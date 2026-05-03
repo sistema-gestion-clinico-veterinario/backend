@@ -1,0 +1,44 @@
+# ===== MAVEN =====
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ===== INTELLIJ IDEA =====
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ===== SPRING BOOT =====
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# ===== LOGS =====
+*.log
+logs/
+spring.log
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+
+# ===== ENV / SECRETS =====
+.env
+.env.*
+application-local.properties
+application-local.yml
+application-secret.properties
+application-secret.yml
+secrets.properties
+
+# ===== JAVA =====
+*.class
+
+# ===== GITKEEP (no rastrear archivos de marcador) =====
+# Los .gitkeep se mantienen para preservar la estructura de carpetas
