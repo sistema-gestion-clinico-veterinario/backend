@@ -60,9 +60,8 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         Usuario usuario = userMapper.toEntity(registrationDTO);
         
         roleRepository.findByName(ERole.ROLE_VETERINARIO)
-                .ifPresent(usuario::setRole);
+                .ifPresent(role -> usuario.getRoles().add(role));
 
-        // Generar token de verificación
         String token = UUID.randomUUID().toString();
         usuario.setVerificationToken(token);
         usuario.setEmailVerified(false);
@@ -70,7 +69,6 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         Usuario saved = usuarioRepository.save(usuario);
 
-        // Enviar correo de bienvenida
         sendVerificationEmail(saved);
 
         return userMapper.toProfileDTO(saved);
@@ -78,7 +76,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
     private void sendVerificationEmail(Usuario usuario) {
         Map<String, Object> model = new HashMap<>();
-        model.put("nombre", usuario.getEmail()); // Podrías usar el nombre real si estuviera en la entidad
+        model.put("nombre", usuario.getEmail());
         model.put("companyName", companyName);
         model.put("companyLogo", companyLogo);
         model.put("verificationLink", appUrl + "/auth/verify/" + usuario.getVerificationToken());
@@ -142,21 +140,23 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             throw new BadCredentialsException("Los apoderados no tienen acceso al sistema");
         }
 
-        String systemRole = usuario.getRole() != null ? usuario.getRole().getName().name() : null;
+        List<String> userRoles = usuario.getRoles().stream()
+                .map(role -> role.getName().name())
+                .collect(Collectors.toList());
+
         Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
         
-        List<String> permissions = List.of();
-        if (usuario.getRole() != null && usuario.getRole().getPermissions() != null) {
-            permissions = usuario.getRole().getPermissions().stream()
-                    .map(Permission::getName)
-                    .collect(Collectors.toList());
-        }
+        List<String> permissions = usuario.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getName)
+                .distinct()
+                .collect(Collectors.toList());
 
-        String jwt = tokenProvider.createToken(usuario.getEmail(), systemRole, companyId, permissions);
+        String jwt = tokenProvider.createToken(usuario.getEmail(), userRoles, companyId, permissions);
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
-        response.setSystemRole(systemRole);
+        response.setRoles(userRoles);
         response.setCompanyId(companyId);
         response.setCompanyName(usuario.getCompany() != null ? usuario.getCompany().getName() : null);
         response.setPermissions(permissions);
@@ -189,7 +189,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     private String resolveUserType(Usuario usuario) {
-        if (usuario.getRole() != null && usuario.getRole().getName() == ERole.ROLE_SUPER_ADMIN) return "SUPER_ADMIN";
+        if (usuario.getRoles().stream().anyMatch(r -> r.getName() == ERole.ROLE_SUPER_ADMIN)) return "SUPER_ADMIN";
         if (usuario.getEmpleadoVeterinario() != null) return "EMPLEADO";
         return "USUARIO";
     }

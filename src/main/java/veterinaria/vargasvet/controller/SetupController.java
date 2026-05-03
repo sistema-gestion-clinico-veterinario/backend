@@ -29,13 +29,10 @@ public class SetupController {
 
     @PostMapping("/first-admin")
     public ResponseEntity<?> createFirstAdmin(@Valid @RequestBody UserRegistrationDTO registrationDTO) {
-        // Verificar si ya existe algún usuario en el sistema
         if (usuarioRepository.count() > 0) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("El sistema ya ha sido inicializado. No se pueden crear más administradores base.");
         }
-
-        // Crear el super admin
         Usuario admin = userMapper.toEntity(registrationDTO);
         admin.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
         admin.setActivo(true);

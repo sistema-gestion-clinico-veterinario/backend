@@ -6,4 +6,5 @@ import veterinaria.vargasvet.domain.entity.EmpleadoVeterinario;
 
 @Repository
 public interface EmpleadoVeterinarioRepository extends JpaRepository<EmpleadoVeterinario, Long> {
+    boolean existsByNumeroColegiatura(String numeroColegiatura);
 }
