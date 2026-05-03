@@ -10,4 +10,6 @@ public interface UsuarioService {
     AuthResponse login(LoginDTO loginDTO);
     UserProfileDTO getProfile(Integer id);
     void suspendAccount(Integer id);
+    void verifyEmail(String token);
+    void resendVerificationToken(String email);
 }

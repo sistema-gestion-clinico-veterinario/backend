@@ -36,12 +36,13 @@ public class Usuario {
     @JoinColumn(name = "company_id")
     private Company company;
 
-    @Column(unique = true)
+    @Column(name = "activo", nullable = false)
+    private boolean activo = false;
+
+    @Column(name = "verification_token")
     private String verificationToken;
 
-    private Boolean isVerified = false;
-
-    @Column(name = "activo", nullable = false)
-    private boolean activo = true;
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = false;
 }
 

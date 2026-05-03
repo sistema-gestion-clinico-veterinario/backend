@@ -39,7 +39,6 @@ public class SetupController {
         Usuario admin = userMapper.toEntity(registrationDTO);
         admin.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
         admin.setActivo(true);
-        admin.setIsVerified(true);
 
         roleRepository.findByName(ERole.ROLE_SUPER_ADMIN)
                 .ifPresent(admin::setRole);

@@ -32,6 +32,18 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Login exitoso", response));
     }
 
+    @GetMapping("/verify/{token}")
+    public ResponseEntity<ApiResponse<Void>> verifyEmail(@PathVariable String token) {
+        usuarioService.verifyEmail(token);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Correo verificado exitosamente. Ya puedes iniciar sesión.", null));
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<ApiResponse<Void>> resendVerification(@RequestParam String email) {
+        usuarioService.resendVerificationToken(email);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Correo de verificación reenviado exitosamente.", null));
+    }
+
     @GetMapping("/profile/{id}")
     public ResponseEntity<ApiResponse<UserProfileDTO>> getProfile(@PathVariable Integer id) {
         UserProfileDTO profile = usuarioService.getProfile(id);
