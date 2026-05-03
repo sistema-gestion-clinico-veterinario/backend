@@ -26,8 +26,11 @@ public class UsuarioPrincipal implements UserDetails {
     }
 
     public static UsuarioPrincipal create(Usuario usuario) {
-        String roleName = usuario.getRole() != null ? usuario.getRole().getName().name() : "ROLE_USER";
-        GrantedAuthority authority = new SimpleGrantedAuthority(roleName);
+        java.util.List<GrantedAuthority> authorities = usuario.getRoles() != null
+                ? usuario.getRoles().stream()
+                        .map(role -> new SimpleGrantedAuthority(role.getName().name()))
+                        .collect(java.util.stream.Collectors.toList())
+                : Collections.emptyList();
 
         Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
 
@@ -35,7 +38,7 @@ public class UsuarioPrincipal implements UserDetails {
                 usuario.getId(),
                 usuario.getEmail(),
                 usuario.getPassword(),
-                Collections.singletonList(authority),
+                authorities,
                 companyId
         );
     }

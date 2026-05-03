@@ -75,19 +75,23 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     private void sendVerificationEmail(Usuario usuario) {
-        Map<String, Object> model = new HashMap<>();
-        model.put("nombre", usuario.getEmail());
-        model.put("companyName", companyName);
-        model.put("companyLogo", companyLogo);
-        model.put("verificationLink", appUrl + "/auth/verify/" + usuario.getVerificationToken());
+        try {
+            Map<String, Object> model = new HashMap<>();
+            model.put("nombre", usuario.getEmail());
+            model.put("companyName", companyName);
+            model.put("companyLogo", companyLogo);
+            model.put("verificationLink", appUrl + "/auth/verify/" + usuario.getVerificationToken());
 
-        Mail mail = emailService.createMail(
-                usuario.getEmail(),
-                "Bienvenido a " + companyName + " - Activa tu cuenta",
-                model
-        );
+            Mail mail = emailService.createMail(
+                    usuario.getEmail(),
+                    "Bienvenido a " + companyName + " - Activa tu cuenta",
+                    model
+            );
 
-        emailService.sendEmail(mail, "email/welcome-template");
+            emailService.sendEmail(mail, "email/welcome-template");
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo enviar el correo de verificación a " + usuario.getEmail() + ": " + e.getMessage());
+        }
     }
 
     @Override
@@ -136,7 +140,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             throw new DisabledException("La cuenta está suspendida");
         }
 
-        if (usuario.getApoderado() != null && usuario.getEmpleadoVeterinario() == null && usuario.getRole() == null) {
+        if (usuario.getApoderado() != null && usuario.getEmpleadoVeterinario() == null && usuario.getRoles().isEmpty()) {
             throw new BadCredentialsException("Los apoderados no tienen acceso al sistema");
         }
 
@@ -198,8 +202,8 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     private String resolveNombreCompleto(Usuario usuario) {
-        if (usuario.getEmpleadoVeterinario() != null) {
-            return usuario.getEmpleadoVeterinario().getNombre() + " " + usuario.getEmpleadoVeterinario().getApellido();
+        if (usuario.getNombre() != null) {
+            return usuario.getNombre() + (usuario.getApellido() != null ? " " + usuario.getApellido() : "");
         }
         return usuario.getEmail();
     }

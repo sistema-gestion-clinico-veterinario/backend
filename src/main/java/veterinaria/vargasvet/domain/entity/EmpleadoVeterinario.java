@@ -23,17 +23,9 @@ public class EmpleadoVeterinario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "nombre", nullable = false)
-    private String nombre;
-
-    @Column(name = "apellido", nullable = false)
-    private String apellido;
-
     @Column(name = "fecha_nacimiento", nullable = true)
     private LocalDate fechaNacimiento;
 
-    @Column(name = "direccion", nullable = true)
-    private String direccion;
     @ToString.Exclude
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -53,9 +45,6 @@ public class EmpleadoVeterinario {
     @Column(name = "Genero", nullable = false)
     private Genero genero;
 
-    @Column(name = "telefono", nullable = true)
-    private String telefono;
-
     @Column(name = "estado", nullable = false)
     private Boolean estado = true;
 
@@ -68,8 +57,6 @@ public class EmpleadoVeterinario {
     @Column(name = "foto_url")
     private String fotoUrl;
 
-    @Column(name = "email")
-    private String email;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "empleado_tipo_empleado",
