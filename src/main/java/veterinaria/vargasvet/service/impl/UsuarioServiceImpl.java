@@ -6,7 +6,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import veterinaria.vargasvet.domain.entity.ERole;
+import veterinaria.vargasvet.domain.enums.ERole;
 import veterinaria.vargasvet.domain.entity.Permission;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.dto.request.LoginDTO;

@@ -2,6 +2,7 @@ package veterinaria.vargasvet.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import veterinaria.vargasvet.domain.enums.ERole;
 
 import java.util.Set;
 
