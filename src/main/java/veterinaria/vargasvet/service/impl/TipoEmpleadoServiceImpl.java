@@ -16,15 +16,24 @@ import java.util.List;
 public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
 
     private final TipoEmpleadoRepository tipoEmpleadoRepository;
+    private final veterinaria.vargasvet.repository.CompanyRepository companyRepository;
 
     @Override
     public List<TipoEmpleado> findAll() {
+        Integer companyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+        if (companyId != null) {
+            return tipoEmpleadoRepository.findByCompanyId(companyId);
+        }
         return tipoEmpleadoRepository.findAll();
     }
 
     @Override
     @Transactional
     public TipoEmpleado create(TipoEmpleado tipo) {
+        Integer companyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+        if (companyId != null) {
+            tipo.setCompany(companyRepository.findById(companyId).orElse(null));
+        }
         tipo.setCreatedAt(LocalDateTime.now());
         return tipoEmpleadoRepository.save(tipo);
     }

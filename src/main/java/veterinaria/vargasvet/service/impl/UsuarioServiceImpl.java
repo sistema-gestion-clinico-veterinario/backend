@@ -6,9 +6,9 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import veterinaria.vargasvet.domain.enums.ERole;
 import veterinaria.vargasvet.domain.entity.Permission;
 import veterinaria.vargasvet.domain.entity.Usuario;
+import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.dto.request.LoginDTO;
 import veterinaria.vargasvet.dto.request.UserRegistrationDTO;
 import veterinaria.vargasvet.dto.response.AuthResponse;
@@ -59,7 +59,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         registrationDTO.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
         Usuario usuario = userMapper.toEntity(registrationDTO);
         
-        roleRepository.findByName(ERole.ROLE_VETERINARIO)
+        roleRepository.findByName("ROLE_VETERINARIO")
                 .ifPresent(role -> usuario.getRoles().add(role));
 
         String token = UUID.randomUUID().toString();
@@ -145,7 +145,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         }
 
         List<String> userRoles = usuario.getRoles().stream()
-                .map(role -> role.getName().name())
+                .map(Role::getName)
                 .collect(Collectors.toList());
 
         Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
@@ -209,7 +209,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     private String resolveUserType(Usuario usuario) {
-        if (usuario.getRoles().stream().anyMatch(r -> r.getName() == ERole.ROLE_SUPER_ADMIN)) return "SUPER_ADMIN";
+        if (usuario.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"))) return "SUPER_ADMIN";
         if (usuario.getEmpleadoVeterinario() != null) return "EMPLEADO";
         return "USUARIO";
     }

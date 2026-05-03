@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface EspecialidadRepository extends JpaRepository<Especialidad, Long> {
     Optional<Especialidad> findByNombre(String nombre);
+    java.util.List<Especialidad> findByCompanyId(Integer companyId);
+    Optional<Especialidad> findByNombreAndCompanyId(String nombre, Integer companyId);
 }

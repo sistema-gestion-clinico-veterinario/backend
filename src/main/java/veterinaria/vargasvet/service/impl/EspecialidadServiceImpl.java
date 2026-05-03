@@ -16,9 +16,14 @@ import java.util.List;
 public class EspecialidadServiceImpl implements EspecialidadService {
 
     private final EspecialidadRepository especialidadRepository;
+    private final veterinaria.vargasvet.repository.CompanyRepository companyRepository;
 
     @Override
     public List<Especialidad> findAll() {
+        Integer companyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+        if (companyId != null) {
+            return especialidadRepository.findByCompanyId(companyId);
+        }
         return especialidadRepository.findAll();
     }
 
@@ -31,6 +36,10 @@ public class EspecialidadServiceImpl implements EspecialidadService {
     @Override
     @Transactional
     public Especialidad create(Especialidad especialidad) {
+        Integer companyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+        if (companyId != null) {
+            especialidad.setCompany(companyRepository.findById(companyId).orElse(null));
+        }
         especialidad.setCreatedAt(LocalDateTime.now());
         return especialidadRepository.save(especialidad);
     }
@@ -40,6 +49,7 @@ public class EspecialidadServiceImpl implements EspecialidadService {
     public Especialidad update(Long id, Especialidad especialidad) {
         Especialidad existing = findById(id);
         existing.setNombre(especialidad.getNombre());
+        existing.setDescripcion(especialidad.getDescripcion());
         existing.setUpdatedAt(LocalDateTime.now());
         return especialidadRepository.save(existing);
     }
