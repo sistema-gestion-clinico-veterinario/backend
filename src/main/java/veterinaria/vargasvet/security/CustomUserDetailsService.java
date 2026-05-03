@@ -13,6 +13,7 @@ import veterinaria.vargasvet.repository.UsuarioRepository;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,15 +26,15 @@ public class CustomUserDetailsService implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
 
-        if (usuario.getApoderado() != null && usuario.getEmpleadoVeterinario() == null && usuario.getRole() == null) {
+        if (usuario.getApoderado() != null && usuario.getEmpleadoVeterinario() == null && usuario.getRoles().isEmpty()) {
             throw new UsernameNotFoundException("Los apoderados no tienen acceso al sistema");
         }
 
         List<GrantedAuthority> authorities;
-        if (usuario.getRole() != null) {
-            authorities = Collections.singletonList(
-                    new SimpleGrantedAuthority(usuario.getRole().getName().name())
-            );
+        if (usuario.getRoles() != null && !usuario.getRoles().isEmpty()) {
+            authorities = usuario.getRoles().stream()
+                    .map(role -> new SimpleGrantedAuthority(role.getName().name()))
+                    .collect(Collectors.toList());
         } else {
             authorities = Collections.emptyList();
         }

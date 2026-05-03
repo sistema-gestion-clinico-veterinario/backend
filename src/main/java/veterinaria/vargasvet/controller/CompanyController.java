@@ -22,14 +22,16 @@ public class CompanyController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
+
     public ResponseEntity<ApiResponse<CompanyDTO>> saveCompany(@Valid @RequestBody CompanyDTO companyDTO) {
         CompanyDTO updated = companyService.updateCompanyInfo(companyDTO);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la empresa guardados correctamente", updated));
     }
 
     @PutMapping
-    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
+
     public ResponseEntity<ApiResponse<CompanyDTO>> updateCompany(@Valid @RequestBody CompanyDTO companyDTO) {
         CompanyDTO updated = companyService.updateCompanyInfo(companyDTO);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la empresa actualizados correctamente", updated));

@@ -46,6 +46,11 @@ public class VeterinarioServiceImpl implements VeterinarioService {
 
         Usuario usuario = new Usuario();
         usuario.setEmail(dto.getEmail());
+        usuario.setNombre(dto.getNombre());
+        usuario.setApellido(dto.getApellido());
+        usuario.setDni(dto.getNumeroDocumento());
+        usuario.setTelefono(dto.getTelefono());
+        usuario.setDireccion(dto.getDireccion());
         String tempPassword = dto.getNumeroDocumento();
         usuario.setPassword(passwordEncoder.encode(tempPassword));
         usuario.setActivo(false);
@@ -57,14 +62,8 @@ public class VeterinarioServiceImpl implements VeterinarioService {
 
         Usuario savedUser = usuarioRepository.save(usuario);
 
-
         EmpleadoVeterinario empleado = new EmpleadoVeterinario();
-        empleado.setNombre(dto.getNombre());
-        empleado.setApellido(dto.getApellido());
         empleado.setNumeroColegiatura(dto.getNumeroColegiatura());
-        empleado.setTelefono(dto.getTelefono());
-        empleado.setEmail(dto.getEmail());
-        empleado.setDireccion(dto.getDireccion());
         empleado.setObservaciones(dto.getObservaciones());
         empleado.setFotoUrl(dto.getFotoUrl());
         empleado.setEstado(true);
@@ -74,14 +73,12 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         empleado.setUser(savedUser);
         empleado.setCreated_At(LocalDateTime.now());
 
-
         if (dto.getEspecialidades() != null) {
             empleado.setEspecialidades(dto.getEspecialidades().stream()
                     .map(nombre -> especialidadRepository.findByNombre(nombre)
                             .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada: " + nombre)))
                     .collect(Collectors.toSet()));
         }
-
 
         tipoEmpleadoRepository.findByNombre("VETERINARIO")
                 .ifPresent(tipo -> empleado.getTiposEmpleado().add(tipo));
@@ -94,19 +91,22 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     }
 
     private void sendWelcomeEmail(Usuario usuario, String nombre, String tempPassword) {
-        Map<String, Object> model = new HashMap<>();
-        model.put("nombre", nombre);
-        model.put("tempPassword", tempPassword);
-        model.put("companyName", "Patitas Felices");
-        model.put("verificationLink", "http://localhost:8080/api/v1/auth/verify/" + usuario.getVerificationToken());
+        try {
+            Map<String, Object> model = new HashMap<>();
+            model.put("nombre", nombre);
+            model.put("tempPassword", tempPassword);
+            model.put("companyName", "Patitas Felices");
+            model.put("verificationLink", "http://localhost:8080/api/v1/auth/verify/" + usuario.getVerificationToken());
 
-        Mail mail = emailService.createMail(
-                usuario.getEmail(),
-                "Bienvenido al equipo de Patitas Felices",
-                model
-        );
+            Mail mail = emailService.createMail(
+                    usuario.getEmail(),
+                    "Bienvenido al equipo de Patitas Felices",
+                    model
+            );
 
-   
-        emailService.sendEmail(mail, "email/welcome-template");
+            emailService.sendEmail(mail, "email/welcome-template");
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo enviar el correo de bienvenida a " + usuario.getEmail() + ": " + e.getMessage());
+        }
     }
 }
