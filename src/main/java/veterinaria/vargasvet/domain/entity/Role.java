@@ -2,7 +2,7 @@ package veterinaria.vargasvet.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import veterinaria.vargasvet.domain.enums.ERole;
+
 
 import java.util.Set;
 
@@ -14,9 +14,8 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "name", nullable = false, unique = true)
-    private ERole name;
+    private String name;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

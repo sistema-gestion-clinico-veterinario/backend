@@ -9,10 +9,15 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import veterinaria.vargasvet.domain.entity.Usuario;
+import veterinaria.vargasvet.domain.entity.Role;
+import veterinaria.vargasvet.domain.entity.Permission;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,9 +37,19 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         List<GrantedAuthority> authorities;
         if (usuario.getRoles() != null && !usuario.getRoles().isEmpty()) {
-            authorities = usuario.getRoles().stream()
-                    .map(role -> new SimpleGrantedAuthority(role.getName().name()))
-                    .collect(Collectors.toList());
+            Set<GrantedAuthority> authSet = new HashSet<>();
+            for (Role role : usuario.getRoles()) {
+                // Agregar el rol con prefijo ROLE_
+                authSet.add(new SimpleGrantedAuthority(role.getName()));
+                
+                // Agregar todos los permisos asociados al rol
+                if (role.getPermissions() != null) {
+                    for (Permission perm : role.getPermissions()) {
+                        authSet.add(new SimpleGrantedAuthority(perm.getName()));
+                    }
+                }
+            }
+            authorities = new ArrayList<>(authSet);
         } else {
             authorities = Collections.emptyList();
         }

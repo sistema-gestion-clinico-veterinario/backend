@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import veterinaria.vargasvet.domain.enums.ERole;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.dto.request.UserRegistrationDTO;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
@@ -39,7 +38,7 @@ public class SetupController {
         admin.setEmailVerified(true);
         admin.setPasswordChanged(true);
 
-        roleRepository.findByName(ERole.ROLE_SUPER_ADMIN)
+        roleRepository.findByName("ROLE_SUPER_ADMIN")
                 .ifPresent(role -> admin.getRoles().add(role));
 
         Usuario saved = usuarioRepository.save(admin);

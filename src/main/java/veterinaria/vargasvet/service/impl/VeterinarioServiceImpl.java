@@ -1,11 +1,11 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.*;
-import veterinaria.vargasvet.domain.enums.ERole;
 import veterinaria.vargasvet.dto.Mail;
 import veterinaria.vargasvet.dto.request.VeterinarioRegistrationDTO;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
@@ -34,6 +34,9 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     private final UserMapper userMapper;
     private final EmailService emailService;
 
+    @Value("${app.url}")
+    private String appUrl;
+
     @Override
     @Transactional
     public UserProfileDTO registerVeterinario(VeterinarioRegistrationDTO dto) {
@@ -57,7 +60,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         usuario.setEmailVerified(false);
         usuario.setVerificationToken(UUID.randomUUID().toString());
 
-        roleRepository.findByName(ERole.ROLE_VETERINARIO)
+        roleRepository.findByName("ROLE_VETERINARIO")
                 .ifPresent(role -> usuario.getRoles().add(role));
 
         Usuario savedUser = usuarioRepository.save(usuario);
@@ -96,7 +99,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
             model.put("nombre", nombre);
             model.put("tempPassword", tempPassword);
             model.put("companyName", "Patitas Felices");
-            model.put("verificationLink", "http://localhost:8080/api/v1/auth/verify/" + usuario.getVerificationToken());
+            model.put("verificationLink", appUrl + "/auth/verify/" + usuario.getVerificationToken());
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),
