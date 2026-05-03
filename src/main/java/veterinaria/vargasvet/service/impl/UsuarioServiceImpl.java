@@ -124,10 +124,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Override
     public AuthResponse login(LoginDTO loginDTO) {
         Usuario usuario = usuarioRepository.findByEmail(loginDTO.getEmail())
-                .orElseThrow(() -> new BadCredentialsException("Credenciales incorrectas"));
+                .orElseThrow(() -> new BadCredentialsException("Credenciales inválidas"));
 
         if (!passwordEncoder.matches(loginDTO.getPassword(), usuario.getPassword())) {
-            throw new BadCredentialsException("Credenciales incorrectas");
+            throw new BadCredentialsException("Credenciales inválidas");
         }
 
         if (!usuario.isEmailVerified()) {
