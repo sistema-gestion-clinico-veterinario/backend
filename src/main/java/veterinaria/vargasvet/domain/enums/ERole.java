@@ -1,4 +1,4 @@
-package veterinaria.vargasvet.domain.entity;
+package veterinaria.vargasvet.domain.enums;
 
 public enum ERole {
     ROLE_SUPER_ADMIN,
