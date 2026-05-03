@@ -36,6 +36,7 @@ application-local.yml
 application-secret.properties
 application-secret.yml
 secrets.properties
+src/main/resources/application-local.properties
 
 # ===== INTELLIJ IDEA =====
 .idea/

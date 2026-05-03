@@ -22,26 +22,31 @@ public class Usuario {
     @Column(nullable = false)
     private String password;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private EmpleadoVeterinario empleadoVeterinario;
 
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Apoderado apoderado;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="role_id", referencedColumnName = "id")
-    private Role role;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "usuario_role",
+            joinColumns = @JoinColumn(name = "usuario_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private java.util.Set<Role> roles = new java.util.HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
     private Company company;
 
-    @Column(unique = true)
+    @Column(name = "activo", nullable = false)
+    private boolean activo = false;
+
+    @Column(name = "verification_token")
     private String verificationToken;
 
-    private Boolean isVerified = false;
-
-    @Column(name = "activo", nullable = false)
-    private boolean activo = true;
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = false;
 }
 
