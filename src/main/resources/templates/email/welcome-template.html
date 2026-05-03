@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>¡Bienvenido a Patitas Felices!</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f8fb;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      border: 1px solid #e0e0e0;
+    }
+    .header {
+      text-align: center;
+      background: linear-gradient(135deg, #1d4355, #3a6f81);
+      color: white;
+      padding: 40px;
+    }
+    .header img {
+      width: 90px;
+      margin-bottom: 15px;
+    }
+    .header h1 {
+      font-size: 28px;
+      margin: 10px 0;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .content {
+      padding: 40px 30px;
+      line-height: 1.8;
+      text-align: center;
+    }
+    .content h2 {
+      color: #1d4355;
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+    .content p {
+      font-size: 16px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+    .quote {
+      background-color: #f4f8fb;
+      padding: 15px;
+      font-style: italic;
+      color: #3a6f81;
+      border-left: 4px solid #1d4355;
+      margin: 20px 0;
+      font-size: 16px;
+    }
+    .button {
+      display: inline-block;
+      background: linear-gradient(135deg, #1d4355, #3a6f81);
+      color: white;
+      padding: 14px 35px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 20px;
+      transition: 0.3s ease;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    }
+    .button:hover {
+      background: #153347;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    .footer {
+      text-align: center;
+      background-color: #f4f8fb;
+      padding: 25px;
+      font-size: 14px;
+      color: #777;
+      border-top: 1px solid #e0e0e0;
+    }
+    .footer p {
+      margin: 5px 0;
+    }
+    .footer a {
+      color: #1d4355;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <img th:src="${companyLogo}" alt="Patitas Felices">
+    <h1 th:text="'Bienvenido a ' + ${companyName}">Bienvenido a Patitas Felices</h1>
+  </div>
+  <div class="content">
+    <h2>¡Hola, <span th:text="${nombre}"></span>!</h2>
+    <p>Nos complace darte la bienvenida a nuestro equipo. En <strong th:text="${companyName}">Patitas Felices</strong>, no solo cuidamos de las mascotas, sino que también nos preocupamos por el bienestar de cada persona que forma parte de nuestra familia.</p>
+
+    <div class="quote">"El amor por los animales nos une, y juntos haremos la diferencia."</div>
+
+    <p>Estamos seguros de que con tu talento, dedicación y profesionalismo, haremos cosas increíbles. ¡Estamos emocionados de empezar este viaje juntos!</p>
+
+    <p>Para completar tu registro, por favor confirma tu cuenta:</p>
+    <a th:href="${verificationLink}" class="button">Activar Cuenta</a>
+
+    <p>Si tienes alguna pregunta, no dudes en escribirnos.</p>
+  </div>
+
+  <div class="footer">
+    <p th:text="'© 2025 ' + ${companyName} + '. Todos los derechos reservados.'"></p>
+    <p>Estamos felices de que seas parte de nuestra familia.</p>
+    <p><a href="#">Contacto</a> | <a href="#">Política de Privacidad</a> | <a href="#">Términos y Condiciones</a></p>
+  </div>
+</div>
+</body>
+</html>
