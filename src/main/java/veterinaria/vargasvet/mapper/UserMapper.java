@@ -21,7 +21,6 @@ public class UserMapper {
         usuario.setEmail(dto.getEmail());
         usuario.setPassword(dto.getPassword());
         usuario.setActivo(true);
-        usuario.setIsVerified(true);
         
         EmpleadoVeterinario empleado = new EmpleadoVeterinario();
         empleado.setNombre(dto.getNombre());

@@ -19,7 +19,14 @@ import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.TokenProvider;
 
+import org.springframework.beans.factory.annotation.Value;
+import veterinaria.vargasvet.dto.Mail;
+import veterinaria.vargasvet.service.EmailService;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +38,16 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final TokenProvider tokenProvider;
+    private final EmailService emailService;
+
+    @Value("${app.url}")
+    private String appUrl;
+
+    @Value("${app.company.name}")
+    private String companyName;
+
+    @Value("${app.company.logo}")
+    private String companyLogo;
 
     @Override
     @Transactional
@@ -45,8 +62,63 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         roleRepository.findByName(ERole.ROLE_VETERINARIO)
                 .ifPresent(usuario::setRole);
 
+        // Generar token de verificación
+        String token = UUID.randomUUID().toString();
+        usuario.setVerificationToken(token);
+        usuario.setEmailVerified(false);
+        usuario.setActivo(false);
+
         Usuario saved = usuarioRepository.save(usuario);
+
+        // Enviar correo de bienvenida
+        sendVerificationEmail(saved);
+
         return userMapper.toProfileDTO(saved);
+    }
+
+    private void sendVerificationEmail(Usuario usuario) {
+        Map<String, Object> model = new HashMap<>();
+        model.put("nombre", usuario.getEmail()); // Podrías usar el nombre real si estuviera en la entidad
+        model.put("companyName", companyName);
+        model.put("companyLogo", companyLogo);
+        model.put("verificationLink", appUrl + "/auth/verify/" + usuario.getVerificationToken());
+
+        Mail mail = emailService.createMail(
+                usuario.getEmail(),
+                "Bienvenido a " + companyName + " - Activa tu cuenta",
+                model
+        );
+
+        emailService.sendEmail(mail, "email/welcome-template");
+    }
+
+    @Override
+    @Transactional
+    public void verifyEmail(String token) {
+        Usuario usuario = usuarioRepository.findByVerificationToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Token de verificación inválido"));
+
+        usuario.setEmailVerified(true);
+        usuario.setActivo(true);
+        usuario.setVerificationToken(null);
+        usuarioRepository.save(usuario);
+    }
+
+    @Override
+    @Transactional
+    public void resendVerificationToken(String email) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        if (usuario.isEmailVerified()) {
+            throw new IllegalArgumentException("El correo ya ha sido verificado");
+        }
+
+        String newToken = UUID.randomUUID().toString();
+        usuario.setVerificationToken(newToken);
+        usuarioRepository.save(usuario);
+
+        sendVerificationEmail(usuario);
     }
 
     @Override
@@ -56,6 +128,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         if (!passwordEncoder.matches(loginDTO.getPassword(), usuario.getPassword())) {
             throw new BadCredentialsException("Credenciales incorrectas");
+        }
+
+        if (!usuario.isEmailVerified()) {
+            throw new DisabledException("Tu cuenta aún no ha sido verificada. Por favor, revisa tu correo electrónico.");
         }
 
         if (!usuario.isActivo()) {
