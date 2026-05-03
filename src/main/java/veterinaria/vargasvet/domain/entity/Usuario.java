@@ -22,7 +22,7 @@ public class Usuario {
     @Column(nullable = false)
     private String password;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private EmpleadoVeterinario empleadoVeterinario;
 
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
