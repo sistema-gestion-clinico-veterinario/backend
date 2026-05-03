@@ -1,0 +1,47 @@
+package veterinaria.vargasvet.domain.entity;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.util.List;
+
+@Data
+@Entity
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Table(name = "usuario")
+public class Usuario {
+    @EqualsAndHashCode.Include
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private EmpleadoVeterinario empleadoVeterinario;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private Apoderado apoderado;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="role_id", referencedColumnName = "id")
+    private Role role;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
+    @Column(unique = true)
+    private String verificationToken;
+
+    private Boolean isVerified = false;
+
+    @Column(name = "activo", nullable = false)
+    private boolean activo = true;
+}
+

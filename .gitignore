@@ -1,8 +1,41 @@
+# ===== HELP =====
+HELP.md
+
 # ===== MAVEN =====
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+# ===== MAVEN WRAPPER =====
+.mvn/wrapper/maven-wrapper.jar
+
+# ===== SPRING BOOT / BUILDS =====
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# ===== JAVA =====
+*.class
+
+# ===== LOGS =====
+*.log
+logs/
+spring.log
+
+# ===== ENV / SECRETS =====
+.env
+*.env
+.env.*
+!.env.example
+application-local.properties
+application-local.yml
+application-secret.properties
+application-secret.yml
+secrets.properties
 
 # ===== INTELLIJ IDEA =====
 .idea/
@@ -11,34 +44,32 @@ target/
 *.ipr
 out/
 
-# ===== SPRING BOOT =====
-*.jar
-*.war
-*.ear
-*.zip
-*.tar.gz
-*.rar
+# ===== STS / ECLIPSE =====
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
 
-# ===== LOGS =====
-*.log
-logs/
-spring.log
+# ===== NETBEANS =====
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ===== VS CODE =====
+.vscode/
 
 # ===== OS =====
 .DS_Store
 Thumbs.db
 
-# ===== ENV / SECRETS =====
-.env
-.env.*
-application-local.properties
-application-local.yml
-application-secret.properties
-application-secret.yml
-secrets.properties
-
-# ===== JAVA =====
-*.class
-
-# ===== GITKEEP (no rastrear archivos de marcador) =====
-# Los .gitkeep se mantienen para preservar la estructura de carpetas
+# ===== GITKEEP =====
+# Los archivos .gitkeep se pueden mantener si deseas preservar carpetas vacías.
+!.gitkeep
