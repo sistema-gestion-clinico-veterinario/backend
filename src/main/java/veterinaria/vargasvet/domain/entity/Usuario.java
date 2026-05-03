@@ -36,6 +36,9 @@ public class Usuario {
     )
     private java.util.Set<Role> roles = new java.util.HashSet<>();
 
+    @Column(nullable = false)
+    private boolean passwordChanged = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
     private Company company;

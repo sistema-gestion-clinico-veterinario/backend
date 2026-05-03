@@ -12,4 +12,5 @@ public interface UsuarioService {
     void suspendAccount(Integer id);
     void verifyEmail(String token);
     void resendVerificationToken(String email);
+    void changePassword(String email, veterinaria.vargasvet.dto.request.ChangePasswordDTO dto);
 }
