@@ -46,7 +46,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
 
         Usuario usuario = new Usuario();
         usuario.setEmail(dto.getEmail());
-        String tempPassword = UUID.randomUUID().toString().substring(0, 8);
+        String tempPassword = dto.getNumeroDocumento();
         usuario.setPassword(passwordEncoder.encode(tempPassword));
         usuario.setActivo(false);
         usuario.setEmailVerified(false);

@@ -55,4 +55,11 @@ public class AuthController {
         usuarioService.suspendAccount(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cuenta suspendida", null));
     }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(@Valid @RequestBody veterinaria.vargasvet.dto.request.ChangePasswordDTO dto) {
+        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        usuarioService.changePassword(email, dto);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Contraseña actualizada exitosamente", null));
+    }
 }

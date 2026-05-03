@@ -162,6 +162,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setPermissions(permissions);
         response.setNombreCompleto(resolveNombreCompleto(usuario));
         response.setUserType(resolveUserType(usuario));
+        response.setPasswordChanged(usuario.isPasswordChanged());
 
         return response;
     }
@@ -178,6 +179,21 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         usuario.setActivo(false);
+        usuarioRepository.save(usuario);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String email, veterinaria.vargasvet.dto.request.ChangePasswordDTO dto) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        if (!passwordEncoder.matches(dto.getOldPassword(), usuario.getPassword())) {
+            throw new BadCredentialsException("La contraseña actual es incorrecta");
+        }
+
+        usuario.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        usuario.setPasswordChanged(true);
         usuarioRepository.save(usuario);
     }
 
