@@ -36,3 +36,6 @@ build/
 *.env
 .env.*
 !.env.example
+
+### Spring Local Config ###
+src/main/resources/application-local.properties
