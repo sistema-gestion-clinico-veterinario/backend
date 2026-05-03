@@ -6,7 +6,7 @@ import java.util.List;
 @Data
 public class AuthResponse {
     private String token;
-    private String systemRole;
+    private List<String> roles;
     private Integer companyId;
     private String companyName;
     private List<String> permissions;

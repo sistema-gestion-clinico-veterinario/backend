@@ -28,9 +28,13 @@ public class Usuario {
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Apoderado apoderado;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="role_id", referencedColumnName = "id")
-    private Role role;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "usuario_role",
+            joinColumns = @JoinColumn(name = "usuario_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private java.util.Set<Role> roles = new java.util.HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")

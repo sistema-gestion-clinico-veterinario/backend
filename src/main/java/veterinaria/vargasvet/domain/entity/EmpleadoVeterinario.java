@@ -57,7 +57,17 @@ public class EmpleadoVeterinario {
     private String telefono;
 
     @Column(name = "estado", nullable = false)
-    private Boolean estado;
+    private Boolean estado = true;
+
+    @Column(name = "numero_colegiatura", nullable = false, unique = true)
+    private String numeroColegiatura;
+
+    @Column(name = "observaciones", columnDefinition = "TEXT")
+    private String observaciones;
+
+    @Column(name = "foto_url")
+    private String fotoUrl;
+
     @Column(name = "email")
     private String email;
     @ManyToMany(fetch = FetchType.EAGER)

@@ -50,13 +50,13 @@ public class TokenProvider {
         }
     }
 
-    public String createToken(String email, String systemRole, Integer companyId, List<String> permissions) {
+    public String createToken(String email, List<String> roles, Integer companyId, List<String> permissions) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + (jwtValidityInSeconds * 1000));
 
         JwtBuilder builder = Jwts.builder()
                 .subject(email)
-                .claim("systemRole", systemRole)
+                .claim("roles", roles)
                 .claim("companyId", companyId)
                 .claim("permissions", permissions)
                 .issuedAt(now)
@@ -74,9 +74,12 @@ public class TokenProvider {
                 .getPayload();
 
         List<GrantedAuthority> authorities = new ArrayList<>();
-        String systemRole = claims.get("systemRole", String.class);
-        if (systemRole != null && !systemRole.isBlank()) {
-            authorities.add(new SimpleGrantedAuthority(systemRole));
+        List<?> roles = claims.get("roles", List.class);
+        if (roles != null) {
+            roles.stream()
+                    .map(Object::toString)
+                    .map(SimpleGrantedAuthority::new)
+                    .forEach(authorities::add);
         }
 
         List<?> rawPermissions = claims.get("permissions", List.class);
