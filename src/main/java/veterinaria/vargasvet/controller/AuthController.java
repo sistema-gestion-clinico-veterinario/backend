@@ -1,0 +1,46 @@
+package veterinaria.vargasvet.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import veterinaria.vargasvet.dto.ApiResponse;
+import veterinaria.vargasvet.dto.request.LoginDTO;
+import veterinaria.vargasvet.dto.request.UserRegistrationDTO;
+import veterinaria.vargasvet.dto.response.AuthResponse;
+import veterinaria.vargasvet.dto.response.UserProfileDTO;
+import veterinaria.vargasvet.service.UsuarioService;
+
+@RestController
+@RequestMapping("/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final UsuarioService usuarioService;
+
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<UserProfileDTO>> register(@Valid @RequestBody UserRegistrationDTO registrationDTO) {
+        UserProfileDTO profile = usuarioService.register(registrationDTO);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, "Usuario registrado exitosamente", profile));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginDTO loginDTO) {
+        AuthResponse response = usuarioService.login(loginDTO);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Login exitoso", response));
+    }
+
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<ApiResponse<UserProfileDTO>> getProfile(@PathVariable Integer id) {
+        UserProfileDTO profile = usuarioService.getProfile(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Perfil obtenido", profile));
+    }
+
+    @PutMapping("/suspend/{id}")
+    public ResponseEntity<ApiResponse<Void>> suspendAccount(@PathVariable Integer id) {
+        usuarioService.suspendAccount(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Cuenta suspendida", null));
+    }
+}
