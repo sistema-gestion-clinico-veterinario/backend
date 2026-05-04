@@ -15,7 +15,15 @@ import veterinaria.vargasvet.repository.*;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CitaService;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import veterinaria.vargasvet.domain.enums.EstadoCita;
+import veterinaria.vargasvet.dto.response.CitaResponse;
+import veterinaria.vargasvet.mapper.CitaMapper;
+
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
@@ -145,7 +153,26 @@ public class CitaServiceImpl implements CitaService {
         consulta.setEstado(EstadoConsulta.ABIERTA);
         
         Consulta savedConsulta = consultaRepository.save(consulta);
-        
+
         return savedConsulta.getId();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CitaResponse> listar(Integer companyId, LocalDate fecha, EstadoCita estado, Long veterinarioId, int page, int size) {
+        Integer resolvedCompanyId = resolverCompanyId(companyId);
+        return citaRepository.buscar(resolvedCompanyId, fecha, estado, veterinarioId,
+                PageRequest.of(page, size, Sort.unsorted()))
+                .map(citaMapper::toResponse);
+    }
+
+    private Integer resolverCompanyId(Integer companyIdParam) {
+        if (SecurityUtils.isSuperAdmin()) {
+            if (companyIdParam == null) {
+                throw new IllegalArgumentException("El parámetro companyId es requerido para SUPER_ADMIN");
+            }
+            return companyIdParam;
+        }
+        return SecurityUtils.getCurrentCompanyId();
     }
 }
