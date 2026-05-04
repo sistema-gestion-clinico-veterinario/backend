@@ -38,7 +38,7 @@ public class Usuario {
     private String direccion;
 
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private EmpleadoVeterinario empleadoVeterinario;
+    private Empleado empleado;
 
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Apoderado apoderado;

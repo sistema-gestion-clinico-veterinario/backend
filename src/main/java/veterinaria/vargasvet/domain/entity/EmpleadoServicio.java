@@ -15,13 +15,11 @@ public class EmpleadoServicio {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "empleado_veterinario_id", nullable = false, referencedColumnName = "id",
-            foreignKey = @ForeignKey(name = "FK_empleado_servicio_empleado_veterinario"))
-    private EmpleadoVeterinario empleadoVeterinario;
+    @JoinColumn(name = "empleado_id", nullable = false, referencedColumnName = "id")
+    private Empleado empleado;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "servicio_id", nullable = false, referencedColumnName = "id",
-            foreignKey = @ForeignKey(name = "FK_empleado_servicio_servicio"))
+    @JoinColumn(name = "servicio_id", nullable = false, referencedColumnName = "id")
     private ServiciosVeterinarios servicio;
 
     @Column(name = "fecha_asignacion", nullable = false)
@@ -30,8 +28,8 @@ public class EmpleadoServicio {
     public EmpleadoServicio() {
     }
 
-    public EmpleadoServicio(EmpleadoVeterinario empleadoVeterinario, ServiciosVeterinarios servicio) {
-        this.empleadoVeterinario = empleadoVeterinario;
+    public EmpleadoServicio(Empleado empleado, ServiciosVeterinarios servicio) {
+        this.empleado = empleado;
         this.servicio = servicio;
         this.fechaAsignacion = LocalDateTime.now();
     }

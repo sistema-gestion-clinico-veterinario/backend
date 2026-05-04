@@ -28,6 +28,6 @@ public class RegistroPeso {
     private String observaciones;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "veterinario_id", nullable = true)
-    private EmpleadoVeterinario veterinario;
+    @JoinColumn(name = "veterinario_id")
+    private Empleado veterinario;
 }
