@@ -33,4 +33,7 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
                          @Param("especie") EspecieMascota especie,
                          @Param("nombrePropietario") String nombrePropietario,
                          Pageable pageable);
+
+    @Query("SELECT COUNT(m) FROM Mascota m WHERE m.apoderado.user.company.id = :companyId")
+    long countByCompanyId(@Param("companyId") Integer companyId);
 }

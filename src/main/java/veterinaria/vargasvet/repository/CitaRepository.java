@@ -47,4 +47,11 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
                       @Param("estado") EstadoCita estado,
                       @Param("veterinarioId") Long veterinarioId,
                       Pageable pageable);
+
+    @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.user.company.id = :companyId")
+    long countByCompanyId(@Param("companyId") Integer companyId);
+
+    @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.user.company.id = :companyId " +
+           "AND CAST(c.fechaHoraInicio AS date) = CURRENT_DATE")
+    long countTodayByCompanyId(@Param("companyId") Integer companyId);
 }
