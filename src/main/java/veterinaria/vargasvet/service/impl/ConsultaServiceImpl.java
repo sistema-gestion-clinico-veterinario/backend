@@ -28,11 +28,20 @@ public class ConsultaServiceImpl implements ConsultaService {
         Consulta consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + id));
 
-        if (!SecurityUtils.isSuperAdmin()) {
+        if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
             if (consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null ||
                 !consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany().getId().equals(currentCompanyId)) {
                 throw new IllegalArgumentException("No tienes permiso para modificar esta consulta");
+            }
+
+            Integer currentUserId = SecurityUtils.getCurrentUserId();
+            boolean esVeterinarioAsignado = consulta.getVeterinario() != null &&
+                    consulta.getVeterinario().getUser() != null &&
+                    consulta.getVeterinario().getUser().getId().equals(currentUserId);
+
+            if (!esVeterinarioAsignado) {
+                throw new IllegalArgumentException("Solo el veterinario asignado a esta consulta puede modificarla");
             }
         }
 
