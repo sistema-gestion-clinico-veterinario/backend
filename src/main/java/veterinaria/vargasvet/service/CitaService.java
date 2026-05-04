@@ -5,4 +5,5 @@ import veterinaria.vargasvet.dto.response.CitaResponse;
 
 public interface CitaService {
     CitaResponse createCita(CitaRequest request);
+    Long iniciarAtencion(Long id);
 }

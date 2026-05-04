@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.*;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
+import veterinaria.vargasvet.domain.enums.TipoConsulta;
 import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
@@ -25,6 +26,8 @@ public class CitaServiceImpl implements CitaService {
     private final EmpleadoRepository empleadoRepository;
     private final ServiciosVeterinariosRepository servicioRepository;
     private final UsuarioRepository usuarioRepository;
+    private final HistoriaClinicaRepository historiaClinicaRepository;
+    private final ConsultaRepository consultaRepository;
     private final CitaMapper citaMapper;
 
     private static final int DURACION_ESTIMADA_MINUTOS = 20;
@@ -95,5 +98,52 @@ public class CitaServiceImpl implements CitaService {
 
         Cita savedCita = citaRepository.save(cita);
         return citaMapper.toResponse(savedCita);
+    }
+
+    @Override
+    @Transactional
+    public Long iniciarAtencion(Long id) {
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
+
+        if (!SecurityUtils.isSuperAdmin()) {
+            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
+            if (cita.getMascota().getApoderado().getUser().getCompany() == null || 
+                !cita.getMascota().getApoderado().getUser().getCompany().getId().equals(currentCompanyId)) {
+                throw new IllegalArgumentException("No tienes permiso para iniciar esta cita");
+            }
+        }
+
+        if (cita.getEstado() != EstadoCita.PROGRAMADA && cita.getEstado() != EstadoCita.REPROGRAMADA) {
+            throw new IllegalArgumentException("Solo se pueden iniciar citas que estén Programadas o Reprogramadas");
+        }
+
+        if (!cita.getMascota().getActivo()) {
+            throw new IllegalArgumentException("No se puede iniciar la atención porque la mascota está inactiva");
+        }
+
+        cita.setEstado(EstadoCita.EN_PROCESO);
+        citaRepository.save(cita);
+
+        HistoriaClinica hc = historiaClinicaRepository.findByMascotaId(cita.getMascota().getId())
+                .orElseGet(() -> {
+                    HistoriaClinica nuevaHc = new HistoriaClinica();
+                    nuevaHc.setMascota(cita.getMascota());
+                    nuevaHc.setNumeroHc(String.format("HC-%06d", cita.getMascota().getId()));
+                    nuevaHc.setActiva(true);
+                    return historiaClinicaRepository.save(nuevaHc);
+                });
+
+        Consulta consulta = new Consulta();
+        consulta.setHistoriaClinica(hc);
+        consulta.setCita(cita);
+        consulta.setVeterinario(cita.getEmpleado());
+        consulta.setFechaConsulta(LocalDateTime.now());
+        consulta.setMotivoConsulta(cita.getMotivoCita());
+        consulta.setTipoConsulta(TipoConsulta.CONTROL_RUTINA); 
+        
+        Consulta savedConsulta = consultaRepository.save(consulta);
+        
+        return savedConsulta.getId();
     }
 }
