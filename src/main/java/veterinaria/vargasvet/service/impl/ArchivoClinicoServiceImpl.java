@@ -125,11 +125,12 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
 
     private void validarCabeceraDicom(MultipartFile file) {
         try {
-            byte[] bytes = file.getBytes();
-            if (bytes.length < 132) {
+            byte[] cabecera = new byte[132];
+            int leidos = file.getInputStream().read(cabecera, 0, 132);
+            if (leidos < 132) {
                 throw new IllegalArgumentException("El archivo .dcm no tiene una cabecera DICOM válida");
             }
-            if (bytes[128] != 'D' || bytes[129] != 'I' || bytes[130] != 'C' || bytes[131] != 'M') {
+            if (cabecera[128] != 'D' || cabecera[129] != 'I' || cabecera[130] != 'C' || cabecera[131] != 'M') {
                 throw new IllegalArgumentException("El archivo .dcm no contiene una cabecera DICOM válida");
             }
         } catch (IOException e) {
