@@ -5,12 +5,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Consulta;
 import veterinaria.vargasvet.domain.entity.HistoriaClinica;
+import veterinaria.vargasvet.domain.enums.EstadoConsulta;
 import veterinaria.vargasvet.dto.request.ConsultaRequest;
 import veterinaria.vargasvet.dto.response.ConsultaResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.mapper.ConsultaMapper;
 import veterinaria.vargasvet.repository.ConsultaRepository;
 import veterinaria.vargasvet.repository.HistoriaClinicaRepository;
+import veterinaria.vargasvet.repository.MascotaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.ConsultaService;
 
@@ -20,6 +22,7 @@ public class ConsultaServiceImpl implements ConsultaService {
 
     private final ConsultaRepository consultaRepository;
     private final HistoriaClinicaRepository historiaClinicaRepository;
+    private final MascotaRepository mascotaRepository;
     private final ConsultaMapper consultaMapper;
 
     @Override
@@ -45,7 +48,16 @@ public class ConsultaServiceImpl implements ConsultaService {
             }
         }
 
-        if (request.getPesoEnConsulta() != null) consulta.setPesoEnConsulta(request.getPesoEnConsulta());
+        if (consulta.getEstado() == EstadoConsulta.CERRADA) {
+            throw new IllegalArgumentException("No se puede modificar una consulta cerrada");
+        }
+
+        if (request.getTipoConsulta() != null) consulta.setTipoConsulta(request.getTipoConsulta());
+        if (request.getPesoEnConsulta() != null) {
+            consulta.setPesoEnConsulta(request.getPesoEnConsulta());
+            consulta.getHistoriaClinica().getMascota().setPeso(request.getPesoEnConsulta());
+            mascotaRepository.save(consulta.getHistoriaClinica().getMascota());
+        }
         if (request.getTemperatura() != null) consulta.setTemperatura(request.getTemperatura());
         if (request.getFrecuenciaCardiaca() != null) consulta.setFrecuenciaCardiaca(request.getFrecuenciaCardiaca());
         if (request.getFrecuenciaRespiratoria() != null) consulta.setFrecuenciaRespiratoria(request.getFrecuenciaRespiratoria());
@@ -56,20 +68,17 @@ public class ConsultaServiceImpl implements ConsultaService {
         if (request.getAnamnesis() != null) consulta.setAnamnesis(request.getAnamnesis());
         if (request.getExamenFisico() != null) consulta.setExamenFisico(request.getExamenFisico());
         if (request.getObservaciones() != null) consulta.setObservaciones(request.getObservaciones());
-        if (request.getMotivoConsulta() != null && !request.getMotivoConsulta().trim().isEmpty()) {
+        if (request.getMotivoConsulta() != null && !request.getMotivoConsulta().isBlank()) {
             consulta.setMotivoConsulta(request.getMotivoConsulta());
         }
 
-        if (request.getAntecedentesEnfermedades() != null || request.getAntecedentesProcedimientos() != null) {
-            HistoriaClinica hc = consulta.getHistoriaClinica();
-            if (request.getAntecedentesEnfermedades() != null) {
-                hc.setEnfermedades(request.getAntecedentesEnfermedades());
-            }
-            if (request.getAntecedentesProcedimientos() != null) {
-                hc.setProcedimientos(request.getAntecedentesProcedimientos());
-            }
-            historiaClinicaRepository.save(hc);
-        }
+        HistoriaClinica hc = consulta.getHistoriaClinica();
+        if (request.getAntecedentesEnfermedades() != null) hc.setEnfermedades(request.getAntecedentesEnfermedades());
+        if (request.getAntecedentesProcedimientos() != null) hc.setProcedimientos(request.getAntecedentesProcedimientos());
+        if (request.getAntecedentesPersonales() != null) hc.setAntecedentesPersonales(request.getAntecedentesPersonales());
+        if (request.getAntecedentesFamiliares() != null) hc.setAntecedentesFamiliares(request.getAntecedentesFamiliares());
+        if (request.getGrupoSanguineo() != null) hc.setGrupoSanguineo(request.getGrupoSanguineo());
+        historiaClinicaRepository.save(hc);
 
         Consulta savedConsulta = consultaRepository.save(consulta);
         return consultaMapper.toResponse(savedConsulta);

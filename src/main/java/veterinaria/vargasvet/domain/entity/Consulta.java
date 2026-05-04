@@ -2,6 +2,8 @@ package veterinaria.vargasvet.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.DynamicUpdate;
+import veterinaria.vargasvet.domain.enums.EstadoConsulta;
 import veterinaria.vargasvet.domain.enums.TipoConsulta;
 
 import java.time.LocalDateTime;
@@ -10,11 +12,20 @@ import java.util.List;
 
 @Data
 @Entity
+@DynamicUpdate
 @Table(name = "consulta")
 public class Consulta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false)
+    private EstadoConsulta estado;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "historia_clinica_id", nullable = false)

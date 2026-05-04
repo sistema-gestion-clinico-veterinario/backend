@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.*;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
+import veterinaria.vargasvet.domain.enums.EstadoConsulta;
 import veterinaria.vargasvet.domain.enums.TipoConsulta;
 import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
@@ -140,7 +141,8 @@ public class CitaServiceImpl implements CitaService {
         consulta.setVeterinario(cita.getEmpleado());
         consulta.setFechaConsulta(LocalDateTime.now());
         consulta.setMotivoConsulta(cita.getMotivoCita());
-        consulta.setTipoConsulta(TipoConsulta.CONTROL_RUTINA); 
+        consulta.setTipoConsulta(TipoConsulta.CONTROL_RUTINA);
+        consulta.setEstado(EstadoConsulta.ABIERTA);
         
         Consulta savedConsulta = consultaRepository.save(consulta);
         
