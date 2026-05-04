@@ -1,8 +1,11 @@
 package veterinaria.vargasvet.service;
 
+import org.springframework.data.domain.Page;
 import veterinaria.vargasvet.dto.request.CompanyDTO;
+import veterinaria.vargasvet.dto.response.CompanyListResponse;
 
 public interface CompanyService {
     CompanyDTO getCompanyInfo();
     CompanyDTO updateCompanyInfo(CompanyDTO companyDTO);
+    Page<CompanyListResponse> listarTodas(int page, int size);
 }

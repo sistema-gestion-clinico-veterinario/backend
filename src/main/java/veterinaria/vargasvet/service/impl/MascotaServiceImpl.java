@@ -1,6 +1,9 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Apoderado;
@@ -170,7 +173,28 @@ public class MascotaServiceImpl implements MascotaService {
         mascota.setActivo(request.getActive());
         mascota.setEstadoModificadoPor(SecurityUtils.getCurrentUserEmail());
         mascota.setFechaModificacionEstado(java.time.LocalDateTime.now());
-        
+
         mascotaRepository.save(mascota);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<MascotaResponse> listar(Integer companyId, String nombre, EspecieMascota especie, String nombrePropietario, int page, int size) {
+        Integer resolvedCompanyId = resolverCompanyId(companyId);
+        String nombreFiltro = (nombre != null && !nombre.isBlank()) ? nombre.trim() : null;
+        String propietarioFiltro = (nombrePropietario != null && !nombrePropietario.isBlank()) ? nombrePropietario.trim() : null;
+        return mascotaRepository.buscar(resolvedCompanyId, nombreFiltro, especie, propietarioFiltro,
+                PageRequest.of(page, size, Sort.unsorted()))
+                .map(mascotaMapper::toResponse);
+    }
+
+    private Integer resolverCompanyId(Integer companyIdParam) {
+        if (SecurityUtils.isSuperAdmin()) {
+            if (companyIdParam == null) {
+                throw new IllegalArgumentException("El parámetro companyId es requerido para SUPER_ADMIN");
+            }
+            return companyIdParam;
+        }
+        return SecurityUtils.getCurrentCompanyId();
     }
 }

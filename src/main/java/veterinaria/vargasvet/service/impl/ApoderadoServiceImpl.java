@@ -20,6 +20,11 @@ import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.ApoderadoService;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import veterinaria.vargasvet.dto.response.ApoderadoListResponse;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -162,5 +167,41 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             mascota.setActivo(nuevoEstado);
             mascotaRepository.save(mascota);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ApoderadoListResponse> listar(Integer companyId, String nombre, String numeroDocumento, int page, int size) {
+        Integer resolvedCompanyId = resolverCompanyId(companyId);
+        String nombreFiltro = (nombre != null && !nombre.isBlank()) ? nombre.trim() : null;
+        String docFiltro = (numeroDocumento != null && !numeroDocumento.isBlank()) ? numeroDocumento.trim() : null;
+        return apoderadoRepository.buscar(resolvedCompanyId, nombreFiltro, docFiltro,
+                PageRequest.of(page, size, Sort.unsorted()))
+                .map(this::toListResponse);
+    }
+
+    private Integer resolverCompanyId(Integer companyIdParam) {
+        if (SecurityUtils.isSuperAdmin()) {
+            if (companyIdParam == null) {
+                throw new IllegalArgumentException("El parámetro companyId es requerido para SUPER_ADMIN");
+            }
+            return companyIdParam;
+        }
+        return SecurityUtils.getCurrentCompanyId();
+    }
+
+    private ApoderadoListResponse toListResponse(Apoderado apoderado) {
+        ApoderadoListResponse response = new ApoderadoListResponse();
+        response.setId(apoderado.getId());
+        response.setTipoDocumento(apoderado.getTipoDocumentoIdentidad());
+        response.setNumeroDocumento(apoderado.getNumeroDocumento());
+        if (apoderado.getUser() != null) {
+            response.setNombre(apoderado.getUser().getNombre());
+            response.setApellido(apoderado.getUser().getApellido());
+            response.setEmail(apoderado.getUser().getEmail());
+            response.setTelefono(apoderado.getUser().getTelefono());
+            response.setActivo(apoderado.getUser().isActivo());
+        }
+        return response;
     }
 }
