@@ -1,11 +1,11 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.*;
-import veterinaria.vargasvet.domain.enums.ERole;
 import veterinaria.vargasvet.dto.Mail;
 import veterinaria.vargasvet.dto.request.VeterinarioRegistrationDTO;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VeterinarioServiceImpl implements VeterinarioService {
 
-    private final EmpleadoVeterinarioRepository empleadoVeterinarioRepository;
+    private final EmpleadoRepository empleadoRepository;
     private final UsuarioRepository usuarioRepository;
     private final RoleRepository roleRepository;
     private final EspecialidadRepository especialidadRepository;
@@ -34,37 +34,39 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     private final UserMapper userMapper;
     private final EmailService emailService;
 
+    @Value("${app.url}")
+    private String appUrl;
+
     @Override
     @Transactional
     public UserProfileDTO registerVeterinario(VeterinarioRegistrationDTO dto) {
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("El correo electrónico ya está en uso");
         }
-        if (empleadoVeterinarioRepository.existsByNumeroColegiatura(dto.getNumeroColegiatura())) {
+        if (empleadoRepository.existsByNumeroColegiatura(dto.getNumeroColegiatura())) {
             throw new IllegalArgumentException("El número de colegiatura ya está registrado");
         }
 
         Usuario usuario = new Usuario();
         usuario.setEmail(dto.getEmail());
-        String tempPassword = UUID.randomUUID().toString().substring(0, 8);
+        usuario.setNombre(dto.getNombre());
+        usuario.setApellido(dto.getApellido());
+        usuario.setDni(dto.getNumeroDocumento());
+        usuario.setTelefono(dto.getTelefono());
+        usuario.setDireccion(dto.getDireccion());
+        String tempPassword = dto.getNumeroDocumento();
         usuario.setPassword(passwordEncoder.encode(tempPassword));
         usuario.setActivo(false);
         usuario.setEmailVerified(false);
         usuario.setVerificationToken(UUID.randomUUID().toString());
 
-        roleRepository.findByName(ERole.ROLE_VETERINARIO)
+        roleRepository.findByName("ROLE_VETERINARIO")
                 .ifPresent(role -> usuario.getRoles().add(role));
 
         Usuario savedUser = usuarioRepository.save(usuario);
 
-
-        EmpleadoVeterinario empleado = new EmpleadoVeterinario();
-        empleado.setNombre(dto.getNombre());
-        empleado.setApellido(dto.getApellido());
+        Empleado empleado = new Empleado();
         empleado.setNumeroColegiatura(dto.getNumeroColegiatura());
-        empleado.setTelefono(dto.getTelefono());
-        empleado.setEmail(dto.getEmail());
-        empleado.setDireccion(dto.getDireccion());
         empleado.setObservaciones(dto.getObservaciones());
         empleado.setFotoUrl(dto.getFotoUrl());
         empleado.setEstado(true);
@@ -72,8 +74,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         empleado.setNumeroDocumentoIdentidad(dto.getNumeroDocumento());
         empleado.setGenero(dto.getGenero());
         empleado.setUser(savedUser);
-        empleado.setCreated_At(LocalDateTime.now());
-
+        empleado.setCreatedAt(LocalDateTime.now());
 
         if (dto.getEspecialidades() != null) {
             empleado.setEspecialidades(dto.getEspecialidades().stream()
@@ -82,11 +83,10 @@ public class VeterinarioServiceImpl implements VeterinarioService {
                     .collect(Collectors.toSet()));
         }
 
-
         tipoEmpleadoRepository.findByNombre("VETERINARIO")
                 .ifPresent(tipo -> empleado.getTiposEmpleado().add(tipo));
 
-        empleadoVeterinarioRepository.save(empleado);
+        empleadoRepository.save(empleado);
 
         sendWelcomeEmail(savedUser, dto.getNombre(), tempPassword);
 
@@ -94,19 +94,22 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     }
 
     private void sendWelcomeEmail(Usuario usuario, String nombre, String tempPassword) {
-        Map<String, Object> model = new HashMap<>();
-        model.put("nombre", nombre);
-        model.put("tempPassword", tempPassword);
-        model.put("companyName", "Patitas Felices");
-        model.put("verificationLink", "http://localhost:8080/api/v1/auth/verify/" + usuario.getVerificationToken());
+        try {
+            Map<String, Object> model = new HashMap<>();
+            model.put("nombre", nombre);
+            model.put("tempPassword", tempPassword);
+            model.put("companyName", "Patitas Felices");
+            model.put("verificationLink", appUrl + "/auth/verify/" + usuario.getVerificationToken());
 
-        Mail mail = emailService.createMail(
-                usuario.getEmail(),
-                "Bienvenido al equipo de Patitas Felices",
-                model
-        );
+            Mail mail = emailService.createMail(
+                    usuario.getEmail(),
+                    "Bienvenido al equipo de Patitas Felices",
+                    model
+            );
 
-   
-        emailService.sendEmail(mail, "email/welcome-template");
+            emailService.sendEmail(mail, "email/welcome-template");
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo enviar el correo de bienvenida a " + usuario.getEmail() + ": " + e.getMessage());
+        }
     }
 }

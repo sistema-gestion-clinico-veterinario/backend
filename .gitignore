@@ -71,6 +71,9 @@ build/
 .DS_Store
 Thumbs.db
 
+# ===== UPLOADS =====
+uploads/
+
 # ===== GITKEEP =====
 # Los archivos .gitkeep se pueden mantener si deseas preservar carpetas vacías.
 !.gitkeep

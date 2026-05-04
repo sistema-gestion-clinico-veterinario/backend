@@ -26,8 +26,17 @@ public class UsuarioPrincipal implements UserDetails {
     }
 
     public static UsuarioPrincipal create(Usuario usuario) {
-        String roleName = usuario.getRole() != null ? usuario.getRole().getName().name() : "ROLE_USER";
-        GrantedAuthority authority = new SimpleGrantedAuthority(roleName);
+        java.util.List<GrantedAuthority> authorities = new java.util.ArrayList<>();
+        if (usuario.getRoles() != null) {
+            for (veterinaria.vargasvet.domain.entity.Role role : usuario.getRoles()) {
+                authorities.add(new SimpleGrantedAuthority(role.getName()));
+                if (role.getPermissions() != null) {
+                    for (veterinaria.vargasvet.domain.entity.Permission perm : role.getPermissions()) {
+                        authorities.add(new SimpleGrantedAuthority(perm.getName()));
+                    }
+                }
+            }
+        }
 
         Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
 
@@ -35,7 +44,7 @@ public class UsuarioPrincipal implements UserDetails {
                 usuario.getId(),
                 usuario.getEmail(),
                 usuario.getPassword(),
-                Collections.singletonList(authority),
+                authorities,
                 companyId
         );
     }

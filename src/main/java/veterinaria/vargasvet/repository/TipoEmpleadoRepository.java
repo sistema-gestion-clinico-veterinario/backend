@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface TipoEmpleadoRepository extends JpaRepository<TipoEmpleado, Long> {
     Optional<TipoEmpleado> findByNombre(String nombre);
+    java.util.List<TipoEmpleado> findByCompanyId(Integer companyId);
+    Optional<TipoEmpleado> findByNombreAndCompanyId(String nombre, Integer companyId);
 }

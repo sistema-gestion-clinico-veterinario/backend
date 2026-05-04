@@ -6,9 +6,9 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import veterinaria.vargasvet.domain.enums.ERole;
 import veterinaria.vargasvet.domain.entity.Permission;
 import veterinaria.vargasvet.domain.entity.Usuario;
+import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.dto.request.LoginDTO;
 import veterinaria.vargasvet.dto.request.UserRegistrationDTO;
 import veterinaria.vargasvet.dto.response.AuthResponse;
@@ -59,7 +59,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         registrationDTO.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
         Usuario usuario = userMapper.toEntity(registrationDTO);
         
-        roleRepository.findByName(ERole.ROLE_VETERINARIO)
+        roleRepository.findByName("ROLE_VETERINARIO")
                 .ifPresent(role -> usuario.getRoles().add(role));
 
         String token = UUID.randomUUID().toString();
@@ -75,19 +75,23 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     private void sendVerificationEmail(Usuario usuario) {
-        Map<String, Object> model = new HashMap<>();
-        model.put("nombre", usuario.getEmail());
-        model.put("companyName", companyName);
-        model.put("companyLogo", companyLogo);
-        model.put("verificationLink", appUrl + "/auth/verify/" + usuario.getVerificationToken());
+        try {
+            Map<String, Object> model = new HashMap<>();
+            model.put("nombre", usuario.getEmail());
+            model.put("companyName", companyName);
+            model.put("companyLogo", companyLogo);
+            model.put("verificationLink", appUrl + "/auth/verify/" + usuario.getVerificationToken());
 
-        Mail mail = emailService.createMail(
-                usuario.getEmail(),
-                "Bienvenido a " + companyName + " - Activa tu cuenta",
-                model
-        );
+            Mail mail = emailService.createMail(
+                    usuario.getEmail(),
+                    "Bienvenido a " + companyName + " - Activa tu cuenta",
+                    model
+            );
 
-        emailService.sendEmail(mail, "email/welcome-template");
+            emailService.sendEmail(mail, "email/welcome-template");
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo enviar el correo de verificación a " + usuario.getEmail() + ": " + e.getMessage());
+        }
     }
 
     @Override
@@ -136,12 +140,12 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             throw new DisabledException("La cuenta está suspendida");
         }
 
-        if (usuario.getApoderado() != null && usuario.getEmpleadoVeterinario() == null && usuario.getRole() == null) {
+        if (usuario.getApoderado() != null && usuario.getEmpleado() == null && usuario.getRoles().isEmpty()) {
             throw new BadCredentialsException("Los apoderados no tienen acceso al sistema");
         }
 
         List<String> userRoles = usuario.getRoles().stream()
-                .map(role -> role.getName().name())
+                .map(Role::getName)
                 .collect(Collectors.toList());
 
         Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
@@ -162,6 +166,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setPermissions(permissions);
         response.setNombreCompleto(resolveNombreCompleto(usuario));
         response.setUserType(resolveUserType(usuario));
+        response.setPasswordChanged(usuario.isPasswordChanged());
 
         return response;
     }
@@ -181,16 +186,31 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         usuarioRepository.save(usuario);
     }
 
+    @Override
+    @Transactional
+    public void changePassword(String email, veterinaria.vargasvet.dto.request.ChangePasswordDTO dto) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        if (!passwordEncoder.matches(dto.getOldPassword(), usuario.getPassword())) {
+            throw new BadCredentialsException("La contraseña actual es incorrecta");
+        }
+
+        usuario.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        usuario.setPasswordChanged(true);
+        usuarioRepository.save(usuario);
+    }
+
     private String resolveNombreCompleto(Usuario usuario) {
-        if (usuario.getEmpleadoVeterinario() != null) {
-            return usuario.getEmpleadoVeterinario().getNombre() + " " + usuario.getEmpleadoVeterinario().getApellido();
+        if (usuario.getNombre() != null) {
+            return usuario.getNombre() + (usuario.getApellido() != null ? " " + usuario.getApellido() : "");
         }
         return usuario.getEmail();
     }
 
     private String resolveUserType(Usuario usuario) {
-        if (usuario.getRoles().stream().anyMatch(r -> r.getName() == ERole.ROLE_SUPER_ADMIN)) return "SUPER_ADMIN";
-        if (usuario.getEmpleadoVeterinario() != null) return "EMPLEADO";
+        if (usuario.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"))) return "SUPER_ADMIN";
+        if (usuario.getEmpleado() != null) return "EMPLEADO";
         return "USUARIO";
     }
 }
