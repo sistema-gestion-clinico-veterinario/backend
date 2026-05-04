@@ -19,15 +19,15 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
 
     @Query(value = "SELECT m FROM Mascota m JOIN m.apoderado a JOIN a.user u " +
                    "WHERE u.company.id = :companyId " +
-                   "AND (:nombre IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +
+                   "AND (CAST(:nombre AS text) IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                    "AND (:especie IS NULL OR m.especie = :especie) " +
-                   "AND (:nombrePropietario IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', :nombrePropietario, '%'))) " +
+                   "AND (CAST(:nombrePropietario AS text) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', CAST(:nombrePropietario AS text), '%'))) " +
                    "ORDER BY m.nombreCompleto ASC",
            countQuery = "SELECT COUNT(m) FROM Mascota m JOIN m.apoderado a JOIN a.user u " +
                         "WHERE u.company.id = :companyId " +
-                        "AND (:nombre IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +
+                        "AND (CAST(:nombre AS text) IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                         "AND (:especie IS NULL OR m.especie = :especie) " +
-                        "AND (:nombrePropietario IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', :nombrePropietario, '%')))")
+                        "AND (CAST(:nombrePropietario AS text) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', CAST(:nombrePropietario AS text), '%')))")
     Page<Mascota> buscar(@Param("companyId") Integer companyId,
                          @Param("nombre") String nombre,
                          @Param("especie") EspecieMascota especie,
