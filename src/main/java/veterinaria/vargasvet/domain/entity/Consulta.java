@@ -46,6 +46,15 @@ public class Consulta {
     @Column(name = "mucosas")
     private String mucosas;
 
+    @Column(name = "turgencia_piel")
+    private String turgenciaPiel;
+
+    @Column(name = "vacunacion_al_dia")
+    private Boolean vacunacionAlDia;
+
+    @Column(name = "desparasitacion_al_dia")
+    private Boolean desparasitacionAlDia;
+
     @Column(name = "motivo_consulta", columnDefinition = "TEXT", nullable = false)
     private String motivoConsulta;
 
