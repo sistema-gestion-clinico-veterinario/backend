@@ -15,6 +15,9 @@ public class HistoriaClinica {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "numero_hc", unique = true, nullable = false, length = 20)
+    private String numeroHc;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mascota_id", nullable = false, unique = true)
     private Mascota mascota;

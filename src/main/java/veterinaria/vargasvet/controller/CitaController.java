@@ -25,4 +25,11 @@ public class CitaController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Cita programada exitosamente", response));
     }
+
+    @PatchMapping("/{id}/iniciar")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO')")
+    public ResponseEntity<ApiResponse<Long>> iniciarAtencion(@PathVariable Long id) {
+        Long consultaId = citaService.iniciarAtencion(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Atención iniciada con éxito", consultaId));
+    }
 }
