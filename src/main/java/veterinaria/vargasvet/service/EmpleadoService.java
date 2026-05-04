@@ -7,7 +7,8 @@ import veterinaria.vargasvet.dto.response.UserProfileDTO;
 
 public interface EmpleadoService {
     UserProfileDTO registerEmpleado(EmpleadoRequest dto);
-    UserProfileDTO updateEmpleado(Integer usuarioId, EmpleadoRequest dto);
-    void cambiarEstado(Integer usuarioId, Boolean nuevoEstado);
+    UserProfileDTO updateEmpleado(Long empleadoId, EmpleadoRequest dto);
+    void cambiarEstado(Long empleadoId, Boolean nuevoEstado);
     Page<EmpleadoListResponse> listar(Integer companyId, String nombre, Long tipoEmpleadoId, Long especialidadId, int page, int size);
+    EmpleadoRequest findById(Long id);
 }

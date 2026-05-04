@@ -34,6 +34,13 @@ public class EmpleadoController {
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    public ResponseEntity<ApiResponse<EmpleadoRequest>> findById(@PathVariable Long id) {
+        EmpleadoRequest empleado = empleadoService.findById(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Empleado recuperado con éxito", empleado));
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'USER_CREATE')")
     public ResponseEntity<ApiResponse<UserProfileDTO>> registerEmpleado(@Valid @RequestBody EmpleadoRequest dto) {
@@ -44,14 +51,14 @@ public class EmpleadoController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'USER_UPDATE')")
-    public ResponseEntity<ApiResponse<UserProfileDTO>> updateEmpleado(@PathVariable Integer id, @RequestBody EmpleadoRequest dto) {
+    public ResponseEntity<ApiResponse<UserProfileDTO>> updateEmpleado(@PathVariable Long id, @RequestBody EmpleadoRequest dto) {
         UserProfileDTO profile = empleadoService.updateEmpleado(id, dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos del empleado actualizados exitosamente", profile));
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> cambiarEstado(@PathVariable Integer id, @RequestParam Boolean active) {
+    public ResponseEntity<ApiResponse<Void>> cambiarEstado(@PathVariable Long id, @RequestParam Boolean active) {
         empleadoService.cambiarEstado(id, active);
         String mensaje = active ? "Empleado activado exitosamente" : "Empleado desactivado exitosamente";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, null));

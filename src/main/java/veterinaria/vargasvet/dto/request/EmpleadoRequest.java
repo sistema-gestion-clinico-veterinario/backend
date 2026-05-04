@@ -12,6 +12,7 @@ import java.util.Set;
 
 @Data
 public class EmpleadoRequest {
+    private Long id;
 
     @NotBlank(message = "El nombre es obligatorio")
     private String nombre;

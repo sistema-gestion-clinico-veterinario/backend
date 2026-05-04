@@ -190,6 +190,31 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         return SecurityUtils.getCurrentCompanyId();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ApoderadoRequest findById(Long id) {
+        Apoderado apoderado = apoderadoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Apoderado no encontrado con ID: " + id));
+
+        Usuario usuario = apoderado.getUser();
+        ApoderadoRequest dto = new ApoderadoRequest();
+        dto.setId(apoderado.getId());
+        dto.setNombre(usuario.getNombre());
+        dto.setApellido(usuario.getApellido());
+        dto.setEmail(usuario.getEmail());
+        dto.setNumeroDocumento(usuario.getDni());
+        dto.setTelefono(usuario.getTelefono());
+        dto.setDireccion(usuario.getDireccion());
+        dto.setCompanyId(usuario.getCompany() != null ? usuario.getCompany().getId() : null);
+
+        dto.setGenero(apoderado.getGenero());
+        dto.setTipoDocumento(apoderado.getTipoDocumentoIdentidad());
+        dto.setReferencias(apoderado.getReferencias());
+        dto.setObservaciones(apoderado.getObservaciones());
+
+        return dto;
+    }
+
     private ApoderadoListResponse toListResponse(Apoderado apoderado) {
         ApoderadoListResponse response = new ApoderadoListResponse();
         response.setId(apoderado.getId());

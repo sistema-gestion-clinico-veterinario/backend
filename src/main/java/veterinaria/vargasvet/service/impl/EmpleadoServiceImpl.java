@@ -23,7 +23,6 @@ import veterinaria.vargasvet.dto.response.EmpleadoListResponse;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -115,8 +114,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
             if (dto.getEspecialidades() != null) {
                 empleado.setEspecialidades(dto.getEspecialidades().stream()
-                        .map(nombre -> especialidadRepository.findByNombre(nombre)
-                                .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada: " + nombre)))
+                        .map(nombre -> especialidadRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
+                                .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada: " + nombre + " para la empresa")))
                         .collect(Collectors.toSet()));
             }
         }
@@ -124,8 +123,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
   
         if (dto.getTiposEmpleado() != null) {
             empleado.setTiposEmpleado(dto.getTiposEmpleado().stream()
-                    .map(nombre -> tipoEmpleadoRepository.findByNombre(nombre)
-                            .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado: " + nombre)))
+                    .map(nombre -> tipoEmpleadoRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
+                            .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado: " + nombre + " para la empresa")))
                     .collect(Collectors.toSet()));
         }
 
@@ -136,11 +135,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         return userMapper.toProfileDTO(savedUser);
     }
 
-    @Override
     @Transactional
-    public UserProfileDTO updateEmpleado(Integer usuarioId, EmpleadoRequest dto) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + usuarioId));
+    @Override
+    public UserProfileDTO updateEmpleado(Long empleadoId, EmpleadoRequest dto) {
+        Empleado empleado = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado con ID: " + empleadoId));
+
+        Usuario usuario = empleado.getUser();
 
         Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
         if (!SecurityUtils.isSuperAdmin()) {
@@ -148,6 +149,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 throw new IllegalArgumentException("No tienes permiso para editar a un empleado de otra empresa");
             }
         }
+
+        Integer companyIdToUse = usuario.getCompany().getId();
 
 
         if (dto.getNumeroDocumento() != null && !dto.getNumeroDocumento().equals(usuario.getDni())) {
@@ -165,24 +168,26 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
 
         if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
-
             boolean isTargetSuperAdmin = usuario.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"));
             if (isTargetSuperAdmin && !SecurityUtils.isSuperAdmin()) {
                 throw new IllegalArgumentException("Solo un Super Admin puede modificar los roles de otro Super Admin");
             }
 
-            usuario.getRoles().clear();
+            java.util.Set<Role> newRoles = new java.util.HashSet<>();
             for (String roleName : dto.getRoles()) {
                 Role role = roleRepository.findByName(roleName)
                         .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado: " + roleName));
-                usuario.getRoles().add(role);
+                newRoles.add(role);
             }
+
+            // Sincronizar roles para evitar errores de llave duplicada en Hibernate
+            usuario.getRoles().retainAll(newRoles);
+            usuario.getRoles().addAll(newRoles);
         }
 
-        usuarioRepository.save(usuario);
+        usuarioRepository.saveAndFlush(usuario);
 
-        Empleado empleado = empleadoRepository.findByUserId(usuarioId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ficha de empleado no encontrada para este usuario"));
+        // Los datos del usuario ya están cargados en la variable 'usuario'
 
         if (dto.getGenero() != null) empleado.setGenero(dto.getGenero());
         if (dto.getTipoDocumento() != null) empleado.setTipoDocumentoIdentidad(dto.getTipoDocumento());
@@ -193,21 +198,25 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
 
         if (dto.getTiposEmpleado() != null) {
-            empleado.getTiposEmpleado().clear();
+            java.util.Set<TipoEmpleado> newTipos = new java.util.HashSet<>();
             for (String nombre : dto.getTiposEmpleado()) {
-                TipoEmpleado tipo = tipoEmpleadoRepository.findByNombre(nombre)
-                        .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado: " + nombre));
-                empleado.getTiposEmpleado().add(tipo);
+                TipoEmpleado tipo = tipoEmpleadoRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
+                        .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado: " + nombre + " para la empresa"));
+                newTipos.add(tipo);
             }
+            empleado.getTiposEmpleado().retainAll(newTipos);
+            empleado.getTiposEmpleado().addAll(newTipos);
         }
         boolean isVeterinario = usuario.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_VETERINARIO"));
         if (isVeterinario && dto.getEspecialidades() != null) {
-            empleado.getEspecialidades().clear();
+            java.util.Set<Especialidad> newEspecialidades = new java.util.HashSet<>();
             for (String nombre : dto.getEspecialidades()) {
-                Especialidad esp = especialidadRepository.findByNombre(nombre)
-                        .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada: " + nombre));
-                empleado.getEspecialidades().add(esp);
+                Especialidad esp = especialidadRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
+                        .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada: " + nombre + " para la empresa"));
+                newEspecialidades.add(esp);
             }
+            empleado.getEspecialidades().retainAll(newEspecialidades);
+            empleado.getEspecialidades().addAll(newEspecialidades);
         }
 
         empleado.setUpdatedAt(LocalDateTime.now());
@@ -216,14 +225,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         return userMapper.toProfileDTO(usuario);
     }
 
-    @Override
     @Transactional
-    public void cambiarEstado(Integer usuarioId, Boolean nuevoEstado) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + usuarioId));
+    @Override
+    public void cambiarEstado(Long empleadoId, Boolean nuevoEstado) {
+        Empleado empleado = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado con ID: " + empleadoId));
 
-        Empleado empleado = empleadoRepository.findByUserId(usuarioId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ficha de empleado no encontrada"));
+        Usuario usuario = empleado.getUser();
 
         String adminEmail = SecurityUtils.getCurrentUserEmail();
         
@@ -284,6 +292,35 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             return companyIdParam;
         }
         return SecurityUtils.getCurrentCompanyId();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EmpleadoRequest findById(Long id) {
+        Empleado empleado = empleadoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado con ID: " + id));
+
+        Usuario usuario = empleado.getUser();
+        EmpleadoRequest dto = new EmpleadoRequest();
+        dto.setId(empleado.getId());
+        dto.setNombre(usuario.getNombre());
+        dto.setApellido(usuario.getApellido());
+        dto.setEmail(usuario.getEmail());
+        dto.setNumeroDocumento(usuario.getDni());
+        dto.setTelefono(usuario.getTelefono());
+        dto.setDireccion(usuario.getDireccion());
+        dto.setRoles(usuario.getRoles().stream().map(r -> r.getName()).collect(Collectors.toSet()));
+        dto.setCompanyId(usuario.getCompany() != null ? usuario.getCompany().getId() : null);
+
+        dto.setGenero(empleado.getGenero());
+        dto.setTipoDocumento(empleado.getTipoDocumentoIdentidad());
+        dto.setObservaciones(empleado.getObservaciones());
+        dto.setFotoUrl(empleado.getFotoUrl());
+        dto.setNumeroColegiatura(empleado.getNumeroColegiatura());
+        dto.setEspecialidades(empleado.getEspecialidades().stream().map(e -> e.getNombre()).collect(Collectors.toSet()));
+        dto.setTiposEmpleado(empleado.getTiposEmpleado().stream().map(t -> t.getNombre()).collect(Collectors.toSet()));
+
+        return dto;
     }
 
     private EmpleadoListResponse toListResponse(Empleado empleado) {
