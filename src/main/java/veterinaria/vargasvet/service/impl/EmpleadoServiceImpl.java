@@ -61,10 +61,21 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         usuario.setEmailVerified(false);
         usuario.setVerificationToken(UUID.randomUUID().toString());
 
-        if (dto.getCompanyId() != null) {
-            usuario.setCompany(companyRepository.findById(dto.getCompanyId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
+        Integer companyIdToUse;
+        if (SecurityUtils.isSuperAdmin()) {
+            if (dto.getCompanyId() == null) {
+                throw new IllegalArgumentException("El Super Admin debe proporcionar un companyId");
+            }
+            companyIdToUse = dto.getCompanyId();
+        } else {
+            companyIdToUse = SecurityUtils.getCurrentCompanyId();
+            if (companyIdToUse == null) {
+                throw new IllegalArgumentException("No se pudo determinar la empresa del administrador");
+            }
         }
+
+        usuario.setCompany(companyRepository.findById(companyIdToUse)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
 
      
         if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
@@ -198,6 +209,36 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         empleadoRepository.save(empleado);
 
         return userMapper.toProfileDTO(usuario);
+    }
+
+    @Override
+    @Transactional
+    public void cambiarEstado(Integer usuarioId, Boolean nuevoEstado) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + usuarioId));
+
+        Empleado empleado = empleadoRepository.findByUserId(usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ficha de empleado no encontrada"));
+
+        String adminEmail = SecurityUtils.getCurrentUserEmail();
+        
+        if (usuario.getEmail().equals(adminEmail)) {
+            throw new IllegalArgumentException("No puedes cambiar tu propio estado de actividad");
+        }
+        Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
+        if (!SecurityUtils.isSuperAdmin()) {
+            if (usuario.getCompany() == null || !usuario.getCompany().getId().equals(currentCompanyId)) {
+                throw new IllegalArgumentException("No tienes permiso para modificar el estado de un empleado de otra empresa");
+            }
+        }
+        empleado.setEstado(nuevoEstado);
+        empleado.setEstadoModificadoPor(adminEmail);
+        empleado.setFechaModificacionEstado(LocalDateTime.now());
+        empleado.setUpdatedAt(LocalDateTime.now());
+        usuario.setActivo(nuevoEstado);
+
+        empleadoRepository.save(empleado);
+        usuarioRepository.save(usuario);
     }
 
     private void sendWelcomeEmail(Usuario usuario, String nombre, String tempPassword) {

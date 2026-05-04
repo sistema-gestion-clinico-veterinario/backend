@@ -36,10 +36,21 @@ public class EspecialidadServiceImpl implements EspecialidadService {
     @Override
     @Transactional
     public Especialidad create(Especialidad especialidad) {
-        Integer companyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
-        if (companyId != null) {
-            especialidad.setCompany(companyRepository.findById(companyId).orElse(null));
+        Integer companyIdToUse;
+        if (veterinaria.vargasvet.security.SecurityUtils.isSuperAdmin()) {
+            if (especialidad.getCompany() == null || especialidad.getCompany().getId() == null) {
+                throw new IllegalArgumentException("El Super Admin debe proporcionar una empresa para la especialidad");
+            }
+            companyIdToUse = especialidad.getCompany().getId();
+        } else {
+            companyIdToUse = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+            if (companyIdToUse == null) {
+                throw new IllegalArgumentException("No se pudo determinar la empresa del administrador");
+            }
         }
+        
+        especialidad.setCompany(companyRepository.findById(companyIdToUse)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
         especialidad.setCreatedAt(LocalDateTime.now());
         return especialidadRepository.save(especialidad);
     }

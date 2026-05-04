@@ -72,6 +72,12 @@ public class Empleado {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private Usuario user;
 
+    @Column(name = "estado_modificado_por")
+    private String estadoModificadoPor;
+
+    @Column(name = "fecha_modificacion_estado")
+    private LocalDateTime fechaModificacionEstado;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

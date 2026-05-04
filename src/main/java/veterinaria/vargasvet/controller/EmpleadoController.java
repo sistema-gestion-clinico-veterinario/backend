@@ -33,4 +33,12 @@ public class EmpleadoController {
         UserProfileDTO profile = empleadoService.updateEmpleado(id, dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos del empleado actualizados exitosamente", profile));
     }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'USER_UPDATE')")
+    public ResponseEntity<ApiResponse<Void>> cambiarEstado(@PathVariable Integer id, @RequestParam Boolean active) {
+        empleadoService.cambiarEstado(id, active);
+        String mensaje = active ? "Empleado activado exitosamente" : "Empleado desactivado exitosamente";
+        return ResponseEntity.ok(new ApiResponse<>(true, mensaje, null));
+    }
 }

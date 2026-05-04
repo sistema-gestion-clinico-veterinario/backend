@@ -30,10 +30,21 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
     @Override
     @Transactional
     public TipoEmpleado create(TipoEmpleado tipo) {
-        Integer companyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
-        if (companyId != null) {
-            tipo.setCompany(companyRepository.findById(companyId).orElse(null));
+        Integer companyIdToUse;
+        if (veterinaria.vargasvet.security.SecurityUtils.isSuperAdmin()) {
+            if (tipo.getCompany() == null || tipo.getCompany().getId() == null) {
+                throw new IllegalArgumentException("El Super Admin debe proporcionar una empresa para el tipo de empleado");
+            }
+            companyIdToUse = tipo.getCompany().getId();
+        } else {
+            companyIdToUse = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+            if (companyIdToUse == null) {
+                throw new IllegalArgumentException("No se pudo determinar la empresa del administrador");
+            }
         }
+        
+        tipo.setCompany(companyRepository.findById(companyIdToUse)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
         tipo.setCreatedAt(LocalDateTime.now());
         return tipoEmpleadoRepository.save(tipo);
     }

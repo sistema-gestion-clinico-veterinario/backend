@@ -7,4 +7,5 @@ import veterinaria.vargasvet.dto.response.UserProfileDTO;
 public interface EmpleadoService {
     UserProfileDTO registerEmpleado(EmpleadoRegistrationDTO dto);
     UserProfileDTO updateEmpleado(Integer usuarioId, EmpleadoUpdateDTO dto);
+    void cambiarEstado(Integer usuarioId, Boolean nuevoEstado);
 }
