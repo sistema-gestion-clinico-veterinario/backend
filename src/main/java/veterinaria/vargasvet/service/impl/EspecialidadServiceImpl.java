@@ -16,9 +16,14 @@ import java.util.List;
 public class EspecialidadServiceImpl implements EspecialidadService {
 
     private final EspecialidadRepository especialidadRepository;
+    private final veterinaria.vargasvet.repository.CompanyRepository companyRepository;
 
     @Override
     public List<Especialidad> findAll() {
+        Integer companyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+        if (companyId != null) {
+            return especialidadRepository.findByCompanyId(companyId);
+        }
         return especialidadRepository.findAll();
     }
 
@@ -31,6 +36,21 @@ public class EspecialidadServiceImpl implements EspecialidadService {
     @Override
     @Transactional
     public Especialidad create(Especialidad especialidad) {
+        Integer companyIdToUse;
+        if (veterinaria.vargasvet.security.SecurityUtils.isSuperAdmin()) {
+            if (especialidad.getCompany() == null || especialidad.getCompany().getId() == null) {
+                throw new IllegalArgumentException("El Super Admin debe proporcionar una empresa para la especialidad");
+            }
+            companyIdToUse = especialidad.getCompany().getId();
+        } else {
+            companyIdToUse = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+            if (companyIdToUse == null) {
+                throw new IllegalArgumentException("No se pudo determinar la empresa del administrador");
+            }
+        }
+        
+        especialidad.setCompany(companyRepository.findById(companyIdToUse)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
         especialidad.setCreatedAt(LocalDateTime.now());
         return especialidadRepository.save(especialidad);
     }
@@ -40,6 +60,7 @@ public class EspecialidadServiceImpl implements EspecialidadService {
     public Especialidad update(Long id, Especialidad especialidad) {
         Especialidad existing = findById(id);
         existing.setNombre(especialidad.getNombre());
+        existing.setDescripcion(especialidad.getDescripcion());
         existing.setUpdatedAt(LocalDateTime.now());
         return especialidadRepository.save(existing);
     }

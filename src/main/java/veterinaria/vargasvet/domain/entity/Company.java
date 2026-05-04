@@ -26,6 +26,17 @@ public class Company {
     private String phone;
     private String email;
 
+    @Column(name = "logo_url")
+    private String logoUrl;
+
+    private String website;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "business_hours")
+    private String businessHours;
+
     @Column(name = "activo", nullable = false)
     private boolean activo = true;
 

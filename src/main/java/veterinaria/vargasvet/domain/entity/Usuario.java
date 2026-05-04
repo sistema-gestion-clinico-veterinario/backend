@@ -22,8 +22,23 @@ public class Usuario {
     @Column(nullable = false)
     private String password;
 
+    @Column
+    private String nombre;
+
+    @Column
+    private String apellido;
+
+    @Column
+    private String dni;
+
+    @Column
+    private String telefono;
+
+    @Column
+    private String direccion;
+
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private EmpleadoVeterinario empleadoVeterinario;
+    private Empleado empleado;
 
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Apoderado apoderado;
@@ -35,6 +50,9 @@ public class Usuario {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private java.util.Set<Role> roles = new java.util.HashSet<>();
+
+    @Column(nullable = false)
+    private boolean passwordChanged = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")

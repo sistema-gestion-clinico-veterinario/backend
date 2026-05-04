@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/tipos-empleado")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
+@PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
 public class TipoEmpleadoController {
 
     private final TipoEmpleadoService tipoEmpleadoService;

@@ -25,8 +25,8 @@ public class Consulta {
     private Cita cita;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "veterinario_id", nullable = false)
-    private EmpleadoVeterinario veterinario;
+    @JoinColumn(name = "veterinario_id")
+    private Empleado veterinario;
 
     @Column(name = "fecha_consulta", nullable = false)
     private LocalDateTime fechaConsulta;

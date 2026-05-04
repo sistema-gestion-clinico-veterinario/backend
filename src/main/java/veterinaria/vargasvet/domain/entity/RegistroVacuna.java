@@ -24,8 +24,8 @@ public class RegistroVacuna {
     private Consulta consulta;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "veterinario_id", nullable = true)
-    private EmpleadoVeterinario veterinario;
+    @JoinColumn(name = "veterinario_id")
+    private Empleado veterinario;
 
     @Column(name = "nombre_vacuna", nullable = false, length = 200)
     private String nombreVacuna;
