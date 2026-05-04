@@ -140,7 +140,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             throw new DisabledException("La cuenta está suspendida");
         }
 
-        if (usuario.getApoderado() != null && usuario.getEmpleadoVeterinario() == null && usuario.getRoles().isEmpty()) {
+        if (usuario.getApoderado() != null && usuario.getEmpleado() == null && usuario.getRoles().isEmpty()) {
             throw new BadCredentialsException("Los apoderados no tienen acceso al sistema");
         }
 
@@ -210,7 +210,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
     private String resolveUserType(Usuario usuario) {
         if (usuario.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"))) return "SUPER_ADMIN";
-        if (usuario.getEmpleadoVeterinario() != null) return "EMPLEADO";
+        if (usuario.getEmpleado() != null) return "EMPLEADO";
         return "USUARIO";
     }
 }

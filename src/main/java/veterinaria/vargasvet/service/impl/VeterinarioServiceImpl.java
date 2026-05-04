@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class VeterinarioServiceImpl implements VeterinarioService {
 
-    private final EmpleadoVeterinarioRepository empleadoVeterinarioRepository;
+    private final EmpleadoRepository empleadoRepository;
     private final UsuarioRepository usuarioRepository;
     private final RoleRepository roleRepository;
     private final EspecialidadRepository especialidadRepository;
@@ -43,7 +43,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("El correo electrónico ya está en uso");
         }
-        if (empleadoVeterinarioRepository.existsByNumeroColegiatura(dto.getNumeroColegiatura())) {
+        if (empleadoRepository.existsByNumeroColegiatura(dto.getNumeroColegiatura())) {
             throw new IllegalArgumentException("El número de colegiatura ya está registrado");
         }
 
@@ -65,7 +65,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
 
         Usuario savedUser = usuarioRepository.save(usuario);
 
-        EmpleadoVeterinario empleado = new EmpleadoVeterinario();
+        Empleado empleado = new Empleado();
         empleado.setNumeroColegiatura(dto.getNumeroColegiatura());
         empleado.setObservaciones(dto.getObservaciones());
         empleado.setFotoUrl(dto.getFotoUrl());
@@ -74,7 +74,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         empleado.setNumeroDocumentoIdentidad(dto.getNumeroDocumento());
         empleado.setGenero(dto.getGenero());
         empleado.setUser(savedUser);
-        empleado.setCreated_At(LocalDateTime.now());
+        empleado.setCreatedAt(LocalDateTime.now());
 
         if (dto.getEspecialidades() != null) {
             empleado.setEspecialidades(dto.getEspecialidades().stream()
@@ -86,7 +86,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         tipoEmpleadoRepository.findByNombre("VETERINARIO")
                 .ifPresent(tipo -> empleado.getTiposEmpleado().add(tipo));
 
-        empleadoVeterinarioRepository.save(empleado);
+        empleadoRepository.save(empleado);
 
         sendWelcomeEmail(savedUser, dto.getNombre(), tempPassword);
 

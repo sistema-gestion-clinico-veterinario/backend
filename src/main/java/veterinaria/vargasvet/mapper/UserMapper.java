@@ -3,7 +3,7 @@ package veterinaria.vargasvet.mapper;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
-import veterinaria.vargasvet.domain.entity.EmpleadoVeterinario;
+import veterinaria.vargasvet.domain.entity.Empleado;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.dto.request.UserRegistrationDTO;
@@ -35,14 +35,14 @@ public class UserMapper {
     public Usuario toEmpleadoEntity(UserRegistrationDTO dto) {
         Usuario usuario = toEntity(dto);
 
-        EmpleadoVeterinario empleado = new EmpleadoVeterinario();
+        Empleado empleado = new Empleado();
         empleado.setNumeroDocumentoIdentidad(dto.getDni());
         empleado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
         empleado.setGenero(Genero.MASCULINO);
         empleado.setEstado(true);
         empleado.setUser(usuario);
 
-        usuario.setEmpleadoVeterinario(empleado);
+        usuario.setEmpleado(empleado);
         return usuario;
     }
 

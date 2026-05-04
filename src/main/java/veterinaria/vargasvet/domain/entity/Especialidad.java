@@ -35,6 +35,6 @@ public class Especialidad {
     @JsonIgnore
     @ToString.Exclude
     @ManyToMany(mappedBy = "especialidades")
-    private List<EmpleadoVeterinario> empleados;
+    private List<Empleado> empleados;
 
 }

@@ -10,20 +10,19 @@ import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Data
 @Entity
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@Table(name = "empleado_veterinario")
-public class EmpleadoVeterinario {
+@Table(name = "empleado")
+public class Empleado {
     @EqualsAndHashCode.Include
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "fecha_nacimiento", nullable = true)
+    @Column(name = "fecha_nacimiento")
     private LocalDate fechaNacimiento;
 
     @ToString.Exclude
@@ -33,22 +32,26 @@ public class EmpleadoVeterinario {
             joinColumns = @JoinColumn(name = "empleado_id"),
             inverseJoinColumns = @JoinColumn(name = "especialidad_id"))
     private Set<Especialidad> especialidades = new HashSet<>();
+
     @ToString.Exclude
-    @OneToMany(mappedBy = "empleadoVeterinario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "empleado", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<EmpleadoServicio> servicios = new HashSet<>();
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipoDocumentoIdentidad", nullable = false)
+    @Column(name = "tipo_documento_identidad", nullable = false)
     private TipoDocumentoIdentidad tipoDocumentoIdentidad;
-    @Column(name = "numeroDocumentoIdentidad",nullable = false)
+
+    @Column(name = "numero_documento_identidad", nullable = false)
     private String numeroDocumentoIdentidad;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "Genero", nullable = false)
+    @Column(name = "genero", nullable = false)
     private Genero genero;
 
     @Column(name = "estado", nullable = false)
     private Boolean estado = true;
 
-    @Column(name = "numero_colegiatura", nullable = false, unique = true)
+    @Column(name = "numero_colegiatura", unique = true) // Nullable para no-veterinarios
     private String numeroColegiatura;
 
     @Column(name = "observaciones", columnDefinition = "TEXT")
@@ -65,11 +68,10 @@ public class EmpleadoVeterinario {
     )
     private Set<TipoEmpleado> tiposEmpleado = new HashSet<>();
 
-
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
-    @OneToOne(cascade = CascadeType.ALL)
     private Usuario user;
 
-    private LocalDateTime created_At;
-    private LocalDateTime updated_At;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
