@@ -1,9 +1,16 @@
 package veterinaria.vargasvet.dto.request;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import veterinaria.vargasvet.domain.enums.TipoConsulta;
 
 @Data
 public class ConsultaRequest {
+
+    @NotNull(message = "El campo version es requerido para evitar ediciones simultáneas")
+    private Long version;
+
+    private TipoConsulta tipoConsulta;
 
     private Double pesoEnConsulta;
     private Double temperatura;
@@ -13,14 +20,15 @@ public class ConsultaRequest {
     private String turgenciaPiel;
     private Boolean vacunacionAlDia;
     private Boolean desparasitacionAlDia;
-    
 
-    private String anamnesis; 
+    private String motivoConsulta;
+    private String anamnesis;
     private String examenFisico;
     private String observaciones;
-    private String motivoConsulta;
-
 
     private String antecedentesEnfermedades;
     private String antecedentesProcedimientos;
+    private String antecedentesPersonales;
+    private String antecedentesFamiliares;
+    private String grupoSanguineo;
 }
