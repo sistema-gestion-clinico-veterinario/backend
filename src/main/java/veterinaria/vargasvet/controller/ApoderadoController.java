@@ -2,12 +2,14 @@ package veterinaria.vargasvet.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.ApoderadoRequest;
+import veterinaria.vargasvet.dto.response.ApoderadoListResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.service.ApoderadoService;
 
@@ -17,6 +19,19 @@ import veterinaria.vargasvet.service.ApoderadoService;
 public class ApoderadoController {
 
     private final ApoderadoService apoderadoService;
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    public ResponseEntity<ApiResponse<Page<ApoderadoListResponse>>> listar(
+            @RequestParam(required = false) Integer companyId,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String numeroDocumento,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<ApoderadoListResponse> resultado = apoderadoService.listar(companyId, nombre, numeroDocumento, page, size);
+        String mensaje = resultado.isEmpty() ? "No se encontraron propietarios" : "Propietarios recuperados con éxito";
+        return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
+    }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
