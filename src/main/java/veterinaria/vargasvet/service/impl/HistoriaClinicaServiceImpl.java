@@ -10,6 +10,7 @@ import veterinaria.vargasvet.domain.entity.Consulta;
 import veterinaria.vargasvet.domain.entity.HistoriaClinica;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.entity.Usuario;
+import veterinaria.vargasvet.dto.response.ArchivoClinicoResponse;
 import veterinaria.vargasvet.dto.response.ConsultaResumenResponse;
 import veterinaria.vargasvet.dto.response.HistoriaClinicaDetalleResponse;
 import veterinaria.vargasvet.dto.response.HistoriaClinicaListResponse;
@@ -18,6 +19,7 @@ import veterinaria.vargasvet.repository.ConsultaRepository;
 import veterinaria.vargasvet.repository.HistoriaClinicaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.HistoriaClinicaService;
+import veterinaria.vargasvet.service.impl.ArchivoClinicoServiceImpl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,6 +36,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
 
     private final HistoriaClinicaRepository historiaClinicaRepository;
     private final ConsultaRepository consultaRepository;
+    private final ArchivoClinicoServiceImpl archivoClinicoService;
 
     @Override
     @Transactional(readOnly = true)
@@ -159,6 +162,11 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
             Usuario user = consulta.getVeterinario().getUser();
             response.setVeterinarioNombre(user.getNombre() + " " + user.getApellido());
         }
+
+        List<ArchivoClinicoResponse> archivos = consulta.getArchivos().stream()
+                .map(archivoClinicoService::toResponse)
+                .toList();
+        response.setArchivos(archivos);
 
         return response;
     }
