@@ -7,8 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.*;
 import veterinaria.vargasvet.dto.Mail;
-import veterinaria.vargasvet.dto.request.EmpleadoRegistrationDTO;
-import veterinaria.vargasvet.dto.request.EmpleadoUpdateDTO;
+import veterinaria.vargasvet.dto.request.EmpleadoRequest;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.mapper.UserMapper;
@@ -42,7 +41,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
     @Override
     @Transactional
-    public UserProfileDTO registerEmpleado(EmpleadoRegistrationDTO dto) {
+    public UserProfileDTO registerEmpleado(EmpleadoRequest dto) {
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("El correo electrónico ya está en uso");
         }
@@ -133,7 +132,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
     @Override
     @Transactional
-    public UserProfileDTO updateEmpleado(Integer usuarioId, EmpleadoUpdateDTO dto) {
+    public UserProfileDTO updateEmpleado(Integer usuarioId, EmpleadoRequest dto) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + usuarioId));
 

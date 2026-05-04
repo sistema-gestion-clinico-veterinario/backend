@@ -14,4 +14,5 @@ public class UserProfileDTO {
     private String systemRole;
     private Integer companyId;
     private String companyName;
+    private Boolean activo;
 }

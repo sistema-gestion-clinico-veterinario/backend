@@ -27,7 +27,7 @@ public class Mascota {
 
     private LocalDate fechaNacimiento;
 
-    @Column(name = "peso", nullable = true)
+    @Column(name = "peso")
     private Double peso;
 
     @Enumerated(EnumType.STRING)
@@ -43,6 +43,9 @@ public class Mascota {
     @Column(name = "esterilizado", nullable = false)
     private Boolean esterilizado;
 
+    @Column(name = "activo", nullable = false)
+    private Boolean activo = true;
+
     @ManyToMany
     @JoinTable(
             name = "mascota_apoderado",
@@ -55,11 +58,23 @@ public class Mascota {
     @JsonIgnore
     private HistoriaClinica historiaClinica;
 
-
     @Column(unique = true, nullable = false, length = 36)
     private String uuid;
 
-    private LocalDateTime created_At;
-    private LocalDateTime updated_At;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

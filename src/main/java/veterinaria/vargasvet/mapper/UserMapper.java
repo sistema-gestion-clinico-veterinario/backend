@@ -67,6 +67,8 @@ public class UserMapper {
             dto.setCompanyName(usuario.getCompany().getName());
         }
 
+        dto.setActivo(usuario.isActivo());
+
         return dto;
     }
 }
