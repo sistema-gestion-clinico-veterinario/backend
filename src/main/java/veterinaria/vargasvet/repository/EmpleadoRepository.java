@@ -33,4 +33,7 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
                           @Param("tipoEmpleadoId") Long tipoEmpleadoId,
                           @Param("especialidadId") Long especialidadId,
                           Pageable pageable);
+
+    @Query("SELECT COUNT(e) FROM Empleado e WHERE e.user.company.id = :companyId")
+    long countByCompanyId(@Param("companyId") Integer companyId);
 }
