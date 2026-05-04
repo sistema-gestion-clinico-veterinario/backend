@@ -38,7 +38,7 @@ public class Apoderado {
     @Column(columnDefinition = "TEXT")
     private String observaciones;
 
-    @ManyToMany(mappedBy = "apoderados", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "apoderado", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
     private List<Mascota> mascotas;
 

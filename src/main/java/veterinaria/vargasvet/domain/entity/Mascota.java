@@ -3,6 +3,8 @@ package veterinaria.vargasvet.domain.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import veterinaria.vargasvet.domain.enums.EspecieMascota;
+import veterinaria.vargasvet.domain.enums.MotivoBajaMascota;
 import veterinaria.vargasvet.domain.enums.SexoMascota;
 
 import java.time.LocalDate;
@@ -23,7 +25,13 @@ public class Mascota {
 
     @Column(nullable = false)
     private String raza;
-    private String especie;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "especie", nullable = false)
+    private EspecieMascota especie;
+
+    @Column(name = "otra_especie")
+    private String otraEspecie; 
 
     private LocalDate fechaNacimiento;
 
@@ -40,19 +48,25 @@ public class Mascota {
     @Column(name = "senas_particulares", columnDefinition = "TEXT")
     private String senasParticulares;
 
+    @Column(name = "foto_url")
+    private String fotoUrl;
+
+    @Column(name = "numero_microchip", length = 50)
+    private String numeroMicrochip;
+
+    @Column(name = "observaciones", columnDefinition = "TEXT")
+    private String observaciones;
+
     @Column(name = "esterilizado", nullable = false)
-    private Boolean esterilizado;
+    private Boolean esterilizado = false;
 
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
 
-    @ManyToMany
-    @JoinTable(
-            name = "mascota_apoderado",
-            joinColumns = @JoinColumn(name = "mascota_id"),
-            inverseJoinColumns = @JoinColumn(name = "apoderado_id")
-    )
-    private List<Apoderado> apoderados;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "apoderado_id", nullable = false)
+    @JsonIgnore
+    private Apoderado apoderado;
 
     @OneToOne(mappedBy = "mascota", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
@@ -66,6 +80,19 @@ public class Mascota {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "motivo_baja")
+    private MotivoBajaMascota motivoBaja;
+
+    @Column(name = "otro_motivo_baja")
+    private String otroMotivoBaja;
+
+    @Column(name = "estado_modificado_por")
+    private String estadoModificadoPor;
+
+    @Column(name = "fecha_modificacion_estado")
+    private LocalDateTime fechaModificacionEstado;
 
     @PrePersist
     protected void onCreate() {
