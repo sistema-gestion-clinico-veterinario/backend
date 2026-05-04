@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 public interface MascotaRepository extends JpaRepository<Mascota, Long> {
 
-    @Query("SELECT m FROM Mascota m JOIN m.apoderados a WHERE a.id = :apoderadoId")
+    @Query("SELECT m FROM Mascota m WHERE m.apoderado.id = :apoderadoId")
     List<Mascota> findByApoderadoId(@Param("apoderadoId") Long apoderadoId);
 }
