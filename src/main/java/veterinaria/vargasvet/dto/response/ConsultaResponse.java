@@ -1,12 +1,18 @@
 package veterinaria.vargasvet.dto.response;
 
 import lombok.Data;
+import veterinaria.vargasvet.domain.enums.EstadoConsulta;
+import veterinaria.vargasvet.domain.enums.TipoConsulta;
+
 import java.time.LocalDateTime;
 
 @Data
 public class ConsultaResponse {
 
     private Long id;
+    private Long version;
+    private EstadoConsulta estado;
+    private TipoConsulta tipoConsulta;
     private Long citaId;
     private Long historiaClinicaId;
     private String numeroHc;
@@ -46,4 +52,10 @@ public class ConsultaResponse {
 
     private String antecedentesEnfermedades;
     private String antecedentesProcedimientos;
+    private String antecedentesPersonales;
+    private String antecedentesFamiliares;
+    private String grupoSanguineo;
+
+    private LocalDateTime fechaCierre;
+    private String cerradoPor;
 }

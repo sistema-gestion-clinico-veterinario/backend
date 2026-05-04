@@ -32,6 +32,15 @@ public class ArchivoClinico {
     @Column(columnDefinition = "TEXT")
     private String descripcion;
 
+    @Column(name = "tipo_mime", length = 100)
+    private String tipoMime;
+
+    @Column(name = "tamanio_bytes")
+    private Long tamanioBytes;
+
+    @Column(name = "subido_por", length = 150)
+    private String subidoPor;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
