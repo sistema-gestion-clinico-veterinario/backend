@@ -33,6 +33,13 @@ public class ApoderadoController {
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    public ResponseEntity<ApiResponse<ApoderadoRequest>> findById(@PathVariable Long id) {
+        ApoderadoRequest apoderado = apoderadoService.findById(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Propietario recuperado con éxito", apoderado));
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
     public ResponseEntity<ApiResponse<UserProfileDTO>> registerApoderado(@Valid @RequestBody ApoderadoRequest dto) {

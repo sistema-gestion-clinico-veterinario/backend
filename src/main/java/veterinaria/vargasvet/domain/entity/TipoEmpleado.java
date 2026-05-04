@@ -2,11 +2,13 @@ package veterinaria.vargasvet.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
 @Data
 @Entity
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Table(name = "tipo_empleado")
 public class TipoEmpleado {
 
@@ -14,6 +16,7 @@ public class TipoEmpleado {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @EqualsAndHashCode.Include
     @Column(name = "nombre", nullable = false)
     private String nombre;
 
