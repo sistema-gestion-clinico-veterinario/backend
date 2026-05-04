@@ -2,12 +2,14 @@ package veterinaria.vargasvet.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.EmpleadoRequest;
+import veterinaria.vargasvet.dto.response.EmpleadoListResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.service.EmpleadoService;
 
@@ -17,6 +19,20 @@ import veterinaria.vargasvet.service.EmpleadoService;
 public class EmpleadoController {
 
     private final EmpleadoService empleadoService;
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    public ResponseEntity<ApiResponse<Page<EmpleadoListResponse>>> listar(
+            @RequestParam(required = false) Integer companyId,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Long tipoEmpleadoId,
+            @RequestParam(required = false) Long especialidadId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<EmpleadoListResponse> resultado = empleadoService.listar(companyId, nombre, tipoEmpleadoId, especialidadId, page, size);
+        String mensaje = resultado.isEmpty() ? "No se encontraron empleados" : "Empleados recuperados con éxito";
+        return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
+    }
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_ADMIN', 'USER_CREATE')")

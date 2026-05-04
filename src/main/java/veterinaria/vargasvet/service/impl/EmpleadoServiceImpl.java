@@ -16,8 +16,14 @@ import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.service.EmpleadoService;
 import veterinaria.vargasvet.security.SecurityUtils;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import veterinaria.vargasvet.dto.response.EmpleadoListResponse;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -258,5 +264,46 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         } catch (Exception e) {
             System.err.println("[WARNING] No se pudo enviar el correo de bienvenida a " + usuario.getEmail() + ": " + e.getMessage());
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EmpleadoListResponse> listar(Integer companyId, String nombre, Long tipoEmpleadoId, Long especialidadId, int page, int size) {
+        Integer resolvedCompanyId = resolverCompanyId(companyId);
+        String nombreFiltro = (nombre != null && !nombre.isBlank()) ? nombre.trim() : null;
+        return empleadoRepository.buscar(resolvedCompanyId, nombreFiltro, tipoEmpleadoId, especialidadId,
+                PageRequest.of(page, size, Sort.unsorted()))
+                .map(this::toListResponse);
+    }
+
+    private Integer resolverCompanyId(Integer companyIdParam) {
+        if (SecurityUtils.isSuperAdmin()) {
+            if (companyIdParam == null) {
+                throw new IllegalArgumentException("El parámetro companyId es requerido para SUPER_ADMIN");
+            }
+            return companyIdParam;
+        }
+        return SecurityUtils.getCurrentCompanyId();
+    }
+
+    private EmpleadoListResponse toListResponse(Empleado empleado) {
+        EmpleadoListResponse response = new EmpleadoListResponse();
+        response.setId(empleado.getId());
+        response.setNumeroColegiatura(empleado.getNumeroColegiatura());
+        response.setFotoUrl(empleado.getFotoUrl());
+        response.setActivo(empleado.getEstado());
+        if (empleado.getUser() != null) {
+            response.setNombre(empleado.getUser().getNombre());
+            response.setApellido(empleado.getUser().getApellido());
+            response.setEmail(empleado.getUser().getEmail());
+            response.setTelefono(empleado.getUser().getTelefono());
+        }
+        response.setTiposEmpleado(empleado.getTiposEmpleado().stream()
+                .map(t -> t.getNombre())
+                .toList());
+        response.setEspecialidades(empleado.getEspecialidades().stream()
+                .map(e -> e.getNombre())
+                .toList());
+        return response;
     }
 }
