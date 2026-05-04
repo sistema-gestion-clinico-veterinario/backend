@@ -23,12 +23,15 @@ public class Cita {
     private Mascota mascota;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "empleado_id")
+    @JoinColumn(name = "empleado_id", nullable = false)
     private Empleado empleado;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "servicio_id", nullable = false)
+    @JoinColumn(name = "servicio_id", nullable = true)
     private ServiciosVeterinarios servicio;
+
+    @Column(name = "motivo_cita", nullable = false)
+    private String motivoCita;
 
     @Column(name = "fecha_hora_inicio", nullable = false)
     private LocalDateTime fechaHoraInicio;
@@ -41,7 +44,7 @@ public class Cita {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
-    private EstadoCita estado = EstadoCita.PENDIENTE;
+    private EstadoCita estado = EstadoCita.PROGRAMADA;
 
     @Column(name = "notas", columnDefinition = "TEXT")
     private String notas;
