@@ -3,18 +3,24 @@ package veterinaria.vargasvet.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.entity.Consulta;
 import veterinaria.vargasvet.domain.entity.HistoriaClinica;
+import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.domain.enums.EstadoConsulta;
+import veterinaria.vargasvet.dto.request.CerrarConsultaRequest;
 import veterinaria.vargasvet.dto.request.ConsultaRequest;
 import veterinaria.vargasvet.dto.response.ConsultaResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.mapper.ConsultaMapper;
+import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.ConsultaRepository;
 import veterinaria.vargasvet.repository.HistoriaClinicaRepository;
 import veterinaria.vargasvet.repository.MascotaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.ConsultaService;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +29,7 @@ public class ConsultaServiceImpl implements ConsultaService {
     private final ConsultaRepository consultaRepository;
     private final HistoriaClinicaRepository historiaClinicaRepository;
     private final MascotaRepository mascotaRepository;
+    private final CitaRepository citaRepository;
     private final ConsultaMapper consultaMapper;
 
     @Override
@@ -99,5 +106,63 @@ public class ConsultaServiceImpl implements ConsultaService {
         }
 
         return consultaMapper.toResponse(consulta);
+    }
+
+    @Override
+    @Transactional
+    public ConsultaResponse cerrarConsulta(Long id, CerrarConsultaRequest request) {
+        Consulta consulta = consultaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + id));
+
+        if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
+            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
+            if (consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null ||
+                !consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany().getId().equals(currentCompanyId)) {
+                throw new IllegalArgumentException("No tienes permiso para cerrar esta consulta");
+            }
+
+            Integer currentUserId = SecurityUtils.getCurrentUserId();
+            boolean esVeterinarioAsignado = consulta.getVeterinario() != null &&
+                    consulta.getVeterinario().getUser() != null &&
+                    consulta.getVeterinario().getUser().getId().equals(currentUserId);
+
+            if (!esVeterinarioAsignado) {
+                throw new IllegalArgumentException("Solo el veterinario asignado a esta consulta puede cerrarla");
+            }
+        }
+
+        if (consulta.getEstado() == EstadoConsulta.CERRADA) {
+            throw new IllegalArgumentException("La consulta ya se encuentra cerrada");
+        }
+
+        validarCamposObligatorios(consulta);
+
+        consulta.setEstado(EstadoConsulta.CERRADA);
+        consulta.setFechaCierre(LocalDateTime.now());
+        consulta.setCerradoPor(SecurityUtils.getCurrentUserEmail());
+
+        Cita cita = consulta.getCita();
+        if (cita != null) {
+            cita.setEstado(EstadoCita.COMPLETADA);
+            citaRepository.save(cita);
+        }
+
+        Consulta savedConsulta = consultaRepository.save(consulta);
+        return consultaMapper.toResponse(savedConsulta);
+    }
+
+    private void validarCamposObligatorios(Consulta consulta) {
+        if (consulta.getMotivoConsulta() == null || consulta.getMotivoConsulta().isBlank()) {
+            throw new IllegalArgumentException("El motivo de consulta es obligatorio para cerrar la historia clínica");
+        }
+        if (consulta.getTipoConsulta() == null) {
+            throw new IllegalArgumentException("El tipo de consulta es obligatorio para cerrar la historia clínica");
+        }
+        if (consulta.getPesoEnConsulta() == null) {
+            throw new IllegalArgumentException("El peso del paciente es obligatorio para cerrar la historia clínica");
+        }
+        if (consulta.getAnamnesis() == null || consulta.getAnamnesis().isBlank()) {
+            throw new IllegalArgumentException("La anamnesis es obligatoria para cerrar la historia clínica");
+        }
     }
 }

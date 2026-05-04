@@ -55,4 +55,7 @@ public class ConsultaResponse {
     private String antecedentesPersonales;
     private String antecedentesFamiliares;
     private String grupoSanguineo;
+
+    private LocalDateTime fechaCierre;
+    private String cerradoPor;
 }

@@ -94,6 +94,12 @@ public class Consulta {
     @OneToMany(mappedBy = "consulta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ArchivoClinico> archivos = new ArrayList<>();
 
+    @Column(name = "fecha_cierre")
+    private LocalDateTime fechaCierre;
+
+    @Column(name = "cerrado_por")
+    private String cerradoPor;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

@@ -35,6 +35,8 @@ public class ConsultaMapper {
         response.setVacunacionAlDia(consulta.getVacunacionAlDia());
         response.setDesparasitacionAlDia(consulta.getDesparasitacionAlDia());
         response.setObservaciones(consulta.getObservaciones());
+        response.setFechaCierre(consulta.getFechaCierre());
+        response.setCerradoPor(consulta.getCerradoPor());
 
         if (consulta.getCita() != null) {
             response.setCitaId(consulta.getCita().getId());
@@ -55,7 +57,7 @@ public class ConsultaMapper {
             response.setAntecedentesPersonales(consulta.getHistoriaClinica().getAntecedentesPersonales());
             response.setAntecedentesFamiliares(consulta.getHistoriaClinica().getAntecedentesFamiliares());
             response.setGrupoSanguineo(consulta.getHistoriaClinica().getGrupoSanguineo());
-            
+
             Mascota mascota = consulta.getHistoriaClinica().getMascota();
             if (mascota != null) {
                 response.setMascotaId(mascota.getId());
