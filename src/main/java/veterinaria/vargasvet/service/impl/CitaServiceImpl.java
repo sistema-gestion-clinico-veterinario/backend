@@ -143,11 +143,21 @@ public class CitaServiceImpl implements CitaService {
             }
         }
 
+        if (cita.getEstado() == EstadoCita.EN_PROCESO) {
+            if (cita.getConsulta() != null) {
+                return cita.getConsulta().getId();
+            }
+            // Si por alguna razón no tiene consulta pero está en proceso, intentamos buscarla
+            return consultaRepository.findByCitaId(id)
+                    .map(Consulta::getId)
+                    .orElseThrow(() -> new IllegalArgumentException("La cita está en proceso pero no se encontró la consulta asociada"));
+        }
+
         if (cita.getEstado() != EstadoCita.PROGRAMADA &&
             cita.getEstado() != EstadoCita.REPROGRAMADA &&
             cita.getEstado() != EstadoCita.CONFIRMADA &&
             cita.getEstado() != EstadoCita.SALA_DE_ESPERA) {
-            throw new IllegalArgumentException("Solo se pueden iniciar citas que estén Programadas, Reprogramadas, Confirmadas o en Sala de espera");
+            throw new IllegalArgumentException("No se puede iniciar una cita con estado: " + cita.getEstado());
         }
 
         if (!cita.getMascota().getActivo()) {

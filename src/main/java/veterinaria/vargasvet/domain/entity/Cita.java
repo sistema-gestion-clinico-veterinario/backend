@@ -18,6 +18,9 @@ public class Cita {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version = 0L;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mascota_id", nullable = false)
     private Mascota mascota;
@@ -67,6 +70,9 @@ public class Cita {
 
     @OneToMany(mappedBy = "cita", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Purchase> pagos = new ArrayList<>();
+
+    @OneToOne(mappedBy = "cita", fetch = FetchType.LAZY)
+    private Consulta consulta;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
