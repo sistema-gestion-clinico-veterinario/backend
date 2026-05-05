@@ -8,10 +8,13 @@ import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.*;
 import veterinaria.vargasvet.dto.Mail;
 import veterinaria.vargasvet.dto.request.EmpleadoRequest;
+import veterinaria.vargasvet.dto.request.HorarioEmpleadoRequest;
+import veterinaria.vargasvet.dto.response.HorarioEmpleadoResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.mapper.UserMapper;
 import veterinaria.vargasvet.repository.*;
+import java.util.List;
 import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.service.EmpleadoService;
 import veterinaria.vargasvet.security.SecurityUtils;
@@ -37,6 +40,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final EspecialidadRepository especialidadRepository;
     private final TipoEmpleadoRepository tipoEmpleadoRepository;
     private final CompanyRepository companyRepository;
+    private final HorarioEmpleadoRepository horarioEmpleadoRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final EmailService emailService;
@@ -128,8 +132,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                     .collect(Collectors.toSet()));
         }
 
-        empleadoRepository.save(empleado);
-        
+        Empleado savedEmpleado = empleadoRepository.save(empleado);
+
+        if (dto.getHorarios() != null && !dto.getHorarios().isEmpty()) {
+            guardarHorarios(savedEmpleado, dto.getHorarios());
+        }
+
         sendWelcomeEmail(savedUser, dto.getNombre(), tempPassword);
 
         return userMapper.toProfileDTO(savedUser);
@@ -222,6 +230,11 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         empleado.setUpdatedAt(LocalDateTime.now());
         empleadoRepository.save(empleado);
 
+        if (dto.getHorarios() != null) {
+            horarioEmpleadoRepository.deleteByEmpleadoId(empleado.getId());
+            guardarHorarios(empleado, dto.getHorarios());
+        }
+
         return userMapper.toProfileDTO(usuario);
     }
 
@@ -252,6 +265,35 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         empleadoRepository.save(empleado);
         usuarioRepository.save(usuario);
+    }
+
+    private void guardarHorarios(Empleado empleado, List<HorarioEmpleadoRequest> horariosRequest) {
+        for (HorarioEmpleadoRequest h : horariosRequest) {
+            if (h.getHoraInicio() != null && h.getHoraFin() != null) {
+                HorarioEmpleado horario = new HorarioEmpleado();
+                horario.setEmpleado(empleado);
+                horario.setDiaSemana(h.getDiaSemana());
+                horario.setHoraInicio(h.getHoraInicio());
+                horario.setHoraFin(h.getHoraFin());
+                horario.setActivo(h.getActivo() != null ? h.getActivo() : true);
+                horarioEmpleadoRepository.save(horario);
+            }
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<HorarioEmpleadoResponse> getHorario(Long empleadoId) {
+        return horarioEmpleadoRepository.findByEmpleadoId(empleadoId).stream()
+                .map(h -> {
+                    HorarioEmpleadoResponse r = new HorarioEmpleadoResponse();
+                    r.setId(h.getId());
+                    r.setDiaSemana(h.getDiaSemana().name());
+                    r.setHoraInicio(h.getHoraInicio());
+                    r.setHoraFin(h.getHoraFin());
+                    r.setActivo(h.getActivo());
+                    return r;
+                }).toList();
     }
 
     private void sendWelcomeEmail(Usuario usuario, String nombre, String tempPassword) {

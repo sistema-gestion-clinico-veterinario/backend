@@ -44,4 +44,11 @@ public class HistoriaClinicaController {
         HistoriaClinicaDetalleResponse detalle = historiaClinicaService.getDetalle(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Historia clínica recuperada con éxito", detalle));
     }
+
+    @GetMapping("/mascota/{mascotaId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getPorMascota(@PathVariable Long mascotaId) {
+        HistoriaClinicaDetalleResponse detalle = historiaClinicaService.getPorMascota(mascotaId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Historia clínica recuperada con éxito", detalle));
+    }
 }

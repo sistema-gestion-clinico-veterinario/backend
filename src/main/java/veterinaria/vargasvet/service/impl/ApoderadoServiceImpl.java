@@ -77,9 +77,9 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         usuario.setCompany(companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
 
-        Role apoderadoRole = roleRepository.findByName("ROLE_APODERADO")
+        Role apoderadoRole = roleRepository.findByName("ROLE_CLIENTE")
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Error de configuración: El rol 'ROLE_APODERADO' no existe."));
+                        "Error de configuración: El rol 'ROLE_CLIENTE' no existe."));
         usuario.getRoles().add(apoderadoRole);
 
         Usuario savedUser = usuarioRepository.save(usuario);

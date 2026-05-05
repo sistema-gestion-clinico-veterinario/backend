@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.*;
+import veterinaria.vargasvet.domain.enums.DiaSemana;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.domain.enums.EstadoConsulta;
 import veterinaria.vargasvet.domain.enums.TipoConsulta;
@@ -23,8 +24,10 @@ import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.mapper.CitaMapper;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Service
 @RequiredArgsConstructor
@@ -70,6 +73,23 @@ public class CitaServiceImpl implements CitaService {
 
         LocalDateTime fechaInicio = request.getFechaHoraInicio();
         LocalDateTime fechaFin = fechaInicio.plusMinutes(DURACION_ESTIMADA_MINUTOS);
+
+        DiaSemana diaSemana = toDiaSemana(fechaInicio.getDayOfWeek());
+        LocalTime horaInicio = fechaInicio.toLocalTime();
+        LocalTime horaFinCita = fechaFin.toLocalTime();
+
+        HorarioEmpleado horario = veterinario.getHorarios().stream()
+                .filter(h -> h.getDiaSemana() == diaSemana && Boolean.TRUE.equals(h.getActivo()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "El veterinario no atiende los días " + diaSemana.name().charAt(0) +
+                        diaSemana.name().substring(1).toLowerCase()));
+
+        if (horaInicio.isBefore(horario.getHoraInicio()) || horaFinCita.isAfter(horario.getHoraFin())) {
+            throw new IllegalArgumentException(
+                    "La cita está fuera del horario del veterinario. Atiende de " +
+                    horario.getHoraInicio() + " a " + horario.getHoraFin());
+        }
 
         boolean hayCruceVeterinario = citaRepository.existsOverlappingCita(veterinario.getId(), fechaInicio, fechaFin);
         if (hayCruceVeterinario) {
@@ -164,6 +184,18 @@ public class CitaServiceImpl implements CitaService {
         return citaRepository.buscar(resolvedCompanyId, fecha, estado, veterinarioId,
                 PageRequest.of(page, size, Sort.unsorted()))
                 .map(citaMapper::toResponse);
+    }
+
+    private DiaSemana toDiaSemana(DayOfWeek dayOfWeek) {
+        return switch (dayOfWeek) {
+            case MONDAY    -> DiaSemana.LUNES;
+            case TUESDAY   -> DiaSemana.MARTES;
+            case WEDNESDAY -> DiaSemana.MIERCOLES;
+            case THURSDAY  -> DiaSemana.JUEVES;
+            case FRIDAY    -> DiaSemana.VIERNES;
+            case SATURDAY  -> DiaSemana.SABADO;
+            case SUNDAY    -> DiaSemana.DOMINGO;
+        };
     }
 
     private Integer resolverCompanyId(Integer companyIdParam) {

@@ -11,4 +11,6 @@ public interface HistoriaClinicaService {
                                              LocalDate fechaDesde, LocalDate fechaHasta, int page, int size);
 
     HistoriaClinicaDetalleResponse getDetalle(Long id);
+
+    HistoriaClinicaDetalleResponse getPorMascota(Long mascotaId);
 }
