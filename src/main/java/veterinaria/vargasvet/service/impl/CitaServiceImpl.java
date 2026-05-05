@@ -143,8 +143,11 @@ public class CitaServiceImpl implements CitaService {
             }
         }
 
-        if (cita.getEstado() != EstadoCita.PROGRAMADA && cita.getEstado() != EstadoCita.REPROGRAMADA) {
-            throw new IllegalArgumentException("Solo se pueden iniciar citas que estén Programadas o Reprogramadas");
+        if (cita.getEstado() != EstadoCita.PROGRAMADA &&
+            cita.getEstado() != EstadoCita.REPROGRAMADA &&
+            cita.getEstado() != EstadoCita.CONFIRMADA &&
+            cita.getEstado() != EstadoCita.SALA_DE_ESPERA) {
+            throw new IllegalArgumentException("Solo se pueden iniciar citas que estén Programadas, Reprogramadas, Confirmadas o en Sala de espera");
         }
 
         if (!cita.getMascota().getActivo()) {
