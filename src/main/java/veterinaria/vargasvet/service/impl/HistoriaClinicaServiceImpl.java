@@ -12,8 +12,11 @@ import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.dto.response.ArchivoClinicoResponse;
 import veterinaria.vargasvet.dto.response.ConsultaResumenResponse;
+import veterinaria.vargasvet.dto.response.DiagnosticoResumenResponse;
 import veterinaria.vargasvet.dto.response.HistoriaClinicaDetalleResponse;
 import veterinaria.vargasvet.dto.response.HistoriaClinicaListResponse;
+import veterinaria.vargasvet.dto.response.PrescripcionResumenResponse;
+import veterinaria.vargasvet.dto.response.TratamientoResumenResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.ConsultaRepository;
 import veterinaria.vargasvet.repository.HistoriaClinicaRepository;
@@ -49,8 +52,8 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         LocalDateTime hasta = fechaHasta != null ? fechaHasta.atTime(LocalTime.MAX) : null;
 
         String hcFiltro = (numeroHc != null && !numeroHc.isBlank()) ? numeroHc.trim() : null;
-        String pacienteFiltro = (nombrePaciente != null && !nombrePaciente.isBlank()) ? nombrePaciente.trim() : null;
-        String propietarioFiltro = (nombrePropietario != null && !nombrePropietario.isBlank()) ? nombrePropietario.trim() : null;
+        String pacienteFiltro = (nombrePaciente != null && !nombrePaciente.isBlank()) ? "%" + nombrePaciente.trim().toLowerCase() + "%" : null;
+        String propietarioFiltro = (nombrePropietario != null && !nombrePropietario.isBlank()) ? "%" + nombrePropietario.trim().toLowerCase() + "%" : null;
 
         Page<HistoriaClinica> pageHc = historiaClinicaRepository.buscar(
                 isSuperAdmin, companyId, hcFiltro, pacienteFiltro, propietarioFiltro, desde, hasta,
@@ -65,6 +68,23 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
                                 row -> (LocalDateTime) row[1]));
 
         return pageHc.map(hc -> toListResponse(hc, ultimasFechas.get(hc.getId())));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public HistoriaClinicaDetalleResponse getPorMascota(Long mascotaId) {
+        HistoriaClinica hc = historiaClinicaRepository.findByMascotaId(mascotaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada para la mascota con ID: " + mascotaId));
+
+        if (!SecurityUtils.isSuperAdmin()) {
+            Integer companyId = SecurityUtils.getCurrentCompanyId();
+            if (hc.getMascota().getApoderado().getUser().getCompany() == null ||
+                !hc.getMascota().getApoderado().getUser().getCompany().getId().equals(companyId)) {
+                throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");
+            }
+        }
+
+        return toDetalleResponse(hc);
     }
 
     @Override
@@ -93,7 +113,10 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
 
         Mascota mascota = hc.getMascota();
         if (mascota != null) {
+            response.setMascotaId(mascota.getId());
             response.setMascotaNombre(mascota.getNombreCompleto());
+            response.setEspecie(mascota.getEspecie() != null ? mascota.getEspecie().name() : mascota.getOtraEspecie());
+            response.setRaza(mascota.getRaza());
             if (mascota.getApoderado() != null) {
                 Usuario user = mascota.getApoderado().getUser();
                 if (user != null) {
@@ -157,16 +180,65 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         response.setFechaConsulta(consulta.getFechaConsulta());
         response.setMotivoConsulta(consulta.getMotivoConsulta());
         response.setTipoConsulta(consulta.getTipoConsulta() != null ? consulta.getTipoConsulta().name() : null);
+        response.setEstado(consulta.getEstado() != null ? consulta.getEstado().name() : null);
 
         if (consulta.getVeterinario() != null && consulta.getVeterinario().getUser() != null) {
             Usuario user = consulta.getVeterinario().getUser();
             response.setVeterinarioNombre(user.getNombre() + " " + user.getApellido());
         }
 
-        List<ArchivoClinicoResponse> archivos = consulta.getArchivos().stream()
+        response.setPesoEnConsulta(consulta.getPesoEnConsulta());
+        response.setTemperatura(consulta.getTemperatura());
+        response.setFrecuenciaCardiaca(consulta.getFrecuenciaCardiaca());
+        response.setFrecuenciaRespiratoria(consulta.getFrecuenciaRespiratoria());
+        response.setMucosas(consulta.getMucosas());
+        response.setTurgenciaPiel(consulta.getTurgenciaPiel());
+        response.setVacunacionAlDia(consulta.getVacunacionAlDia());
+        response.setDesparasitacionAlDia(consulta.getDesparasitacionAlDia());
+        response.setAnamnesis(consulta.getAnamnesis());
+        response.setExamenFisico(consulta.getExamenFisico());
+        response.setObservaciones(consulta.getObservaciones());
+
+        response.setDiagnosticos(consulta.getDiagnosticos().stream().map(d -> {
+            DiagnosticoResumenResponse dr = new DiagnosticoResumenResponse();
+            dr.setId(d.getId());
+            dr.setNombre(d.getNombre());
+            dr.setCodigoCIE(d.getCodigoCIE());
+            dr.setDescripcion(d.getDescripcion());
+            dr.setTipo(d.getTipo() != null ? d.getTipo().name() : null);
+            dr.setEstado(d.getEstado() != null ? d.getEstado().name() : null);
+            return dr;
+        }).toList());
+
+        response.setTratamientos(consulta.getTratamientos().stream().map(t -> {
+            TratamientoResumenResponse tr = new TratamientoResumenResponse();
+            tr.setId(t.getId());
+            tr.setNombre(t.getNombre());
+            tr.setDescripcion(t.getDescripcion());
+            tr.setFechaInicio(t.getFechaInicio());
+            tr.setFechaFin(t.getFechaFin());
+            tr.setEstado(t.getEstado() != null ? t.getEstado().name() : null);
+            return tr;
+        }).toList());
+
+        response.setPrescripciones(consulta.getPrescripciones().stream().map(p -> {
+            PrescripcionResumenResponse pr = new PrescripcionResumenResponse();
+            pr.setId(p.getId());
+            pr.setMedicamento(p.getMedicamento());
+            pr.setPrincipioActivo(p.getPrincipioActivo());
+            pr.setDosis(p.getDosis());
+            pr.setFrecuencia(p.getFrecuencia());
+            pr.setDuracionDias(p.getDuracionDias());
+            pr.setViaAdministracion(p.getViaAdministracion());
+            pr.setInstrucciones(p.getInstrucciones());
+            pr.setFechaInicio(p.getFechaInicio());
+            pr.setFechaFin(p.getFechaFin());
+            return pr;
+        }).toList());
+
+        response.setArchivos(consulta.getArchivos().stream()
                 .map(archivoClinicoService::toResponse)
-                .toList();
-        response.setArchivos(archivos);
+                .toList());
 
         return response;
     }

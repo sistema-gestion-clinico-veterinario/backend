@@ -4,7 +4,7 @@ import veterinaria.vargasvet.domain.entity.TipoEmpleado;
 import java.util.List;
 
 public interface TipoEmpleadoService {
-    List<TipoEmpleado> findAll();
+    List<TipoEmpleado> findAll(Integer companyId);
     TipoEmpleado create(TipoEmpleado tipo);
     void delete(Long id);
 }

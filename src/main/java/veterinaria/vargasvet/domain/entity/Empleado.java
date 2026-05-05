@@ -9,7 +9,9 @@ import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -71,6 +73,10 @@ public class Empleado {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private Usuario user;
+
+    @OneToMany(mappedBy = "empleado", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("diaSemana ASC")
+    private List<HorarioEmpleado> horarios = new ArrayList<>();
 
     @Column(name = "estado_modificado_por")
     private String estadoModificadoPor;
