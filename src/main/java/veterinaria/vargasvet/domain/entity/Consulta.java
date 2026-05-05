@@ -21,7 +21,7 @@ public class Consulta {
 
     @Version
     @Column(name = "version", nullable = false)
-    private Long version;
+    private Long version = 0L;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)

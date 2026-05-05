@@ -14,6 +14,7 @@ public class CitaMapper {
 
         CitaResponse response = new CitaResponse();
         response.setId(cita.getId());
+        response.setVersion(cita.getVersion());
         
         if (cita.getMascota() != null) {
             response.setMascotaId(cita.getMascota().getId());
@@ -44,6 +45,10 @@ public class CitaMapper {
         response.setDuracionMinutos(cita.getDuracionMinutos());
         response.setEstado(cita.getEstado());
         response.setNotas(cita.getNotas());
+        
+        if (cita.getConsulta() != null) {
+            response.setConsultaId(cita.getConsulta().getId());
+        }
 
         return response;
     }

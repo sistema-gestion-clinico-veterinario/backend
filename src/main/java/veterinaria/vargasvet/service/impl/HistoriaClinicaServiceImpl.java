@@ -52,8 +52,8 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         LocalDateTime hasta = fechaHasta != null ? fechaHasta.atTime(LocalTime.MAX) : null;
 
         String hcFiltro = (numeroHc != null && !numeroHc.isBlank()) ? numeroHc.trim() : null;
-        String pacienteFiltro = (nombrePaciente != null && !nombrePaciente.isBlank()) ? nombrePaciente.trim() : null;
-        String propietarioFiltro = (nombrePropietario != null && !nombrePropietario.isBlank()) ? nombrePropietario.trim() : null;
+        String pacienteFiltro = (nombrePaciente != null && !nombrePaciente.isBlank()) ? "%" + nombrePaciente.trim().toLowerCase() + "%" : null;
+        String propietarioFiltro = (nombrePropietario != null && !nombrePropietario.isBlank()) ? "%" + nombrePropietario.trim().toLowerCase() + "%" : null;
 
         Page<HistoriaClinica> pageHc = historiaClinicaRepository.buscar(
                 isSuperAdmin, companyId, hcFiltro, pacienteFiltro, propietarioFiltro, desde, hasta,
@@ -113,7 +113,10 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
 
         Mascota mascota = hc.getMascota();
         if (mascota != null) {
+            response.setMascotaId(mascota.getId());
             response.setMascotaNombre(mascota.getNombreCompleto());
+            response.setEspecie(mascota.getEspecie() != null ? mascota.getEspecie().name() : mascota.getOtraEspecie());
+            response.setRaza(mascota.getRaza());
             if (mascota.getApoderado() != null) {
                 Usuario user = mascota.getApoderado().getUser();
                 if (user != null) {

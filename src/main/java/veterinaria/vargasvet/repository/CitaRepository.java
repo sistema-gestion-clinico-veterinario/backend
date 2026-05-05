@@ -31,7 +31,8 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
                                          @Param("fechaHoraInicio") LocalDateTime fechaHoraInicio,
                                          @Param("fechaHoraFin") LocalDateTime fechaHoraFin);
 
-    @Query(value = "SELECT c FROM Cita c JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
+    @Query(value = "SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
+                   "LEFT JOIN FETCH c.consulta " +
                    "WHERE u.company.id = :companyId " +
                    "AND (CAST(:fecha AS date) IS NULL OR CAST(c.fechaHoraInicio AS date) = :fecha) " +
                    "AND (CAST(:estado AS text) IS NULL OR c.estado = :estado) " +

@@ -24,21 +24,17 @@ public interface HistoriaClinicaRepository extends JpaRepository<HistoriaClinica
                    "JOIN a.user u " +
                    "WHERE (:isSuperAdmin = true OR u.company.id = :companyId) " +
                    "AND (:numeroHc IS NULL OR hc.numeroHc = :numeroHc) " +
-                   "AND (:nombrePaciente IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', :nombrePaciente, '%'))) " +
-                   "AND (:nombrePropietario IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', :nombrePropietario, '%'))) " +
-                   "AND (:fechaDesde IS NULL OR (SELECT MAX(c.fechaConsulta) FROM Consulta c WHERE c.historiaClinica = hc) >= :fechaDesde) " +
-                   "AND (:fechaHasta IS NULL OR (SELECT MAX(c.fechaConsulta) FROM Consulta c WHERE c.historiaClinica = hc) <= :fechaHasta) " +
-                   "ORDER BY (SELECT MAX(c.fechaConsulta) FROM Consulta c WHERE c.historiaClinica = hc) DESC NULLS LAST",
+                   "AND (:nombrePaciente IS NULL OR LOWER(m.nombreCompleto) LIKE :nombrePaciente) " +
+                   "AND (:nombrePropietario IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE :nombrePropietario) " +
+                   "ORDER BY hc.numeroHc DESC",
            countQuery = "SELECT COUNT(hc) FROM HistoriaClinica hc " +
                         "JOIN hc.mascota m " +
                         "JOIN m.apoderado a " +
                         "JOIN a.user u " +
                         "WHERE (:isSuperAdmin = true OR u.company.id = :companyId) " +
                         "AND (:numeroHc IS NULL OR hc.numeroHc = :numeroHc) " +
-                        "AND (:nombrePaciente IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', :nombrePaciente, '%'))) " +
-                        "AND (:nombrePropietario IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', :nombrePropietario, '%'))) " +
-                        "AND (:fechaDesde IS NULL OR (SELECT MAX(c.fechaConsulta) FROM Consulta c WHERE c.historiaClinica = hc) >= :fechaDesde) " +
-                        "AND (:fechaHasta IS NULL OR (SELECT MAX(c.fechaConsulta) FROM Consulta c WHERE c.historiaClinica = hc) <= :fechaHasta)")
+                        "AND (:nombrePaciente IS NULL OR LOWER(m.nombreCompleto) LIKE :nombrePaciente) " +
+                        "AND (:nombrePropietario IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE :nombrePropietario)")
     Page<HistoriaClinica> buscar(
             @Param("isSuperAdmin") boolean isSuperAdmin,
             @Param("companyId") Integer companyId,
