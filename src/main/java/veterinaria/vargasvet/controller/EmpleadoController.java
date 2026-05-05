@@ -10,8 +10,11 @@ import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.EmpleadoRequest;
 import veterinaria.vargasvet.dto.response.EmpleadoListResponse;
+import veterinaria.vargasvet.dto.response.HorarioEmpleadoResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.service.EmpleadoService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin/empleados")
@@ -54,6 +57,13 @@ public class EmpleadoController {
     public ResponseEntity<ApiResponse<UserProfileDTO>> updateEmpleado(@PathVariable Long id, @RequestBody EmpleadoRequest dto) {
         UserProfileDTO profile = empleadoService.updateEmpleado(id, dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos del empleado actualizados exitosamente", profile));
+    }
+
+    @GetMapping("/{id}/horario")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    public ResponseEntity<ApiResponse<List<HorarioEmpleadoResponse>>> getHorario(@PathVariable Long id) {
+        List<HorarioEmpleadoResponse> horario = empleadoService.getHorario(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horario recuperado con éxito", horario));
     }
 
     @PatchMapping("/{id}/status")
