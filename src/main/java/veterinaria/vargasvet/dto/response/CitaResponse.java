@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Data
 public class CitaResponse {
     private Long id;
+    private Long version;
     private Long mascotaId;
     private String mascotaNombre;
     private Long apoderadoId;
@@ -22,4 +23,5 @@ public class CitaResponse {
     private Integer duracionMinutos;
     private EstadoCita estado;
     private String notas;
+    private Long consultaId;
 }

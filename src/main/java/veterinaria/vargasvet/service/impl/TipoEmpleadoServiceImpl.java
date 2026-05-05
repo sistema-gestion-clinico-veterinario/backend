@@ -19,11 +19,17 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
     private final veterinaria.vargasvet.repository.CompanyRepository companyRepository;
 
     @Override
-    public List<TipoEmpleado> findAll() {
-        Integer companyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+    public List<TipoEmpleado> findAll(Integer companyId) {
+        // Si se pasa companyId explícito (SUPER_ADMIN seleccionó empresa), usar ese
         if (companyId != null) {
             return tipoEmpleadoRepository.findByCompanyId(companyId);
         }
+        // Si es ADMIN u otro rol, usar el companyId del token
+        Integer tokenCompanyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+        if (tokenCompanyId != null) {
+            return tipoEmpleadoRepository.findByCompanyId(tokenCompanyId);
+        }
+        // SUPER_ADMIN sin companyId: retorna todo
         return tipoEmpleadoRepository.findAll();
     }
 

@@ -166,6 +166,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setPermissions(permissions);
         response.setNombreCompleto(resolveNombreCompleto(usuario));
         response.setUserType(resolveUserType(usuario));
+        response.setEmpleadoId(Math.toIntExact(usuario.getEmpleado() != null ? usuario.getEmpleado().getId() : null));
         response.setPasswordChanged(usuario.isPasswordChanged());
 
         return response;

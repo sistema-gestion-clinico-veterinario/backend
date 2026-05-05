@@ -8,6 +8,7 @@ import lombok.Data;
 import veterinaria.vargasvet.domain.enums.Genero;
 import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
 
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -45,4 +46,5 @@ public class EmpleadoRequest {
     private String observaciones;
     private Boolean estado;
     private Integer companyId;
+    private List<HorarioEmpleadoRequest> horarios;
 }

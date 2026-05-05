@@ -6,6 +6,18 @@
   <component name="ChangeListManager">
     <list default="true" id="8ffa857a-e1ef-4049-a862-755969e462ca" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/Cita.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/Cita.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/Consulta.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/Consulta.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/request/CitaRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/request/CitaRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/CitaResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/CitaResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/HistoriaClinicaListResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/HistoriaClinicaListResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/mapper/CitaMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/mapper/CitaMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/CitaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/CitaRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/HistoriaClinicaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/HistoriaClinicaRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/CitaServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/CitaServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/ConsultaServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/ConsultaServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/HistoriaClinicaServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/HistoriaClinicaServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -57,7 +69,7 @@
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;Spring Boot.VargasvetApplication.executor&quot;: &quot;Run&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;develop&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/pets&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;D:/UPAO_Diogho_Baylon/IX/Taller Integrador I/SystemVargasVet-Backend&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -106,6 +118,7 @@
       <workItem from="1777843071004" duration="15561000" />
       <workItem from="1777906385696" duration="1133000" />
       <workItem from="1777950821450" duration="1045000" />
+      <workItem from="1777985078799" duration="5154000" />
     </task>
     <servers />
   </component>

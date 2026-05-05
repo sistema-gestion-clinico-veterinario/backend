@@ -1,6 +1,5 @@
 package veterinaria.vargasvet.domain.entity;
 
-
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -12,9 +11,14 @@ import java.util.List;
 @Entity
 @Table(name = "servicios")
 public class ServiciosVeterinarios {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 
     @Column(nullable = false, length = 100)
     private String nombre;
@@ -22,16 +26,32 @@ public class ServiciosVeterinarios {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column(name = "precio", precision = 10, scale = 2)
+    @Column(name = "precio", precision = 10, scale = 2, nullable = false)
     private BigDecimal precio;
 
     @Column(nullable = false)
-    private Boolean disponible;
+    private Boolean disponible = true;
+
+    @Column(nullable = false)
+    private Boolean activo = true;
 
     @OneToMany(mappedBy = "servicio", cascade = CascadeType.ALL)
     private List<EmpleadoServicio> empleados;
 
-    private LocalDateTime created_At;
-    private LocalDateTime updated_At;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

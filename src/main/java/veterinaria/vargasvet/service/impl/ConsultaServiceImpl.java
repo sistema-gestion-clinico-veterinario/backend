@@ -38,6 +38,10 @@ public class ConsultaServiceImpl implements ConsultaService {
         Consulta consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + id));
 
+        if (!consulta.getVersion().equals(request.getVersion())) {
+            throw new IllegalArgumentException("La consulta ha sido modificada por otro usuario. Por favor, refresque la página.");
+        }
+
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
             if (consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null ||
@@ -113,6 +117,10 @@ public class ConsultaServiceImpl implements ConsultaService {
     public ConsultaResponse cerrarConsulta(Long id, CerrarConsultaRequest request) {
         Consulta consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + id));
+
+        if (!consulta.getVersion().equals(request.getVersion())) {
+            throw new IllegalArgumentException("La consulta ha sido modificada por otro usuario. Por favor, refresque la página.");
+        }
 
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
