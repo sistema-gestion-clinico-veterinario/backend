@@ -24,9 +24,10 @@ public class TipoEmpleadoController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<TipoEmpleado>>> getAll(
+            @RequestParam(required = false) Integer companyId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        List<TipoEmpleado> todos = tipoEmpleadoService.findAll();
+        List<TipoEmpleado> todos = tipoEmpleadoService.findAll(companyId);
         int start = Math.min(page * size, todos.size());
         int end = Math.min(start + size, todos.size());
         Page<TipoEmpleado> resultado = new PageImpl<>(todos.subList(start, end), PageRequest.of(page, size), todos.size());

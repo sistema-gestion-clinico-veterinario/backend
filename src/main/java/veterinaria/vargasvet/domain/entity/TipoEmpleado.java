@@ -1,5 +1,6 @@
 package veterinaria.vargasvet.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "tipo_empleado")
 public class TipoEmpleado {
 
