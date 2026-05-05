@@ -33,14 +33,14 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     @Query(value = "SELECT c FROM Cita c JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
                    "WHERE u.company.id = :companyId " +
-                   "AND (:fecha IS NULL OR CAST(c.fechaHoraInicio AS date) = :fecha) " +
-                   "AND (:estado IS NULL OR c.estado = :estado) " +
+                   "AND (CAST(:fecha AS date) IS NULL OR CAST(c.fechaHoraInicio AS date) = :fecha) " +
+                   "AND (CAST(:estado AS text) IS NULL OR c.estado = :estado) " +
                    "AND (:veterinarioId IS NULL OR c.empleado.id = :veterinarioId) " +
                    "ORDER BY c.fechaHoraInicio DESC",
            countQuery = "SELECT COUNT(c) FROM Cita c JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
                         "WHERE u.company.id = :companyId " +
-                        "AND (:fecha IS NULL OR CAST(c.fechaHoraInicio AS date) = :fecha) " +
-                        "AND (:estado IS NULL OR c.estado = :estado) " +
+                        "AND (CAST(:fecha AS date) IS NULL OR CAST(c.fechaHoraInicio AS date) = :fecha) " +
+                        "AND (CAST(:estado AS text) IS NULL OR c.estado = :estado) " +
                         "AND (:veterinarioId IS NULL OR c.empleado.id = :veterinarioId)")
     Page<Cita> buscar(@Param("companyId") Integer companyId,
                       @Param("fecha") LocalDate fecha,
