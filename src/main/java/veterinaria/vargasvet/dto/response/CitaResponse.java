@@ -24,4 +24,5 @@ public class CitaResponse {
     private EstadoCita estado;
     private String notas;
     private Long consultaId;
+    private Boolean esEmergencia;
 }

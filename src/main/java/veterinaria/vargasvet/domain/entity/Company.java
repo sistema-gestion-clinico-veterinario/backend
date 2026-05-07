@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.LocalTime;
 import java.util.List;
 
 @Data
@@ -39,6 +40,12 @@ public class Company {
 
     @Column(name = "business_hours")
     private String businessHours;
+
+    @Column(name = "opening_time")
+    private LocalTime openingTime;
+
+    @Column(name = "closing_time")
+    private LocalTime closingTime;
 
     @Column(name = "activo", nullable = false)
     private boolean activo = true;

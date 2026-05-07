@@ -71,24 +71,47 @@ public class CitaServiceImpl implements CitaService {
             }
         }
 
+        ServiciosVeterinarios servicio = null;
+        if (request.getServicioId() != null) {
+            servicio = servicioRepository.findById(request.getServicioId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Servicio no encontrado con ID: " + request.getServicioId()));
+        }
+
+        int duracion = (servicio != null && servicio.getDuracionEstimada() != null)
+                ? servicio.getDuracionEstimada()
+                : DURACION_ESTIMADA_MINUTOS;
+
         LocalDateTime fechaInicio = request.getFechaHoraInicio();
-        LocalDateTime fechaFin = fechaInicio.plusMinutes(DURACION_ESTIMADA_MINUTOS);
+        LocalDateTime fechaFin = fechaInicio.plusMinutes(duracion);
 
         DiaSemana diaSemana = toDiaSemana(fechaInicio.getDayOfWeek());
         LocalTime horaInicio = fechaInicio.toLocalTime();
         LocalTime horaFinCita = fechaFin.toLocalTime();
 
-        HorarioEmpleado horario = veterinario.getHorarios().stream()
-                .filter(h -> h.getDiaSemana() == diaSemana && Boolean.TRUE.equals(h.getActivo()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "El veterinario no atiende los días " + diaSemana.name().charAt(0) +
-                        diaSemana.name().substring(1).toLowerCase()));
+        // Validación contra el horario de la clínica (solo si NO es emergencia)
+        boolean esEmergencia = Boolean.TRUE.equals(request.getEsEmergencia());
+        Company company = veterinario.getUser().getCompany();
+        if (!esEmergencia && company != null && company.getOpeningTime() != null && company.getClosingTime() != null) {
+            if (horaInicio.isBefore(company.getOpeningTime()) || horaFinCita.isAfter(company.getClosingTime())) {
+                throw new IllegalArgumentException(
+                        "La cita está fuera del horario de atención de la clínica (" + company.getName() + "). " +
+                        "Atiende de " + company.getOpeningTime() + " a " + company.getClosingTime());
+            }
+        }
 
-        if (horaInicio.isBefore(horario.getHoraInicio()) || horaFinCita.isAfter(horario.getHoraFin())) {
-            throw new IllegalArgumentException(
-                    "La cita está fuera del horario del veterinario. Atiende de " +
-                    horario.getHoraInicio() + " a " + horario.getHoraFin());
+        if (!esEmergencia) {
+            HorarioEmpleado horario = veterinario.getHorarios().stream()
+                    .filter(h -> h.getDiaSemana() == diaSemana && Boolean.TRUE.equals(h.getActivo()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "El veterinario no atiende los días " + diaSemana.name().charAt(0) +
+                            diaSemana.name().substring(1).toLowerCase()));
+
+            if (horaInicio.isBefore(horario.getHoraInicio()) || horaFinCita.isAfter(horario.getHoraFin())) {
+                throw new IllegalArgumentException(
+                        "La cita está fuera del horario del veterinario. Atiende de " +
+                        horario.getHoraInicio() + " a " + horario.getHoraFin());
+            }
         }
 
         boolean hayCruceVeterinario = citaRepository.existsOverlappingCita(veterinario.getId(), fechaInicio, fechaFin);
@@ -106,18 +129,17 @@ public class CitaServiceImpl implements CitaService {
         cita.setEmpleado(veterinario);
         cita.setFechaHoraInicio(fechaInicio);
         cita.setFechaHoraFin(fechaFin);
-        cita.setDuracionMinutos(DURACION_ESTIMADA_MINUTOS);
+        cita.setDuracionMinutos(duracion);
         cita.setMotivoCita(request.getMotivoCita());
         cita.setNotas(request.getNotas());
         cita.setEstado(EstadoCita.PROGRAMADA);
+        cita.setEsEmergencia(esEmergencia);
         
         // Atributos obligatorios en la entidad Cita
         cita.setMontoPagado(BigDecimal.ZERO);
         cita.setTotalServicio(BigDecimal.ZERO);
 
-        if (request.getServicioId() != null) {
-            ServiciosVeterinarios servicio = servicioRepository.findById(request.getServicioId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Servicio no encontrado con ID: " + request.getServicioId()));
+        if (servicio != null) {
             cita.setServicio(servicio);
             cita.setTotalServicio(servicio.getPrecio());
         }
@@ -147,7 +169,7 @@ public class CitaServiceImpl implements CitaService {
             if (cita.getConsulta() != null) {
                 return cita.getConsulta().getId();
             }
-            // Si por alguna razón no tiene consulta pero está en proceso, intentamos buscarla
+      
             return consultaRepository.findByCitaId(id)
                     .map(Consulta::getId)
                     .orElseThrow(() -> new IllegalArgumentException("La cita está en proceso pero no se encontró la consulta asociada"));
@@ -194,9 +216,183 @@ public class CitaServiceImpl implements CitaService {
     @Transactional(readOnly = true)
     public Page<CitaResponse> listar(Integer companyId, LocalDate fecha, EstadoCita estado, Long veterinarioId, int page, int size) {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
-        return citaRepository.buscar(resolvedCompanyId, fecha, estado, veterinarioId,
+        Long filteredVeterinarioId = veterinarioId;
+        if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
+
+            if (SecurityUtils.hasRole("ROLE_VETERINARIO")) {
+                filteredVeterinarioId = SecurityUtils.getCurrentUserId().longValue();
+                filteredVeterinarioId = empleadoRepository.findByUserId(SecurityUtils.getCurrentUserId())
+                        .map(Empleado::getId)
+                        .orElse(veterinarioId);
+            }
+        }
+        
+        return citaRepository.buscar(resolvedCompanyId, fecha, estado, filteredVeterinarioId,
                 PageRequest.of(page, size, Sort.unsorted()))
                 .map(citaMapper::toResponse);
+    }
+
+    @Override
+    @Transactional
+    public void cancelarCita(Long id, String motivo) {
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
+
+        validarPermisoEmpresa(cita);
+
+        if (cita.getEstado() == EstadoCita.COMPLETADA || cita.getEstado() == EstadoCita.CANCELADA) {
+            throw new IllegalArgumentException("No se puede cancelar una cita que ya está " + cita.getEstado());
+        }
+
+        if (cita.getEstado() == EstadoCita.EN_PROCESO) {
+            throw new IllegalArgumentException("No se puede cancelar una cita que ya está en proceso médico");
+        }
+
+        // Regla: No se puede cancelar faltando menos de 1 hora
+        if (LocalDateTime.now().isAfter(cita.getFechaHoraInicio().minusHours(1))) {
+            throw new IllegalArgumentException("No se puede cancelar la cita faltando menos de 1 hora para su inicio");
+        }
+
+        cita.setEstado(EstadoCita.CANCELADA);
+        cita.setMotivoCancelacion(motivo);
+        citaRepository.save(cita);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarCita(Long id) {
+        if (!SecurityUtils.isAdmin() && !SecurityUtils.isSuperAdmin()) {
+            throw new IllegalArgumentException("Solo el administrador puede eliminar citas");
+        }
+
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
+
+        validarPermisoEmpresa(cita);
+
+        if (cita.getEstado() != EstadoCita.CANCELADA) {
+            throw new IllegalArgumentException("Solo se permite eliminar citas en estado Cancelada");
+        }
+
+        cita.setEliminada(true);
+        cita.setEliminadoAt(LocalDateTime.now());
+        
+        String currentUserEmail = SecurityUtils.getCurrentUserEmail();
+        usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setEliminadoPor);
+        
+        citaRepository.save(cita);
+    }
+
+    @Override
+    @Transactional
+    public CitaResponse actualizarCita(Long id, CitaRequest request) {
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
+
+        validarPermisoEmpresa(cita);
+
+        if (cita.getEstado() == EstadoCita.COMPLETADA || cita.getEstado() == EstadoCita.CANCELADA) {
+            throw new IllegalArgumentException("No se puede modificar una cita que ya está " + cita.getEstado());
+        }
+
+        Mascota mascota = mascotaRepository.findById(request.getMascotaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada"));
+        Empleado veterinario = empleadoRepository.findById(request.getVeterinarioId())
+                .orElseThrow(() -> new ResourceNotFoundException("Veterinario no encontrado"));
+
+        ServiciosVeterinarios servicio = null;
+        if (request.getServicioId() != null) {
+            servicio = servicioRepository.findById(request.getServicioId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Servicio no encontrado"));
+        }
+
+        int duracion = (servicio != null && servicio.getDuracionEstimada() != null)
+                ? servicio.getDuracionEstimada()
+                : DURACION_ESTIMADA_MINUTOS;
+
+        LocalDateTime fechaInicio = request.getFechaHoraInicio();
+        LocalDateTime fechaFin = fechaInicio.plusMinutes(duracion);
+
+        // Validar cruces (excluyendo la cita actual)
+        boolean hayCruceVeterinario = citaRepository.existsOverlappingCitaExcludeSelf(veterinario.getId(), fechaInicio, fechaFin, id);
+        if (hayCruceVeterinario) {
+            throw new IllegalArgumentException("El veterinario ya tiene otra cita en ese horario");
+        }
+
+        cita.setMascota(mascota);
+        cita.setEmpleado(veterinario);
+        cita.setFechaHoraInicio(fechaInicio);
+        cita.setFechaHoraFin(fechaFin);
+        cita.setDuracionMinutos(duracion);
+        cita.setMotivoCita(request.getMotivoCita());
+        cita.setNotas(request.getNotas());
+        cita.setEsEmergencia(Boolean.TRUE.equals(request.getEsEmergencia()));
+
+        if (servicio != null) {
+            cita.setServicio(servicio);
+            cita.setTotalServicio(servicio.getPrecio());
+        }
+
+        Cita updatedCita = citaRepository.save(cita);
+        return citaMapper.toResponse(updatedCita);
+    }
+
+    @Override
+    @Transactional
+    public CitaResponse reprogramarCita(Long id, CitaRequest request) {
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
+
+        validarPermisoEmpresa(cita);
+
+        // Regla: Solo Programada o Cancelada
+        if (cita.getEstado() != EstadoCita.PROGRAMADA && cita.getEstado() != EstadoCita.CANCELADA && cita.getEstado() != EstadoCita.REPROGRAMADA) {
+            throw new IllegalArgumentException("Solo se pueden reprogramar citas en estado Programada, Cancelada o Reprogramada");
+        }
+
+        // Regla: 1 hora antes si está programada
+        if (cita.getEstado() == EstadoCita.PROGRAMADA || cita.getEstado() == EstadoCita.REPROGRAMADA) {
+            if (LocalDateTime.now().isAfter(cita.getFechaHoraInicio().minusHours(1))) {
+                throw new IllegalArgumentException("No se puede reprogramar una cita con menos de 1 hora de anticipación");
+            }
+        }
+
+        Empleado veterinario = empleadoRepository.findById(request.getVeterinarioId())
+                .orElseThrow(() -> new ResourceNotFoundException("Veterinario no encontrado"));
+
+        LocalDateTime fechaInicio = request.getFechaHoraInicio();
+        LocalDateTime fechaFin = fechaInicio.plusMinutes(cita.getDuracionMinutos());
+
+        // Validar disponibilidad
+        boolean hayCruce = citaRepository.existsOverlappingCitaExcludeSelf(veterinario.getId(), fechaInicio, fechaFin, id);
+        if (hayCruce) {
+            throw new IllegalArgumentException("El veterinario ya tiene otra cita en ese horario");
+        }
+
+        // Aplicar cambios
+        cita.setEmpleado(veterinario);
+        cita.setFechaHoraInicio(fechaInicio);
+        cita.setFechaHoraFin(fechaFin);
+        cita.setEstado(EstadoCita.REPROGRAMADA);
+        cita.setMotivoReprogramacion(request.getNotas()); // Usamos notas como motivo si no hay campo específico en request
+        
+        // Auditoría
+        cita.setReprogramadoAt(LocalDateTime.now());
+        String currentUserEmail = SecurityUtils.getCurrentUserEmail();
+        usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setReprogramadoPor);
+
+        Cita savedCita = citaRepository.save(cita);
+        return citaMapper.toResponse(savedCita);
+    }
+
+    private void validarPermisoEmpresa(Cita cita) {
+        if (!SecurityUtils.isSuperAdmin()) {
+            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
+            if (cita.getMascota().getApoderado().getUser().getCompany() == null ||
+                !cita.getMascota().getApoderado().getUser().getCompany().getId().equals(currentCompanyId)) {
+                throw new IllegalArgumentException("No tienes permiso para realizar esta acción en esta cita");
+            }
+        }
     }
 
     private DiaSemana toDiaSemana(DayOfWeek dayOfWeek) {

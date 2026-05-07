@@ -23,4 +23,7 @@ public class ServicioRequest {
     private BigDecimal precio;
 
     private Boolean disponible = true;
+
+    @NotNull(message = "La duración estimada es obligatoria")
+    private Integer duracionEstimada;
 }
