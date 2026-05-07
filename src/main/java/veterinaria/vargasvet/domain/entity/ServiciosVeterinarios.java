@@ -35,6 +35,9 @@ public class ServiciosVeterinarios {
     @Column(nullable = false)
     private Boolean activo = true;
 
+    @Column(name = "duracion_estimada")
+    private Integer duracionEstimada; // en minutos
+
     @OneToMany(mappedBy = "servicio", cascade = CascadeType.ALL)
     private List<EmpleadoServicio> empleados;
 

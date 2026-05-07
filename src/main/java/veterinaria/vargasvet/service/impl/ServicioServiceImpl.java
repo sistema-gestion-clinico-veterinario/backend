@@ -58,6 +58,7 @@ public class ServicioServiceImpl implements ServicioService {
         servicio.setPrecio(request.getPrecio());
         servicio.setDisponible(request.getDisponible() != null ? request.getDisponible() : true);
         servicio.setActivo(true);
+        servicio.setDuracionEstimada(request.getDuracionEstimada());
 
         return toResponse(servicioRepository.save(servicio));
     }
@@ -76,6 +77,7 @@ public class ServicioServiceImpl implements ServicioService {
         if (request.getDisponible() != null) {
             servicio.setDisponible(request.getDisponible());
         }
+        servicio.setDuracionEstimada(request.getDuracionEstimada());
 
         return toResponse(servicioRepository.save(servicio));
     }
@@ -112,6 +114,7 @@ public class ServicioServiceImpl implements ServicioService {
             r.setCompanyId(s.getCompany().getId());
             r.setCompanyName(s.getCompany().getName());
         }
+        r.setDuracionEstimada(s.getDuracionEstimada());
         return r;
     }
 

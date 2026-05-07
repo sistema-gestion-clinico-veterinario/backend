@@ -50,6 +50,8 @@ public class CitaMapper {
             response.setConsultaId(cita.getConsulta().getId());
         }
 
+        response.setEsEmergencia(cita.getEsEmergencia());
+
         return response;
     }
 }
