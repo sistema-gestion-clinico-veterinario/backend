@@ -34,7 +34,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public List<PermissionDTO> getAllPermissions() {
         return permissionRepository.findAll().stream()
-                .map(p -> new PermissionDTO(p.getId(), p.getName()))
+                .map(p -> new PermissionDTO(p.getId(), p.getName(), p.getLabel(), p.getDescription(), p.getModule()))
                 .collect(Collectors.toList());
     }
 
@@ -82,7 +82,7 @@ public class RoleServiceImpl implements RoleService {
         dto.setId(role.getId());
         dto.setName(role.getName());
         dto.setPermissions(role.getPermissions().stream()
-                .map(p -> new PermissionDTO(p.getId(), p.getName()))
+                .map(p -> new PermissionDTO(p.getId(), p.getName(), p.getLabel(), p.getDescription(), p.getModule()))
                 .collect(Collectors.toSet()));
         return dto;
     }

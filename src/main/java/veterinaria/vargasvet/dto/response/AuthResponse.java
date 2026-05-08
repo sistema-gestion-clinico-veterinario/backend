@@ -15,4 +15,5 @@ public class AuthResponse {
     private Integer empleadoId;
     private boolean passwordChanged;
     private boolean needsCompanySelection;
+    private List<MenuDTO> menu;
 }
