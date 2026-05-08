@@ -14,4 +14,5 @@ public class ServicioResponse {
     private BigDecimal precio;
     private Boolean disponible;
     private Boolean activo;
+    private Integer duracionEstimada;
 }

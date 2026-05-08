@@ -15,11 +15,15 @@ public class SecurityUtils {
         return null;
     }
 
-    public static boolean isSuperAdmin() {
+    public static boolean hasRole(String role) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) return false;
         return auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+                .anyMatch(a -> a.getAuthority().equals(role));
+    }
+
+    public static boolean isSuperAdmin() {
+        return hasRole("ROLE_SUPER_ADMIN");
     }
 
     public static String getCurrentUserEmail() {
@@ -39,9 +43,6 @@ public class SecurityUtils {
     }
 
     public static boolean isAdmin() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) return false;
-        return auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return hasRole("ROLE_ADMIN");
     }
 }
