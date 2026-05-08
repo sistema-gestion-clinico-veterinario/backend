@@ -23,11 +23,10 @@ import org.springframework.beans.factory.annotation.Value;
 import veterinaria.vargasvet.dto.Mail;
 import veterinaria.vargasvet.service.EmailService;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
+import veterinaria.vargasvet.service.MenuService;
+import veterinaria.vargasvet.dto.response.MenuDTO;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +38,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private final UserMapper userMapper;
     private final TokenProvider tokenProvider;
     private final EmailService emailService;
+    private final MenuService menuService;
 
     @Value("${app.url}")
     private String appUrl;
@@ -173,6 +173,11 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                         : null
         );
         response.setPasswordChanged(usuario.isPasswordChanged());
+
+        // Cargar menú dinámico basado en permisos
+        Set<String> authorities = new HashSet<>(userRoles);
+        authorities.addAll(permissions);
+        response.setMenu(menuService.getMenuForUser(authorities));
 
         return response;
     }
