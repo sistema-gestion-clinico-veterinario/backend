@@ -19,10 +19,13 @@ public class EspecialidadServiceImpl implements EspecialidadService {
     private final veterinaria.vargasvet.repository.CompanyRepository companyRepository;
 
     @Override
-    public List<Especialidad> findAll() {
-        Integer companyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+    public List<Especialidad> findAll(Integer companyId) {
         if (companyId != null) {
             return especialidadRepository.findByCompanyId(companyId);
+        }
+        Integer currentCompanyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+        if (currentCompanyId != null) {
+            return especialidadRepository.findByCompanyId(currentCompanyId);
         }
         return especialidadRepository.findAll();
     }

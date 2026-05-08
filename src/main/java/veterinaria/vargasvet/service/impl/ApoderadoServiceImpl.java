@@ -77,9 +77,9 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         usuario.setCompany(companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
 
-        Role apoderadoRole = roleRepository.findByName("ROLE_APODERADO")
+        Role apoderadoRole = roleRepository.findByName("ROLE_CLIENTE")
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Error de configuración: El rol 'ROLE_APODERADO' no existe."));
+                        "Error de configuración: El rol 'ROLE_CLIENTE' no existe."));
         usuario.getRoles().add(apoderadoRole);
 
         Usuario savedUser = usuarioRepository.save(usuario);
@@ -188,6 +188,31 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             return companyIdParam;
         }
         return SecurityUtils.getCurrentCompanyId();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ApoderadoRequest findById(Long id) {
+        Apoderado apoderado = apoderadoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Apoderado no encontrado con ID: " + id));
+
+        Usuario usuario = apoderado.getUser();
+        ApoderadoRequest dto = new ApoderadoRequest();
+        dto.setId(apoderado.getId());
+        dto.setNombre(usuario.getNombre());
+        dto.setApellido(usuario.getApellido());
+        dto.setEmail(usuario.getEmail());
+        dto.setNumeroDocumento(usuario.getDni());
+        dto.setTelefono(usuario.getTelefono());
+        dto.setDireccion(usuario.getDireccion());
+        dto.setCompanyId(usuario.getCompany() != null ? usuario.getCompany().getId() : null);
+
+        dto.setGenero(apoderado.getGenero());
+        dto.setTipoDocumento(apoderado.getTipoDocumentoIdentidad());
+        dto.setReferencias(apoderado.getReferencias());
+        dto.setObservaciones(apoderado.getObservaciones());
+
+        return dto;
     }
 
     private ApoderadoListResponse toListResponse(Apoderado apoderado) {

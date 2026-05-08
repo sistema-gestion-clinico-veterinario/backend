@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import java.time.LocalTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Company;
@@ -11,6 +12,7 @@ import veterinaria.vargasvet.dto.request.CompanyDTO;
 import veterinaria.vargasvet.dto.response.CompanyListResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CompanyRepository;
+import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CompanyService;
 
 @Service
@@ -21,19 +23,69 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     public CompanyDTO getCompanyInfo() {
-        Company company = companyRepository.findAll().stream()
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("No se ha configurado la empresa aún"));
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        Company company;
+        
+        if (companyId != null) {
+            company = companyRepository.findById(companyId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + companyId));
+        } else {
+         
+            company = companyRepository.findAll().stream()
+                    .findFirst()
+                    .orElseThrow(() -> new ResourceNotFoundException("No se ha configurado ninguna empresa aún"));
+        }
         return mapToDTO(company);
     }
 
     @Override
     @Transactional
     public CompanyDTO updateCompanyInfo(CompanyDTO dto) {
-        Company company = companyRepository.findAll().stream()
-                .findFirst()
-                .orElse(new Company());
+       
+        Integer id = dto.getId();
+        if (id == null) {
 
+            return companyRepository.findAll().stream()
+                    .findFirst()
+                    .map(c -> update(c.getId(), dto))
+                    .orElseGet(() -> save(dto));
+        }
+        return update(id, dto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CompanyListResponse> listarTodas(int page, int size) {
+        return companyRepository.findAll(PageRequest.of(page, size, Sort.by("name").ascending()))
+                .map(this::toListResponse);
+    }
+
+    @Override
+    public CompanyDTO findById(Integer id) {
+        return companyRepository.findById(id)
+                .map(this::mapToDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + id));
+    }
+
+    @Override
+    @Transactional
+    public CompanyDTO save(CompanyDTO dto) {
+        Company company = new Company();
+        updateEntityFromDTO(company, dto);
+        company.setActivo(true);
+        return mapToDTO(companyRepository.save(company));
+    }
+
+    @Override
+    @Transactional
+    public CompanyDTO update(Integer id, CompanyDTO dto) {
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + id));
+        updateEntityFromDTO(company, dto);
+        return mapToDTO(companyRepository.save(company));
+    }
+
+    private void updateEntityFromDTO(Company company, CompanyDTO dto) {
         company.setName(dto.getName());
         company.setRuc(dto.getRuc());
         company.setAddress(dto.getAddress());
@@ -43,17 +95,12 @@ public class CompanyServiceImpl implements CompanyService {
         company.setWebsite(dto.getWebsite());
         company.setDescription(dto.getDescription());
         company.setBusinessHours(dto.getBusinessHours());
-        company.setActivo(true);
-
-        Company saved = companyRepository.save(company);
-        return mapToDTO(saved);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<CompanyListResponse> listarTodas(int page, int size) {
-        return companyRepository.findAll(PageRequest.of(page, size, Sort.by("name").ascending()))
-                .map(this::toListResponse);
+        if (dto.getOpeningTime() != null && !dto.getOpeningTime().isBlank()) {
+            company.setOpeningTime(LocalTime.parse(dto.getOpeningTime()));
+        }
+        if (dto.getClosingTime() != null && !dto.getClosingTime().isBlank()) {
+            company.setClosingTime(LocalTime.parse(dto.getClosingTime()));
+        }
     }
 
     private CompanyListResponse toListResponse(Company company) {
@@ -65,6 +112,9 @@ public class CompanyServiceImpl implements CompanyService {
         response.setPhone(company.getPhone());
         response.setEmail(company.getEmail());
         response.setActivo(company.isActivo());
+        response.setBusinessHours(company.getBusinessHours());
+        if (company.getOpeningTime() != null) response.setOpeningTime(company.getOpeningTime().toString());
+        if (company.getClosingTime() != null) response.setClosingTime(company.getClosingTime().toString());
         return response;
     }
 
@@ -80,6 +130,8 @@ public class CompanyServiceImpl implements CompanyService {
         dto.setWebsite(company.getWebsite());
         dto.setDescription(company.getDescription());
         dto.setBusinessHours(company.getBusinessHours());
+        if (company.getOpeningTime() != null) dto.setOpeningTime(company.getOpeningTime().toString());
+        if (company.getClosingTime() != null) dto.setClosingTime(company.getClosingTime().toString());
         return dto;
     }
 }

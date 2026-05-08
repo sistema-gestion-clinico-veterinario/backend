@@ -10,6 +10,7 @@ import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
 
 @Data
 public class ApoderadoRequest {
+    private Long id;
     @NotBlank
     private String nombre;
     @NotBlank

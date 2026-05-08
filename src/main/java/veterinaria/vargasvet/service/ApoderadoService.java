@@ -10,4 +10,5 @@ public interface ApoderadoService {
     UserProfileDTO updateApoderado(Long id, ApoderadoRequest dto);
     void cambiarEstado(Long id, Boolean nuevoEstado);
     Page<ApoderadoListResponse> listar(Integer companyId, String nombre, String numeroDocumento, int page, int size);
+    ApoderadoRequest findById(Long id);
 }
