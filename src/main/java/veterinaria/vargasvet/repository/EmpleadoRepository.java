@@ -19,13 +19,13 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
 
     @Query(value = "SELECT e FROM Empleado e JOIN e.user u " +
                    "WHERE u.company.id = :companyId " +
-                   "AND (:nombre IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +
+                   "AND (CAST(:nombre AS text) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                    "AND (:tipoEmpleadoId IS NULL OR EXISTS (SELECT t FROM e.tiposEmpleado t WHERE t.id = :tipoEmpleadoId)) " +
                    "AND (:especialidadId IS NULL OR EXISTS (SELECT es FROM e.especialidades es WHERE es.id = :especialidadId)) " +
                    "ORDER BY u.apellido ASC, u.nombre ASC",
            countQuery = "SELECT COUNT(e) FROM Empleado e JOIN e.user u " +
                         "WHERE u.company.id = :companyId " +
-                        "AND (:nombre IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +
+                        "AND (CAST(:nombre AS text) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                         "AND (:tipoEmpleadoId IS NULL OR EXISTS (SELECT t FROM e.tiposEmpleado t WHERE t.id = :tipoEmpleadoId)) " +
                         "AND (:especialidadId IS NULL OR EXISTS (SELECT es FROM e.especialidades es WHERE es.id = :especialidadId))")
     Page<Empleado> buscar(@Param("companyId") Integer companyId,
@@ -33,4 +33,7 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
                           @Param("tipoEmpleadoId") Long tipoEmpleadoId,
                           @Param("especialidadId") Long especialidadId,
                           Pageable pageable);
+
+    @Query("SELECT COUNT(e) FROM Empleado e WHERE e.user.company.id = :companyId")
+    long countByCompanyId(@Param("companyId") Integer companyId);
 }

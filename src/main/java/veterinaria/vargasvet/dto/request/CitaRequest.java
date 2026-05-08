@@ -24,4 +24,6 @@ public class CitaRequest {
     private Long servicioId;
 
     private String notas;
+    private Long version;
+    private Boolean esEmergencia = false;
 }

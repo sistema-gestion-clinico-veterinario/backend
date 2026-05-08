@@ -12,6 +12,8 @@ public class AuthResponse {
     private List<String> permissions;
     private String nombreCompleto;
     private String userType;
+    private Integer empleadoId;
     private boolean passwordChanged;
     private boolean needsCompanySelection;
+    private List<MenuDTO> menu;
 }
