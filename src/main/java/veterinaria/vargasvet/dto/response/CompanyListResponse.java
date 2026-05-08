@@ -11,4 +11,7 @@ public class CompanyListResponse {
     private String phone;
     private String email;
     private Boolean activo;
+    private String businessHours;
+    private String openingTime;
+    private String closingTime;
 }

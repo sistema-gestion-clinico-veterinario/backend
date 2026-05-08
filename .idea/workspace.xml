@@ -6,18 +6,24 @@
   <component name="ChangeListManager">
     <list default="true" id="8ffa857a-e1ef-4049-a862-755969e462ca" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/CitaController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/CitaController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/Cita.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/Cita.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/Consulta.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/Consulta.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/Company.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/Company.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/ServiciosVeterinarios.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/ServiciosVeterinarios.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/request/CitaRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/request/CitaRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/request/CompanyDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/request/CompanyDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/request/ServicioRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/request/ServicioRequest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/CitaResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/CitaResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/HistoriaClinicaListResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/HistoriaClinicaListResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/CompanyListResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/CompanyListResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/ServicioResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/ServicioResponse.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/mapper/CitaMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/mapper/CitaMapper.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/CitaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/CitaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/HistoriaClinicaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/HistoriaClinicaRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/SecurityUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/SecurityUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/CitaService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/CitaService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/CitaServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/CitaServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/ConsultaServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/ConsultaServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/HistoriaClinicaServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/HistoriaClinicaServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/CompanyServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/CompanyServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/ServicioServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/ServicioServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/UsuarioServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/UsuarioServiceImpl.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -119,6 +125,9 @@
       <workItem from="1777906385696" duration="1133000" />
       <workItem from="1777950821450" duration="1045000" />
       <workItem from="1777985078799" duration="5154000" />
+      <workItem from="1778104157402" duration="1367000" />
+      <workItem from="1778122062052" duration="2365000" />
+      <workItem from="1778186360732" duration="3603000" />
     </task>
     <servers />
   </component>

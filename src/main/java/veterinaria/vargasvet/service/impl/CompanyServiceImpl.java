@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import java.time.LocalTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Company;
@@ -94,6 +95,12 @@ public class CompanyServiceImpl implements CompanyService {
         company.setWebsite(dto.getWebsite());
         company.setDescription(dto.getDescription());
         company.setBusinessHours(dto.getBusinessHours());
+        if (dto.getOpeningTime() != null && !dto.getOpeningTime().isBlank()) {
+            company.setOpeningTime(LocalTime.parse(dto.getOpeningTime()));
+        }
+        if (dto.getClosingTime() != null && !dto.getClosingTime().isBlank()) {
+            company.setClosingTime(LocalTime.parse(dto.getClosingTime()));
+        }
     }
 
     private CompanyListResponse toListResponse(Company company) {
@@ -105,6 +112,9 @@ public class CompanyServiceImpl implements CompanyService {
         response.setPhone(company.getPhone());
         response.setEmail(company.getEmail());
         response.setActivo(company.isActivo());
+        response.setBusinessHours(company.getBusinessHours());
+        if (company.getOpeningTime() != null) response.setOpeningTime(company.getOpeningTime().toString());
+        if (company.getClosingTime() != null) response.setClosingTime(company.getClosingTime().toString());
         return response;
     }
 
@@ -120,6 +130,8 @@ public class CompanyServiceImpl implements CompanyService {
         dto.setWebsite(company.getWebsite());
         dto.setDescription(company.getDescription());
         dto.setBusinessHours(company.getBusinessHours());
+        if (company.getOpeningTime() != null) dto.setOpeningTime(company.getOpeningTime().toString());
+        if (company.getClosingTime() != null) dto.setClosingTime(company.getClosingTime().toString());
         return dto;
     }
 }

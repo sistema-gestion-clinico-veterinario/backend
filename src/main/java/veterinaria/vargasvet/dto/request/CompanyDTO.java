@@ -31,4 +31,6 @@ public class CompanyDTO {
     private String website;
     private String description;
     private String businessHours;
+    private String openingTime;
+    private String closingTime;
 }
