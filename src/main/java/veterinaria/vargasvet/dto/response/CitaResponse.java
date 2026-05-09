@@ -3,6 +3,7 @@ package veterinaria.vargasvet.dto.response;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -25,4 +26,6 @@ public class CitaResponse {
     private String notas;
     private Long consultaId;
     private Boolean esEmergencia;
+    private BigDecimal totalServicio;
+    private BigDecimal montoPagado;
 }

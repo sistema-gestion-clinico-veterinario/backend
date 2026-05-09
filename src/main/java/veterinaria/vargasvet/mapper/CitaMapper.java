@@ -51,6 +51,8 @@ public class CitaMapper {
         }
 
         response.setEsEmergencia(cita.getEsEmergencia());
+        response.setTotalServicio(cita.getTotalServicio());
+        response.setMontoPagado(cita.getMontoPagado());
 
         return response;
     }

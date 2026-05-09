@@ -50,6 +50,9 @@ public class Purchase {
     @Column(name = "tipo_documento")
     private TipoDocumentoVenta tipoDocumento;
 
+    @Column(name = "monto_recibido", precision = 10, scale = 2)
+    private BigDecimal montoRecibido;
+
     @Column(name = "comprobante_transferencia")
     private String comprobanteTransferencia;
 

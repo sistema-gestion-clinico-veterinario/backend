@@ -2,6 +2,7 @@ package veterinaria.vargasvet.dto.response;
 
 import lombok.Data;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class PrescripcionResumenResponse {
@@ -15,4 +16,6 @@ public class PrescripcionResumenResponse {
     private String instrucciones;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
+    private String veterinarioNombre;
+    private LocalDateTime fechaCreacion;
 }

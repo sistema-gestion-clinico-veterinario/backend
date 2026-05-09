@@ -3,8 +3,13 @@ package veterinaria.vargasvet.mapper;
 import org.springframework.stereotype.Component;
 import veterinaria.vargasvet.domain.entity.Consulta;
 import veterinaria.vargasvet.domain.entity.Mascota;
+import veterinaria.vargasvet.domain.entity.Prescripcion;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.dto.response.ConsultaResponse;
+import veterinaria.vargasvet.dto.response.PrescripcionResumenResponse;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -85,6 +90,32 @@ public class ConsultaMapper {
             }
         }
 
+        if (consulta.getPrescripciones() != null) {
+            List<PrescripcionResumenResponse> prescripciones = consulta.getPrescripciones().stream()
+                    .map(this::toPrescripcionResponse)
+                    .collect(Collectors.toList());
+            response.setPrescripciones(prescripciones);
+        }
+
         return response;
+    }
+
+    public PrescripcionResumenResponse toPrescripcionResponse(Prescripcion p) {
+        PrescripcionResumenResponse r = new PrescripcionResumenResponse();
+        r.setId(p.getId());
+        r.setMedicamento(p.getMedicamento());
+        r.setPrincipioActivo(p.getPrincipioActivo());
+        r.setDosis(p.getDosis());
+        r.setFrecuencia(p.getFrecuencia());
+        r.setDuracionDias(p.getDuracionDias());
+        r.setViaAdministracion(p.getViaAdministracion());
+        r.setInstrucciones(p.getInstrucciones());
+        r.setFechaInicio(p.getFechaInicio());
+        r.setFechaFin(p.getFechaFin());
+        r.setFechaCreacion(p.getCreatedAt());
+        if (p.getVeterinario() != null && p.getVeterinario().getUser() != null) {
+            r.setVeterinarioNombre(p.getVeterinario().getUser().getNombre() + " " + p.getVeterinario().getUser().getApellido());
+        }
+        return r;
     }
 }
