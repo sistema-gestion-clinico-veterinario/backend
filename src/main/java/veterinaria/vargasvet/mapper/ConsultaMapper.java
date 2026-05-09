@@ -42,6 +42,7 @@ public class ConsultaMapper {
         response.setObservaciones(consulta.getObservaciones());
         response.setFechaCierre(consulta.getFechaCierre());
         response.setCerradoPor(consulta.getCerradoPor());
+        response.setIndicacionesReceta(consulta.getIndicacionesReceta());
 
         if (consulta.getCita() != null) {
             response.setCitaId(consulta.getCita().getId());
