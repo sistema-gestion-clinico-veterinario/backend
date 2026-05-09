@@ -78,6 +78,9 @@ public class Consulta {
     @Column(name = "observaciones", columnDefinition = "TEXT")
     private String observaciones;
 
+    @Column(name = "indicaciones_receta", columnDefinition = "TEXT")
+    private String indicacionesReceta;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_consulta", nullable = false)
     private TipoConsulta tipoConsulta;

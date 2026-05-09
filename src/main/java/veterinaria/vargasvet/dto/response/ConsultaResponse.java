@@ -59,5 +59,6 @@ public class ConsultaResponse {
 
     private LocalDateTime fechaCierre;
     private String cerradoPor;
+    private String indicacionesReceta;
     private List<PrescripcionResumenResponse> prescripciones;
 }

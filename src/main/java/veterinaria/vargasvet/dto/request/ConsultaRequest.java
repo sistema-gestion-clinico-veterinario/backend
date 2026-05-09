@@ -31,4 +31,6 @@ public class ConsultaRequest {
     private String antecedentesPersonales;
     private String antecedentesFamiliares;
     private String grupoSanguineo;
+
+    private String indicacionesReceta;
 }
