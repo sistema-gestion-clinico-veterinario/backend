@@ -5,6 +5,7 @@ import veterinaria.vargasvet.domain.enums.EstadoConsulta;
 import veterinaria.vargasvet.domain.enums.TipoConsulta;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class ConsultaResponse {
@@ -58,4 +59,5 @@ public class ConsultaResponse {
 
     private LocalDateTime fechaCierre;
     private String cerradoPor;
+    private List<PrescripcionResumenResponse> prescripciones;
 }
