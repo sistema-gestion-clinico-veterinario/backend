@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -136,6 +137,30 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
         } catch (IOException e) {
             throw new RuntimeException("Error al leer el archivo para validación DICOM", e);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ArchivoClinicoResponse obtenerPorId(Long id) {
+        return toResponse(archivoClinicoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Archivo no encontrado con ID: " + id)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Resource servirContenido(Long id) {
+        ArchivoClinico archivo = archivoClinicoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Archivo no encontrado con ID: " + id));
+        return storageService.loadAsResource(archivo.getUrl());
+    }
+
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        ArchivoClinico archivo = archivoClinicoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Archivo no encontrado con ID: " + id));
+        storageService.delete(archivo.getUrl());
+        archivoClinicoRepository.delete(archivo);
     }
 
     public ArchivoClinicoResponse toResponse(ArchivoClinico archivo) {
