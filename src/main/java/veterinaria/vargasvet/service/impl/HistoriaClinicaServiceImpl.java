@@ -26,7 +26,6 @@ import veterinaria.vargasvet.service.impl.ArchivoClinicoServiceImpl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
@@ -48,15 +47,15 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         boolean isSuperAdmin = SecurityUtils.isSuperAdmin();
         Integer companyId = SecurityUtils.getCurrentCompanyId();
 
-        LocalDateTime desde = fechaDesde != null ? fechaDesde.atStartOfDay() : null;
-        LocalDateTime hasta = fechaHasta != null ? fechaHasta.atTime(LocalTime.MAX) : null;
-
         String hcFiltro = (numeroHc != null && !numeroHc.isBlank()) ? numeroHc.trim() : null;
         String pacienteFiltro = (nombrePaciente != null && !nombrePaciente.isBlank()) ? "%" + nombrePaciente.trim().toLowerCase() + "%" : null;
         String propietarioFiltro = (nombrePropietario != null && !nombrePropietario.isBlank()) ? "%" + nombrePropietario.trim().toLowerCase() + "%" : null;
+        String desdeStr = fechaDesde != null ? fechaDesde.toString() + " 00:00:00" : null;
+        String hastaStr = fechaHasta != null ? fechaHasta.toString() + " 23:59:59" : null;
 
         Page<HistoriaClinica> pageHc = historiaClinicaRepository.buscar(
-                isSuperAdmin, companyId, hcFiltro, pacienteFiltro, propietarioFiltro, desde, hasta,
+                isSuperAdmin, companyId, hcFiltro, pacienteFiltro, propietarioFiltro,
+                desdeStr, hastaStr,
                 PageRequest.of(page, size, Sort.unsorted()));
 
         List<Long> ids = pageHc.getContent().stream().map(HistoriaClinica::getId).toList();
