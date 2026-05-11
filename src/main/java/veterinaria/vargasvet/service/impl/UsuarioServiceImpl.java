@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import veterinaria.vargasvet.service.MenuService;
 import veterinaria.vargasvet.dto.response.MenuDTO;
+import veterinaria.vargasvet.security.SecurityUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -210,6 +211,52 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         usuario.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         usuario.setPasswordChanged(true);
         usuarioRepository.save(usuario);
+
+        // Enviar notificación informativa
+        sendPasswordChangeNotification(usuario);
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(veterinaria.vargasvet.dto.request.AdminChangePasswordRequest dto) {
+        Usuario usuario = usuarioRepository.findById(dto.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        // Aislamiento de datos: Si no es SUPER_ADMIN, solo puede resetear a usuarios de su misma empresa
+        if (!SecurityUtils.isSuperAdmin()) {
+            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
+            if (usuario.getCompany() == null || !usuario.getCompany().getId().equals(currentCompanyId)) {
+                throw new org.springframework.security.access.AccessDeniedException("No tiene permisos para cambiar la contraseña de este usuario");
+            }
+        }
+
+        usuario.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        usuario.setPasswordChanged(false);
+        usuarioRepository.save(usuario);
+
+        // Enviar notificación informativa
+        sendPasswordChangeNotification(usuario);
+    }
+
+    private void sendPasswordChangeNotification(Usuario usuario) {
+        try {
+            Map<String, Object> model = new HashMap<>();
+            model.put("nombre", resolveNombreCompleto(usuario));
+            model.put("email", usuario.getEmail());
+            model.put("companyName", companyName);
+            model.put("companyLogo", companyLogo);
+            model.put("appUrl", appUrl);
+
+            Mail mail = emailService.createMail(
+                    usuario.getEmail(),
+                    "Notificación de Cambio de Contraseña - " + companyName,
+                    model
+            );
+
+            emailService.sendEmail(mail, "email/password-change-template");
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo enviar el correo de notificación a " + usuario.getEmail() + ": " + e.getMessage());
+        }
     }
 
     private String resolveNombreCompleto(Usuario usuario) {

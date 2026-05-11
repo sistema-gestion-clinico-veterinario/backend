@@ -318,10 +318,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<EmpleadoListResponse> listar(Integer companyId, String nombre, Long tipoEmpleadoId, Long especialidadId, int page, int size) {
+    public Page<EmpleadoListResponse> listar(Integer companyId, String nombre, String apellido, String email, Long tipoEmpleadoId, Long especialidadId, int page, int size) {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
         String nombreFiltro = (nombre != null && !nombre.isBlank()) ? nombre.trim() : null;
-        return empleadoRepository.buscar(resolvedCompanyId, nombreFiltro, tipoEmpleadoId, especialidadId,
+        String apellidoFiltro = (apellido != null && !apellido.isBlank()) ? apellido.trim() : null;
+        String emailFiltro = (email != null && !email.isBlank()) ? email.trim() : null;
+        return empleadoRepository.buscar(resolvedCompanyId, nombreFiltro, apellidoFiltro, emailFiltro, tipoEmpleadoId, especialidadId,
                 PageRequest.of(page, size, Sort.unsorted()))
                 .map(this::toListResponse);
     }

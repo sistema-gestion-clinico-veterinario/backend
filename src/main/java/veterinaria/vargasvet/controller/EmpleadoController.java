@@ -28,11 +28,13 @@ public class EmpleadoController {
     public ResponseEntity<ApiResponse<Page<EmpleadoListResponse>>> listar(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String apellido,
+            @RequestParam(required = false) String email,
             @RequestParam(required = false) Long tipoEmpleadoId,
             @RequestParam(required = false) Long especialidadId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<EmpleadoListResponse> resultado = empleadoService.listar(companyId, nombre, tipoEmpleadoId, especialidadId, page, size);
+        Page<EmpleadoListResponse> resultado = empleadoService.listar(companyId, nombre, apellido, email, tipoEmpleadoId, especialidadId, page, size);
         String mensaje = resultado.isEmpty() ? "No se encontraron empleados" : "Empleados recuperados con éxito";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
     }
