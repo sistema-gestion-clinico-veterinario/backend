@@ -2,6 +2,7 @@ package veterinaria.vargasvet.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,8 +21,19 @@ public class PrescripcionController {
 
     private final PrescripcionService prescripcionService;
 
+    @GetMapping
+    @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
+    public ResponseEntity<ApiResponse<Page<PrescripcionResumenResponse>>> buscar(
+            @RequestParam(required = false, defaultValue = "") String query,
+            @RequestParam(required = false) Integer companyId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Recetas obtenidas",
+                prescripcionService.buscar(query, companyId, page, size)));
+    }
+
     @PostMapping("/consulta/{consultaId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO')")
+    @PreAuthorize("hasAuthority('CLINICAL_RECORD_MANAGE')")
     public ResponseEntity<ApiResponse<PrescripcionResumenResponse>> crear(
             @PathVariable Long consultaId,
             @Valid @RequestBody PrescripcionRequest request) {
@@ -30,14 +42,14 @@ public class PrescripcionController {
     }
 
     @GetMapping("/consulta/{consultaId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
     public ResponseEntity<ApiResponse<List<PrescripcionResumenResponse>>> listarPorConsulta(
             @PathVariable Long consultaId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Recetas obtenidas", prescripcionService.listarPorConsulta(consultaId)));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO')")
+    @PreAuthorize("hasAuthority('CLINICAL_RECORD_MANAGE')")
     public ResponseEntity<ApiResponse<PrescripcionResumenResponse>> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody PrescripcionRequest request) {
@@ -45,7 +57,7 @@ public class PrescripcionController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO')")
+    @PreAuthorize("hasAuthority('CLINICAL_RECORD_MANAGE')")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         prescripcionService.eliminar(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Receta eliminada exitosamente", null));

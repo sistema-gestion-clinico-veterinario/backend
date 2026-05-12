@@ -17,6 +17,7 @@ import veterinaria.vargasvet.repository.ApoderadoRepository;
 import veterinaria.vargasvet.repository.MascotaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.MascotaService;
+import veterinaria.vargasvet.util.BusinessValidator;
 
 import java.util.UUID;
 
@@ -27,6 +28,7 @@ public class MascotaServiceImpl implements MascotaService {
     private final MascotaRepository mascotaRepository;
     private final ApoderadoRepository apoderadoRepository;
     private final MascotaMapper mascotaMapper;
+    private final BusinessValidator businessValidator;
 
     @Override
     @Transactional
@@ -47,6 +49,9 @@ public class MascotaServiceImpl implements MascotaService {
                 throw new IllegalArgumentException("No tienes permiso para registrar mascotas a clientes de otra clínica");
             }
         }
+        businessValidator.checkCompanyActiva(
+            apoderado.getUser() != null && apoderado.getUser().getCompany() != null
+                ? apoderado.getUser().getCompany().getId() : null);
 
 
         if (request.getEspecie() == EspecieMascota.OTRO) {
@@ -87,6 +92,14 @@ public class MascotaServiceImpl implements MascotaService {
     public MascotaResponse updateMascota(Long id, MascotaRequest request) {
         Mascota mascota = mascotaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada con ID: " + id));
+
+        if (!Boolean.TRUE.equals(mascota.getActivo())) {
+            throw new IllegalStateException("No se puede editar una mascota inactiva. Active a la mascota primero.");
+        }
+        businessValidator.checkCompanyActiva(
+            mascota.getApoderado() != null && mascota.getApoderado().getUser() != null
+                && mascota.getApoderado().getUser().getCompany() != null
+                ? mascota.getApoderado().getUser().getCompany().getId() : null);
 
         if (!SecurityUtils.isSuperAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();

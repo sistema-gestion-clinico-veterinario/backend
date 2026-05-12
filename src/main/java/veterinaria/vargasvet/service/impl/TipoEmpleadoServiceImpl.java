@@ -57,6 +57,29 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
 
     @Override
     @Transactional
+    public TipoEmpleado update(Long id, TipoEmpleado tipo) {
+        TipoEmpleado existing = tipoEmpleadoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado"));
+
+        existing.setNombre(tipo.getNombre());
+        if (tipo.getDescripcion() != null) existing.setDescripcion(tipo.getDescripcion());
+        existing.setPermiteEspecialidades(tipo.getPermiteEspecialidades() != null ? tipo.getPermiteEspecialidades() : existing.getPermiteEspecialidades());
+        existing.setUpdatedAt(java.time.LocalDateTime.now());
+        return tipoEmpleadoRepository.save(existing);
+    }
+
+    @Override
+    @Transactional
+    public void cambiarEstado(Long id, Boolean activo) {
+        TipoEmpleado existing = tipoEmpleadoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado"));
+        existing.setEstado(activo);
+        existing.setUpdatedAt(java.time.LocalDateTime.now());
+        tipoEmpleadoRepository.save(existing);
+    }
+
+    @Override
+    @Transactional
     public void delete(Long id) {
         if (!tipoEmpleadoRepository.existsById(id)) {
             throw new ResourceNotFoundException("Tipo de empleado no encontrado");

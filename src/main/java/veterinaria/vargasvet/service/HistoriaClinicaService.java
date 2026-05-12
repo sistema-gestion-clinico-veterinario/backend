@@ -8,7 +8,8 @@ import java.time.LocalDate;
 
 public interface HistoriaClinicaService {
     Page<HistoriaClinicaListResponse> buscar(String numeroHc, String nombrePaciente, String nombrePropietario,
-                                             LocalDate fechaDesde, LocalDate fechaHasta, int page, int size);
+                                             LocalDate fechaDesde, LocalDate fechaHasta,
+                                             Integer companyId, int page, int size);
 
     HistoriaClinicaDetalleResponse getDetalle(Long id);
 

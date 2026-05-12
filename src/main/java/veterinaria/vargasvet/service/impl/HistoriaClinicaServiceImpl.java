@@ -43,9 +43,23 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
     @Override
     @Transactional(readOnly = true)
     public Page<HistoriaClinicaListResponse> buscar(String numeroHc, String nombrePaciente, String nombrePropietario,
-                                                    LocalDate fechaDesde, LocalDate fechaHasta, int page, int size) {
+                                                    LocalDate fechaDesde, LocalDate fechaHasta,
+                                                    Integer companyId, int page, int size) {
         boolean isSuperAdmin = SecurityUtils.isSuperAdmin();
-        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        Integer effectiveCompanyId;
+
+        if (isSuperAdmin) {
+            if (companyId != null) {
+                // Super admin filtrando por empresa específica
+                isSuperAdmin = false;
+                effectiveCompanyId = companyId;
+            } else {
+                effectiveCompanyId = -1; // sentinel — no afecta porque isSuperAdmin=true
+            }
+        } else {
+            effectiveCompanyId = SecurityUtils.getCurrentCompanyId();
+            if (effectiveCompanyId == null) effectiveCompanyId = -1;
+        }
 
         String hcFiltro = (numeroHc != null && !numeroHc.isBlank()) ? numeroHc.trim() : null;
         String pacienteFiltro = (nombrePaciente != null && !nombrePaciente.isBlank()) ? "%" + nombrePaciente.trim().toLowerCase() + "%" : null;
@@ -54,7 +68,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         String hastaStr = fechaHasta != null ? fechaHasta.toString() + " 23:59:59" : null;
 
         Page<HistoriaClinica> pageHc = historiaClinicaRepository.buscar(
-                isSuperAdmin, companyId, hcFiltro, pacienteFiltro, propietarioFiltro,
+                isSuperAdmin, effectiveCompanyId, hcFiltro, pacienteFiltro, propietarioFiltro,
                 desdeStr, hastaStr,
                 PageRequest.of(page, size, Sort.unsorted()));
 

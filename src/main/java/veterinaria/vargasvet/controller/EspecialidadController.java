@@ -17,12 +17,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/especialidades")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
 public class EspecialidadController {
 
     private final EspecialidadService especialidadService;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ESPECIALIDAD_READ')")
     public ResponseEntity<ApiResponse<Page<Especialidad>>> getAll(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(defaultValue = "0") int page,
@@ -35,16 +35,19 @@ public class EspecialidadController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ESPECIALIDAD_CREATE')")
     public ResponseEntity<Especialidad> create(@RequestBody Especialidad especialidad) {
         return ResponseEntity.status(HttpStatus.CREATED).body(especialidadService.create(especialidad));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ESPECIALIDAD_UPDATE')")
     public Especialidad update(@PathVariable Long id, @RequestBody Especialidad especialidad) {
         return especialidadService.update(id, especialidad);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ESPECIALIDAD_DELETE')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         especialidadService.delete(id);
         return ResponseEntity.noContent().build();
