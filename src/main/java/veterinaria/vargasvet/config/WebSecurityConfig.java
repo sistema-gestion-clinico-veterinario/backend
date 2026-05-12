@@ -1,9 +1,9 @@
 package veterinaria.vargasvet.config;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -31,15 +31,19 @@ public class WebSecurityConfig {
     private final JWTFilter jwtFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    @Value("${cors.allowed-origins}")
-    private List<String> allowedOrigins;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
+
                 .authorizeHttpRequests(auth -> auth
+
+                        // Permitir preflight CORS
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Endpoints públicos
                         .requestMatchers(
                                 "/auth/login",
                                 "/auth/register/**",
@@ -52,33 +56,69 @@ public class WebSecurityConfig {
                                 "/media/**",
                                 "/error"
                         ).permitAll()
+
+                        // Todo lo demás requiere auth
                         .anyRequest().authenticated()
                 )
+
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 )
+
                 .sessionManagement(s -> s
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        // JWT Filter
+        http.addFilterBefore(
+                jwtFilter,
+                UsernamePasswordAuthenticationFilter.class
+        );
+
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(allowedOrigins);
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        config.setExposedHeaders(List.of("Authorization"));
+        // Frontends permitidos
+        config.setAllowedOriginPatterns(List.of(
+                "https://systemvetfrontend.vercel.app",
+                "https://*.vercel.app",
+                "http://localhost:4200"
+        ));
 
+        // Métodos permitidos
+        config.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "OPTIONS"
+        ));
+
+        // Headers permitidos
+        config.setAllowedHeaders(List.of("*"));
+
+        // Headers expuestos
+        config.setExposedHeaders(List.of(
+                "Authorization"
+        ));
+
+        // Permitir credenciales
         config.setAllowCredentials(true);
+
+        // Cache preflight
         config.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
         source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 
@@ -91,6 +131,7 @@ public class WebSecurityConfig {
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config
     ) throws Exception {
+
         return config.getAuthenticationManager();
     }
 }
