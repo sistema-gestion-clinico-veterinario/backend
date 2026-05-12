@@ -14,12 +14,14 @@ import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CompanyService;
+import veterinaria.vargasvet.util.BusinessValidator;
 
 @Service
 @RequiredArgsConstructor
 public class CompanyServiceImpl implements CompanyService {
 
     private final CompanyRepository companyRepository;
+    private final BusinessValidator businessValidator;
 
     @Override
     public CompanyDTO getCompanyInfo() {
@@ -81,6 +83,9 @@ public class CompanyServiceImpl implements CompanyService {
     public CompanyDTO update(Integer id, CompanyDTO dto) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + id));
+        if (!company.isActivo() && !SecurityUtils.isSuperAdmin()) {
+            throw new IllegalStateException("La empresa está inactiva. Solo un super administrador puede modificarla.");
+        }
         updateEntityFromDTO(company, dto);
         return mapToDTO(companyRepository.save(company));
     }

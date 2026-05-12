@@ -19,6 +19,7 @@ import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.ApoderadoService;
+import veterinaria.vargasvet.util.BusinessValidator;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +41,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     private final CompanyRepository companyRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final BusinessValidator businessValidator;
 
     @Override
     @Transactional
@@ -73,7 +75,8 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         usuario.setDireccion(dto.getDireccion());
         usuario.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
         usuario.setActivo(true);
-        usuario.setEmailVerified(false);
+        usuario.setEmailVerified(true);
+        businessValidator.checkCompanyActiva(companyIdToUse);
         usuario.setCompany(companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
 
@@ -104,6 +107,11 @@ public class ApoderadoServiceImpl implements ApoderadoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Apoderado no encontrado con ID: " + id));
 
         Usuario usuario = apoderado.getUser();
+
+        if (!usuario.isActivo()) {
+            throw new IllegalStateException("No se puede editar un cliente inactivo. Active al cliente primero.");
+        }
+        businessValidator.checkCompanyActiva(usuario.getCompany() != null ? usuario.getCompany().getId() : null);
 
         Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
         if (!SecurityUtils.isSuperAdmin()) {
@@ -167,6 +175,18 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             mascota.setActivo(nuevoEstado);
             mascotaRepository.save(mascota);
         }
+    }
+
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        Apoderado apoderado = apoderadoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Apoderado no encontrado con ID: " + id));
+        if (!mascotaRepository.findByApoderadoId(apoderado.getId()).isEmpty()) {
+            throw new IllegalArgumentException("No se puede eliminar un propietario que tiene mascotas registradas");
+        }
+        apoderadoRepository.delete(apoderado);
+        usuarioRepository.delete(apoderado.getUser());
     }
 
     @Override

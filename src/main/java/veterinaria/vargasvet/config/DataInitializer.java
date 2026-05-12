@@ -17,7 +17,6 @@ import veterinaria.vargasvet.repository.MenuRepository;
 
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -67,38 +66,62 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedRoles() {
-        createRoleIfNotFound("ROLE_SUPER_ADMIN", Arrays.asList(AppPermission.values()));
+        upsertRole("ROLE_SUPER_ADMIN", Arrays.asList(AppPermission.values()));
 
-        createRoleIfNotFound("ROLE_ADMIN", Arrays.asList(
-                AppPermission.USER_MANAGE,
-                AppPermission.PET_READ, AppPermission.PET_WRITE,
+        upsertRole("ROLE_ADMIN", Arrays.asList(
+                AppPermission.USER_READ, AppPermission.USER_CREATE, AppPermission.USER_UPDATE,
+                AppPermission.ROLE_MANAGE,
+                AppPermission.COMPANY_READ, AppPermission.COMPANY_UPDATE, AppPermission.COMPANY_MANAGE,
+                AppPermission.EMPLEADO_READ, AppPermission.EMPLEADO_CREATE, AppPermission.EMPLEADO_UPDATE, AppPermission.EMPLEADO_STATUS,
+                AppPermission.TIPO_EMPLEADO_READ, AppPermission.TIPO_EMPLEADO_CREATE, AppPermission.TIPO_EMPLEADO_UPDATE, AppPermission.TIPO_EMPLEADO_STATUS,
+                AppPermission.ESPECIALIDAD_READ, AppPermission.ESPECIALIDAD_CREATE, AppPermission.ESPECIALIDAD_UPDATE, AppPermission.ESPECIALIDAD_DELETE,
+                AppPermission.APODERADO_READ, AppPermission.APODERADO_CREATE, AppPermission.APODERADO_UPDATE, AppPermission.APODERADO_STATUS,
+                AppPermission.PET_READ, AppPermission.PET_CREATE, AppPermission.PET_UPDATE, AppPermission.PET_STATUS,
+                AppPermission.PET_WRITE, AppPermission.PET_HISTORY_READ, AppPermission.PET_HISTORY_WRITE,
+                AppPermission.CLINICAL_RECORD_READ, AppPermission.CLINICAL_RECORD_MANAGE,
+                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL,
+                AppPermission.SERVICIO_READ, AppPermission.SERVICIO_CREATE, AppPermission.SERVICIO_UPDATE, AppPermission.SERVICIO_DELETE, AppPermission.SERVICIO_TOGGLE,
+                AppPermission.INV_READ, AppPermission.INV_WRITE,
+                AppPermission.ADMIN_DASHBOARD, AppPermission.USER_MANAGE
+        ));
+
+        upsertRole("ROLE_VETERINARIO", Arrays.asList(
+                AppPermission.EMPLEADO_READ,
+                AppPermission.ESPECIALIDAD_READ,
+                AppPermission.SERVICIO_READ,
+                AppPermission.APODERADO_READ, AppPermission.APODERADO_CREATE, AppPermission.APODERADO_UPDATE,
+                AppPermission.PET_READ, AppPermission.PET_CREATE, AppPermission.PET_UPDATE, AppPermission.PET_STATUS,
                 AppPermission.PET_HISTORY_READ, AppPermission.PET_HISTORY_WRITE,
-                AppPermission.COMPANY_MANAGE, AppPermission.INV_READ, AppPermission.INV_WRITE
+                AppPermission.CLINICAL_RECORD_READ, AppPermission.CLINICAL_RECORD_MANAGE,
+                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL, AppPermission.CITA_INICIAR
         ));
 
-        createRoleIfNotFound("ROLE_VETERINARIO", Arrays.asList(
-                AppPermission.CITA_READ, AppPermission.CITA_UPDATE,
-                AppPermission.PET_READ, AppPermission.PET_HISTORY_READ,
-                AppPermission.PET_HISTORY_WRITE
+        upsertRole("ROLE_RECEPCIONISTA", Arrays.asList(
+                AppPermission.EMPLEADO_READ,
+                AppPermission.ESPECIALIDAD_READ,
+                AppPermission.SERVICIO_READ,
+                AppPermission.APODERADO_READ, AppPermission.APODERADO_CREATE, AppPermission.APODERADO_UPDATE,
+                AppPermission.PET_READ, AppPermission.PET_CREATE, AppPermission.PET_UPDATE,
+                AppPermission.CLINICAL_RECORD_READ,
+                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL
         ));
 
-        createRoleIfNotFound("ROLE_RECEPCIONISTA", Arrays.asList(
-                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE,
-                AppPermission.PET_READ, AppPermission.CLIENT_READ, AppPermission.CLIENT_WRITE
-        ));
+        upsertRole("ROLE_CLIENTE", java.util.Collections.emptyList());
     }
 
-    private void createRoleIfNotFound(String roleName, java.util.List<AppPermission> permissions) {
-        if (roleRepository.findByName(roleName).isEmpty()) {
-            Role role = new Role();
-            role.setName(roleName);
-            Set<Permission> rolePermissions = permissions.stream()
-                    .map(p -> permissionRepository.findByName(p.name()).get())
-                    .collect(Collectors.toSet());
-            role.setPermissions(rolePermissions);
-            roleRepository.save(role);
-            log.info("Role {} created with {} permissions.", roleName, permissions.size());
-        }
+    private void upsertRole(String roleName, java.util.List<AppPermission> permissions) {
+        Role role = roleRepository.findByName(roleName).orElseGet(() -> {
+            Role r = new Role();
+            r.setName(roleName);
+            return r;
+        });
+        Set<Permission> rolePermissions = permissions.stream()
+                .map(p -> permissionRepository.findByName(p.name())
+                        .orElseThrow(() -> new IllegalStateException("Permission not found: " + p.name())))
+                .collect(Collectors.toSet());
+        role.setPermissions(rolePermissions);
+        roleRepository.save(role);
+        log.info("Role {} upserted with {} permissions.", roleName, permissions.size());
     }
 
     private void seedMenus() {

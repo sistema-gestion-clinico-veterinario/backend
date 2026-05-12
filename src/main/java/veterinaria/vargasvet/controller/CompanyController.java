@@ -19,6 +19,7 @@ public class CompanyController {
     private final CompanyService companyService;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('COMPANY_READ')")
     public ResponseEntity<ApiResponse<CompanyDTO>> getCompany() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la empresa obtenidos", companyService.getCompanyInfo()));
     }
@@ -47,7 +48,7 @@ public class CompanyController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('COMPANY_UPDATE')")
     public ResponseEntity<ApiResponse<CompanyDTO>> updateCompany(@PathVariable Integer id, @Valid @RequestBody CompanyDTO companyDTO) {
         CompanyDTO updated = companyService.update(id, companyDTO);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la empresa actualizados correctamente", updated));
@@ -55,7 +56,7 @@ public class CompanyController {
 
     // Método legacy por si el frontend aún usa PUT sin ID en el path
     @PutMapping
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('COMPANY_UPDATE')")
     public ResponseEntity<ApiResponse<CompanyDTO>> updateCompanyLegacy(@Valid @RequestBody CompanyDTO companyDTO) {
         CompanyDTO updated = companyService.updateCompanyInfo(companyDTO);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la empresa actualizados correctamente", updated));
