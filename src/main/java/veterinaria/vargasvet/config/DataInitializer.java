@@ -6,14 +6,14 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import veterinaria.vargasvet.domain.entity.Permission;
-import veterinaria.vargasvet.domain.entity.Role;
-import veterinaria.vargasvet.domain.enums.AppPermission;
-import veterinaria.vargasvet.repository.PermissionRepository;
-import veterinaria.vargasvet.repository.RoleRepository;
-import veterinaria.vargasvet.repository.UsuarioRepository;
-import veterinaria.vargasvet.domain.entity.Menu;
-import veterinaria.vargasvet.repository.MenuRepository;
+import veterinaria.vargasvet.modules.users.domain.entity.Permission;
+import veterinaria.vargasvet.modules.users.domain.entity.Role;
+import veterinaria.vargasvet.modules.users.domain.enums.AppPermission;
+import veterinaria.vargasvet.modules.users.repository.PermissionRepository;
+import veterinaria.vargasvet.modules.users.repository.RoleRepository;
+import veterinaria.vargasvet.modules.users.repository.UsuarioRepository;
+import veterinaria.vargasvet.modules.users.domain.entity.Menu;
+import veterinaria.vargasvet.modules.users.repository.MenuRepository;
 
 
 import java.util.Arrays;

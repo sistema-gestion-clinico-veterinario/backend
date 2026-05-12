@@ -1,8 +1,8 @@
 package veterinaria.vargasvet.dto.response;
 
 import lombok.Data;
-import veterinaria.vargasvet.domain.enums.MetodoPago;
-import veterinaria.vargasvet.domain.enums.PaymentStatus;
+import veterinaria.vargasvet.modules.pagos.domain.enums.MetodoPago;
+import veterinaria.vargasvet.modules.pagos.domain.enums.PaymentStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

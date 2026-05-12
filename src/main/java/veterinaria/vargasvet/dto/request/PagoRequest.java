@@ -2,7 +2,7 @@ package veterinaria.vargasvet.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import veterinaria.vargasvet.domain.enums.MetodoPago;
+import veterinaria.vargasvet.modules.pagos.domain.enums.MetodoPago;
 
 import java.math.BigDecimal;
 

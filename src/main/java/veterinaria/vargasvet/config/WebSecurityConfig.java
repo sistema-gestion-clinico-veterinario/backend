@@ -17,8 +17,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import veterinaria.vargasvet.security.JWTFilter;
-import veterinaria.vargasvet.security.JwtAuthenticationEntryPoint;
+import veterinaria.vargasvet.modules.users.security.JWTFilter;
+import veterinaria.vargasvet.modules.users.security.JwtAuthenticationEntryPoint;
 
 import java.util.List;
 
