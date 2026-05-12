@@ -1,6 +1,8 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Consulta;
@@ -91,6 +93,33 @@ public class PrescripcionServiceImpl implements PrescripcionService {
         }
 
         prescripcionRepository.delete(prescripcion);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PrescripcionResumenResponse> buscar(String query, Integer companyId, int page, int size) {
+        boolean isSuperAdmin = SecurityUtils.isSuperAdmin();
+        Integer effectiveCompanyId;
+
+        if (isSuperAdmin) {
+            if (companyId != null) {
+                isSuperAdmin = false;
+                effectiveCompanyId = companyId;
+            } else {
+                effectiveCompanyId = -1;
+            }
+        } else {
+            effectiveCompanyId = SecurityUtils.getCurrentCompanyId();
+            if (effectiveCompanyId == null) effectiveCompanyId = -1;
+        }
+
+        String queryFiltro = (query != null && !query.isBlank())
+                ? "%" + query.trim().toLowerCase() + "%" : null;
+
+        return prescripcionRepository.buscar(
+                isSuperAdmin, effectiveCompanyId, queryFiltro,
+                PageRequest.of(page, size))
+                .map(consultaMapper::toPrescripcionListResponse);
     }
 
     private void mapRequestToEntity(PrescripcionRequest request, Prescripcion prescripcion) {

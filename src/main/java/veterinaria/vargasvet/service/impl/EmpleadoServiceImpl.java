@@ -18,6 +18,7 @@ import java.util.List;
 import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.service.EmpleadoService;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.util.BusinessValidator;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,6 +45,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final EmailService emailService;
+    private final BusinessValidator businessValidator;
 
     @Value("${app.url}")
     private String appUrl;
@@ -82,10 +84,11 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             }
         }
 
-        usuario.setCompany(companyRepository.findById(companyIdToUse)
-                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
+        Company companyToUse = companyRepository.findById(companyIdToUse)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
+        businessValidator.checkCompanyActiva(companyIdToUse);
+        usuario.setCompany(companyToUse);
 
-     
         if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
             usuario.getRoles().clear();
             for (String roleName : dto.getRoles()) {
@@ -149,7 +152,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         Empleado empleado = empleadoRepository.findById(empleadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado con ID: " + empleadoId));
 
+        if (!Boolean.TRUE.equals(empleado.getEstado())) {
+            throw new IllegalStateException("No se puede editar un empleado inactivo. Active al empleado primero.");
+        }
+
         Usuario usuario = empleado.getUser();
+        businessValidator.checkCompanyActiva(usuario.getCompany() != null ? usuario.getCompany().getId() : null);
 
         Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
         if (!SecurityUtils.isSuperAdmin()) {
@@ -267,6 +275,18 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         usuarioRepository.save(usuario);
     }
 
+    @Override
+    @Transactional
+    public void eliminar(Long empleadoId) {
+        Empleado empleado = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado con ID: " + empleadoId));
+        horarioEmpleadoRepository.deleteByEmpleadoId(empleadoId);
+        empleado.getEspecialidades().clear();
+        empleado.getTiposEmpleado().clear();
+        empleadoRepository.delete(empleado);
+        usuarioRepository.delete(empleado.getUser());
+    }
+
     private void guardarHorarios(Empleado empleado, List<HorarioEmpleadoRequest> horariosRequest) {
         for (HorarioEmpleadoRequest h : horariosRequest) {
             if (h.getHoraInicio() != null && h.getHoraFin() != null) {
@@ -285,6 +305,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Transactional(readOnly = true)
     public List<HorarioEmpleadoResponse> getHorario(Long empleadoId) {
         return horarioEmpleadoRepository.findByEmpleadoId(empleadoId).stream()
+                .sorted(java.util.Comparator.comparingInt(h -> h.getDiaSemana().ordinal()))
                 .map(h -> {
                     HorarioEmpleadoResponse r = new HorarioEmpleadoResponse();
                     r.setId(h.getId());
@@ -318,10 +339,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<EmpleadoListResponse> listar(Integer companyId, String nombre, Long tipoEmpleadoId, Long especialidadId, int page, int size) {
+    public Page<EmpleadoListResponse> listar(Integer companyId, String nombre, String apellido, String email, Long tipoEmpleadoId, Long especialidadId, int page, int size) {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
         String nombreFiltro = (nombre != null && !nombre.isBlank()) ? nombre.trim() : null;
-        return empleadoRepository.buscar(resolvedCompanyId, nombreFiltro, tipoEmpleadoId, especialidadId,
+        String apellidoFiltro = (apellido != null && !apellido.isBlank()) ? apellido.trim() : null;
+        String emailFiltro = (email != null && !email.isBlank()) ? email.trim() : null;
+        return empleadoRepository.buscar(resolvedCompanyId, nombreFiltro, apellidoFiltro, emailFiltro, tipoEmpleadoId, especialidadId,
                 PageRequest.of(page, size, Sort.unsorted()))
                 .map(this::toListResponse);
     }

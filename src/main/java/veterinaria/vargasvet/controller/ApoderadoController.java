@@ -21,7 +21,7 @@ public class ApoderadoController {
     private final ApoderadoService apoderadoService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('APODERADO_READ')")
     public ResponseEntity<ApiResponse<Page<ApoderadoListResponse>>> listar(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(required = false) String nombre,
@@ -34,14 +34,14 @@ public class ApoderadoController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('APODERADO_READ')")
     public ResponseEntity<ApiResponse<ApoderadoRequest>> findById(@PathVariable Long id) {
         ApoderadoRequest apoderado = apoderadoService.findById(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Propietario recuperado con éxito", apoderado));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('APODERADO_CREATE')")
     public ResponseEntity<ApiResponse<UserProfileDTO>> registerApoderado(@Valid @RequestBody ApoderadoRequest dto) {
         UserProfileDTO profile = apoderadoService.registerApoderado(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -49,14 +49,21 @@ public class ApoderadoController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO')")
+    @PreAuthorize("hasAuthority('APODERADO_UPDATE')")
     public ResponseEntity<ApiResponse<UserProfileDTO>> updateApoderado(@PathVariable Long id, @RequestBody ApoderadoRequest dto) {
         UserProfileDTO profile = apoderadoService.updateApoderado(id, dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos del dueño actualizados exitosamente", profile));
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('APODERADO_DELETE')")
+    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
+        apoderadoService.eliminar(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Propietario eliminado exitosamente", null));
+    }
+
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('APODERADO_STATUS')")
     public ResponseEntity<ApiResponse<Void>> cambiarEstado(@PathVariable Long id, @RequestParam Boolean active) {
         apoderadoService.cambiarEstado(id, active);
         String mensaje = active ? "Dueño activado exitosamente" : "Dueño desactivado exitosamente";
