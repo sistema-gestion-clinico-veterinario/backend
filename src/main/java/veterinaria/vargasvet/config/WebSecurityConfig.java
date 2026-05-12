@@ -66,22 +66,35 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
+public CorsConfigurationSource corsConfigurationSource() {
 
-        config.setAllowedOrigins(allowedOrigins);
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        config.setExposedHeaders(List.of("Authorization"));
+    CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowCredentials(true);
-        config.setMaxAge(3600L);
+    config.setAllowedOriginPatterns(List.of(
+            "https://systemvetfrontend.vercel.app",
+            "https://*.vercel.app",
+            "http://localhost:4200"
+    ));
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+    config.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+    ));
 
+    config.setAllowedHeaders(List.of("*"));
+
+    config.setExposedHeaders(List.of("Authorization"));
+
+    config.setAllowCredentials(true);
+
+    config.setMaxAge(3600L);
+
+    UrlBasedCorsConfigurationSource source =
+            new UrlBasedCorsConfigurationSource();
+
+    source.registerCorsConfiguration("/**", config);
+
+    return source;
+}
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
