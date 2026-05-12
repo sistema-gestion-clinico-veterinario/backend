@@ -15,6 +15,7 @@ import veterinaria.vargasvet.mapper.CitaMapper;
 import veterinaria.vargasvet.repository.*;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CitaService;
+import veterinaria.vargasvet.util.BusinessValidator;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +42,7 @@ public class CitaServiceImpl implements CitaService {
     private final HistoriaClinicaRepository historiaClinicaRepository;
     private final ConsultaRepository consultaRepository;
     private final CitaMapper citaMapper;
+    private final BusinessValidator businessValidator;
 
     private static final int DURACION_ESTIMADA_MINUTOS = 20;
 
@@ -54,11 +56,26 @@ public class CitaServiceImpl implements CitaService {
             throw new IllegalArgumentException("No se puede crear una cita para una mascota inactiva");
         }
 
+        if (mascota.getApoderado() == null
+                || mascota.getApoderado().getUser() == null
+                || !mascota.getApoderado().getUser().isActivo()) {
+            throw new IllegalArgumentException("No se puede crear una cita porque el propietario de la mascota está inactivo");
+        }
+
+        businessValidator.checkCompanyActiva(
+            mascota.getApoderado() != null && mascota.getApoderado().getUser() != null
+                && mascota.getApoderado().getUser().getCompany() != null
+                ? mascota.getApoderado().getUser().getCompany().getId() : null);
+
         Empleado veterinario = empleadoRepository.findById(request.getVeterinarioId())
                 .orElseThrow(() -> new ResourceNotFoundException("Veterinario no encontrado con ID: " + request.getVeterinarioId()));
 
         if (veterinario.getUser() == null || !veterinario.getUser().isActivo()) {
             throw new IllegalArgumentException("No se puede asignar la cita a un veterinario inactivo");
+        }
+
+        if (!Boolean.TRUE.equals(veterinario.getEstado())) {
+            throw new IllegalArgumentException("No se puede asignar la cita a un empleado inactivo");
         }
 
         if (!SecurityUtils.isSuperAdmin()) {

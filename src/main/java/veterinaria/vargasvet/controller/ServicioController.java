@@ -22,7 +22,7 @@ public class ServicioController {
     private final ServicioService servicioService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('SERVICIO_READ')")
     public ResponseEntity<ApiResponse<Page<ServicioResponse>>> listar(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(defaultValue = "0") int page,
@@ -32,7 +32,7 @@ public class ServicioController {
     }
 
     @GetMapping("/disponibles")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('SERVICIO_READ')")
     public ResponseEntity<ApiResponse<List<ServicioResponse>>> listarDisponibles(
             @RequestParam(required = false) Integer companyId) {
         List<ServicioResponse> resultado = servicioService.listarDisponibles(companyId);
@@ -40,7 +40,7 @@ public class ServicioController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('SERVICIO_CREATE')")
     public ResponseEntity<ApiResponse<ServicioResponse>> crear(@Valid @RequestBody ServicioRequest request) {
         ServicioResponse response = servicioService.crear(request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -48,7 +48,7 @@ public class ServicioController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('SERVICIO_UPDATE')")
     public ResponseEntity<ApiResponse<ServicioResponse>> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody ServicioRequest request) {
@@ -56,14 +56,14 @@ public class ServicioController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('SERVICIO_DELETE')")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         servicioService.eliminar(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Servicio desactivado", null));
     }
 
     @PatchMapping("/{id}/toggle")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('SERVICIO_TOGGLE')")
     public ResponseEntity<ApiResponse<ServicioResponse>> toggleDisponible(@PathVariable Long id) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Estado actualizado", servicioService.toggleDisponible(id)));
     }

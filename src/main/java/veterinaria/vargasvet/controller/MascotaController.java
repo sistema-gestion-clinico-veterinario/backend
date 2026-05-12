@@ -22,7 +22,7 @@ public class MascotaController {
     private final MascotaService mascotaService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('PET_READ')")
     public ResponseEntity<ApiResponse<Page<MascotaResponse>>> listar(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(required = false) String nombre,
@@ -36,7 +36,7 @@ public class MascotaController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('PET_CREATE')")
     public ResponseEntity<ApiResponse<MascotaResponse>> registerMascota(@Valid @RequestBody MascotaRequest request) {
         MascotaResponse response = mascotaService.registerMascota(request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -44,14 +44,14 @@ public class MascotaController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('PET_UPDATE')")
     public ResponseEntity<ApiResponse<MascotaResponse>> updateMascota(@PathVariable Long id, @RequestBody MascotaRequest request) {
         MascotaResponse response = mascotaService.updateMascota(id, request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la mascota actualizados exitosamente", response));
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('PET_STATUS')")
     public ResponseEntity<ApiResponse<Void>> cambiarEstado(@PathVariable Long id, @Valid @RequestBody EstadoMascotaRequest request) {
         mascotaService.cambiarEstado(id, request);
         String mensaje = request.getActive() ? "Mascota activada exitosamente" : "Mascota dada de baja exitosamente";
