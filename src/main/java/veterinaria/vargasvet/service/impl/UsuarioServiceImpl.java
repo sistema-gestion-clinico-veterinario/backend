@@ -129,6 +129,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     @Override
+    @Transactional
     public AuthResponse login(LoginDTO loginDTO) {
         Usuario usuario = usuarioRepository.findByEmail(loginDTO.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Credenciales inválidas"));
@@ -197,6 +198,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     @Override
+    @Transactional
     public void suspendAccount(Integer id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
@@ -312,15 +314,20 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     private String createRefreshToken(Usuario usuario) {
-        refreshTokenRepository.deleteByUsuario(usuario); // Limpiar tokens anteriores
-        
         String token = tokenProvider.createRefreshToken(usuario.getEmail());
-        
-        RefreshToken refreshToken = RefreshToken.builder()
-                .usuario(usuario)
-                .token(token)
-                .expiryDate(Instant.now().plusSeconds(604800)) // 7 días (igual que en TokenProvider)
-                .build();
+        Instant expiryDate = Instant.now().plusSeconds(604800); // 7 días
+
+        RefreshToken refreshToken = refreshTokenRepository.findByUsuario(usuario)
+                .map(existing -> {
+                    existing.setToken(token);
+                    existing.setExpiryDate(expiryDate);
+                    return existing;
+                })
+                .orElseGet(() -> RefreshToken.builder()
+                        .usuario(usuario)
+                        .token(token)
+                        .expiryDate(expiryDate)
+                        .build());
 
         refreshTokenRepository.save(refreshToken);
         return token;

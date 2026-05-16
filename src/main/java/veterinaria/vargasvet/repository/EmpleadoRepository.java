@@ -42,4 +42,7 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
 
     @Query("SELECT COUNT(e) FROM Empleado e WHERE e.user.company.id = :companyId")
     long countByCompanyId(@Param("companyId") Integer companyId);
+
+    @Query("SELECT e FROM Empleado e WHERE e.user.company.id = :companyId")
+    java.util.List<Empleado> findAllByCompanyId(@Param("companyId") Integer companyId);
 }

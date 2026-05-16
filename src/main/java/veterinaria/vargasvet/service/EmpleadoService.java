@@ -18,4 +18,7 @@ public interface EmpleadoService {
     List<HorarioEmpleadoResponse> getHorario(Long empleadoId);
     void assignBulkSchedule(Long empleadoId, veterinaria.vargasvet.dto.request.BulkScheduleRequest request);
     void deleteHorario(Long horarioId);
+    void updateHorario(Long horarioId, veterinaria.vargasvet.dto.request.HorarioEmpleadoRequest request);
+    void cloneWeekSchedule(Long empleadoId, java.time.LocalDate sourceStartDate, java.time.LocalDate targetStartDate);
+    List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse> getSchedulesReport(Integer companyId);
 }
