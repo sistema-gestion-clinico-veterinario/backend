@@ -62,4 +62,11 @@ public class AuthController {
         usuarioService.changePassword(email, dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Contraseña actualizada exitosamente", null));
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@RequestBody java.util.Map<String, String> request) {
+        String refreshToken = request.get("refreshToken");
+        AuthResponse response = usuarioService.refreshToken(refreshToken);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Token refrescado exitosamente", response));
+    }
 }

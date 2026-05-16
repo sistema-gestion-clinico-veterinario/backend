@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class CompanyDTO {
     
@@ -31,6 +33,6 @@ public class CompanyDTO {
     private String website;
     private String description;
     private String businessHours;
-    private String openingTime;
-    private String closingTime;
+    
+    private List<CompanyOperatingHourDTO> operatingHours;
 }

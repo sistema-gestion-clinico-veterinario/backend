@@ -82,7 +82,8 @@ public class DataInitializer implements CommandLineRunner {
                 AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL,
                 AppPermission.SERVICIO_READ, AppPermission.SERVICIO_CREATE, AppPermission.SERVICIO_UPDATE, AppPermission.SERVICIO_DELETE, AppPermission.SERVICIO_TOGGLE,
                 AppPermission.INV_READ, AppPermission.INV_WRITE,
-                AppPermission.ADMIN_DASHBOARD, AppPermission.USER_MANAGE
+                AppPermission.ADMIN_DASHBOARD, AppPermission.USER_MANAGE,
+                AppPermission.HORARIO_READ, AppPermission.HORARIO_MANAGE
         ));
 
         upsertRole("ROLE_VETERINARIO", Arrays.asList(
@@ -93,17 +94,17 @@ public class DataInitializer implements CommandLineRunner {
                 AppPermission.PET_READ, AppPermission.PET_CREATE, AppPermission.PET_UPDATE, AppPermission.PET_STATUS,
                 AppPermission.PET_HISTORY_READ, AppPermission.PET_HISTORY_WRITE,
                 AppPermission.CLINICAL_RECORD_READ, AppPermission.CLINICAL_RECORD_MANAGE,
-                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL, AppPermission.CITA_INICIAR
+                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL, AppPermission.CITA_INICIAR,
+                AppPermission.HORARIO_READ, AppPermission.ADMIN_DASHBOARD, AppPermission.USER_READ
         ));
 
         upsertRole("ROLE_RECEPCIONISTA", Arrays.asList(
                 AppPermission.EMPLEADO_READ,
-                AppPermission.ESPECIALIDAD_READ,
-                AppPermission.SERVICIO_READ,
                 AppPermission.APODERADO_READ, AppPermission.APODERADO_CREATE, AppPermission.APODERADO_UPDATE,
                 AppPermission.PET_READ, AppPermission.PET_CREATE, AppPermission.PET_UPDATE,
-                AppPermission.CLINICAL_RECORD_READ,
-                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL
+                AppPermission.PET_HISTORY_READ, AppPermission.CLINICAL_RECORD_READ,
+                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL,
+                AppPermission.ADMIN_DASHBOARD, AppPermission.USER_READ
         ));
 
         upsertRole("ROLE_CLIENTE", java.util.Collections.emptyList());
@@ -146,6 +147,11 @@ public class DataInitializer implements CommandLineRunner {
             createMenu("Gestión de Menús", "pi pi-list", "/admin/menus", 2, admin, "USER_MANAGE");
             createMenu("Usuarios", "pi pi-users", "/admin/usuarios", 3, admin, "USER_MANAGE");
             createMenu("Empresa", "pi pi-building", "/admin/empresa", 4, admin, "COMPANY_MANAGE");
+
+            // Horarios
+            Menu horarios = createMenu("Gestión de Personal", "pi pi-users", null, 5, null, "EMPLEADO_READ");
+            createMenu("Lista de Empleados", "pi pi-list", "/admin/empleados", 1, horarios, "EMPLEADO_READ");
+            createMenu("Roster General", "pi pi-calendar", "/admin/empleados/horarios", 2, horarios, "HORARIO_READ");
         }
     }
 

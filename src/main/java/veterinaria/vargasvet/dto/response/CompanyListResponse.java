@@ -12,6 +12,4 @@ public class CompanyListResponse {
     private String email;
     private Boolean activo;
     private String businessHours;
-    private String openingTime;
-    private String closingTime;
 }
