@@ -20,4 +20,7 @@ public class BulkScheduleRequest {
     private List<HorarioEmpleadoRequest> shifts;
     
     private Boolean overwrite = false;
+    
+    @JsonFormat(pattern = "HH:mm")
+    private java.time.LocalTime originalStartTime;
 }

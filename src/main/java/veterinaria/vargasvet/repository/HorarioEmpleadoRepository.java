@@ -21,6 +21,18 @@ public interface HorarioEmpleadoRepository extends JpaRepository<HorarioEmpleado
     void deleteByEmpleadoId(Long empleadoId);
     
     void deleteByEmpleadoIdAndFechaBetween(Long empleadoId, LocalDate start, LocalDate end);
+    
+    void deleteByEmpleadoIdAndFecha(Long empleadoId, LocalDate fecha);
+    
+    void deleteByEmpleadoIdAndFechaAndHoraInicio(Long empleadoId, LocalDate fecha, LocalTime horaInicio);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId " +
+           "AND h.fecha = :fecha AND ((:inicio < h.horaFin AND :fin > h.horaInicio))")
+    void deleteOverlapping(@Param("empleadoId") Long empleadoId, 
+                           @Param("fecha") LocalDate fecha, 
+                           @Param("inicio") LocalTime inicio, 
+                           @Param("fin") LocalTime fin);
 
     @Query("SELECT COUNT(h) > 0 FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId " +
            "AND h.fecha = :fecha AND ((:inicio < h.horaFin AND :fin > h.horaInicio))")
@@ -28,4 +40,13 @@ public interface HorarioEmpleadoRepository extends JpaRepository<HorarioEmpleado
                           @Param("fecha") LocalDate fecha, 
                           @Param("inicio") LocalTime inicio, 
                           @Param("fin") LocalTime fin);
+
+    @Query("SELECT COUNT(h) > 0 FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId " +
+           "AND h.fecha = :fecha AND ((:inicio < h.horaFin AND :fin > h.horaInicio)) " +
+           "AND h.id <> :excludeId")
+    boolean existsOverlapExcluding(@Param("empleadoId") Long empleadoId, 
+                                   @Param("fecha") LocalDate fecha, 
+                                   @Param("inicio") LocalTime inicio, 
+                                   @Param("fin") LocalTime fin,
+                                   @Param("excludeId") Long excludeId);
 }

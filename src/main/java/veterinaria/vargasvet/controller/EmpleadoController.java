@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.EmpleadoRequest;
+import veterinaria.vargasvet.dto.request.HorarioEmpleadoRequest;
 import veterinaria.vargasvet.dto.response.EmpleadoListResponse;
 import veterinaria.vargasvet.dto.response.HorarioEmpleadoResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
@@ -96,5 +97,31 @@ public class EmpleadoController {
     public ResponseEntity<ApiResponse<Void>> deleteHorario(@PathVariable Long horarioId) {
         empleadoService.deleteHorario(horarioId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario eliminado correctamente", null));
+    }
+    @PutMapping("/horario/{horarioId}")
+    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> updateHorario(@PathVariable Long horarioId, @Valid @RequestBody HorarioEmpleadoRequest request) {
+        empleadoService.updateHorario(horarioId, request);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horario actualizado correctamente", null));
+    }
+
+    @PostMapping("/{id}/clone-week")
+    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> cloneWeekSchedule(
+            @PathVariable Long id,
+            @RequestParam String sourceWeekStart,
+            @RequestParam String targetWeekStart) {
+        java.time.LocalDate source = java.time.LocalDate.parse(sourceWeekStart);
+        java.time.LocalDate target = java.time.LocalDate.parse(targetWeekStart);
+        empleadoService.cloneWeekSchedule(id, source, target);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horario clonado con éxito para la semana seleccionada", null));
+    }
+
+    @GetMapping("/schedules-report")
+    @PreAuthorize("hasAuthority('HORARIO_READ')")
+    public ResponseEntity<ApiResponse<List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse>>> getSchedulesReport(
+            @RequestParam(required = false) Integer companyId) {
+        List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse> report = empleadoService.getSchedulesReport(companyId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Reporte consolidado recuperado con éxito", report));
     }
 }

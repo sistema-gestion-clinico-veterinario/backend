@@ -11,7 +11,9 @@ import java.util.Optional;
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
     Optional<RefreshToken> findByToken(String token);
+    Optional<RefreshToken> findByUsuario(Usuario usuario);
     
     @Modifying
+    @org.springframework.transaction.annotation.Transactional
     void deleteByUsuario(Usuario usuario);
 }
