@@ -643,29 +643,106 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         Empleado empleado = empleadoRepository.findById(empleadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
 
+        Integer companyId = empleado.getUser().getCompany().getId();
         LocalDate sourceEnd = sourceStart.plusDays(6);
         LocalDate targetEnd = targetStart.plusDays(6);
+        String adminEmail  = SecurityUtils.getCurrentUserEmail();
 
-        // 1. Obtener turnos de la semana origen
-        List<HorarioEmpleado> sourceShifts = horarioEmpleadoRepository.findByEmpleadoIdAndFechaBetween(empleadoId, sourceStart, sourceEnd);
-        
-        if (sourceShifts.isEmpty()) {
-            throw new IllegalArgumentException("No hay turnos en la semana de origen para clonar");
+        // ── 1. La semana destino no puede ser igual o anterior a la semana origen ──────
+        if (!targetStart.isAfter(sourceStart)) {
+            throw new IllegalArgumentException(
+                "La semana destino (" + targetStart + ") debe ser posterior a la semana origen (" + sourceStart + ").");
         }
 
-        // 2. Limpiar semana destino
+        // ── 2. Obtener turnos de la semana origen ────────────────────────────────────
+        List<HorarioEmpleado> sourceShifts =
+                horarioEmpleadoRepository.findByEmpleadoIdAndFechaBetween(empleadoId, sourceStart, sourceEnd);
+
+        if (sourceShifts.isEmpty()) {
+            throw new IllegalArgumentException(
+                "No hay turnos registrados en la semana origen (" + sourceStart + " al " + sourceEnd + ") para clonar.");
+        }
+
+        // ── 3. Validar citas existentes en la semana destino ────────────────────────
+        List<Cita> citasEnDestino = citaRepository.findByEmpleadoIdAndDateRange(empleadoId, targetStart, targetEnd);
+        if (!citasEnDestino.isEmpty()) {
+            StringBuilder sb = new StringBuilder(
+                "No se puede clonar el horario porque el empleado tiene citas programadas en la semana destino: ");
+            for (Cita c : citasEnDestino) {
+                sb.append(String.format("[%s %s - %s], ",
+                    c.getFechaHoraInicio().toLocalDate(),
+                    c.getFechaHoraInicio().toLocalTime(),
+                    c.getMascota().getNombreCompleto()));
+            }
+            throw new IllegalStateException(sb.toString().replaceAll(", $", ""));
+        }
+
+        // ── 4. Pre-validar cada día destino contra horario de clínica y feriados ────
+        //      (antes de borrar nada, para fallar rápido si algo es inválido)
+        long daysDiff = java.time.temporal.ChronoUnit.DAYS.between(sourceStart, targetStart);
+        List<String> warnings = new java.util.ArrayList<>();
+
+        for (HorarioEmpleado source : sourceShifts) {
+            LocalDate targetDay = source.getFecha().plusDays(daysDiff);
+            DiaSemana dia       = toDiaSemana(targetDay.getDayOfWeek());
+
+            // 4a. Verificar cierre especial / feriado en la fecha destino exacta
+            var exception = companyExceptionRepository.findByCompanyIdAndDate(companyId, targetDay);
+            if (exception.isPresent() && Boolean.FALSE.equals(exception.get().getIsOpen())) {
+                throw new IllegalArgumentException(
+                    "No se puede clonar el turno al " + targetDay + ": la clínica está cerrada ese día (" +
+                    exception.get().getDescription() + ").");
+            }
+
+            // 4b. Verificar horario operativo del día destino
+            var opHourOpt = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, dia);
+            if (opHourOpt.isPresent()) {
+                CompanyOperatingHour opHour = opHourOpt.get();
+
+                if (Boolean.FALSE.equals(opHour.getIsOpen())) {
+                    // Día cerrado → omitir con advertencia (no lanzar error, solo skip)
+                    warnings.add("El día " + targetDay + " (" + dia + ") fue omitido: la clínica no abre ese día.");
+                    continue;
+                }
+
+                // 4c. Validar que las horas del turno estén dentro del horario de la clínica
+                LocalTime inicio   = source.getHoraInicio();
+                LocalTime fin      = source.getHoraFin();
+                LocalTime opening  = opHour.getOpeningTime();
+                LocalTime closing  = opHour.getClosingTime();
+
+                if (inicio.isBefore(opening) || fin.isAfter(closing)) {
+                    throw new IllegalArgumentException(String.format(
+                        "El turno del %s (%s - %s) no puede clonarse al %s: " +
+                        "está fuera del horario de atención de la clínica (%s - %s).",
+                        source.getFecha(), inicio, fin, targetDay, opening, closing));
+                }
+            }
+        }
+
+        // ── 5. Limpiar SOLO si todas las validaciones pasaron ────────────────────────
         horarioEmpleadoRepository.deleteByEmpleadoIdAndFechaBetween(empleadoId, targetStart, targetEnd);
         horarioEmpleadoRepository.flush();
 
-        // 3. Clonar
-        String adminEmail = SecurityUtils.getCurrentUserEmail();
-        long daysDiff = java.time.temporal.ChronoUnit.DAYS.between(sourceStart, targetStart);
-
+        // ── 6. Clonar día por día, respetando días cerrados ──────────────────────────
         for (HorarioEmpleado source : sourceShifts) {
+            LocalDate targetDay = source.getFecha().plusDays(daysDiff);
+            DiaSemana dia       = toDiaSemana(targetDay.getDayOfWeek());
+
+            // Omitir días cerrados (ya detectados en el pre-check de arriba)
+            var opHourOpt = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, dia);
+            if (opHourOpt.isPresent() && Boolean.FALSE.equals(opHourOpt.get().getIsOpen())) {
+                continue;
+            }
+            var exception = companyExceptionRepository.findByCompanyIdAndDate(companyId, targetDay);
+            if (exception.isPresent() && Boolean.FALSE.equals(exception.get().getIsOpen())) {
+                continue;
+            }
+
             HorarioEmpleado target = new HorarioEmpleado();
             target.setEmpleado(empleado);
-            target.setFecha(source.getFecha().plusDays(daysDiff));
-            target.setDiaSemana(source.getDiaSemana());
+            target.setFecha(targetDay);
+            target.setDiaSemana(dia);
             target.setHoraInicio(source.getHoraInicio());
             target.setHoraFin(source.getHoraFin());
             target.setActivo(true);
