@@ -13,6 +13,7 @@ import veterinaria.vargasvet.dto.response.EmpleadoListResponse;
 import veterinaria.vargasvet.dto.response.HorarioEmpleadoResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.service.EmpleadoService;
+import veterinaria.vargasvet.dto.request.BulkScheduleRequest;
 
 import java.util.List;
 
@@ -62,10 +63,17 @@ public class EmpleadoController {
     }
 
     @GetMapping("/{id}/horario")
-    @PreAuthorize("hasAuthority('EMPLEADO_READ')")
+    @PreAuthorize("hasAuthority('HORARIO_READ')")
     public ResponseEntity<ApiResponse<List<HorarioEmpleadoResponse>>> getHorario(@PathVariable Long id) {
         List<HorarioEmpleadoResponse> horario = empleadoService.getHorario(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario recuperado con éxito", horario));
+    }
+
+    @PostMapping("/{id}/schedule-bulk")
+    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> assignBulkSchedule(@PathVariable Long id, @RequestBody BulkScheduleRequest request) {
+        empleadoService.assignBulkSchedule(id, request);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horario masivo asignado correctamente", null));
     }
 
     @DeleteMapping("/{id}")
@@ -81,5 +89,12 @@ public class EmpleadoController {
         empleadoService.cambiarEstado(id, active);
         String mensaje = active ? "Empleado activado exitosamente" : "Empleado desactivado exitosamente";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, null));
+    }
+
+    @DeleteMapping("/horario/{horarioId}")
+    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> deleteHorario(@PathVariable Long horarioId) {
+        empleadoService.deleteHorario(horarioId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horario eliminado correctamente", null));
     }
 }

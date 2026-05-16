@@ -16,6 +16,9 @@ import veterinaria.vargasvet.repository.*;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CitaService;
 import veterinaria.vargasvet.util.BusinessValidator;
+import java.time.LocalDate;
+import veterinaria.vargasvet.repository.CompanyOperatingHourRepository;
+import veterinaria.vargasvet.repository.CompanyExceptionRepository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +44,8 @@ public class CitaServiceImpl implements CitaService {
     private final UsuarioRepository usuarioRepository;
     private final HistoriaClinicaRepository historiaClinicaRepository;
     private final ConsultaRepository consultaRepository;
+    private final CompanyOperatingHourRepository companyOperatingHourRepository;
+    private final CompanyExceptionRepository companyExceptionRepository;
     private final CitaMapper citaMapper;
     private final BusinessValidator businessValidator;
 
@@ -108,27 +113,39 @@ public class CitaServiceImpl implements CitaService {
         // Validación contra el horario de la clínica (solo si NO es emergencia)
         boolean esEmergencia = Boolean.TRUE.equals(request.getEsEmergencia());
         Company company = veterinario.getUser().getCompany();
-        if (!esEmergencia && company != null && company.getOpeningTime() != null && company.getClosingTime() != null) {
-            if (horaInicio.isBefore(company.getOpeningTime()) || horaFinCita.isAfter(company.getClosingTime())) {
-                throw new IllegalArgumentException(
-                        "La cita está fuera del horario de atención de la clínica (" + company.getName() + "). " +
-                        "Atiende de " + company.getOpeningTime() + " a " + company.getClosingTime());
-            }
-        }
+        
+        if (!esEmergencia && company != null) {
+            LocalDate fechaCita = fechaInicio.toLocalDate();
+            
+            // 1. Validar excepciones (feriados/cierres)
+            companyExceptionRepository.findByCompanyIdAndDate(company.getId(), fechaCita)
+                    .ifPresent(ex -> {
+                        if (Boolean.FALSE.equals(ex.getIsOpen())) {
+                            throw new IllegalArgumentException("La clínica está cerrada el día " + fechaCita + " (" + ex.getDescription() + ")");
+                        }
+                    });
 
-        if (!esEmergencia) {
-            HorarioEmpleado horario = veterinario.getHorarios().stream()
-                    .filter(h -> h.getDiaSemana() == diaSemana && Boolean.TRUE.equals(h.getActivo()))
+            // 2. Validar horario maestro de la clínica
+            CompanyOperatingHour opHour = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(company.getId(), diaSemana)
+                    .orElseThrow(() -> new IllegalArgumentException("La clínica no atiende los días " + diaSemana));
+            
+            if (Boolean.FALSE.equals(opHour.getIsOpen())) {
+                throw new IllegalArgumentException("La clínica no abre los días " + diaSemana);
+            }
+
+            if (horaInicio.isBefore(opHour.getOpeningTime()) || horaFinCita.isAfter(opHour.getClosingTime())) {
+                throw new IllegalArgumentException(String.format("La cita (%s-%s) está fuera del horario de la clínica (%s-%s)",
+                        horaInicio, horaFinCita, opHour.getOpeningTime(), opHour.getClosingTime()));
+            }
+
+            // 3. Validar el turno específico del veterinario para esa fecha
+            HorarioEmpleado turno = veterinario.getHorarios().stream()
+                    .filter(h -> h.getFecha().equals(fechaCita) && Boolean.TRUE.equals(h.getActivo()))
+                    .filter(h -> (horaInicio.equals(h.getHoraInicio()) || horaInicio.isAfter(h.getHoraInicio())) &&
+                                 (horaFinCita.equals(h.getHoraFin()) || horaFinCita.isBefore(h.getHoraFin())))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException(
-                            "El veterinario no atiende los días " + diaSemana.name().charAt(0) +
-                            diaSemana.name().substring(1).toLowerCase()));
-
-            if (horaInicio.isBefore(horario.getHoraInicio()) || horaFinCita.isAfter(horario.getHoraFin())) {
-                throw new IllegalArgumentException(
-                        "La cita está fuera del horario del veterinario. Atiende de " +
-                        horario.getHoraInicio() + " a " + horario.getHoraFin());
-            }
+                            "El veterinario no tiene turno asignado para cubrir este horario el día " + fechaCita));
         }
 
         boolean hayCruceVeterinario = citaRepository.existsOverlappingCita(veterinario.getId(), fechaInicio, fechaFin);

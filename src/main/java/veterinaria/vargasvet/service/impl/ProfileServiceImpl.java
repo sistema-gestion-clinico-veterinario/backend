@@ -92,10 +92,12 @@ public class ProfileServiceImpl implements ProfileService {
             List<HorarioEmpleadoResponse> horarios = horarioEmpleadoRepository.findByEmpleadoId(empleado.getId())
                     .stream()
                     .filter(h -> Boolean.TRUE.equals(h.getActivo()))
-                    .sorted(java.util.Comparator.comparingInt(h -> h.getDiaSemana().ordinal()))
+                    .sorted(java.util.Comparator.comparing(HorarioEmpleado::getFecha)
+                            .thenComparing(HorarioEmpleado::getHoraInicio))
                     .map(h -> {
                         HorarioEmpleadoResponse hr = new HorarioEmpleadoResponse();
                         hr.setId(h.getId());
+                        hr.setFecha(h.getFecha());
                         hr.setDiaSemana(h.getDiaSemana().name());
                         hr.setHoraInicio(h.getHoraInicio());
                         hr.setHoraFin(h.getHoraFin());

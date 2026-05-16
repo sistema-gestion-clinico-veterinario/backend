@@ -17,7 +17,10 @@ import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.mapper.UserMapper;
 import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
+import veterinaria.vargasvet.repository.RefreshTokenRepository;
 import veterinaria.vargasvet.security.TokenProvider;
+import veterinaria.vargasvet.domain.entity.RefreshToken;
+import java.time.Instant;
 
 import org.springframework.beans.factory.annotation.Value;
 import veterinaria.vargasvet.dto.Mail;
@@ -40,6 +43,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private final TokenProvider tokenProvider;
     private final EmailService emailService;
     private final MenuService menuService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Value("${app.url}")
     private String appUrl;
@@ -158,9 +162,11 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .collect(Collectors.toList());
 
         String jwt = tokenProvider.createToken(usuario.getEmail(), userRoles, companyId, permissions);
+        String refreshToken = createRefreshToken(usuario);
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
+        response.setRefreshToken(refreshToken);
         response.setRoles(userRoles);
         response.setCompanyId(companyId);
         response.setCompanyName(usuario.getCompany() != null ? usuario.getCompany().getName() : null);
@@ -257,6 +263,67 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         } catch (Exception e) {
             System.err.println("[WARNING] No se pudo enviar el correo de notificación a " + usuario.getEmail() + ": " + e.getMessage());
         }
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse refreshToken(String token) {
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
+                .orElseThrow(() -> new BadCredentialsException("Refresh token no encontrado"));
+
+        if (refreshToken.getExpiryDate().isBefore(Instant.now())) {
+            refreshTokenRepository.delete(refreshToken);
+            throw new BadCredentialsException("Refresh token expirado. Por favor, inicie sesión nuevamente.");
+        }
+
+        Usuario usuario = refreshToken.getUsuario();
+        
+        List<String> userRoles = usuario.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toList());
+
+        Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
+        
+        List<String> permissions = usuario.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getName)
+                .distinct()
+                .collect(Collectors.toList());
+
+        String newJwt = tokenProvider.createToken(usuario.getEmail(), userRoles, companyId, permissions);
+
+        AuthResponse response = new AuthResponse();
+        response.setToken(newJwt);
+        response.setRefreshToken(token); // Mantener el mismo o rotar (aquí mantenemos por ahora)
+        response.setRoles(userRoles);
+        response.setCompanyId(companyId);
+        response.setCompanyName(usuario.getCompany() != null ? usuario.getCompany().getName() : null);
+        response.setPermissions(permissions);
+        response.setNombreCompleto(resolveNombreCompleto(usuario));
+        response.setUserType(resolveUserType(usuario));
+        response.setPasswordChanged(usuario.isPasswordChanged());
+        response.setEmpleadoId(usuario.getEmpleado() != null ? Math.toIntExact(usuario.getEmpleado().getId()) : null);
+        
+        Set<String> authorities = new HashSet<>(userRoles);
+        authorities.addAll(permissions);
+        response.setMenu(menuService.getMenuForUser(authorities));
+
+        return response;
+    }
+
+    private String createRefreshToken(Usuario usuario) {
+        refreshTokenRepository.deleteByUsuario(usuario); // Limpiar tokens anteriores
+        
+        String token = tokenProvider.createRefreshToken(usuario.getEmail());
+        
+        RefreshToken refreshToken = RefreshToken.builder()
+                .usuario(usuario)
+                .token(token)
+                .expiryDate(Instant.now().plusSeconds(604800)) // 7 días (igual que en TokenProvider)
+                .build();
+
+        refreshTokenRepository.save(refreshToken);
+        return token;
     }
 
     private String resolveNombreCompleto(Usuario usuario) {
