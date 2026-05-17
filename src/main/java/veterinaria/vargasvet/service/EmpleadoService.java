@@ -20,5 +20,6 @@ public interface EmpleadoService {
     void deleteHorario(Long horarioId);
     void updateHorario(Long horarioId, veterinaria.vargasvet.dto.request.HorarioEmpleadoRequest request);
     void cloneWeekSchedule(Long empleadoId, java.time.LocalDate sourceStartDate, java.time.LocalDate targetStartDate);
+    void cloneDaySchedule(Long empleadoId, java.time.LocalDate sourceDate, java.time.LocalDate targetDate);
     List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse> getSchedulesReport(Integer companyId);
 }

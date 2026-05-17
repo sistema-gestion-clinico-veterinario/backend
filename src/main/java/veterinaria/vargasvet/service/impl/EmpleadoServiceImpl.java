@@ -753,6 +753,99 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     }
 
     @Override
+    @Transactional
+    public void cloneDaySchedule(Long empleadoId, LocalDate sourceDate, LocalDate targetDate) {
+        Empleado empleado = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
+
+        Integer companyId = empleado.getUser().getCompany().getId();
+        String adminEmail  = SecurityUtils.getCurrentUserEmail();
+
+        // 1. La fecha destino no puede ser igual a la de origen
+        if (targetDate.equals(sourceDate)) {
+            throw new IllegalArgumentException("La fecha destino debe ser diferente a la fecha origen.");
+        }
+
+        // 2. Obtener turnos de la fecha origen
+        List<HorarioEmpleado> sourceShifts =
+                horarioEmpleadoRepository.findByEmpleadoIdAndFecha(empleadoId, sourceDate);
+
+        if (sourceShifts.isEmpty()) {
+            throw new IllegalArgumentException(
+                "No hay turnos registrados en el día de origen (" + sourceDate + ") para clonar.");
+        }
+
+        // 3. Validar citas existentes en el día destino
+        List<Cita> citasEnDestino = citaRepository.findByEmpleadoIdAndDateRange(empleadoId, targetDate, targetDate);
+        if (!citasEnDestino.isEmpty()) {
+            StringBuilder sb = new StringBuilder(
+                "No se puede clonar el horario porque el empleado tiene citas programadas en el día destino: ");
+            for (Cita c : citasEnDestino) {
+                sb.append(String.format("[%s %s - %s], ",
+                    c.getFechaHoraInicio().toLocalDate(),
+                    c.getFechaHoraInicio().toLocalTime(),
+                    c.getMascota().getNombreCompleto()));
+            }
+            throw new IllegalStateException(sb.toString().replaceAll(", $", ""));
+        }
+
+        // 4. Pre-validar el día destino contra horario de clínica y feriados
+        DiaSemana diaDestino = toDiaSemana(targetDate.getDayOfWeek());
+
+        // 4a. Verificar cierre especial / feriado en la fecha destino exacta
+        var exception = companyExceptionRepository.findByCompanyIdAndDate(companyId, targetDate);
+        if (exception.isPresent() && Boolean.FALSE.equals(exception.get().getIsOpen())) {
+            throw new IllegalArgumentException(
+                "No se puede clonar el turno al " + targetDate + ": la clínica está cerrada ese día (" +
+                exception.get().getDescription() + ").");
+        }
+
+        // 4b. Verificar horario operativo del día destino
+        var opHourOpt = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, diaDestino);
+        if (opHourOpt.isPresent()) {
+            CompanyOperatingHour opHour = opHourOpt.get();
+
+            if (Boolean.FALSE.equals(opHour.getIsOpen())) {
+                throw new IllegalArgumentException(
+                    "No se puede clonar el turno al " + targetDate + ": la clínica no abre los días " + diaDestino + ".");
+            }
+
+            // 4c. Validar que las horas del turno estén dentro del horario de la clínica
+            for (HorarioEmpleado source : sourceShifts) {
+                LocalTime inicio = source.getHoraInicio();
+                LocalTime fin    = source.getHoraFin();
+                LocalTime opening = opHour.getOpeningTime();
+                LocalTime closing = opHour.getClosingTime();
+
+                if (inicio.isBefore(opening) || fin.isAfter(closing)) {
+                    throw new IllegalArgumentException(String.format(
+                        "El turno del %s (%s - %s) no puede clonarse al %s: " +
+                        "está fuera del horario de atención de la clínica (%s - %s).",
+                        source.getFecha(), inicio, fin, targetDate, opening, closing));
+                }
+            }
+        }
+
+        // 5. Limpiar horarios previos del día destino
+        horarioEmpleadoRepository.deleteByEmpleadoIdAndFecha(empleadoId, targetDate);
+        horarioEmpleadoRepository.flush();
+
+        // 6. Clonar día por día
+        for (HorarioEmpleado source : sourceShifts) {
+            HorarioEmpleado target = new HorarioEmpleado();
+            target.setEmpleado(empleado);
+            target.setFecha(targetDate);
+            target.setDiaSemana(diaDestino);
+            target.setHoraInicio(source.getHoraInicio());
+            target.setHoraFin(source.getHoraFin());
+            target.setActivo(true);
+            target.setCreatedAt(LocalDateTime.now());
+            target.setCreatedBy(adminEmail);
+            horarioEmpleadoRepository.save(target);
+        }
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse> getSchedulesReport(Integer companyId) {
         Integer resolvedId = resolverCompanyId(companyId);

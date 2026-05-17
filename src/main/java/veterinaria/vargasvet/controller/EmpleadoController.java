@@ -117,6 +117,18 @@ public class EmpleadoController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario clonado con éxito para la semana seleccionada", null));
     }
 
+    @PostMapping("/{id}/clone-day")
+    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> cloneDaySchedule(
+            @PathVariable Long id,
+            @RequestParam String sourceDate,
+            @RequestParam String targetDate) {
+        java.time.LocalDate source = java.time.LocalDate.parse(sourceDate);
+        java.time.LocalDate target = java.time.LocalDate.parse(targetDate);
+        empleadoService.cloneDaySchedule(id, source, target);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horario clonado con éxito para el día seleccionado", null));
+    }
+
     @GetMapping("/schedules-report")
     @PreAuthorize("hasAuthority('HORARIO_READ')")
     public ResponseEntity<ApiResponse<List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse>>> getSchedulesReport(

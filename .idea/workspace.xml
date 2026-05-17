@@ -7,13 +7,8 @@
     <list default="true" id="8ef16273-d33e-4236-ac8a-9607d61e8aac" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/EmpleadoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/EmpleadoController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/request/BulkScheduleRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/request/BulkScheduleRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/EmpleadoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/EmpleadoRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/HorarioEmpleadoRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/HorarioEmpleadoRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/RefreshTokenRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/RefreshTokenRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/EmpleadoService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/EmpleadoService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/EmpleadoServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/EmpleadoServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/UsuarioServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/UsuarioServiceImpl.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -89,7 +84,8 @@
       <workItem from="1778861568913" duration="1259000" />
       <workItem from="1778883680910" duration="9639000" />
       <workItem from="1778937853014" duration="5175000" />
-      <workItem from="1778968516363" duration="1855000" />
+      <workItem from="1778968516363" duration="4323000" />
+      <workItem from="1778991861906" duration="2240000" />
     </task>
     <servers />
   </component>
