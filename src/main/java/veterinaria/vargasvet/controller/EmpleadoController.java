@@ -77,6 +77,19 @@ public class EmpleadoController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario masivo asignado correctamente", null));
     }
 
+    @DeleteMapping("/{id}/schedule-bulk")
+    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> deleteBulkSchedule(
+            @PathVariable Long id,
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam(required = false) List<String> dias) {
+        java.time.LocalDate start = java.time.LocalDate.parse(startDate);
+        java.time.LocalDate end = java.time.LocalDate.parse(endDate);
+        empleadoService.deleteBulkSchedule(id, start, end, dias);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horarios eliminados correctamente en el rango seleccionado", null));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('EMPLEADO_DELETE')")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {

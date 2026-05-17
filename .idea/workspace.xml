@@ -5,7 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8ef16273-d33e-4236-ac8a-9607d61e8aac" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/EmpleadoController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/EmpleadoController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/EmpleadoService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/EmpleadoService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/EmpleadoServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/EmpleadoServiceImpl.java" afterDir="false" />
@@ -38,24 +37,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;Spring Boot.VargasvetApplication.executor&quot;: &quot;Run&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/Schedule-Management&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "Spring Boot.VargasvetApplication.executor": "Run",
+    "git-widget-placeholder": "feature/module-for-employees",
+    "kotlin-language-version-configured": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration name="VargasvetApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="vargasvet" />
@@ -85,7 +84,7 @@
       <workItem from="1778883680910" duration="9639000" />
       <workItem from="1778937853014" duration="5175000" />
       <workItem from="1778968516363" duration="4323000" />
-      <workItem from="1778991861906" duration="2240000" />
+      <workItem from="1778991861906" duration="3085000" />
     </task>
     <servers />
   </component>

@@ -846,6 +846,60 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     }
 
     @Override
+    @Transactional
+    public void deleteBulkSchedule(Long empleadoId, java.time.LocalDate startDate, java.time.LocalDate endDate, List<String> dias) {
+        Empleado empleado = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
+
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la de fin");
+        }
+
+        // 1. Validar citas en el rango
+        List<Cita> citas = citaRepository.findByEmpleadoIdAndDateRange(empleadoId, startDate, endDate);
+        if (!citas.isEmpty()) {
+            List<Cita> citasConConflicto = citas;
+            if (dias != null && !dias.isEmpty()) {
+                List<DiaSemana> diasFiltro = dias.stream()
+                        .map(d -> DiaSemana.valueOf(d.toUpperCase()))
+                        .toList();
+                citasConConflicto = citas.stream()
+                        .filter(c -> {
+                            DiaSemana dCita = toDiaSemana(c.getFechaHoraInicio().getDayOfWeek());
+                            return diasFiltro.contains(dCita);
+                        })
+                        .toList();
+            }
+
+            if (!citasConConflicto.isEmpty()) {
+                StringBuilder sb = new StringBuilder("No se puede eliminar el horario porque existen citas programadas: ");
+                for (Cita c : citasConConflicto) {
+                    sb.append(String.format("[%s %s - %s], ", c.getFechaHoraInicio().toLocalDate(), 
+                            c.getFechaHoraInicio().toLocalTime(), c.getMascota().getNombreCompleto()));
+                }
+                throw new IllegalStateException(sb.toString());
+            }
+        }
+
+        // 2. Eliminar en el rango
+        if (dias == null || dias.isEmpty()) {
+            horarioEmpleadoRepository.deleteByEmpleadoIdAndFechaBetween(empleadoId, startDate, endDate);
+        } else {
+            // Eliminar día por día si coincide el día de la semana
+            List<DiaSemana> diasFiltro = dias.stream()
+                    .map(d -> DiaSemana.valueOf(d.toUpperCase()))
+                    .toList();
+            for (java.time.LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+                final java.time.LocalDate currentDay = date;
+                DiaSemana dia = toDiaSemana(currentDay.getDayOfWeek());
+                if (diasFiltro.contains(dia)) {
+                    horarioEmpleadoRepository.deleteByEmpleadoIdAndFecha(empleadoId, currentDay);
+                }
+            }
+        }
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse> getSchedulesReport(Integer companyId) {
         Integer resolvedId = resolverCompanyId(companyId);
