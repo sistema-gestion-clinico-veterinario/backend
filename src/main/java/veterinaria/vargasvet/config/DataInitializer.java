@@ -108,6 +108,23 @@ public class DataInitializer implements CommandLineRunner {
         ));
 
         upsertRole("ROLE_CLIENTE", java.util.Collections.emptyList());
+        upsertRole("ROLE_APODERADO", java.util.Collections.emptyList());
+
+        // Migración automática: Cualquier usuario existente con ROLE_CLIENTE
+        // debe tener asignado el nuevo rol ROLE_APODERADO de forma transparente.
+        roleRepository.findByName("ROLE_CLIENTE").ifPresent(clienteRole -> {
+            roleRepository.findByName("ROLE_APODERADO").ifPresent(apoderadoRole -> {
+                usuarioRepository.findAll().stream()
+                        .filter(u -> u.getRoles().contains(clienteRole))
+                        .forEach(u -> {
+                            if (!u.getRoles().contains(apoderadoRole)) {
+                                u.getRoles().add(apoderadoRole);
+                                usuarioRepository.save(u);
+                                log.info("Migrado usuario {} de ROLE_CLIENTE a ROLE_APODERADO.", u.getEmail());
+                            }
+                        });
+            });
+        });
     }
 
     private void upsertRole(String roleName, java.util.List<AppPermission> permissions) {
@@ -154,6 +171,20 @@ public class DataInitializer implements CommandLineRunner {
             createMenu("Lista de Empleados", "pi pi-list", "/admin/empleados", 1, horarios, "EMPLEADO_READ");
             createMenu("Roster General", "pi pi-calendar", "/admin/empleados/horarios", 2, horarios, "HORARIO_READ");
         }
+
+        // Garantizar que exista el ítem de menú 'Auditoría' en Administración de forma idempotente
+        menuRepository.findByPath("/admin/auditoria").ifPresentOrElse(
+                existing -> {},
+                () -> {
+                    menuRepository.findByPath("/admin/usuarios").ifPresent(usuariosMenu -> {
+                        Menu adminMenu = usuariosMenu.getParent();
+                        if (adminMenu != null) {
+                            createMenu("Auditoría", "pi pi-shield", "/admin/auditoria", 5, adminMenu, "USER_MANAGE");
+                            log.info("Auditoría menu item created successfully.");
+                        }
+                    });
+                }
+        );
     }
 
     private Menu createMenu(String label, String icon, String path, int order, Menu parent, String permission) {

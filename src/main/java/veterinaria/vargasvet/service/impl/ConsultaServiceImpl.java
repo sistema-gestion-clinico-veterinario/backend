@@ -31,6 +31,7 @@ public class ConsultaServiceImpl implements ConsultaService {
     private final MascotaRepository mascotaRepository;
     private final CitaRepository citaRepository;
     private final ConsultaMapper consultaMapper;
+    private final veterinaria.vargasvet.service.AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -93,6 +94,13 @@ public class ConsultaServiceImpl implements ConsultaService {
         historiaClinicaRepository.save(hc);
 
         Consulta savedConsulta = consultaRepository.save(consulta);
+
+        auditLogService.log(
+            "ACTUALIZAR_CONSULTA",
+            "Consultas",
+            "Se actualizaron los datos clínicos de la consulta de la mascota " + consulta.getHistoriaClinica().getMascota().getNombreCompleto() + " atendida por " + (consulta.getVeterinario().getUser() != null ? (consulta.getVeterinario().getUser().getNombre() + " " + consulta.getVeterinario().getUser().getApellido()) : "sin usuario") + " el " + consulta.getFechaConsulta()
+        );
+
         return consultaMapper.toResponse(savedConsulta);
     }
 
@@ -157,6 +165,13 @@ public class ConsultaServiceImpl implements ConsultaService {
         }
 
         Consulta savedConsulta = consultaRepository.save(consulta);
+
+        auditLogService.log(
+            "CERRAR_CONSULTA",
+            "Consultas",
+            "Se cerró la atención y la historia clínica de la consulta de la mascota " + consulta.getHistoriaClinica().getMascota().getNombreCompleto() + " por el veterinario " + consulta.getCerradoPor()
+        );
+
         return consultaMapper.toResponse(savedConsulta);
     }
 

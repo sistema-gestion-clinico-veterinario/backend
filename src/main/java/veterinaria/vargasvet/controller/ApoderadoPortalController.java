@@ -27,6 +27,17 @@ public class ApoderadoPortalController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Mascotas recuperadas con éxito", apoderadoPortalService.getMascotas()));
     }
 
+    @GetMapping("/mascotas/paginated")
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<MascotaResponse>>> getMascotasPaginated(
+            @RequestParam(value = "nombre", required = false) String nombre,
+            @RequestParam(value = "especie", required = false) veterinaria.vargasvet.domain.enums.EspecieMascota especie,
+            @RequestParam(value = "activo", required = false) Boolean activo,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Mascotas recuperadas con éxito", apoderadoPortalService.getMascotasPaginated(nombre, especie, activo, pageable)));
+    }
+
     @GetMapping("/mascotas/{mascotaId}/historia")
     public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getHistoriaMascota(@PathVariable Long mascotaId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Historial clínico recuperado con éxito", apoderadoPortalService.getHistoriaMascota(mascotaId)));

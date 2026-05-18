@@ -69,4 +69,12 @@ public class AuthController {
         AuthResponse response = usuarioService.refreshToken(refreshToken);
         return ResponseEntity.ok(new ApiResponse<>(true, "Token refrescado exitosamente", response));
     }
+
+    @PostMapping("/switch-role")
+    public ResponseEntity<ApiResponse<AuthResponse>> switchRole(@RequestBody java.util.Map<String, String> request) {
+        String roleName = request.get("roleName");
+        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        AuthResponse response = usuarioService.switchRole(email, roleName);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Rol cambiado exitosamente", response));
+    }
 }

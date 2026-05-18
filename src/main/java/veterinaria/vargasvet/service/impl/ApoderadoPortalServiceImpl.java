@@ -48,8 +48,31 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         String email = SecurityUtils.getCurrentUserEmail();
         Usuario user = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
-        return apoderadoRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Perfil de propietario no encontrado para este usuario"));
+        
+        java.util.Optional<Apoderado> apoderadoOpt = apoderadoRepository.findByUserId(user.getId());
+        if (apoderadoOpt.isPresent()) {
+            return apoderadoOpt.get();
+        }
+
+        // Vista previa segura para Super Admin y Admin:
+        // Si el usuario autenticado es un administrador, le permitimos visualizar el portal
+        // con la información del primer apoderado registrado EN SU SEDE/CLÍNICA activa.
+        if (SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin()) {
+            Integer companyId = SecurityUtils.getCurrentCompanyId();
+            if (companyId != null) {
+                List<Apoderado> companyApoderados = apoderadoRepository.findByCompanyId(companyId);
+                if (!companyApoderados.isEmpty()) {
+                    return companyApoderados.get(0);
+                }
+            } else {
+                List<Apoderado> allApoderados = apoderadoRepository.findAll();
+                if (!allApoderados.isEmpty()) {
+                    return allApoderados.get(0);
+                }
+            }
+        }
+
+        throw new ResourceNotFoundException("Perfil de propietario no encontrado para este usuario");
     }
 
     @Override
@@ -86,6 +109,14 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
                 .filter(m -> Boolean.TRUE.equals(m.getActivo()))
                 .map(mascotaMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<MascotaResponse> getMascotasPaginated(String nombre, veterinaria.vargasvet.domain.enums.EspecieMascota especie, Boolean activo, org.springframework.data.domain.Pageable pageable) {
+        Apoderado apoderado = getAuthenticatedApoderado();
+        return mascotaRepository.buscarPortalMascotas(apoderado.getId(), nombre, especie, activo, pageable)
+                .map(mascotaMapper::toResponse);
     }
 
     @Override
