@@ -41,6 +41,10 @@ public class ServiciosVeterinarios {
     @OneToMany(mappedBy = "servicio", cascade = CascadeType.ALL)
     private List<EmpleadoServicio> empleados;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tipo_empleado_id", nullable = true)
+    private TipoEmpleado tipoEmpleado;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

@@ -8,11 +8,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.ServiciosVeterinarios;
+import veterinaria.vargasvet.domain.entity.TipoEmpleado;
 import veterinaria.vargasvet.dto.request.ServicioRequest;
 import veterinaria.vargasvet.dto.response.ServicioResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.ServiciosVeterinariosRepository;
+import veterinaria.vargasvet.repository.TipoEmpleadoRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.ServicioService;
 
@@ -25,6 +27,7 @@ public class ServicioServiceImpl implements ServicioService {
 
     private final ServiciosVeterinariosRepository servicioRepository;
     private final CompanyRepository companyRepository;
+    private final TipoEmpleadoRepository tipoEmpleadoRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -60,6 +63,12 @@ public class ServicioServiceImpl implements ServicioService {
         servicio.setActivo(true);
         servicio.setDuracionEstimada(request.getDuracionEstimada());
 
+        if (request.getTipoEmpleadoId() != null) {
+            TipoEmpleado tipo = tipoEmpleadoRepository.findById(request.getTipoEmpleadoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado con ID: " + request.getTipoEmpleadoId()));
+            servicio.setTipoEmpleado(tipo);
+        }
+
         return toResponse(servicioRepository.save(servicio));
     }
 
@@ -78,6 +87,14 @@ public class ServicioServiceImpl implements ServicioService {
             servicio.setDisponible(request.getDisponible());
         }
         servicio.setDuracionEstimada(request.getDuracionEstimada());
+
+        if (request.getTipoEmpleadoId() != null) {
+            TipoEmpleado tipo = tipoEmpleadoRepository.findById(request.getTipoEmpleadoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado con ID: " + request.getTipoEmpleadoId()));
+            servicio.setTipoEmpleado(tipo);
+        } else {
+            servicio.setTipoEmpleado(null);
+        }
 
         return toResponse(servicioRepository.save(servicio));
     }
@@ -115,6 +132,10 @@ public class ServicioServiceImpl implements ServicioService {
             r.setCompanyName(s.getCompany().getName());
         }
         r.setDuracionEstimada(s.getDuracionEstimada());
+        if (s.getTipoEmpleado() != null) {
+            r.setTipoEmpleadoId(s.getTipoEmpleado().getId());
+            r.setTipoEmpleadoNombre(s.getTipoEmpleado().getNombre());
+        }
         return r;
     }
 

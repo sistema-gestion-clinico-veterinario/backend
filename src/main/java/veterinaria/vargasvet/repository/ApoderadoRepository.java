@@ -24,4 +24,7 @@ public interface ApoderadoRepository extends JpaRepository<Apoderado, Long> {
                            @Param("nombre") String nombre,
                            @Param("numeroDocumento") String numeroDocumento,
                            Pageable pageable);
+
+    @Query("SELECT a FROM Apoderado a WHERE a.user.id = :userId")
+    java.util.Optional<Apoderado> findByUserId(@Param("userId") Integer userId);
 }

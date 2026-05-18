@@ -55,8 +55,20 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final EmailService emailService;
     private final BusinessValidator businessValidator;
 
-    @Value("${app.url}")
-    private String appUrl;
+    @Value("${app.frontend.verify-url}")
+    private String frontendVerifyUrl;
+
+    @Value("${app.company.email}")
+    private String companyEmail;
+
+    @Value("${app.company.phone}")
+    private String companyPhone;
+
+    @Value("${app.company.address}")
+    private String companyAddress;
+
+    @Value("${app.company.logo}")
+    private String defaultCompanyLogo;
 
     @Override
     @Transactional
@@ -548,14 +560,19 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private void sendWelcomeEmail(Usuario usuario, String nombre, String tempPassword) {
         try {
             Map<String, Object> model = new HashMap<>();
+            String resolvedCompanyName = usuario.getCompany() != null ? usuario.getCompany().getName() : "VargasVet";
+            String resolvedLogo = (usuario.getCompany() != null && usuario.getCompany().getLogoUrl() != null) ? usuario.getCompany().getLogoUrl() : defaultCompanyLogo;
             model.put("nombre", nombre);
-            model.put("tempPassword", tempPassword);
-            model.put("companyName", usuario.getCompany() != null ? usuario.getCompany().getName() : "VargasVet");
-            model.put("verificationLink", appUrl + "/auth/verify/" + usuario.getVerificationToken());
+            model.put("companyName", resolvedCompanyName);
+            model.put("companyLogo", resolvedLogo);
+            model.put("companyEmail", companyEmail);
+            model.put("companyPhone", companyPhone);
+            model.put("companyAddress", companyAddress);
+            model.put("verificationLink", frontendVerifyUrl + usuario.getVerificationToken());
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),
-                    "Bienvenido al equipo de " + (usuario.getCompany() != null ? usuario.getCompany().getName() : "VargasVet"),
+                    "Bienvenido al equipo de " + resolvedCompanyName,
                     model
             );
 
@@ -627,6 +644,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             response.setApellido(empleado.getUser().getApellido());
             response.setEmail(empleado.getUser().getEmail());
             response.setTelefono(empleado.getUser().getTelefono());
+            response.setUserId(empleado.getUser().getId());
         }
         response.setTiposEmpleado(empleado.getTiposEmpleado().stream()
                 .map(t -> t.getNombre())
