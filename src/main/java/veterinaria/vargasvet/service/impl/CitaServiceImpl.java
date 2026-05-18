@@ -48,6 +48,7 @@ public class CitaServiceImpl implements CitaService {
     private final CompanyExceptionRepository companyExceptionRepository;
     private final CitaMapper citaMapper;
     private final BusinessValidator businessValidator;
+    private final veterinaria.vargasvet.service.AuditLogService auditLogService;
 
     private static final int DURACION_ESTIMADA_MINUTOS = 20;
 
@@ -182,6 +183,14 @@ public class CitaServiceImpl implements CitaService {
         usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setCreadoPor);
 
         Cita savedCita = citaRepository.save(cita);
+
+        // Registrar log de auditoría para creación de cita
+        auditLogService.log(
+            "CREAR_CITA",
+            "Citas",
+            "Se agendó una nueva cita para la mascota " + mascota.getNombreCompleto() + " con el veterinario " + (veterinario.getUser() != null ? (veterinario.getUser().getNombre() + " " + veterinario.getUser().getApellido()) : "sin usuario") + " el " + cita.getFechaHoraInicio()
+        );
+
         return citaMapper.toResponse(savedCita);
     }
 
@@ -222,6 +231,12 @@ public class CitaServiceImpl implements CitaService {
 
         cita.setEstado(EstadoCita.EN_PROCESO);
         citaRepository.save(cita);
+
+        auditLogService.log(
+            "INICIAR_ATENCION",
+            "Citas",
+            "Se inició la atención médica de la mascota " + cita.getMascota().getNombreCompleto() + " programada con el veterinario " + (cita.getEmpleado().getUser() != null ? (cita.getEmpleado().getUser().getNombre() + " " + cita.getEmpleado().getUser().getApellido()) : "sin usuario") + " el " + cita.getFechaHoraInicio()
+        );
 
         HistoriaClinica hc = historiaClinicaRepository.findByMascotaId(cita.getMascota().getId())
                 .orElseGet(() -> {
@@ -290,6 +305,12 @@ public class CitaServiceImpl implements CitaService {
         cita.setEstado(EstadoCita.CANCELADA);
         cita.setMotivoCancelacion(motivo);
         citaRepository.save(cita);
+
+        auditLogService.log(
+            "CANCELAR_CITA",
+            "Citas",
+            "Se canceló la cita de la mascota " + cita.getMascota().getNombreCompleto() + " programada para el " + cita.getFechaHoraInicio() + ". Motivo: " + motivo
+        );
     }
 
     @Override
@@ -315,6 +336,12 @@ public class CitaServiceImpl implements CitaService {
         usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setEliminadoPor);
         
         citaRepository.save(cita);
+
+        auditLogService.log(
+            "ELIMINAR_CITA",
+            "Citas",
+            "Se eliminó (borrado lógico) la cita cancelada de la mascota " + cita.getMascota().getNombreCompleto() + " programada para el " + cita.getFechaHoraInicio()
+        );
     }
 
     @Override
@@ -368,6 +395,13 @@ public class CitaServiceImpl implements CitaService {
         }
 
         Cita updatedCita = citaRepository.save(cita);
+
+        auditLogService.log(
+            "ACTUALIZAR_CITA",
+            "Citas",
+            "Se actualizaron los datos de la cita de la mascota " + updatedCita.getMascota().getNombreCompleto() + " programada para el " + updatedCita.getFechaHoraInicio()
+        );
+
         return citaMapper.toResponse(updatedCita);
     }
 
@@ -416,6 +450,14 @@ public class CitaServiceImpl implements CitaService {
         usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setReprogramadoPor);
 
         Cita savedCita = citaRepository.save(cita);
+
+        // Registrar log de auditoría para reprogramación de cita
+        auditLogService.log(
+            "REPROGRAMAR_CITA",
+            "Citas",
+            "Se reprogramó la cita para la mascota " + cita.getMascota().getNombreCompleto() + " para la nueva fecha " + fechaInicio
+        );
+
         return citaMapper.toResponse(savedCita);
     }
 

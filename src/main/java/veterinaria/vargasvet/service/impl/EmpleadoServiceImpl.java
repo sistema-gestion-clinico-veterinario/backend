@@ -54,9 +54,22 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final UserMapper userMapper;
     private final EmailService emailService;
     private final BusinessValidator businessValidator;
+    private final veterinaria.vargasvet.service.AuditLogService auditLogService;
 
-    @Value("${app.url}")
-    private String appUrl;
+    @Value("${app.frontend.verify-url}")
+    private String frontendVerifyUrl;
+
+    @Value("${app.company.email}")
+    private String companyEmail;
+
+    @Value("${app.company.phone}")
+    private String companyPhone;
+
+    @Value("${app.company.address}")
+    private String companyAddress;
+
+    @Value("${app.company.logo}")
+    private String defaultCompanyLogo;
 
     @Override
     @Transactional
@@ -150,6 +163,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
 
         sendWelcomeEmail(savedUser, dto.getNombre(), tempPassword);
+
+        auditLogService.log(
+            "CREAR_EMPLEADO",
+            "Empleados",
+            "Se registró al empleado " + dto.getNombre() + " " + dto.getApellido() + " con email " + dto.getEmail()
+        );
 
         return userMapper.toProfileDTO(savedUser);
     }
@@ -251,6 +270,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             guardarHorarios(empleado, dto.getHorarios());
         }
 
+        auditLogService.log(
+            "ACTUALIZAR_EMPLEADO",
+            "Empleados",
+            "Se actualizaron los datos del empleado " + usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ")"
+        );
+
         return userMapper.toProfileDTO(usuario);
     }
 
@@ -281,6 +306,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         empleadoRepository.save(empleado);
         usuarioRepository.save(usuario);
+
+        auditLogService.log(
+            Boolean.TRUE.equals(nuevoEstado) ? "ACTIVAR_EMPLEADO" : "DESACTIVAR_EMPLEADO",
+            "Empleados",
+            (Boolean.TRUE.equals(nuevoEstado) ? "Se activó" : "Se desactivó") + " al empleado " + usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ")"
+        );
     }
 
     @Override
@@ -291,8 +322,16 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         horarioEmpleadoRepository.deleteByEmpleadoId(empleadoId);
         empleado.getEspecialidades().clear();
         empleado.getTiposEmpleado().clear();
+        String empEmail = empleado.getUser().getEmail();
+        String empNombre = empleado.getUser().getNombre() + " " + empleado.getUser().getApellido();
         empleadoRepository.delete(empleado);
         usuarioRepository.delete(empleado.getUser());
+
+        auditLogService.log(
+            "ELIMINAR_EMPLEADO",
+            "Empleados",
+            "Se eliminó permanentemente al empleado " + empNombre + " (" + empEmail + ")"
+        );
     }
 
     private void guardarHorarios(Empleado empleado, List<HorarioEmpleadoRequest> horariosRequest) {
@@ -439,6 +478,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 horarioEmpleadoRepository.save(h);
             }
         }
+
+        auditLogService.log(
+            "ASIGNAR_HORARIOS_MASIVO",
+            "Horarios",
+            "Asignación masiva de horarios para el empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " entre " + start + " y " + end
+        );
     }
 
     /**
@@ -548,14 +593,19 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private void sendWelcomeEmail(Usuario usuario, String nombre, String tempPassword) {
         try {
             Map<String, Object> model = new HashMap<>();
+            String resolvedCompanyName = usuario.getCompany() != null ? usuario.getCompany().getName() : "VargasVet";
+            String resolvedLogo = (usuario.getCompany() != null && usuario.getCompany().getLogoUrl() != null) ? usuario.getCompany().getLogoUrl() : defaultCompanyLogo;
             model.put("nombre", nombre);
-            model.put("tempPassword", tempPassword);
-            model.put("companyName", usuario.getCompany() != null ? usuario.getCompany().getName() : "VargasVet");
-            model.put("verificationLink", appUrl + "/auth/verify/" + usuario.getVerificationToken());
+            model.put("companyName", resolvedCompanyName);
+            model.put("companyLogo", resolvedLogo);
+            model.put("companyEmail", companyEmail);
+            model.put("companyPhone", companyPhone);
+            model.put("companyAddress", companyAddress);
+            model.put("verificationLink", frontendVerifyUrl + usuario.getVerificationToken());
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),
-                    "Bienvenido al equipo de " + (usuario.getCompany() != null ? usuario.getCompany().getName() : "VargasVet"),
+                    "Bienvenido al equipo de " + resolvedCompanyName,
                     model
             );
 
@@ -627,6 +677,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             response.setApellido(empleado.getUser().getApellido());
             response.setEmail(empleado.getUser().getEmail());
             response.setTelefono(empleado.getUser().getTelefono());
+            response.setUserId(empleado.getUser().getId());
         }
         response.setTiposEmpleado(empleado.getTiposEmpleado().stream()
                 .map(t -> t.getNombre())
@@ -750,6 +801,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             target.setCreatedBy(adminEmail);
             horarioEmpleadoRepository.save(target);
         }
+
+        auditLogService.log(
+            "CLONAR_HORARIOS_SEMANA",
+            "Horarios",
+            "Se clonó la semana de horarios del empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " desde " + sourceStart + " hacia " + targetStart
+        );
     }
 
     @Override
@@ -843,6 +900,72 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             target.setCreatedBy(adminEmail);
             horarioEmpleadoRepository.save(target);
         }
+
+        auditLogService.log(
+            "CLONAR_HORARIOS_DIA",
+            "Horarios",
+            "Se clonó el día de horarios del empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " del " + sourceDate + " hacia el " + targetDate
+        );
+    }
+
+    @Override
+    @Transactional
+    public void deleteBulkSchedule(Long empleadoId, java.time.LocalDate startDate, java.time.LocalDate endDate, List<String> dias) {
+        Empleado empleado = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
+
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la de fin");
+        }
+
+        // 1. Validar citas en el rango
+        List<Cita> citas = citaRepository.findByEmpleadoIdAndDateRange(empleadoId, startDate, endDate);
+        if (!citas.isEmpty()) {
+            List<Cita> citasConConflicto = citas;
+            if (dias != null && !dias.isEmpty()) {
+                List<DiaSemana> diasFiltro = dias.stream()
+                        .map(d -> DiaSemana.valueOf(d.toUpperCase()))
+                        .toList();
+                citasConConflicto = citas.stream()
+                        .filter(c -> {
+                            DiaSemana dCita = toDiaSemana(c.getFechaHoraInicio().getDayOfWeek());
+                            return diasFiltro.contains(dCita);
+                        })
+                        .toList();
+            }
+
+            if (!citasConConflicto.isEmpty()) {
+                StringBuilder sb = new StringBuilder("No se puede eliminar el horario porque existen citas programadas: ");
+                for (Cita c : citasConConflicto) {
+                    sb.append(String.format("[%s %s - %s], ", c.getFechaHoraInicio().toLocalDate(), 
+                            c.getFechaHoraInicio().toLocalTime(), c.getMascota().getNombreCompleto()));
+                }
+                throw new IllegalStateException(sb.toString());
+            }
+        }
+
+        // 2. Eliminar en el rango
+        if (dias == null || dias.isEmpty()) {
+            horarioEmpleadoRepository.deleteByEmpleadoIdAndFechaBetween(empleadoId, startDate, endDate);
+        } else {
+            // Eliminar día por día si coincide el día de la semana
+            List<DiaSemana> diasFiltro = dias.stream()
+                    .map(d -> DiaSemana.valueOf(d.toUpperCase()))
+                    .toList();
+            for (java.time.LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+                final java.time.LocalDate currentDay = date;
+                DiaSemana dia = toDiaSemana(currentDay.getDayOfWeek());
+                if (diasFiltro.contains(dia)) {
+                    horarioEmpleadoRepository.deleteByEmpleadoIdAndFecha(empleadoId, currentDay);
+                }
+            }
+        }
+
+        auditLogService.log(
+            "ELIMINAR_HORARIOS_MASIVO",
+            "Horarios",
+            "Se eliminaron masivamente los horarios del empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " del " + startDate + " al " + endDate
+        );
     }
 
     @Override

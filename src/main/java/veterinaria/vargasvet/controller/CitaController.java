@@ -13,6 +13,7 @@ import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.service.CitaService;
+import veterinaria.vargasvet.service.AuditLogService;
 
 import java.time.LocalDate;
 
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 public class CitaController {
 
     private final CitaService citaService;
+    private final AuditLogService auditLogService;
 
     @GetMapping
     @PreAuthorize("hasAuthority('CITA_READ')")
@@ -33,6 +35,7 @@ public class CitaController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Page<CitaResponse> resultado = citaService.listar(companyId, fecha, estado, veterinarioId, page, size);
+        auditLogService.log(companyId, "CONSULTAR_CITAS", "Citas", "Consultó la lista de citas.");
         String mensaje = resultado.isEmpty() ? "No se encontraron citas" : "Citas recuperadas con éxito";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
     }
