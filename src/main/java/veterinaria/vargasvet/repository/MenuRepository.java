@@ -12,4 +12,6 @@ public interface MenuRepository extends JpaRepository<Menu, Integer> {
     
     @Query("SELECT m FROM Menu m WHERE m.active = true AND m.parent IS NULL ORDER BY m.sortOrder ASC")
     List<Menu> findRootMenus();
+
+    java.util.Optional<Menu> findByPath(String path);
 }

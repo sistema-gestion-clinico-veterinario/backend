@@ -34,8 +34,23 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     private final UserMapper userMapper;
     private final EmailService emailService;
 
-    @Value("${app.url}")
-    private String appUrl;
+    @Value("${app.frontend.verify-url}")
+    private String frontendVerifyUrl;
+
+    @Value("${app.company.name}")
+    private String companyName;
+
+    @Value("${app.company.logo}")
+    private String companyLogo;
+
+    @Value("${app.company.email}")
+    private String companyEmail;
+
+    @Value("${app.company.phone}")
+    private String companyPhone;
+
+    @Value("${app.company.address}")
+    private String companyAddress;
 
     @Override
     @Transactional
@@ -97,13 +112,16 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         try {
             Map<String, Object> model = new HashMap<>();
             model.put("nombre", nombre);
-            model.put("tempPassword", tempPassword);
-            model.put("companyName", "Patitas Felices");
-            model.put("verificationLink", appUrl + "/auth/verify/" + usuario.getVerificationToken());
+            model.put("companyName", companyName);
+            model.put("companyLogo", companyLogo);
+            model.put("companyEmail", companyEmail);
+            model.put("companyPhone", companyPhone);
+            model.put("companyAddress", companyAddress);
+            model.put("verificationLink", frontendVerifyUrl + usuario.getVerificationToken());
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),
-                    "Bienvenido al equipo de Patitas Felices",
+                    "Bienvenido al equipo de " + companyName,
                     model
             );
 

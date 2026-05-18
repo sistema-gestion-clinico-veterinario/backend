@@ -29,6 +29,7 @@ public class MascotaServiceImpl implements MascotaService {
     private final ApoderadoRepository apoderadoRepository;
     private final MascotaMapper mascotaMapper;
     private final BusinessValidator businessValidator;
+    private final veterinaria.vargasvet.service.AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -83,6 +84,12 @@ public class MascotaServiceImpl implements MascotaService {
         mascota.setApoderado(apoderado);
 
         Mascota savedMascota = mascotaRepository.save(mascota);
+
+        auditLogService.log(
+            "REGISTRAR_MASCOTA",
+            "Mascotas",
+            "Se registró a la mascota: " + savedMascota.getNombreCompleto() + " (" + savedMascota.getEspecie() + ")"
+        );
 
         return mascotaMapper.toResponse(savedMascota);
     }
@@ -151,6 +158,13 @@ public class MascotaServiceImpl implements MascotaService {
         if (request.getObservaciones() != null) mascota.setObservaciones(request.getObservaciones());
 
         Mascota savedMascota = mascotaRepository.save(mascota);
+
+        auditLogService.log(
+            "ACTUALIZAR_MASCOTA",
+            "Mascotas",
+            "Se actualizaron los datos de la mascota: " + savedMascota.getNombreCompleto()
+        );
+
         return mascotaMapper.toResponse(savedMascota);
     }
 
@@ -188,6 +202,12 @@ public class MascotaServiceImpl implements MascotaService {
         mascota.setFechaModificacionEstado(java.time.LocalDateTime.now());
 
         mascotaRepository.save(mascota);
+
+        auditLogService.log(
+            Boolean.TRUE.equals(request.getActive()) ? "ACTIVAR_MASCOTA" : "DESACTIVAR_MASCOTA",
+            "Mascotas",
+            (Boolean.TRUE.equals(request.getActive()) ? "Se activó" : "Se desactivó") + " a la mascota: " + mascota.getNombreCompleto()
+        );
     }
 
     @Override

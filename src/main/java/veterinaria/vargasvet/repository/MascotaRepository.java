@@ -17,6 +17,20 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
     @Query("SELECT m FROM Mascota m WHERE m.apoderado.id = :apoderadoId")
     List<Mascota> findByApoderadoId(@Param("apoderadoId") Long apoderadoId);
 
+    @Query("SELECT m FROM Mascota m WHERE m.apoderado.id = :apoderadoId AND m.activo = true ORDER BY m.nombreCompleto ASC")
+    Page<Mascota> findActiveByApoderadoId(@Param("apoderadoId") Long apoderadoId, Pageable pageable);
+
+    @Query("SELECT m FROM Mascota m WHERE m.apoderado.id = :apoderadoId " +
+           "AND (CAST(:nombre AS text) IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
+           "AND (:especie IS NULL OR m.especie = :especie) " +
+           "AND (:activo IS NULL OR m.activo = :activo) " +
+           "ORDER BY m.nombreCompleto ASC")
+    Page<Mascota> buscarPortalMascotas(@Param("apoderadoId") Long apoderadoId,
+                                       @Param("nombre") String nombre,
+                                       @Param("especie") EspecieMascota especie,
+                                       @Param("activo") Boolean activo,
+                                       Pageable pageable);
+
     @Query(value = "SELECT m FROM Mascota m JOIN m.apoderado a JOIN a.user u " +
                    "WHERE u.company.id = :companyId " +
                    "AND (CAST(:nombre AS text) IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +

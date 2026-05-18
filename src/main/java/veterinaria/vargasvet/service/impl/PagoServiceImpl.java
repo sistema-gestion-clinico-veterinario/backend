@@ -25,6 +25,7 @@ public class PagoServiceImpl implements PagoService {
 
     private final CitaRepository citaRepository;
     private final PurchaseRepository purchaseRepository;
+    private final veterinaria.vargasvet.service.AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -77,6 +78,12 @@ public class PagoServiceImpl implements PagoService {
 
         cita.setMontoPagado(montoRecibido != null ? montoRecibido : total);
         citaRepository.save(cita);
+
+        auditLogService.log(
+            "REGISTRAR_PAGO",
+            "Facturación",
+            "Se registró un pago por un monto total de S/ " + total + " para la cita de la mascota " + cita.getMascota().getNombreCompleto() + " con método de pago: " + request.getMetodoPago()
+        );
 
         return toResponse(savedPago, cambio);
     }

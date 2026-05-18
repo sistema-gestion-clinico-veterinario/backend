@@ -69,4 +69,30 @@ public class AuthController {
         AuthResponse response = usuarioService.refreshToken(refreshToken);
         return ResponseEntity.ok(new ApiResponse<>(true, "Token refrescado exitosamente", response));
     }
+
+    @PostMapping("/switch-role")
+    public ResponseEntity<ApiResponse<AuthResponse>> switchRole(@RequestBody java.util.Map<String, String> request) {
+        String roleName = request.get("roleName");
+        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        AuthResponse response = usuarioService.switchRole(email, roleName);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Rol cambiado exitosamente", response));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody veterinaria.vargasvet.dto.request.ForgotPasswordRequest request) {
+        usuarioService.forgotPassword(request);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Si el correo existe, se han enviado las instrucciones para restablecer la contraseña.", null));
+    }
+
+    @GetMapping("/validate-reset-token")
+    public ResponseEntity<ApiResponse<Boolean>> validateResetToken(@RequestParam String token) {
+        boolean isValid = usuarioService.validateResetToken(token);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Token validado", isValid));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody veterinaria.vargasvet.dto.request.ResetPasswordRequest request) {
+        usuarioService.resetPasswordWithToken(request);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Contraseña restablecida exitosamente", null));
+    }
 }

@@ -7,5 +7,7 @@ import java.util.Set;
 public class RoleDTO {
     private Integer id;
     private String name;
+    private Integer companyId;
     private Set<PermissionDTO> permissions;
+    private Set<Integer> menuIds;
 }

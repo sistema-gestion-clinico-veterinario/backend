@@ -26,4 +26,6 @@ public class ServicioRequest {
 
     @NotNull(message = "La duración estimada es obligatoria")
     private Integer duracionEstimada;
+
+    private Long tipoEmpleadoId;
 }
