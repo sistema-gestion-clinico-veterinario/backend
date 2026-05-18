@@ -21,18 +21,33 @@ public class JWTFilter extends GenericFilterBean {
     private final TokenProvider tokenProvider;
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String bearerToken = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            String token = bearerToken.substring(7);
-            try {
-                Authentication authentication = tokenProvider.getAuthentication(token);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (Exception e) {
-                SecurityContextHolder.clearContext();
-            }
-        }
+public void doFilter(
+        ServletRequest request,
+        ServletResponse response,
+        FilterChain chain
+) throws IOException, ServletException {
+
+    HttpServletRequest httpRequest = (HttpServletRequest) request;
+
+
+    if ("OPTIONS".equalsIgnoreCase(httpRequest.getMethod())) {
         chain.doFilter(request, response);
+        return;
     }
+
+    String bearerToken = httpRequest.getHeader(HttpHeaders.AUTHORIZATION);
+
+    if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+        String token = bearerToken.substring(7);
+
+        try {
+            Authentication authentication = tokenProvider.getAuthentication(token);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        } catch (Exception e) {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    chain.doFilter(request, response);
+}
 }

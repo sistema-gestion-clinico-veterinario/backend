@@ -17,12 +17,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/tipos-empleado")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
 public class TipoEmpleadoController {
 
     private final TipoEmpleadoService tipoEmpleadoService;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('TIPO_EMPLEADO_READ')")
     public ResponseEntity<ApiResponse<Page<TipoEmpleado>>> getAll(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(defaultValue = "0") int page,
@@ -35,11 +35,29 @@ public class TipoEmpleadoController {
     }
 
     @PostMapping
-    public ResponseEntity<TipoEmpleado> create(@RequestBody TipoEmpleado tipo) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(tipoEmpleadoService.create(tipo));
+    @PreAuthorize("hasAuthority('TIPO_EMPLEADO_CREATE')")
+    public ResponseEntity<ApiResponse<TipoEmpleado>> create(@RequestBody TipoEmpleado tipo) {
+        TipoEmpleado created = tipoEmpleadoService.create(tipo);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, "Tipo de empleado creado", created));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('TIPO_EMPLEADO_UPDATE')")
+    public ResponseEntity<ApiResponse<TipoEmpleado>> update(@PathVariable Long id, @RequestBody TipoEmpleado tipo) {
+        TipoEmpleado updated = tipoEmpleadoService.update(id, tipo);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Tipo de empleado actualizado", updated));
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('TIPO_EMPLEADO_STATUS')")
+    public ResponseEntity<ApiResponse<Void>> cambiarEstado(@PathVariable Long id, @RequestParam Boolean active) {
+        tipoEmpleadoService.cambiarEstado(id, active);
+        String msg = active ? "Tipo de empleado activado" : "Tipo de empleado desactivado";
+        return ResponseEntity.ok(new ApiResponse<>(true, msg, null));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('TIPO_EMPLEADO_DELETE')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         tipoEmpleadoService.delete(id);
         return ResponseEntity.noContent().build();

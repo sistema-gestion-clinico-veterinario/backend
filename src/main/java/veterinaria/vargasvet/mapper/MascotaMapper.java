@@ -1,11 +1,16 @@
 package veterinaria.vargasvet.mapper;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.dto.response.MascotaResponse;
+import veterinaria.vargasvet.repository.HistoriaClinicaRepository;
 
 @Component
+@RequiredArgsConstructor
 public class MascotaMapper {
+
+    private final HistoriaClinicaRepository historiaClinicaRepository;
 
     public MascotaResponse toResponse(Mascota mascota) {
         if (mascota == null) {
@@ -33,10 +38,12 @@ public class MascotaMapper {
 
         if (mascota.getApoderado() != null && mascota.getApoderado().getUser() != null) {
             response.setApoderadoId(mascota.getApoderado().getId());
-            String apoderadoNombre = mascota.getApoderado().getUser().getNombre() + " " + 
+            String apoderadoNombre = mascota.getApoderado().getUser().getNombre() + " " +
                                      mascota.getApoderado().getUser().getApellido();
             response.setApoderadoNombreCompleto(apoderadoNombre);
         }
+
+        response.setTieneHistoriaClinica(historiaClinicaRepository.existsByMascotaId(mascota.getId()));
 
         return response;
     }

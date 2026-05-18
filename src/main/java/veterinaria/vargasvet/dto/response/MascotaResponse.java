@@ -28,4 +28,6 @@ public class MascotaResponse {
     
     private Long apoderadoId;
     private String apoderadoNombreCompleto;
+
+    private Boolean tieneHistoriaClinica;
 }

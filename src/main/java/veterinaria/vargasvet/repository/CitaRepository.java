@@ -65,4 +65,10 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.user.company.id = :companyId " +
            "AND c.eliminada = false AND CAST(c.fechaHoraInicio AS date) = CURRENT_DATE")
     long countTodayByCompanyId(@Param("companyId") Integer companyId);
+    @Query("SELECT c FROM Cita c WHERE c.empleado.id = :empleadoId " +
+           "AND c.estado != 'CANCELADA' AND c.eliminada = false " +
+           "AND CAST(c.fechaHoraInicio AS date) BETWEEN :startDate AND :endDate")
+    java.util.List<Cita> findByEmpleadoIdAndDateRange(@Param("empleadoId") Long empleadoId, 
+                                                       @Param("startDate") LocalDate startDate, 
+                                                       @Param("endDate") LocalDate endDate);
 }
