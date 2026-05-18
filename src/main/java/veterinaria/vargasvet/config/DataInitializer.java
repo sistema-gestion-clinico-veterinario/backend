@@ -111,18 +111,19 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void upsertRole(String roleName, java.util.List<AppPermission> permissions) {
-        Role role = roleRepository.findByName(roleName).orElseGet(() -> {
-            Role r = new Role();
-            r.setName(roleName);
-            return r;
-        });
+        if (roleRepository.findByName(roleName).isPresent()) {
+            log.info("Role {} already exists. Skipping initialization to preserve user/admin permission modifications.", roleName);
+            return;
+        }
+        Role role = new Role();
+        role.setName(roleName);
         Set<Permission> rolePermissions = permissions.stream()
                 .map(p -> permissionRepository.findByName(p.name())
                         .orElseThrow(() -> new IllegalStateException("Permission not found: " + p.name())))
                 .collect(Collectors.toSet());
         role.setPermissions(rolePermissions);
         roleRepository.save(role);
-        log.info("Role {} upserted with {} permissions.", roleName, permissions.size());
+        log.info("Role {} created with {} initial permissions.", roleName, permissions.size());
     }
 
     private void seedMenus() {

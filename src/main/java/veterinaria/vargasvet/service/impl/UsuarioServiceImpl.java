@@ -45,6 +45,9 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private final MenuService menuService;
     private final RefreshTokenRepository refreshTokenRepository;
 
+    @Value("${app.frontend.verify-url}")
+    private String frontendVerifyUrl;
+
     @Value("${app.url}")
     private String appUrl;
 
@@ -53,6 +56,15 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
     @Value("${app.company.logo}")
     private String companyLogo;
+
+    @Value("${app.company.email}")
+    private String companyEmail;
+
+    @Value("${app.company.phone}")
+    private String companyPhone;
+
+    @Value("${app.company.address}")
+    private String companyAddress;
 
     @Override
     @Transactional
@@ -85,7 +97,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             model.put("nombre", usuario.getEmail());
             model.put("companyName", companyName);
             model.put("companyLogo", companyLogo);
-            model.put("verificationLink", appUrl + "/auth/verify/" + usuario.getVerificationToken());
+            model.put("companyEmail", companyEmail);
+            model.put("companyPhone", companyPhone);
+            model.put("companyAddress", companyAddress);
+            model.put("verificationLink", frontendVerifyUrl + usuario.getVerificationToken());
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),
@@ -227,8 +242,16 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Override
     @Transactional
     public void resetPassword(veterinaria.vargasvet.dto.request.AdminChangePasswordRequest dto) {
-        Usuario usuario = usuarioRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        Usuario usuario;
+        if (dto.getUserId() != null) {
+            usuario = usuarioRepository.findById(dto.getUserId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        } else if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            usuario = usuarioRepository.findByEmail(dto.getEmail())
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con el email: " + dto.getEmail()));
+        } else {
+            throw new IllegalArgumentException("Debe proporcionar el ID de usuario o el correo electrónico");
+        }
 
         // Aislamiento de datos: Si no es SUPER_ADMIN, solo puede resetear a usuarios de su misma empresa
         if (!SecurityUtils.isSuperAdmin()) {
@@ -239,7 +262,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         }
 
         usuario.setPassword(passwordEncoder.encode(dto.getNewPassword()));
-        usuario.setPasswordChanged(false);
+        usuario.setPasswordChanged(true);
         usuarioRepository.save(usuario);
 
         // Enviar notificación informativa
@@ -253,6 +276,9 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             model.put("email", usuario.getEmail());
             model.put("companyName", companyName);
             model.put("companyLogo", companyLogo);
+            model.put("companyEmail", companyEmail);
+            model.put("companyPhone", companyPhone);
+            model.put("companyAddress", companyAddress);
             model.put("appUrl", appUrl);
 
             Mail mail = emailService.createMail(
