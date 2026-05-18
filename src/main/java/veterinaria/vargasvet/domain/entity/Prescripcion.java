@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -17,6 +18,13 @@ public class Prescripcion {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "consulta_id", nullable = false)
     private Consulta consulta;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "veterinario_id")
+    private Empleado veterinario;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @Column(name = "medicamento", nullable = false, length = 200)
     private String medicamento;

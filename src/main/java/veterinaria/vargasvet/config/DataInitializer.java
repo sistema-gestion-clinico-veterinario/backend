@@ -45,43 +45,43 @@ public class DataInitializer implements CommandLineRunner {
     private void seedPermissions() {
         Arrays.stream(AppPermission.values()).forEach(pEnum -> {
             permissionRepository.findByName(pEnum.name()).ifPresentOrElse(
-                existing -> {
-                    // Actualizar metadatos si ya existe (idempotencia)
-                    existing.setLabel(pEnum.getLabel());
-                    existing.setDescription(pEnum.getDescription());
-                    existing.setModule(pEnum.getModule());
-                    permissionRepository.save(existing);
-                },
-                () -> {
-                    // Crear nuevo si no existe
-                    Permission permission = new Permission();
-                    permission.setName(pEnum.name());
-                    permission.setLabel(pEnum.getLabel());
-                    permission.setDescription(pEnum.getDescription());
-                    permission.setModule(pEnum.getModule());
-                    permissionRepository.save(permission);
-                    log.info("Permiso {} ({}) creado.", pEnum.name(), pEnum.getModule());
-                }
+                    existing -> {
+                        // Actualizar metadatos si ya existe (idempotencia)
+                        existing.setLabel(pEnum.getLabel());
+                        existing.setDescription(pEnum.getDescription());
+                        existing.setModule(pEnum.getModule());
+                        permissionRepository.save(existing);
+                    },
+                    () -> {
+                        // Crear nuevo si no existe
+                        Permission permission = new Permission();
+                        permission.setName(pEnum.name());
+                        permission.setLabel(pEnum.getLabel());
+                        permission.setDescription(pEnum.getDescription());
+                        permission.setModule(pEnum.getModule());
+                        permissionRepository.save(permission);
+                        log.info("Permiso {} ({}) creado.", pEnum.name(), pEnum.getModule());
+                    }
             );
         });
     }
 
     private void seedRoles() {
         createRoleIfNotFound("ROLE_SUPER_ADMIN", Arrays.asList(AppPermission.values()));
-        
+
         createRoleIfNotFound("ROLE_ADMIN", Arrays.asList(
                 AppPermission.USER_MANAGE,
                 AppPermission.PET_READ, AppPermission.PET_WRITE,
                 AppPermission.PET_HISTORY_READ, AppPermission.PET_HISTORY_WRITE,
                 AppPermission.COMPANY_MANAGE, AppPermission.INV_READ, AppPermission.INV_WRITE
         ));
-        
+
         createRoleIfNotFound("ROLE_VETERINARIO", Arrays.asList(
                 AppPermission.CITA_READ, AppPermission.CITA_UPDATE,
-                AppPermission.PET_READ, AppPermission.PET_HISTORY_READ, 
+                AppPermission.PET_READ, AppPermission.PET_HISTORY_READ,
                 AppPermission.PET_HISTORY_WRITE
         ));
-        
+
         createRoleIfNotFound("ROLE_RECEPCIONISTA", Arrays.asList(
                 AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE,
                 AppPermission.PET_READ, AppPermission.CLIENT_READ, AppPermission.CLIENT_WRITE
