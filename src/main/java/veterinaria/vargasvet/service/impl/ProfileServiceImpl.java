@@ -34,6 +34,25 @@ public class ProfileServiceImpl implements ProfileService {
     public ProfileResponse getMyProfile() {
         Usuario usuario = getCurrentUser();
         Optional<Empleado> empleadoOpt = empleadoRepository.findByUserId(usuario.getId());
+
+        // Vista previa segura para Super Admin y Admin:
+        // Si el usuario no tiene un registro de Empleado, le permitimos visualizar el perfil
+        // del primer empleado registrado EN SU SEDE/CLÍNICA activa para cargar sus horarios de demostración.
+        if (empleadoOpt.isEmpty() && (SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin())) {
+            Integer companyId = SecurityUtils.getCurrentCompanyId();
+            if (companyId != null) {
+                List<Empleado> companyEmployees = empleadoRepository.findAllByCompanyId(companyId);
+                if (!companyEmployees.isEmpty()) {
+                    empleadoOpt = Optional.of(companyEmployees.get(0));
+                }
+            } else {
+                List<Empleado> allEmployees = empleadoRepository.findAll();
+                if (!allEmployees.isEmpty()) {
+                    empleadoOpt = Optional.of(allEmployees.get(0));
+                }
+            }
+        }
+
         return buildResponse(usuario, empleadoOpt.orElse(null));
     }
 

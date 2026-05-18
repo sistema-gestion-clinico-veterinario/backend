@@ -54,6 +54,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final UserMapper userMapper;
     private final EmailService emailService;
     private final BusinessValidator businessValidator;
+    private final veterinaria.vargasvet.service.AuditLogService auditLogService;
 
     @Value("${app.frontend.verify-url}")
     private String frontendVerifyUrl;
@@ -163,6 +164,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         sendWelcomeEmail(savedUser, dto.getNombre(), tempPassword);
 
+        auditLogService.log(
+            "CREAR_EMPLEADO",
+            "Empleados",
+            "Se registró al empleado " + dto.getNombre() + " " + dto.getApellido() + " con email " + dto.getEmail()
+        );
+
         return userMapper.toProfileDTO(savedUser);
     }
 
@@ -263,6 +270,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             guardarHorarios(empleado, dto.getHorarios());
         }
 
+        auditLogService.log(
+            "ACTUALIZAR_EMPLEADO",
+            "Empleados",
+            "Se actualizaron los datos del empleado " + usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ")"
+        );
+
         return userMapper.toProfileDTO(usuario);
     }
 
@@ -293,6 +306,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         empleadoRepository.save(empleado);
         usuarioRepository.save(usuario);
+
+        auditLogService.log(
+            Boolean.TRUE.equals(nuevoEstado) ? "ACTIVAR_EMPLEADO" : "DESACTIVAR_EMPLEADO",
+            "Empleados",
+            (Boolean.TRUE.equals(nuevoEstado) ? "Se activó" : "Se desactivó") + " al empleado " + usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ")"
+        );
     }
 
     @Override
@@ -303,8 +322,16 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         horarioEmpleadoRepository.deleteByEmpleadoId(empleadoId);
         empleado.getEspecialidades().clear();
         empleado.getTiposEmpleado().clear();
+        String empEmail = empleado.getUser().getEmail();
+        String empNombre = empleado.getUser().getNombre() + " " + empleado.getUser().getApellido();
         empleadoRepository.delete(empleado);
         usuarioRepository.delete(empleado.getUser());
+
+        auditLogService.log(
+            "ELIMINAR_EMPLEADO",
+            "Empleados",
+            "Se eliminó permanentemente al empleado " + empNombre + " (" + empEmail + ")"
+        );
     }
 
     private void guardarHorarios(Empleado empleado, List<HorarioEmpleadoRequest> horariosRequest) {
@@ -451,6 +478,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 horarioEmpleadoRepository.save(h);
             }
         }
+
+        auditLogService.log(
+            "ASIGNAR_HORARIOS_MASIVO",
+            "Horarios",
+            "Asignación masiva de horarios para el empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " entre " + start + " y " + end
+        );
     }
 
     /**
@@ -768,6 +801,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             target.setCreatedBy(adminEmail);
             horarioEmpleadoRepository.save(target);
         }
+
+        auditLogService.log(
+            "CLONAR_HORARIOS_SEMANA",
+            "Horarios",
+            "Se clonó la semana de horarios del empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " desde " + sourceStart + " hacia " + targetStart
+        );
     }
 
     @Override
@@ -861,6 +900,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             target.setCreatedBy(adminEmail);
             horarioEmpleadoRepository.save(target);
         }
+
+        auditLogService.log(
+            "CLONAR_HORARIOS_DIA",
+            "Horarios",
+            "Se clonó el día de horarios del empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " del " + sourceDate + " hacia el " + targetDate
+        );
     }
 
     @Override
@@ -915,6 +960,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 }
             }
         }
+
+        auditLogService.log(
+            "ELIMINAR_HORARIOS_MASIVO",
+            "Horarios",
+            "Se eliminaron masivamente los horarios del empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " del " + startDate + " al " + endDate
+        );
     }
 
     @Override

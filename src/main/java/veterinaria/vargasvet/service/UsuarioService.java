@@ -15,4 +15,5 @@ public interface UsuarioService {
     void changePassword(String email, veterinaria.vargasvet.dto.request.ChangePasswordDTO dto);
     void resetPassword(veterinaria.vargasvet.dto.request.AdminChangePasswordRequest dto);
     AuthResponse refreshToken(String refreshToken);
+    AuthResponse switchRole(String email, String roleName);
 }

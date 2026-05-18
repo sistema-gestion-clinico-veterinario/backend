@@ -17,4 +17,5 @@ public class AuthResponse {
     private boolean passwordChanged;
     private boolean needsCompanySelection;
     private List<MenuDTO> menu;
+    private List<String> assignedRoles;
 }

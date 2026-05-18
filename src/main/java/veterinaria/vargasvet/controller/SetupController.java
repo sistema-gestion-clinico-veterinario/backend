@@ -25,6 +25,7 @@ public class SetupController {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @PostMapping("/first-admin")
     public ResponseEntity<?> createFirstAdmin(@Valid @RequestBody UserRegistrationDTO registrationDTO) {

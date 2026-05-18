@@ -7,6 +7,7 @@ import java.util.List;
 public interface ApoderadoPortalService {
     ApoderadoPerfilResponse getPerfil();
     List<MascotaResponse> getMascotas();
+    org.springframework.data.domain.Page<MascotaResponse> getMascotasPaginated(String nombre, veterinaria.vargasvet.domain.enums.EspecieMascota especie, Boolean activo, org.springframework.data.domain.Pageable pageable);
     HistoriaClinicaDetalleResponse getHistoriaMascota(Long mascotaId);
     List<CitaResponse> getCitas(Long mascotaId);
     List<PrescripcionResumenResponse> getRecetas();
