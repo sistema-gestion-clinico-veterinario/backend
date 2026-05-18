@@ -10,6 +10,7 @@ import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.response.HistoriaClinicaDetalleResponse;
 import veterinaria.vargasvet.dto.response.HistoriaClinicaListResponse;
 import veterinaria.vargasvet.service.HistoriaClinicaService;
+import veterinaria.vargasvet.service.AuditLogService;
 
 import java.time.LocalDate;
 
@@ -19,6 +20,7 @@ import java.time.LocalDate;
 public class HistoriaClinicaController {
 
     private final HistoriaClinicaService historiaClinicaService;
+    private final AuditLogService auditLogService;
 
     @GetMapping
     @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
@@ -35,6 +37,7 @@ public class HistoriaClinicaController {
         Page<HistoriaClinicaListResponse> resultado = historiaClinicaService.buscar(
                 numeroHc, nombrePaciente, nombrePropietario, fechaDesde, fechaHasta, companyId, page, size);
 
+        auditLogService.log(companyId, "CONSULTAR_HISTORIAS_CLINICAS", "Historias Clínicas", "Consultó el listado de historias clínicas.");
         String mensaje = resultado.isEmpty() ? "No se encontraron historias clínicas" : "Historias clínicas recuperadas con éxito";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
     }
@@ -43,6 +46,7 @@ public class HistoriaClinicaController {
     @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
     public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getDetalle(@PathVariable Long id) {
         HistoriaClinicaDetalleResponse detalle = historiaClinicaService.getDetalle(id);
+        auditLogService.log("CONSULTAR_DETALLE_HISTORIA_CLINICA", "Historias Clínicas", "Consultó el detalle de la historia clínica con ID: " + id + ".");
         return ResponseEntity.ok(new ApiResponse<>(true, "Historia clínica recuperada con éxito", detalle));
     }
 
@@ -50,6 +54,7 @@ public class HistoriaClinicaController {
     @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
     public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getPorMascota(@PathVariable Long mascotaId) {
         HistoriaClinicaDetalleResponse detalle = historiaClinicaService.getPorMascota(mascotaId);
+        auditLogService.log("CONSULTAR_HISTORIA_CLINICA_MASCOTA", "Historias Clínicas", "Consultó la historia clínica de la mascota con ID: " + mascotaId + ".");
         return ResponseEntity.ok(new ApiResponse<>(true, "Historia clínica recuperada con éxito", detalle));
     }
 }

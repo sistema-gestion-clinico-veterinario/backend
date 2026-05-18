@@ -33,7 +33,8 @@ public class AuditLogController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "timestamp,desc") String sort) {
+            @RequestParam(defaultValue = "timestamp,desc") String sort,
+            @RequestParam(required = false, defaultValue = "false") boolean initialLoad) {
 
         // Multi-tenant Security Check:
         // Si no es Super Admin, forzamos que filtre únicamente por la empresa de su sesión
@@ -56,13 +57,14 @@ public class AuditLogController {
         Pageable pageable = PageRequest.of(page, size, sortOrder);
 
         // Práctica de Alta Seguridad: Auditar al Auditor.
-        // Registra en el log cada vez que un usuario consulta el historial de auditoría en su carga inicial.
-        if (page == 0) {
+        // Solo se audita cuando el frontend envía initialLoad=true (únicamente en ngOnInit).
+        // Cambiar de página o aplicar filtros nunca envían este flag.
+        if (initialLoad) {
             String currentUserEmail = SecurityUtils.getCurrentUserEmail();
             Integer currentCompId = SecurityUtils.getCurrentCompanyId();
             String userRole = SecurityUtils.isSuperAdmin() ? "ROLE_SUPER_ADMIN" : "ROLE_ADMIN";
             String details = String.format("El usuario %s consultó el historial de auditoría.", currentUserEmail);
-            
+
             auditLogService.log(
                 currentUserEmail,
                 userRole,

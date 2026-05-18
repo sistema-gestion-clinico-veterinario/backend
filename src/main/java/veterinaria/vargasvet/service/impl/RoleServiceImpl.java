@@ -15,6 +15,7 @@ import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.MenuRepository;
 import veterinaria.vargasvet.repository.PermissionRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
+import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.RoleService;
 
 import java.util.HashSet;
@@ -30,6 +31,7 @@ public class RoleServiceImpl implements RoleService {
     private final PermissionRepository permissionRepository;
     private final MenuRepository menuRepository;
     private final CompanyRepository companyRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -90,7 +92,18 @@ public class RoleServiceImpl implements RoleService {
             role.setMenus(new HashSet<>(menuRepository.findAllById(dto.getMenuIds())));
         }
 
-        return convertToDTO(roleRepository.save(role));
+        Role savedRole = roleRepository.save(role);
+
+        auditLogService.log(
+            "CREAR_ROL",
+            "Configuración",
+            String.format("Se creó el rol '%s' (ID: %d) con %d permisos y %d menús",
+                savedRole.getName(), savedRole.getId(),
+                savedRole.getPermissions().size(),
+                savedRole.getMenus() != null ? savedRole.getMenus().size() : 0)
+        );
+
+        return convertToDTO(savedRole);
     }
 
     @Override
@@ -108,7 +121,18 @@ public class RoleServiceImpl implements RoleService {
             role.getMenus().clear();
         }
 
-        return convertToDTO(roleRepository.save(role));
+        Role savedRole = roleRepository.save(role);
+
+        auditLogService.log(
+            "ACTUALIZAR_ROL",
+            "Configuración",
+            String.format("Se actualizó el rol '%s' (ID: %d) con %d permisos y %d menús",
+                savedRole.getName(), savedRole.getId(),
+                savedRole.getPermissions().size(),
+                savedRole.getMenus() != null ? savedRole.getMenus().size() : 0)
+        );
+
+        return convertToDTO(savedRole);
     }
 
     @Override
@@ -121,7 +145,14 @@ public class RoleServiceImpl implements RoleService {
             throw new IllegalArgumentException("No se puede eliminar este rol del sistema");
         }
 
+        String roleName = role.getName();
         roleRepository.delete(role);
+
+        auditLogService.log(
+            "ELIMINAR_ROL",
+            "Configuración",
+            String.format("Se eliminó el rol '%s' (ID: %d)", roleName, id)
+        );
     }
 
     private RoleDTO convertToDTO(Role role) {

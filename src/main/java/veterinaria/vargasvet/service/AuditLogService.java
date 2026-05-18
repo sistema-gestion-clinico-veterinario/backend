@@ -13,6 +13,11 @@ public interface AuditLogService {
     void log(String action, String module, String details);
 
     /**
+     * Registra un log de auditoría capturando el usuario del contexto y permitiendo especificar una empresa.
+     */
+    void log(Integer companyId, String action, String module, String details);
+
+    /**
      * Registra un log de auditoría con datos explícitos (útil para login/logout o procesos externos).
      */
     void log(String email, String role, Integer companyId, String companyName, String action, String module, String details, String ipAddress);
