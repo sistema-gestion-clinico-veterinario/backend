@@ -119,4 +119,16 @@ public class ConsultaMapper {
         }
         return r;
     }
+
+    /** Para el listado global — incluye paciente y número de HC */
+    public PrescripcionResumenResponse toPrescripcionListResponse(Prescripcion p) {
+        PrescripcionResumenResponse r = toPrescripcionResponse(p);
+        if (p.getConsulta() != null && p.getConsulta().getHistoriaClinica() != null) {
+            r.setNumeroHc(p.getConsulta().getHistoriaClinica().getNumeroHc());
+            if (p.getConsulta().getHistoriaClinica().getMascota() != null) {
+                r.setPacienteNombre(p.getConsulta().getHistoriaClinica().getMascota().getNombreCompleto());
+            }
+        }
+        return r;
+    }
 }

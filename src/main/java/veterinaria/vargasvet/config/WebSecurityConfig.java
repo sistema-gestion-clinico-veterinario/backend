@@ -79,49 +79,35 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration config = new CorsConfiguration();
+    CorsConfiguration config = new CorsConfiguration();
 
-        // Frontends permitidos
-        config.setAllowedOriginPatterns(List.of(
-                "https://systemvetfrontend.vercel.app",
-                "https://*.vercel.app",
-                "http://localhost:4200"
-        ));
+    config.setAllowedOriginPatterns(List.of(
+            "https://systemvetfrontend.vercel.app",
+            "https://*.vercel.app",
+            "http://localhost:4200"
+    ));
 
-        // Métodos permitidos
-        config.setAllowedMethods(List.of(
-                "GET",
-                "POST",
-                "PUT",
-                "PATCH",
-                "DELETE",
-                "OPTIONS"
-        ));
+    config.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+    ));
 
-        // Headers permitidos
-        config.setAllowedHeaders(List.of("*"));
+    config.setAllowedHeaders(List.of("*"));
 
-        // Headers expuestos
-        config.setExposedHeaders(List.of(
-                "Authorization"
-        ));
+    config.setExposedHeaders(List.of("Authorization"));
 
-        // Permitir credenciales
-        config.setAllowCredentials(true);
+    config.setAllowCredentials(true);
 
-        // Cache preflight
-        config.setMaxAge(3600L);
+    config.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+    UrlBasedCorsConfigurationSource source =
+            new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", config);
+    source.registerCorsConfiguration("/**", config);
 
-        return source;
-    }
-
+    return source;
+}
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

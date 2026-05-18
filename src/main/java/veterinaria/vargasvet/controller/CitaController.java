@@ -24,7 +24,7 @@ public class CitaController {
     private final CitaService citaService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('CITA_READ')")
     public ResponseEntity<ApiResponse<Page<CitaResponse>>> listar(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
@@ -38,7 +38,7 @@ public class CitaController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('CITA_CREATE')")
     public ResponseEntity<ApiResponse<CitaResponse>> createCita(@Valid @RequestBody CitaRequest request) {
         CitaResponse response = citaService.createCita(request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -46,35 +46,35 @@ public class CitaController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('CITA_UPDATE')")
     public ResponseEntity<ApiResponse<CitaResponse>> actualizarCita(@PathVariable Long id, @Valid @RequestBody CitaRequest request) {
         CitaResponse response = citaService.actualizarCita(id, request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita actualizada exitosamente", response));
     }
 
     @PutMapping("/{id}/reprogramar")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('CITA_UPDATE')")
     public ResponseEntity<ApiResponse<CitaResponse>> reprogramarCita(@PathVariable Long id, @Valid @RequestBody CitaRequest request) {
         CitaResponse response = citaService.reprogramarCita(id, request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita reprogramada exitosamente", response));
     }
 
     @PatchMapping("/{id}/iniciar")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO')")
+    @PreAuthorize("hasAuthority('CITA_INICIAR')")
     public ResponseEntity<ApiResponse<Long>> iniciarAtencion(@PathVariable Long id) {
         Long consultaId = citaService.iniciarAtencion(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Atención iniciada con éxito", consultaId));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAuthority('CITA_DELETE')")
     public ResponseEntity<ApiResponse<Void>> eliminarCita(@PathVariable Long id) {
         citaService.eliminarCita(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita eliminada con éxito", null));
     }
 
     @DeleteMapping("/{id}/cancelar")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAuthority('CITA_CANCEL')")
     public ResponseEntity<ApiResponse<Void>> cancelarCita(@PathVariable Long id, @RequestParam String motivo) {
         citaService.cancelarCita(id, motivo);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita cancelada con éxito", null));
