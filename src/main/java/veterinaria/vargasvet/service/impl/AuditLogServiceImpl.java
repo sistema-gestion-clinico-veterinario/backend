@@ -13,6 +13,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import veterinaria.vargasvet.domain.entity.AuditLog;
 import veterinaria.vargasvet.dto.AuditLogDTO;
 import veterinaria.vargasvet.repository.AuditLogRepository;
+import veterinaria.vargasvet.repository.CompanyRepository;
+import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.AuditLogService;
 import java.time.LocalDateTime;
@@ -24,6 +26,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     private final AuditLogRepository auditLogRepository;
     private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     private final SimpMessagingTemplate messagingTemplate;
+    private final CompanyRepository companyRepository;
 
     @Autowired(required = false)
     private jakarta.servlet.http.HttpServletRequest httpServletRequest;
@@ -43,8 +46,13 @@ public class AuditLogServiceImpl implements AuditLogService {
     @Override
     @Transactional
     public void log(String action, String module, String details) {
+        log(null, action, module, details);
+    }
+
+    @Override
+    @Transactional
+    public void log(Integer companyId, String action, String module, String details) {
         String email = SecurityUtils.getCurrentUserEmail();
-        Integer companyId = SecurityUtils.getCurrentCompanyId();
         
         // Extraer rol activo de las authorities del SecurityContext
         String role = null;
@@ -59,7 +67,59 @@ public class AuditLogServiceImpl implements AuditLogService {
 
         String ip = getClientIp();
 
-        log(email, role, companyId, null, action, module, details, ip);
+        // Resolver nombre de empresa
+        String companyName = null;
+        Integer finalCompanyId = companyId;
+        if (finalCompanyId == null) {
+            finalCompanyId = SecurityUtils.getCurrentCompanyId();
+        }
+
+        if (finalCompanyId != null) {
+            try {
+                companyName = companyRepository.findById(finalCompanyId)
+                        .map(Company::getName)
+                        .orElse(null);
+            } catch (Exception e) {
+                System.err.println("AUDIT WARNING: Could not fetch company name: " + e.getMessage());
+            }
+        }
+
+        // Determinar el origen (desde dónde se originó la llamada en el frontend)
+        String finalDetails = details;
+        if (httpServletRequest != null) {
+            String referer = httpServletRequest.getHeader("Referer");
+            if (referer == null) {
+                referer = httpServletRequest.getHeader("referer");
+            }
+            if (referer != null) {
+                System.out.println("AUDIT REFERER DETECTADO: " + referer);
+                String refLower = referer.toLowerCase();
+                String detailsSuffix = "";
+                
+                if (refLower.contains("/dashboard")) {
+                    detailsSuffix = " desde el panel (Dashboard).";
+                } else if (refLower.contains("/mascotas")) {
+                    detailsSuffix = " desde la sección de Mascotas.";
+                } else if (refLower.contains("/citas/agenda") || refLower.contains("/citas")) {
+                    detailsSuffix = " desde la agenda de Citas.";
+                } else if (refLower.contains("/admin/clientes")) {
+                    detailsSuffix = " desde el mantenedor de Clientes.";
+                } else if (refLower.contains("/admin/empleados")) {
+                    detailsSuffix = " desde el mantenedor de Empleados.";
+                } else if (refLower.contains("/admin/auditoria")) {
+                    detailsSuffix = " desde la sección de Auditoría.";
+                }
+                
+                if (!detailsSuffix.isEmpty() && finalDetails != null) {
+                    if (finalDetails.endsWith(".")) {
+                        finalDetails = finalDetails.substring(0, finalDetails.length() - 1);
+                    }
+                    finalDetails = finalDetails + detailsSuffix;
+                }
+            }
+        }
+
+        log(email, role, finalCompanyId, companyName, action, module, finalDetails, ip);
     }
 
     @Override

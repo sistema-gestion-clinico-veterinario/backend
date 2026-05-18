@@ -16,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.dto.response.MenuDTO;
+import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.MenuService;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,6 +33,7 @@ public class MenuController {
     private final MenuRepository menuRepository;
     private final RoleRepository roleRepository;
     private final MenuService menuService;
+    private final AuditLogService auditLogService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<Menu>>> getMenuTree() {
@@ -47,8 +49,17 @@ public class MenuController {
     public ResponseEntity<ApiResponse<Menu>> createMenu(@Valid @RequestBody MenuRequestDTO dto) {
         Menu menu = new Menu();
         mapDtoToEntity(dto, menu);
+        Menu savedMenu = menuRepository.save(menu);
+
+        auditLogService.log(
+            "CREAR_MENU",
+            "Configuración",
+            String.format("Se creó el menú '%s' (ID: %d) con ruta '%s'",
+                savedMenu.getLabel(), savedMenu.getId(), savedMenu.getPath())
+        );
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(true, "Menú creado exitosamente", menuRepository.save(menu)));
+                .body(new ApiResponse<>(true, "Menú creado exitosamente", savedMenu));
     }
 
     @PutMapping("/{id}")
@@ -57,8 +68,15 @@ public class MenuController {
                 .orElseThrow(() -> new RuntimeException("Menú no encontrado"));
         
         mapDtoToEntity(dto, menu);
+        Menu savedMenu = menuRepository.save(menu);
+
+        auditLogService.log(
+            "ACTUALIZAR_MENU",
+            "Configuración",
+            String.format("Se actualizó el menú '%s' (ID: %d)", savedMenu.getLabel(), savedMenu.getId())
+        );
         
-        return ResponseEntity.ok(new ApiResponse<>(true, "Menú actualizado exitosamente", menuRepository.save(menu)));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Menú actualizado exitosamente", savedMenu));
     }
 
     private void mapDtoToEntity(MenuRequestDTO dto, Menu menu) {
@@ -103,7 +121,14 @@ public class MenuController {
         }
 
         // Eliminar físicamente el menú (gracias a CascadeType.ALL, eliminar el padre eliminará a los hijos)
+        String menuLabel = menu.getLabel();
         menuRepository.delete(menu);
+
+        auditLogService.log(
+            "ELIMINAR_MENU",
+            "Configuración",
+            String.format("Se eliminó el menú '%s' (ID: %d) y todos sus submenús relacionados", menuLabel, id)
+        );
         
         return ResponseEntity.ok(new ApiResponse<>(true, "Menú y sus relaciones eliminados exitosamente", null));
     }

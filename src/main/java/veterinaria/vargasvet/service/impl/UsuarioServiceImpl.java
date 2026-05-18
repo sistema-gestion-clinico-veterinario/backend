@@ -20,7 +20,10 @@ import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.repository.RefreshTokenRepository;
 import veterinaria.vargasvet.security.TokenProvider;
 import veterinaria.vargasvet.domain.entity.RefreshToken;
+import veterinaria.vargasvet.domain.entity.PasswordResetToken;
+import veterinaria.vargasvet.repository.PasswordResetTokenRepository;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Value;
 import veterinaria.vargasvet.dto.Mail;
@@ -45,6 +48,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private final EmailService emailService;
     private final MenuService menuService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final AuditLogService auditLogService;
 
     @Value("${app.frontend.verify-url}")
@@ -401,6 +405,98 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         } catch (Exception e) {
             System.err.println("[WARNING] No se pudo enviar el correo de notificación a " + usuario.getEmail() + ": " + e.getMessage());
         }
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(veterinaria.vargasvet.dto.request.ForgotPasswordRequest request) {
+        Usuario usuario = usuarioRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con email: " + request.getEmail()));
+
+        // Delete any existing reset token for this user
+        passwordResetTokenRepository.deleteByUsuario(usuario);
+
+        // Create new token
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .token(token)
+                .usuario(usuario)
+                .expiryDate(LocalDateTime.now().plusHours(24)) // 24 hours validity
+                .build();
+        
+        passwordResetTokenRepository.save(resetToken);
+
+        // Send email
+        try {
+            Map<String, Object> model = new HashMap<>();
+            model.put("usuario", resolveNombreCompleto(usuario));
+            model.put("companyName", companyName);
+            model.put("companyEmail", companyEmail);
+            model.put("companyPhone", companyPhone);
+            model.put("companyLogo", companyLogo);
+            
+            // Construct the reset URL pointing to the frontend
+            String resetUrl = appUrl + "/reset-password?token=" + token;
+            model.put("resetUrl", resetUrl);
+
+            Mail mail = emailService.createMail(
+                    usuario.getEmail(),
+                    "Restablecer Contraseña - " + companyName,
+                    model
+            );
+            emailService.sendEmail(mail, "email/forgot-password-template");
+            
+            auditLogService.log(
+                usuario.getEmail(), 
+                "USER", 
+                null, 
+                companyName, 
+                "SOLICITAR_RESTABLECER_PASSWORD", 
+                "Seguridad", 
+                "El usuario ha solicitado restablecer su contraseña.",
+                null
+            );
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo enviar el correo de recuperación a " + usuario.getEmail() + ": " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void resetPasswordWithToken(veterinaria.vargasvet.dto.request.ResetPasswordRequest request) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.getToken())
+                .orElseThrow(() -> new IllegalArgumentException("El token es inválido o no existe."));
+
+        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            passwordResetTokenRepository.delete(resetToken);
+            throw new IllegalArgumentException("El token ha expirado. Por favor solicite uno nuevo.");
+        }
+
+        Usuario usuario = resetToken.getUsuario();
+        usuario.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        usuario.setPasswordChanged(true);
+        usuarioRepository.save(usuario);
+
+        passwordResetTokenRepository.delete(resetToken);
+        
+        auditLogService.log(
+            usuario.getEmail(), 
+            "USER", 
+            null, 
+            companyName, 
+            "RESTABLECER_PASSWORD", 
+            "Seguridad", 
+            "El usuario ha restablecido su contraseña exitosamente usando un token.",
+            null
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean validateResetToken(String token) {
+        return passwordResetTokenRepository.findByToken(token)
+                .map(resetToken -> !resetToken.getExpiryDate().isBefore(LocalDateTime.now()))
+                .orElse(false);
     }
 
     @Override
