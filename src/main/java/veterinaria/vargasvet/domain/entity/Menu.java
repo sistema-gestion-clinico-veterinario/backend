@@ -41,7 +41,7 @@ public class Menu {
 
     private boolean active = true;
 
-    @ManyToMany(mappedBy = "menus", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "menus", fetch = FetchType.EAGER)
     @JsonIgnore
     private java.util.Set<Role> roles = new java.util.HashSet<>();
 

@@ -412,9 +412,9 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
             throw new IllegalArgumentException("Solo se pueden reprogramar citas en estado PROGRAMADA, CANCELADA o REPROGRAMADA");
         }
 
-        // Rule: Can only reschedule up to 1 hour before the original appointment start time
-        if (LocalDateTime.now().isAfter(cita.getFechaHoraInicio().minusHours(1))) {
-            throw new IllegalArgumentException("No se puede reprogramar la cita con menos de 1 hora de anticipación.");
+        // Rule: Can only reschedule up to 6 hours before the original appointment start time
+        if (LocalDateTime.now().isAfter(cita.getFechaHoraInicio().minusHours(6))) {
+            throw new IllegalArgumentException("No se puede reprogramar la cita con menos de 6 horas de anticipación.");
         }
 
         // Validate availability of the professional in the new requested date and time slot
@@ -498,6 +498,12 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
                 throw new IllegalArgumentException("El profesional seleccionado ya tiene otra cita reservada en esta franja horaria.");
             }
         }
+    }
+
+    @Override
+    @Transactional
+    public void cancelPortalCita(Long id, String motivo) {
+        throw new IllegalArgumentException("Un apoderado no tiene permiso para cancelar citas");
     }
 }
 

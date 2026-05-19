@@ -18,8 +18,8 @@ class VargasvetApplicationTests {
 		try {
 			RoleCreateDTO dto = new RoleCreateDTO();
 			dto.setName("ROLE_VETERINARIO");
-			dto.setPermissionIds(Arrays.asList(1, 2));
-			dto.setMenuIds(Arrays.asList(1));
+			dto.setPermissionIds(java.util.Set.of(1, 2));
+			dto.setMenuIds(java.util.Set.of(1));
 			roleService.updateRole(3, dto);
 			System.out.println("TEST UPDATE SUCCESSFUL!");
 		} catch (Exception e) {

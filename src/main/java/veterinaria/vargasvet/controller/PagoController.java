@@ -21,7 +21,7 @@ public class PagoController {
     private final PagoService pagoService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA', 'APODERADO', 'CLIENTE')")
     public ResponseEntity<ApiResponse<PagoResponse>> registrar(@Valid @RequestBody PagoRequest request) {
         PagoResponse response = pagoService.registrar(request);
         return ResponseEntity.status(HttpStatus.CREATED)
