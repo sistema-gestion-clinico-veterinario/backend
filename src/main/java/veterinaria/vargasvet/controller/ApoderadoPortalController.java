@@ -89,5 +89,13 @@ public class ApoderadoPortalController {
             @jakarta.validation.Valid @RequestBody CitaRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Appointment rescheduled successfully", apoderadoPortalService.reschedulePortalCita(id, request)));
     }
+
+    @DeleteMapping("/citas/{id}/cancelar")
+    public ResponseEntity<ApiResponse<Void>> cancelPortalCita(
+            @PathVariable Long id,
+            @RequestParam(required = false) String motivo) {
+        apoderadoPortalService.cancelPortalCita(id, motivo);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Cita cancelada con éxito", null));
+    }
 }
 

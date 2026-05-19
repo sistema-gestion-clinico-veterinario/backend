@@ -139,31 +139,33 @@ public class AuditLogServiceImpl implements AuditLogService {
 
         AuditLog saved = auditLogRepository.save(auditLog);
 
-        // Transmitir en tiempo real a través de WebSockets de forma segura
-        try {
-            AuditLogDTO dto = AuditLogDTO.builder()
-                    .id(saved.getId())
-                    .timestamp(saved.getTimestamp() != null ? saved.getTimestamp().toString() : null)
-                    .userEmail(saved.getUserEmail())
-                    .userRole(saved.getUserRole())
-                    .companyId(saved.getCompanyId())
-                    .companyName(saved.getCompanyName())
-                    .action(saved.getAction())
-                    .module(saved.getModule())
-                    .details(saved.getDetails())
-                    .ipAddress(saved.getIpAddress())
-                    .build();
+        // Transmitir en tiempo real a través de WebSockets de forma segura de manera asíncrona
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                AuditLogDTO dto = AuditLogDTO.builder()
+                        .id(saved.getId())
+                        .timestamp(saved.getTimestamp() != null ? saved.getTimestamp().toString() : null)
+                        .userEmail(saved.getUserEmail())
+                        .userRole(saved.getUserRole())
+                        .companyId(saved.getCompanyId())
+                        .companyName(saved.getCompanyName())
+                        .action(saved.getAction())
+                        .module(saved.getModule())
+                        .details(saved.getDetails())
+                        .ipAddress(saved.getIpAddress())
+                        .build();
 
-            // Canal global para Super Administradores
-            messagingTemplate.convertAndSend("/topic/audit-logs", dto);
-            
-            // Canal específico para Administradores de la clínica actual
-            if (companyId != null) {
-                messagingTemplate.convertAndSend("/topic/audit-logs/" + companyId, dto);
+                // Canal global para Super Administradores
+                messagingTemplate.convertAndSend("/topic/audit-logs", dto);
+                
+                // Canal específico para Administradores de la clínica actual
+                if (companyId != null) {
+                    messagingTemplate.convertAndSend("/topic/audit-logs/" + companyId, dto);
+                }
+            } catch (Exception e) {
+                System.err.println("WS ERROR: No se pudo transmitir el log de auditoría por WebSockets: " + e.getMessage());
             }
-        } catch (Exception e) {
-            System.err.println("WS ERROR: No se pudo transmitir el log de auditoría por WebSockets: " + e.getMessage());
-        }
+        });
     }
 
     @Override

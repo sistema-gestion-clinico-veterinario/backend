@@ -28,7 +28,15 @@ import veterinaria.vargasvet.dto.response.PagoResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.PurchaseRepository;
+import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.PagoService;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import veterinaria.vargasvet.dto.response.PagoListResponse;
+import veterinaria.vargasvet.repository.UsuarioRepository;
+import veterinaria.vargasvet.security.SecurityUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -42,7 +50,9 @@ public class PagoServiceImpl implements PagoService {
 
     private final CitaRepository citaRepository;
     private final PurchaseRepository purchaseRepository;
+    private final UsuarioRepository usuarioRepository;
     private final RestTemplate restTemplate;
+    private final AuditLogService auditLogService;
 
     @Value("${mercadopago.public-key}")
     private String mpPublicKey;
@@ -119,9 +129,7 @@ public class PagoServiceImpl implements PagoService {
                 mpStatus = mpPayment.getStatus();
 
                 if (!"approved".equals(mpStatus)) {
-                    throw new IllegalArgumentException(
-                        "Pago Yape rechazado: " + mpPayment.getStatusDetail()
-                    );
+                    throw new IllegalArgumentException(traducirRechazoYape(mpPayment.getStatusDetail()));
                 }
                 estado = PaymentStatus.PAID;
 
@@ -170,6 +178,85 @@ public class PagoServiceImpl implements PagoService {
             cambio = pago.getMontoRecibido().subtract(pago.getTotal());
         }
         return toResponse(pago, cambio);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PagoListResponse> listarTodos(int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return purchaseRepository.findAllByTipoPurchaseOrderByCreatedAtDesc(TipoPurchase.SERVICIO_CITA, pageable)
+                .map(this::toListResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PagoListResponse> listarMisPagos(int page, int size) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        veterinaria.vargasvet.domain.entity.Usuario user = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + email));
+        PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return purchaseRepository.findByApoderadoUserId(user.getId(), TipoPurchase.SERVICIO_CITA, pageable)
+                .map(this::toListResponse);
+    }
+
+    private PagoListResponse toListResponse(Purchase p) {
+        PagoListResponse r = new PagoListResponse();
+        r.setId(p.getId());
+        r.setMetodoPago(p.getMetodoPago());
+        r.setMonto(p.getTotal());
+        r.setMontoRecibido(p.getMontoRecibido());
+        r.setFechaPago(p.getCreatedAt());
+        r.setEstado(p.getPaymentStatus());
+
+        BigDecimal cambio = null;
+        if (p.getMontoRecibido() != null && p.getTotal() != null
+                && p.getMontoRecibido().compareTo(p.getTotal()) > 0) {
+            cambio = p.getMontoRecibido().subtract(p.getTotal());
+        }
+        r.setCambio(cambio);
+
+        if (p.getCita() != null) {
+            r.setCitaId(p.getCita().getId());
+            r.setEstadoCita(p.getCita().getEstado() != null ? p.getCita().getEstado().name() : null);
+            if (p.getCita().getMascota() != null) {
+                r.setMascotaNombre(p.getCita().getMascota().getNombreCompleto());
+                if (p.getCita().getMascota().getApoderado() != null
+                        && p.getCita().getMascota().getApoderado().getUser() != null) {
+                    veterinaria.vargasvet.domain.entity.Usuario apUser = p.getCita().getMascota().getApoderado().getUser();
+                    r.setClienteNombre(
+                            (apUser.getNombre() != null ? apUser.getNombre() : "")
+                            + " " + (apUser.getApellido() != null ? apUser.getApellido() : "")
+                    );
+                }
+            }
+            if (p.getCita().getServicio() != null) {
+                r.setServicioNombre(p.getCita().getServicio().getNombre());
+            }
+            if (p.getCita().getEmpleado() != null && p.getCita().getEmpleado().getUser() != null) {
+                veterinaria.vargasvet.domain.entity.Usuario vetUser = p.getCita().getEmpleado().getUser();
+                r.setVeterinarioNombre(
+                        (vetUser.getNombre() != null ? vetUser.getNombre() : "")
+                        + " " + (vetUser.getApellido() != null ? vetUser.getApellido() : "")
+                );
+            }
+        }
+        return r;
+    }
+
+    private String traducirRechazoYape(String statusDetail) {
+        if (statusDetail == null) return "Pago Yape rechazado por MercadoPago.";
+        return switch (statusDetail) {
+            case "cc_rejected_insufficient_amount" ->
+                "Saldo insuficiente en Yape. El cliente debe recargar su cuenta.";
+            case "cc_rejected_call_for_authorize" ->
+                "Yape requiere autorización del cliente. Debe aprobar el pago en su app.";
+            case "cc_rejected_bad_filled_security_code" ->
+                "Código OTP incorrecto. Verifique el código con el cliente e intente de nuevo.";
+            case "cc_rejected_max_attempts" ->
+                "Demasiados intentos fallidos. Espere unos minutos antes de intentar de nuevo.";
+            default ->
+                "Pago Yape rechazado. Motivo: " + statusDetail;
+        };
     }
 
     /**

@@ -34,6 +34,7 @@ public class EmailService {
         return mail;
     }
 
+    @org.springframework.scheduling.annotation.Async
     public void sendEmail(Mail mail, String templateName) {
         try {
             MimeMessage message = mailSender.createMimeMessage();

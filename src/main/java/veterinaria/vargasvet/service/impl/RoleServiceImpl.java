@@ -120,12 +120,14 @@ public class RoleServiceImpl implements RoleService {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
 
-        // Bloquear completamente la actualización de los roles SUPER_ADMIN y ADMIN
-        if (role.getName().startsWith("ROLE_SUPER_ADMIN") || role.getName().equals("ROLE_ADMIN")) {
-            throw new IllegalArgumentException("No está permitido modificar la configuración del rol " + role.getName());
+        // Proteger solo el nombre de los roles centrales, pero permitir cambiar permisos y menús
+        final boolean isProtectedName = role.getName().equals("ROLE_SUPER_ADMIN") || role.getName().equals("ROLE_ADMIN");
+        if (isProtectedName) {
+            // Mantener el nombre original, no permitir renombrarlo
+            role.setName(role.getName());
+        } else {
+            role.setName(dto.getName());
         }
-
-        role.setName(dto.getName());
         role.setPermissions(new HashSet<>(permissionRepository.findAllById(dto.getPermissionIds())));
 
         if (dto.getMenuIds() != null) {
