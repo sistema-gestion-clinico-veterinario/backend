@@ -94,13 +94,21 @@ public class RoleServiceImpl implements RoleService {
 
         Role savedRole = roleRepository.save(role);
 
+        String permissionNames = savedRole.getPermissions().stream()
+                .map(Permission::getLabel)
+                .collect(Collectors.joining(", "));
+        String menuNames = (savedRole.getMenus() != null && !savedRole.getMenus().isEmpty()) 
+                ? savedRole.getMenus().stream().map(Menu::getLabel).collect(Collectors.joining(", ")) 
+                : "Ninguno";
+        String scopeInfo = savedRole.getCompany() != null 
+                ? String.format("de la empresa '%s' (ID: %d)", savedRole.getCompany().getName(), savedRole.getCompany().getId()) 
+                : "del sistema";
+
         auditLogService.log(
             "CREAR_ROL",
             "Configuración",
-            String.format("Se creó el rol '%s' (ID: %d) con %d permisos y %d menús",
-                savedRole.getName(), savedRole.getId(),
-                savedRole.getPermissions().size(),
-                savedRole.getMenus() != null ? savedRole.getMenus().size() : 0)
+            String.format("Se creó el rol '%s' (ID: %d) %s. Permisos asignados: [%s]. Menús asignados: [%s]",
+                savedRole.getName(), savedRole.getId(), scopeInfo, permissionNames, menuNames)
         );
 
         return convertToDTO(savedRole);
@@ -111,6 +119,11 @@ public class RoleServiceImpl implements RoleService {
     public RoleDTO updateRole(Integer id, RoleCreateDTO dto) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
+
+        // Bloquear completamente la actualización de los roles SUPER_ADMIN y ADMIN
+        if (role.getName().startsWith("ROLE_SUPER_ADMIN") || role.getName().equals("ROLE_ADMIN")) {
+            throw new IllegalArgumentException("No está permitido modificar la configuración del rol " + role.getName());
+        }
 
         role.setName(dto.getName());
         role.setPermissions(new HashSet<>(permissionRepository.findAllById(dto.getPermissionIds())));
@@ -123,13 +136,21 @@ public class RoleServiceImpl implements RoleService {
 
         Role savedRole = roleRepository.save(role);
 
+        String permissionNames = savedRole.getPermissions().stream()
+                .map(Permission::getLabel)
+                .collect(Collectors.joining(", "));
+        String menuNames = (savedRole.getMenus() != null && !savedRole.getMenus().isEmpty()) 
+                ? savedRole.getMenus().stream().map(Menu::getLabel).collect(Collectors.joining(", ")) 
+                : "Ninguno";
+        String scopeInfo = savedRole.getCompany() != null 
+                ? String.format("de la empresa '%s' (ID: %d)", savedRole.getCompany().getName(), savedRole.getCompany().getId()) 
+                : "del sistema";
+
         auditLogService.log(
             "ACTUALIZAR_ROL",
             "Configuración",
-            String.format("Se actualizó el rol '%s' (ID: %d) con %d permisos y %d menús",
-                savedRole.getName(), savedRole.getId(),
-                savedRole.getPermissions().size(),
-                savedRole.getMenus() != null ? savedRole.getMenus().size() : 0)
+            String.format("Se actualizó el rol '%s' (ID: %d) %s. Nuevos permisos asignados: [%s]. Nuevos menús asignados: [%s]",
+                savedRole.getName(), savedRole.getId(), scopeInfo, permissionNames, menuNames)
         );
 
         return convertToDTO(savedRole);
@@ -141,17 +162,20 @@ public class RoleServiceImpl implements RoleService {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
 
-        if (role.getName().startsWith("ROLE_SUPER_ADMIN") || role.getName().equals("ROLE_CLIENTE") || role.getName().equals("ROLE_APODERADO")) {
+        if (role.getName().startsWith("ROLE_SUPER_ADMIN") || role.getName().equals("ROLE_ADMIN")) {
             throw new IllegalArgumentException("No se puede eliminar este rol del sistema");
         }
 
         String roleName = role.getName();
+        String scopeInfo = role.getCompany() != null 
+                ? String.format("de la empresa '%s' (ID: %d)", role.getCompany().getName(), role.getCompany().getId()) 
+                : "del sistema";
         roleRepository.delete(role);
 
         auditLogService.log(
             "ELIMINAR_ROL",
             "Configuración",
-            String.format("Se eliminó el rol '%s' (ID: %d)", roleName, id)
+            String.format("Se eliminó el rol '%s' (ID: %d) %s", roleName, id, scopeInfo)
         );
     }
 
