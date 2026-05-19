@@ -12,10 +12,6 @@ import veterinaria.vargasvet.domain.enums.AppPermission;
 import veterinaria.vargasvet.repository.PermissionRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
-import veterinaria.vargasvet.domain.entity.Menu;
-import veterinaria.vargasvet.repository.MenuRepository;
-
-
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,7 +25,6 @@ public class DataInitializer implements CommandLineRunner {
     private final PermissionRepository permissionRepository;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
-    private final MenuRepository menuRepository;
 
     @Override
     @Transactional
@@ -37,7 +32,6 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Initializing system data...");
         seedPermissions();
         seedRoles();
-        seedMenus();
         log.info("System data initialization completed.");
     }
 
@@ -86,45 +80,6 @@ public class DataInitializer implements CommandLineRunner {
                 AppPermission.HORARIO_READ, AppPermission.HORARIO_MANAGE
         ));
 
-        upsertRole("ROLE_VETERINARIO", Arrays.asList(
-                AppPermission.EMPLEADO_READ,
-                AppPermission.ESPECIALIDAD_READ,
-                AppPermission.SERVICIO_READ,
-                AppPermission.APODERADO_READ, AppPermission.APODERADO_CREATE, AppPermission.APODERADO_UPDATE,
-                AppPermission.PET_READ, AppPermission.PET_CREATE, AppPermission.PET_UPDATE, AppPermission.PET_STATUS,
-                AppPermission.PET_HISTORY_READ, AppPermission.PET_HISTORY_WRITE,
-                AppPermission.CLINICAL_RECORD_READ, AppPermission.CLINICAL_RECORD_MANAGE,
-                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL, AppPermission.CITA_INICIAR,
-                AppPermission.HORARIO_READ, AppPermission.ADMIN_DASHBOARD, AppPermission.USER_READ
-        ));
-
-        upsertRole("ROLE_RECEPCIONISTA", Arrays.asList(
-                AppPermission.EMPLEADO_READ,
-                AppPermission.APODERADO_READ, AppPermission.APODERADO_CREATE, AppPermission.APODERADO_UPDATE,
-                AppPermission.PET_READ, AppPermission.PET_CREATE, AppPermission.PET_UPDATE,
-                AppPermission.PET_HISTORY_READ, AppPermission.CLINICAL_RECORD_READ,
-                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL,
-                AppPermission.ADMIN_DASHBOARD, AppPermission.USER_READ
-        ));
-
-        upsertRole("ROLE_CLIENTE", java.util.Collections.emptyList());
-        upsertRole("ROLE_APODERADO", java.util.Collections.emptyList());
-
-        // Migración automática: Cualquier usuario existente con ROLE_CLIENTE
-        // debe tener asignado el nuevo rol ROLE_APODERADO de forma transparente.
-        roleRepository.findByName("ROLE_CLIENTE").ifPresent(clienteRole -> {
-            roleRepository.findByName("ROLE_APODERADO").ifPresent(apoderadoRole -> {
-                usuarioRepository.findAll().stream()
-                        .filter(u -> u.getRoles().contains(clienteRole))
-                        .forEach(u -> {
-                            if (!u.getRoles().contains(apoderadoRole)) {
-                                u.getRoles().add(apoderadoRole);
-                                usuarioRepository.save(u);
-                                log.info("Migrado usuario {} de ROLE_CLIENTE a ROLE_APODERADO.", u.getEmail());
-                            }
-                        });
-            });
-        });
     }
 
     private void upsertRole(String roleName, java.util.List<AppPermission> permissions) {
@@ -143,58 +98,4 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Role {} created with {} initial permissions.", roleName, permissions.size());
     }
 
-    private void seedMenus() {
-        if (menuRepository.count() == 0) {
-            log.info("Initializing menu items...");
-
-            // Dashboard
-            createMenu("Dashboard", "pi pi-home", "/dashboard", 1, null, null);
-
-            // Citas
-            Menu citas = createMenu("Citas", "pi pi-calendar", null, 2, null, "CITA_READ");
-            createMenu("Agenda", "pi pi-calendar-plus", "/citas/agenda", 1, citas, "CITA_READ");
-
-            // Pacientes
-            Menu pacientes = createMenu("Mascotas", "pi pi-heart", null, 3, null, "PET_READ");
-            createMenu("Lista de Mascotas", "pi pi-list", "/mascotas", 1, pacientes, "PET_READ");
-            createMenu("Historias Clínicas", "pi pi-book", "/historias-clinicas", 2, pacientes, "PET_HISTORY_READ");
-
-            // Administración
-            Menu admin = createMenu("Administración", "pi pi-cog", null, 4, null, "USER_MANAGE");
-            createMenu("Roles y Permisos", "pi pi-shield", "/admin/roles", 1, admin, "USER_MANAGE");
-            createMenu("Gestión de Menús", "pi pi-list", "/admin/menus", 2, admin, "USER_MANAGE");
-            createMenu("Usuarios", "pi pi-users", "/admin/usuarios", 3, admin, "USER_MANAGE");
-            createMenu("Empresa", "pi pi-building", "/admin/empresa", 4, admin, "COMPANY_MANAGE");
-
-            // Horarios
-            Menu horarios = createMenu("Gestión de Personal", "pi pi-users", null, 5, null, "EMPLEADO_READ");
-            createMenu("Lista de Empleados", "pi pi-list", "/admin/empleados", 1, horarios, "EMPLEADO_READ");
-            createMenu("Roster General", "pi pi-calendar", "/admin/empleados/horarios", 2, horarios, "HORARIO_READ");
-        }
-
-        // Garantizar que exista el ítem de menú 'Auditoría' en Administración de forma idempotente
-        menuRepository.findByPath("/admin/auditoria").ifPresentOrElse(
-                existing -> {},
-                () -> {
-                    menuRepository.findByPath("/admin/usuarios").ifPresent(usuariosMenu -> {
-                        Menu adminMenu = usuariosMenu.getParent();
-                        if (adminMenu != null) {
-                            createMenu("Auditoría", "pi pi-shield", "/admin/auditoria", 5, adminMenu, "USER_MANAGE");
-                            log.info("Auditoría menu item created successfully.");
-                        }
-                    });
-                }
-        );
-    }
-
-    private Menu createMenu(String label, String icon, String path, int order, Menu parent, String permission) {
-        Menu menu = new Menu();
-        menu.setLabel(label);
-        menu.setIcon(icon);
-        menu.setPath(path);
-        menu.setSortOrder(order);
-        menu.setParent(parent);
-        menu.setRequiredPermission(permission);
-        return menuRepository.save(menu);
-    }
 }
