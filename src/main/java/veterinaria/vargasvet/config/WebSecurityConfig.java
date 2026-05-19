@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,7 +21,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import veterinaria.vargasvet.security.JWTFilter;
 import veterinaria.vargasvet.security.JwtAuthenticationEntryPoint;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @RequiredArgsConstructor
@@ -30,6 +33,9 @@ public class WebSecurityConfig {
 
     private final JWTFilter jwtFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    @Value("${cors.allowed-origins:https://systemvetfrontend.vercel.app,http://localhost:4200}")
+    private String allowedOriginsRaw;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -82,35 +88,35 @@ public class WebSecurityConfig {
     }
 
     @Bean
-public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource() {
 
-    CorsConfiguration config = new CorsConfiguration();
+        CorsConfiguration config = new CorsConfiguration();
 
-    config.setAllowedOriginPatterns(List.of(
-            "https://systemvetfrontend.vercel.app",
-            "https://*.vercel.app",
-            "http://localhost:4200"
-    ));
+        List<String> origins = Arrays.stream(allowedOriginsRaw.split(","))
+                .map(String::trim)
+                .map(o -> o.endsWith("/") ? o.substring(0, o.length() - 1) : o)
+                .collect(Collectors.toList());
+        origins.add("https://*.vercel.app");
+        origins.add("http://localhost:4200");
 
-    config.setAllowedMethods(List.of(
-            "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
-    ));
+        config.setAllowedOriginPatterns(origins);
 
-    config.setAllowedHeaders(List.of("*"));
+        config.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+        ));
 
-    config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowedHeaders(List.of("*"));
 
-    config.setAllowCredentials(true);
+        config.setExposedHeaders(List.of("Authorization"));
 
-    config.setMaxAge(3600L);
+        config.setAllowCredentials(true);
 
-    UrlBasedCorsConfigurationSource source =
-            new UrlBasedCorsConfigurationSource();
+        config.setMaxAge(3600L);
 
-    source.registerCorsConfiguration("/**", config);
-
-    return source;
-}
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
