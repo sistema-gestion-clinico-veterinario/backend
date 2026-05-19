@@ -1,9 +1,9 @@
 package veterinaria.vargasvet.config;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -31,19 +31,26 @@ public class WebSecurityConfig {
     private final JWTFilter jwtFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    @Value("${cors.allowed-origins}")
-    private List<String> allowedOrigins;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
+
                 .authorizeHttpRequests(auth -> auth
+
+                        // Permitir preflight CORS
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Endpoints públicos
                         .requestMatchers(
                                 "/auth/login",
                                 "/auth/register/**",
                                 "/auth/verify/**",
+                                "/auth/forgot-password",
+                                "/auth/reset-password",
+                                "/auth/validate-reset-token",
                                 "/setup/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
@@ -52,16 +59,25 @@ public class WebSecurityConfig {
                                 "/media/**",
                                 "/error"
                         ).permitAll()
+
+                        // Todo lo demás requiere auth
                         .anyRequest().authenticated()
                 )
+
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 )
+
                 .sessionManagement(s -> s
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        // JWT Filter
+        http.addFilterBefore(
+                jwtFilter,
+                UsernamePasswordAuthenticationFilter.class
+        );
+
         return http.build();
     }
 
@@ -104,6 +120,7 @@ public CorsConfigurationSource corsConfigurationSource() {
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config
     ) throws Exception {
+
         return config.getAuthenticationManager();
     }
 }

@@ -15,4 +15,5 @@ public class EmpleadoListResponse {
     private Boolean activo;
     private List<String> tiposEmpleado;
     private List<String> especialidades;
+    private Integer userId;
 }

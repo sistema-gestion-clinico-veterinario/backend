@@ -34,6 +34,25 @@ public class ProfileServiceImpl implements ProfileService {
     public ProfileResponse getMyProfile() {
         Usuario usuario = getCurrentUser();
         Optional<Empleado> empleadoOpt = empleadoRepository.findByUserId(usuario.getId());
+
+        // Vista previa segura para Super Admin y Admin:
+        // Si el usuario no tiene un registro de Empleado, le permitimos visualizar el perfil
+        // del primer empleado registrado EN SU SEDE/CLÍNICA activa para cargar sus horarios de demostración.
+        if (empleadoOpt.isEmpty() && (SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin())) {
+            Integer companyId = SecurityUtils.getCurrentCompanyId();
+            if (companyId != null) {
+                List<Empleado> companyEmployees = empleadoRepository.findAllByCompanyId(companyId);
+                if (!companyEmployees.isEmpty()) {
+                    empleadoOpt = Optional.of(companyEmployees.get(0));
+                }
+            } else {
+                List<Empleado> allEmployees = empleadoRepository.findAll();
+                if (!allEmployees.isEmpty()) {
+                    empleadoOpt = Optional.of(allEmployees.get(0));
+                }
+            }
+        }
+
         return buildResponse(usuario, empleadoOpt.orElse(null));
     }
 
@@ -92,10 +111,12 @@ public class ProfileServiceImpl implements ProfileService {
             List<HorarioEmpleadoResponse> horarios = horarioEmpleadoRepository.findByEmpleadoId(empleado.getId())
                     .stream()
                     .filter(h -> Boolean.TRUE.equals(h.getActivo()))
-                    .sorted(java.util.Comparator.comparingInt(h -> h.getDiaSemana().ordinal()))
+                    .sorted(java.util.Comparator.comparing(HorarioEmpleado::getFecha)
+                            .thenComparing(HorarioEmpleado::getHoraInicio))
                     .map(h -> {
                         HorarioEmpleadoResponse hr = new HorarioEmpleadoResponse();
                         hr.setId(h.getId());
+                        hr.setFecha(h.getFecha());
                         hr.setDiaSemana(h.getDiaSemana().name());
                         hr.setHoraInicio(h.getHoraInicio());
                         hr.setHoraFin(h.getHoraFin());
