@@ -62,6 +62,10 @@ public class DataInitializer implements CommandLineRunner {
     private void seedRoles() {
         upsertRole("ROLE_SUPER_ADMIN", Arrays.asList(AppPermission.values()));
 
+        upsertRole("ROLE_APODERADO", Arrays.asList(
+                AppPermission.APODERADO_DASHBOARD
+        ));
+
         upsertRole("ROLE_ADMIN", Arrays.asList(
                 AppPermission.USER_READ, AppPermission.USER_CREATE, AppPermission.USER_UPDATE,
                 AppPermission.ROLE_MANAGE,
@@ -73,29 +77,47 @@ public class DataInitializer implements CommandLineRunner {
                 AppPermission.PET_READ, AppPermission.PET_CREATE, AppPermission.PET_UPDATE, AppPermission.PET_STATUS,
                 AppPermission.PET_WRITE, AppPermission.PET_HISTORY_READ, AppPermission.PET_HISTORY_WRITE,
                 AppPermission.CLINICAL_RECORD_READ, AppPermission.CLINICAL_RECORD_MANAGE,
-                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL,
+                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL, AppPermission.CITA_DELETE,
                 AppPermission.SERVICIO_READ, AppPermission.SERVICIO_CREATE, AppPermission.SERVICIO_UPDATE, AppPermission.SERVICIO_DELETE, AppPermission.SERVICIO_TOGGLE,
                 AppPermission.INV_READ, AppPermission.INV_WRITE,
-                AppPermission.ADMIN_DASHBOARD, AppPermission.USER_MANAGE,
+                AppPermission.SALE_READ, AppPermission.SALE_MANAGE,
+                AppPermission.ADMIN_DASHBOARD, AppPermission.EMPLEADO_DASHBOARD, AppPermission.USER_MANAGE,
                 AppPermission.HORARIO_READ, AppPermission.HORARIO_MANAGE
         ));
 
     }
 
     private void upsertRole(String roleName, java.util.List<AppPermission> permissions) {
-        if (roleRepository.findByName(roleName).isPresent()) {
-            log.info("Role {} already exists. Skipping initialization to preserve user/admin permission modifications.", roleName);
-            return;
+        Role role = roleRepository.findByName(roleName).orElse(null);
+
+        if (role == null) {
+            role = new Role();
+            role.setName(roleName);
+            Set<Permission> rolePermissions = permissions.stream()
+                    .map(p -> permissionRepository.findByName(p.name())
+                            .orElseThrow(() -> new IllegalStateException("Permission not found: " + p.name())))
+                    .collect(Collectors.toSet());
+            role.setPermissions(rolePermissions);
+            roleRepository.save(role);
+            log.info("Role {} created with {} initial permissions.", roleName, permissions.size());
+        } else {
+            // Role exists — add any missing permissions without removing existing ones
+            Set<String> existingNames = role.getPermissions().stream()
+                    .map(Permission::getName)
+                    .collect(Collectors.toSet());
+            Set<Permission> toAdd = permissions.stream()
+                    .filter(p -> !existingNames.contains(p.name()))
+                    .map(p -> permissionRepository.findByName(p.name())
+                            .orElseThrow(() -> new IllegalStateException("Permission not found: " + p.name())))
+                    .collect(Collectors.toSet());
+            if (!toAdd.isEmpty()) {
+                role.getPermissions().addAll(toAdd);
+                roleRepository.save(role);
+                log.info("Role {} updated: added {} missing permissions.", roleName, toAdd.size());
+            } else {
+                log.info("Role {} already up-to-date.", roleName);
+            }
         }
-        Role role = new Role();
-        role.setName(roleName);
-        Set<Permission> rolePermissions = permissions.stream()
-                .map(p -> permissionRepository.findByName(p.name())
-                        .orElseThrow(() -> new IllegalStateException("Permission not found: " + p.name())))
-                .collect(Collectors.toSet());
-        role.setPermissions(rolePermissions);
-        roleRepository.save(role);
-        log.info("Role {} created with {} initial permissions.", roleName, permissions.size());
     }
 
 }

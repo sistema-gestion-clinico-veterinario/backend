@@ -49,4 +49,7 @@ public interface HorarioEmpleadoRepository extends JpaRepository<HorarioEmpleado
                                    @Param("inicio") LocalTime inicio, 
                                    @Param("fin") LocalTime fin,
                                    @Param("excludeId") Long excludeId);
+
+    @Query("SELECT h FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId AND h.fecha = CAST(:fecha AS date)")
+    List<HorarioEmpleado> findByEmpleadoIdAndFechaString(@Param("empleadoId") Long empleadoId, @Param("fecha") String fecha);
 }
