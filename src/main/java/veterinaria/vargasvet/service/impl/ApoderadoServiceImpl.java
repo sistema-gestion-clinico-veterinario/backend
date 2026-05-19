@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.ApoderadoService;
+import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.util.BusinessValidator;
 
 import org.springframework.data.domain.Page;
@@ -42,6 +44,26 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final BusinessValidator businessValidator;
+    private final EmailService emailService;
+    private final veterinaria.vargasvet.service.AuditLogService auditLogService;
+
+    @Value("${app.frontend.login-url}")
+    private String loginUrl;
+
+    @Value("${app.company.name}")
+    private String defaultCompanyName;
+
+    @Value("${app.company.logo}")
+    private String defaultCompanyLogo;
+
+    @Value("${app.company.email}")
+    private String companyEmail;
+
+    @Value("${app.company.phone}")
+    private String companyPhone;
+
+    @Value("${app.company.address}")
+    private String companyAddress;
 
     @Override
     @Transactional
@@ -73,16 +95,16 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         usuario.setDni(dto.getNumeroDocumento());
         usuario.setTelefono(dto.getTelefono());
         usuario.setDireccion(dto.getDireccion());
-        usuario.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+        usuario.setPassword(passwordEncoder.encode(dto.getNumeroDocumento()));
         usuario.setActivo(true);
         usuario.setEmailVerified(true);
         businessValidator.checkCompanyActiva(companyIdToUse);
         usuario.setCompany(companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
 
-        Role apoderadoRole = roleRepository.findByName("ROLE_CLIENTE")
+        Role apoderadoRole = roleRepository.findByName("ROLE_APODERADO")
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Error de configuración: El rol 'ROLE_CLIENTE' no existe."));
+                        "Error de configuración: El rol 'ROLE_APODERADO' no existe."));
         usuario.getRoles().add(apoderadoRole);
 
         Usuario savedUser = usuarioRepository.save(usuario);
@@ -97,7 +119,42 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
         apoderadoRepository.save(apoderado);
 
+        sendWelcomeEmail(savedUser, dto.getNombre() + " " + dto.getApellido(), dto.getNumeroDocumento());
+
+        auditLogService.log(
+            "CREAR_APODERADO",
+            "Clientes",
+            "Se registró al cliente/apoderado " + dto.getNombre() + " " + dto.getApellido() + " con email " + dto.getEmail()
+        );
+
         return userMapper.toProfileDTO(savedUser);
+    }
+
+    private void sendWelcomeEmail(Usuario usuario, String nombre, String DNI) {
+        try {
+            String resolvedCompanyName = usuario.getCompany() != null ? usuario.getCompany().getName() : defaultCompanyName;
+            String resolvedLogo = (usuario.getCompany() != null && usuario.getCompany().getLogoUrl() != null) ? usuario.getCompany().getLogoUrl() : defaultCompanyLogo;
+            java.util.Map<String, Object> model = new java.util.HashMap<>();
+            model.put("nombre", nombre);
+            model.put("email", usuario.getEmail());
+            model.put("tempPassword", DNI);
+            model.put("companyName", resolvedCompanyName);
+            model.put("companyLogo", resolvedLogo);
+            model.put("companyEmail", companyEmail);
+            model.put("companyPhone", companyPhone);
+            model.put("companyAddress", companyAddress);
+            model.put("verificationLink", loginUrl);
+
+            veterinaria.vargasvet.dto.Mail mail = emailService.createMail(
+                    usuario.getEmail(),
+                    "¡Bienvenido a la familia de " + resolvedCompanyName + "!",
+                    model
+            );
+
+            emailService.sendEmail(mail, "email/welcome-apoderado-template");
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo enviar el correo de bienvenida al apoderado " + usuario.getEmail() + ": " + e.getMessage());
+        }
     }
 
     @Override
@@ -142,6 +199,12 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         apoderado.setUpdatedAt(LocalDateTime.now());
         apoderadoRepository.save(apoderado);
 
+        auditLogService.log(
+            "ACTUALIZAR_APODERADO",
+            "Clientes",
+            "Se actualizaron los datos del cliente/apoderado " + usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ")"
+        );
+
         return userMapper.toProfileDTO(usuario);
     }
 
@@ -175,6 +238,12 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             mascota.setActivo(nuevoEstado);
             mascotaRepository.save(mascota);
         }
+
+        auditLogService.log(
+            Boolean.TRUE.equals(nuevoEstado) ? "ACTIVAR_APODERADO" : "DESACTIVAR_APODERADO",
+            "Clientes",
+            (Boolean.TRUE.equals(nuevoEstado) ? "Se activó" : "Se desactivó") + " al cliente/apoderado " + usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ")"
+        );
     }
 
     @Override
@@ -185,8 +254,16 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         if (!mascotaRepository.findByApoderadoId(apoderado.getId()).isEmpty()) {
             throw new IllegalArgumentException("No se puede eliminar un propietario que tiene mascotas registradas");
         }
+        String clientNombre = apoderado.getUser().getNombre() + " " + apoderado.getUser().getApellido();
+        String clientEmail = apoderado.getUser().getEmail();
         apoderadoRepository.delete(apoderado);
         usuarioRepository.delete(apoderado.getUser());
+
+        auditLogService.log(
+            "ELIMINAR_APODERADO",
+            "Clientes",
+            "Se eliminó permanentemente al cliente/apoderado " + clientNombre + " (" + clientEmail + ")"
+        );
     }
 
     @Override

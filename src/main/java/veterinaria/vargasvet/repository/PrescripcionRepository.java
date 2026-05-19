@@ -42,4 +42,12 @@ public interface PrescripcionRepository extends JpaRepository<Prescripcion, Long
             @Param("companyId") Integer companyId,
             @Param("query") String query,
             Pageable pageable);
+
+    @Query("SELECT p FROM Prescripcion p " +
+           "JOIN p.consulta c " +
+           "JOIN c.historiaClinica hc " +
+           "JOIN hc.mascota m " +
+           "WHERE m.apoderado.id = :apoderadoId " +
+           "ORDER BY p.createdAt DESC")
+    List<Prescripcion> findByApoderadoId(@Param("apoderadoId") Long apoderadoId);
 }

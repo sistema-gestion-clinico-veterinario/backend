@@ -26,8 +26,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TokenProvider {
 
-    @Value("${jwt.validity-in-seconds:259200}")
+    @Value("${jwt.validity-in-seconds:1800}") // 30 minutos
     private long jwtValidityInSeconds;
+
+    @Value("${jwt.refresh-validity-in-seconds:604800}") // 7 días
+    private long refreshTokenValidityInSeconds;
 
     @Value("${jwt.private-key:classpath:keys/private_key.pem}")
     private String privateKeyPath;
@@ -54,16 +57,39 @@ public class TokenProvider {
         Date now = new Date();
         Date validity = new Date(now.getTime() + (jwtValidityInSeconds * 1000));
 
-        JwtBuilder builder = Jwts.builder()
+        return Jwts.builder()
                 .subject(email)
                 .claim("roles", roles)
                 .claim("companyId", companyId)
                 .claim("permissions", permissions)
                 .issuedAt(now)
                 .expiration(validity)
-                .signWith(privateKey);
+                .signWith(privateKey)
+                .compact();
+    }
 
-        return builder.compact();
+    public String createRefreshToken(String email) {
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + (refreshTokenValidityInSeconds * 1000));
+
+        return Jwts.builder()
+                .subject(email)
+                .issuedAt(now)
+                .expiration(validity)
+                .signWith(privateKey)
+                .compact();
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                    .verifyWith(publicKey)
+                    .build()
+                    .parseSignedClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 
     public Authentication getAuthentication(String token) {

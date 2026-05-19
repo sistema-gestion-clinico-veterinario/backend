@@ -12,6 +12,7 @@ import veterinaria.vargasvet.dto.request.ApoderadoRequest;
 import veterinaria.vargasvet.dto.response.ApoderadoListResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.service.ApoderadoService;
+import veterinaria.vargasvet.service.AuditLogService;
 
 @RestController
 @RequestMapping("/clientes/apoderados")
@@ -19,6 +20,7 @@ import veterinaria.vargasvet.service.ApoderadoService;
 public class ApoderadoController {
 
     private final ApoderadoService apoderadoService;
+    private final AuditLogService auditLogService;
 
     @GetMapping
     @PreAuthorize("hasAuthority('APODERADO_READ')")
@@ -29,6 +31,7 @@ public class ApoderadoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Page<ApoderadoListResponse> resultado = apoderadoService.listar(companyId, nombre, numeroDocumento, page, size);
+        auditLogService.log(companyId, "CONSULTAR_APODERADOS", "Clientes", "Consultó la lista de propietarios/apoderados.");
         String mensaje = resultado.isEmpty() ? "No se encontraron propietarios" : "Propietarios recuperados con éxito";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
     }
@@ -37,6 +40,7 @@ public class ApoderadoController {
     @PreAuthorize("hasAuthority('APODERADO_READ')")
     public ResponseEntity<ApiResponse<ApoderadoRequest>> findById(@PathVariable Long id) {
         ApoderadoRequest apoderado = apoderadoService.findById(id);
+        auditLogService.log("CONSULTAR_DETALLE_APODERADO", "Clientes", "Consultó el detalle del propietario con ID: " + id + " (" + apoderado.getNombre() + " " + apoderado.getApellido() + ").");
         return ResponseEntity.ok(new ApiResponse<>(true, "Propietario recuperado con éxito", apoderado));
     }
 
