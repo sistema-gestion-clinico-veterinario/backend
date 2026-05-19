@@ -167,10 +167,6 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             throw new DisabledException("La cuenta está suspendida");
         }
 
-        if (usuario.getApoderado() != null && usuario.getEmpleado() == null && usuario.getRoles().isEmpty()) {
-            throw new BadCredentialsException("Los apoderados no tienen acceso al sistema");
-        }
-
         List<String> assignedRoles = usuario.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toList());

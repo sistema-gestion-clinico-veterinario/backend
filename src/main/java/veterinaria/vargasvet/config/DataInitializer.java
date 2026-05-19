@@ -62,6 +62,10 @@ public class DataInitializer implements CommandLineRunner {
     private void seedRoles() {
         upsertRole("ROLE_SUPER_ADMIN", Arrays.asList(AppPermission.values()));
 
+        upsertRole("ROLE_APODERADO", Arrays.asList(
+                AppPermission.APODERADO_DASHBOARD
+        ));
+
         upsertRole("ROLE_ADMIN", Arrays.asList(
                 AppPermission.USER_READ, AppPermission.USER_CREATE, AppPermission.USER_UPDATE,
                 AppPermission.ROLE_MANAGE,
@@ -73,11 +77,11 @@ public class DataInitializer implements CommandLineRunner {
                 AppPermission.PET_READ, AppPermission.PET_CREATE, AppPermission.PET_UPDATE, AppPermission.PET_STATUS,
                 AppPermission.PET_WRITE, AppPermission.PET_HISTORY_READ, AppPermission.PET_HISTORY_WRITE,
                 AppPermission.CLINICAL_RECORD_READ, AppPermission.CLINICAL_RECORD_MANAGE,
-                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL,
+                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL, AppPermission.CITA_DELETE,
                 AppPermission.SERVICIO_READ, AppPermission.SERVICIO_CREATE, AppPermission.SERVICIO_UPDATE, AppPermission.SERVICIO_DELETE, AppPermission.SERVICIO_TOGGLE,
                 AppPermission.INV_READ, AppPermission.INV_WRITE,
                 AppPermission.SALE_READ, AppPermission.SALE_MANAGE,
-                AppPermission.ADMIN_DASHBOARD, AppPermission.USER_MANAGE,
+                AppPermission.ADMIN_DASHBOARD, AppPermission.EMPLEADO_DASHBOARD, AppPermission.USER_MANAGE,
                 AppPermission.HORARIO_READ, AppPermission.HORARIO_MANAGE
         ));
 

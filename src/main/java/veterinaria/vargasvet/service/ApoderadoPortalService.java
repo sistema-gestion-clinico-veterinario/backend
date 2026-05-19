@@ -17,5 +17,6 @@ public interface ApoderadoPortalService {
     CitaResponse createPortalCita(CitaRequest request);
     CitaResponse updatePortalCita(Long id, CitaRequest request);
     CitaResponse reschedulePortalCita(Long id, CitaRequest request);
+    void cancelPortalCita(Long id, String motivo);
 }
 
