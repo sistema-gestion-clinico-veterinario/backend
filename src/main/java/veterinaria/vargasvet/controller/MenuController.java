@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.domain.entity.Menu;
 import veterinaria.vargasvet.domain.entity.Role;
+import veterinaria.vargasvet.domain.enums.AppRoute;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.repository.MenuRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
@@ -43,6 +44,20 @@ public class MenuController {
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<Menu>>> getAllMenusFlat() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Lista plana de menús obtenida", menuRepository.findAll()));
+    }
+
+    @GetMapping("/available-routes")
+    public ResponseEntity<ApiResponse<List<java.util.Map<String, String>>>> getAvailableRoutes() {
+        List<java.util.Map<String, String>> routes = java.util.Arrays.stream(AppRoute.values())
+                .map(r -> {
+                    java.util.Map<String, String> m = new java.util.LinkedHashMap<>();
+                    m.put("path", r.getPath());
+                    m.put("label", r.getLabel());
+                    m.put("group", r.getGroup());
+                    return m;
+                })
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Rutas disponibles obtenidas", routes));
     }
 
     @PostMapping
