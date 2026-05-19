@@ -90,8 +90,13 @@ public enum AppPermission {
     CLIENT_WRITE("CLIENTES", "Gestionar Clientes (legacy)", "Permite crear y editar información de clientes"),
     VETERINARY_PRACTICE("VET", "Práctica Veterinaria", "Acceso a funciones específicas de veterinarios"),
     SYSTEM_CONFIG("SISTEMA", "Configuración", "Acceso a ajustes técnicos del sistema"),
-    ADMIN_DASHBOARD("ADMIN", "Ver Dashboard", "Acceso a estadísticas y métricas generales"),
-    USER_MANAGE("ADMIN", "Gestionar Usuarios", "Administración total de cuentas, empleados y roles");
+    ADMIN_DASHBOARD("ADMIN", "Ver Dashboard Admin", "Acceso a estadísticas y métricas generales del administrador"),
+    EMPLEADO_DASHBOARD("EMPLEADOS", "Ver Dashboard Empleado", "Acceso al panel de inicio del empleado/veterinario"),
+    APODERADO_DASHBOARD("CLIENTES", "Ver Portal Apoderado", "Acceso al portal de inicio del apoderado"),
+    USER_MANAGE("ADMIN", "Gestionar Usuarios", "Administración total de cuentas, empleados y roles"),
+    // HORARIOS
+    HORARIO_READ("HORARIOS", "Ver Horarios", "Permite visualizar el calendario de turnos de los empleados"),
+    HORARIO_MANAGE("HORARIOS", "Gestionar Horarios", "Permite asignar, modificar y eliminar turnos de trabajo");
 
     private final String module;
     private final String label;

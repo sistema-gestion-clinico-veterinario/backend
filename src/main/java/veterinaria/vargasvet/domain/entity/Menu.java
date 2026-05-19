@@ -41,6 +41,10 @@ public class Menu {
 
     private boolean active = true;
 
+    @ManyToMany(mappedBy = "menus", fetch = FetchType.EAGER)
+    @JsonIgnore
+    private java.util.Set<Role> roles = new java.util.HashSet<>();
+
     @JsonProperty("parentId")
     public Integer getParentId() {
         return parent != null ? parent.getId() : null;

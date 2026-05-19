@@ -28,4 +28,5 @@ public class CitaResponse {
     private Boolean esEmergencia;
     private BigDecimal totalServicio;
     private BigDecimal montoPagado;
+    private Integer companyId;
 }

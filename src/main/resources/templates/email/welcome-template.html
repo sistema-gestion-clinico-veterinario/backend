@@ -1,129 +1,152 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>¡Bienvenido a Patitas Felices!</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f4f8fb;
-      margin: 0;
-      padding: 0;
-      color: #333;
-    }
-    .container {
-      max-width: 700px;
-      margin: 40px auto;
-      background-color: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      border: 1px solid #e0e0e0;
-    }
-    .header {
-      text-align: center;
-      background: linear-gradient(135deg, #1d4355, #3a6f81);
-      color: white;
-      padding: 40px;
-    }
-    .header img {
-      width: 90px;
-      margin-bottom: 15px;
-    }
-    .header h1 {
-      font-size: 28px;
-      margin: 10px 0;
-      font-weight: bold;
-      letter-spacing: 1px;
-    }
-    .content {
-      padding: 40px 30px;
-      line-height: 1.8;
-      text-align: center;
-    }
-    .content h2 {
-      color: #1d4355;
-      font-size: 24px;
-      margin-bottom: 15px;
-    }
-    .content p {
-      font-size: 16px;
-      color: #555;
-      margin-bottom: 20px;
-    }
-    .quote {
-      background-color: #f4f8fb;
-      padding: 15px;
-      font-style: italic;
-      color: #3a6f81;
-      border-left: 4px solid #1d4355;
-      margin: 20px 0;
-      font-size: 16px;
-    }
-    .button {
-      display: inline-block;
-      background: linear-gradient(135deg, #1d4355, #3a6f81);
-      color: white;
-      padding: 14px 35px;
-      text-decoration: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      margin-top: 20px;
-      transition: 0.3s ease;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-    }
-    .button:hover {
-      background: #153347;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    }
-    .footer {
-      text-align: center;
-      background-color: #f4f8fb;
-      padding: 25px;
-      font-size: 14px;
-      color: #777;
-      border-top: 1px solid #e0e0e0;
-    }
-    .footer p {
-      margin: 5px 0;
-    }
-    .footer a {
-      color: #1d4355;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .footer a:hover {
-      text-decoration: underline;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title th:text="'Bienvenido al equipo de ' + ${companyName}"></title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; display: block; }
+        body { margin: 0; padding: 0; background-color: #f2f2f2; font-family: 'Barlow', Arial, sans-serif; }
+    </style>
 </head>
-<body>
-<div class="container">
-  <div class="header">
-    <img th:src="${companyLogo}" alt="Patitas Felices">
-    <h1 th:text="'Bienvenido a ' + ${companyName}">Bienvenido a Patitas Felices</h1>
-  </div>
-  <div class="content">
-    <h2>¡Hola, <span th:text="${nombre}"></span>!</h2>
-    <p>Nos complace darte la bienvenida a nuestro equipo. En <strong th:text="${companyName}">Patitas Felices</strong>, no solo cuidamos de las mascotas, sino que también nos preocupamos por el bienestar de cada persona que forma parte de nuestra familia.</p>
+<body style="margin:0;padding:0;background-color:#f2f2f2;">
 
-    <div class="quote">"El amor por los animales nos une, y juntos haremos la diferencia."</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f2f2f2;">
+    <tr>
+        <td align="center" style="padding:40px 16px;">
 
-    <p>Estamos seguros de que con tu talento, dedicación y profesionalismo, haremos cosas increíbles. ¡Estamos emocionados de empezar este viaje juntos!</p>
+            <table role="presentation" width="580" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;width:100%;background:#ffffff;border:1px solid #e4e4e4;">
 
-    <p>Para completar tu registro, por favor confirma tu cuenta:</p>
-    <a th:href="${verificationLink}" class="button">Activar Cuenta</a>
+                <!-- HEADER -->
+                <tr>
+                    <td style="background-color:#ffffff;padding:32px 40px 24px;border-bottom:2px solid #4f46e5;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="vertical-align:middle;">
+                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td th:if="${companyLogo != null}" style="padding-right:12px;vertical-align:middle;">
+                                                <img th:src="${companyLogo}" alt="Logo" width="42" height="42" style="border-radius:50%;width:42px;height:42px;object-fit:cover;">
+                                            </td>
+                                            <td style="vertical-align:middle;">
+                                                <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:15px;font-weight:700;color:#111111;" th:text="${companyName}">Veterinaria</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td align="right" style="vertical-align:middle;">
+                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td style="background-color:#ede9fe;padding:5px 12px;border:1px solid #c4b5fd;">
+                                                <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#4f46e5;letter-spacing:1.8px;text-transform:uppercase;">Nuevo empleado</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
 
-    <p>Si tienes alguna pregunta, no dudes en escribirnos.</p>
-  </div>
+                <!-- TITULO -->
+                <tr>
+                    <td style="padding:32px 40px 0;">
+                        <p style="margin:0 0 4px;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#4f46e5;letter-spacing:2.5px;text-transform:uppercase;">Bienvenida</p>
+                        <p style="margin:0 0 8px;font-family:'Barlow',Arial,sans-serif;font-size:24px;font-weight:700;color:#111111;line-height:1.25;">¡Hola, <span th:text="${nombre}">Empleado</span>!</p>
+                        <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:14px;color:#888888;line-height:1.75;">Has sido registrado como parte del equipo de <span style="color:#111111;font-weight:600;" th:text="${companyName}">Veterinaria</span>. Estamos muy contentos de tenerte con nosotros.</p>
+                    </td>
+                </tr>
 
-  <div class="footer">
-    <p th:text="'© 2025 ' + ${companyName} + '. Todos los derechos reservados.'"></p>
-    <p>Estamos felices de que seas parte de nuestra familia.</p>
-    <p><a href="#">Contacto</a> | <a href="#">Política de Privacidad</a> | <a href="#">Términos y Condiciones</a></p>
-  </div>
-</div>
+                <!-- ACCESO INICIAL -->
+                <tr>
+                    <td style="padding:24px 40px 0;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8f8f8;border:1px solid #eeeeee;">
+                            <tr>
+                                <td style="padding:18px 22px;">
+                                    <p style="margin:0 0 4px;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#aaaaaa;letter-spacing:2px;text-transform:uppercase;">Primer acceso</p>
+                                    <p style="margin:8px 0 0;font-family:'Barlow',Arial,sans-serif;font-size:13px;color:#555555;line-height:1.8;">Ya tienes acceso a la plataforma. Haz clic en el botón de abajo para activar tu cuenta y comenzar a usarla.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- BLOQUE ACTIVACIÓN -->
+                <tr>
+                    <td style="padding:20px 40px 0;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e4e4e4;border-left:4px solid #4f46e5;">
+                            <tr>
+                                <td style="padding:20px 22px;">
+                                    <p style="margin:0 0 4px;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#aaaaaa;letter-spacing:2px;text-transform:uppercase;">Activa tu cuenta</p>
+                                    <p style="margin:0 0 16px;font-family:'Barlow',Arial,sans-serif;font-size:13px;color:#555555;line-height:1.7;">Para comenzar a usar la plataforma, haz clic en el botón a continuación para verificar tu dirección de correo y activar tu cuenta.</p>
+                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td style="background-color:#4f46e5;">
+                                                <a th:href="${verificationLink}" style="display:inline-block;padding:12px 28px;font-family:'Barlow',Arial,sans-serif;font-size:13px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.5px;">Activar mi cuenta</a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- SEPARADOR -->
+                <tr>
+                    <td style="padding:28px 40px 0;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="border-top:1px solid #f0f0f0;font-size:0;line-height:0;">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- CONTACTO -->
+                <tr>
+                    <td style="padding:24px 40px 32px;">
+                        <p style="margin:0 0 14px;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#aaaaaa;letter-spacing:2px;text-transform:uppercase;">¿Tienes alguna consulta?</p>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8f8f8;border:1px solid #eeeeee;">
+                            <tr>
+                                <td style="padding:18px 22px;">
+                                    <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:13px;color:#555555;line-height:2.1;">
+                                        <span style="font-weight:600;color:#111111;" th:text="${companyName}">—</span><br>
+                                        <span th:text="${companyEmail}">—</span><br>
+                                        <span th:text="${companyPhone}">—</span><br>
+                                        <span th:text="${companyAddress}">—</span>
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- FOOTER -->
+                <tr>
+                    <td style="background-color:#f8f8f8;border-top:1px solid #eeeeee;padding:18px 40px;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td>
+                                    <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:12px;color:#bbbbbb;">© 2025 <span style="color:#888888;font-weight:600;" th:text="${companyName}">Veterinaria</span>. Todos los derechos reservados.</p>
+                                </td>
+                                <td align="right">
+                                    <a th:href="'mailto:' + ${companyEmail}" th:text="${companyEmail}" style="font-family:'Barlow',Arial,sans-serif;font-size:12px;color:#4f46e5;text-decoration:none;">correo</a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
 </body>
 </html>

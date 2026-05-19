@@ -10,5 +10,6 @@ public enum EstadoCita {
     COMPLETADA,
     NO_ASISTIO,
     CANCELADA,
+    ELIMINADA,
     OTRO
 }

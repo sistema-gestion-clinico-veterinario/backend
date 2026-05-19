@@ -31,6 +31,7 @@ public class ConsultaServiceImpl implements ConsultaService {
     private final MascotaRepository mascotaRepository;
     private final CitaRepository citaRepository;
     private final ConsultaMapper consultaMapper;
+    private final veterinaria.vargasvet.service.AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -59,7 +60,7 @@ public class ConsultaServiceImpl implements ConsultaService {
             }
         }
 
-        if (consulta.getEstado() == EstadoConsulta.CERRADA) {
+        if (consulta.getEstado() == EstadoConsulta.CERRADA && !SecurityUtils.isAdmin() && !SecurityUtils.isSuperAdmin()) {
             throw new IllegalArgumentException("No se puede modificar una consulta cerrada");
         }
 
@@ -93,6 +94,13 @@ public class ConsultaServiceImpl implements ConsultaService {
         historiaClinicaRepository.save(hc);
 
         Consulta savedConsulta = consultaRepository.save(consulta);
+
+        auditLogService.log(
+            "ACTUALIZAR_CONSULTA",
+            "Consultas",
+            "Se actualizaron los datos clínicos de la consulta de la mascota " + consulta.getHistoriaClinica().getMascota().getNombreCompleto() + " atendida por " + (consulta.getVeterinario().getUser() != null ? (consulta.getVeterinario().getUser().getNombre() + " " + consulta.getVeterinario().getUser().getApellido()) : "sin usuario") + " el " + consulta.getFechaConsulta()
+        );
+
         return consultaMapper.toResponse(savedConsulta);
     }
 
@@ -157,21 +165,28 @@ public class ConsultaServiceImpl implements ConsultaService {
         }
 
         Consulta savedConsulta = consultaRepository.save(consulta);
+
+        auditLogService.log(
+            "CERRAR_CONSULTA",
+            "Consultas",
+            "Se cerró la consulta de la mascota " + consulta.getHistoriaClinica().getMascota().getNombreCompleto() + " por el veterinario " + consulta.getCerradoPor()
+        );
+
         return consultaMapper.toResponse(savedConsulta);
     }
 
     private void validarCamposObligatorios(Consulta consulta) {
         if (consulta.getMotivoConsulta() == null || consulta.getMotivoConsulta().isBlank()) {
-            throw new IllegalArgumentException("El motivo de consulta es obligatorio para cerrar la historia clínica");
+            throw new IllegalArgumentException("El motivo de consulta es obligatorio para cerrar la consulta");
         }
         if (consulta.getTipoConsulta() == null) {
-            throw new IllegalArgumentException("El tipo de consulta es obligatorio para cerrar la historia clínica");
+            throw new IllegalArgumentException("El tipo de consulta es obligatorio para cerrar la consulta");
         }
         if (consulta.getPesoEnConsulta() == null) {
-            throw new IllegalArgumentException("El peso del paciente es obligatorio para cerrar la historia clínica");
+            throw new IllegalArgumentException("El peso del paciente es obligatorio para cerrar la consulta");
         }
         if (consulta.getAnamnesis() == null || consulta.getAnamnesis().isBlank()) {
-            throw new IllegalArgumentException("La anamnesis es obligatoria para cerrar la historia clínica");
+            throw new IllegalArgumentException("La anamnesis es obligatoria para cerrar la consulta");
         }
     }
 }

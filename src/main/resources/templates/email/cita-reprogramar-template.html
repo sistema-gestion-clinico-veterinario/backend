@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cita Reprogramada</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; display: block; }
+        body { margin: 0; padding: 0; background-color: #f2f2f2; font-family: 'Barlow', Arial, sans-serif; }
+    </style>
+</head>
+<body style="margin:0;padding:0;background-color:#f2f2f2;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f2f2f2;">
+    <tr>
+        <td align="center" style="padding:40px 16px;">
+            <table role="presentation" width="580" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;width:100%;background:#ffffff;border:1px solid #e4e4e4;">
+
+                <!-- HEADER -->
+                <tr>
+                    <td style="background-color:#ffffff;padding:32px 40px 24px;border-bottom:2px solid #f59e0b;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="vertical-align:middle;">
+                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td th:if="${companyLogo != null}" style="padding-right:12px;vertical-align:middle;">
+                                                <img th:src="${companyLogo}" alt="Logo" width="42" height="42" style="border-radius:50%;width:42px;height:42px;object-fit:cover;">
+                                            </td>
+                                            <td style="vertical-align:middle;">
+                                                <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:15px;font-weight:700;color:#111111;" th:text="${companyName}">Veterinaria</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td align="right" style="vertical-align:middle;">
+                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td style="background-color:#fef3c7;padding:5px 12px;border:1px solid #fcd34d;">
+                                                <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#b45309;letter-spacing:1.8px;text-transform:uppercase;">Cita Reprogramada</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- TITULO -->
+                <tr>
+                    <td style="padding:32px 40px 0;">
+                        <p style="margin:0 0 4px;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#f59e0b;letter-spacing:2.5px;text-transform:uppercase;">Aviso de cambio</p>
+                        <p style="margin:0 0 8px;font-family:'Barlow',Arial,sans-serif;font-size:24px;font-weight:700;color:#111111;line-height:1.25;">Tu cita fue reprogramada</p>
+                        <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:14px;color:#888888;line-height:1.75;">Hola, <span style="color:#111111;font-weight:600;" th:text="${nombreApoderado}">Propietario</span>. La cita de tu mascota <span style="color:#111111;font-weight:600;" th:text="${nombreMascota}">Mascota</span> ha sido reprogramada.</p>
+                    </td>
+                </tr>
+
+                <!-- FECHAS -->
+                <tr>
+                    <td style="padding:24px 40px 0;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e4e4e4;">
+                            <tr>
+                                <td style="padding:18px 22px;border-bottom:1px solid #f5f5f5;">
+                                    <p style="margin:0 0 4px;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#aaaaaa;letter-spacing:2px;text-transform:uppercase;">Fecha anterior</p>
+                                    <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:15px;font-weight:700;color:#ef4444;" th:text="${fechaAnterior}">—</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:18px 22px;background:#f0fdf4;border-left:4px solid #22c55e;">
+                                    <p style="margin:0 0 4px;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#aaaaaa;letter-spacing:2px;text-transform:uppercase;">Nueva fecha y hora</p>
+                                    <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:15px;font-weight:700;color:#16a34a;" th:text="${fechaNueva}">—</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- MOTIVO -->
+                <tr>
+                    <td style="padding:20px 40px 0;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e4e4e4;border-left:4px solid #f59e0b;">
+                            <tr>
+                                <td style="padding:18px 22px;">
+                                    <p style="margin:0 0 6px;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#aaaaaa;letter-spacing:2px;text-transform:uppercase;">Motivo de reprogramación</p>
+                                    <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:13px;color:#555555;line-height:1.7;" th:text="${motivo}">—</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- CONTACTO -->
+                <tr>
+                    <td style="padding:24px 40px 32px;">
+                        <p style="margin:0 0 14px;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#aaaaaa;letter-spacing:2px;text-transform:uppercase;">¿Tienes alguna consulta?</p>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8f8f8;border:1px solid #eeeeee;">
+                            <tr>
+                                <td style="padding:18px 22px;">
+                                    <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:13px;color:#555555;line-height:2.1;">
+                                        <span style="font-weight:600;color:#111111;" th:text="${companyName}">—</span><br>
+                                        <span th:text="${companyEmail}">—</span><br>
+                                        <span th:text="${companyPhone}">—</span><br>
+                                        <span th:text="${companyAddress}">—</span>
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- FOOTER -->
+                <tr>
+                    <td style="background-color:#f8f8f8;border-top:1px solid #eeeeee;padding:18px 40px;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td>
+                                    <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:12px;color:#bbbbbb;">© 2025 <span style="color:#888888;font-weight:600;" th:text="${companyName}">Veterinaria</span>. Todos los derechos reservados.</p>
+                                </td>
+                                <td align="right">
+                                    <a th:href="'mailto:' + ${companyEmail}" th:text="${companyEmail}" style="font-family:'Barlow',Arial,sans-serif;font-size:12px;color:#f59e0b;text-decoration:none;">correo</a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

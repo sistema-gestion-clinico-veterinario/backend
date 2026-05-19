@@ -9,10 +9,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.EmpleadoRequest;
+import veterinaria.vargasvet.dto.request.HorarioEmpleadoRequest;
 import veterinaria.vargasvet.dto.response.EmpleadoListResponse;
 import veterinaria.vargasvet.dto.response.HorarioEmpleadoResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.service.EmpleadoService;
+import veterinaria.vargasvet.dto.request.BulkScheduleRequest;
+
+import veterinaria.vargasvet.service.AuditLogService;
 
 import java.util.List;
 
@@ -22,6 +26,7 @@ import java.util.List;
 public class EmpleadoController {
 
     private final EmpleadoService empleadoService;
+    private final AuditLogService auditLogService;
 
     @GetMapping
     @PreAuthorize("hasAuthority('EMPLEADO_READ')")
@@ -35,6 +40,7 @@ public class EmpleadoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Page<EmpleadoListResponse> resultado = empleadoService.listar(companyId, nombre, apellido, email, tipoEmpleadoId, especialidadId, page, size);
+        auditLogService.log(companyId, "CONSULTAR_EMPLEADOS", "Empleados", "Consultó el listado de empleados.");
         String mensaje = resultado.isEmpty() ? "No se encontraron empleados" : "Empleados recuperados con éxito";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
     }
@@ -43,6 +49,7 @@ public class EmpleadoController {
     @PreAuthorize("hasAuthority('EMPLEADO_READ')")
     public ResponseEntity<ApiResponse<EmpleadoRequest>> findById(@PathVariable Long id) {
         EmpleadoRequest empleado = empleadoService.findById(id);
+        auditLogService.log("CONSULTAR_DETALLE_EMPLEADO", "Empleados", "Consultó el detalle del empleado con ID: " + id + " (" + empleado.getNombre() + " " + empleado.getApellido() + ").");
         return ResponseEntity.ok(new ApiResponse<>(true, "Empleado recuperado con éxito", empleado));
     }
 
@@ -62,10 +69,33 @@ public class EmpleadoController {
     }
 
     @GetMapping("/{id}/horario")
-    @PreAuthorize("hasAuthority('EMPLEADO_READ')")
+    @PreAuthorize("hasAuthority('HORARIO_READ')")
     public ResponseEntity<ApiResponse<List<HorarioEmpleadoResponse>>> getHorario(@PathVariable Long id) {
         List<HorarioEmpleadoResponse> horario = empleadoService.getHorario(id);
+        auditLogService.log("CONSULTAR_HORARIO", "Horario", "Consultó el horario del empleado con ID: " + id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario recuperado con éxito", horario));
+    }
+
+    @PostMapping("/{id}/schedule-bulk")
+    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> assignBulkSchedule(@PathVariable Long id, @RequestBody BulkScheduleRequest request) {
+        empleadoService.assignBulkSchedule(id, request);
+        auditLogService.log("ASIGNAR_HORARIO_MASIVO", "Horario", "Asignó horario masivo al empleado con ID: " + id + " desde " + request.getStartDate() + " hasta " + request.getEndDate());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horario masivo asignado correctamente", null));
+    }
+
+    @DeleteMapping("/{id}/schedule-bulk")
+    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> deleteBulkSchedule(
+            @PathVariable Long id,
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam(required = false) List<String> dias) {
+        java.time.LocalDate start = java.time.LocalDate.parse(startDate);
+        java.time.LocalDate end = java.time.LocalDate.parse(endDate);
+        empleadoService.deleteBulkSchedule(id, start, end, dias);
+        auditLogService.log("ELIMINAR_HORARIO_MASIVO", "Horario", "Eliminó horario masivo del empleado con ID: " + id + " desde " + startDate + " hasta " + endDate);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horarios eliminados correctamente en el rango seleccionado", null));
     }
 
     @DeleteMapping("/{id}")
@@ -81,5 +111,54 @@ public class EmpleadoController {
         empleadoService.cambiarEstado(id, active);
         String mensaje = active ? "Empleado activado exitosamente" : "Empleado desactivado exitosamente";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, null));
+    }
+
+    @DeleteMapping("/horario/{horarioId}")
+    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> deleteHorario(@PathVariable Long horarioId) {
+        empleadoService.deleteHorario(horarioId);
+        auditLogService.log("ELIMINAR_TURNO", "Horario", "Eliminó el turno con ID: " + horarioId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horario eliminado correctamente", null));
+    }
+    @PutMapping("/horario/{horarioId}")
+    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> updateHorario(@PathVariable Long horarioId, @Valid @RequestBody HorarioEmpleadoRequest request) {
+        empleadoService.updateHorario(horarioId, request);
+        auditLogService.log("ACTUALIZAR_TURNO", "Horario", "Actualizó el turno con ID: " + horarioId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horario actualizado correctamente", null));
+    }
+
+    @PostMapping("/{id}/clone-week")
+    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> cloneWeekSchedule(
+            @PathVariable Long id,
+            @RequestParam String sourceWeekStart,
+            @RequestParam String targetWeekStart) {
+        java.time.LocalDate source = java.time.LocalDate.parse(sourceWeekStart);
+        java.time.LocalDate target = java.time.LocalDate.parse(targetWeekStart);
+        empleadoService.cloneWeekSchedule(id, source, target);
+        auditLogService.log("CLONAR_HORARIO_SEMANA", "Horario", "Clonó la semana desde " + sourceWeekStart + " hacia " + targetWeekStart + " para el empleado ID: " + id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horario clonado con éxito para la semana seleccionada", null));
+    }
+
+    @PostMapping("/{id}/clone-day")
+    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> cloneDaySchedule(
+            @PathVariable Long id,
+            @RequestParam String sourceDate,
+            @RequestParam String targetDate) {
+        java.time.LocalDate source = java.time.LocalDate.parse(sourceDate);
+        java.time.LocalDate target = java.time.LocalDate.parse(targetDate);
+        empleadoService.cloneDaySchedule(id, source, target);
+        auditLogService.log("CLONAR_HORARIO_DIA", "Horario", "Clonó el día desde " + sourceDate + " hacia " + targetDate + " para el empleado ID: " + id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horario clonado con éxito para el día seleccionado", null));
+    }
+
+    @GetMapping("/schedules-report")
+    @PreAuthorize("hasAuthority('HORARIO_READ')")
+    public ResponseEntity<ApiResponse<List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse>>> getSchedulesReport(
+            @RequestParam(required = false) Integer companyId) {
+        List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse> report = empleadoService.getSchedulesReport(companyId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Reporte consolidado recuperado con éxito", report));
     }
 }

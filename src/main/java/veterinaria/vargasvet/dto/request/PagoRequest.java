@@ -16,4 +16,13 @@ public class PagoRequest {
     private MetodoPago metodoPago;
 
     private BigDecimal montoRecibido;
+
+    /** Teléfono Yape del cliente (9 dígitos, sin +51) — solo para MetodoPago.YAPE */
+    private Long yapePhoneNumber;
+
+    /** Código OTP de 6 dígitos generado en la app Yape — solo para MetodoPago.YAPE */
+    private Integer yapeOtp;
+
+    /** Email del pagador — requerido por MercadoPago para pagos Yape */
+    private String payerEmail;
 }

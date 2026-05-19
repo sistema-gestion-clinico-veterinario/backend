@@ -17,12 +17,17 @@ import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CitaService;
 import veterinaria.vargasvet.util.BusinessValidator;
 
+import veterinaria.vargasvet.service.EmailService;
+import veterinaria.vargasvet.dto.Mail;
+import veterinaria.vargasvet.dto.CitaWsEvent;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import java.util.Map;
+import java.util.HashMap;
+import java.time.format.DateTimeFormatter;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import veterinaria.vargasvet.domain.enums.EstadoCita;
-import veterinaria.vargasvet.dto.response.CitaResponse;
-import veterinaria.vargasvet.mapper.CitaMapper;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -41,8 +46,14 @@ public class CitaServiceImpl implements CitaService {
     private final UsuarioRepository usuarioRepository;
     private final HistoriaClinicaRepository historiaClinicaRepository;
     private final ConsultaRepository consultaRepository;
+    private final CompanyOperatingHourRepository companyOperatingHourRepository;
+    private final CompanyExceptionRepository companyExceptionRepository;
+    private final HorarioEmpleadoRepository horarioEmpleadoRepository;
     private final CitaMapper citaMapper;
     private final BusinessValidator businessValidator;
+    private final veterinaria.vargasvet.service.AuditLogService auditLogService;
+    private final EmailService emailService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private static final int DURACION_ESTIMADA_MINUTOS = 20;
 
@@ -108,27 +119,39 @@ public class CitaServiceImpl implements CitaService {
         // Validación contra el horario de la clínica (solo si NO es emergencia)
         boolean esEmergencia = Boolean.TRUE.equals(request.getEsEmergencia());
         Company company = veterinario.getUser().getCompany();
-        if (!esEmergencia && company != null && company.getOpeningTime() != null && company.getClosingTime() != null) {
-            if (horaInicio.isBefore(company.getOpeningTime()) || horaFinCita.isAfter(company.getClosingTime())) {
-                throw new IllegalArgumentException(
-                        "La cita está fuera del horario de atención de la clínica (" + company.getName() + "). " +
-                        "Atiende de " + company.getOpeningTime() + " a " + company.getClosingTime());
-            }
-        }
+        
+        if (!esEmergencia && company != null) {
+            LocalDate fechaCita = fechaInicio.toLocalDate();
+            
+            // 1. Validar excepciones (feriados/cierres)
+            companyExceptionRepository.findByCompanyIdAndDate(company.getId(), fechaCita)
+                    .ifPresent(ex -> {
+                        if (Boolean.FALSE.equals(ex.getIsOpen())) {
+                            throw new IllegalArgumentException("La clínica está cerrada el día " + fechaCita + " (" + ex.getDescription() + ")");
+                        }
+                    });
 
-        if (!esEmergencia) {
-            HorarioEmpleado horario = veterinario.getHorarios().stream()
-                    .filter(h -> h.getDiaSemana() == diaSemana && Boolean.TRUE.equals(h.getActivo()))
+            // 2. Validar horario maestro de la clínica
+            CompanyOperatingHour opHour = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(company.getId(), diaSemana)
+                    .orElseThrow(() -> new IllegalArgumentException("La clínica no atiende los días " + diaSemana));
+            
+            if (Boolean.FALSE.equals(opHour.getIsOpen())) {
+                throw new IllegalArgumentException("La clínica no abre los días " + diaSemana);
+            }
+
+            if (horaInicio.isBefore(opHour.getOpeningTime()) || horaFinCita.isAfter(opHour.getClosingTime())) {
+                throw new IllegalArgumentException(String.format("La cita (%s-%s) está fuera del horario de la clínica (%s-%s)",
+                        horaInicio, horaFinCita, opHour.getOpeningTime(), opHour.getClosingTime()));
+            }
+
+            // 3. Validar el turno específico del veterinario para esa fecha
+            HorarioEmpleado turno = veterinario.getHorarios().stream()
+                    .filter(h -> h.getFecha().equals(fechaCita) && Boolean.TRUE.equals(h.getActivo()))
+                    .filter(h -> (horaInicio.equals(h.getHoraInicio()) || horaInicio.isAfter(h.getHoraInicio())) &&
+                                 (horaFinCita.equals(h.getHoraFin()) || horaFinCita.isBefore(h.getHoraFin())))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException(
-                            "El veterinario no atiende los días " + diaSemana.name().charAt(0) +
-                            diaSemana.name().substring(1).toLowerCase()));
-
-            if (horaInicio.isBefore(horario.getHoraInicio()) || horaFinCita.isAfter(horario.getHoraFin())) {
-                throw new IllegalArgumentException(
-                        "La cita está fuera del horario del veterinario. Atiende de " +
-                        horario.getHoraInicio() + " a " + horario.getHoraFin());
-            }
+                            "El veterinario no tiene turno asignado para cubrir este horario el día " + fechaCita));
         }
 
         boolean hayCruceVeterinario = citaRepository.existsOverlappingCita(veterinario.getId(), fechaInicio, fechaFin);
@@ -165,7 +188,16 @@ public class CitaServiceImpl implements CitaService {
         usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setCreadoPor);
 
         Cita savedCita = citaRepository.save(cita);
-        return citaMapper.toResponse(savedCita);
+
+        auditLogService.log(
+            "CREAR_CITA",
+            "Citas",
+            "Se agendó una nueva cita para la mascota " + mascota.getNombreCompleto() + " con el veterinario " + (veterinario.getUser() != null ? (veterinario.getUser().getNombre() + " " + veterinario.getUser().getApellido()) : "sin usuario") + " el " + cita.getFechaHoraInicio()
+        );
+
+        CitaResponse createdResponse = citaMapper.toResponse(savedCita);
+        broadcastCitaEvent("CREAR_CITA", savedCita, createdResponse);
+        return createdResponse;
     }
 
     @Override
@@ -183,10 +215,12 @@ public class CitaServiceImpl implements CitaService {
         }
 
         if (cita.getEstado() == EstadoCita.EN_PROCESO) {
+            boolean esGroomerEnProceso = cita.getEmpleado().getTiposEmpleado().stream()
+                    .anyMatch(t -> "GROMMER".equalsIgnoreCase(t.getNombre()));
+            if (esGroomerEnProceso) return null;
             if (cita.getConsulta() != null) {
                 return cita.getConsulta().getId();
             }
-      
             return consultaRepository.findByCitaId(id)
                     .map(Consulta::getId)
                     .orElseThrow(() -> new IllegalArgumentException("La cita está en proceso pero no se encontró la consulta asociada"));
@@ -203,8 +237,38 @@ public class CitaServiceImpl implements CitaService {
             throw new IllegalArgumentException("No se puede iniciar la atención porque la mascota está inactiva");
         }
 
+        // Validar ventana de inicio: sólo se puede iniciar dentro de la hora previa a la cita
+        java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
+        java.time.LocalDateTime inicioCita = cita.getFechaHoraInicio();
+        long minutosRestantes = java.time.Duration.between(ahora, inicioCita).toMinutes();
+        if (minutosRestantes > 60) {
+            long horasRestantes = minutosRestantes / 60;
+            long minutosExtra = minutosRestantes % 60;
+            String tiempoRestante = horasRestantes > 0
+                ? horasRestantes + "h " + minutosExtra + "min"
+                : minutosExtra + " minutos";
+            throw new IllegalArgumentException(
+                "Aún no es posible iniciar esta atención. Faltan " + tiempoRestante +
+                " para la cita. Solo se puede iniciar dentro de la hora previa al horario programado."
+            );
+        }
+
+        boolean esGroomer = cita.getEmpleado().getTiposEmpleado().stream()
+                .anyMatch(t -> "GROMMER".equalsIgnoreCase(t.getNombre()));
+
         cita.setEstado(EstadoCita.EN_PROCESO);
         citaRepository.save(cita);
+
+        auditLogService.log(
+            "INICIAR_ATENCION",
+            "Citas",
+            "Se inició la atención " + (esGroomer ? "de grooming" : "médica") + " de la mascota " + cita.getMascota().getNombreCompleto() + " con el empleado " + (cita.getEmpleado().getUser() != null ? (cita.getEmpleado().getUser().getNombre() + " " + cita.getEmpleado().getUser().getApellido()) : "sin usuario") + " el " + cita.getFechaHoraInicio()
+        );
+
+        if (esGroomer) {
+            broadcastCitaEvent("INICIAR_ATENCION", cita, citaMapper.toResponse(cita));
+            return null;
+        }
 
         HistoriaClinica hc = historiaClinicaRepository.findByMascotaId(cita.getMascota().getId())
                 .orElseGet(() -> {
@@ -225,7 +289,7 @@ public class CitaServiceImpl implements CitaService {
         consulta.setEstado(EstadoConsulta.ABIERTA);
         
         Consulta savedConsulta = consultaRepository.save(consulta);
-
+        broadcastCitaEvent("INICIAR_ATENCION", cita, citaMapper.toResponse(cita));
         return savedConsulta.getId();
     }
 
@@ -257,6 +321,10 @@ public class CitaServiceImpl implements CitaService {
 
         validarPermisoEmpresa(cita);
 
+        if (SecurityUtils.hasRole("ROLE_APODERADO")) {
+            throw new IllegalArgumentException("Un apoderado no tiene permiso para cancelar citas");
+        }
+
         if (cita.getEstado() == EstadoCita.COMPLETADA || cita.getEstado() == EstadoCita.CANCELADA) {
             throw new IllegalArgumentException("No se puede cancelar una cita que ya está " + cita.getEstado());
         }
@@ -265,14 +333,61 @@ public class CitaServiceImpl implements CitaService {
             throw new IllegalArgumentException("No se puede cancelar una cita que ya está en proceso médico");
         }
 
-        // Regla: No se puede cancelar faltando menos de 1 hora
-        if (LocalDateTime.now().isAfter(cita.getFechaHoraInicio().minusHours(1))) {
-            throw new IllegalArgumentException("No se puede cancelar la cita faltando menos de 1 hora para su inicio");
+        // Regla: 2 horas antes para apoderado, 1 hora para personal administrativo
+        int hoursLimit = SecurityUtils.hasRole("ROLE_APODERADO") ? 2 : 1;
+        if (LocalDateTime.now().isAfter(cita.getFechaHoraInicio().minusHours(hoursLimit))) {
+            throw new IllegalArgumentException("No se puede cancelar la cita faltando menos de " + hoursLimit + " horas para su inicio");
         }
 
         cita.setEstado(EstadoCita.CANCELADA);
         cita.setMotivoCancelacion(motivo);
         citaRepository.save(cita);
+
+        broadcastCitaEvent("CANCELAR_CITA", cita, citaMapper.toResponse(cita));
+
+        auditLogService.log(
+            "CANCELAR_CITA",
+            "Citas",
+            "Se canceló la cita de la mascota " + cita.getMascota().getNombreCompleto() + " programada para el " + cita.getFechaHoraInicio() + ". Motivo: " + motivo
+        );
+
+        // Envío de correo electrónico al apoderado
+        try {
+            if (cita.getMascota().getApoderado() != null && cita.getMascota().getApoderado().getUser() != null) {
+                String emailDestinatario = cita.getMascota().getApoderado().getUser().getEmail();
+                if (emailDestinatario != null && !emailDestinatario.isBlank()) {
+                    Company company = cita.getMascota().getApoderado().getUser().getCompany();
+                    if (company == null && cita.getEmpleado() != null && cita.getEmpleado().getUser() != null) {
+                        company = cita.getEmpleado().getUser().getCompany();
+                    }
+
+                    String companyName = company != null ? company.getName() : "VargasVet";
+                    String companyLogo = (company != null && company.getLogoUrl() != null) ? company.getLogoUrl() : "";
+                    String companyEmail = company != null ? company.getEmail() : "";
+                    String companyPhone = company != null ? company.getPhone() : "";
+                    String companyAddress = company != null ? company.getAddress() : "";
+
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                    String fechaCitaStr = formatter.format(cita.getFechaHoraInicio());
+
+                    Map<String, Object> model = new HashMap<>();
+                    model.put("nombreApoderado", cita.getMascota().getApoderado().getUser().getNombre());
+                    model.put("nombreMascota", cita.getMascota().getNombreCompleto());
+                    model.put("fechaCita", fechaCitaStr);
+                    model.put("motivo", motivo != null && !motivo.isBlank() ? motivo : "No especificado");
+                    model.put("companyName", companyName);
+                    model.put("companyLogo", companyLogo);
+                    model.put("companyEmail", companyEmail);
+                    model.put("companyPhone", companyPhone);
+                    model.put("companyAddress", companyAddress);
+
+                    Mail mail = emailService.createMail(emailDestinatario, "Cita Cancelada - " + companyName, model);
+                    emailService.sendEmail(mail, "email/cita-cancelar-template");
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo enviar el correo de cancelación a " + cita.getMascota().getApoderado().getUser().getEmail() + ": " + e.getMessage());
+        }
     }
 
     @Override
@@ -291,6 +406,7 @@ public class CitaServiceImpl implements CitaService {
             throw new IllegalArgumentException("Solo se permite eliminar citas en estado Cancelada");
         }
 
+        cita.setEstado(EstadoCita.ELIMINADA);
         cita.setEliminada(true);
         cita.setEliminadoAt(LocalDateTime.now());
         
@@ -298,6 +414,13 @@ public class CitaServiceImpl implements CitaService {
         usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setEliminadoPor);
         
         citaRepository.save(cita);
+        broadcastCitaEvent("ELIMINAR_CITA", cita, citaMapper.toResponse(cita));
+
+        auditLogService.log(
+            "ELIMINAR_CITA",
+            "Citas",
+            "Se eliminó (borrado lógico) la cita cancelada de la mascota " + cita.getMascota().getNombreCompleto() + " programada para el " + cita.getFechaHoraInicio()
+        );
     }
 
     @Override
@@ -351,7 +474,16 @@ public class CitaServiceImpl implements CitaService {
         }
 
         Cita updatedCita = citaRepository.save(cita);
-        return citaMapper.toResponse(updatedCita);
+        CitaResponse updatedResponse = citaMapper.toResponse(updatedCita);
+        broadcastCitaEvent("ACTUALIZAR_CITA", updatedCita, updatedResponse);
+
+        auditLogService.log(
+            "ACTUALIZAR_CITA",
+            "Citas",
+            "Se actualizaron los datos de la cita de la mascota " + updatedCita.getMascota().getNombreCompleto() + " programada para el " + updatedCita.getFechaHoraInicio()
+        );
+
+        return updatedResponse;
     }
 
     @Override
@@ -362,15 +494,19 @@ public class CitaServiceImpl implements CitaService {
 
         validarPermisoEmpresa(cita);
 
+        // Guardar la fecha/hora original para el correo de reprogramación
+        LocalDateTime originalFechaInicio = cita.getFechaHoraInicio();
+
         // Regla: Solo Programada o Cancelada
         if (cita.getEstado() != EstadoCita.PROGRAMADA && cita.getEstado() != EstadoCita.CANCELADA && cita.getEstado() != EstadoCita.REPROGRAMADA) {
             throw new IllegalArgumentException("Solo se pueden reprogramar citas en estado Programada, Cancelada o Reprogramada");
         }
 
-        // Regla: 1 hora antes si está programada
+        // Regla: 6 horas antes para apoderado, 1 hora para personal administrativo
+        int hoursLimit = SecurityUtils.hasRole("ROLE_APODERADO") ? 6 : 1;
         if (cita.getEstado() == EstadoCita.PROGRAMADA || cita.getEstado() == EstadoCita.REPROGRAMADA) {
-            if (LocalDateTime.now().isAfter(cita.getFechaHoraInicio().minusHours(1))) {
-                throw new IllegalArgumentException("No se puede reprogramar una cita con menos de 1 hora de anticipación");
+            if (LocalDateTime.now().isAfter(cita.getFechaHoraInicio().minusHours(hoursLimit))) {
+                throw new IllegalArgumentException("No se puede reprogramar una cita con menos de " + hoursLimit + " horas de anticipación");
             }
         }
 
@@ -399,7 +535,56 @@ public class CitaServiceImpl implements CitaService {
         usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setReprogramadoPor);
 
         Cita savedCita = citaRepository.save(cita);
-        return citaMapper.toResponse(savedCita);
+        CitaResponse reprogramadaResponse = citaMapper.toResponse(savedCita);
+        broadcastCitaEvent("REPROGRAMAR_CITA", savedCita, reprogramadaResponse);
+
+        auditLogService.log(
+            "REPROGRAMAR_CITA",
+            "Citas",
+            "Se reprogramó la cita para la mascota " + cita.getMascota().getNombreCompleto() + " para la nueva fecha " + fechaInicio
+        );
+
+        // Envío de correo electrónico al apoderado
+        try {
+            if (cita.getMascota().getApoderado() != null && cita.getMascota().getApoderado().getUser() != null) {
+                String emailDestinatario = cita.getMascota().getApoderado().getUser().getEmail();
+                if (emailDestinatario != null && !emailDestinatario.isBlank()) {
+                    Company company = cita.getMascota().getApoderado().getUser().getCompany();
+                    if (company == null && cita.getEmpleado() != null && cita.getEmpleado().getUser() != null) {
+                        company = cita.getEmpleado().getUser().getCompany();
+                    }
+
+                    String companyName = company != null ? company.getName() : "VargasVet";
+                    String companyLogo = (company != null && company.getLogoUrl() != null) ? company.getLogoUrl() : "";
+                    String companyEmail = company != null ? company.getEmail() : "";
+                    String companyPhone = company != null ? company.getPhone() : "";
+                    String companyAddress = company != null ? company.getAddress() : "";
+
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                    String fechaAnteriorStr = formatter.format(originalFechaInicio);
+                    String fechaNuevaStr = formatter.format(fechaInicio);
+
+                    Map<String, Object> model = new HashMap<>();
+                    model.put("nombreApoderado", cita.getMascota().getApoderado().getUser().getNombre());
+                    model.put("nombreMascota", cita.getMascota().getNombreCompleto());
+                    model.put("fechaAnterior", fechaAnteriorStr);
+                    model.put("fechaNueva", fechaNuevaStr);
+                    model.put("motivo", request.getNotas() != null && !request.getNotas().isBlank() ? request.getNotas() : "No especificado");
+                    model.put("companyName", companyName);
+                    model.put("companyLogo", companyLogo);
+                    model.put("companyEmail", companyEmail);
+                    model.put("companyPhone", companyPhone);
+                    model.put("companyAddress", companyAddress);
+
+                    Mail mail = emailService.createMail(emailDestinatario, "Cita Reprogramada - " + companyName, model);
+                    emailService.sendEmail(mail, "email/cita-reprogramar-template");
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo enviar el correo de reprogramación a " + cita.getMascota().getApoderado().getUser().getEmail() + ": " + e.getMessage());
+        }
+
+        return reprogramadaResponse;
     }
 
     private void validarPermisoEmpresa(Cita cita) {
@@ -424,6 +609,29 @@ public class CitaServiceImpl implements CitaService {
         };
     }
 
+    private void broadcastCitaEvent(String tipo, Cita cita, CitaResponse response) {
+        Integer companyId = null;
+        if (cita.getEmpleado() != null && cita.getEmpleado().getUser() != null
+                && cita.getEmpleado().getUser().getCompany() != null) {
+            companyId = cita.getEmpleado().getUser().getCompany().getId();
+        }
+        final Integer finalCompanyId = companyId;
+        final CitaWsEvent event = CitaWsEvent.builder()
+                .tipo(tipo)
+                .cita(response)
+                .companyId(finalCompanyId)
+                .build();
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                if (finalCompanyId != null) {
+                    messagingTemplate.convertAndSend("/topic/citas/" + finalCompanyId, event);
+                }
+            } catch (Exception e) {
+                System.err.println("WS ERROR: No se pudo transmitir evento de cita: " + e.getMessage());
+            }
+        });
+    }
+
     private Integer resolverCompanyId(Integer companyIdParam) {
         if (SecurityUtils.isSuperAdmin()) {
             if (companyIdParam == null) {
@@ -432,5 +640,77 @@ public class CitaServiceImpl implements CitaService {
             return companyIdParam;
         }
         return SecurityUtils.getCurrentCompanyId();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<String> getAdminDisponibilidad(Long empleadoId, String fecha, Long servicioId) {
+        LocalDate localDate = LocalDate.parse(fecha);
+
+        Empleado empleado = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
+
+        ServiciosVeterinarios servicio = servicioRepository.findById(servicioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Servicio no encontrado"));
+
+        Integer companyId = empleado.getUser().getCompany().getId();
+        int duracion = servicio.getDuracionEstimada() != null ? servicio.getDuracionEstimada() : 20;
+
+        java.util.List<String> availableSlots = new java.util.ArrayList<>();
+
+        boolean clinicClosed = companyExceptionRepository.findByCompanyIdAndDateString(companyId, fecha)
+                .map(ex -> Boolean.FALSE.equals(ex.getIsOpen()))
+                .orElse(false);
+        if (clinicClosed) return availableSlots;
+
+        java.time.DayOfWeek dayOfWeek = localDate.getDayOfWeek();
+        DiaSemana diaSemana = switch (dayOfWeek) {
+            case MONDAY    -> DiaSemana.LUNES;
+            case TUESDAY   -> DiaSemana.MARTES;
+            case WEDNESDAY -> DiaSemana.MIERCOLES;
+            case THURSDAY  -> DiaSemana.JUEVES;
+            case FRIDAY    -> DiaSemana.VIERNES;
+            case SATURDAY  -> DiaSemana.SABADO;
+            case SUNDAY    -> DiaSemana.DOMINGO;
+        };
+
+        var opHourOpt = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, diaSemana);
+        if (opHourOpt.isEmpty() || Boolean.FALSE.equals(opHourOpt.get().getIsOpen())) return availableSlots;
+
+        LocalTime clinicOpen  = opHourOpt.get().getOpeningTime();
+        LocalTime clinicClose = opHourOpt.get().getClosingTime();
+
+        java.util.List<HorarioEmpleado> shifts = horarioEmpleadoRepository.findByEmpleadoIdAndFechaString(empleadoId, fecha);
+        if (shifts.isEmpty()) return availableSlots;
+
+        java.util.List<Cita> existingAppointments = citaRepository.findActiveByEmpleadoIdAndFechaString(empleadoId, fecha);
+
+        int slotStepMinutes = 20;
+
+        for (HorarioEmpleado shift : shifts) {
+            if (Boolean.FALSE.equals(shift.getActivo())) continue;
+            LocalTime current  = shift.getHoraInicio();
+            LocalTime shiftEnd = shift.getHoraFin();
+
+            while (current.plusMinutes(duracion).isBefore(shiftEnd) || current.plusMinutes(duracion).equals(shiftEnd)) {
+                LocalTime slotStart = current;
+                LocalTime slotEnd   = current.plusMinutes(duracion);
+
+                if ((slotStart.isAfter(clinicOpen) || slotStart.equals(clinicOpen)) &&
+                    (slotEnd.isBefore(clinicClose) || slotEnd.equals(clinicClose))) {
+
+                    boolean overlap = existingAppointments.stream().anyMatch(appt -> {
+                        LocalTime s = appt.getFechaHoraInicio().toLocalTime();
+                        LocalTime e = appt.getFechaHoraFin().toLocalTime();
+                        return slotStart.isBefore(e) && slotEnd.isAfter(s);
+                    });
+
+                    if (!overlap) availableSlots.add(slotStart.toString());
+                }
+                current = current.plusMinutes(slotStepMinutes);
+            }
+        }
+
+        return availableSlots;
     }
 }

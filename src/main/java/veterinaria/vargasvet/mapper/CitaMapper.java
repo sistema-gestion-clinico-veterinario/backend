@@ -54,6 +54,11 @@ public class CitaMapper {
         response.setTotalServicio(cita.getTotalServicio());
         response.setMontoPagado(cita.getMontoPagado());
 
+        if (cita.getEmpleado() != null && cita.getEmpleado().getUser() != null
+                && cita.getEmpleado().getUser().getCompany() != null) {
+            response.setCompanyId(cita.getEmpleado().getUser().getCompany().getId());
+        }
+
         return response;
     }
 }
