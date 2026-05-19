@@ -13,6 +13,7 @@ import veterinaria.vargasvet.dto.request.EstadoMascotaRequest;
 import veterinaria.vargasvet.dto.request.MascotaRequest;
 import veterinaria.vargasvet.dto.response.MascotaResponse;
 import veterinaria.vargasvet.service.MascotaService;
+import veterinaria.vargasvet.service.AuditLogService;
 
 @RestController
 @RequestMapping("/mascotas")
@@ -20,6 +21,7 @@ import veterinaria.vargasvet.service.MascotaService;
 public class MascotaController {
 
     private final MascotaService mascotaService;
+    private final AuditLogService auditLogService;
 
     @GetMapping
     @PreAuthorize("hasAuthority('PET_READ')")
@@ -31,6 +33,7 @@ public class MascotaController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Page<MascotaResponse> resultado = mascotaService.listar(companyId, nombre, especie, nombrePropietario, page, size);
+        auditLogService.log(companyId, "CONSULTAR_MASCOTAS", "Mascotas", "Consultó la lista de mascotas.");
         String mensaje = resultado.isEmpty() ? "No se encontraron mascotas" : "Mascotas recuperadas con éxito";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
     }

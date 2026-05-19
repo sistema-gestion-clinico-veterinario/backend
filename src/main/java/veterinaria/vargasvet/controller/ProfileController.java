@@ -8,17 +8,27 @@ import veterinaria.vargasvet.dto.request.ProfileUpdateRequest;
 import veterinaria.vargasvet.dto.response.ProfileResponse;
 import veterinaria.vargasvet.service.ProfileService;
 
+import veterinaria.vargasvet.service.AuditLogService;
+
 @RestController
 @RequestMapping("/profile")
 @RequiredArgsConstructor
 public class ProfileController {
 
     private final ProfileService profileService;
+    private final AuditLogService auditLogService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<ProfileResponse>> getMyProfile() {
         ProfileResponse profile = profileService.getMyProfile();
         return ResponseEntity.ok(new ApiResponse<>(true, "Perfil obtenido", profile));
+    }
+
+    @GetMapping("/horario")
+    public ResponseEntity<ApiResponse<ProfileResponse>> getMySchedule() {
+        ProfileResponse profile = profileService.getMyProfile();
+        auditLogService.log("CONSULTAR_HORARIO", "Horario", "El empleado consultó su propio horario.");
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horario obtenido", profile));
     }
 
     @PutMapping

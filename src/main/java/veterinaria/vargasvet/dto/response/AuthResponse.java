@@ -6,6 +6,7 @@ import java.util.List;
 @Data
 public class AuthResponse {
     private String token;
+    private String refreshToken;
     private List<String> roles;
     private Integer companyId;
     private String companyName;
@@ -16,4 +17,5 @@ public class AuthResponse {
     private boolean passwordChanged;
     private boolean needsCompanySelection;
     private List<MenuDTO> menu;
+    private List<String> assignedRoles;
 }
