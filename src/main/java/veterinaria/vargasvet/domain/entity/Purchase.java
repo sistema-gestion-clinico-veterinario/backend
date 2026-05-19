@@ -72,4 +72,12 @@ public class Purchase {
     @Column(name = "cliente_doc_walkin")
     private String clienteDocWalkin;
 
+    /** ID del pago generado en MercadoPago (para trazabilidad y refunds) */
+    @Column(name = "mercadopago_id")
+    private String mercadoPagoId;
+
+    /** Estado retornado por MercadoPago: "approved", "rejected", etc. */
+    @Column(name = "mp_status")
+    private String mpStatus;
+
 }
