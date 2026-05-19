@@ -5,12 +5,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import java.time.LocalTime;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Company;
+import veterinaria.vargasvet.domain.entity.CompanyOperatingHour;
+import veterinaria.vargasvet.domain.enums.DiaSemana;
 import veterinaria.vargasvet.dto.request.CompanyDTO;
+import veterinaria.vargasvet.dto.request.CompanyOperatingHourDTO;
 import veterinaria.vargasvet.dto.response.CompanyListResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
+import veterinaria.vargasvet.repository.CompanyOperatingHourRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CompanyService;
@@ -21,6 +27,7 @@ import veterinaria.vargasvet.util.BusinessValidator;
 public class CompanyServiceImpl implements CompanyService {
 
     private final CompanyRepository companyRepository;
+    private final CompanyOperatingHourRepository companyOperatingHourRepository;
     private final BusinessValidator businessValidator;
 
     @Override
@@ -32,7 +39,6 @@ public class CompanyServiceImpl implements CompanyService {
             company = companyRepository.findById(companyId)
                     .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + companyId));
         } else {
-         
             company = companyRepository.findAll().stream()
                     .findFirst()
                     .orElseThrow(() -> new ResourceNotFoundException("No se ha configurado ninguna empresa aún"));
@@ -43,10 +49,8 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     @Transactional
     public CompanyDTO updateCompanyInfo(CompanyDTO dto) {
-       
         Integer id = dto.getId();
         if (id == null) {
-
             return companyRepository.findAll().stream()
                     .findFirst()
                     .map(c -> update(c.getId(), dto))
@@ -75,7 +79,9 @@ public class CompanyServiceImpl implements CompanyService {
         Company company = new Company();
         updateEntityFromDTO(company, dto);
         company.setActivo(true);
-        return mapToDTO(companyRepository.save(company));
+        Company savedCompany = companyRepository.save(company);
+        saveOperatingHours(savedCompany, dto.getOperatingHours());
+        return mapToDTO(savedCompany);
     }
 
     @Override
@@ -87,7 +93,9 @@ public class CompanyServiceImpl implements CompanyService {
             throw new IllegalStateException("La empresa está inactiva. Solo un super administrador puede modificarla.");
         }
         updateEntityFromDTO(company, dto);
-        return mapToDTO(companyRepository.save(company));
+        Company savedCompany = companyRepository.save(company);
+        saveOperatingHours(savedCompany, dto.getOperatingHours());
+        return mapToDTO(savedCompany);
     }
 
     private void updateEntityFromDTO(Company company, CompanyDTO dto) {
@@ -100,11 +108,23 @@ public class CompanyServiceImpl implements CompanyService {
         company.setWebsite(dto.getWebsite());
         company.setDescription(dto.getDescription());
         company.setBusinessHours(dto.getBusinessHours());
-        if (dto.getOpeningTime() != null && !dto.getOpeningTime().isBlank()) {
-            company.setOpeningTime(LocalTime.parse(dto.getOpeningTime()));
-        }
-        if (dto.getClosingTime() != null && !dto.getClosingTime().isBlank()) {
-            company.setClosingTime(LocalTime.parse(dto.getClosingTime()));
+    }
+
+    private void saveOperatingHours(Company company, List<CompanyOperatingHourDTO> hoursDTO) {
+        if (hoursDTO == null || hoursDTO.isEmpty()) return;
+        
+        for (CompanyOperatingHourDTO hDTO : hoursDTO) {
+            DiaSemana dia = DiaSemana.valueOf(hDTO.getDiaSemana());
+            CompanyOperatingHour hour = companyOperatingHourRepository
+                    .findByCompanyIdAndDiaSemana(company.getId(), dia)
+                    .orElse(new CompanyOperatingHour());
+            
+            hour.setCompany(company);
+            hour.setDiaSemana(dia);
+            hour.setOpeningTime(hDTO.getOpeningTime());
+            hour.setClosingTime(hDTO.getClosingTime());
+            hour.setIsOpen(hDTO.getIsOpen() != null ? hDTO.getIsOpen() : true);
+            companyOperatingHourRepository.save(hour);
         }
     }
 
@@ -118,8 +138,6 @@ public class CompanyServiceImpl implements CompanyService {
         response.setEmail(company.getEmail());
         response.setActivo(company.isActivo());
         response.setBusinessHours(company.getBusinessHours());
-        if (company.getOpeningTime() != null) response.setOpeningTime(company.getOpeningTime().toString());
-        if (company.getClosingTime() != null) response.setClosingTime(company.getClosingTime().toString());
         return response;
     }
 
@@ -135,8 +153,17 @@ public class CompanyServiceImpl implements CompanyService {
         dto.setWebsite(company.getWebsite());
         dto.setDescription(company.getDescription());
         dto.setBusinessHours(company.getBusinessHours());
-        if (company.getOpeningTime() != null) dto.setOpeningTime(company.getOpeningTime().toString());
-        if (company.getClosingTime() != null) dto.setClosingTime(company.getClosingTime().toString());
+        
+        dto.setOperatingHours(companyOperatingHourRepository.findByCompanyId(company.getId()).stream()
+                .map(h -> {
+                    CompanyOperatingHourDTO hDTO = new CompanyOperatingHourDTO();
+                    hDTO.setDiaSemana(h.getDiaSemana().name());
+                    hDTO.setOpeningTime(h.getOpeningTime());
+                    hDTO.setClosingTime(h.getClosingTime());
+                    hDTO.setIsOpen(h.getIsOpen());
+                    return hDTO;
+                }).collect(Collectors.toList()));
+        
         return dto;
     }
 }

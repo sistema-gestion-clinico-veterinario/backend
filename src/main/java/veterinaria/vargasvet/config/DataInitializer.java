@@ -12,10 +12,6 @@ import veterinaria.vargasvet.domain.enums.AppPermission;
 import veterinaria.vargasvet.repository.PermissionRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
-import veterinaria.vargasvet.domain.entity.Menu;
-import veterinaria.vargasvet.repository.MenuRepository;
-
-
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,7 +25,6 @@ public class DataInitializer implements CommandLineRunner {
     private final PermissionRepository permissionRepository;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
-    private final MenuRepository menuRepository;
 
     @Override
     @Transactional
@@ -37,7 +32,6 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Initializing system data...");
         seedPermissions();
         seedRoles();
-        seedMenus();
         log.info("System data initialization completed.");
     }
 
@@ -68,6 +62,10 @@ public class DataInitializer implements CommandLineRunner {
     private void seedRoles() {
         upsertRole("ROLE_SUPER_ADMIN", Arrays.asList(AppPermission.values()));
 
+        upsertRole("ROLE_APODERADO", Arrays.asList(
+                AppPermission.APODERADO_DASHBOARD
+        ));
+
         upsertRole("ROLE_ADMIN", Arrays.asList(
                 AppPermission.USER_READ, AppPermission.USER_CREATE, AppPermission.USER_UPDATE,
                 AppPermission.ROLE_MANAGE,
@@ -79,84 +77,47 @@ public class DataInitializer implements CommandLineRunner {
                 AppPermission.PET_READ, AppPermission.PET_CREATE, AppPermission.PET_UPDATE, AppPermission.PET_STATUS,
                 AppPermission.PET_WRITE, AppPermission.PET_HISTORY_READ, AppPermission.PET_HISTORY_WRITE,
                 AppPermission.CLINICAL_RECORD_READ, AppPermission.CLINICAL_RECORD_MANAGE,
-                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL,
+                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL, AppPermission.CITA_DELETE,
                 AppPermission.SERVICIO_READ, AppPermission.SERVICIO_CREATE, AppPermission.SERVICIO_UPDATE, AppPermission.SERVICIO_DELETE, AppPermission.SERVICIO_TOGGLE,
                 AppPermission.INV_READ, AppPermission.INV_WRITE,
-                AppPermission.ADMIN_DASHBOARD, AppPermission.USER_MANAGE
+                AppPermission.SALE_READ, AppPermission.SALE_MANAGE,
+                AppPermission.ADMIN_DASHBOARD, AppPermission.EMPLEADO_DASHBOARD, AppPermission.USER_MANAGE,
+                AppPermission.HORARIO_READ, AppPermission.HORARIO_MANAGE
         ));
 
-        upsertRole("ROLE_VETERINARIO", Arrays.asList(
-                AppPermission.EMPLEADO_READ,
-                AppPermission.ESPECIALIDAD_READ,
-                AppPermission.SERVICIO_READ,
-                AppPermission.APODERADO_READ, AppPermission.APODERADO_CREATE, AppPermission.APODERADO_UPDATE,
-                AppPermission.PET_READ, AppPermission.PET_CREATE, AppPermission.PET_UPDATE, AppPermission.PET_STATUS,
-                AppPermission.PET_HISTORY_READ, AppPermission.PET_HISTORY_WRITE,
-                AppPermission.CLINICAL_RECORD_READ, AppPermission.CLINICAL_RECORD_MANAGE,
-                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL, AppPermission.CITA_INICIAR
-        ));
-
-        upsertRole("ROLE_RECEPCIONISTA", Arrays.asList(
-                AppPermission.EMPLEADO_READ,
-                AppPermission.ESPECIALIDAD_READ,
-                AppPermission.SERVICIO_READ,
-                AppPermission.APODERADO_READ, AppPermission.APODERADO_CREATE, AppPermission.APODERADO_UPDATE,
-                AppPermission.PET_READ, AppPermission.PET_CREATE, AppPermission.PET_UPDATE,
-                AppPermission.CLINICAL_RECORD_READ,
-                AppPermission.CITA_READ, AppPermission.CITA_CREATE, AppPermission.CITA_UPDATE, AppPermission.CITA_CANCEL
-        ));
-
-        upsertRole("ROLE_CLIENTE", java.util.Collections.emptyList());
     }
 
     private void upsertRole(String roleName, java.util.List<AppPermission> permissions) {
-        Role role = roleRepository.findByName(roleName).orElseGet(() -> {
-            Role r = new Role();
-            r.setName(roleName);
-            return r;
-        });
-        Set<Permission> rolePermissions = permissions.stream()
-                .map(p -> permissionRepository.findByName(p.name())
-                        .orElseThrow(() -> new IllegalStateException("Permission not found: " + p.name())))
-                .collect(Collectors.toSet());
-        role.setPermissions(rolePermissions);
-        roleRepository.save(role);
-        log.info("Role {} upserted with {} permissions.", roleName, permissions.size());
-    }
+        Role role = roleRepository.findByName(roleName).orElse(null);
 
-    private void seedMenus() {
-        if (menuRepository.count() == 0) {
-            log.info("Initializing menu items...");
-
-            // Dashboard
-            createMenu("Dashboard", "pi pi-home", "/dashboard", 1, null, null);
-
-            // Citas
-            Menu citas = createMenu("Citas", "pi pi-calendar", null, 2, null, "CITA_READ");
-            createMenu("Agenda", "pi pi-calendar-plus", "/citas/agenda", 1, citas, "CITA_READ");
-
-            // Pacientes
-            Menu pacientes = createMenu("Mascotas", "pi pi-heart", null, 3, null, "PET_READ");
-            createMenu("Lista de Mascotas", "pi pi-list", "/mascotas", 1, pacientes, "PET_READ");
-            createMenu("Historias Clínicas", "pi pi-book", "/historias-clinicas", 2, pacientes, "PET_HISTORY_READ");
-
-            // Administración
-            Menu admin = createMenu("Administración", "pi pi-cog", null, 4, null, "USER_MANAGE");
-            createMenu("Roles y Permisos", "pi pi-shield", "/admin/roles", 1, admin, "USER_MANAGE");
-            createMenu("Gestión de Menús", "pi pi-list", "/admin/menus", 2, admin, "USER_MANAGE");
-            createMenu("Usuarios", "pi pi-users", "/admin/usuarios", 3, admin, "USER_MANAGE");
-            createMenu("Empresa", "pi pi-building", "/admin/empresa", 4, admin, "COMPANY_MANAGE");
+        if (role == null) {
+            role = new Role();
+            role.setName(roleName);
+            Set<Permission> rolePermissions = permissions.stream()
+                    .map(p -> permissionRepository.findByName(p.name())
+                            .orElseThrow(() -> new IllegalStateException("Permission not found: " + p.name())))
+                    .collect(Collectors.toSet());
+            role.setPermissions(rolePermissions);
+            roleRepository.save(role);
+            log.info("Role {} created with {} initial permissions.", roleName, permissions.size());
+        } else {
+            // Role exists — add any missing permissions without removing existing ones
+            Set<String> existingNames = role.getPermissions().stream()
+                    .map(Permission::getName)
+                    .collect(Collectors.toSet());
+            Set<Permission> toAdd = permissions.stream()
+                    .filter(p -> !existingNames.contains(p.name()))
+                    .map(p -> permissionRepository.findByName(p.name())
+                            .orElseThrow(() -> new IllegalStateException("Permission not found: " + p.name())))
+                    .collect(Collectors.toSet());
+            if (!toAdd.isEmpty()) {
+                role.getPermissions().addAll(toAdd);
+                roleRepository.save(role);
+                log.info("Role {} updated: added {} missing permissions.", roleName, toAdd.size());
+            } else {
+                log.info("Role {} already up-to-date.", roleName);
+            }
         }
     }
 
-    private Menu createMenu(String label, String icon, String path, int order, Menu parent, String permission) {
-        Menu menu = new Menu();
-        menu.setLabel(label);
-        menu.setIcon(icon);
-        menu.setPath(path);
-        menu.setSortOrder(order);
-        menu.setParent(parent);
-        menu.setRequiredPermission(permission);
-        return menuRepository.save(menu);
-    }
 }

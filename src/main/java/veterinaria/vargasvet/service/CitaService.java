@@ -6,6 +6,7 @@ import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface CitaService {
     CitaResponse createCita(CitaRequest request);
@@ -15,4 +16,5 @@ public interface CitaService {
     void eliminarCita(Long id);
     CitaResponse actualizarCita(Long id, CitaRequest request);
     CitaResponse reprogramarCita(Long id, CitaRequest request);
+    List<String> getAdminDisponibilidad(Long empleadoId, String fecha, Long servicioId);
 }

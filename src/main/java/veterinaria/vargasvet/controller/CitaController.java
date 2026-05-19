@@ -13,8 +13,10 @@ import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.service.CitaService;
+import veterinaria.vargasvet.service.AuditLogService;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/citas")
@@ -22,6 +24,17 @@ import java.time.LocalDate;
 public class CitaController {
 
     private final CitaService citaService;
+    private final AuditLogService auditLogService;
+
+    @GetMapping("/disponibilidad")
+    @PreAuthorize("hasAuthority('CITA_READ')")
+    public ResponseEntity<ApiResponse<List<String>>> getAdminDisponibilidad(
+            @RequestParam Long empleadoId,
+            @RequestParam String fecha,
+            @RequestParam Long servicioId) {
+        List<String> slots = citaService.getAdminDisponibilidad(empleadoId, fecha, servicioId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Disponibilidad recuperada con éxito", slots));
+    }
 
     @GetMapping
     @PreAuthorize("hasAuthority('CITA_READ')")
@@ -33,6 +46,7 @@ public class CitaController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Page<CitaResponse> resultado = citaService.listar(companyId, fecha, estado, veterinarioId, page, size);
+        auditLogService.log(companyId, "CONSULTAR_CITAS", "Citas", "Consultó la lista de citas.");
         String mensaje = resultado.isEmpty() ? "No se encontraron citas" : "Citas recuperadas con éxito";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
     }
@@ -75,8 +89,9 @@ public class CitaController {
 
     @DeleteMapping("/{id}/cancelar")
     @PreAuthorize("hasAuthority('CITA_CANCEL')")
-    public ResponseEntity<ApiResponse<Void>> cancelarCita(@PathVariable Long id, @RequestParam String motivo) {
-        citaService.cancelarCita(id, motivo);
+    public ResponseEntity<ApiResponse<Void>> cancelarCita(@PathVariable Long id, @RequestParam(required = false) String motivo) {
+        String finalMotivo = (motivo == null || motivo.isBlank()) ? "Cancelado por el usuario" : motivo;
+        citaService.cancelarCita(id, finalMotivo);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita cancelada con éxito", null));
     }
 }
