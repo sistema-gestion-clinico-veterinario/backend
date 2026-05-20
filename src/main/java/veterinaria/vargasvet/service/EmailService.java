@@ -22,7 +22,7 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
 
-    @Value("${spring.mail.username}")
+    @Value("${app.mail.from}")
     private String defaultFrom;
 
     public Mail createMail(String to, String subject, Map<String, Object> model) {
