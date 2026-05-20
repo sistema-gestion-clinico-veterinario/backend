@@ -62,10 +62,6 @@ public class DataInitializer implements CommandLineRunner {
     private void seedRoles() {
         upsertRole("ROLE_SUPER_ADMIN", Arrays.asList(AppPermission.values()));
 
-        upsertRole("ROLE_APODERADO", Arrays.asList(
-                AppPermission.APODERADO_DASHBOARD
-        ));
-
         upsertRole("ROLE_ADMIN", Arrays.asList(
                 AppPermission.USER_READ, AppPermission.USER_CREATE, AppPermission.USER_UPDATE,
                 AppPermission.ROLE_MANAGE,
