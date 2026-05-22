@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Apoderado;
 import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.entity.Usuario;
+import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.dto.request.ApoderadoRequest;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
@@ -40,6 +41,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     private final ApoderadoRepository apoderadoRepository;
     private final MascotaRepository mascotaRepository;
     private final RoleRepository roleRepository;
+    private final veterinaria.vargasvet.repository.UsuarioPorRolRepository usuarioPorRolRepository;
     private final CompanyRepository companyRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
@@ -102,12 +104,15 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         usuario.setCompany(companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
 
+        Usuario savedUser = usuarioRepository.save(usuario);
+
         Role apoderadoRole = roleRepository.findByName("ROLE_APODERADO")
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Error de configuración: El rol 'ROLE_APODERADO' no existe."));
-        usuario.getRoles().add(apoderadoRole);
-
-        Usuario savedUser = usuarioRepository.save(usuario);
+        UsuarioPorRol upr = new UsuarioPorRol();
+        upr.setUsuario(savedUser);
+        upr.setRol(apoderadoRole);
+        usuarioPorRolRepository.save(upr);
 
         Apoderado apoderado = new Apoderado();
         apoderado.setTipoDocumentoIdentidad(dto.getTipoDocumento());
@@ -117,7 +122,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         apoderado.setObservaciones(dto.getObservaciones());
         apoderado.setUser(savedUser);
 
-        apoderadoRepository.save(apoderado);
+        Apoderado savedApoderado = apoderadoRepository.save(apoderado);
 
         sendWelcomeEmail(savedUser, dto.getNombre() + " " + dto.getApellido(), dto.getNumeroDocumento());
 
@@ -127,7 +132,9 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             "Se registró al cliente/apoderado " + dto.getNombre() + " " + dto.getApellido() + " con email " + dto.getEmail()
         );
 
-        return userMapper.toProfileDTO(savedUser);
+        UserProfileDTO profileDTO = userMapper.toProfileDTO(savedUser);
+        profileDTO.setApoderadoId(savedApoderado.getId().intValue());
+        return profileDTO;
     }
 
     private void sendWelcomeEmail(Usuario usuario, String nombre, String DNI) {

@@ -54,11 +54,16 @@ public class CompanyController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la empresa actualizados correctamente", updated));
     }
 
-    // Método legacy por si el frontend aún usa PUT sin ID en el path
     @PutMapping
     @PreAuthorize("hasAuthority('COMPANY_UPDATE')")
     public ResponseEntity<ApiResponse<CompanyDTO>> updateCompanyLegacy(@Valid @RequestBody CompanyDTO companyDTO) {
         CompanyDTO updated = companyService.updateCompanyInfo(companyDTO);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la empresa actualizados correctamente", updated));
+    }
+
+    @PatchMapping("/{id}/toggle-activo")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<veterinaria.vargasvet.dto.response.CompanyListResponse>> toggleActivo(@PathVariable Integer id) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Estado de empresa actualizado", companyService.toggleActivo(id)));
     }
 }

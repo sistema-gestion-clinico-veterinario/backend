@@ -237,20 +237,40 @@ public class CitaServiceImpl implements CitaService {
             throw new IllegalArgumentException("No se puede iniciar la atención porque la mascota está inactiva");
         }
 
-        // Validar ventana de inicio: sólo se puede iniciar dentro de la hora previa a la cita
-        java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
-        java.time.LocalDateTime inicioCita = cita.getFechaHoraInicio();
-        long minutosRestantes = java.time.Duration.between(ahora, inicioCita).toMinutes();
-        if (minutosRestantes > 60) {
-            long horasRestantes = minutosRestantes / 60;
-            long minutosExtra = minutosRestantes % 60;
-            String tiempoRestante = horasRestantes > 0
-                ? horasRestantes + "h " + minutosExtra + "min"
-                : minutosExtra + " minutos";
-            throw new IllegalArgumentException(
-                "Aún no es posible iniciar esta atención. Faltan " + tiempoRestante +
-                " para la cita. Solo se puede iniciar dentro de la hora previa al horario programado."
-            );
+        java.math.BigDecimal total = cita.getTotalServicio();
+        if (total != null && total.compareTo(java.math.BigDecimal.ZERO) > 0) {
+            java.math.BigDecimal pagado = cita.getMontoPagado() != null ? cita.getMontoPagado() : java.math.BigDecimal.ZERO;
+            java.math.BigDecimal mitad = total.multiply(new java.math.BigDecimal("0.5"));
+            if (pagado.compareTo(mitad) < 0) {
+                throw new IllegalArgumentException(
+                    "Para iniciar la atención se debe haber abonado al menos el 50% del costo. " +
+                    "Total: S/ " + total.setScale(2, java.math.RoundingMode.HALF_UP) +
+                    " — Pagado: S/ " + pagado.setScale(2, java.math.RoundingMode.HALF_UP) +
+                    " — Mínimo requerido: S/ " + mitad.setScale(2, java.math.RoundingMode.HALF_UP)
+                );
+            }
+        }
+
+        if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
+            java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
+            java.time.LocalDateTime inicioCita = cita.getFechaHoraInicio();
+            long minutosRestantes = java.time.Duration.between(ahora, inicioCita).toMinutes();
+            if (minutosRestantes > 60) {
+                long horasRestantes = minutosRestantes / 60;
+                long minutosExtra = minutosRestantes % 60;
+                String tiempoRestante = horasRestantes > 0
+                    ? horasRestantes + "h " + minutosExtra + "min"
+                    : minutosExtra + " minutos";
+                throw new IllegalArgumentException(
+                    "Aún no es posible iniciar esta atención. Faltan " + tiempoRestante +
+                    " para la cita. Solo se puede iniciar dentro de la hora previa al horario programado."
+                );
+            }
+        }
+
+        long citasEnProceso = citaRepository.countEnProcesoByEmpleadoExcluding(cita.getEmpleado().getId(), id);
+        if (citasEnProceso > 0) {
+            throw new IllegalArgumentException("El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.");
         }
 
         boolean esGroomer = cita.getEmpleado().getTiposEmpleado().stream()
@@ -685,29 +705,40 @@ public class CitaServiceImpl implements CitaService {
 
         java.util.List<Cita> existingAppointments = citaRepository.findActiveByEmpleadoIdAndFechaString(empleadoId, fecha);
 
-        int slotStepMinutes = 20;
+        final int STEP = 20;
 
         for (HorarioEmpleado shift : shifts) {
             if (Boolean.FALSE.equals(shift.getActivo())) continue;
-            LocalTime current  = shift.getHoraInicio();
-            LocalTime shiftEnd = shift.getHoraFin();
+            LocalTime shiftStart = shift.getHoraInicio();
+            LocalTime shiftEnd   = shift.getHoraFin();
 
-            while (current.plusMinutes(duracion).isBefore(shiftEnd) || current.plusMinutes(duracion).equals(shiftEnd)) {
-                LocalTime slotStart = current;
-                LocalTime slotEnd   = current.plusMinutes(duracion);
+            java.util.Set<LocalTime> candidates = new java.util.TreeSet<>();
 
-                if ((slotStart.isAfter(clinicOpen) || slotStart.equals(clinicOpen)) &&
-                    (slotEnd.isBefore(clinicClose) || slotEnd.equals(clinicClose))) {
+            LocalTime t = shiftStart;
+            while (!t.isAfter(shiftEnd)) {
+                candidates.add(t);
+                t = t.plusMinutes(STEP);
+            }
 
-                    boolean overlap = existingAppointments.stream().anyMatch(appt -> {
-                        LocalTime s = appt.getFechaHoraInicio().toLocalTime();
-                        LocalTime e = appt.getFechaHoraFin().toLocalTime();
-                        return slotStart.isBefore(e) && slotEnd.isAfter(s);
-                    });
-
-                    if (!overlap) availableSlots.add(slotStart.toString());
+            for (Cita appt : existingAppointments) {
+                LocalTime endTime = appt.getFechaHoraFin().toLocalTime();
+                if (!endTime.isBefore(shiftStart) && !endTime.isAfter(shiftEnd)) {
+                    candidates.add(endTime);
                 }
-                current = current.plusMinutes(slotStepMinutes);
+            }
+
+            for (LocalTime slotStart2 : candidates) {
+                LocalTime slotEnd = slotStart2.plusMinutes(duracion);
+                if (slotEnd.isAfter(shiftEnd)) continue;
+                if (slotStart2.isBefore(clinicOpen) || slotEnd.isAfter(clinicClose)) continue;
+
+                boolean overlap = existingAppointments.stream().anyMatch(appt -> {
+                    LocalTime s = appt.getFechaHoraInicio().toLocalTime();
+                    LocalTime e = appt.getFechaHoraFin().toLocalTime();
+                    return slotStart2.isBefore(e) && slotEnd.isAfter(s);
+                });
+
+                if (!overlap) availableSlots.add(slotStart2.toString());
             }
         }
 

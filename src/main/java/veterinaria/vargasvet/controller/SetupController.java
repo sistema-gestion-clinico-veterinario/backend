@@ -13,7 +13,9 @@ import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.dto.request.UserRegistrationDTO;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.mapper.UserMapper;
+import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.repository.RoleRepository;
+import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 
 @RestController
@@ -23,6 +25,7 @@ public class SetupController {
 
     private final UsuarioRepository usuarioRepository;
     private final RoleRepository roleRepository;
+    private final UsuarioPorRolRepository usuarioPorRolRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
@@ -39,10 +42,14 @@ public class SetupController {
         admin.setEmailVerified(true);
         admin.setPasswordChanged(true);
 
-        roleRepository.findByName("ROLE_SUPER_ADMIN")
-                .ifPresent(role -> admin.getRoles().add(role));
-
         Usuario saved = usuarioRepository.save(admin);
+
+        roleRepository.findByName("ROLE_SUPER_ADMIN").ifPresent(role -> {
+            UsuarioPorRol upr = new UsuarioPorRol();
+            upr.setUsuario(saved);
+            upr.setRol(role);
+            usuarioPorRolRepository.save(upr);
+        });
         UserProfileDTO response = userMapper.toProfileDTO(saved);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

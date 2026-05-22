@@ -53,7 +53,7 @@ public class TokenProvider {
         }
     }
 
-    public String createToken(String email, List<String> roles, Integer companyId, List<String> permissions) {
+    public String createToken(String email, List<String> roles, Integer companyId) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + (jwtValidityInSeconds * 1000));
 
@@ -61,7 +61,6 @@ public class TokenProvider {
                 .subject(email)
                 .claim("roles", roles)
                 .claim("companyId", companyId)
-                .claim("permissions", permissions)
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(privateKey)
@@ -103,14 +102,6 @@ public class TokenProvider {
         List<?> roles = claims.get("roles", List.class);
         if (roles != null) {
             roles.stream()
-                    .map(Object::toString)
-                    .map(SimpleGrantedAuthority::new)
-                    .forEach(authorities::add);
-        }
-
-        List<?> rawPermissions = claims.get("permissions", List.class);
-        if (rawPermissions != null) {
-            rawPermissions.stream()
                     .map(Object::toString)
                     .map(SimpleGrantedAuthority::new)
                     .forEach(authorities::add);

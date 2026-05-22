@@ -43,13 +43,8 @@ public class Usuario {
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Apoderado apoderado;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "usuario_role",
-            joinColumns = @JoinColumn(name = "usuario_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private java.util.Set<Role> roles = new java.util.HashSet<>();
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private java.util.List<UsuarioPorRol> usuariosPorRol = new java.util.ArrayList<>();
 
     @Column(nullable = false)
     private boolean passwordChanged = false;
