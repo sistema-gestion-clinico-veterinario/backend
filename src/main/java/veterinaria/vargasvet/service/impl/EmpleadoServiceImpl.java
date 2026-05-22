@@ -114,8 +114,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         Usuario savedUser = usuarioRepository.save(usuario);
 
         if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
-            usuarioPorRolRepository.deleteAll(usuarioPorRolRepository.findByUsuarioId(savedUser.getId()));
-            for (String roleName : dto.getRoles()) {
+            usuarioPorRolRepository.deleteByUsuarioId(savedUser.getId());
+            for (String roleName : new java.util.LinkedHashSet<>(dto.getRoles())) {
                 Role role = roleRepository.findByName(roleName)
                         .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado: " + roleName));
                 UsuarioPorRol upr = new UsuarioPorRol();
@@ -221,8 +221,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 throw new IllegalArgumentException("Solo un Super Admin puede modificar los roles de otro Super Admin");
             }
 
-            usuarioPorRolRepository.deleteAll(usuarioPorRolRepository.findByUsuarioId(usuario.getId()));
-            for (String roleName : dto.getRoles()) {
+            usuarioPorRolRepository.deleteByUsuarioId(usuario.getId());
+            for (String roleName : new java.util.LinkedHashSet<>(dto.getRoles())) {
                 Role role = roleRepository.findByNameAndCompanyId(roleName, companyIdToUse)
                         .orElseGet(() -> roleRepository.findByName(roleName)
                                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado: " + roleName)));
@@ -323,11 +323,33 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     public void eliminar(Long empleadoId) {
         Empleado empleado = empleadoRepository.findById(empleadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado con ID: " + empleadoId));
+
+        if (citaRepository.existsByEmpleadoId(empleadoId)) {
+            Usuario usuario = empleado.getUser();
+            horarioEmpleadoRepository.deleteByEmpleadoId(empleadoId);
+            empleado.setEstado(false);
+            empleado.setEstadoModificadoPor(SecurityUtils.getCurrentUserEmail());
+            empleado.setFechaModificacionEstado(LocalDateTime.now());
+            if (usuario != null) {
+                usuario.setActivo(false);
+                usuarioRepository.save(usuario);
+            }
+            empleadoRepository.save(empleado);
+
+            auditLogService.log(
+                "DESACTIVAR_EMPLEADO_CON_HISTORIAL",
+                "Empleados",
+                "Se desactivó al empleado " + usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ") porque tiene historial asociado"
+            );
+            return;
+        }
+
         horarioEmpleadoRepository.deleteByEmpleadoId(empleadoId);
         empleado.getEspecialidades().clear();
         empleado.getTiposEmpleado().clear();
         String empEmail = empleado.getUser().getEmail();
         String empNombre = empleado.getUser().getNombre() + " " + empleado.getUser().getApellido();
+        usuarioPorRolRepository.deleteByUsuarioId(empleado.getUser().getId());
         empleadoRepository.delete(empleado);
         usuarioRepository.delete(empleado.getUser());
 

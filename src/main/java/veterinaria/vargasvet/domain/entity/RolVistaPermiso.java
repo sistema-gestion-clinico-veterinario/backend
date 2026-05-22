@@ -2,26 +2,22 @@ package veterinaria.vargasvet.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @Data
 @Entity
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@Table(name = "usuario_por_rol_permisos", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"usuario_por_rol_id", "vista_id"})
+@Table(name = "rol_vista_permisos", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"rol_id", "vista_id"})
 })
-public class UsuarioPorRolPermiso {
+public class RolVistaPermiso {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @EqualsAndHashCode.Include
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_por_rol_id", nullable = false)
-    private UsuarioPorRol usuarioPorRol;
+    @JoinColumn(name = "rol_id", nullable = false)
+    private Role rol;
 
-    @EqualsAndHashCode.Include
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vista_id", nullable = false)
     private Vista vista;
