@@ -18,6 +18,63 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MenuBuilderService {
 
+    // Mapeo de código de Vista → permisos que otorga cada flag
+    private static final Map<String, String[]> LEER     = new HashMap<>();
+    private static final Map<String, String[]> ESCRIBIR = new HashMap<>();
+    private static final Map<String, String[]> MODIFICAR= new HashMap<>();
+    private static final Map<String, String[]> ELIMINAR = new HashMap<>();
+
+    static {
+        LEER.put("VISTA_CLIENTES",      new String[]{"APODERADO_READ"});
+        ESCRIBIR.put("VISTA_CLIENTES",  new String[]{"APODERADO_CREATE"});
+        MODIFICAR.put("VISTA_CLIENTES", new String[]{"APODERADO_UPDATE", "APODERADO_STATUS"});
+        ELIMINAR.put("VISTA_CLIENTES",  new String[]{"APODERADO_DELETE"});
+
+        LEER.put("VISTA_MASCOTAS",      new String[]{"PET_READ"});
+        ESCRIBIR.put("VISTA_MASCOTAS",  new String[]{"PET_CREATE", "PET_WRITE"});
+        MODIFICAR.put("VISTA_MASCOTAS", new String[]{"PET_UPDATE", "PET_STATUS"});
+        ELIMINAR.put("VISTA_MASCOTAS",  new String[]{"PET_DELETE"});
+
+        LEER.put("VISTA_HISTORIAS",      new String[]{"CLINICAL_RECORD_READ", "PET_HISTORY_READ"});
+        MODIFICAR.put("VISTA_HISTORIAS", new String[]{"CLINICAL_RECORD_MANAGE", "PET_HISTORY_WRITE"});
+
+        LEER.put("VISTA_RECETAS",        new String[]{"PET_HISTORY_READ"});
+        MODIFICAR.put("VISTA_RECETAS",   new String[]{"PET_HISTORY_WRITE"});
+
+        LEER.put("VISTA_CITAS_AGENDA",      new String[]{"CITA_READ"});
+        ESCRIBIR.put("VISTA_CITAS_AGENDA",  new String[]{"CITA_CREATE"});
+        MODIFICAR.put("VISTA_CITAS_AGENDA", new String[]{"CITA_UPDATE", "CITA_INICIAR"});
+        ELIMINAR.put("VISTA_CITAS_AGENDA",  new String[]{"CITA_DELETE", "CITA_CANCEL"});
+
+        LEER.put("VISTA_EMPLEADOS",      new String[]{"EMPLEADO_READ"});
+        ESCRIBIR.put("VISTA_EMPLEADOS",  new String[]{"EMPLEADO_CREATE"});
+        MODIFICAR.put("VISTA_EMPLEADOS", new String[]{"EMPLEADO_UPDATE", "EMPLEADO_STATUS"});
+        ELIMINAR.put("VISTA_EMPLEADOS",  new String[]{"EMPLEADO_DELETE"});
+
+        LEER.put("VISTA_HORARIOS",      new String[]{"HORARIO_READ"});
+        MODIFICAR.put("VISTA_HORARIOS", new String[]{"HORARIO_MANAGE"});
+
+        LEER.put("VISTA_MI_HORARIO",    new String[]{"USER_READ"});
+
+        LEER.put("VISTA_COMPLEMENTARIO",      new String[]{"USER_MANAGE"});
+        MODIFICAR.put("VISTA_COMPLEMENTARIO", new String[]{"TIPO_EMPLEADO_READ", "TIPO_EMPLEADO_CREATE", "TIPO_EMPLEADO_UPDATE", "TIPO_EMPLEADO_STATUS", "TIPO_EMPLEADO_DELETE", "ESPECIALIDAD_READ", "ESPECIALIDAD_CREATE", "ESPECIALIDAD_UPDATE", "ESPECIALIDAD_DELETE", "SERVICIO_READ", "SERVICIO_CREATE", "SERVICIO_UPDATE", "SERVICIO_DELETE", "SERVICIO_TOGGLE"});
+
+        LEER.put("VISTA_COMPANY",      new String[]{"COMPANY_READ"});
+        MODIFICAR.put("VISTA_COMPANY", new String[]{"COMPANY_UPDATE", "COMPANY_MANAGE"});
+
+        LEER.put("VISTA_ROLES",      new String[]{"ROLE_MANAGE"});
+        MODIFICAR.put("VISTA_ROLES", new String[]{"ROLE_MANAGE"});
+
+        LEER.put("VISTA_PAGOS",      new String[]{"SALE_READ"});
+        MODIFICAR.put("VISTA_PAGOS", new String[]{"SALE_MANAGE"});
+
+        LEER.put("VISTA_DASHBOARD",          new String[]{"ADMIN_DASHBOARD"});
+        LEER.put("VISTA_APODERADO_DASHBOARD",new String[]{"APODERADO_DASHBOARD"});
+
+        LEER.put("VISTA_AUDITORIA_ADMIN",    new String[]{"COMPANY_MANAGE"});
+        LEER.put("VISTA_VENTANAS",           new String[]{"USER_MANAGE"});
+    }
+
     private final UsuarioPorRolRepository usuarioPorRolRepository;
     private final VistaRepository vistaRepository;
     private final RolVistaPermisoRepository rolVistaPermisoRepository;
@@ -139,5 +196,23 @@ public class MenuBuilderService {
         a.setModificar(a.isModificar() || b.isModificar());
         a.setEliminar(a.isEliminar() || b.isEliminar());
         return a;
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> construirPermissions(Integer usuarioId, String rolActivo) {
+        Map<String, UsuarioPorRolPermiso> permisos = obtenerPermisosUsuario(usuarioId, rolActivo);
+        Set<String> resultado = new LinkedHashSet<>();
+
+        for (Map.Entry<String, UsuarioPorRolPermiso> entry : permisos.entrySet()) {
+            String codigo = entry.getKey();
+            UsuarioPorRolPermiso p = entry.getValue();
+
+            if (p.isLeer()     && LEER.containsKey(codigo))     Collections.addAll(resultado, LEER.get(codigo));
+            if (p.isEscribir() && ESCRIBIR.containsKey(codigo)) Collections.addAll(resultado, ESCRIBIR.get(codigo));
+            if (p.isModificar()&& MODIFICAR.containsKey(codigo))Collections.addAll(resultado, MODIFICAR.get(codigo));
+            if (p.isEliminar() && ELIMINAR.containsKey(codigo)) Collections.addAll(resultado, ELIMINAR.get(codigo));
+        }
+
+        return new ArrayList<>(resultado);
     }
 }

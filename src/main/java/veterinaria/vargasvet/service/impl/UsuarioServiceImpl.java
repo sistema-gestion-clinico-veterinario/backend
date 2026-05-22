@@ -189,6 +189,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         String refreshToken = createRefreshToken(usuario);
 
         List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRole));
+        List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRole);
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
@@ -206,6 +207,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                         : null
         );
         response.setMenu(menu);
+        response.setPermissions(permissions);
 
         // Registrar log de auditoría para Login
         auditLogService.log(
@@ -243,6 +245,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         String refreshToken = createRefreshToken(usuario);
 
         List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), roleName));
+        List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), roleName);
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
@@ -261,6 +264,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         );
 
         response.setMenu(menu);
+        response.setPermissions(permissions);
 
         // Registrar log de auditoría para cambio de rol
         auditLogService.log(
@@ -504,6 +508,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         String newJwt = tokenProvider.createToken(usuario.getEmail(), userRoles, companyId);
 
         List<Object> menu = new ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRole));
+        List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRole);
 
         AuthResponse response = new AuthResponse();
         response.setToken(newJwt);
@@ -517,6 +522,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setPasswordChanged(usuario.isPasswordChanged());
         response.setEmpleadoId(usuario.getEmpleado() != null ? Math.toIntExact(usuario.getEmpleado().getId()) : null);
         response.setMenu(menu);
+        response.setPermissions(permissions);
 
         return response;
     }
