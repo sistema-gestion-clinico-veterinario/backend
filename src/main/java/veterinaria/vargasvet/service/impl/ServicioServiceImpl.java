@@ -62,6 +62,7 @@ public class ServicioServiceImpl implements ServicioService {
         servicio.setDisponible(request.getDisponible() != null ? request.getDisponible() : true);
         servicio.setActivo(true);
         servicio.setDuracionEstimada(request.getDuracionEstimada());
+        servicio.setPermiteEmergencia(request.getPermiteEmergencia() != null ? request.getPermiteEmergencia() : Boolean.FALSE);
 
         if (request.getTipoEmpleadoId() != null) {
             TipoEmpleado tipo = tipoEmpleadoRepository.findById(request.getTipoEmpleadoId())
@@ -87,6 +88,7 @@ public class ServicioServiceImpl implements ServicioService {
             servicio.setDisponible(request.getDisponible());
         }
         servicio.setDuracionEstimada(request.getDuracionEstimada());
+        servicio.setPermiteEmergencia(request.getPermiteEmergencia() != null ? request.getPermiteEmergencia() : Boolean.FALSE);
 
         if (request.getTipoEmpleadoId() != null) {
             TipoEmpleado tipo = tipoEmpleadoRepository.findById(request.getTipoEmpleadoId())
@@ -132,6 +134,7 @@ public class ServicioServiceImpl implements ServicioService {
             r.setCompanyName(s.getCompany().getName());
         }
         r.setDuracionEstimada(s.getDuracionEstimada());
+        r.setPermiteEmergencia(s.getPermiteEmergencia());
         if (s.getTipoEmpleado() != null) {
             r.setTipoEmpleadoId(s.getTipoEmpleado().getId());
             r.setTipoEmpleadoNombre(s.getTipoEmpleado().getNombre());

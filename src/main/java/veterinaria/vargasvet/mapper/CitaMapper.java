@@ -23,6 +23,7 @@ public class CitaMapper {
                 response.setApoderadoId(cita.getMascota().getApoderado().getId());
                 if (cita.getMascota().getApoderado().getUser() != null) {
                     response.setApoderadoNombre(cita.getMascota().getApoderado().getUser().getNombre() + " " + cita.getMascota().getApoderado().getUser().getApellido());
+                    response.setApoderadoEmail(cita.getMascota().getApoderado().getUser().getEmail());
                 }
             }
         }

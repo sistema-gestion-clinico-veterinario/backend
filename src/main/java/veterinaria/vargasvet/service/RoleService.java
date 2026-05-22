@@ -1,23 +1,18 @@
 package veterinaria.vargasvet.service;
 
-import veterinaria.vargasvet.dto.request.RoleCreateDTO;
-import veterinaria.vargasvet.dto.response.PermissionDTO;
-import veterinaria.vargasvet.dto.response.RoleDTO;
+import veterinaria.vargasvet.dto.response.RolDTO;
+import veterinaria.vargasvet.dto.response.RolVentanaPermisoDTO;
 
 import java.util.List;
 
 public interface RoleService {
-    /** Todos los roles (solo SUPER_ADMIN debería llamar esto) */
-    List<RoleDTO> getAllRoles();
-
-    /** Roles pertenecientes a una empresa */
-    List<RoleDTO> getRolesByCompany(Integer companyId);
-
-    /** Roles del sistema (company_id IS NULL) */
-    List<RoleDTO> getSystemRoles();
-
-    List<PermissionDTO> getAllPermissions();
-    RoleDTO createRole(RoleCreateDTO dto);
-    RoleDTO updateRole(Integer id, RoleCreateDTO dto);
+    List<RolDTO> getAllRoles();
+    List<RolDTO> getRolesByCompany(Integer companyId);
+    List<RolDTO> getSystemRoles();
+    RolDTO createRole(String nombre, String descripcion, Integer companyId);
+    RolDTO updateRole(Integer id, String nombre, String descripcion);
     void deleteRole(Integer id);
+
+    List<RolVentanaPermisoDTO> getVentanasByRole(Integer roleId);
+    List<RolVentanaPermisoDTO> saveVentanasByRole(Integer roleId, List<RolVentanaPermisoDTO> permisos);
 }

@@ -14,6 +14,7 @@ public class CitaResponse {
     private String mascotaNombre;
     private Long apoderadoId;
     private String apoderadoNombre;
+    private String apoderadoEmail;
     private Long veterinarioId;
     private String veterinarioNombre;
     private Long servicioId;

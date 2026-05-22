@@ -98,6 +98,15 @@ public class CompanyServiceImpl implements CompanyService {
         return mapToDTO(savedCompany);
     }
 
+    @Override
+    @Transactional
+    public CompanyListResponse toggleActivo(Integer id) {
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + id));
+        company.setActivo(!company.isActivo());
+        return toListResponse(companyRepository.save(company));
+    }
+
     private void updateEntityFromDTO(Company company, CompanyDTO dto) {
         company.setName(dto.getName());
         company.setRuc(dto.getRuc());
