@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 @Configuration
 @RequiredArgsConstructor
 @EnableWebSecurity
-@EnableMethodSecurity
 public class WebSecurityConfig {
 
     private final JWTFilter jwtFilter;

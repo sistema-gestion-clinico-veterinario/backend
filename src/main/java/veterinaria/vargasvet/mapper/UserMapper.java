@@ -56,9 +56,9 @@ public class UserMapper {
         dto.setTelefono(usuario.getTelefono());
         dto.setDireccion(usuario.getDireccion());
 
-        if (usuario.getRoles() != null && !usuario.getRoles().isEmpty()) {
-            dto.setSystemRole(usuario.getRoles().stream()
-                    .map(r -> r.getName())
+        if (usuario.getUsuariosPorRol() != null && !usuario.getUsuariosPorRol().isEmpty()) {
+            dto.setSystemRole(usuario.getUsuariosPorRol().stream()
+                    .map(upr -> upr.getRol().getName())
                     .collect(Collectors.joining(",")));
         }
 

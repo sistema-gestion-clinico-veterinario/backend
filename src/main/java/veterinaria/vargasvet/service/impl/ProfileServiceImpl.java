@@ -94,7 +94,7 @@ public class ProfileServiceImpl implements ProfileService {
         res.setTelefono(usuario.getTelefono());
         res.setDireccion(usuario.getDireccion());
         res.setActivo(usuario.isActivo());
-        res.setRoles(usuario.getRoles().stream().map(r -> r.getName()).collect(Collectors.toSet()));
+        res.setRoles(usuario.getUsuariosPorRol().stream().map(upr -> upr.getRol().getName()).collect(Collectors.toSet()));
         res.setCompanyName(usuario.getCompany() != null ? usuario.getCompany().getName() : null);
 
         if (empleado != null) {
@@ -111,7 +111,8 @@ public class ProfileServiceImpl implements ProfileService {
             List<HorarioEmpleadoResponse> horarios = horarioEmpleadoRepository.findByEmpleadoId(empleado.getId())
                     .stream()
                     .filter(h -> Boolean.TRUE.equals(h.getActivo()))
-                    .sorted(java.util.Comparator.comparing(HorarioEmpleado::getFecha)
+                    .sorted(java.util.Comparator.comparing(HorarioEmpleado::getFecha,
+                            java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder()))
                             .thenComparing(HorarioEmpleado::getHoraInicio))
                     .map(h -> {
                         HorarioEmpleadoResponse hr = new HorarioEmpleadoResponse();

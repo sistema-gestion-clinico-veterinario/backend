@@ -1,13 +1,11 @@
 package veterinaria.vargasvet.dto.response;
 
 import lombok.Data;
-import java.util.Set;
 
 @Data
-public class RoleDTO {
+public class RolDTO {
     private Integer id;
     private String name;
+    private String descripcion;
     private Integer companyId;
-    private Set<PermissionDTO> permissions;
-    private Set<Integer> menuIds;
 }
