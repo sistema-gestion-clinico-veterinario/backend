@@ -25,11 +25,16 @@ public class Vista {
     @Column(nullable = false)
     private String ruta;
 
-    @ToString.Exclude
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ventana_id")
-    private Ventana ventana;
+    @Column(name = "grupo", nullable = true)
+    private String grupo;
+
+    @Column(nullable = true)
+    private Integer orden = 0;
 
     @Column(nullable = false)
     private boolean activo = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ventana_id", nullable = true)
+    private Ventana ventana;
 }

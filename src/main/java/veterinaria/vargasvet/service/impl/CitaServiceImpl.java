@@ -81,8 +81,8 @@ public class CitaServiceImpl implements CitaService {
         Empleado veterinario = empleadoRepository.findById(request.getVeterinarioId())
                 .orElseThrow(() -> new ResourceNotFoundException("Veterinario no encontrado con ID: " + request.getVeterinarioId()));
 
-        if (veterinario.getUser() == null || !veterinario.getUser().isActivo()) {
-            throw new IllegalArgumentException("No se puede asignar la cita a un veterinario inactivo");
+        if (veterinario.getUser() == null) {
+            throw new IllegalArgumentException("No se puede asignar la cita a un empleado sin usuario asociado");
         }
 
         if (!Boolean.TRUE.equals(veterinario.getEstado())) {
@@ -705,7 +705,7 @@ public class CitaServiceImpl implements CitaService {
 
         java.util.List<Cita> existingAppointments = citaRepository.findActiveByEmpleadoIdAndFechaString(empleadoId, fecha);
 
-        final int STEP = 20;
+        final int step = Math.max(duracion, 1);
 
         for (HorarioEmpleado shift : shifts) {
             if (Boolean.FALSE.equals(shift.getActivo())) continue;
@@ -717,7 +717,7 @@ public class CitaServiceImpl implements CitaService {
             LocalTime t = shiftStart;
             while (!t.isAfter(shiftEnd)) {
                 candidates.add(t);
-                t = t.plusMinutes(STEP);
+                t = t.plusMinutes(step);
             }
 
             for (Cita appt : existingAppointments) {

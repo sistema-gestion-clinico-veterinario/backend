@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.response.RolDTO;
-import veterinaria.vargasvet.dto.response.RolVentanaPermisoDTO;
+import veterinaria.vargasvet.dto.response.RolVistaPermisoDTO;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.RoleService;
 
@@ -75,17 +75,17 @@ public class RoleController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Rol eliminado", null));
     }
 
-    @GetMapping("/{id}/ventanas")
-    public ResponseEntity<ApiResponse<List<RolVentanaPermisoDTO>>> getVentanas(@PathVariable Integer id) {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Ventanas del rol",
-                roleService.getVentanasByRole(id)));
+    @GetMapping("/{id}/vistas")
+    public ResponseEntity<ApiResponse<List<RolVistaPermisoDTO>>> getVistas(@PathVariable Integer id) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Vistas del rol",
+                roleService.getVistasByRole(id)));
     }
 
-    @PutMapping("/{id}/ventanas")
-    public ResponseEntity<ApiResponse<List<RolVentanaPermisoDTO>>> saveVentanas(
+    @PutMapping("/{id}/vistas")
+    public ResponseEntity<ApiResponse<List<RolVistaPermisoDTO>>> saveVistas(
             @PathVariable Integer id,
-            @RequestBody List<RolVentanaPermisoDTO> permisos) {
+            @RequestBody List<RolVistaPermisoDTO> permisos) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Permisos guardados",
-                roleService.saveVentanasByRole(id, permisos)));
+                roleService.saveVistasByRole(id, permisos)));
     }
 }

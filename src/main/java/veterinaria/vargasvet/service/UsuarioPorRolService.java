@@ -17,7 +17,7 @@ public class UsuarioPorRolService {
     private final UsuarioPorRolPermisoRepository permisoRepository;
     private final UsuarioRepository usuarioRepository;
     private final RoleRepository roleRepository;
-    private final VentanaRepository ventanaRepository;
+    private final VistaRepository vistaRepository;
 
     @Transactional(readOnly = true)
     public List<UsuarioPorRol> listarPorUsuario(Integer usuarioId) {
@@ -42,21 +42,21 @@ public class UsuarioPorRolService {
     }
 
     @Transactional
-    public UsuarioPorRolPermiso asignarPermiso(Integer usuarioPorRolId, Integer ventanaId,
+    public UsuarioPorRolPermiso asignarPermiso(Integer usuarioPorRolId, Integer vistaId,
                                                 boolean leer, boolean escribir,
                                                 boolean modificar, boolean eliminar) {
         UsuarioPorRol upr = usuarioPorRolRepository.findById(usuarioPorRolId)
                 .orElseThrow(() -> new ResourceNotFoundException("AsignacionRol no encontrada"));
 
-        Ventana ventana = ventanaRepository.findById(ventanaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ventana no encontrada"));
+        Vista vista = vistaRepository.findById(vistaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vista no encontrada"));
 
         UsuarioPorRolPermiso permiso = permisoRepository
-                .findByUsuarioPorRolIdAndVentanaCodigo(usuarioPorRolId, ventana.getCodigo())
+                .findByUsuarioPorRolIdAndVistaCodigo(usuarioPorRolId, vista.getCodigo())
                 .orElse(new UsuarioPorRolPermiso());
 
         permiso.setUsuarioPorRol(upr);
-        permiso.setVentana(ventana);
+        permiso.setVista(vista);
         permiso.setLeer(leer);
         permiso.setEscribir(escribir);
         permiso.setModificar(modificar);
