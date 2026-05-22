@@ -62,6 +62,8 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.user.company.id = :companyId AND c.eliminada = false")
     long countByCompanyId(@Param("companyId") Integer companyId);
 
+    boolean existsByEmpleadoId(Long empleadoId);
+
     @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.user.company.id = :companyId " +
            "AND c.eliminada = false AND CAST(c.fechaHoraInicio AS date) = CURRENT_DATE")
     long countTodayByCompanyId(@Param("companyId") Integer companyId);

@@ -1,20 +1,14 @@
 package veterinaria.vargasvet.dto.response;
 
-import lombok.Builder;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
-@Builder
-public class MenuItemDTO {
-    private Integer id;
+public class RolVistaPermisoDTO {
+    private Integer vistaId;
     private String codigo;
     private String nombre;
     private String ruta;
     private String grupo;
-    private Integer orden;
-    private boolean activo;
     private boolean leer;
     private boolean escribir;
     private boolean modificar;

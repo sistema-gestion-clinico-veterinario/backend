@@ -5,10 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
 import veterinaria.vargasvet.domain.entity.Ventana;
 import veterinaria.vargasvet.dto.ApiResponse;
-import veterinaria.vargasvet.dto.response.MenuItemDTO;
 import veterinaria.vargasvet.service.VentanaService;
 
 import java.util.List;
@@ -21,18 +19,13 @@ public class VentanaController {
     private final VentanaService ventanaService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<MenuItemDTO>>> listar() {
+    public ResponseEntity<ApiResponse<List<Ventana>>> listar() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Ventanas obtenidas", ventanaService.listarTodas()));
     }
 
-    @GetMapping("/arbol")
-    public ResponseEntity<ApiResponse<List<MenuItemDTO>>> listarArbol() {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Árbol de ventanas obtenido", ventanaService.listarArbol()));
-    }
-
-    @GetMapping("/arbol/completo")
-    public ResponseEntity<ApiResponse<List<MenuItemDTO>>> listarArbolCompleto() {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Árbol completo", ventanaService.listarArbolCompleto()));
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Ventana>> obtener(@PathVariable Integer id) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Ventana obtenida", ventanaService.obtenerPorId(id)));
     }
 
     @PostMapping
