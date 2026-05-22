@@ -188,7 +188,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         String jwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, companyId);
         String refreshToken = createRefreshToken(usuario);
 
-        List<MenuItemDTO> menu = menuBuilderService.construirMenu(usuario.getId(), activeRole);
+        List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRole));
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
@@ -242,7 +242,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         String jwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, companyId);
         String refreshToken = createRefreshToken(usuario);
 
-        List<MenuItemDTO> menu = menuBuilderService.construirMenu(usuario.getId(), roleName);
+        List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), roleName));
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
@@ -260,7 +260,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                         : null
         );
 
-        response.setMenu(menuBuilderService.construirMenu(usuario.getId(), roleName));
+        response.setMenu(menu);
 
         // Registrar log de auditoría para cambio de rol
         auditLogService.log(
@@ -503,7 +503,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         String newJwt = tokenProvider.createToken(usuario.getEmail(), userRoles, companyId);
 
-        List<MenuItemDTO> menu = menuBuilderService.construirMenu(usuario.getId(), activeRole);
+        List<Object> menu = new ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRole));
 
         AuthResponse response = new AuthResponse();
         response.setToken(newJwt);
