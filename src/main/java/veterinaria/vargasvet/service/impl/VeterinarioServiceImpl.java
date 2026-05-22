@@ -28,6 +28,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     private final EmpleadoRepository empleadoRepository;
     private final UsuarioRepository usuarioRepository;
     private final RoleRepository roleRepository;
+    private final veterinaria.vargasvet.repository.UsuarioPorRolRepository usuarioPorRolRepository;
     private final EspecialidadRepository especialidadRepository;
     private final TipoEmpleadoRepository tipoEmpleadoRepository;
     private final PasswordEncoder passwordEncoder;
@@ -75,10 +76,14 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         usuario.setEmailVerified(false);
         usuario.setVerificationToken(UUID.randomUUID().toString());
 
-        roleRepository.findByName("ROLE_VETERINARIO")
-                .ifPresent(role -> usuario.getRoles().add(role));
-
         Usuario savedUser = usuarioRepository.save(usuario);
+
+        roleRepository.findByName("ROLE_VETERINARIO").ifPresent(role -> {
+            UsuarioPorRol upr = new UsuarioPorRol();
+            upr.setUsuario(savedUser);
+            upr.setRol(role);
+            usuarioPorRolRepository.save(upr);
+        });
 
         Empleado empleado = new Empleado();
         empleado.setNumeroColegiatura(dto.getNumeroColegiatura());

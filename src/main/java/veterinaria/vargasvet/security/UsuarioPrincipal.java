@@ -27,14 +27,9 @@ public class UsuarioPrincipal implements UserDetails {
 
     public static UsuarioPrincipal create(Usuario usuario) {
         java.util.List<GrantedAuthority> authorities = new java.util.ArrayList<>();
-        if (usuario.getRoles() != null) {
-            for (veterinaria.vargasvet.domain.entity.Role role : usuario.getRoles()) {
-                authorities.add(new SimpleGrantedAuthority(role.getName()));
-                if (role.getPermissions() != null) {
-                    for (veterinaria.vargasvet.domain.entity.Permission perm : role.getPermissions()) {
-                        authorities.add(new SimpleGrantedAuthority(perm.getName()));
-                    }
-                }
+        if (usuario.getUsuariosPorRol() != null) {
+            for (veterinaria.vargasvet.domain.entity.UsuarioPorRol upr : usuario.getUsuariosPorRol()) {
+                authorities.add(new SimpleGrantedAuthority(upr.getRol().getName()));
             }
         }
 
