@@ -11,4 +11,5 @@ public interface CompanyService {
     CompanyDTO findById(Integer id);
     CompanyDTO save(CompanyDTO dto);
     CompanyDTO update(Integer id, CompanyDTO dto);
+    CompanyListResponse toggleActivo(Integer id);
 }

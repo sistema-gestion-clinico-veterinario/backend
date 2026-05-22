@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.HorarioEmpleado;
 import org.springframework.data.jpa.repository.Query;
@@ -17,18 +18,23 @@ public interface HorarioEmpleadoRepository extends JpaRepository<HorarioEmpleado
     
     @Query("SELECT h FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId AND h.fecha = :fecha")
     List<HorarioEmpleado> findByEmpleadoIdAndFecha(@Param("empleadoId") Long empleadoId, @Param("fecha") LocalDate fecha);
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId")
+    void deleteByEmpleadoId(@Param("empleadoId") Long empleadoId);
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId AND h.fecha BETWEEN :start AND :end")
+    void deleteByEmpleadoIdAndFechaBetween(@Param("empleadoId") Long empleadoId, @Param("start") LocalDate start, @Param("end") LocalDate end);
 
-    void deleteByEmpleadoId(Long empleadoId);
-    
-    void deleteByEmpleadoIdAndFechaBetween(Long empleadoId, LocalDate start, LocalDate end);
-    
-    void deleteByEmpleadoIdAndFecha(Long empleadoId, LocalDate fecha);
-    
-    void deleteByEmpleadoIdAndFechaAndHoraInicio(Long empleadoId, LocalDate fecha, LocalTime horaInicio);
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId AND h.fecha = :fecha")
+    void deleteByEmpleadoIdAndFecha(@Param("empleadoId") Long empleadoId, @Param("fecha") LocalDate fecha);
 
-    @org.springframework.data.jpa.repository.Modifying
-    @org.springframework.data.jpa.repository.Query("DELETE FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId " +
-           "AND h.fecha = :fecha AND ((:inicio < h.horaFin AND :fin > h.horaInicio))")
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId AND h.fecha = :fecha AND h.horaInicio = :horaInicio")
+    void deleteByEmpleadoIdAndFechaAndHoraInicio(@Param("empleadoId") Long empleadoId, @Param("fecha") LocalDate fecha, @Param("horaInicio") LocalTime horaInicio);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId AND h.fecha = :fecha AND (:inicio < h.horaFin AND :fin > h.horaInicio)")
     void deleteOverlapping(@Param("empleadoId") Long empleadoId, 
                            @Param("fecha") LocalDate fecha, 
                            @Param("inicio") LocalTime inicio, 

@@ -15,6 +15,7 @@ public class ServicioResponse {
     private Boolean disponible;
     private Boolean activo;
     private Integer duracionEstimada;
+    private Boolean permiteEmergencia;
     private Long tipoEmpleadoId;
     private String tipoEmpleadoNombre;
 }
