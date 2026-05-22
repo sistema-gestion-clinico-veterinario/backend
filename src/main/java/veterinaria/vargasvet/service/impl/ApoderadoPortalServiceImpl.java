@@ -282,8 +282,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         // Fetch existing appointments for the employee on this date
         List<Cita> existingAppointments = citaRepository.findActiveByEmpleadoIdAndFecha(empleadoId, localDate);
 
-        // Calculate time-slot interval (20 minutes step)
-        int slotStepMinutes = 20;
+        int slotStepMinutes = Math.max(duracion, 1);
 
         // Minimum 2 hours lead time for same-day booking
         LocalTime minAllowedTime = LocalTime.MIN;

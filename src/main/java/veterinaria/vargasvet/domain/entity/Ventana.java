@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-
 import java.util.List;
 
 @Data
@@ -24,29 +23,16 @@ public class Ventana {
     @Column(nullable = false)
     private String nombre;
 
-    private String icono;
+    @Column(name = "grupo", nullable = true)
+    private String grupo;
 
-    private String ruta;
-
-    @Column(name = "sort_order")
-    private Integer orden;
-
-    private String descripcion;
+    @Column(nullable = false)
+    private Integer orden = 0;
 
     @Column(nullable = false)
     private boolean activo = true;
 
+    @OneToMany(mappedBy = "ventana", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     @ToString.Exclude
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private Ventana parent;
-
-    @ToString.Exclude
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @OrderBy("orden ASC")
-    private List<Ventana> hijos;
-
-    @ToString.Exclude
-    @OneToMany(mappedBy = "ventana", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Vista> vistas;
 }

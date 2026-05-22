@@ -11,14 +11,14 @@ public interface UsuarioPorRolPermisoRepository extends JpaRepository<UsuarioPor
 
     List<UsuarioPorRolPermiso> findByUsuarioPorRolId(Integer usuarioPorRolId);
 
-    Optional<UsuarioPorRolPermiso> findByUsuarioPorRolIdAndVentanaCodigo(Integer usuarioPorRolId, String codigoVentana);
+    Optional<UsuarioPorRolPermiso> findByUsuarioPorRolIdAndVistaCodigo(Integer usuarioPorRolId, String codigoVista);
 
     @Query("""
         SELECT p FROM UsuarioPorRolPermiso p
         WHERE p.usuarioPorRol.usuario.id = :usuarioId
-        AND p.ventana.codigo = :codigoVentana
+        AND p.vista.codigo = :codigoVista
     """)
-    List<UsuarioPorRolPermiso> findByUsuarioIdAndVentanaCodigo(Integer usuarioId, String codigoVentana);
+    List<UsuarioPorRolPermiso> findByUsuarioIdAndVistaCodigo(Integer usuarioId, String codigoVista);
 
-    void deleteByVentanaId(Integer ventanaId);
+    void deleteByVistaId(Integer vistaId);
 }
