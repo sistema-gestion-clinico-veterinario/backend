@@ -75,15 +75,37 @@ public class TokenProvider {
     }
 
     public String createRefreshToken(String email) {
+        return createRefreshToken(email, null);
+    }
+
+    public String createRefreshToken(String email, String activeRole) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + (refreshTokenValidityInSeconds * 1000));
 
-        return Jwts.builder()
+        JwtBuilder builder = Jwts.builder()
                 .subject(email)
                 .issuedAt(now)
                 .expiration(validity)
-                .signWith(privateKey)
-                .compact();
+                .signWith(privateKey);
+
+        if (activeRole != null && !activeRole.isBlank()) {
+            builder.claim("activeRole", activeRole);
+        }
+
+        return builder.compact();
+    }
+
+    public Optional<String> getActiveRoleFromRefreshToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(publicKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            return Optional.ofNullable(claims.get("activeRole", String.class));
+        } catch (JwtException | IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 
     public boolean validateToken(String token) {

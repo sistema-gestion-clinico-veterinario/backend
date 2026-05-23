@@ -13,6 +13,7 @@ public interface ApoderadoPortalService {
     List<PrescripcionResumenResponse> getRecetas();
     List<ServicioResponse> getServicios();
     List<EmpleadoListResponse> getEmpleados(Long servicioId);
+    List<HorarioEmpleadoResponse> getHorarioEmpleado(Long empleadoId);
     List<String> getDisponibilidad(Long empleadoId, String fecha, Long servicioId);
     CitaResponse createPortalCita(CitaRequest request);
     CitaResponse updatePortalCita(Long id, CitaRequest request);
