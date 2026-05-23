@@ -23,4 +23,19 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
 
     @Query("SELECT upr FROM UsuarioPorRol upr WHERE upr.usuario.id = :usuarioId")
     List<UsuarioPorRol> findConPermisosByUsuarioId(Integer usuarioId);
+
+    @Query("""
+            SELECT DISTINCT upr
+            FROM UsuarioPorRol upr
+            JOIN FETCH upr.rol rol
+            LEFT JOIN FETCH upr.permisos permiso
+            LEFT JOIN FETCH permiso.vista vista
+            LEFT JOIN FETCH vista.ventana
+            WHERE upr.usuario.id = :usuarioId
+              AND (:rolActivo IS NULL OR rol.name = :rolActivo)
+            """)
+    List<UsuarioPorRol> findByUsuarioIdAndRolActivoWithPermisos(
+            @Param("usuarioId") Integer usuarioId,
+            @Param("rolActivo") String rolActivo
+    );
 }
