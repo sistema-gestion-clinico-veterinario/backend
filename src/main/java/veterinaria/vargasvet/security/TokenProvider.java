@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
+import veterinaria.vargasvet.repository.UsuarioRepository;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +43,7 @@ public class TokenProvider {
     private PublicKey publicKey;
 
     private final ResourceLoader resourceLoader;
+    private final UsuarioRepository usuarioRepository;
 
     @PostConstruct
     public void init() {
@@ -54,12 +56,17 @@ public class TokenProvider {
     }
 
     public String createToken(String email, List<String> roles, Integer companyId) {
+        return createToken(email, roles, Collections.emptyList(), companyId);
+    }
+
+    public String createToken(String email, List<String> roles, List<String> permissions, Integer companyId) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + (jwtValidityInSeconds * 1000));
 
         return Jwts.builder()
                 .subject(email)
                 .claim("roles", roles)
+                .claim("permissions", permissions)
                 .claim("companyId", companyId)
                 .issuedAt(now)
                 .expiration(validity)
@@ -106,12 +113,23 @@ public class TokenProvider {
                     .map(SimpleGrantedAuthority::new)
                     .forEach(authorities::add);
         }
+        List<?> permissions = claims.get("permissions", List.class);
+        if (permissions != null) {
+            permissions.stream()
+                    .map(Object::toString)
+                    .map(SimpleGrantedAuthority::new)
+                    .forEach(authorities::add);
+        }
 
         String email = claims.getSubject();
         Integer companyId = claims.get("companyId", Integer.class);
 
+        Integer userId = usuarioRepository.findByEmail(email)
+                .map(usuario -> usuario.getId())
+                .orElse(null);
+
         UsuarioPrincipal principal = new UsuarioPrincipal(
-                null,
+                userId,
                 email,
                 "",
                 authorities,
