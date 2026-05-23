@@ -185,7 +185,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRole));
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRole);
         String jwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, permissions, companyId);
-        String refreshToken = createRefreshToken(usuario);
+        String refreshToken = createRefreshToken(usuario, activeRole);
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
@@ -240,7 +240,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), roleName));
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), roleName);
         String jwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, permissions, companyId);
-        String refreshToken = createRefreshToken(usuario);
+        String refreshToken = createRefreshToken(usuario, roleName);
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
@@ -493,7 +493,9 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .map(upr -> upr.getRol().getName())
                 .collect(Collectors.toList());
 
-        String activeRole = resolveActiveRole(userRoles);
+        String activeRole = tokenProvider.getActiveRoleFromRefreshToken(token)
+                .filter(userRoles::contains)
+                .orElseGet(() -> resolveActiveRole(userRoles));
         List<String> activeRolesList = activeRole != null
                 ? Collections.singletonList(activeRole)
                 : Collections.emptyList();
@@ -521,8 +523,8 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         return response;
     }
 
-    private String createRefreshToken(Usuario usuario) {
-        String token = tokenProvider.createRefreshToken(usuario.getEmail());
+    private String createRefreshToken(Usuario usuario, String activeRole) {
+        String token = tokenProvider.createRefreshToken(usuario.getEmail(), activeRole);
         Instant expiryDate = Instant.now().plusSeconds(604800); // 7 días
 
         RefreshToken refreshToken = refreshTokenRepository.findByUsuario(usuario)
