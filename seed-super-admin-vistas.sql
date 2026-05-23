@@ -1,43 +1,52 @@
--- Asignar todas las vistas activas al rol SUPER_ADMIN con todos los permisos
--- Primero, obtener el ID del rol SUPER_ADMIN
-SET @roleId = (SELECT id FROM roles WHERE name = 'ROLE_SUPER_ADMIN' LIMIT 1);
+-- ============================================================
+-- SCRIPT SEGURO: Asigna vistas nuevas al SUPER_ADMIN
+-- SOLO agrega las vistas que NO tienen permiso aún.
+-- NO sobreescribe permisos existentes (configurados manualmente).
+-- ============================================================
 
--- Si el rol existe, asignar todas las vistas activas
-IF @roleId IS NOT NULL THEN
-  -- Limpiar asignaciones previas
-  DELETE FROM rol_vista_permisos WHERE rol_id = @roleId;
+DO $$
+DECLARE
+    v_role_id INT;
+    v_count   INT;
+BEGIN
+    SELECT id INTO v_role_id FROM roles WHERE name = 'ROLE_SUPER_ADMIN' LIMIT 1;
 
-  -- Insertar todas las vistas activas con todos los permisos
-  INSERT INTO rol_vista_permisos (rol_id, vista_id, leer, escribir, modificar, eliminar, created_at, updated_at)
-  SELECT
-    @roleId,
-    v.id,
-    1,
-    1,
-    1,
-    1,
-    NOW(),
-    NOW()
-  FROM vistas v
-  WHERE v.activo = 1;
+    IF v_role_id IS NULL THEN
+        RAISE NOTICE 'No se encontró el rol ROLE_SUPER_ADMIN';
+        RETURN;
+    END IF;
 
-  SELECT CONCAT('✅ ', ROW_COUNT(), ' vistas asignadas al rol SUPER_ADMIN') AS resultado;
-ELSE
-  SELECT '❌ No se encontró el rol ROLE_SUPER_ADMIN' AS resultado;
-END IF;
+    INSERT INTO rol_vista_permisos (rol_id, vista_id, leer, escribir, modificar, eliminar, created_at, updated_at)
+    SELECT v_role_id, v.id, true, true, true, true, NOW(), NOW()
+    FROM vistas v
+    WHERE v.activo = true
+      AND NOT EXISTS (
+          SELECT 1 FROM rol_vista_permisos rvp
+          WHERE rvp.rol_id = v_role_id AND rvp.vista_id = v.id
+      );
 
--- Verificación: mostrar vistas asignadas al SUPER_ADMIN
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+
+    IF v_count > 0 THEN
+        RAISE NOTICE '% nuevas vistas asignadas al SUPER_ADMIN', v_count;
+    ELSE
+        RAISE NOTICE 'SUPER_ADMIN ya tiene todos los permisos al día, no se modificó nada';
+    END IF;
+END;
+$$;
+
+-- Verificación: estado actual del SUPER_ADMIN
 SELECT
-  r.name as rol,
-  v.codigo,
-  v.nombre,
-  v.grupo,
-  rvp.leer,
-  rvp.escribir,
-  rvp.modificar,
-  rvp.eliminar
+    r.name          AS rol,
+    v.codigo,
+    v.nombre,
+    v.grupo,
+    rvp.leer,
+    rvp.escribir,
+    rvp.modificar,
+    rvp.eliminar
 FROM rol_vista_permisos rvp
-JOIN roles r ON rvp.rol_id = r.id
+JOIN roles r  ON rvp.rol_id  = r.id
 JOIN vistas v ON rvp.vista_id = v.id
 WHERE r.name = 'ROLE_SUPER_ADMIN'
 ORDER BY v.grupo, v.nombre;

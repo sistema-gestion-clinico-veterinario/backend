@@ -86,7 +86,7 @@ public class MenuBuilderService {
         if (permisosPorVista.isEmpty()) return Collections.emptyList();
 
         return permisosPorVista.values().stream()
-                .filter(p -> p.getVista() != null && p.getVista().isActivo())
+                .filter(p -> p.getVista() != null && p.getVista().isActivo() && isVistaVisibleForRole(p.getVista(), rolActivo))
                 .map(p -> toDTO(p.getVista(), p))
                 .sorted(Comparator.comparingInt(MenuItemDTO::getOrden))
                 .collect(Collectors.toList());
@@ -102,7 +102,7 @@ public class MenuBuilderService {
 
         for (UsuarioPorRolPermiso permiso : permisosPorVista.values()) {
             Vista vista = permiso.getVista();
-            if (vista == null || !vista.isActivo()) {
+            if (vista == null || !vista.isActivo() || !isVistaVisibleForRole(vista, rolActivo)) {
                 continue;
             }
 
@@ -190,6 +190,36 @@ public class MenuBuilderService {
                 .modificar(permiso != null && permiso.isModificar())
                 .eliminar(permiso != null && permiso.isEliminar())
                 .build();
+    }
+
+    private boolean isVistaVisibleForRole(Vista vista, String rolActivo) {
+        if (rolActivo == null || "ROLE_SUPER_ADMIN".equals(rolActivo)) {
+            return true;
+        }
+
+        String codigo = vista.getCodigo();
+
+        if ("ROLE_ADMIN".equals(rolActivo)) {
+            return !codigo.equals("VISTA_EMPLEADO_DASHBOARD")
+                    && !codigo.equals("VISTA_MI_HORARIO")
+                    && !codigo.startsWith("VISTA_MIS_")
+                    && !codigo.equals("VISTA_APODERADO_DASHBOARD");
+        }
+
+        if (rolActivo.contains("APODERADO") || rolActivo.contains("CLIENTE")) {
+            return codigo.equals("VISTA_APODERADO_DASHBOARD")
+                    || codigo.startsWith("VISTA_MIS_")
+                    || codigo.equals("VISTA_PROFILE");
+        }
+
+        return !codigo.equals("VISTA_COMPANY")
+                && !codigo.equals("VISTA_AUDITORIA_ADMIN")
+                && !codigo.equals("VISTA_ROLES")
+                && !codigo.equals("VISTA_VENTANAS")
+                && !codigo.equals("VISTA_COMPLEMENTARIO")
+                && !codigo.equals("VISTA_PAGOS")
+                && !codigo.startsWith("VISTA_MIS_")
+                && !codigo.equals("VISTA_APODERADO_DASHBOARD");
     }
 
     private UsuarioPorRolPermiso mergePermisos(UsuarioPorRolPermiso a, UsuarioPorRolPermiso b) {
