@@ -86,7 +86,7 @@ public class MenuBuilderService {
         if (permisosPorVista.isEmpty()) return Collections.emptyList();
 
         return permisosPorVista.values().stream()
-                .filter(p -> p.getVista() != null && p.getVista().isActivo() && isVistaVisibleForRole(p.getVista(), rolActivo))
+                .filter(p -> p.isLeer() && p.getVista() != null && p.getVista().isActivo() && isVistaVisibleForRole(p.getVista(), rolActivo))
                 .map(p -> toDTO(p.getVista(), p))
                 .sorted(Comparator.comparingInt(MenuItemDTO::getOrden))
                 .collect(Collectors.toList());
@@ -102,7 +102,7 @@ public class MenuBuilderService {
 
         for (UsuarioPorRolPermiso permiso : permisosPorVista.values()) {
             Vista vista = permiso.getVista();
-            if (vista == null || !vista.isActivo() || !isVistaVisibleForRole(vista, rolActivo)) {
+            if (!permiso.isLeer() || vista == null || !vista.isActivo() || !isVistaVisibleForRole(vista, rolActivo)) {
                 continue;
             }
 
