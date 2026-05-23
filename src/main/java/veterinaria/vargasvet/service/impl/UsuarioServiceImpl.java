@@ -174,10 +174,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .map(upr -> upr.getRol().getName())
                 .collect(Collectors.toList());
 
-        String activeRole = assignedRoles.stream()
-                .filter(r -> r.equals("ROLE_SUPER_ADMIN"))
-                .findFirst()
-                .orElse(assignedRoles.isEmpty() ? null : assignedRoles.get(0));
+        String activeRole = resolveActiveRole(assignedRoles);
 
         List<String> activeRolesList = activeRole != null
                 ? java.util.Collections.singletonList(activeRole)
@@ -496,10 +493,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .map(upr -> upr.getRol().getName())
                 .collect(Collectors.toList());
 
-        String activeRole = userRoles.stream()
-                .filter(r -> r.equals("ROLE_SUPER_ADMIN"))
-                .findFirst()
-                .orElse(userRoles.isEmpty() ? null : userRoles.get(0));
+        String activeRole = resolveActiveRole(userRoles);
         List<String> activeRolesList = activeRole != null
                 ? Collections.singletonList(activeRole)
                 : Collections.emptyList();
@@ -545,6 +539,22 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         refreshTokenRepository.save(refreshToken);
         return token;
+    }
+
+    private String resolveActiveRole(List<String> roles) {
+        if (roles == null || roles.isEmpty()) {
+            return null;
+        }
+
+        List<String> priority = List.of(
+                "ROLE_SUPER_ADMIN",
+                "ROLE_ADMIN"
+        );
+
+        return priority.stream()
+                .filter(roles::contains)
+                .findFirst()
+                .orElse(roles.get(0));
     }
 
     private String resolveNombreCompleto(Usuario usuario) {
