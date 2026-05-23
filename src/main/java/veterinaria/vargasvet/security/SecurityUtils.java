@@ -4,6 +4,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class SecurityUtils {
 
@@ -48,5 +50,14 @@ public class SecurityUtils {
 
     public static boolean hasAuthority(String authority) {
         return hasRole(authority);
+    }
+
+    public static List<String> getCurrentRoleNames() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return List.of();
+        return auth.getAuthorities().stream()
+                .map(a -> a.getAuthority())
+                .filter(a -> a.startsWith("ROLE_"))
+                .toList();
     }
 }

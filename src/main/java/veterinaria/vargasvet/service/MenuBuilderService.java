@@ -34,7 +34,9 @@ public class MenuBuilderService {
         ELIMINAR.put("VISTA_MASCOTAS",  new String[]{"PET_DELETE"});
 
         LEER.put("VISTA_HISTORIAS",      new String[]{"CLINICAL_RECORD_READ", "PET_HISTORY_READ"});
+        ESCRIBIR.put("VISTA_HISTORIAS",  new String[]{"CLINICAL_RECORD_MANAGE", "PET_HISTORY_WRITE"});
         MODIFICAR.put("VISTA_HISTORIAS", new String[]{"CLINICAL_RECORD_MANAGE", "PET_HISTORY_WRITE"});
+        ELIMINAR.put("VISTA_HISTORIAS",  new String[]{"CLINICAL_RECORD_MANAGE", "PET_HISTORY_WRITE"});
 
         LEER.put("VISTA_RECETAS",        new String[]{"PET_HISTORY_READ"});
         MODIFICAR.put("VISTA_RECETAS",   new String[]{"PET_HISTORY_WRITE"});
