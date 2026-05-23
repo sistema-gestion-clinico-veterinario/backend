@@ -16,6 +16,7 @@ import veterinaria.vargasvet.repository.VentanaRepository;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @Order(1)
@@ -152,25 +153,27 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
     private void seedPermisosIfNotExist() {
-        log.info("Verificando permisos iniciales del SUPER_ADMIN...");
+        log.info("Verificando permisos del SUPER_ADMIN...");
         Role superAdmin = roleRepository.findByName("ROLE_SUPER_ADMIN").orElse(null);
 
         if (superAdmin == null) {
-            log.warn("️ ROLE_SUPER_ADMIN no encontrado");
+            log.warn("ROLE_SUPER_ADMIN no encontrado");
             return;
         }
 
-        List<RolVistaPermiso> permisosExistentes = rolVistaPermisoRepository.findByRolId(superAdmin.getId());
-
-        if (!permisosExistentes.isEmpty()) {
-            log.info("⏭ SUPER_ADMIN ya tiene {} permisos configurados, no se sobreescribe", permisosExistentes.size());
-            return;
-        }
+        Set<Integer> vistasConPermiso = rolVistaPermisoRepository
+                .findByRolId(superAdmin.getId())
+                .stream()
+                .map(p -> p.getVista().getId())
+                .collect(Collectors.toSet());
 
         List<Vista> vistas = vistaRepository.findByActivoTrue();
         int contadorCreados = 0;
 
         for (Vista vista : vistas) {
+            if (vistasConPermiso.contains(vista.getId())) {
+                continue;
+            }
             RolVistaPermiso permiso = new RolVistaPermiso();
             permiso.setRol(superAdmin);
             permiso.setVista(vista);
@@ -182,7 +185,11 @@ public class DataInitializer implements CommandLineRunner {
             contadorCreados++;
         }
 
-        log.info(" {} permisos iniciales asignados al SUPER_ADMIN", contadorCreados);
+        if (contadorCreados > 0) {
+            log.info("{} nuevos permisos asignados al SUPER_ADMIN (vistas nuevas)", contadorCreados);
+        } else {
+            log.info("⏭ SUPER_ADMIN ya tiene todos los permisos al día");
+        }
     }
 
     private void seed(String codigo, String nombre, String ruta, String grupo, Integer orden, Ventana ventana) {

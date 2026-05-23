@@ -231,6 +231,37 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<HorarioEmpleadoResponse> getHorarioEmpleado(Long empleadoId) {
+        Apoderado apoderado = getAuthenticatedApoderado();
+        Integer companyId = apoderado.getUser().getCompany().getId();
+
+        Empleado empleado = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
+
+        if (empleado.getUser() == null || empleado.getUser().getCompany() == null ||
+                !empleado.getUser().getCompany().getId().equals(companyId)) {
+            throw new AccessDeniedException("No tienes permiso para consultar el horario de este profesional");
+        }
+
+        return horarioEmpleadoRepository.findByEmpleadoId(empleadoId).stream()
+                .filter(h -> Boolean.TRUE.equals(h.getActivo()))
+                .sorted(java.util.Comparator.comparing(HorarioEmpleado::getFecha, java.util.Comparator.nullsFirst(LocalDate::compareTo))
+                        .thenComparing(HorarioEmpleado::getHoraInicio))
+                .map(h -> {
+                    HorarioEmpleadoResponse r = new HorarioEmpleadoResponse();
+                    r.setId(h.getId());
+                    r.setFecha(h.getFecha());
+                    r.setDiaSemana(h.getDiaSemana().name());
+                    r.setHoraInicio(h.getHoraInicio());
+                    r.setHoraFin(h.getHoraFin());
+                    r.setActivo(h.getActivo());
+                    return r;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<String> getDisponibilidad(Long empleadoId, String fecha, Long servicioId) {
         LocalDate localDate = LocalDate.parse(fecha);
         Apoderado apoderado = getAuthenticatedApoderado();
