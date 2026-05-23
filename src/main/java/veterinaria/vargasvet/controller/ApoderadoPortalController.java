@@ -63,6 +63,11 @@ public class ApoderadoPortalController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Profesionales disponibles recuperados con éxito", apoderadoPortalService.getEmpleados(servicioId)));
     }
 
+    @GetMapping("/empleados/{empleadoId}/horario")
+    public ResponseEntity<ApiResponse<List<HorarioEmpleadoResponse>>> getHorarioEmpleado(@PathVariable Long empleadoId) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Horario del profesional recuperado con éxito", apoderadoPortalService.getHorarioEmpleado(empleadoId)));
+    }
+
     @GetMapping("/disponibilidad")
     public ResponseEntity<ApiResponse<List<String>>> getDisponibilidad(
             @RequestParam Long empleadoId,
