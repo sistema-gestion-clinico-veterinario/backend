@@ -14,6 +14,15 @@ public interface RolVistaPermisoRepository extends JpaRepository<RolVistaPermiso
 
     List<RolVistaPermiso> findByRolId(Integer rolId);
 
+    @Query("""
+            SELECT rvp
+            FROM RolVistaPermiso rvp
+            JOIN FETCH rvp.vista vista
+            LEFT JOIN FETCH vista.ventana
+            WHERE rvp.rol.id = :rolId
+            """)
+    List<RolVistaPermiso> findByRolIdWithVistaAndVentana(@Param("rolId") Integer rolId);
+
     @Query("SELECT rvp FROM RolVistaPermiso rvp WHERE rvp.rol.id = :rolId AND rvp.vista.codigo = :vistaCodigo")
     Optional<RolVistaPermiso> findByRolIdAndVistaCodigo(@Param("rolId") Integer rolId, @Param("vistaCodigo") String vistaCodigo);
 
