@@ -56,14 +56,18 @@ public class MenuBuilderService {
 
         LEER.put("VISTA_MI_HORARIO",    new String[]{"USER_READ"});
 
-        LEER.put("VISTA_COMPLEMENTARIO",      new String[]{"USER_MANAGE"});
-        MODIFICAR.put("VISTA_COMPLEMENTARIO", new String[]{"TIPO_EMPLEADO_READ", "TIPO_EMPLEADO_CREATE", "TIPO_EMPLEADO_UPDATE", "TIPO_EMPLEADO_STATUS", "TIPO_EMPLEADO_DELETE", "ESPECIALIDAD_READ", "ESPECIALIDAD_CREATE", "ESPECIALIDAD_UPDATE", "ESPECIALIDAD_DELETE", "SERVICIO_READ", "SERVICIO_CREATE", "SERVICIO_UPDATE", "SERVICIO_DELETE", "SERVICIO_TOGGLE"});
+        LEER.put("VISTA_COMPLEMENTARIO",      new String[]{"TIPO_EMPLEADO_READ", "ESPECIALIDAD_READ", "SERVICIO_READ"});
+        ESCRIBIR.put("VISTA_COMPLEMENTARIO",  new String[]{"TIPO_EMPLEADO_CREATE", "ESPECIALIDAD_CREATE", "SERVICIO_CREATE"});
+        MODIFICAR.put("VISTA_COMPLEMENTARIO", new String[]{"TIPO_EMPLEADO_UPDATE", "TIPO_EMPLEADO_STATUS", "ESPECIALIDAD_UPDATE", "SERVICIO_UPDATE", "SERVICIO_TOGGLE"});
+        ELIMINAR.put("VISTA_COMPLEMENTARIO",  new String[]{"TIPO_EMPLEADO_DELETE", "ESPECIALIDAD_DELETE", "SERVICIO_DELETE"});
 
         LEER.put("VISTA_COMPANY",      new String[]{"COMPANY_READ"});
         MODIFICAR.put("VISTA_COMPANY", new String[]{"COMPANY_UPDATE", "COMPANY_MANAGE"});
 
         LEER.put("VISTA_ROLES",      new String[]{"ROLE_MANAGE"});
+        ESCRIBIR.put("VISTA_ROLES",  new String[]{"ROLE_MANAGE"});
         MODIFICAR.put("VISTA_ROLES", new String[]{"ROLE_MANAGE"});
+        ELIMINAR.put("VISTA_ROLES",  new String[]{"ROLE_MANAGE"});
 
         LEER.put("VISTA_PAGOS",      new String[]{"SALE_READ"});
         MODIFICAR.put("VISTA_PAGOS", new String[]{"SALE_MANAGE"});
@@ -159,15 +163,13 @@ public class MenuBuilderService {
             List<RolVistaPermiso> rolPermisos = rolVistaPermisoRepository.findByRolId(upr.getRol().getId());
             for (RolVistaPermiso rp : rolPermisos) {
                 String codigo = rp.getVista().getCodigo();
-                if (!permisosPorVista.containsKey(codigo)) {
-                    UsuarioPorRolPermiso synthetic = new UsuarioPorRolPermiso();
-                    synthetic.setVista(rp.getVista());
-                    synthetic.setLeer(rp.isLeer());
-                    synthetic.setEscribir(rp.isEscribir());
-                    synthetic.setModificar(rp.isModificar());
-                    synthetic.setEliminar(rp.isEliminar());
-                    permisosPorVista.put(codigo, synthetic);
-                }
+                UsuarioPorRolPermiso synthetic = new UsuarioPorRolPermiso();
+                synthetic.setVista(rp.getVista());
+                synthetic.setLeer(rp.isLeer());
+                synthetic.setEscribir(rp.isEscribir());
+                synthetic.setModificar(rp.isModificar());
+                synthetic.setEliminar(rp.isEliminar());
+                permisosPorVista.merge(codigo, synthetic, this::mergePermisos);
             }
         }
 
