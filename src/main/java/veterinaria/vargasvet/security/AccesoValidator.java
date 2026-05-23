@@ -55,12 +55,19 @@ public class AccesoValidator {
 
         Integer usuarioId = resolverUsuarioId();
 
-        List<UsuarioPorRolPermiso> userPermisos = permisoRepository
-                .findByUsuarioIdAndVistaCodigo(usuarioId, codigoVista);
-        if (userPermisos.stream().anyMatch(usuarioCheck)) return true;
+        List<String> rolesActivos = SecurityUtils.getCurrentRoleNames();
 
-        List<UsuarioPorRol> asignaciones = usuarioPorRolRepository.findByUsuarioId(usuarioId);
+        List<UsuarioPorRol> asignaciones = usuarioPorRolRepository.findByUsuarioId(usuarioId).stream()
+                .filter(upr -> rolesActivos.isEmpty() || rolesActivos.contains(upr.getRol().getName()))
+                .toList();
         for (UsuarioPorRol upr : asignaciones) {
+            List<UsuarioPorRolPermiso> userPermisos = permisoRepository.findByUsuarioPorRolId(upr.getId());
+            if (userPermisos.stream()
+                    .filter(p -> p.getVista().getCodigo().equals(codigoVista))
+                    .anyMatch(usuarioCheck)) {
+                return true;
+            }
+
             List<RolVistaPermiso> rolPermisos = rolVistaPermisoRepository.findByRolId(upr.getRol().getId());
             boolean tiene = rolPermisos.stream()
                     .filter(rp -> rp.getVista().getCodigo().equals(codigoVista))

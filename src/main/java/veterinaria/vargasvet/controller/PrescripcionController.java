@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.PrescripcionRequest;
 import veterinaria.vargasvet.dto.response.PrescripcionResumenResponse;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.PrescripcionService;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 public class PrescripcionController {
 
     private final PrescripcionService prescripcionService;
+    private final AccesoValidator accesoValidator;
 
     @GetMapping
     @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
@@ -28,6 +30,7 @@ public class PrescripcionController {
             @RequestParam(required = false) Integer companyId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
+        accesoValidator.validarLeer("VISTA_HISTORIAS");
         return ResponseEntity.ok(new ApiResponse<>(true, "Recetas obtenidas",
                 prescripcionService.buscar(query, companyId, page, size)));
     }
@@ -37,6 +40,7 @@ public class PrescripcionController {
     public ResponseEntity<ApiResponse<PrescripcionResumenResponse>> crear(
             @PathVariable Long consultaId,
             @Valid @RequestBody PrescripcionRequest request) {
+        accesoValidator.validarEscribir("VISTA_HISTORIAS");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Receta registrada exitosamente", prescripcionService.crear(consultaId, request)));
     }
@@ -45,6 +49,7 @@ public class PrescripcionController {
     @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
     public ResponseEntity<ApiResponse<List<PrescripcionResumenResponse>>> listarPorConsulta(
             @PathVariable Long consultaId) {
+        accesoValidator.validarLeer("VISTA_HISTORIAS");
         return ResponseEntity.ok(new ApiResponse<>(true, "Recetas obtenidas", prescripcionService.listarPorConsulta(consultaId)));
     }
 
@@ -53,12 +58,14 @@ public class PrescripcionController {
     public ResponseEntity<ApiResponse<PrescripcionResumenResponse>> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody PrescripcionRequest request) {
+        accesoValidator.validarModificar("VISTA_HISTORIAS");
         return ResponseEntity.ok(new ApiResponse<>(true, "Receta actualizada exitosamente", prescripcionService.actualizar(id, request)));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('CLINICAL_RECORD_MANAGE')")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
+        accesoValidator.validarEliminar("VISTA_HISTORIAS");
         prescripcionService.eliminar(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Receta eliminada exitosamente", null));
     }
