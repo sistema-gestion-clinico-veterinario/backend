@@ -85,6 +85,7 @@ public class CitaController {
     @PatchMapping("/{id}/iniciar")
     public ResponseEntity<ApiResponse<Long>> iniciarAtencion(@PathVariable Long id) {
         accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
+        accesoValidator.validarEscribir("VISTA_HISTORIAS");
         Long consultaId = citaService.iniciarAtencion(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Atención iniciada con éxito", consultaId));
     }

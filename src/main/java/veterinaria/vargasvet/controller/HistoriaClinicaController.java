@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.response.HistoriaClinicaDetalleResponse;
 import veterinaria.vargasvet.dto.response.HistoriaClinicaListResponse;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.HistoriaClinicaService;
 import veterinaria.vargasvet.service.AuditLogService;
 
@@ -21,6 +22,7 @@ public class HistoriaClinicaController {
 
     private final HistoriaClinicaService historiaClinicaService;
     private final AuditLogService auditLogService;
+    private final AccesoValidator accesoValidator;
 
     @GetMapping
     @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
@@ -34,6 +36,7 @@ public class HistoriaClinicaController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
+        accesoValidator.validarLeer("VISTA_HISTORIAS");
         Page<HistoriaClinicaListResponse> resultado = historiaClinicaService.buscar(
                 numeroHc, nombrePaciente, nombrePropietario, fechaDesde, fechaHasta, companyId, page, size);
 
@@ -45,6 +48,7 @@ public class HistoriaClinicaController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
     public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getDetalle(@PathVariable Long id) {
+        accesoValidator.validarLeer("VISTA_HISTORIAS");
         HistoriaClinicaDetalleResponse detalle = historiaClinicaService.getDetalle(id);
         auditLogService.log("CONSULTAR_DETALLE_HISTORIA_CLINICA", "Historias Clínicas", "Consultó el detalle de la historia clínica con ID: " + id + ".");
         return ResponseEntity.ok(new ApiResponse<>(true, "Historia clínica recuperada con éxito", detalle));
@@ -53,6 +57,7 @@ public class HistoriaClinicaController {
     @GetMapping("/mascota/{mascotaId}")
     @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
     public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getPorMascota(@PathVariable Long mascotaId) {
+        accesoValidator.validarLeer("VISTA_HISTORIAS");
         HistoriaClinicaDetalleResponse detalle = historiaClinicaService.getPorMascota(mascotaId);
         auditLogService.log("CONSULTAR_HISTORIA_CLINICA_MASCOTA", "Historias Clínicas", "Consultó la historia clínica de la mascota con ID: " + mascotaId + ".");
         return ResponseEntity.ok(new ApiResponse<>(true, "Historia clínica recuperada con éxito", detalle));
