@@ -43,6 +43,7 @@ public class ConsultaServiceImpl implements ConsultaService {
             throw new IllegalArgumentException("La consulta ha sido modificada por otro usuario. Por favor, refresque la página.");
         }
 
+        boolean puedeModificarPorPermiso = SecurityUtils.hasAuthority("CLINICAL_RECORD_MANAGE");
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
             if (consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null ||
@@ -55,12 +56,12 @@ public class ConsultaServiceImpl implements ConsultaService {
                     consulta.getVeterinario().getUser() != null &&
                     consulta.getVeterinario().getUser().getId().equals(currentUserId);
 
-            if (!esVeterinarioAsignado) {
+            if (!esVeterinarioAsignado && !puedeModificarPorPermiso) {
                 throw new IllegalArgumentException("Solo el veterinario asignado a esta consulta puede modificarla");
             }
         }
 
-        if (consulta.getEstado() == EstadoConsulta.CERRADA && !SecurityUtils.isAdmin() && !SecurityUtils.isSuperAdmin()) {
+        if (consulta.getEstado() == EstadoConsulta.CERRADA && !SecurityUtils.isAdmin() && !SecurityUtils.isSuperAdmin() && !puedeModificarPorPermiso) {
             throw new IllegalArgumentException("No se puede modificar una consulta cerrada");
         }
 
@@ -131,6 +132,7 @@ public class ConsultaServiceImpl implements ConsultaService {
             throw new IllegalArgumentException("La consulta ha sido modificada por otro usuario. Por favor, refresque la página.");
         }
 
+        boolean puedeCerrarPorPermiso = SecurityUtils.hasAuthority("CLINICAL_RECORD_MANAGE");
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
             if (consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null ||
@@ -143,7 +145,7 @@ public class ConsultaServiceImpl implements ConsultaService {
                     consulta.getVeterinario().getUser() != null &&
                     consulta.getVeterinario().getUser().getId().equals(currentUserId);
 
-            if (!esVeterinarioAsignado) {
+            if (!esVeterinarioAsignado && !puedeCerrarPorPermiso) {
                 throw new IllegalArgumentException("Solo el veterinario asignado a esta consulta puede cerrarla");
             }
         }

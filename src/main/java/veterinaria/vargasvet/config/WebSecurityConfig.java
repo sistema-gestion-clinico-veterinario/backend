@@ -51,6 +51,7 @@ public class WebSecurityConfig {
                         // Endpoints públicos
                         .requestMatchers(
                                 "/auth/login",
+                                "/auth/refresh",
                                 "/auth/register/**",
                                 "/auth/verify/**",
                                 "/auth/forgot-password",
