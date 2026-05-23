@@ -8,8 +8,6 @@ import veterinaria.vargasvet.dto.response.MenuItemDTO;
 import veterinaria.vargasvet.dto.response.MenuStructureDTO;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
-import veterinaria.vargasvet.repository.VentanaRepository;
-import veterinaria.vargasvet.repository.VistaRepository;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -80,18 +78,16 @@ public class MenuBuilderService {
     }
 
     private final UsuarioPorRolRepository usuarioPorRolRepository;
-    private final VistaRepository vistaRepository;
     private final RolVistaPermisoRepository rolVistaPermisoRepository;
-    private final VentanaRepository ventanaRepository;
 
     @Transactional(readOnly = true)
     public List<MenuItemDTO> construirMenu(Integer usuarioId, String rolActivo) {
         Map<String, UsuarioPorRolPermiso> permisosPorVista = obtenerPermisosUsuario(usuarioId, rolActivo);
         if (permisosPorVista.isEmpty()) return Collections.emptyList();
 
-        return vistaRepository.findAll().stream()
-                .filter(v -> v.isActivo() && permisosPorVista.containsKey(v.getCodigo()))
-                .map(v -> toDTO(v, permisosPorVista.get(v.getCodigo())))
+        return permisosPorVista.values().stream()
+                .filter(p -> p.getVista() != null && p.getVista().isActivo() && isVistaVisibleForRole(p.getVista(), rolActivo))
+                .map(p -> toDTO(p.getVista(), p))
                 .sorted(Comparator.comparingInt(MenuItemDTO::getOrden))
                 .collect(Collectors.toList());
     }
@@ -101,15 +97,16 @@ public class MenuBuilderService {
         Map<String, UsuarioPorRolPermiso> permisosPorVista = obtenerPermisosUsuario(usuarioId, rolActivo);
         if (permisosPorVista.isEmpty()) return Collections.emptyList();
 
-        List<Vista> vistasAccesibles = vistaRepository.findAll().stream()
-                .filter(v -> v.isActivo() && permisosPorVista.containsKey(v.getCodigo()))
-                .collect(Collectors.toList());
-
         Map<Ventana, List<MenuItemDTO>> porVentana = new LinkedHashMap<>();
         List<MenuItemDTO> vistasSueltas = new ArrayList<>();
 
-        for (Vista vista : vistasAccesibles) {
-            MenuItemDTO dto = toDTO(vista, permisosPorVista.get(vista.getCodigo()));
+        for (UsuarioPorRolPermiso permiso : permisosPorVista.values()) {
+            Vista vista = permiso.getVista();
+            if (vista == null || !vista.isActivo() || !isVistaVisibleForRole(vista, rolActivo)) {
+                continue;
+            }
+
+            MenuItemDTO dto = toDTO(vista, permiso);
             if (vista.getVentana() != null) {
                 porVentana.computeIfAbsent(vista.getVentana(), k -> new ArrayList<>()).add(dto);
             } else {
@@ -146,22 +143,25 @@ public class MenuBuilderService {
     }
 
     private Map<String, UsuarioPorRolPermiso> obtenerPermisosUsuario(Integer usuarioId, String rolActivo) {
-        List<UsuarioPorRol> asignaciones = usuarioPorRolRepository.findByUsuarioId(usuarioId);
+        List<UsuarioPorRol> asignaciones = usuarioPorRolRepository.findByUsuarioIdAndRolActivoWithPermisos(usuarioId, rolActivo);
         Map<String, UsuarioPorRolPermiso> permisosPorVista = new HashMap<>();
 
         for (UsuarioPorRol upr : asignaciones) {
-            boolean esRolActivo = rolActivo == null || upr.getRol().getName().equals(rolActivo);
-            if (!esRolActivo) continue;
-
             if (upr.getPermisos() != null) {
                 for (UsuarioPorRolPermiso permiso : upr.getPermisos()) {
+                    if (permiso.getVista() == null) {
+                        continue;
+                    }
                     String codigo = permiso.getVista().getCodigo();
                     permisosPorVista.merge(codigo, permiso, this::mergePermisos);
                 }
             }
 
-            List<RolVistaPermiso> rolPermisos = rolVistaPermisoRepository.findByRolId(upr.getRol().getId());
+            List<RolVistaPermiso> rolPermisos = rolVistaPermisoRepository.findByRolIdWithVistaAndVentana(upr.getRol().getId());
             for (RolVistaPermiso rp : rolPermisos) {
+                if (rp.getVista() == null) {
+                    continue;
+                }
                 String codigo = rp.getVista().getCodigo();
                 UsuarioPorRolPermiso synthetic = new UsuarioPorRolPermiso();
                 synthetic.setVista(rp.getVista());
@@ -190,6 +190,36 @@ public class MenuBuilderService {
                 .modificar(permiso != null && permiso.isModificar())
                 .eliminar(permiso != null && permiso.isEliminar())
                 .build();
+    }
+
+    private boolean isVistaVisibleForRole(Vista vista, String rolActivo) {
+        if (rolActivo == null || "ROLE_SUPER_ADMIN".equals(rolActivo)) {
+            return true;
+        }
+
+        String codigo = vista.getCodigo();
+
+        if ("ROLE_ADMIN".equals(rolActivo)) {
+            return !codigo.equals("VISTA_EMPLEADO_DASHBOARD")
+                    && !codigo.equals("VISTA_MI_HORARIO")
+                    && !codigo.startsWith("VISTA_MIS_")
+                    && !codigo.equals("VISTA_APODERADO_DASHBOARD");
+        }
+
+        if (rolActivo.contains("APODERADO") || rolActivo.contains("CLIENTE")) {
+            return codigo.equals("VISTA_APODERADO_DASHBOARD")
+                    || codigo.startsWith("VISTA_MIS_")
+                    || codigo.equals("VISTA_PROFILE");
+        }
+
+        return !codigo.equals("VISTA_COMPANY")
+                && !codigo.equals("VISTA_AUDITORIA_ADMIN")
+                && !codigo.equals("VISTA_ROLES")
+                && !codigo.equals("VISTA_VENTANAS")
+                && !codigo.equals("VISTA_COMPLEMENTARIO")
+                && !codigo.equals("VISTA_PAGOS")
+                && !codigo.startsWith("VISTA_MIS_")
+                && !codigo.equals("VISTA_APODERADO_DASHBOARD");
     }
 
     private UsuarioPorRolPermiso mergePermisos(UsuarioPorRolPermiso a, UsuarioPorRolPermiso b) {
