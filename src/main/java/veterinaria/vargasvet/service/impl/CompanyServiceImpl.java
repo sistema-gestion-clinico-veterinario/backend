@@ -2,7 +2,9 @@ package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import java.time.LocalTime;
 import java.util.List;
@@ -62,12 +64,25 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     @Transactional(readOnly = true)
     public Page<CompanyListResponse> listarTodas(int page, int size) {
-        return companyRepository.findAll(PageRequest.of(page, size, Sort.by("name").ascending()))
-                .map(this::toListResponse);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+        if (SecurityUtils.isSuperAdmin()) {
+            return companyRepository.findAll(pageable).map(this::toListResponse);
+        }
+
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        if (companyId == null) {
+            throw new IllegalArgumentException("No se pudo determinar la empresa del usuario autenticado");
+        }
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + companyId));
+        List<CompanyListResponse> content = page == 0 ? List.of(toListResponse(company)) : List.of();
+        return new PageImpl<>(content, pageable, 1);
     }
 
     @Override
     public CompanyDTO findById(Integer id) {
+        validarAccesoEmpresa(id);
         return companyRepository.findById(id)
                 .map(this::mapToDTO)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + id));
@@ -87,6 +102,7 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     @Transactional
     public CompanyDTO update(Integer id, CompanyDTO dto) {
+        validarAccesoEmpresa(id);
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + id));
         if (!company.isActivo() && !SecurityUtils.isSuperAdmin()) {
@@ -105,6 +121,15 @@ public class CompanyServiceImpl implements CompanyService {
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + id));
         company.setActivo(!company.isActivo());
         return toListResponse(companyRepository.save(company));
+    }
+
+    private void validarAccesoEmpresa(Integer companyId) {
+        if (SecurityUtils.isSuperAdmin()) return;
+
+        Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
+        if (currentCompanyId == null || !currentCompanyId.equals(companyId)) {
+            throw new IllegalArgumentException("No tienes permiso para acceder a otra empresa");
+        }
     }
 
     private void updateEntityFromDTO(Company company, CompanyDTO dto) {

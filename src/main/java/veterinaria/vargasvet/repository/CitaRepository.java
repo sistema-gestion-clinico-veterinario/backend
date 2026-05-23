@@ -41,6 +41,16 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
                                          @Param("fechaHoraInicio") LocalDateTime fechaHoraInicio,
                                          @Param("fechaHoraFin") LocalDateTime fechaHoraFin);
 
+    @Query("SELECT COUNT(c) > 0 FROM Cita c WHERE c.mascota.id = :mascotaId " +
+           "AND c.id != :citaId " +
+           "AND c.estado != 'CANCELADA' AND c.eliminada = false " +
+           "AND c.fechaHoraInicio < :fechaHoraFin " +
+           "AND c.fechaHoraFin > :fechaHoraInicio")
+    boolean existsOverlappingCitaMascotaExcludeSelf(@Param("mascotaId") Long mascotaId,
+                                                    @Param("fechaHoraInicio") LocalDateTime fechaHoraInicio,
+                                                    @Param("fechaHoraFin") LocalDateTime fechaHoraFin,
+                                                    @Param("citaId") Long citaId);
+
     @Query(value = "SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
                    "LEFT JOIN FETCH c.consulta " +
                    "WHERE u.company.id = :companyId AND c.eliminada = false AND c.estado != 'ELIMINADA' " +

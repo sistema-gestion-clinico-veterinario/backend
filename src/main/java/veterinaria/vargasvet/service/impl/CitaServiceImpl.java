@@ -9,6 +9,7 @@ import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.domain.enums.EstadoConsulta;
 import veterinaria.vargasvet.domain.enums.TipoConsulta;
 import veterinaria.vargasvet.dto.request.CitaRequest;
+import veterinaria.vargasvet.dto.request.CitaReprogramacionRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.mapper.CitaMapper;
@@ -319,12 +320,10 @@ public class CitaServiceImpl implements CitaService {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
         Long filteredVeterinarioId = veterinarioId;
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
-
-            if (SecurityUtils.hasRole("ROLE_VETERINARIO")) {
-                filteredVeterinarioId = SecurityUtils.getCurrentUserId().longValue();
-                filteredVeterinarioId = empleadoRepository.findByUserId(SecurityUtils.getCurrentUserId())
+            if (SecurityUtils.hasRole("ROLE_VETERINARIO") || SecurityUtils.hasRole("ROLE_EMPLEADO")) {
+                filteredVeterinarioId = empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail())
                         .map(Empleado::getId)
-                        .orElse(veterinarioId);
+                        .orElse(-1L);
             }
         }
         
@@ -457,8 +456,24 @@ public class CitaServiceImpl implements CitaService {
 
         Mascota mascota = mascotaRepository.findById(request.getMascotaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada"));
-        Empleado veterinario = empleadoRepository.findById(request.getVeterinarioId())
+        Long empleadoDestinoId = request.getVeterinarioId() != null ? request.getVeterinarioId() : cita.getEmpleado().getId();
+        Empleado veterinario = empleadoRepository.findById(empleadoDestinoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Veterinario no encontrado"));
+
+        if (veterinario.getUser() == null) {
+            throw new IllegalArgumentException("No se puede asignar la cita a un empleado sin usuario asociado");
+        }
+
+        if (!Boolean.TRUE.equals(veterinario.getEstado())) {
+            throw new IllegalArgumentException("No se puede asignar la cita a un empleado inactivo");
+        }
+
+        if (!SecurityUtils.isSuperAdmin()) {
+            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
+            if (veterinario.getUser().getCompany() == null || !veterinario.getUser().getCompany().getId().equals(currentCompanyId)) {
+                throw new IllegalArgumentException("No tienes permiso para asignar citas a empleados de otra clínica");
+            }
+        }
 
         ServiciosVeterinarios servicio = null;
         if (request.getServicioId() != null) {
@@ -509,6 +524,16 @@ public class CitaServiceImpl implements CitaService {
     @Override
     @Transactional
     public CitaResponse reprogramarCita(Long id, CitaRequest request) {
+        CitaReprogramacionRequest reprogramacion = new CitaReprogramacionRequest();
+        reprogramacion.setVeterinarioId(request.getVeterinarioId());
+        reprogramacion.setFechaHoraInicio(request.getFechaHoraInicio());
+        reprogramacion.setMotivoReprogramacion(request.getNotas());
+        return reprogramarCita(id, reprogramacion);
+    }
+
+    @Override
+    @Transactional
+    public CitaResponse reprogramarCita(Long id, CitaReprogramacionRequest request) {
         Cita cita = citaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
 
@@ -536,18 +561,14 @@ public class CitaServiceImpl implements CitaService {
         LocalDateTime fechaInicio = request.getFechaHoraInicio();
         LocalDateTime fechaFin = fechaInicio.plusMinutes(cita.getDuracionMinutos());
 
-        // Validar disponibilidad
-        boolean hayCruce = citaRepository.existsOverlappingCitaExcludeSelf(veterinario.getId(), fechaInicio, fechaFin, id);
-        if (hayCruce) {
-            throw new IllegalArgumentException("El veterinario ya tiene otra cita en ese horario");
-        }
+        validarDisponibilidadCita(cita.getMascota(), veterinario, fechaInicio, fechaFin, Boolean.TRUE.equals(cita.getEsEmergencia()), id);
 
         // Aplicar cambios
         cita.setEmpleado(veterinario);
         cita.setFechaHoraInicio(fechaInicio);
         cita.setFechaHoraFin(fechaFin);
         cita.setEstado(EstadoCita.REPROGRAMADA);
-        cita.setMotivoReprogramacion(request.getNotas()); // Usamos notas como motivo si no hay campo específico en request
+        cita.setMotivoReprogramacion(request.getMotivoReprogramacion());
         
         // Auditoría
         cita.setReprogramadoAt(LocalDateTime.now());
@@ -589,7 +610,7 @@ public class CitaServiceImpl implements CitaService {
                     model.put("nombreMascota", cita.getMascota().getNombreCompleto());
                     model.put("fechaAnterior", fechaAnteriorStr);
                     model.put("fechaNueva", fechaNuevaStr);
-                    model.put("motivo", request.getNotas() != null && !request.getNotas().isBlank() ? request.getNotas() : "No especificado");
+                    model.put("motivo", request.getMotivoReprogramacion() != null && !request.getMotivoReprogramacion().isBlank() ? request.getMotivoReprogramacion() : "No especificado");
                     model.put("companyName", companyName);
                     model.put("companyLogo", companyLogo);
                     model.put("companyEmail", companyEmail);
@@ -605,6 +626,54 @@ public class CitaServiceImpl implements CitaService {
         }
 
         return reprogramadaResponse;
+    }
+
+    private void validarDisponibilidadCita(Mascota mascota, Empleado empleado, LocalDateTime fechaInicio,
+                                           LocalDateTime fechaFin, boolean esEmergencia, Long citaIdExcluida) {
+        DiaSemana diaSemana = toDiaSemana(fechaInicio.getDayOfWeek());
+        LocalDate fechaCita = fechaInicio.toLocalDate();
+        LocalTime horaInicio = fechaInicio.toLocalTime();
+        LocalTime horaFinCita = fechaFin.toLocalTime();
+        Company company = empleado.getUser() != null ? empleado.getUser().getCompany() : null;
+
+        if (!esEmergencia && company != null) {
+            companyExceptionRepository.findByCompanyIdAndDate(company.getId(), fechaCita)
+                    .ifPresent(ex -> {
+                        if (Boolean.FALSE.equals(ex.getIsOpen())) {
+                            throw new IllegalArgumentException("La clínica está cerrada el día " + fechaCita + " (" + ex.getDescription() + ")");
+                        }
+                    });
+
+            CompanyOperatingHour opHour = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(company.getId(), diaSemana)
+                    .orElseThrow(() -> new IllegalArgumentException("La clínica no atiende los días " + diaSemana));
+
+            if (Boolean.FALSE.equals(opHour.getIsOpen())) {
+                throw new IllegalArgumentException("La clínica no abre los días " + diaSemana);
+            }
+
+            if (horaInicio.isBefore(opHour.getOpeningTime()) || horaFinCita.isAfter(opHour.getClosingTime())) {
+                throw new IllegalArgumentException(String.format("La cita (%s-%s) está fuera del horario de la clínica (%s-%s)",
+                        horaInicio, horaFinCita, opHour.getOpeningTime(), opHour.getClosingTime()));
+            }
+
+            empleado.getHorarios().stream()
+                    .filter(h -> h.getFecha() != null && h.getFecha().equals(fechaCita) && Boolean.TRUE.equals(h.getActivo()))
+                    .filter(h -> (horaInicio.equals(h.getHoraInicio()) || horaInicio.isAfter(h.getHoraInicio())) &&
+                                 (horaFinCita.equals(h.getHoraFin()) || horaFinCita.isBefore(h.getHoraFin())))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "El empleado no tiene turno asignado para cubrir este horario el día " + fechaCita));
+        }
+
+        boolean hayCruceEmpleado = citaRepository.existsOverlappingCitaExcludeSelf(empleado.getId(), fechaInicio, fechaFin, citaIdExcluida);
+        if (hayCruceEmpleado) {
+            throw new IllegalArgumentException("El empleado ya tiene otra cita en ese horario");
+        }
+
+        boolean hayCruceMascota = citaRepository.existsOverlappingCitaMascotaExcludeSelf(mascota.getId(), fechaInicio, fechaFin, citaIdExcluida);
+        if (hayCruceMascota) {
+            throw new IllegalArgumentException("La mascota ya tiene otra cita programada en ese horario");
+        }
     }
 
     private void validarPermisoEmpresa(Cita cita) {

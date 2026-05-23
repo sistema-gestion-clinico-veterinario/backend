@@ -3,6 +3,7 @@ package veterinaria.vargasvet.service;
 import org.springframework.data.domain.Page;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.dto.request.CitaRequest;
+import veterinaria.vargasvet.dto.request.CitaReprogramacionRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
 
 import java.time.LocalDate;
@@ -16,5 +17,6 @@ public interface CitaService {
     void eliminarCita(Long id);
     CitaResponse actualizarCita(Long id, CitaRequest request);
     CitaResponse reprogramarCita(Long id, CitaRequest request);
+    CitaResponse reprogramarCita(Long id, CitaReprogramacionRequest request);
     List<String> getAdminDisponibilidad(Long empleadoId, String fecha, Long servicioId);
 }
