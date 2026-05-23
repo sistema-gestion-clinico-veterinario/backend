@@ -16,6 +16,7 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
     Optional<Empleado> findByNumeroColegiatura(String numeroColegiatura);
     boolean existsByNumeroColegiatura(String numeroColegiatura);
     Optional<Empleado> findByUserId(Integer userId);
+    Optional<Empleado> findByUserEmail(String email);
 
     @Query(value = "SELECT e FROM Empleado e JOIN e.user u " +
                    "WHERE u.company.id = :companyId " +
