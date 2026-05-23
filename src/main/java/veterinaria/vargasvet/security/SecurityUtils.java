@@ -45,4 +45,8 @@ public class SecurityUtils {
     public static boolean isAdmin() {
         return hasRole("ROLE_ADMIN");
     }
+
+    public static boolean hasAuthority(String authority) {
+        return hasRole(authority);
+    }
 }

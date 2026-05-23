@@ -185,11 +185,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
 
-        String jwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, companyId);
-        String refreshToken = createRefreshToken(usuario);
-
         List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRole));
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRole);
+        String jwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, permissions, companyId);
+        String refreshToken = createRefreshToken(usuario);
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
@@ -241,11 +240,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         List<String> activeRolesList = java.util.Collections.singletonList(roleName);
         Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
 
-        String jwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, companyId);
-        String refreshToken = createRefreshToken(usuario);
-
         List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), roleName));
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), roleName);
+        String jwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, permissions, companyId);
+        String refreshToken = createRefreshToken(usuario);
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
@@ -502,18 +500,20 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .filter(r -> r.equals("ROLE_SUPER_ADMIN"))
                 .findFirst()
                 .orElse(userRoles.isEmpty() ? null : userRoles.get(0));
+        List<String> activeRolesList = activeRole != null
+                ? Collections.singletonList(activeRole)
+                : Collections.emptyList();
 
         Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
 
-        String newJwt = tokenProvider.createToken(usuario.getEmail(), userRoles, companyId);
-
         List<Object> menu = new ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRole));
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRole);
+        String newJwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, permissions, companyId);
 
         AuthResponse response = new AuthResponse();
         response.setToken(newJwt);
         response.setRefreshToken(token);
-        response.setRoles(userRoles);
+        response.setRoles(activeRolesList);
         response.setAssignedRoles(userRoles);
         response.setCompanyId(companyId);
         response.setCompanyName(usuario.getCompany() != null ? usuario.getCompany().getName() : null);

@@ -141,7 +141,6 @@ public class RoleServiceImpl implements RoleService {
         rolVistaPermisoRepository.flush();
 
         for (RolVistaPermisoDTO dto : permisos) {
-            if (!dto.isLeer() && !dto.isEscribir() && !dto.isModificar() && !dto.isEliminar()) continue;
             Vista vista = vistaRepository.findById(dto.getVistaId())
                     .orElseThrow(() -> new ResourceNotFoundException("Vista no encontrada: " + dto.getVistaId()));
             RolVistaPermiso rvp = new RolVistaPermiso();
