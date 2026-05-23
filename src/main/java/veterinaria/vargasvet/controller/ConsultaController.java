@@ -9,6 +9,7 @@ import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.CerrarConsultaRequest;
 import veterinaria.vargasvet.dto.request.ConsultaRequest;
 import veterinaria.vargasvet.dto.response.ConsultaResponse;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.ConsultaService;
 
 @RestController
@@ -17,10 +18,12 @@ import veterinaria.vargasvet.service.ConsultaService;
 public class ConsultaController {
 
     private final ConsultaService consultaService;
+    private final AccesoValidator accesoValidator;
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
     public ResponseEntity<ApiResponse<ConsultaResponse>> getConsultaById(@PathVariable Long id) {
+        accesoValidator.validarLeer("VISTA_HISTORIAS");
         ConsultaResponse response = consultaService.getConsultaById(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Consulta recuperada con éxito", response));
     }
@@ -28,6 +31,7 @@ public class ConsultaController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
     public ResponseEntity<ApiResponse<ConsultaResponse>> updateConsulta(@PathVariable Long id, @Valid @RequestBody ConsultaRequest request) {
+        accesoValidator.validarModificar("VISTA_HISTORIAS");
         ConsultaResponse response = consultaService.updateConsulta(id, request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Historia Clínica guardada exitosamente", response));
     }
@@ -35,6 +39,7 @@ public class ConsultaController {
     @PatchMapping("/{id}/cerrar")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
     public ResponseEntity<ApiResponse<ConsultaResponse>> cerrarConsulta(@PathVariable Long id, @Valid @RequestBody CerrarConsultaRequest request) {
+        accesoValidator.validarModificar("VISTA_HISTORIAS");
         ConsultaResponse response = consultaService.cerrarConsulta(id, request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Historia clínica cerrada exitosamente", response));
     }
