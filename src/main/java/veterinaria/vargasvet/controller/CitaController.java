@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.CitaRequest;
+import veterinaria.vargasvet.dto.request.CitaReprogramacionRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.CitaService;
@@ -69,6 +70,13 @@ public class CitaController {
 
     @PutMapping("/{id}/reprogramar")
     public ResponseEntity<ApiResponse<CitaResponse>> reprogramarCita(@PathVariable Long id, @Valid @RequestBody CitaRequest request) {
+        accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
+        CitaResponse response = citaService.reprogramarCita(id, request);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Cita reprogramada exitosamente", response));
+    }
+
+    @PatchMapping("/{id}/reprogramar")
+    public ResponseEntity<ApiResponse<CitaResponse>> patchReprogramarCita(@PathVariable Long id, @Valid @RequestBody CitaReprogramacionRequest request) {
         accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
         CitaResponse response = citaService.reprogramarCita(id, request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita reprogramada exitosamente", response));

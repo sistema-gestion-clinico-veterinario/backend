@@ -57,9 +57,7 @@ public class AccesoValidator {
 
         List<UsuarioPorRolPermiso> userPermisos = permisoRepository
                 .findByUsuarioIdAndVistaCodigo(usuarioId, codigoVista);
-        if (!userPermisos.isEmpty()) {
-            return userPermisos.stream().anyMatch(usuarioCheck);
-        }
+        if (userPermisos.stream().anyMatch(usuarioCheck)) return true;
 
         List<UsuarioPorRol> asignaciones = usuarioPorRolRepository.findByUsuarioId(usuarioId);
         for (UsuarioPorRol upr : asignaciones) {
