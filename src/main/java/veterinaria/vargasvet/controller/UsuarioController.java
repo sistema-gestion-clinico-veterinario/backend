@@ -10,7 +10,7 @@ import veterinaria.vargasvet.dto.request.AdminChangePasswordRequest;
 import veterinaria.vargasvet.service.UsuarioService;
 
 @RestController
-@RequestMapping("/admin/usuarios")
+@RequestMapping("/admin/users")
 @RequiredArgsConstructor
 public class UsuarioController {
 

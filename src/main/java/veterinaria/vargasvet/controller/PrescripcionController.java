@@ -16,7 +16,7 @@ import veterinaria.vargasvet.service.PrescripcionService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/prescripciones")
+@RequestMapping("/prescriptions")
 @RequiredArgsConstructor
 public class PrescripcionController {
 
@@ -35,20 +35,20 @@ public class PrescripcionController {
                 prescripcionService.buscar(query, companyId, page, size)));
     }
 
-    @PostMapping("/consulta/{consultaId}")
+    @PostMapping("/consultation/{consultationId}")
     @PreAuthorize("hasAuthority('CLINICAL_RECORD_MANAGE')")
     public ResponseEntity<ApiResponse<PrescripcionResumenResponse>> crear(
-            @PathVariable Long consultaId,
+            @PathVariable("consultationId") Long consultaId,
             @Valid @RequestBody PrescripcionRequest request) {
         accesoValidator.validarEscribir("VISTA_HISTORIAS");
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Receta registrada exitosamente", prescripcionService.crear(consultaId, request)));
     }
 
-    @GetMapping("/consulta/{consultaId}")
+    @GetMapping("/consultation/{consultationId}")
     @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
     public ResponseEntity<ApiResponse<List<PrescripcionResumenResponse>>> listarPorConsulta(
-            @PathVariable Long consultaId) {
+            @PathVariable("consultationId") Long consultaId) {
         accesoValidator.validarLeer("VISTA_HISTORIAS");
         return ResponseEntity.ok(new ApiResponse<>(true, "Recetas obtenidas", prescripcionService.listarPorConsulta(consultaId)));
     }

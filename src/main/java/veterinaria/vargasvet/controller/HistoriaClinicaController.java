@@ -16,7 +16,7 @@ import veterinaria.vargasvet.service.AuditLogService;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/historias-clinicas")
+@RequestMapping("/medical-records")
 @RequiredArgsConstructor
 public class HistoriaClinicaController {
 
@@ -54,9 +54,9 @@ public class HistoriaClinicaController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Historia clínica recuperada con éxito", detalle));
     }
 
-    @GetMapping("/mascota/{mascotaId}")
+    @GetMapping("/pet/{petId}")
     @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
-    public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getPorMascota(@PathVariable Long mascotaId) {
+    public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getPorMascota(@PathVariable("petId") Long mascotaId) {
         accesoValidator.validarLeer("VISTA_HISTORIAS");
         HistoriaClinicaDetalleResponse detalle = historiaClinicaService.getPorMascota(mascotaId);
         auditLogService.log("CONSULTAR_HISTORIA_CLINICA_MASCOTA", "Historias Clínicas", "Consultó la historia clínica de la mascota con ID: " + mascotaId + ".");

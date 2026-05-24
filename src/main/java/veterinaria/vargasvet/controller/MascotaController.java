@@ -16,7 +16,7 @@ import veterinaria.vargasvet.service.MascotaService;
 import veterinaria.vargasvet.service.AuditLogService;
 
 @RestController
-@RequestMapping("/mascotas")
+@RequestMapping("/pets")
 @RequiredArgsConstructor
 public class MascotaController {
 

@@ -11,23 +11,23 @@ import veterinaria.vargasvet.service.ApoderadoPortalService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/clientes/portal")
+@RequestMapping("/clients/portal")
 @RequiredArgsConstructor
 public class ApoderadoPortalController {
 
     private final ApoderadoPortalService apoderadoPortalService;
 
-    @GetMapping("/perfil")
+    @GetMapping("/profile")
     public ResponseEntity<ApiResponse<ApoderadoPerfilResponse>> getPerfil() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Perfil recuperado con éxito", apoderadoPortalService.getPerfil()));
     }
 
-    @GetMapping("/mascotas")
+    @GetMapping("/pets")
     public ResponseEntity<ApiResponse<List<MascotaResponse>>> getMascotas() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Mascotas recuperadas con éxito", apoderadoPortalService.getMascotas()));
     }
 
-    @GetMapping("/mascotas/paginated")
+    @GetMapping("/pets/paginated")
     public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<MascotaResponse>>> getMascotasPaginated(
             @RequestParam(value = "nombre", required = false) String nombre,
             @RequestParam(value = "especie", required = false) veterinaria.vargasvet.domain.enums.EspecieMascota especie,
@@ -38,37 +38,37 @@ public class ApoderadoPortalController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Mascotas recuperadas con éxito", apoderadoPortalService.getMascotasPaginated(nombre, especie, activo, pageable)));
     }
 
-    @GetMapping("/mascotas/{mascotaId}/historia")
-    public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getHistoriaMascota(@PathVariable Long mascotaId) {
+    @GetMapping("/pets/{petId}/medical-record")
+    public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getHistoriaMascota(@PathVariable("petId") Long mascotaId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Historial clínico recuperado con éxito", apoderadoPortalService.getHistoriaMascota(mascotaId)));
     }
 
-    @GetMapping("/citas")
+    @GetMapping("/appointments")
     public ResponseEntity<ApiResponse<List<CitaResponse>>> getCitas(@RequestParam(required = false) Long mascotaId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Citas recuperadas con éxito", apoderadoPortalService.getCitas(mascotaId)));
     }
 
-    @GetMapping("/recetas")
+    @GetMapping("/prescriptions")
     public ResponseEntity<ApiResponse<List<PrescripcionResumenResponse>>> getRecetas() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Recetas recuperadas con éxito", apoderadoPortalService.getRecetas()));
     }
 
-    @GetMapping("/servicios")
+    @GetMapping("/services")
     public ResponseEntity<ApiResponse<List<ServicioResponse>>> getServicios() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Servicios disponibles recuperados con éxito", apoderadoPortalService.getServicios()));
     }
 
-    @GetMapping("/empleados")
+    @GetMapping("/employees")
     public ResponseEntity<ApiResponse<List<EmpleadoListResponse>>> getEmpleados(@RequestParam(required = false) Long servicioId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Profesionales disponibles recuperados con éxito", apoderadoPortalService.getEmpleados(servicioId)));
     }
 
-    @GetMapping("/empleados/{empleadoId}/horario")
-    public ResponseEntity<ApiResponse<List<HorarioEmpleadoResponse>>> getHorarioEmpleado(@PathVariable Long empleadoId) {
+    @GetMapping("/employees/{employeeId}/schedule")
+    public ResponseEntity<ApiResponse<List<HorarioEmpleadoResponse>>> getHorarioEmpleado(@PathVariable("employeeId") Long empleadoId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario del profesional recuperado con éxito", apoderadoPortalService.getHorarioEmpleado(empleadoId)));
     }
 
-    @GetMapping("/disponibilidad")
+    @GetMapping("/availability")
     public ResponseEntity<ApiResponse<List<String>>> getDisponibilidad(
             @RequestParam Long empleadoId,
             @RequestParam String fecha,
@@ -76,26 +76,26 @@ public class ApoderadoPortalController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Horarios de disponibilidad recuperados con éxito", apoderadoPortalService.getDisponibilidad(empleadoId, fecha, servicioId)));
     }
 
-    @PostMapping("/citas")
+    @PostMapping("/appointments")
     public ResponseEntity<ApiResponse<CitaResponse>> createPortalCita(@jakarta.validation.Valid @RequestBody CitaRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita registrada con éxito", apoderadoPortalService.createPortalCita(request)));
     }
 
-    @PutMapping("/citas/{id}")
+    @PutMapping("/appointments/{id}")
     public ResponseEntity<ApiResponse<CitaResponse>> updatePortalCita(
             @PathVariable Long id,
             @jakarta.validation.Valid @RequestBody CitaRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Appointment updated successfully", apoderadoPortalService.updatePortalCita(id, request)));
     }
 
-    @PutMapping("/citas/{id}/reprogramar")
+    @PutMapping("/appointments/{id}/reschedule")
     public ResponseEntity<ApiResponse<CitaResponse>> reschedulePortalCita(
             @PathVariable Long id,
             @jakarta.validation.Valid @RequestBody CitaRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Appointment rescheduled successfully", apoderadoPortalService.reschedulePortalCita(id, request)));
     }
 
-    @DeleteMapping("/citas/{id}/cancelar")
+    @DeleteMapping("/appointments/{id}/cancel")
     public ResponseEntity<ApiResponse<Void>> cancelPortalCita(
             @PathVariable Long id,
             @RequestParam(required = false) String motivo) {

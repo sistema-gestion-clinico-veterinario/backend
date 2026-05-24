@@ -30,7 +30,7 @@ public class CompanyController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Empresa obtenida con éxito", companyService.findById(id)));
     }
 
-    @GetMapping("/listar")
+    @GetMapping("/list")
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('COMPANY_READ')")
     public ResponseEntity<ApiResponse<Page<CompanyListResponse>>> listar(
             @RequestParam(defaultValue = "0") int page,
@@ -61,7 +61,7 @@ public class CompanyController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la empresa actualizados correctamente", updated));
     }
 
-    @PatchMapping("/{id}/toggle-activo")
+    @PatchMapping("/{id}/toggle-active")
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<veterinaria.vargasvet.dto.response.CompanyListResponse>> toggleActivo(@PathVariable Integer id) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Estado de empresa actualizado", companyService.toggleActivo(id)));
