@@ -26,7 +26,7 @@ public class ProfileController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Perfil obtenido", profile));
     }
 
-    @GetMapping("/horario")
+    @GetMapping("/schedule")
     public ResponseEntity<ApiResponse<ProfileResponse>> getMySchedule() {
         ProfileResponse profile = profileService.getMyProfile();
         auditLogService.log("CONSULTAR_HORARIO", "Horario", "El empleado consultó su propio horario.");
