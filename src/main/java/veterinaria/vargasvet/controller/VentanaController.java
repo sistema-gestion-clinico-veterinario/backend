@@ -12,7 +12,7 @@ import veterinaria.vargasvet.service.VentanaService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/ventanas")
+@RequestMapping("/admin/windows")
 @RequiredArgsConstructor
 public class VentanaController {
 

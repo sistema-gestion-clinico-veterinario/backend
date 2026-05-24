@@ -25,7 +25,7 @@ public class RoleController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Lista de roles", roleService.getAllRoles()));
     }
 
-    @GetMapping("/empresa")
+    @GetMapping("/company")
     public ResponseEntity<ApiResponse<List<RolDTO>>> getRolesByCompany(
             @RequestParam(required = false) Integer companyId) {
 
@@ -41,7 +41,7 @@ public class RoleController {
                 roleService.getRolesByCompany(effectiveId)));
     }
 
-    @GetMapping("/sistema")
+    @GetMapping("/system")
     public ResponseEntity<ApiResponse<List<RolDTO>>> getSystemRoles() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Roles del sistema", roleService.getSystemRoles()));
     }
@@ -75,13 +75,13 @@ public class RoleController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Rol eliminado", null));
     }
 
-    @GetMapping("/{id}/vistas")
+    @GetMapping("/{id}/views")
     public ResponseEntity<ApiResponse<List<RolVistaPermisoDTO>>> getVistas(@PathVariable Integer id) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Vistas del rol",
                 roleService.getVistasByRole(id)));
     }
 
-    @PutMapping("/{id}/vistas")
+    @PutMapping("/{id}/views")
     public ResponseEntity<ApiResponse<List<RolVistaPermisoDTO>>> saveVistas(
             @PathVariable Integer id,
             @RequestBody List<RolVistaPermisoDTO> permisos) {

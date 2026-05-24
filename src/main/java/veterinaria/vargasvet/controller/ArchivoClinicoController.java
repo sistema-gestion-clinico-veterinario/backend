@@ -18,7 +18,7 @@ import veterinaria.vargasvet.service.ArchivoClinicoService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/consultas/{consultaId}/archivos")
+@RequestMapping("/consultations/{consultationId}/files")
 @RequiredArgsConstructor
 public class ArchivoClinicoController {
 
@@ -28,7 +28,7 @@ public class ArchivoClinicoController {
     @PostMapping(consumes = "multipart/form-data")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
     public ResponseEntity<ApiResponse<ArchivoClinicoResponse>> subirArchivo(
-            @PathVariable Long consultaId,
+            @PathVariable("consultationId") Long consultaId,
             @RequestParam("file") MultipartFile file,
             @RequestParam("tipo") TipoArchivo tipo,
             @RequestParam(value = "descripcion", required = false) String descripcion) {
@@ -41,16 +41,16 @@ public class ArchivoClinicoController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
-    public ResponseEntity<ApiResponse<List<ArchivoClinicoResponse>>> listarArchivos(@PathVariable Long consultaId) {
+    public ResponseEntity<ApiResponse<List<ArchivoClinicoResponse>>> listarArchivos(@PathVariable("consultationId") Long consultaId) {
         accesoValidator.validarLeer("VISTA_HISTORIAS");
         List<ArchivoClinicoResponse> archivos = archivoClinicoService.listarPorConsulta(consultaId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Archivos recuperados con éxito", archivos));
     }
 
-    @GetMapping("/{id}/contenido")
+    @GetMapping("/{id}/content")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
     public ResponseEntity<Resource> servirContenido(
-            @PathVariable Long consultaId,
+            @PathVariable("consultationId") Long consultaId,
             @PathVariable Long id,
             @RequestParam(defaultValue = "false") boolean descargar) {
         accesoValidator.validarLeer("VISTA_HISTORIAS");
@@ -69,7 +69,7 @@ public class ArchivoClinicoController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
     public ResponseEntity<ApiResponse<Void>> eliminar(
-            @PathVariable Long consultaId,
+            @PathVariable("consultationId") Long consultaId,
             @PathVariable Long id) {
         accesoValidator.validarEliminar("VISTA_HISTORIAS");
         archivoClinicoService.eliminar(id);

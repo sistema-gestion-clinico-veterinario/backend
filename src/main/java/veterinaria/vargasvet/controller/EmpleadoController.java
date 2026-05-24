@@ -22,7 +22,7 @@ import veterinaria.vargasvet.service.AuditLogService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/empleados")
+@RequestMapping("/admin/employees")
 @RequiredArgsConstructor
 public class EmpleadoController {
 
@@ -70,7 +70,7 @@ public class EmpleadoController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos del empleado actualizados exitosamente", profile));
     }
 
-    @GetMapping("/{id}/horario")
+    @GetMapping("/{id}/schedule")
     @PreAuthorize("hasAuthority('HORARIO_READ')")
     public ResponseEntity<ApiResponse<List<HorarioEmpleadoResponse>>> getHorario(@PathVariable Long id) {
         accesoValidator.validarLeer("VISTA_HORARIOS");
@@ -118,17 +118,17 @@ public class EmpleadoController {
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, null));
     }
 
-    @DeleteMapping("/horario/{horarioId}")
+    @DeleteMapping("/schedule/{scheduleId}")
     @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
-    public ResponseEntity<ApiResponse<Void>> deleteHorario(@PathVariable Long horarioId) {
+    public ResponseEntity<ApiResponse<Void>> deleteHorario(@PathVariable("scheduleId") Long horarioId) {
         accesoValidator.validarEliminar("VISTA_HORARIOS");
         empleadoService.deleteHorario(horarioId);
         auditLogService.log("ELIMINAR_TURNO", "Horario", "Eliminó el turno con ID: " + horarioId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario eliminado correctamente", null));
     }
-    @PutMapping("/horario/{horarioId}")
+    @PutMapping("/schedule/{scheduleId}")
     @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
-    public ResponseEntity<ApiResponse<Void>> updateHorario(@PathVariable Long horarioId, @Valid @RequestBody HorarioEmpleadoRequest request) {
+    public ResponseEntity<ApiResponse<Void>> updateHorario(@PathVariable("scheduleId") Long horarioId, @Valid @RequestBody HorarioEmpleadoRequest request) {
         accesoValidator.validarModificar("VISTA_HORARIOS");
         empleadoService.updateHorario(horarioId, request);
         auditLogService.log("ACTUALIZAR_TURNO", "Horario", "Actualizó el turno con ID: " + horarioId);
