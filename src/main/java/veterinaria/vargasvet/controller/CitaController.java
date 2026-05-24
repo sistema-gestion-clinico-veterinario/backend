@@ -20,7 +20,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/citas")
+@RequestMapping("/appointments")
 @RequiredArgsConstructor
 public class CitaController {
 
@@ -28,7 +28,7 @@ public class CitaController {
     private final AuditLogService auditLogService;
     private final AccesoValidator accesoValidator;
 
-    @GetMapping("/disponibilidad")
+    @GetMapping("/availability")
     public ResponseEntity<ApiResponse<List<String>>> getAdminDisponibilidad(
             @RequestParam Long empleadoId,
             @RequestParam String fecha,
@@ -68,23 +68,24 @@ public class CitaController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita actualizada exitosamente", response));
     }
 
-    @PutMapping("/{id}/reprogramar")
+    @PutMapping("/{id}/reschedule")
     public ResponseEntity<ApiResponse<CitaResponse>> reprogramarCita(@PathVariable Long id, @Valid @RequestBody CitaRequest request) {
         accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
         CitaResponse response = citaService.reprogramarCita(id, request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita reprogramada exitosamente", response));
     }
 
-    @PatchMapping("/{id}/reprogramar")
+    @PatchMapping("/{id}/reschedule")
     public ResponseEntity<ApiResponse<CitaResponse>> patchReprogramarCita(@PathVariable Long id, @Valid @RequestBody CitaReprogramacionRequest request) {
         accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
         CitaResponse response = citaService.reprogramarCita(id, request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita reprogramada exitosamente", response));
     }
 
-    @PatchMapping("/{id}/iniciar")
+    @PatchMapping("/{id}/start")
     public ResponseEntity<ApiResponse<Long>> iniciarAtencion(@PathVariable Long id) {
         accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
+        accesoValidator.validarEscribir("VISTA_HISTORIAS");
         Long consultaId = citaService.iniciarAtencion(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Atención iniciada con éxito", consultaId));
     }
@@ -96,7 +97,7 @@ public class CitaController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita eliminada con éxito", null));
     }
 
-    @DeleteMapping("/{id}/cancelar")
+    @DeleteMapping("/{id}/cancel")
     public ResponseEntity<ApiResponse<Void>> cancelarCita(@PathVariable Long id, @RequestParam(required = false) String motivo) {
         accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
         String finalMotivo = (motivo == null || motivo.isBlank()) ? "Cancelado por el usuario" : motivo;

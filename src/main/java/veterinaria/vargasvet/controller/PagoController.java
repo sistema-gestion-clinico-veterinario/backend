@@ -14,7 +14,7 @@ import veterinaria.vargasvet.dto.response.PagoResponse;
 import veterinaria.vargasvet.service.PagoService;
 
 @RestController
-@RequestMapping("/pagos")
+@RequestMapping("/payments")
 @RequiredArgsConstructor
 public class PagoController {
 
@@ -28,9 +28,9 @@ public class PagoController {
                 .body(new ApiResponse<>(true, "Pago registrado exitosamente", response));
     }
 
-    @GetMapping("/cita/{citaId}")
+    @GetMapping("/appointment/{appointmentId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
-    public ResponseEntity<ApiResponse<PagoResponse>> obtenerPorCita(@PathVariable Long citaId) {
+    public ResponseEntity<ApiResponse<PagoResponse>> obtenerPorCita(@PathVariable("appointmentId") Long citaId) {
         PagoResponse response = pagoService.obtenerPorCita(citaId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Pago recuperado con éxito", response));
     }
@@ -43,7 +43,7 @@ public class PagoController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Historial de pagos recuperado con éxito", pagoService.listarTodos(page, size)));
     }
 
-    @GetMapping("/portal/mis-pagos")
+    @GetMapping("/portal/my-payments")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Page<PagoListResponse>>> misPagos(
             @RequestParam(defaultValue = "0") int page,
