@@ -15,7 +15,7 @@ import veterinaria.vargasvet.service.EspecialidadService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/especialidades")
+@RequestMapping("/admin/specialties")
 @RequiredArgsConstructor
 public class EspecialidadController {
 

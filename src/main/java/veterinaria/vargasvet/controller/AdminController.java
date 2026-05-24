@@ -15,7 +15,7 @@ import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.service.VeterinarioService;
 
 @RestController
-@RequestMapping("/admin/veterinarios")
+@RequestMapping("/admin/veterinarians")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
 public class AdminController {

@@ -15,7 +15,7 @@ import veterinaria.vargasvet.service.ServicioService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/servicios")
+@RequestMapping("/services")
 @RequiredArgsConstructor
 public class ServicioController {
 
@@ -31,7 +31,7 @@ public class ServicioController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Servicios obtenidos", resultado));
     }
 
-    @GetMapping("/disponibles")
+    @GetMapping("/available")
     @PreAuthorize("hasAuthority('SERVICIO_READ')")
     public ResponseEntity<ApiResponse<List<ServicioResponse>>> listarDisponibles(
             @RequestParam(required = false) Integer companyId) {

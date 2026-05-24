@@ -15,7 +15,7 @@ import veterinaria.vargasvet.service.TipoEmpleadoService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/tipos-empleado")
+@RequestMapping("/admin/employee-types")
 @RequiredArgsConstructor
 public class TipoEmpleadoController {
 

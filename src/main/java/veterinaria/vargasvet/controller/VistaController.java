@@ -12,7 +12,7 @@ import veterinaria.vargasvet.service.VistaService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/vistas")
+@RequestMapping("/admin/views")
 @RequiredArgsConstructor
 public class VistaController {
 

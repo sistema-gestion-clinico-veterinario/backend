@@ -12,43 +12,48 @@ import org.springframework.web.multipart.MultipartFile;
 import veterinaria.vargasvet.domain.enums.TipoArchivo;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.response.ArchivoClinicoResponse;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.ArchivoClinicoService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/consultas/{consultaId}/archivos")
+@RequestMapping("/consultations/{consultationId}/files")
 @RequiredArgsConstructor
 public class ArchivoClinicoController {
 
     private final ArchivoClinicoService archivoClinicoService;
+    private final AccesoValidator accesoValidator;
 
     @PostMapping(consumes = "multipart/form-data")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
     public ResponseEntity<ApiResponse<ArchivoClinicoResponse>> subirArchivo(
-            @PathVariable Long consultaId,
+            @PathVariable("consultationId") Long consultaId,
             @RequestParam("file") MultipartFile file,
             @RequestParam("tipo") TipoArchivo tipo,
             @RequestParam(value = "descripcion", required = false) String descripcion) {
 
+        accesoValidator.validarEscribir("VISTA_HISTORIAS");
         ArchivoClinicoResponse response = archivoClinicoService.subirArchivo(consultaId, file, tipo, descripcion);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Archivo cargado exitosamente", response));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
-    public ResponseEntity<ApiResponse<List<ArchivoClinicoResponse>>> listarArchivos(@PathVariable Long consultaId) {
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
+    public ResponseEntity<ApiResponse<List<ArchivoClinicoResponse>>> listarArchivos(@PathVariable("consultationId") Long consultaId) {
+        accesoValidator.validarLeer("VISTA_HISTORIAS");
         List<ArchivoClinicoResponse> archivos = archivoClinicoService.listarPorConsulta(consultaId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Archivos recuperados con éxito", archivos));
     }
 
-    @GetMapping("/{id}/contenido")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @GetMapping("/{id}/content")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
     public ResponseEntity<Resource> servirContenido(
-            @PathVariable Long consultaId,
+            @PathVariable("consultationId") Long consultaId,
             @PathVariable Long id,
             @RequestParam(defaultValue = "false") boolean descargar) {
+        accesoValidator.validarLeer("VISTA_HISTORIAS");
         ArchivoClinicoResponse meta = archivoClinicoService.obtenerPorId(id);
         Resource resource = archivoClinicoService.servirContenido(id);
         String contentType = meta.getTipoMime() != null ? meta.getTipoMime() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
@@ -62,10 +67,11 @@ public class ArchivoClinicoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
     public ResponseEntity<ApiResponse<Void>> eliminar(
-            @PathVariable Long consultaId,
+            @PathVariable("consultationId") Long consultaId,
             @PathVariable Long id) {
+        accesoValidator.validarEliminar("VISTA_HISTORIAS");
         archivoClinicoService.eliminar(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Archivo eliminado exitosamente", null));
     }

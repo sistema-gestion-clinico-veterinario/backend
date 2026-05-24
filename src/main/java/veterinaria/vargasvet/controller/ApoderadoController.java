@@ -15,7 +15,7 @@ import veterinaria.vargasvet.service.ApoderadoService;
 import veterinaria.vargasvet.service.AuditLogService;
 
 @RestController
-@RequestMapping("/clientes/apoderados")
+@RequestMapping("/clients/guardians")
 @RequiredArgsConstructor
 public class ApoderadoController {
 
