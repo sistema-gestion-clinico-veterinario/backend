@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/usuarios")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 public class UsuarioPorRolController {
 
@@ -24,29 +24,29 @@ public class UsuarioPorRolController {
     private final MenuBuilderService menuBuilderService;
     private final UsuarioRepository usuarioRepository;
 
-    @GetMapping("/{usuarioId}/roles")
-    public ResponseEntity<ApiResponse<List<UsuarioPorRol>>> listarRoles(@PathVariable Integer usuarioId) {
+    @GetMapping("/{userId}/roles")
+    public ResponseEntity<ApiResponse<List<UsuarioPorRol>>> listarRoles(@PathVariable("userId") Integer usuarioId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Roles del usuario",
                 usuarioPorRolService.listarPorUsuario(usuarioId)));
     }
 
-    @PostMapping("/{usuarioId}/roles/{rolId}")
+    @PostMapping("/{userId}/roles/{roleId}")
     public ResponseEntity<ApiResponse<UsuarioPorRol>> asignarRol(
-            @PathVariable Integer usuarioId,
-            @PathVariable Integer rolId) {
+            @PathVariable("userId") Integer usuarioId,
+            @PathVariable("roleId") Integer rolId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Rol asignado",
                 usuarioPorRolService.asignarRol(usuarioId, rolId)));
     }
 
-    @DeleteMapping("/roles/{usuarioPorRolId}")
-    public ResponseEntity<ApiResponse<Void>> revocarRol(@PathVariable Integer usuarioPorRolId) {
+    @DeleteMapping("/roles/{userRoleId}")
+    public ResponseEntity<ApiResponse<Void>> revocarRol(@PathVariable("userRoleId") Integer usuarioPorRolId) {
         usuarioPorRolService.revocarRol(usuarioPorRolId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Rol revocado", null));
     }
 
-    @PostMapping("/roles/{usuarioPorRolId}/permisos")
+    @PostMapping("/roles/{userRoleId}/permissions")
     public ResponseEntity<ApiResponse<UsuarioPorRolPermiso>> asignarPermiso(
-            @PathVariable Integer usuarioPorRolId,
+            @PathVariable("userRoleId") Integer usuarioPorRolId,
             @RequestBody Map<String, Object> body) {
 
         Integer ventanaId = (Integer) body.get("ventanaId");
