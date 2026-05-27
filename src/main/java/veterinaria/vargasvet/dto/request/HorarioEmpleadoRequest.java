@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.DiaSemana;
@@ -38,4 +39,14 @@ public class HorarioEmpleadoRequest {
     private LocalTime horaFin;
 
     private Boolean activo = true;
+
+    @AssertTrue(message = "Debe indicar una fecha o un dia de semana")
+    public boolean isFechaODiaSemanaValido() {
+        return fecha != null || diaSemana != null;
+    }
+
+    @AssertTrue(message = "La hora de fin debe ser posterior a la hora de inicio")
+    public boolean isRangoHorarioValido() {
+        return horaInicio == null || horaFin == null || horaFin.isAfter(horaInicio);
+    }
 }

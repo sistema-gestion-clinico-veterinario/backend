@@ -35,17 +35,20 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
                    "WHERE u.company.id = :companyId " +
                    "AND (CAST(:nombre AS text) IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                    "AND (:especie IS NULL OR m.especie = :especie) " +
+                   "AND (:activo IS NULL OR m.activo = :activo) " +
                    "AND (CAST(:nombrePropietario AS text) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', CAST(:nombrePropietario AS text), '%'))) " +
                    "ORDER BY m.nombreCompleto ASC",
            countQuery = "SELECT COUNT(m) FROM Mascota m JOIN m.apoderado a JOIN a.user u " +
                         "WHERE u.company.id = :companyId " +
                         "AND (CAST(:nombre AS text) IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                         "AND (:especie IS NULL OR m.especie = :especie) " +
+                        "AND (:activo IS NULL OR m.activo = :activo) " +
                         "AND (CAST(:nombrePropietario AS text) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', CAST(:nombrePropietario AS text), '%')))")
     Page<Mascota> buscar(@Param("companyId") Integer companyId,
                          @Param("nombre") String nombre,
                          @Param("especie") EspecieMascota especie,
                          @Param("nombrePropietario") String nombrePropietario,
+                         @Param("activo") Boolean activo,
                          Pageable pageable);
 
     @Query("SELECT COUNT(m) FROM Mascota m WHERE m.apoderado.user.company.id = :companyId")

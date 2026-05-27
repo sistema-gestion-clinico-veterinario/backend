@@ -1,5 +1,6 @@
 package veterinaria.vargasvet.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +35,7 @@ public class ProfileController {
     }
 
     @PutMapping
-    public ResponseEntity<ApiResponse<ProfileResponse>> updateMyProfile(@RequestBody ProfileUpdateRequest dto) {
+    public ResponseEntity<ApiResponse<ProfileResponse>> updateMyProfile(@Valid @RequestBody ProfileUpdateRequest dto) {
         accesoValidator.validarModificar("VISTA_PROFILE");
         ProfileResponse profile = profileService.updateMyProfile(dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Perfil actualizado exitosamente", profile));

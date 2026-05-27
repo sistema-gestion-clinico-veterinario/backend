@@ -18,6 +18,7 @@ public class PrescripcionResumenResponse {
     private LocalDate fechaFin;
     private String veterinarioNombre;
     private LocalDateTime fechaCreacion;
+    private Long consultaId;
     // Campos adicionales para listado global
     private String pacienteNombre;
     private String numeroHc;

@@ -1,7 +1,10 @@
 package veterinaria.vargasvet.dto.request;
 
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -10,25 +13,37 @@ import java.time.LocalDate;
 public class PrescripcionRequest {
 
     @NotBlank(message = "El medicamento es obligatorio")
+    @Size(max = 80, message = "El medicamento no debe superar 80 caracteres")
     private String medicamento;
 
+    @Size(max = 80, message = "El principio activo no debe superar 80 caracteres")
     private String principioActivo;
 
     @NotBlank(message = "La dosis es obligatoria")
+    @Size(max = 80, message = "La dosis no debe superar 80 caracteres")
     private String dosis;
 
     @NotBlank(message = "La frecuencia es obligatoria")
+    @Size(max = 80, message = "La frecuencia no debe superar 80 caracteres")
     private String frecuencia;
 
+    @Min(value = 1, message = "La duracion debe ser al menos de 1 dia")
     private Integer duracionDias;
 
     @NotBlank(message = "La vía de administración es obligatoria")
+    @Size(max = 50, message = "La via no debe superar 50 caracteres")
     private String viaAdministracion;
 
+    @Size(max = 500, message = "Las instrucciones no deben superar 500 caracteres")
     private String instrucciones;
 
     @NotNull(message = "La fecha de inicio es obligatoria")
     private LocalDate fechaInicio;
 
     private LocalDate fechaFin;
+
+    @AssertTrue(message = "La fecha de fin no puede ser anterior a la fecha de inicio")
+    public boolean isRangoFechasValido() {
+        return fechaInicio == null || fechaFin == null || !fechaFin.isBefore(fechaInicio);
+    }
 }
