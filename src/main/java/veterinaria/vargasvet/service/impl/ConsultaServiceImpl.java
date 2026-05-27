@@ -94,7 +94,7 @@ public class ConsultaServiceImpl implements ConsultaService {
         if (request.getGrupoSanguineo() != null) hc.setGrupoSanguineo(request.getGrupoSanguineo());
         historiaClinicaRepository.save(hc);
 
-        Consulta savedConsulta = consultaRepository.save(consulta);
+        Consulta savedConsulta = consultaRepository.saveAndFlush(consulta);
 
         auditLogService.log(
             "ACTUALIZAR_CONSULTA",
@@ -166,7 +166,7 @@ public class ConsultaServiceImpl implements ConsultaService {
             citaRepository.save(cita);
         }
 
-        Consulta savedConsulta = consultaRepository.save(consulta);
+        Consulta savedConsulta = consultaRepository.saveAndFlush(consulta);
 
         auditLogService.log(
             "CERRAR_CONSULTA",

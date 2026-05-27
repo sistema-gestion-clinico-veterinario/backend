@@ -10,5 +10,5 @@ public interface MascotaService {
     MascotaResponse registerMascota(MascotaRequest request);
     MascotaResponse updateMascota(Long id, MascotaRequest request);
     void cambiarEstado(Long id, EstadoMascotaRequest request);
-    Page<MascotaResponse> listar(Integer companyId, String nombre, EspecieMascota especie, String nombrePropietario, int page, int size);
+    Page<MascotaResponse> listar(Integer companyId, String nombre, EspecieMascota especie, String nombrePropietario, Boolean activo, int page, int size);
 }

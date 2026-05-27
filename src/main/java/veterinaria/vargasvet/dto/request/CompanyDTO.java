@@ -1,8 +1,10 @@
 package veterinaria.vargasvet.dto.request;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.List;
@@ -13,26 +15,37 @@ public class CompanyDTO {
     private Integer id;
 
     @NotBlank(message = "El nombre de la empresa es obligatorio")
+    @Size(min = 3, max = 100, message = "El nombre debe tener entre 3 y 100 caracteres")
     private String name;
 
     @NotBlank(message = "El RUC es obligatorio")
-    @Pattern(regexp = "\\d{11}", message = "El RUC debe tener exactamente 11 dígitos")
+    @Pattern(regexp = "(10|15|17|20)\\d{9}", message = "El RUC debe tener 11 digitos y un prefijo valido")
     private String ruc;
 
     @NotBlank(message = "La dirección es obligatoria")
+    @Size(min = 5, max = 200, message = "La direccion debe tener entre 5 y 200 caracteres")
     private String address;
 
     @NotBlank(message = "El teléfono es obligatorio")
+    @Pattern(regexp = "^[0-9]{9}$", message = "El telefono debe contener 9 digitos numericos")
     private String phone;
 
     @NotBlank(message = "El correo de contacto es obligatorio")
     @Email(message = "El formato del correo es inválido")
+    @Size(max = 100, message = "El correo no debe superar 100 caracteres")
     private String email;
 
     private String logoUrl;
+
+    @Size(max = 200, message = "El sitio web no debe superar 200 caracteres")
+    @Pattern(regexp = "^$|^https?://.+", message = "El sitio web debe iniciar con http:// o https://")
     private String website;
+
+    @Size(max = 500, message = "La descripcion no debe superar 500 caracteres")
     private String description;
+
+    @Size(max = 100, message = "El horario comercial no debe superar 100 caracteres")
     private String businessHours;
     
-    private List<CompanyOperatingHourDTO> operatingHours;
+    private List<@Valid CompanyOperatingHourDTO> operatingHours;
 }
