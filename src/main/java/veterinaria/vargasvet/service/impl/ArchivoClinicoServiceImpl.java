@@ -53,7 +53,7 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
             }
         }
 
-        if (consulta.getEstado() == EstadoConsulta.CERRADA) {
+        if (consulta.getEstado() == EstadoConsulta.CERRADA && !puedeModificarArchivoCerrado()) {
             throw new IllegalArgumentException("No se pueden cargar archivos en una historia clínica cerrada");
         }
 
@@ -159,8 +159,15 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
     public void eliminar(Long id) {
         ArchivoClinico archivo = archivoClinicoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Archivo no encontrado con ID: " + id));
+        if (archivo.getConsulta().getEstado() == EstadoConsulta.CERRADA && !puedeModificarArchivoCerrado()) {
+            throw new IllegalArgumentException("No se pueden eliminar archivos de una historia clínica cerrada");
+        }
         storageService.delete(archivo.getUrl());
         archivoClinicoRepository.delete(archivo);
+    }
+
+    private boolean puedeModificarArchivoCerrado() {
+        return SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin();
     }
 
     public ArchivoClinicoResponse toResponse(ArchivoClinico archivo) {
