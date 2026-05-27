@@ -30,9 +30,10 @@ public class MascotaController {
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) EspecieMascota especie,
             @RequestParam(required = false) String nombrePropietario,
+            @RequestParam(required = false) Boolean activo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<MascotaResponse> resultado = mascotaService.listar(companyId, nombre, especie, nombrePropietario, page, size);
+        Page<MascotaResponse> resultado = mascotaService.listar(companyId, nombre, especie, nombrePropietario, activo, page, size);
         auditLogService.log(companyId, "CONSULTAR_MASCOTAS", "Mascotas", "Consultó la lista de mascotas.");
         String mensaje = resultado.isEmpty() ? "No se encontraron mascotas" : "Mascotas recuperadas con éxito";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
