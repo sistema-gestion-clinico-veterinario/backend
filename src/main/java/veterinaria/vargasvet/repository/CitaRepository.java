@@ -113,4 +113,18 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     @Query("SELECT COUNT(c) FROM Cita c WHERE c.empleado.id = :empleadoId AND c.estado = 'EN_PROCESO' AND c.eliminada = false AND c.id <> :excludeId")
     long countEnProcesoByEmpleadoExcluding(@Param("empleadoId") Long empleadoId, @Param("excludeId") Long excludeId);
+
+    @Query("SELECT COUNT(c) > 0 FROM Cita c WHERE c.mascota.id = :mascotaId " +
+           "AND c.eliminada = false " +
+           "AND c.fechaHoraInicio >= :ahora " +
+           "AND c.estado IN ('PROGRAMADA', 'PENDIENTE', 'CONFIRMADA', 'REPROGRAMADA', 'SALA_DE_ESPERA', 'EN_PROCESO')")
+    boolean existsCitaVigenteByMascotaId(@Param("mascotaId") Long mascotaId,
+                                         @Param("ahora") LocalDateTime ahora);
+
+    @Query("SELECT COUNT(c) > 0 FROM Cita c WHERE c.empleado.id = :empleadoId " +
+           "AND c.eliminada = false " +
+           "AND c.fechaHoraInicio >= :ahora " +
+           "AND c.estado IN ('PROGRAMADA', 'PENDIENTE', 'CONFIRMADA', 'REPROGRAMADA', 'SALA_DE_ESPERA', 'EN_PROCESO')")
+    boolean existsCitaVigenteByEmpleadoId(@Param("empleadoId") Long empleadoId,
+                                          @Param("ahora") LocalDateTime ahora);
 }

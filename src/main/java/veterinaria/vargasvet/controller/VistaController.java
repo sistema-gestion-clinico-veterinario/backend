@@ -1,5 +1,6 @@
 package veterinaria.vargasvet.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,7 @@ public class VistaController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<VistaDTO>> crear(@RequestBody VistaRequestDTO request) {
+    public ResponseEntity<ApiResponse<VistaDTO>> crear(@Valid @RequestBody VistaRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Vista creada", vistaService.crear(request)));
     }
@@ -36,7 +37,7 @@ public class VistaController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<VistaDTO>> actualizar(
             @PathVariable Integer id,
-            @RequestBody VistaRequestDTO request) {
+            @Valid @RequestBody VistaRequestDTO request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Vista actualizada", vistaService.actualizar(id, request)));
     }
 

@@ -111,6 +111,7 @@ public class CitaServiceImpl implements CitaService {
                 : DURACION_ESTIMADA_MINUTOS;
 
         LocalDateTime fechaInicio = request.getFechaHoraInicio();
+        validarFechaCitaNoPasada(fechaInicio);
         LocalDateTime fechaFin = fechaInicio.plusMinutes(duracion);
 
         DiaSemana diaSemana = toDiaSemana(fechaInicio.getDayOfWeek());
@@ -486,13 +487,10 @@ public class CitaServiceImpl implements CitaService {
                 : DURACION_ESTIMADA_MINUTOS;
 
         LocalDateTime fechaInicio = request.getFechaHoraInicio();
+        validarFechaCitaNoPasada(fechaInicio);
         LocalDateTime fechaFin = fechaInicio.plusMinutes(duracion);
 
-        // Validar cruces (excluyendo la cita actual)
-        boolean hayCruceVeterinario = citaRepository.existsOverlappingCitaExcludeSelf(veterinario.getId(), fechaInicio, fechaFin, id);
-        if (hayCruceVeterinario) {
-            throw new IllegalArgumentException("El veterinario ya tiene otra cita en ese horario");
-        }
+        validarDisponibilidadCita(mascota, veterinario, fechaInicio, fechaFin, Boolean.TRUE.equals(request.getEsEmergencia()), id);
 
         cita.setMascota(mascota);
         cita.setEmpleado(veterinario);
@@ -559,6 +557,7 @@ public class CitaServiceImpl implements CitaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Veterinario no encontrado"));
 
         LocalDateTime fechaInicio = request.getFechaHoraInicio();
+        validarFechaCitaNoPasada(fechaInicio);
         LocalDateTime fechaFin = fechaInicio.plusMinutes(cita.getDuracionMinutos());
 
         validarDisponibilidadCita(cita.getMascota(), veterinario, fechaInicio, fechaFin, Boolean.TRUE.equals(cita.getEsEmergencia()), id);
@@ -676,6 +675,12 @@ public class CitaServiceImpl implements CitaService {
         }
     }
 
+    private void validarFechaCitaNoPasada(LocalDateTime fechaInicio) {
+        if (fechaInicio != null && fechaInicio.isBefore(LocalDateTime.now().minusMinutes(1))) {
+            throw new IllegalArgumentException("La fecha de la cita no puede ser anterior al momento actual");
+        }
+    }
+
     private void validarPermisoEmpresa(Cita cita) {
         if (!SecurityUtils.isSuperAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
@@ -774,7 +779,8 @@ public class CitaServiceImpl implements CitaService {
 
         java.util.List<Cita> existingAppointments = citaRepository.findActiveByEmpleadoIdAndFechaString(empleadoId, fecha);
 
-        final int step = Math.max(duracion, 1);
+        final int step = 20;
+        LocalTime minStart = localDate.isEqual(LocalDate.now()) ? LocalTime.now() : LocalTime.MIN;
 
         for (HorarioEmpleado shift : shifts) {
             if (Boolean.FALSE.equals(shift.getActivo())) continue;
@@ -798,6 +804,7 @@ public class CitaServiceImpl implements CitaService {
 
             for (LocalTime slotStart2 : candidates) {
                 LocalTime slotEnd = slotStart2.plusMinutes(duracion);
+                if (slotStart2.isBefore(minStart)) continue;
                 if (slotEnd.isAfter(shiftEnd)) continue;
                 if (slotStart2.isBefore(clinicOpen) || slotEnd.isAfter(clinicClose)) continue;
 

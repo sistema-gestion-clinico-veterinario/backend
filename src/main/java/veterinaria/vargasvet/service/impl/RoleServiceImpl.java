@@ -57,6 +57,10 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional
     public RolDTO createRole(String nombre, String descripcion, Integer companyId) {
+        nombre = normalizarNombreRol(nombre);
+        descripcion = normalizarDescripcion(descripcion);
+        validarDuplicado(nombre);
+
         Role role = new Role();
         role.setName(nombre);
         role.setDescripcion(descripcion);
@@ -78,9 +82,11 @@ public class RoleServiceImpl implements RoleService {
 
         boolean esProtegido = role.getName().equals("ROLE_SUPER_ADMIN") || role.getName().equals("ROLE_ADMIN");
         if (!esProtegido) {
+            nombre = normalizarNombreRol(nombre);
+            validarDuplicadoEdicion(id, nombre);
             role.setName(nombre);
         }
-        role.setDescripcion(descripcion);
+        role.setDescripcion(normalizarDescripcion(descripcion));
 
         return toDTO(roleRepository.save(role));
     }
@@ -163,5 +169,42 @@ public class RoleServiceImpl implements RoleService {
         dto.setDescripcion(role.getDescripcion());
         dto.setCompanyId(role.getCompany() != null ? role.getCompany().getId() : null);
         return dto;
+    }
+
+    private String normalizarNombreRol(String nombre) {
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("El nombre del rol es obligatorio");
+        }
+        String normalizado = nombre.trim().toUpperCase().replaceAll("\\s+", "_");
+        if (!normalizado.startsWith("ROLE_")) {
+            normalizado = "ROLE_" + normalizado;
+        }
+        if (!normalizado.matches("^ROLE_[A-Z0-9_]{2,60}$")) {
+            throw new IllegalArgumentException("El rol solo puede contener letras, numeros y guion bajo");
+        }
+        return normalizado;
+    }
+
+    private String normalizarDescripcion(String descripcion) {
+        if (descripcion == null || descripcion.isBlank()) return null;
+        String value = descripcion.trim();
+        if (value.length() > 250) {
+            throw new IllegalArgumentException("La descripcion no debe superar 250 caracteres");
+        }
+        return value;
+    }
+
+    private void validarDuplicado(String nombre) {
+        if (roleRepository.existsByName(nombre)) {
+            throw new IllegalArgumentException("Ya existe un rol con ese nombre");
+        }
+    }
+
+    private void validarDuplicadoEdicion(Integer id, String nombre) {
+        roleRepository.findByName(nombre)
+                .filter(existing -> !existing.getId().equals(id))
+                .ifPresent(existing -> {
+                    throw new IllegalArgumentException("Ya existe un rol con ese nombre");
+                });
     }
 }
