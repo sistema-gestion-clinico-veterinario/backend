@@ -114,6 +114,9 @@ public class ConsultaMapper {
         r.setFechaInicio(p.getFechaInicio());
         r.setFechaFin(p.getFechaFin());
         r.setFechaCreacion(p.getCreatedAt());
+        if (p.getConsulta() != null) {
+            r.setConsultaId(p.getConsulta().getId());
+        }
         if (p.getVeterinario() != null && p.getVeterinario().getUser() != null) {
             r.setVeterinarioNombre(p.getVeterinario().getUser().getNombre() + " " + p.getVeterinario().getUser().getApellido());
         }

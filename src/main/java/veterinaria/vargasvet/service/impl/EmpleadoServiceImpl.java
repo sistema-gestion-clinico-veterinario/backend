@@ -302,6 +302,9 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 throw new IllegalArgumentException("No tienes permiso para modificar el estado de un empleado de otra empresa");
             }
         }
+        if (Boolean.FALSE.equals(nuevoEstado) && citaRepository.existsCitaVigenteByEmpleadoId(empleadoId, LocalDateTime.now())) {
+            throw new IllegalArgumentException("No se puede desactivar un empleado con citas programadas vigentes");
+        }
         empleado.setEstado(nuevoEstado);
         empleado.setEstadoModificadoPor(adminEmail);
         empleado.setFechaModificacionEstado(LocalDateTime.now());

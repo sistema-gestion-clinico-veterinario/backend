@@ -1,5 +1,6 @@
 package veterinaria.vargasvet.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,14 +30,14 @@ public class VentanaController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Ventana>> crear(@RequestBody Ventana ventana) {
+    public ResponseEntity<ApiResponse<Ventana>> crear(@Valid @RequestBody Ventana ventana) {
         Ventana creada = ventanaService.crear(ventana);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Ventana creada exitosamente", creada));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Ventana>> actualizar(@PathVariable Integer id, @RequestBody Ventana ventana) {
+    public ResponseEntity<ApiResponse<Ventana>> actualizar(@PathVariable Integer id, @Valid @RequestBody Ventana ventana) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Ventana actualizada", ventanaService.actualizar(id, ventana)));
     }
 

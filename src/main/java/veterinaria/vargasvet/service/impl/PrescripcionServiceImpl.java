@@ -38,7 +38,7 @@ public class PrescripcionServiceImpl implements PrescripcionService {
         Consulta consulta = consultaRepository.findById(consultaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + consultaId));
 
-        if (consulta.getEstado() == EstadoConsulta.CERRADA) {
+        if (consulta.getEstado() == EstadoConsulta.CERRADA && !puedeModificarRecetaCerrada()) {
             throw new IllegalArgumentException("No se puede agregar recetas a una consulta cerrada");
         }
 
@@ -74,7 +74,7 @@ public class PrescripcionServiceImpl implements PrescripcionService {
         Prescripcion prescripcion = prescripcionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Receta no encontrada con ID: " + id));
 
-        if (prescripcion.getConsulta().getEstado() == EstadoConsulta.CERRADA) {
+        if (prescripcion.getConsulta().getEstado() == EstadoConsulta.CERRADA && !puedeModificarRecetaCerrada()) {
             throw new IllegalArgumentException("No se puede modificar recetas de una consulta cerrada");
         }
 
@@ -88,7 +88,7 @@ public class PrescripcionServiceImpl implements PrescripcionService {
         Prescripcion prescripcion = prescripcionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Receta no encontrada con ID: " + id));
 
-        if (prescripcion.getConsulta().getEstado() == EstadoConsulta.CERRADA) {
+        if (prescripcion.getConsulta().getEstado() == EstadoConsulta.CERRADA && !puedeModificarRecetaCerrada()) {
             throw new IllegalArgumentException("No se puede eliminar recetas de una consulta cerrada");
         }
 
@@ -97,7 +97,11 @@ public class PrescripcionServiceImpl implements PrescripcionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PrescripcionResumenResponse> buscar(String query, Integer companyId, int page, int size) {
+    public Page<PrescripcionResumenResponse> buscar(String query, Integer companyId, Long mascotaId,
+                                                    String numeroMicrochip, String numeroDocumentoApoderado,
+                                                    String numeroDocumentoEmpleado, String numeroHc,
+                                                    java.time.LocalDate fechaDesde, java.time.LocalDate fechaHasta,
+                                                    int page, int size) {
         boolean isSuperAdmin = SecurityUtils.isSuperAdmin();
         Integer effectiveCompanyId;
 
@@ -118,8 +122,18 @@ public class PrescripcionServiceImpl implements PrescripcionService {
 
         return prescripcionRepository.buscar(
                 isSuperAdmin, effectiveCompanyId, queryFiltro,
+                mascotaId,
+                normalizarFiltro(numeroMicrochip),
+                normalizarFiltro(numeroDocumentoApoderado),
+                normalizarFiltro(numeroDocumentoEmpleado),
+                normalizarFiltro(numeroHc),
+                fechaDesde, fechaHasta,
                 PageRequest.of(page, size))
                 .map(consultaMapper::toPrescripcionListResponse);
+    }
+
+    private String normalizarFiltro(String value) {
+        return value != null && !value.isBlank() ? value.trim() : null;
     }
 
     private void mapRequestToEntity(PrescripcionRequest request, Prescripcion prescripcion) {
@@ -132,5 +146,9 @@ public class PrescripcionServiceImpl implements PrescripcionService {
         prescripcion.setInstrucciones(request.getInstrucciones());
         prescripcion.setFechaInicio(request.getFechaInicio());
         prescripcion.setFechaFin(request.getFechaFin());
+    }
+
+    private boolean puedeModificarRecetaCerrada() {
+        return SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin();
     }
 }
