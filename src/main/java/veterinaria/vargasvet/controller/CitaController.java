@@ -32,9 +32,10 @@ public class CitaController {
     public ResponseEntity<ApiResponse<List<String>>> getAdminDisponibilidad(
             @RequestParam Long empleadoId,
             @RequestParam String fecha,
-            @RequestParam Long servicioId) {
+            @RequestParam Long servicioId,
+            @RequestParam(required = false) Boolean esEmergencia) {
         accesoValidator.validarLeer("VISTA_CITAS_AGENDA");
-        List<String> slots = citaService.getAdminDisponibilidad(empleadoId, fecha, servicioId);
+        List<String> slots = citaService.getAdminDisponibilidad(empleadoId, fecha, servicioId, esEmergencia != null && esEmergencia);
         return ResponseEntity.ok(new ApiResponse<>(true, "Disponibilidad recuperada con éxito", slots));
     }
 
