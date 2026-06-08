@@ -14,6 +14,7 @@ import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.mapper.CitaMapper;
 import veterinaria.vargasvet.repository.*;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CitaService;
 import veterinaria.vargasvet.util.BusinessValidator;
@@ -52,6 +53,7 @@ public class CitaServiceImpl implements CitaService {
     private final HorarioEmpleadoRepository horarioEmpleadoRepository;
     private final CitaMapper citaMapper;
     private final BusinessValidator businessValidator;
+    private final AccesoValidator accesoValidator;
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
     private final EmailService emailService;
     private final SimpMessagingTemplate messagingTemplate;
@@ -321,7 +323,7 @@ public class CitaServiceImpl implements CitaService {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
         Long filteredVeterinarioId = veterinarioId;
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
-            if (SecurityUtils.hasRole("ROLE_VETERINARIO") || SecurityUtils.hasRole("ROLE_EMPLEADO")) {
+            if (!accesoValidator.puedeLeer("CITA_VER_TODAS") && filteredVeterinarioId == null) {
                 filteredVeterinarioId = empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail())
                         .map(Empleado::getId)
                         .orElse(-1L);
@@ -738,7 +740,7 @@ public class CitaServiceImpl implements CitaService {
 
     @Override
     @Transactional(readOnly = true)
-    public java.util.List<String> getAdminDisponibilidad(Long empleadoId, String fecha, Long servicioId) {
+    public java.util.List<String> getAdminDisponibilidad(Long empleadoId, String fecha, Long servicioId, Boolean esEmergencia) {
         LocalDate localDate = LocalDate.parse(fecha);
 
         Empleado empleado = empleadoRepository.findById(empleadoId)
@@ -751,6 +753,30 @@ public class CitaServiceImpl implements CitaService {
         int duracion = servicio.getDuracionEstimada() != null ? servicio.getDuracionEstimada() : 20;
 
         java.util.List<String> availableSlots = new java.util.ArrayList<>();
+        java.util.List<Cita> existingAppointments = citaRepository.findActiveByEmpleadoIdAndFechaString(empleadoId, fecha);
+
+        if (Boolean.TRUE.equals(esEmergencia)) {
+            LocalTime minStart = localDate.isEqual(LocalDate.now()) ? LocalTime.now() : LocalTime.MIN;
+            LocalTime rangeStart = LocalTime.of(8, 0);
+            LocalTime rangeEnd = LocalTime.of(20, 0);
+            int step = Math.max(duracion, 30);
+
+            LocalTime t = LocalTime.from(rangeStart);
+            while (!t.isAfter(rangeEnd)) {
+                LocalTime slotStart = t;
+                LocalTime slotEnd = slotStart.plusMinutes(duracion);
+                if (!slotStart.isBefore(minStart) && !slotEnd.isAfter(rangeEnd)) {
+                    boolean overlap = existingAppointments.stream().anyMatch(appt -> {
+                        LocalTime s = appt.getFechaHoraInicio().toLocalTime();
+                        LocalTime e = appt.getFechaHoraFin().toLocalTime();
+                        return slotStart.isBefore(e) && slotEnd.isAfter(s);
+                    });
+                    if (!overlap) availableSlots.add(slotStart.toString());
+                }
+                t = t.plusMinutes(step);
+            }
+            return availableSlots;
+        }
 
         boolean clinicClosed = companyExceptionRepository.findByCompanyIdAndDateString(companyId, fecha)
                 .map(ex -> Boolean.FALSE.equals(ex.getIsOpen()))
@@ -776,8 +802,6 @@ public class CitaServiceImpl implements CitaService {
 
         java.util.List<HorarioEmpleado> shifts = horarioEmpleadoRepository.findByEmpleadoIdAndFechaString(empleadoId, fecha);
         if (shifts.isEmpty()) return availableSlots;
-
-        java.util.List<Cita> existingAppointments = citaRepository.findActiveByEmpleadoIdAndFechaString(empleadoId, fecha);
 
         final int step = 20;
         LocalTime minStart = localDate.isEqual(LocalDate.now()) ? LocalTime.now() : LocalTime.MIN;
