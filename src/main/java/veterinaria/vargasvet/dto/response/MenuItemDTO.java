@@ -14,6 +14,7 @@ public class MenuItemDTO {
     private String ruta;
     private String grupo;
     private Integer orden;
+    private Integer ordenGrupo;
     private boolean activo;
     private boolean leer;
     private boolean escribir;

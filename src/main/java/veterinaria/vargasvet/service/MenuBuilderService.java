@@ -11,6 +11,7 @@ import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -99,7 +100,7 @@ public class MenuBuilderService {
         Map<String, UsuarioPorRolPermiso> permisosPorVista = obtenerPermisosUsuario(usuarioId, rolActivo);
         if (permisosPorVista.isEmpty()) return Collections.emptyList();
 
-        Map<Ventana, List<MenuItemDTO>> porVentana = new LinkedHashMap<>();
+        Map<String, List<MenuItemDTO>> porGrupo = new LinkedHashMap<>();
         List<MenuItemDTO> vistasSueltas = new ArrayList<>();
 
         for (UsuarioPorRolPermiso permiso : permisosPorVista.values()) {
@@ -109,8 +110,9 @@ public class MenuBuilderService {
             }
 
             MenuItemDTO dto = toDTO(vista, permiso);
-            if (vista.getVentana() != null) {
-                porVentana.computeIfAbsent(vista.getVentana(), k -> new ArrayList<>()).add(dto);
+            String grupo = vista.getGrupo();
+            if (grupo != null && !grupo.isBlank() && !"GENERAL".equalsIgnoreCase(grupo.trim())) {
+                porGrupo.computeIfAbsent(grupo.trim(), k -> new ArrayList<>()).add(dto);
             } else {
                 vistasSueltas.add(dto);
             }
@@ -118,14 +120,19 @@ public class MenuBuilderService {
 
         List<MenuStructureDTO> resultado = new ArrayList<>();
 
-        porVentana.forEach((ventana, vistas) -> {
+        porGrupo.forEach((grupo, vistas) -> {
             vistas.sort(Comparator.comparingInt(MenuItemDTO::getOrden));
+            Integer ordenGrupo = vistas.stream()
+                    .map(MenuItemDTO::getOrdenGrupo)
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(vistas.getFirst().getOrden());
             resultado.add(MenuStructureDTO.builder()
-                    .ventanaId(ventana.getId())
-                    .ventanaCodigo(ventana.getCodigo())
-                    .ventanaNombre(ventana.getNombre())
-                    .grupo(ventana.getGrupo())
-                    .orden(ventana.getOrden())
+                    .ventanaId(null)
+                    .ventanaCodigo(grupo)
+                    .ventanaNombre(convertirNombreGrupo(grupo))
+                    .grupo(grupo)
+                    .orden(ordenGrupo)
                     .vistas(vistas)
                     .build());
         });
@@ -136,12 +143,23 @@ public class MenuBuilderService {
             resultado.add(MenuStructureDTO.builder()
                     .ventanaId(null)
                     .ventanaNombre(vista.getNombre())
+                    .grupo(vista.getGrupo())
                     .orden(vista.getOrden())
                     .vistas(Collections.singletonList(vista))
                     .build());
         }
 
         return resultado;
+    }
+
+    private String convertirNombreGrupo(String grupo) {
+        return switch (grupo.toUpperCase()) {
+            case "ADMIN" -> "Administración";
+            case "RRHH" -> "Personal";
+            case "CLINICA" -> "Clínica";
+            case "APODERADO" -> "Portal Apoderado";
+            default -> grupo;
+        };
     }
 
     private Map<String, UsuarioPorRolPermiso> obtenerPermisosUsuario(Integer usuarioId, String rolActivo) {
@@ -186,6 +204,7 @@ public class MenuBuilderService {
                 .ruta(vista.getRuta())
                 .grupo(vista.getGrupo())
                 .orden(vista.getOrden())
+                .ordenGrupo(vista.getOrdenGrupo())
                 .activo(vista.isActivo())
                 .leer(permiso != null && permiso.isLeer())
                 .escribir(permiso != null && permiso.isEscribir())
@@ -211,6 +230,7 @@ public class MenuBuilderService {
         if (rolActivo.contains("APODERADO") || rolActivo.contains("CLIENTE")) {
             return codigo.equals("VISTA_APODERADO_DASHBOARD")
                     || codigo.startsWith("VISTA_MIS_")
+                    || codigo.equals("VISTA_MI_HISTORIAL")
                     || codigo.equals("VISTA_PROFILE");
         }
 
