@@ -30,7 +30,7 @@ public class PrescripcionController {
     public ResponseEntity<ApiResponse<Page<PrescripcionResumenResponse>>> buscar(
             @RequestParam(required = false, defaultValue = "") String query,
             @RequestParam(required = false) Integer companyId,
-            @RequestParam(required = false) Long mascotaId,
+            @RequestParam(required = false) String nombreMascota,
             @RequestParam(required = false) String numeroMicrochip,
             @RequestParam(required = false) String numeroDocumentoApoderado,
             @RequestParam(required = false) String numeroDocumentoEmpleado,
@@ -41,7 +41,7 @@ public class PrescripcionController {
             @RequestParam(defaultValue = "10") int size) {
         accesoValidator.validarLeer("VISTA_HISTORIAS");
         return ResponseEntity.ok(new ApiResponse<>(true, "Recetas obtenidas",
-                prescripcionService.buscar(query, companyId, mascotaId, numeroMicrochip,
+                prescripcionService.buscar(query, companyId, nombreMascota, numeroMicrochip,
                         numeroDocumentoApoderado, numeroDocumentoEmpleado, numeroHc,
                         fechaDesde, fechaHasta, page, size)));
     }

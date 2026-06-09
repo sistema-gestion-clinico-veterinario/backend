@@ -71,9 +71,9 @@ public class EmpleadoController {
     }
 
     @GetMapping("/{id}/schedule")
-    @PreAuthorize("hasAuthority('HORARIO_READ')")
+    @PreAuthorize("hasAuthority('CITA_READ')")
     public ResponseEntity<ApiResponse<List<HorarioEmpleadoResponse>>> getHorario(@PathVariable Long id) {
-        accesoValidator.validarLeer("VISTA_HORARIOS");
+        accesoValidator.validarLeer("VISTA_CITAS_AGENDA");
         List<HorarioEmpleadoResponse> horario = empleadoService.getHorario(id);
         auditLogService.log("CONSULTAR_HORARIO", "Horario", "Consultó el horario del empleado con ID: " + id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario recuperado con éxito", horario));
