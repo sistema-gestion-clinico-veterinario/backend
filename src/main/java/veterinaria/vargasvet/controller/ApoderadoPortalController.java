@@ -44,8 +44,12 @@ public class ApoderadoPortalController {
     }
 
     @GetMapping("/appointments")
-    public ResponseEntity<ApiResponse<List<CitaResponse>>> getCitas(@RequestParam(required = false) Long mascotaId) {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Citas recuperadas con éxito", apoderadoPortalService.getCitas(mascotaId)));
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<CitaResponse>>> getCitas(
+            @RequestParam(required = false) Long mascotaId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Citas recuperadas con éxito", apoderadoPortalService.getCitas(mascotaId, pageable)));
     }
 
     @GetMapping("/prescriptions")
@@ -101,6 +105,14 @@ public class ApoderadoPortalController {
             @RequestParam(required = false) String motivo) {
         apoderadoPortalService.cancelPortalCita(id, motivo);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita cancelada con éxito", null));
+    }
+
+    @GetMapping("/payments")
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<PagoPortalResponse>>> getPaymentHistory(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("fechaHoraInicio").descending());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Historial de pagos recuperado con éxito", apoderadoPortalService.getPaymentHistory(pageable)));
     }
 }
 

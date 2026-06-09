@@ -17,11 +17,14 @@ import veterinaria.vargasvet.service.ApoderadoPortalService;
 import veterinaria.vargasvet.service.CitaService;
 import veterinaria.vargasvet.service.HistoriaClinicaService;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
 
 @Service
@@ -135,17 +138,15 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CitaResponse> getCitas(Long mascotaId) {
+    public Page<CitaResponse> getCitas(Long mascotaId, Pageable pageable) {
         Apoderado apoderado = getAuthenticatedApoderado();
-        List<Cita> rawCitas;
+        Page<Cita> rawCitas;
         if (mascotaId != null) {
-            rawCitas = citaRepository.findByApoderadoIdAndMascotaId(apoderado.getId(), mascotaId);
+            rawCitas = citaRepository.findByApoderadoIdAndMascotaIdPaginated(apoderado.getId(), mascotaId, pageable);
         } else {
-            rawCitas = citaRepository.findByApoderadoId(apoderado.getId());
+            rawCitas = citaRepository.findByApoderadoIdPaginated(apoderado.getId(), pageable);
         }
-        return rawCitas.stream()
-                .map(citaMapper::toResponse)
-                .collect(Collectors.toList());
+        return rawCitas.map(citaMapper::toResponse);
     }
 
     @Override
@@ -534,6 +535,69 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     @Transactional
     public void cancelPortalCita(Long id, String motivo) {
         throw new IllegalArgumentException("Un apoderado no tiene permiso para cancelar citas");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<PagoPortalResponse> getPaymentHistory(org.springframework.data.domain.Pageable pageable) {
+        Apoderado apoderado = getAuthenticatedApoderado();
+        org.springframework.data.domain.Page<Cita> citasPage = citaRepository.findByApoderadoIdPaginated(apoderado.getId(), pageable);
+
+        return citasPage.map(cita -> {
+            Purchase purchase = null;
+            if (cita.getPagos() != null && !cita.getPagos().isEmpty()) {
+                purchase = cita.getPagos().get(0);
+            }
+            return mapToPaymentResponse(cita, purchase);
+        });
+    }
+
+    private PagoPortalResponse mapToPaymentResponse(Cita cita, Purchase purchase) {
+        PagoPortalResponse resp = new PagoPortalResponse();
+        resp.setId(cita.getId());
+        resp.setTipoItem("CITA");
+        resp.setDescripcion("Cita - " + (cita.getServicio() != null ? cita.getServicio().getNombre() : "Sin servicio"));
+        resp.setCitaId(cita.getId());
+        resp.setMascotaNombre(cita.getMascota() != null ? cita.getMascota().getNombreCompleto() : null);
+        resp.setServicioNombre(cita.getServicio() != null ? cita.getServicio().getNombre() : null);
+        resp.setVeterinarioNombre(cita.getEmpleado() != null ? cita.getEmpleado().getUser().getNombre() + " " + cita.getEmpleado().getUser().getApellido() : null);
+        resp.setTotal(cita.getTotalServicio());
+        resp.setMontoPagado(cita.getMontoPagado());
+        resp.setFecha(cita.getFechaHoraInicio() != null ? cita.getFechaHoraInicio().toString() : null);
+        resp.setEstadoCita(cita.getEstado() != null ? cita.getEstado().name() : null);
+
+        if (purchase != null) {
+            resp.setMetodoPago(purchase.getMetodoPago() != null ? purchase.getMetodoPago().name() : null);
+            resp.setMontoRecibido(purchase.getMontoRecibido());
+            resp.setCambio(computeCambio(purchase));
+            resp.setFechaPago(purchase.getCreatedAt() != null ? purchase.getCreatedAt().toString() : null);
+            resp.setEstadoPago(purchase.getPaymentStatus() != null ? purchase.getPaymentStatus().name() : "PENDING");
+        } else {
+            resp.setEstadoPago(computePaymentStatus(cita));
+        }
+
+        return resp;
+    }
+
+    private String computePaymentStatus(Cita cita) {
+        BigDecimal total = cita.getTotalServicio();
+        BigDecimal pagado = cita.getMontoPagado();
+
+        if (total != null && pagado != null && pagado.compareTo(total) >= 0) {
+            return "PAID";
+        }
+        if (pagado != null && pagado.compareTo(java.math.BigDecimal.ZERO) > 0) {
+            return "PENDING";
+        }
+        return "PENDING";
+    }
+
+    private BigDecimal computeCambio(Purchase purchase) {
+        if (purchase.getMontoRecibido() != null && purchase.getTotal() != null) {
+            BigDecimal cambio = purchase.getMontoRecibido().subtract(purchase.getTotal());
+            return cambio.compareTo(java.math.BigDecimal.ZERO) > 0 ? cambio : null;
+        }
+        return null;
     }
 }
 

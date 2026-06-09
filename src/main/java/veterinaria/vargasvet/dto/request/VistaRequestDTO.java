@@ -24,5 +24,7 @@ public class VistaRequestDTO {
     @Size(max = 40, message = "El grupo no debe superar 40 caracteres")
     @Pattern(regexp = "^[A-Za-z0-9_\\s-]+$", message = "El grupo solo puede contener letras, numeros, guiones y espacios")
     private String grupo;
+    private Integer orden;
+    private Integer ordenGrupo;
     private boolean activo = true;
 }
