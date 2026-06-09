@@ -19,6 +19,7 @@ import veterinaria.vargasvet.repository.PrescripcionRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.PrescripcionService;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,10 +48,16 @@ public class PrescripcionServiceImpl implements PrescripcionService {
         mapRequestToEntity(request, prescripcion);
         prescripcion.setCreatedAt(LocalDateTime.now());
 
+        Empleado veterinario = null;
         Integer userId = SecurityUtils.getCurrentUserId();
         if (userId != null) {
-            empleadoRepository.findByUserId(userId)
-                    .ifPresent(prescripcion::setVeterinario);
+            veterinario = empleadoRepository.findByUserId(userId).orElse(null);
+        }
+        if (veterinario == null && consulta.getVeterinario() != null) {
+            veterinario = consulta.getVeterinario();
+        }
+        if (veterinario != null) {
+            prescripcion.setVeterinario(veterinario);
         }
 
         return consultaMapper.toPrescripcionResponse(prescripcionRepository.save(prescripcion));
@@ -97,10 +104,10 @@ public class PrescripcionServiceImpl implements PrescripcionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PrescripcionResumenResponse> buscar(String query, Integer companyId, Long mascotaId,
+    public Page<PrescripcionResumenResponse> buscar(String query, Integer companyId, String nombreMascota,
                                                     String numeroMicrochip, String numeroDocumentoApoderado,
                                                     String numeroDocumentoEmpleado, String numeroHc,
-                                                    java.time.LocalDate fechaDesde, java.time.LocalDate fechaHasta,
+                                                    LocalDate fechaDesde, LocalDate fechaHasta,
                                                     int page, int size) {
         boolean isSuperAdmin = SecurityUtils.isSuperAdmin();
         Integer effectiveCompanyId;
@@ -119,15 +126,20 @@ public class PrescripcionServiceImpl implements PrescripcionService {
 
         String queryFiltro = (query != null && !query.isBlank())
                 ? "%" + query.trim().toLowerCase() + "%" : null;
+        String nombreMascotaFiltro = (nombreMascota != null && !nombreMascota.isBlank())
+                ? "%" + nombreMascota.trim().toLowerCase() + "%" : null;
+
+        LocalDate effectiveDesde = fechaDesde != null ? fechaDesde : LocalDate.of(1, 1, 1);
+        LocalDate effectiveHasta = fechaHasta != null ? fechaHasta : LocalDate.of(9999, 12, 31);
 
         return prescripcionRepository.buscar(
                 isSuperAdmin, effectiveCompanyId, queryFiltro,
-                mascotaId,
+                nombreMascotaFiltro,
                 normalizarFiltro(numeroMicrochip),
                 normalizarFiltro(numeroDocumentoApoderado),
                 normalizarFiltro(numeroDocumentoEmpleado),
                 normalizarFiltro(numeroHc),
-                fechaDesde, fechaHasta,
+                effectiveDesde, effectiveHasta,
                 PageRequest.of(page, size))
                 .map(consultaMapper::toPrescripcionListResponse);
     }

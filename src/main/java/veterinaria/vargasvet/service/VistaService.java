@@ -11,6 +11,7 @@ import veterinaria.vargasvet.repository.VistaRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import veterinaria.vargasvet.dto.request.VistaReorderDTO;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +44,8 @@ public class VistaService {
         vista.setNombre(request.getNombre());
         vista.setRuta(resolveRuta(request));
         vista.setGrupo(request.getGrupo());
+        vista.setOrden(request.getOrden() != null ? request.getOrden() : 0);
+        vista.setOrdenGrupo(request.getOrdenGrupo());
         vista.setActivo(request.isActivo());
 
         return toDTO(vistaRepository.save(vista));
@@ -58,6 +61,8 @@ public class VistaService {
             vista.setRuta(request.getRuta());
         }
         vista.setGrupo(request.getGrupo());
+        vista.setOrden(request.getOrden() != null ? request.getOrden() : 0);
+        vista.setOrdenGrupo(request.getOrdenGrupo());
         vista.setActivo(request.isActivo());
 
         return toDTO(vistaRepository.save(vista));
@@ -70,6 +75,20 @@ public class VistaService {
         vistaRepository.delete(vista);
     }
 
+    @Transactional
+    public void reordenar(List<VistaReorderDTO> reorders) {
+        for (VistaReorderDTO r : reorders) {
+            vistaRepository.findById(r.getId()).ifPresent(v -> {
+                v.setOrden(r.getOrden());
+                if (r.getGrupo() != null) {
+                    v.setGrupo(r.getGrupo());
+                }
+                v.setOrdenGrupo(r.getOrdenGrupo());
+            });
+        }
+        vistaRepository.flush();
+    }
+
     public VistaDTO toDTO(Vista v) {
         return VistaDTO.builder()
                 .id(v.getId())
@@ -78,6 +97,7 @@ public class VistaService {
                 .ruta(v.getRuta())
                 .grupo(v.getGrupo())
                 .orden(v.getOrden())
+                .ordenGrupo(v.getOrdenGrupo())
                 .activo(v.isActivo())
                 .build();
     }
