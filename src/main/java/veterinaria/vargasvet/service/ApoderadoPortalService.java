@@ -9,7 +9,7 @@ public interface ApoderadoPortalService {
     List<MascotaResponse> getMascotas();
     org.springframework.data.domain.Page<MascotaResponse> getMascotasPaginated(String nombre, veterinaria.vargasvet.domain.enums.EspecieMascota especie, Boolean activo, org.springframework.data.domain.Pageable pageable);
     HistoriaClinicaDetalleResponse getHistoriaMascota(Long mascotaId);
-    List<CitaResponse> getCitas(Long mascotaId);
+    org.springframework.data.domain.Page<CitaResponse> getCitas(Long mascotaId, org.springframework.data.domain.Pageable pageable);
     List<PrescripcionResumenResponse> getRecetas();
     List<ServicioResponse> getServicios();
     List<EmpleadoListResponse> getEmpleados(Long servicioId);
@@ -19,5 +19,7 @@ public interface ApoderadoPortalService {
     CitaResponse updatePortalCita(Long id, CitaRequest request);
     CitaResponse reschedulePortalCita(Long id, CitaRequest request);
     void cancelPortalCita(Long id, String motivo);
+
+    org.springframework.data.domain.Page<PagoPortalResponse> getPaymentHistory(org.springframework.data.domain.Pageable pageable);
 }
 

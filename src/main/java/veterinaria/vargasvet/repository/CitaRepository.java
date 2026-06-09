@@ -53,13 +53,13 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     @Query(value = "SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
                    "LEFT JOIN FETCH c.consulta " +
-                   "WHERE u.company.id = :companyId AND c.eliminada = false AND c.estado != 'ELIMINADA' " +
-                   "AND (CAST(:fecha AS date) IS NULL OR CAST(c.fechaHoraInicio AS date) = :fecha) " +
-                   "AND (CAST(:estado AS text) IS NULL OR c.estado = :estado) " +
-                   "AND (:veterinarioId IS NULL OR c.empleado.id = :veterinarioId) " +
-                   "ORDER BY c.fechaHoraInicio DESC",
-           countQuery = "SELECT COUNT(c) FROM Cita c JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
-                        "WHERE u.company.id = :companyId AND c.eliminada = false AND c.estado != 'ELIMINADA' " +
+                    "WHERE u.company.id = :companyId AND c.eliminada = false " +
+                    "AND (CAST(:fecha AS date) IS NULL OR CAST(c.fechaHoraInicio AS date) = :fecha) " +
+                    "AND (CAST(:estado AS text) IS NULL OR c.estado = :estado) " +
+                    "AND (:veterinarioId IS NULL OR c.empleado.id = :veterinarioId) " +
+                    "ORDER BY c.fechaHoraInicio DESC",
+            countQuery = "SELECT COUNT(c) FROM Cita c JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
+                         "WHERE u.company.id = :companyId AND c.eliminada = false " +
                         "AND (CAST(:fecha AS date) IS NULL OR CAST(c.fechaHoraInicio AS date) = :fecha) " +
                         "AND (CAST(:estado AS text) IS NULL OR c.estado = :estado) " +
                         "AND (:veterinarioId IS NULL OR c.empleado.id = :veterinarioId)")
@@ -89,6 +89,14 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     @Query("SELECT c FROM Cita c WHERE c.mascota.apoderado.id = :apoderadoId AND c.mascota.id = :mascotaId AND c.eliminada = false ORDER BY c.fechaHoraInicio DESC")
     java.util.List<Cita> findByApoderadoIdAndMascotaId(@Param("apoderadoId") Long apoderadoId, @Param("mascotaId") Long mascotaId);
+
+    @Query(value = "SELECT c FROM Cita c WHERE c.mascota.apoderado.id = :apoderadoId AND c.eliminada = false ORDER BY c.fechaHoraInicio DESC",
+           countQuery = "SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.id = :apoderadoId AND c.eliminada = false")
+    Page<Cita> findByApoderadoIdPaginated(@Param("apoderadoId") Long apoderadoId, Pageable pageable);
+
+    @Query(value = "SELECT c FROM Cita c WHERE c.mascota.apoderado.id = :apoderadoId AND c.mascota.id = :mascotaId AND c.eliminada = false ORDER BY c.fechaHoraInicio DESC",
+           countQuery = "SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.id = :apoderadoId AND c.mascota.id = :mascotaId AND c.eliminada = false")
+    Page<Cita> findByApoderadoIdAndMascotaIdPaginated(@Param("apoderadoId") Long apoderadoId, @Param("mascotaId") Long mascotaId, Pageable pageable);
 
     @Query("SELECT c FROM Cita c WHERE c.empleado.id = :empleadoId AND c.estado != 'CANCELADA' AND c.eliminada = false AND CAST(c.fechaHoraInicio AS date) = :fecha")
     java.util.List<Cita> findActiveByEmpleadoIdAndFecha(@Param("empleadoId") Long empleadoId, @Param("fecha") LocalDate fecha);

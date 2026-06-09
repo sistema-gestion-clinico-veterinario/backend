@@ -108,6 +108,19 @@ public class TokenProvider {
         }
     }
 
+    public Optional<String> getEmailFromToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(publicKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            return Optional.ofNullable(claims.getSubject());
+        } catch (JwtException | IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
     public boolean validateToken(String token) {
         try {
             Jwts.parser()

@@ -11,6 +11,7 @@ import veterinaria.vargasvet.dto.response.VistaDTO;
 import veterinaria.vargasvet.service.VistaService;
 
 import java.util.List;
+import veterinaria.vargasvet.dto.request.VistaReorderDTO;
 
 @RestController
 @RequestMapping("/admin/views")
@@ -45,5 +46,11 @@ public class VistaController {
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Integer id) {
         vistaService.eliminar(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Vista eliminada", null));
+    }
+
+    @PutMapping("/reorder")
+    public ResponseEntity<ApiResponse<Void>> reordenar(@RequestBody List<VistaReorderDTO> reorders) {
+        vistaService.reordenar(reorders);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Orden actualizado", null));
     }
 }
