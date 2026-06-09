@@ -29,13 +29,13 @@ public interface PrescripcionRepository extends JpaRepository<Prescripcion, Long
                    "     OR LOWER(p.principio_activo) LIKE CAST(:query AS varchar) " +
                    "     OR LOWER(m.nombre_completo) LIKE CAST(:query AS varchar) " +
                    "     OR LOWER(hc.numero_hc) LIKE CAST(:query AS varchar)) " +
-                   "AND (:mascotaId IS NULL OR m.id = :mascotaId) " +
+                   "AND (CAST(:nombreMascota AS varchar) IS NULL OR LOWER(m.nombre_completo) LIKE LOWER(CONCAT('%', CAST(:nombreMascota AS varchar), '%'))) " +
                    "AND (CAST(:numeroMicrochip AS varchar) IS NULL OR LOWER(m.numero_microchip) LIKE LOWER(CONCAT('%', CAST(:numeroMicrochip AS varchar), '%'))) " +
                    "AND (CAST(:numeroDocumentoApoderado AS varchar) IS NULL OR LOWER(a.numero_documento) LIKE LOWER(CONCAT('%', CAST(:numeroDocumentoApoderado AS varchar), '%'))) " +
                    "AND (CAST(:numeroDocumentoEmpleado AS varchar) IS NULL OR LOWER(e.numero_documento_identidad) LIKE LOWER(CONCAT('%', CAST(:numeroDocumentoEmpleado AS varchar), '%'))) " +
                    "AND (CAST(:numeroHc AS varchar) IS NULL OR LOWER(hc.numero_hc) LIKE LOWER(CONCAT('%', CAST(:numeroHc AS varchar), '%'))) " +
-                   "AND (:fechaDesde IS NULL OR CAST(p.created_at AS date) >= :fechaDesde) " +
-                   "AND (:fechaHasta IS NULL OR CAST(p.created_at AS date) <= :fechaHasta) " +
+                   "AND CAST(p.created_at AS date) >= :fechaDesde " +
+                   "AND CAST(p.created_at AS date) <= :fechaHasta " +
                    "ORDER BY p.created_at DESC",
            countQuery = "SELECT COUNT(*) FROM prescripciones p " +
                         "JOIN consulta c ON c.id = p.consulta_id " +
@@ -50,19 +50,19 @@ public interface PrescripcionRepository extends JpaRepository<Prescripcion, Long
                         "     OR LOWER(p.principio_activo) LIKE CAST(:query AS varchar) " +
                         "     OR LOWER(m.nombre_completo) LIKE CAST(:query AS varchar) " +
                         "     OR LOWER(hc.numero_hc) LIKE CAST(:query AS varchar)) " +
-                        "AND (:mascotaId IS NULL OR m.id = :mascotaId) " +
+                        "AND (CAST(:nombreMascota AS varchar) IS NULL OR LOWER(m.nombre_completo) LIKE LOWER(CONCAT('%', CAST(:nombreMascota AS varchar), '%'))) " +
                         "AND (CAST(:numeroMicrochip AS varchar) IS NULL OR LOWER(m.numero_microchip) LIKE LOWER(CONCAT('%', CAST(:numeroMicrochip AS varchar), '%'))) " +
                         "AND (CAST(:numeroDocumentoApoderado AS varchar) IS NULL OR LOWER(a.numero_documento) LIKE LOWER(CONCAT('%', CAST(:numeroDocumentoApoderado AS varchar), '%'))) " +
                         "AND (CAST(:numeroDocumentoEmpleado AS varchar) IS NULL OR LOWER(e.numero_documento_identidad) LIKE LOWER(CONCAT('%', CAST(:numeroDocumentoEmpleado AS varchar), '%'))) " +
                         "AND (CAST(:numeroHc AS varchar) IS NULL OR LOWER(hc.numero_hc) LIKE LOWER(CONCAT('%', CAST(:numeroHc AS varchar), '%'))) " +
-                        "AND (:fechaDesde IS NULL OR CAST(p.created_at AS date) >= :fechaDesde) " +
-                        "AND (:fechaHasta IS NULL OR CAST(p.created_at AS date) <= :fechaHasta)",
+                        "AND CAST(p.created_at AS date) >= :fechaDesde " +
+                        "AND CAST(p.created_at AS date) <= :fechaHasta",
            nativeQuery = true)
     Page<Prescripcion> buscar(
             @Param("isSuperAdmin") boolean isSuperAdmin,
             @Param("companyId") Integer companyId,
             @Param("query") String query,
-            @Param("mascotaId") Long mascotaId,
+            @Param("nombreMascota") String nombreMascota,
             @Param("numeroMicrochip") String numeroMicrochip,
             @Param("numeroDocumentoApoderado") String numeroDocumentoApoderado,
             @Param("numeroDocumentoEmpleado") String numeroDocumentoEmpleado,

@@ -14,6 +14,7 @@ import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.mapper.CitaMapper;
 import veterinaria.vargasvet.repository.*;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CitaService;
 import veterinaria.vargasvet.util.BusinessValidator;
@@ -52,6 +53,7 @@ public class CitaServiceImpl implements CitaService {
     private final HorarioEmpleadoRepository horarioEmpleadoRepository;
     private final CitaMapper citaMapper;
     private final BusinessValidator businessValidator;
+    private final AccesoValidator accesoValidator;
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
     private final EmailService emailService;
     private final SimpMessagingTemplate messagingTemplate;
@@ -192,6 +194,7 @@ public class CitaServiceImpl implements CitaService {
         Cita savedCita = citaRepository.save(cita);
 
         auditLogService.log(
+            getCitaCompanyId(savedCita),
             "CREAR_CITA",
             "Citas",
             "Se agendó una nueva cita para la mascota " + mascota.getNombreCompleto() + " con el veterinario " + (veterinario.getUser() != null ? (veterinario.getUser().getNombre() + " " + veterinario.getUser().getApellido()) : "sin usuario") + " el " + cita.getFechaHoraInicio()
@@ -282,6 +285,7 @@ public class CitaServiceImpl implements CitaService {
         citaRepository.save(cita);
 
         auditLogService.log(
+            getCitaCompanyId(cita),
             "INICIAR_ATENCION",
             "Citas",
             "Se inició la atención " + (esGroomer ? "de grooming" : "médica") + " de la mascota " + cita.getMascota().getNombreCompleto() + " con el empleado " + (cita.getEmpleado().getUser() != null ? (cita.getEmpleado().getUser().getNombre() + " " + cita.getEmpleado().getUser().getApellido()) : "sin usuario") + " el " + cita.getFechaHoraInicio()
@@ -321,7 +325,7 @@ public class CitaServiceImpl implements CitaService {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
         Long filteredVeterinarioId = veterinarioId;
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
-            if (SecurityUtils.hasRole("ROLE_VETERINARIO") || SecurityUtils.hasRole("ROLE_EMPLEADO")) {
+            if (!accesoValidator.puedeLeer("CITA_VER_TODAS") && filteredVeterinarioId == null) {
                 filteredVeterinarioId = empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail())
                         .map(Empleado::getId)
                         .orElse(-1L);
@@ -366,6 +370,7 @@ public class CitaServiceImpl implements CitaService {
         broadcastCitaEvent("CANCELAR_CITA", cita, citaMapper.toResponse(cita));
 
         auditLogService.log(
+            getCitaCompanyId(cita),
             "CANCELAR_CITA",
             "Citas",
             "Se canceló la cita de la mascota " + cita.getMascota().getNombreCompleto() + " programada para el " + cita.getFechaHoraInicio() + ". Motivo: " + motivo
@@ -413,10 +418,6 @@ public class CitaServiceImpl implements CitaService {
     @Override
     @Transactional
     public void eliminarCita(Long id) {
-        if (!SecurityUtils.isAdmin() && !SecurityUtils.isSuperAdmin()) {
-            throw new IllegalArgumentException("Solo el administrador puede eliminar citas");
-        }
-
         Cita cita = citaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
 
@@ -427,7 +428,6 @@ public class CitaServiceImpl implements CitaService {
         }
 
         cita.setEstado(EstadoCita.ELIMINADA);
-        cita.setEliminada(true);
         cita.setEliminadoAt(LocalDateTime.now());
         
         String currentUserEmail = SecurityUtils.getCurrentUserEmail();
@@ -437,9 +437,10 @@ public class CitaServiceImpl implements CitaService {
         broadcastCitaEvent("ELIMINAR_CITA", cita, citaMapper.toResponse(cita));
 
         auditLogService.log(
+            getCitaCompanyId(cita),
             "ELIMINAR_CITA",
             "Citas",
-            "Se eliminó (borrado lógico) la cita cancelada de la mascota " + cita.getMascota().getNombreCompleto() + " programada para el " + cita.getFechaHoraInicio()
+            "Se eliminó (borrado lógico) la cita de la mascota " + cita.getMascota().getNombreCompleto() + " programada para el " + cita.getFechaHoraInicio()
         );
     }
 
@@ -511,6 +512,7 @@ public class CitaServiceImpl implements CitaService {
         broadcastCitaEvent("ACTUALIZAR_CITA", updatedCita, updatedResponse);
 
         auditLogService.log(
+            getCitaCompanyId(updatedCita),
             "ACTUALIZAR_CITA",
             "Citas",
             "Se actualizaron los datos de la cita de la mascota " + updatedCita.getMascota().getNombreCompleto() + " programada para el " + updatedCita.getFechaHoraInicio()
@@ -579,6 +581,7 @@ public class CitaServiceImpl implements CitaService {
         broadcastCitaEvent("REPROGRAMAR_CITA", savedCita, reprogramadaResponse);
 
         auditLogService.log(
+            getCitaCompanyId(savedCita),
             "REPROGRAMAR_CITA",
             "Citas",
             "Se reprogramó la cita para la mascota " + cita.getMascota().getNombreCompleto() + " para la nueva fecha " + fechaInicio
@@ -691,6 +694,15 @@ public class CitaServiceImpl implements CitaService {
         }
     }
 
+    private Integer getCitaCompanyId(Cita cita) {
+        if (cita.getMascota() != null && cita.getMascota().getApoderado() != null
+            && cita.getMascota().getApoderado().getUser() != null
+            && cita.getMascota().getApoderado().getUser().getCompany() != null) {
+            return cita.getMascota().getApoderado().getUser().getCompany().getId();
+        }
+        return null;
+    }
+
     private DiaSemana toDiaSemana(DayOfWeek dayOfWeek) {
         return switch (dayOfWeek) {
             case MONDAY    -> DiaSemana.LUNES;
@@ -738,7 +750,7 @@ public class CitaServiceImpl implements CitaService {
 
     @Override
     @Transactional(readOnly = true)
-    public java.util.List<String> getAdminDisponibilidad(Long empleadoId, String fecha, Long servicioId) {
+    public java.util.List<String> getAdminDisponibilidad(Long empleadoId, String fecha, Long servicioId, Boolean esEmergencia, Long excludeCitaId) {
         LocalDate localDate = LocalDate.parse(fecha);
 
         Empleado empleado = empleadoRepository.findById(empleadoId)
@@ -751,6 +763,32 @@ public class CitaServiceImpl implements CitaService {
         int duracion = servicio.getDuracionEstimada() != null ? servicio.getDuracionEstimada() : 20;
 
         java.util.List<String> availableSlots = new java.util.ArrayList<>();
+        java.util.List<Cita> existingAppointments = citaRepository.findActiveByEmpleadoIdAndFechaString(empleadoId, fecha);
+
+        if (Boolean.TRUE.equals(esEmergencia)) {
+            LocalTime minStart = localDate.isEqual(LocalDate.now()) ? LocalTime.now() : LocalTime.MIN;
+            LocalTime rangeStart = LocalTime.of(8, 0);
+            LocalTime rangeEnd = LocalTime.of(20, 0);
+            int step = Math.max(duracion, 30);
+
+            LocalTime t = LocalTime.from(rangeStart);
+            while (!t.isAfter(rangeEnd)) {
+                LocalTime slotStart = t;
+                LocalTime slotEnd = slotStart.plusMinutes(duracion);
+                if (!slotStart.isBefore(minStart) && !slotEnd.isAfter(rangeEnd)) {
+                    boolean overlap = existingAppointments.stream()
+                        .filter(appt -> excludeCitaId == null || !appt.getId().equals(excludeCitaId))
+                        .anyMatch(appt -> {
+                            LocalTime s = appt.getFechaHoraInicio().toLocalTime();
+                            LocalTime e = appt.getFechaHoraFin().toLocalTime();
+                            return slotStart.isBefore(e) && slotEnd.isAfter(s);
+                        });
+                    if (!overlap) availableSlots.add(slotStart.toString());
+                }
+                t = t.plusMinutes(step);
+            }
+            return availableSlots;
+        }
 
         boolean clinicClosed = companyExceptionRepository.findByCompanyIdAndDateString(companyId, fecha)
                 .map(ex -> Boolean.FALSE.equals(ex.getIsOpen()))
@@ -777,9 +815,7 @@ public class CitaServiceImpl implements CitaService {
         java.util.List<HorarioEmpleado> shifts = horarioEmpleadoRepository.findByEmpleadoIdAndFechaString(empleadoId, fecha);
         if (shifts.isEmpty()) return availableSlots;
 
-        java.util.List<Cita> existingAppointments = citaRepository.findActiveByEmpleadoIdAndFechaString(empleadoId, fecha);
-
-        final int step = 20;
+        final int step = Math.max(duracion, 20);
         LocalTime minStart = localDate.isEqual(LocalDate.now()) ? LocalTime.now() : LocalTime.MIN;
 
         for (HorarioEmpleado shift : shifts) {
@@ -796,6 +832,7 @@ public class CitaServiceImpl implements CitaService {
             }
 
             for (Cita appt : existingAppointments) {
+                if (excludeCitaId != null && appt.getId().equals(excludeCitaId)) continue;
                 LocalTime endTime = appt.getFechaHoraFin().toLocalTime();
                 if (!endTime.isBefore(shiftStart) && !endTime.isAfter(shiftEnd)) {
                     candidates.add(endTime);
@@ -808,11 +845,13 @@ public class CitaServiceImpl implements CitaService {
                 if (slotEnd.isAfter(shiftEnd)) continue;
                 if (slotStart2.isBefore(clinicOpen) || slotEnd.isAfter(clinicClose)) continue;
 
-                boolean overlap = existingAppointments.stream().anyMatch(appt -> {
-                    LocalTime s = appt.getFechaHoraInicio().toLocalTime();
-                    LocalTime e = appt.getFechaHoraFin().toLocalTime();
-                    return slotStart2.isBefore(e) && slotEnd.isAfter(s);
-                });
+                boolean overlap = existingAppointments.stream()
+                    .filter(appt -> excludeCitaId == null || !appt.getId().equals(excludeCitaId))
+                    .anyMatch(appt -> {
+                        LocalTime s = appt.getFechaHoraInicio().toLocalTime();
+                        LocalTime e = appt.getFechaHoraFin().toLocalTime();
+                        return slotStart2.isBefore(e) && slotEnd.isAfter(s);
+                    });
 
                 if (!overlap) availableSlots.add(slotStart2.toString());
             }

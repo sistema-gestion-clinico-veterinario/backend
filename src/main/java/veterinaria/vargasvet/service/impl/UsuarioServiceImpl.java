@@ -305,7 +305,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         if (!passwordEncoder.matches(dto.getOldPassword(), usuario.getPassword())) {
-            throw new BadCredentialsException("La contraseña actual es incorrecta");
+            throw new IllegalArgumentException("La contraseña actual es incorrecta");
         }
 
         usuario.setPassword(passwordEncoder.encode(dto.getNewPassword()));
@@ -480,7 +480,19 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Transactional
     public AuthResponse refreshToken(String token) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new BadCredentialsException("Refresh token no encontrado"));
+                .orElse(null);
+
+        if (refreshToken == null) {
+            Optional<String> emailOpt = tokenProvider.getEmailFromToken(token);
+            if (emailOpt.isPresent()) {
+                String email = emailOpt.get();
+                usuarioRepository.findByEmail(email).ifPresent(usuario ->
+                        refreshTokenRepository.deleteByUsuario(usuario)
+                );
+                throw new BadCredentialsException("Refresh token reutilizado. Se ha invalidado el acceso. Por favor, inicie sesión nuevamente.");
+            }
+            throw new BadCredentialsException("Refresh token inválido o expirado. Por favor, inicie sesión nuevamente.");
+        }
 
         if (refreshToken.getExpiryDate().isBefore(Instant.now())) {
             refreshTokenRepository.delete(refreshToken);
@@ -506,9 +518,11 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRole);
         String newJwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, permissions, companyId);
 
+        String newRefreshToken = createRefreshToken(usuario, activeRole);
+
         AuthResponse response = new AuthResponse();
         response.setToken(newJwt);
-        response.setRefreshToken(token);
+        response.setRefreshToken(newRefreshToken);
         response.setRoles(activeRolesList);
         response.setAssignedRoles(userRoles);
         response.setCompanyId(companyId);
@@ -527,17 +541,11 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         String token = tokenProvider.createRefreshToken(usuario.getEmail(), activeRole);
         Instant expiryDate = Instant.now().plusSeconds(604800); // 7 días
 
-        RefreshToken refreshToken = refreshTokenRepository.findByUsuario(usuario)
-                .map(existing -> {
-                    existing.setToken(token);
-                    existing.setExpiryDate(expiryDate);
-                    return existing;
-                })
-                .orElseGet(() -> RefreshToken.builder()
-                        .usuario(usuario)
-                        .token(token)
-                        .expiryDate(expiryDate)
-                        .build());
+        RefreshToken refreshToken = RefreshToken.builder()
+                .usuario(usuario)
+                .token(token)
+                .expiryDate(expiryDate)
+                .build();
 
         refreshTokenRepository.save(refreshToken);
         return token;

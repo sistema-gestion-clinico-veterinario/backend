@@ -129,9 +129,11 @@ public class DataInitializer implements CommandLineRunner {
 
     private void seed(String codigo, String nombre, String ruta, String grupo,
                       Integer orden, Ventana ventana, Vista parent) {
-        Vista vista = vistaRepository.findByCodigo(codigo).orElseGet(Vista::new);
-        boolean esNueva = vista.getId() == null;
+        if (vistaRepository.findByCodigo(codigo).isPresent()) {
+            return;
+        }
 
+        Vista vista = new Vista();
         vista.setCodigo(codigo);
         vista.setNombre(nombre);
         vista.setRuta(ruta);
@@ -139,18 +141,9 @@ public class DataInitializer implements CommandLineRunner {
         vista.setOrden(orden);
         vista.setVentana(ventana);
         vista.setActivo(true);
-
-        if (esNueva) {
-            vista.setParent(parent);
-        }
-
+        vista.setParent(parent);
         vistaRepository.save(vista);
-
-        if (esNueva) {
-            log.info("Vista creada: {} → {}", codigo, ruta);
-        } else {
-            log.debug("Vista actualizada: {}", codigo);
-        }
+        log.info("Vista creada: {} → {}", codigo, ruta);
     }
     private void seedPermisosIfNotExist() {
         log.info("Verificando permisos del SUPER_ADMIN...");
@@ -193,9 +186,11 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seed(String codigo, String nombre, String ruta, String grupo, Integer orden, Ventana ventana) {
-        Vista vista = vistaRepository.findByCodigo(codigo).orElseGet(Vista::new);
-        boolean esNueva = vista.getId() == null;
+        if (vistaRepository.findByCodigo(codigo).isPresent()) {
+            return;
+        }
 
+        Vista vista = new Vista();
         vista.setCodigo(codigo);
         vista.setNombre(nombre);
         vista.setRuta(ruta);
@@ -204,12 +199,7 @@ public class DataInitializer implements CommandLineRunner {
         vista.setVentana(ventana);
         vista.setActivo(true);
         vistaRepository.save(vista);
-
-        if (esNueva) {
-            log.info(" Vista creada: {} → {}", codigo, ruta);
-        } else {
-            log.debug("⏭ Vista actualizada: {}", codigo);
-        }
+        log.info(" Vista creada: {} → {}", codigo, ruta);
     }
 
     private void deactivateObsoleteVistas() {
