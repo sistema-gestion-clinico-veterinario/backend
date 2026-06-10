@@ -999,7 +999,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         List<Cita> citas = citaRepository.findByEmpleadoIdAndDateRange(empleadoId, startDate, endDate);
         if (!citas.isEmpty()) {
             List<Cita> citasConConflicto = citas;
-            if (dias != null && !dias.isEmpty()) {
+            if (dias != null && !dias.isEmpty() && !startDate.equals(endDate)) {
                 List<DiaSemana> diasFiltro = dias.stream()
                         .map(d -> DiaSemana.valueOf(d.toUpperCase()))
                         .toList();
@@ -1022,15 +1022,18 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
 
         // 2. Eliminar en el rango
-        if (dias == null || dias.isEmpty()) {
-            empleado.getHorarios().removeIf(h -> !h.getFecha().isBefore(startDate) && !h.getFecha().isAfter(endDate));
+        if (startDate.equals(endDate)) {
+            empleado.getHorarios().removeIf(h -> h.getFecha() == null || h.getFecha().equals(startDate));
+        } else if (dias == null || dias.isEmpty()) {
+            empleado.getHorarios().removeIf(h -> h.getFecha() == null || (!h.getFecha().isBefore(startDate) && !h.getFecha().isAfter(endDate)));
         } else {
             List<DiaSemana> diasFiltro = dias.stream()
                     .map(d -> DiaSemana.valueOf(d.toUpperCase()))
                     .toList();
-            empleado.getHorarios().removeIf(h -> !h.getFecha().isBefore(startDate) && 
-                    !h.getFecha().isAfter(endDate) && 
-                    diasFiltro.contains(h.getDiaSemana()));
+            empleado.getHorarios().removeIf(h -> h.getFecha() == null || 
+                    (!h.getFecha().isBefore(startDate) && 
+                     !h.getFecha().isAfter(endDate) && 
+                     diasFiltro.contains(h.getDiaSemana())));
         }
         empleadoRepository.save(empleado);
 
