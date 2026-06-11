@@ -48,7 +48,7 @@ public class DashboardServiceImpl implements DashboardService {
         }
 
         // Calcular estadísticas reales de citas para gráficos
-        java.time.LocalDate now = java.time.LocalDate.now();
+        java.time.LocalDate now = veterinaria.vargasvet.util.AppClock.today();
         
         // 1. Citas por Día (Semana actual: Lunes a Domingo)
         java.time.LocalDate startOfWeek = now.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));

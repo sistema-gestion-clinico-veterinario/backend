@@ -94,7 +94,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         empleado.setNumeroDocumentoIdentidad(dto.getNumeroDocumento());
         empleado.setGenero(dto.getGenero());
         empleado.setUser(savedUser);
-        empleado.setCreatedAt(LocalDateTime.now());
+        empleado.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
 
         if (dto.getEspecialidades() != null) {
             empleado.setEspecialidades(dto.getEspecialidades().stream()

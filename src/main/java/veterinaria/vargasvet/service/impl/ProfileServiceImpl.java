@@ -71,7 +71,7 @@ public class ProfileServiceImpl implements ProfileService {
         empleadoOpt.ifPresent(empleado -> {
             if (dto.getObservaciones() != null) empleado.setObservaciones(dto.getObservaciones());
             if (dto.getFotoUrl() != null) empleado.setFotoUrl(dto.getFotoUrl());
-            empleado.setUpdatedAt(LocalDateTime.now());
+            empleado.setUpdatedAt(veterinaria.vargasvet.util.AppClock.now());
             empleadoRepository.save(empleado);
         });
 

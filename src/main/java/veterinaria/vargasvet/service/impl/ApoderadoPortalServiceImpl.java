@@ -318,8 +318,8 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
 
         // Minimum 2 hours lead time for same-day booking
         LocalTime minAllowedTime = LocalTime.MIN;
-        if (localDate.equals(LocalDate.now())) {
-            minAllowedTime = LocalTime.now().plusHours(2);
+        if (localDate.equals(veterinaria.vargasvet.util.AppClock.today())) {
+            minAllowedTime = veterinaria.vargasvet.util.AppClock.currentTime().plusHours(2);
         }
 
         for (HorarioEmpleado shift : shifts) {
@@ -337,7 +337,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
                     (slotEnd.isBefore(clinicClose) || slotEnd.equals(clinicClose))) {
 
                     // Check lead time constraint
-                    if (!localDate.equals(LocalDate.now()) || slotStart.isAfter(minAllowedTime)) {
+                    if (!localDate.equals(veterinaria.vargasvet.util.AppClock.today()) || slotStart.isAfter(minAllowedTime)) {
 
                         // Check overlap with existing appointments
                         boolean overlap = false;
@@ -444,7 +444,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         }
 
         // Rule: Can only reschedule up to 6 hours before the original appointment start time
-        if (LocalDateTime.now().isAfter(cita.getFechaHoraInicio().minusHours(6))) {
+        if (veterinaria.vargasvet.util.AppClock.now().isAfter(cita.getFechaHoraInicio().minusHours(6))) {
             throw new IllegalArgumentException("No se puede reprogramar la cita con menos de 6 horas de anticipación.");
         }
 

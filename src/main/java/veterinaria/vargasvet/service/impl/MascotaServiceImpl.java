@@ -184,7 +184,7 @@ public class MascotaServiceImpl implements MascotaService {
         }
 
         if (!request.getActive()) {
-            if (citaRepository.existsCitaVigenteByMascotaId(id, java.time.LocalDateTime.now())) {
+            if (citaRepository.existsCitaVigenteByMascotaId(id, veterinaria.vargasvet.util.AppClock.now())) {
                 throw new IllegalArgumentException("No se puede desactivar una mascota con citas programadas vigentes");
             }
             if (request.getMotivoBaja() == null) {
@@ -204,7 +204,7 @@ public class MascotaServiceImpl implements MascotaService {
 
         mascota.setActivo(request.getActive());
         mascota.setEstadoModificadoPor(SecurityUtils.getCurrentUserEmail());
-        mascota.setFechaModificacionEstado(java.time.LocalDateTime.now());
+        mascota.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
 
         mascotaRepository.save(mascota);
 
