@@ -257,7 +257,7 @@ public class CitaServiceImpl implements CitaService {
         }
 
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
-            java.time.LocalDateTime ahora = java.time.LocalDateTime.now();
+            java.time.LocalDateTime ahora = veterinaria.vargasvet.util.AppClock.now();
             java.time.LocalDateTime inicioCita = cita.getFechaHoraInicio();
             long minutosRestantes = java.time.Duration.between(ahora, inicioCita).toMinutes();
             if (minutosRestantes > 60) {
@@ -309,7 +309,7 @@ public class CitaServiceImpl implements CitaService {
         consulta.setHistoriaClinica(hc);
         consulta.setCita(cita);
         consulta.setVeterinario(cita.getEmpleado());
-        consulta.setFechaConsulta(LocalDateTime.now());
+        consulta.setFechaConsulta(veterinaria.vargasvet.util.AppClock.now());
         consulta.setMotivoConsulta(cita.getMotivoCita());
         consulta.setTipoConsulta(TipoConsulta.CONTROL_RUTINA);
         consulta.setEstado(EstadoConsulta.ABIERTA);
@@ -359,7 +359,7 @@ public class CitaServiceImpl implements CitaService {
 
         // Regla: 2 horas antes para apoderado, 1 hora para personal administrativo
         int hoursLimit = SecurityUtils.hasRole("ROLE_APODERADO") ? 2 : 1;
-        if (LocalDateTime.now().isAfter(cita.getFechaHoraInicio().minusHours(hoursLimit))) {
+        if (veterinaria.vargasvet.util.AppClock.now().isAfter(cita.getFechaHoraInicio().minusHours(hoursLimit))) {
             throw new IllegalArgumentException("No se puede cancelar la cita faltando menos de " + hoursLimit + " horas para su inicio");
         }
 
@@ -428,7 +428,7 @@ public class CitaServiceImpl implements CitaService {
         }
 
         cita.setEstado(EstadoCita.ELIMINADA);
-        cita.setEliminadoAt(LocalDateTime.now());
+        cita.setEliminadoAt(veterinaria.vargasvet.util.AppClock.now());
         
         String currentUserEmail = SecurityUtils.getCurrentUserEmail();
         usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setEliminadoPor);
@@ -550,7 +550,7 @@ public class CitaServiceImpl implements CitaService {
         // Regla: 6 horas antes para apoderado, 1 hora para personal administrativo
         int hoursLimit = SecurityUtils.hasRole("ROLE_APODERADO") ? 6 : 1;
         if (cita.getEstado() == EstadoCita.PROGRAMADA || cita.getEstado() == EstadoCita.REPROGRAMADA) {
-            if (LocalDateTime.now().isAfter(cita.getFechaHoraInicio().minusHours(hoursLimit))) {
+            if (veterinaria.vargasvet.util.AppClock.now().isAfter(cita.getFechaHoraInicio().minusHours(hoursLimit))) {
                 throw new IllegalArgumentException("No se puede reprogramar una cita con menos de " + hoursLimit + " horas de anticipación");
             }
         }
@@ -572,7 +572,7 @@ public class CitaServiceImpl implements CitaService {
         cita.setMotivoReprogramacion(request.getMotivoReprogramacion());
         
         // Auditoría
-        cita.setReprogramadoAt(LocalDateTime.now());
+        cita.setReprogramadoAt(veterinaria.vargasvet.util.AppClock.now());
         String currentUserEmail = SecurityUtils.getCurrentUserEmail();
         usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setReprogramadoPor);
 
@@ -679,7 +679,7 @@ public class CitaServiceImpl implements CitaService {
     }
 
     private void validarFechaCitaNoPasada(LocalDateTime fechaInicio) {
-        if (fechaInicio != null && fechaInicio.isBefore(LocalDateTime.now().minusMinutes(1))) {
+        if (fechaInicio != null && fechaInicio.isBefore(veterinaria.vargasvet.util.AppClock.now().minusMinutes(1))) {
             throw new IllegalArgumentException("La fecha de la cita no puede ser anterior al momento actual");
         }
     }
@@ -766,7 +766,7 @@ public class CitaServiceImpl implements CitaService {
         java.util.List<Cita> existingAppointments = citaRepository.findActiveByEmpleadoIdAndFechaString(empleadoId, fecha);
 
         if (Boolean.TRUE.equals(esEmergencia)) {
-            LocalTime minStart = localDate.isEqual(LocalDate.now()) ? LocalTime.now() : LocalTime.MIN;
+            LocalTime minStart = localDate.isEqual(veterinaria.vargasvet.util.AppClock.today()) ? veterinaria.vargasvet.util.AppClock.currentTime() : LocalTime.MIN;
             LocalTime rangeStart = LocalTime.of(8, 0);
             LocalTime rangeEnd = LocalTime.of(20, 0);
             int step = Math.max(duracion, 30);
@@ -816,7 +816,7 @@ public class CitaServiceImpl implements CitaService {
         if (shifts.isEmpty()) return availableSlots;
 
         final int step = Math.max(duracion, 20);
-        LocalTime minStart = localDate.isEqual(LocalDate.now()) ? LocalTime.now() : LocalTime.MIN;
+        LocalTime minStart = localDate.isEqual(veterinaria.vargasvet.util.AppClock.today()) ? veterinaria.vargasvet.util.AppClock.currentTime() : LocalTime.MIN;
 
         for (HorarioEmpleado shift : shifts) {
             if (Boolean.FALSE.equals(shift.getActivo())) continue;

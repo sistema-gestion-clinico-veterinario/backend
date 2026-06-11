@@ -23,7 +23,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
             throws IOException, ServletException {
         
         CustomErrorResponse errorResponse = new CustomErrorResponse(
-                LocalDateTime.now(),
+                veterinaria.vargasvet.util.AppClock.now(),
                 "Acceso no autorizado o token inválido",
                 request.getRequestURI()
         );

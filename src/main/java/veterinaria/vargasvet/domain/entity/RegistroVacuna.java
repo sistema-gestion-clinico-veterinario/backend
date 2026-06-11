@@ -50,6 +50,6 @@ public class RegistroVacuna {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = veterinaria.vargasvet.util.AppClock.now();
     }
 }

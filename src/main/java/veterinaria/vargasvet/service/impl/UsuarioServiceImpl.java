@@ -398,7 +398,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         PasswordResetToken resetToken = PasswordResetToken.builder()
                 .token(token)
                 .usuario(usuario)
-                .expiryDate(LocalDateTime.now().plusHours(24)) // 24 hours validity
+                .expiryDate(veterinaria.vargasvet.util.AppClock.now().plusHours(24)) // 24 hours validity
                 .build();
         
         passwordResetTokenRepository.save(resetToken);
@@ -444,7 +444,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.getToken())
                 .orElseThrow(() -> new IllegalArgumentException("El token es inválido o no existe."));
 
-        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+        if (resetToken.getExpiryDate().isBefore(veterinaria.vargasvet.util.AppClock.now())) {
             passwordResetTokenRepository.delete(resetToken);
             throw new IllegalArgumentException("El token ha expirado. Por favor solicite uno nuevo.");
         }
@@ -472,7 +472,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Transactional(readOnly = true)
     public boolean validateResetToken(String token) {
         return passwordResetTokenRepository.findByToken(token)
-                .map(resetToken -> !resetToken.getExpiryDate().isBefore(LocalDateTime.now()))
+                .map(resetToken -> !resetToken.getExpiryDate().isBefore(veterinaria.vargasvet.util.AppClock.now()))
                 .orElse(false);
     }
 
@@ -490,7 +490,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             throw new BadCredentialsException("Refresh token inválido o expirado. Por favor, inicie sesión nuevamente.");
         }
 
-        if (refreshToken.getExpiryDate().isBefore(Instant.now())) {
+        if (refreshToken.getExpiryDate().isBefore(veterinaria.vargasvet.util.AppClock.instantNow())) {
             refreshTokenRepository.delete(refreshToken);
             throw new BadCredentialsException("Refresh token expirado. Por favor, inicie sesión nuevamente.");
         }
@@ -536,7 +536,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
     private String createRefreshToken(Usuario usuario, String activeRole) {
         String token = tokenProvider.createRefreshToken(usuario.getEmail(), activeRole);
-        Instant expiryDate = Instant.now().plusSeconds(604800); // 7 días
+        Instant expiryDate = veterinaria.vargasvet.util.AppClock.instantNow().plusSeconds(604800); // 7 días
 
         RefreshToken refreshToken = RefreshToken.builder()
                 .usuario(usuario)
