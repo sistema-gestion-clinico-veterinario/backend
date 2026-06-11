@@ -485,11 +485,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         if (refreshToken == null) {
             Optional<String> emailOpt = tokenProvider.getEmailFromToken(token);
             if (emailOpt.isPresent()) {
-                String email = emailOpt.get();
-                usuarioRepository.findByEmail(email).ifPresent(usuario ->
-                        refreshTokenRepository.deleteByUsuario(usuario)
-                );
-                throw new BadCredentialsException("Refresh token reutilizado. Se ha invalidado el acceso. Por favor, inicie sesión nuevamente.");
+                throw new BadCredentialsException("Refresh token inválido o expirado. Por favor, inicie sesión nuevamente.");
             }
             throw new BadCredentialsException("Refresh token inválido o expirado. Por favor, inicie sesión nuevamente.");
         }
@@ -519,6 +515,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         String newJwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, permissions, companyId);
 
         String newRefreshToken = createRefreshToken(usuario, activeRole);
+        refreshTokenRepository.delete(refreshToken);
 
         AuthResponse response = new AuthResponse();
         response.setToken(newJwt);

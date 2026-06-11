@@ -32,6 +32,7 @@ import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.PagoService;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import veterinaria.vargasvet.dto.response.PagoListResponse;
@@ -40,9 +41,8 @@ import veterinaria.vargasvet.security.SecurityUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -182,10 +182,116 @@ public class PagoServiceImpl implements PagoService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PagoListResponse> listarTodos(int page, int size) {
+    public Page<PagoListResponse> listarTodos(int page, int size, Integer companyId) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        if (companyId != null) {
+            return purchaseRepository.findByCompanyId(companyId, TipoPurchase.SERVICIO_CITA, pageable)
+                    .map(this::toListResponse);
+        }
         return purchaseRepository.findAllByTipoPurchaseOrderByCreatedAtDesc(TipoPurchase.SERVICIO_CITA, pageable)
                 .map(this::toListResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PagoListResponse> listarHistorialPorEmpresa(int page, int size, Integer companyId) {
+        if (companyId == null) {
+            return Page.empty();
+        }
+
+        // Fetch purchases not linked to citas — covers all future item types (virtual store, etc.)
+        List<PagoListResponse> nonCitaPurchases = purchaseRepository
+                .findByUserCompanyIdNonCita(companyId, PageRequest.of(0, 200, Sort.by("createdAt").descending()))
+                .getContent().stream()
+                .map(this::toListResponse)
+                .collect(Collectors.toList());
+
+        // Fetch all citas by company — covers paid + unpaid appointments
+        List<PagoListResponse> citas = citaRepository
+                .findByCompanyIdPaginated(companyId, PageRequest.of(0, 200, Sort.by("fechaHoraInicio").descending()))
+                .getContent().stream()
+                .map(this::toListResponseFromCita)
+                .collect(Collectors.toList());
+
+        List<PagoListResponse> allItems = new ArrayList<>();
+        allItems.addAll(citas);
+        allItems.addAll(nonCitaPurchases);
+
+        allItems.sort(Comparator.comparing(PagoListResponse::getFechaPago,
+                Comparator.nullsLast(Comparator.reverseOrder())));
+
+        int total = allItems.size();
+        int start = page * size;
+        int end = Math.min(start + size, total);
+
+        List<PagoListResponse> content = start < total
+                ? allItems.subList(start, end)
+                : Collections.emptyList();
+
+        return new PageImpl<>(content, PageRequest.of(page, size), total);
+    }
+
+    private PagoListResponse toListResponseFromCita(Cita cita) {
+        PagoListResponse r = new PagoListResponse();
+        r.setCitaId(cita.getId());
+        r.setId(cita.getId());
+
+        Purchase purchase = null;
+        if (cita.getPagos() != null && !cita.getPagos().isEmpty()) {
+            purchase = cita.getPagos().get(0);
+        }
+
+        if (purchase != null) {
+            r.setMetodoPago(purchase.getMetodoPago());
+            r.setMonto(purchase.getTotal());
+            r.setMontoRecibido(purchase.getMontoRecibido());
+            r.setFechaPago(purchase.getCreatedAt());
+            r.setEstado(purchase.getPaymentStatus());
+
+            BigDecimal cambio = null;
+            if (purchase.getMontoRecibido() != null && purchase.getTotal() != null
+                    && purchase.getMontoRecibido().compareTo(purchase.getTotal()) > 0) {
+                cambio = purchase.getMontoRecibido().subtract(purchase.getTotal());
+            }
+            r.setCambio(cambio);
+        } else {
+            r.setMonto(cita.getTotalServicio());
+            r.setEstado(computePaymentStatus(cita));
+        }
+
+        r.setEstadoCita(cita.getEstado() != null ? cita.getEstado().name() : null);
+
+        if (cita.getMascota() != null) {
+            r.setMascotaNombre(cita.getMascota().getNombreCompleto());
+            if (cita.getMascota().getApoderado() != null
+                    && cita.getMascota().getApoderado().getUser() != null) {
+                var apUser = cita.getMascota().getApoderado().getUser();
+                r.setClienteNombre(
+                        (apUser.getNombre() != null ? apUser.getNombre() : "")
+                        + " " + (apUser.getApellido() != null ? apUser.getApellido() : "")
+                );
+            }
+        }
+        if (cita.getServicio() != null) {
+            r.setServicioNombre(cita.getServicio().getNombre());
+        }
+        if (cita.getEmpleado() != null && cita.getEmpleado().getUser() != null) {
+            var vetUser = cita.getEmpleado().getUser();
+            r.setVeterinarioNombre(
+                    (vetUser.getNombre() != null ? vetUser.getNombre() : "")
+                    + " " + (vetUser.getApellido() != null ? vetUser.getApellido() : "")
+            );
+        }
+        return r;
+    }
+
+    private PaymentStatus computePaymentStatus(Cita cita) {
+        BigDecimal total = cita.getTotalServicio();
+        BigDecimal pagado = cita.getMontoPagado();
+        if (total != null && pagado != null && pagado.compareTo(total) >= 0) {
+            return PaymentStatus.PAID;
+        }
+        return PaymentStatus.PENDING;
     }
 
     @Override
@@ -239,6 +345,12 @@ public class PagoServiceImpl implements PagoService {
                         + " " + (vetUser.getApellido() != null ? vetUser.getApellido() : "")
                 );
             }
+        } else if (p.getUser() != null) {
+            // Fallback for non-cita purchases (e.g., virtual store, future item types)
+            r.setClienteNombre(
+                    (p.getUser().getNombre() != null ? p.getUser().getNombre() : "")
+                    + " " + (p.getUser().getApellido() != null ? p.getUser().getApellido() : "")
+            );
         }
         return r;
     }
