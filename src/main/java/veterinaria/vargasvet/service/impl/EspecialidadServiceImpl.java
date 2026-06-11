@@ -54,7 +54,7 @@ public class EspecialidadServiceImpl implements EspecialidadService {
         
         especialidad.setCompany(companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
-        especialidad.setCreatedAt(LocalDateTime.now());
+        especialidad.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
         return especialidadRepository.save(especialidad);
     }
 
@@ -64,7 +64,7 @@ public class EspecialidadServiceImpl implements EspecialidadService {
         Especialidad existing = findById(id);
         existing.setNombre(especialidad.getNombre());
         existing.setDescripcion(especialidad.getDescripcion());
-        existing.setUpdatedAt(LocalDateTime.now());
+        existing.setUpdatedAt(veterinaria.vargasvet.util.AppClock.now());
         return especialidadRepository.save(existing);
     }
 

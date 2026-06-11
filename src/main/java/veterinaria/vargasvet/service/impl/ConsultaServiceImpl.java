@@ -157,7 +157,7 @@ public class ConsultaServiceImpl implements ConsultaService {
         validarCamposObligatorios(consulta);
 
         consulta.setEstado(EstadoConsulta.CERRADA);
-        consulta.setFechaCierre(LocalDateTime.now());
+        consulta.setFechaCierre(veterinaria.vargasvet.util.AppClock.now());
         consulta.setCerradoPor(SecurityUtils.getCurrentUserEmail());
 
         Cita cita = consulta.getCita();

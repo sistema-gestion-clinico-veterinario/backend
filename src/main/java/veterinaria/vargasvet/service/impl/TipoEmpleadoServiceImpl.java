@@ -51,7 +51,7 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
         
         tipo.setCompany(companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
-        tipo.setCreatedAt(LocalDateTime.now());
+        tipo.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
         return tipoEmpleadoRepository.save(tipo);
     }
 
@@ -64,7 +64,7 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
         existing.setNombre(tipo.getNombre());
         if (tipo.getDescripcion() != null) existing.setDescripcion(tipo.getDescripcion());
         existing.setPermiteEspecialidades(tipo.getPermiteEspecialidades() != null ? tipo.getPermiteEspecialidades() : existing.getPermiteEspecialidades());
-        existing.setUpdatedAt(java.time.LocalDateTime.now());
+        existing.setUpdatedAt(veterinaria.vargasvet.util.AppClock.now());
         return tipoEmpleadoRepository.save(existing);
     }
 
@@ -74,7 +74,7 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
         TipoEmpleado existing = tipoEmpleadoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado"));
         existing.setEstado(activo);
-        existing.setUpdatedAt(java.time.LocalDateTime.now());
+        existing.setUpdatedAt(veterinaria.vargasvet.util.AppClock.now());
         tipoEmpleadoRepository.save(existing);
     }
 
