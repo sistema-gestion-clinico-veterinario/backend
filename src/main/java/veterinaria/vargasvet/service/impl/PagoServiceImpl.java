@@ -149,7 +149,7 @@ public class PagoServiceImpl implements PagoService {
         pago.setTipoPurchase(TipoPurchase.SERVICIO_CITA);
         pago.setMercadoPagoId(mercadoPagoId);
         pago.setMpStatus(mpStatus);
-        pago.setCreatedAt(LocalDateTime.now());
+        pago.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
 
         Purchase savedPago = purchaseRepository.save(pago);
 

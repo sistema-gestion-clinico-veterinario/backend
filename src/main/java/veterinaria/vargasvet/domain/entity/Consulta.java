@@ -111,13 +111,13 @@ public class Consulta {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = veterinaria.vargasvet.util.AppClock.now();
+        updatedAt = veterinaria.vargasvet.util.AppClock.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = veterinaria.vargasvet.util.AppClock.now();
     }
 }
 
