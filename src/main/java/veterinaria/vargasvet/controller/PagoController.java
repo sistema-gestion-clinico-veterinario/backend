@@ -11,6 +11,7 @@ import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.PagoRequest;
 import veterinaria.vargasvet.dto.response.PagoListResponse;
 import veterinaria.vargasvet.dto.response.PagoResponse;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.PagoService;
 
 @RestController
@@ -19,6 +20,7 @@ import veterinaria.vargasvet.service.PagoService;
 public class PagoController {
 
     private final PagoService pagoService;
+    private final AccesoValidator accesoValidator;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA', 'APODERADO', 'CLIENTE')")
@@ -36,11 +38,13 @@ public class PagoController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")
     public ResponseEntity<ApiResponse<Page<PagoListResponse>>> listarTodos(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Historial de pagos recuperado con éxito", pagoService.listarTodos(page, size)));
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Integer companyId) {
+        accesoValidator.validarLeer("VISTA_PAGOS");
+        return ResponseEntity.ok(new ApiResponse<>(true, "Historial de pagos recuperado con éxito", pagoService.listarTodos(page, size, companyId)));
     }
 
     @GetMapping("/portal/my-payments")
@@ -49,5 +53,15 @@ public class PagoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Historial de pagos recuperado con éxito", pagoService.listarMisPagos(page, size)));
+    }
+
+    @GetMapping("/history")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")
+    public ResponseEntity<ApiResponse<Page<PagoListResponse>>> listarHistorialPorEmpresa(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Integer companyId) {
+        accesoValidator.validarLeer("VISTA_PAGOS");
+        return ResponseEntity.ok(new ApiResponse<>(true, "Historial de pagos recuperado con éxito", pagoService.listarHistorialPorEmpresa(page, size, companyId)));
     }
 }
