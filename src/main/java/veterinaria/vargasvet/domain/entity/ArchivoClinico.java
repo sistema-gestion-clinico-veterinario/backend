@@ -46,6 +46,6 @@ public class ArchivoClinico {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = veterinaria.vargasvet.util.AppClock.now();
     }
 }

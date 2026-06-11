@@ -31,6 +31,6 @@ public class EmpleadoServicio {
     public EmpleadoServicio(Empleado empleado, ServiciosVeterinarios servicio) {
         this.empleado = empleado;
         this.servicio = servicio;
-        this.fechaAsignacion = LocalDateTime.now();
+        this.fechaAsignacion = veterinaria.vargasvet.util.AppClock.now();
     }
 }

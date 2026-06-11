@@ -46,7 +46,7 @@ public class PrescripcionServiceImpl implements PrescripcionService {
         Prescripcion prescripcion = new Prescripcion();
         prescripcion.setConsulta(consulta);
         mapRequestToEntity(request, prescripcion);
-        prescripcion.setCreatedAt(LocalDateTime.now());
+        prescripcion.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
 
         Empleado veterinario = null;
         Integer userId = SecurityUtils.getCurrentUserId();
