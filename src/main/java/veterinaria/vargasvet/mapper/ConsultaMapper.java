@@ -75,7 +75,7 @@ public class ConsultaMapper {
                 response.setSenasParticulares(mascota.getSenasParticulares());
                 
                 if (mascota.getFechaNacimiento() != null) {
-                    long meses = ChronoUnit.MONTHS.between(mascota.getFechaNacimiento(), LocalDate.now());
+                    long meses = ChronoUnit.MONTHS.between(mascota.getFechaNacimiento(), veterinaria.vargasvet.util.AppClock.today());
                     response.setEdadAproximadaMeses((int) meses);
                 }
 

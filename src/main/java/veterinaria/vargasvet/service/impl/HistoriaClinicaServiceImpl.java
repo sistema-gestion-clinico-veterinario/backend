@@ -164,7 +164,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
             response.setEsterilizado(mascota.getEsterilizado());
 
             if (mascota.getFechaNacimiento() != null) {
-                response.setEdadAproximadaMeses((int) ChronoUnit.MONTHS.between(mascota.getFechaNacimiento(), LocalDate.now()));
+                response.setEdadAproximadaMeses((int) ChronoUnit.MONTHS.between(mascota.getFechaNacimiento(), veterinaria.vargasvet.util.AppClock.today()));
             }
 
             if (mascota.getApoderado() != null) {

@@ -203,7 +203,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         if (dto.getReferencias() != null) apoderado.setReferencias(dto.getReferencias());
         if (dto.getObservaciones() != null) apoderado.setObservaciones(dto.getObservaciones());
 
-        apoderado.setUpdatedAt(LocalDateTime.now());
+        apoderado.setUpdatedAt(veterinaria.vargasvet.util.AppClock.now());
         apoderadoRepository.save(apoderado);
 
         auditLogService.log(
@@ -236,7 +236,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         usuarioRepository.save(usuario);
 
         apoderado.setEstadoModificadoPor(SecurityUtils.getCurrentUserEmail());
-        apoderado.setFechaModificacionEstado(LocalDateTime.now());
+        apoderado.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
         apoderadoRepository.save(apoderado);
 
 

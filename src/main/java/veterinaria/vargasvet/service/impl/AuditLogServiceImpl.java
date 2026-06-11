@@ -126,7 +126,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     @Transactional
     public void log(String email, String role, Integer companyId, String companyName, String action, String module, String details, String ipAddress) {
         AuditLog auditLog = AuditLog.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(veterinaria.vargasvet.util.AppClock.now())
                 .userEmail(email)
                 .userRole(role)
                 .companyId(companyId)
