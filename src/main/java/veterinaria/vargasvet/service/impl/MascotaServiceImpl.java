@@ -102,6 +102,22 @@ public class MascotaServiceImpl implements MascotaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public MascotaResponse obtenerPorId(Long id) {
+        Mascota mascota = mascotaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada con ID: " + id));
+        return mascotaMapper.toResponse(mascota);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MascotaResponse obtenerPorUuid(String uuid) {
+        Mascota mascota = mascotaRepository.findByUuid(uuid)
+                .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada"));
+        return mascotaMapper.toResponse(mascota);
+    }
+
+    @Override
     @Transactional
     public MascotaResponse updateMascota(Long id, MascotaRequest request) {
         Mascota mascota = mascotaRepository.findById(id)

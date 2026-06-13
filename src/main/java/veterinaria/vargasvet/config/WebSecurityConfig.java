@@ -79,13 +79,13 @@ public class WebSecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
-        // Rate Limit Filter (antes que JWT para capturar login sin auth)
+        // Rate Limit Filter (antes que JWT)
         http.addFilterBefore(
                 rateLimitFilter,
-                JWTFilter.class
+                UsernamePasswordAuthenticationFilter.class
         );
 
-        // JWT Filter
+        // JWT Filter (despues de rate limit)
         http.addFilterBefore(
                 jwtFilter,
                 UsernamePasswordAuthenticationFilter.class

@@ -39,6 +39,20 @@ public class MascotaController {
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('PET_READ')")
+    public ResponseEntity<ApiResponse<MascotaResponse>> obtenerPorId(@PathVariable Long id) {
+        MascotaResponse response = mascotaService.obtenerPorId(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Mascota encontrada", response));
+    }
+
+    @GetMapping("/uuid/{uuid}")
+    @PreAuthorize("hasAuthority('PET_READ')")
+    public ResponseEntity<ApiResponse<MascotaResponse>> obtenerPorUuid(@PathVariable String uuid) {
+        MascotaResponse response = mascotaService.obtenerPorUuid(uuid);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Mascota encontrada", response));
+    }
+
     @PostMapping
     @PreAuthorize("hasAuthority('PET_CREATE')")
     public ResponseEntity<ApiResponse<MascotaResponse>> registerMascota(@Valid @RequestBody MascotaRequest request) {

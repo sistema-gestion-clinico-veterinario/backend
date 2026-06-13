@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,17 +28,23 @@ public class MediaController {
     }
 
     @GetMapping("/{filename:.+}")
-    public ResponseEntity<Resource> getResource(@PathVariable String filename) throws IOException {
-        Resource resource = storageService.loadAsResource(filename);
+    public ResponseEntity<Resource> getResource(@PathVariable String filename) {
+        try {
+            Resource resource = storageService.loadAsResource(filename);
 
-        String contentType = Files.probeContentType(resource.getFile().toPath());
-        if (contentType == null) {
-            contentType = "application/octet-stream";
+            String contentType = Files.probeContentType(resource.getFile().toPath());
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
+            return ResponseEntity
+                    .ok()
+                    .header(HttpHeaders.CONTENT_TYPE, contentType)
+                    .body(resource);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-
-        return ResponseEntity
-                .ok()
-                .header(HttpHeaders.CONTENT_TYPE, contentType)
-                .body(resource);
     }
 }
