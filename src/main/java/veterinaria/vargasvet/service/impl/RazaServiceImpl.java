@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Raza;
+import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.dto.request.RazaRequest;
 import veterinaria.vargasvet.dto.response.RazaResponse;
 import veterinaria.vargasvet.repository.RazaRepository;
@@ -23,7 +24,8 @@ public class RazaServiceImpl implements RazaService {
     @Transactional(readOnly = true)
     public List<RazaResponse> listarPorEspecie(String especie) {
         if (especie != null && !especie.isBlank()) {
-            return razaRepository.findByEspecieAndActivoTrueOrderByNombreAsc(especie)
+            EspecieMascota enumEspecie = EspecieMascota.valueOf(especie.toUpperCase());
+            return razaRepository.findByEspecieAndActivoTrueOrderByNombreAsc(enumEspecie)
                     .stream().map(this::toResponse).collect(Collectors.toList());
         }
         return razaRepository.findByActivoTrueOrderByNombreAsc()
@@ -33,7 +35,7 @@ public class RazaServiceImpl implements RazaService {
     @Override
     @Transactional
     public RazaResponse crear(RazaRequest request) {
-        if (razaRepository.existsByNombreIgnoreCaseAndEspecie(request.getNombre(), request.getEspecie().name())) {
+        if (razaRepository.existsByNombreIgnoreCaseAndEspecie(request.getNombre(), request.getEspecie())) {
             throw new IllegalArgumentException("Ya existe una raza con ese nombre para la especie seleccionada");
         }
 
