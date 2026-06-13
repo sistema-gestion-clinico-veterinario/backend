@@ -46,7 +46,7 @@
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "Spring Boot.VargasvetApplication.executor": "Run",
     "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "bugfix/enterprise",
     "kotlin-language-version-configured": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -106,7 +106,7 @@
       <workItem from="1781289661131" duration="620000" />
       <workItem from="1781295436480" duration="3147000" />
       <workItem from="1781321923398" duration="4898000" />
-      <workItem from="1781352686741" duration="414000" />
+      <workItem from="1781352686741" duration="928000" />
     </task>
     <servers />
   </component>
