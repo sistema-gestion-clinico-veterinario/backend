@@ -26,9 +26,8 @@ public class MascotaRequest {
     @Size(max = 60, message = "La especie personalizada no debe superar 60 caracteres")
     private String otraEspecie;
 
-    @NotBlank(message = "La raza es obligatoria")
-    @Size(min = 2, max = 60, message = "La raza debe tener entre 2 y 60 caracteres")
-    private String raza;
+    @NotNull(message = "Debe seleccionar una raza")
+    private Long razaId;
 
     @NotNull(message = "El sexo es obligatorio")
     private SexoMascota sexo;
