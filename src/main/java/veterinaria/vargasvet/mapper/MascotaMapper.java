@@ -24,7 +24,11 @@ public class MascotaMapper {
         response.setEspecie(mascota.getEspecie());
         response.setOtraEspecie(mascota.getOtraEspecie());
 
-        response.setRaza(mascota.getRaza());
+        if (mascota.getRaza() != null) {
+            response.setRaza(mascota.getRaza().getNombre());
+            response.setRazaId(mascota.getRaza().getId());
+            response.setRazaNombre(mascota.getRaza().getNombre());
+        }
         response.setSexo(mascota.getSexo());
         response.setFechaNacimiento(mascota.getFechaNacimiento());
         response.setPeso(mascota.getPeso());

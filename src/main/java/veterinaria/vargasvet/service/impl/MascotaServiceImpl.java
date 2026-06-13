@@ -32,6 +32,7 @@ public class MascotaServiceImpl implements MascotaService {
     private final MascotaMapper mascotaMapper;
     private final BusinessValidator businessValidator;
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
+    private final veterinaria.vargasvet.repository.RazaRepository razaRepository;
 
     @Override
     @Transactional
@@ -68,7 +69,11 @@ public class MascotaServiceImpl implements MascotaService {
         mascota.setNombreCompleto(request.getNombreCompleto());
         mascota.setEspecie(request.getEspecie());
         mascota.setOtraEspecie(request.getEspecie() == EspecieMascota.OTRO ? request.getOtraEspecie() : null);
-        mascota.setRaza(request.getRaza());
+        if (request.getRazaId() != null) {
+            veterinaria.vargasvet.domain.entity.Raza raza = razaRepository.findById(request.getRazaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Raza no encontrada con ID: " + request.getRazaId()));
+            mascota.setRaza(raza);
+        }
         mascota.setSexo(request.getSexo());
         mascota.setFechaNacimiento(request.getFechaNacimiento());
         mascota.setPeso(request.getPeso());
@@ -148,7 +153,11 @@ public class MascotaServiceImpl implements MascotaService {
         }
 
         if (request.getNombreCompleto() != null) mascota.setNombreCompleto(request.getNombreCompleto());
-        if (request.getRaza() != null) mascota.setRaza(request.getRaza());
+        if (request.getRazaId() != null) {
+            veterinaria.vargasvet.domain.entity.Raza raza = razaRepository.findById(request.getRazaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Raza no encontrada con ID: " + request.getRazaId()));
+            mascota.setRaza(raza);
+        }
         if (request.getSexo() != null) mascota.setSexo(request.getSexo());
         if (request.getFechaNacimiento() != null) mascota.setFechaNacimiento(request.getFechaNacimiento());
         if (request.getPeso() != null) mascota.setPeso(request.getPeso());
