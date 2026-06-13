@@ -32,6 +32,7 @@ public class WebSecurityConfig {
 
     private final JWTFilter jwtFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final veterinaria.vargasvet.security.RateLimitFilter rateLimitFilter;
 
     @Value("${cors.allowed-origins:https://systemvetfrontend.vercel.app,http://localhost:4200}")
     private String allowedOriginsRaw;
@@ -77,6 +78,12 @@ public class WebSecurityConfig {
                 .sessionManagement(s -> s
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
+
+        // Rate Limit Filter (antes que JWT para capturar login sin auth)
+        http.addFilterBefore(
+                rateLimitFilter,
+                JWTFilter.class
+        );
 
         // JWT Filter
         http.addFilterBefore(
