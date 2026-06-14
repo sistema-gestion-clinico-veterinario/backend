@@ -859,4 +859,11 @@ public class CitaServiceImpl implements CitaService {
 
         return availableSlots;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<CitaResponse> getServiciosNoMedicos(Long mascotaId) {
+        return citaRepository.findServiciosNoMedicosParaMascota(mascotaId)
+                .stream().map(citaMapper::toResponse).collect(java.util.stream.Collectors.toList());
+    }
 }

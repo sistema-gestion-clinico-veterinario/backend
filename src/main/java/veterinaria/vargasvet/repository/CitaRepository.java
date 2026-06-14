@@ -139,4 +139,9 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
            "AND c.estado IN ('PROGRAMADA', 'PENDIENTE', 'CONFIRMADA', 'REPROGRAMADA', 'SALA_DE_ESPERA', 'EN_PROCESO')")
     boolean existsCitaVigenteByEmpleadoId(@Param("empleadoId") Long empleadoId,
                                           @Param("ahora") LocalDateTime ahora);
+
+    @Query("SELECT c FROM Cita c JOIN c.empleado e JOIN e.tiposEmpleado t " +
+           "WHERE c.mascota.id = :mascotaId AND c.eliminada = false AND UPPER(t.nombre) = 'GROMMER' " +
+           "ORDER BY c.fechaHoraInicio DESC")
+    java.util.List<Cita> findServiciosNoMedicosParaMascota(@Param("mascotaId") Long mascotaId);
 }
