@@ -106,4 +106,11 @@ public class CitaController {
         citaService.cancelarCita(id, finalMotivo);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita cancelada con éxito", null));
     }
+
+    @GetMapping("/mascota/{mascotaId}/servicios")
+    public ResponseEntity<ApiResponse<List<CitaResponse>>> getServiciosNoMedicos(@PathVariable Long mascotaId) {
+        accesoValidator.validarLeer("VISTA_HISTORIAS");
+        List<CitaResponse> result = citaService.getServiciosNoMedicos(mascotaId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Servicios recuperados con éxito", result));
+    }
 }

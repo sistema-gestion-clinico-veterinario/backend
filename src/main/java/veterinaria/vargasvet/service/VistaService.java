@@ -47,6 +47,7 @@ public class VistaService {
         vista.setOrden(request.getOrden() != null ? request.getOrden() : 0);
         vista.setOrdenGrupo(request.getOrdenGrupo());
         vista.setActivo(request.isActivo());
+        vista.setIcono(request.getIcono());
 
         return toDTO(vistaRepository.save(vista));
     }
@@ -64,6 +65,7 @@ public class VistaService {
         vista.setOrden(request.getOrden() != null ? request.getOrden() : 0);
         vista.setOrdenGrupo(request.getOrdenGrupo());
         vista.setActivo(request.isActivo());
+        vista.setIcono(request.getIcono());
 
         return toDTO(vistaRepository.save(vista));
     }
@@ -99,6 +101,7 @@ public class VistaService {
                 .orden(v.getOrden())
                 .ordenGrupo(v.getOrdenGrupo())
                 .activo(v.isActivo())
+                .icono(v.getIcono())
                 .build();
     }
 

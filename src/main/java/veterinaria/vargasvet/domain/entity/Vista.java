@@ -36,6 +36,9 @@ public class Vista {
     @Column(name = "orden_grupo", nullable = true)
     private Integer ordenGrupo;
 
+    @Column(nullable = true, length = 60)
+    private String icono;
+
     @Column(nullable = false)
     private boolean activo = true;
 
