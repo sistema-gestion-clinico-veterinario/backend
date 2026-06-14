@@ -15,6 +15,8 @@ public interface HistoriaClinicaRepository extends JpaRepository<HistoriaClinica
 
     Optional<HistoriaClinica> findByMascotaId(Long mascotaId);
 
+    Optional<HistoriaClinica> findByNumeroHc(String numeroHc);
+
     boolean existsByMascotaId(Long mascotaId);
 
     boolean existsByNumeroHc(String numeroHc);

@@ -62,4 +62,13 @@ public class HistoriaClinicaController {
         auditLogService.log("CONSULTAR_HISTORIA_CLINICA_MASCOTA", "Historias Clínicas", "Consultó la historia clínica de la mascota con ID: " + mascotaId + ".");
         return ResponseEntity.ok(new ApiResponse<>(true, "Historia clínica recuperada con éxito", detalle));
     }
+
+    @GetMapping("/numero/{numeroHc}")
+    @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
+    public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getPorNumeroHc(@PathVariable String numeroHc) {
+        accesoValidator.validarLeer("VISTA_HISTORIAS");
+        HistoriaClinicaDetalleResponse detalle = historiaClinicaService.getPorNumeroHc(numeroHc);
+        auditLogService.log("CONSULTAR_HISTORIA_CLINICA_NUMERO", "Historias Clínicas", "Consultó la historia clínica: " + numeroHc + ".");
+        return ResponseEntity.ok(new ApiResponse<>(true, "Historia clínica recuperada con éxito", detalle));
+    }
 }
