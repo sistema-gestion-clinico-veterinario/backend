@@ -95,7 +95,29 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         response.setReferencias(apoderado.getReferencias());
         response.setObservaciones(apoderado.getObservaciones());
         if (apoderado.getUser().getCompany() != null) {
-            response.setCompanyId(apoderado.getUser().getCompany().getId());
+            veterinaria.vargasvet.domain.entity.Company company = apoderado.getUser().getCompany();
+            response.setCompanyId(company.getId());
+            response.setCompanyName(company.getName());
+            response.setCompanyPhone(company.getPhone());
+
+            // Check if company is currently open
+            java.time.DayOfWeek today = java.time.LocalDate.now().getDayOfWeek();
+            veterinaria.vargasvet.domain.enums.DiaSemana diaSemana = switch (today) {
+                case MONDAY    -> veterinaria.vargasvet.domain.enums.DiaSemana.LUNES;
+                case TUESDAY   -> veterinaria.vargasvet.domain.enums.DiaSemana.MARTES;
+                case WEDNESDAY -> veterinaria.vargasvet.domain.enums.DiaSemana.MIERCOLES;
+                case THURSDAY  -> veterinaria.vargasvet.domain.enums.DiaSemana.JUEVES;
+                case FRIDAY    -> veterinaria.vargasvet.domain.enums.DiaSemana.VIERNES;
+                case SATURDAY  -> veterinaria.vargasvet.domain.enums.DiaSemana.SABADO;
+                case SUNDAY    -> veterinaria.vargasvet.domain.enums.DiaSemana.DOMINGO;
+            };
+            companyOperatingHourRepository.findByCompanyIdAndDiaSemana(company.getId(), diaSemana)
+                    .ifPresentOrElse(opHour -> {
+                        boolean open = Boolean.TRUE.equals(opHour.getIsOpen())
+                                && !java.time.LocalTime.now().isBefore(opHour.getOpeningTime())
+                                && !java.time.LocalTime.now().isAfter(opHour.getClosingTime());
+                        response.setCurrentlyOpen(open);
+                    }, () -> response.setCurrentlyOpen(false));
         }
 
         List<MascotaResponse> mascotas = getMascotas();
