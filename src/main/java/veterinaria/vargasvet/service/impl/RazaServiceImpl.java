@@ -22,9 +22,14 @@ public class RazaServiceImpl implements RazaService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RazaResponse> listarPorEspecie(String especie) {
-        if (especie != null && !especie.isBlank()) {
-            EspecieMascota enumEspecie = EspecieMascota.valueOf(especie.toUpperCase());
+    public List<RazaResponse> listarPorEspecie(String especie, Long companyId) {
+        EspecieMascota enumEspecie = (especie != null && !especie.isBlank())
+                ? EspecieMascota.valueOf(especie.toUpperCase()) : null;
+        if (companyId != null) {
+            return razaRepository.findByCompanyAndEspecie(companyId, enumEspecie)
+                    .stream().map(this::toResponse).collect(Collectors.toList());
+        }
+        if (enumEspecie != null) {
             return razaRepository.findByEspecieAndActivoTrueOrderByNombreAsc(enumEspecie)
                     .stream().map(this::toResponse).collect(Collectors.toList());
         }
@@ -34,8 +39,9 @@ public class RazaServiceImpl implements RazaService {
 
     @Override
     @Transactional
-    public RazaResponse crear(RazaRequest request) {
-        if (razaRepository.existsByNombreIgnoreCaseAndEspecie(request.getNombre(), request.getEspecie())) {
+    public RazaResponse crear(RazaRequest request, Long companyId) {
+        if (razaRepository.existsByNombreIgnoreCaseAndEspecieAndCompanyId(
+                request.getNombre(), request.getEspecie(), companyId)) {
             throw new IllegalArgumentException("Ya existe una raza con ese nombre para la especie seleccionada");
         }
 
@@ -43,6 +49,7 @@ public class RazaServiceImpl implements RazaService {
         raza.setNombre(request.getNombre());
         raza.setDescripcion(request.getDescripcion());
         raza.setEspecie(request.getEspecie());
+        raza.setCompanyId(companyId);
         raza.setActivo(true);
         raza.setCreatedBy(SecurityUtils.getCurrentUserEmail());
         raza.setUpdatedBy(SecurityUtils.getCurrentUserEmail());

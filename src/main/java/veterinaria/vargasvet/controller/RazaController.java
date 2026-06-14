@@ -23,16 +23,19 @@ public class RazaController {
     @GetMapping
     @PreAuthorize("hasAuthority('PET_READ')")
     public ResponseEntity<ApiResponse<List<RazaResponse>>> listar(
-            @RequestParam(required = false) String especie) {
-        List<RazaResponse> resultado = razaService.listarPorEspecie(especie);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Razas obtenidas", resultado));
+            @RequestParam(required = false) String especie,
+            @RequestParam(required = false) Long companyId) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Razas obtenidas",
+                razaService.listarPorEspecie(especie, companyId)));
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('PET_CREATE')")
-    public ResponseEntity<ApiResponse<RazaResponse>> crear(@Valid @RequestBody RazaRequest request) {
-        RazaResponse response = razaService.crear(request);
+    public ResponseEntity<ApiResponse<RazaResponse>> crear(
+            @Valid @RequestBody RazaRequest request,
+            @RequestParam Long companyId) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(true, "Raza creada exitosamente", response));
+                .body(new ApiResponse<>(true, "Raza creada exitosamente",
+                        razaService.crear(request, companyId)));
     }
 }
