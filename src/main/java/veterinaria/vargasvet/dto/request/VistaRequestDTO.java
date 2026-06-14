@@ -27,4 +27,7 @@ public class VistaRequestDTO {
     private Integer orden;
     private Integer ordenGrupo;
     private boolean activo = true;
+
+    @Size(max = 60, message = "El ícono no debe superar 60 caracteres")
+    private String icono;
 }

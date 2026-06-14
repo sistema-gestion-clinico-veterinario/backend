@@ -14,4 +14,5 @@ public class VistaDTO {
     private Integer orden;
     private Integer ordenGrupo;
     private boolean activo;
+    private String icono;
 }

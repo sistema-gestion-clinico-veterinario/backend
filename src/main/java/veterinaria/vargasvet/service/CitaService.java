@@ -19,4 +19,5 @@ public interface CitaService {
     CitaResponse reprogramarCita(Long id, CitaRequest request);
     CitaResponse reprogramarCita(Long id, CitaReprogramacionRequest request);
     List<String> getAdminDisponibilidad(Long empleadoId, String fecha, Long servicioId, Boolean esEmergencia, Long excludeCitaId);
+    List<CitaResponse> getServiciosNoMedicos(Long mascotaId);
 }
