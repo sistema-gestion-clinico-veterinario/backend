@@ -102,6 +102,23 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
 
     @Override
     @Transactional(readOnly = true)
+    public HistoriaClinicaDetalleResponse getPorNumeroHc(String numeroHc) {
+        HistoriaClinica hc = historiaClinicaRepository.findByNumeroHc(numeroHc)
+                .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada: " + numeroHc));
+
+        if (!SecurityUtils.isSuperAdmin()) {
+            Integer companyId = SecurityUtils.getCurrentCompanyId();
+            if (hc.getMascota().getApoderado().getUser().getCompany() == null ||
+                !hc.getMascota().getApoderado().getUser().getCompany().getId().equals(companyId)) {
+                throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");
+            }
+        }
+
+        return toDetalleResponse(hc);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public HistoriaClinicaDetalleResponse getDetalle(Long id) {
         HistoriaClinica hc = historiaClinicaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada con ID: " + id));

@@ -14,4 +14,6 @@ public interface HistoriaClinicaService {
     HistoriaClinicaDetalleResponse getDetalle(Long id);
 
     HistoriaClinicaDetalleResponse getPorMascota(Long mascotaId);
+
+    HistoriaClinicaDetalleResponse getPorNumeroHc(String numeroHc);
 }
