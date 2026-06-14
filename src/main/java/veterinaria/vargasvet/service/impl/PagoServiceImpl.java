@@ -29,6 +29,7 @@ import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.PurchaseRepository;
 import veterinaria.vargasvet.service.AuditLogService;
+import veterinaria.vargasvet.service.CajaService;
 import veterinaria.vargasvet.service.PagoService;
 
 import org.springframework.data.domain.Page;
@@ -53,6 +54,7 @@ public class PagoServiceImpl implements PagoService {
     private final UsuarioRepository usuarioRepository;
     private final RestTemplate restTemplate;
     private final AuditLogService auditLogService;
+    private final CajaService cajaService;
 
     @Value("${mercadopago.public-key}")
     private String mpPublicKey;
@@ -161,6 +163,9 @@ public class PagoServiceImpl implements PagoService {
             "Facturación",
             "Se registró un pago por un monto total de S/ " + total + " para la cita de la mascota " + cita.getMascota().getNombreCompleto() + " con método de pago: " + request.getMetodoPago()
         );
+
+        Integer companyId = getCitaCompanyId(cita);
+        cajaService.registrarIngresoPorCita(cita, companyId);
 
         return toResponse(savedPago, cambio);
     }
@@ -405,6 +410,17 @@ public class PagoServiceImpl implements PagoService {
         } catch (Exception e) {
             throw new RuntimeException("Error al conectar con MercadoPago Yape: " + e.getMessage());
         }
+    }
+
+    private Integer getCitaCompanyId(Cita cita) {
+        try {
+            if (cita.getMascota() != null && cita.getMascota().getApoderado() != null
+                    && cita.getMascota().getApoderado().getUser() != null
+                    && cita.getMascota().getApoderado().getUser().getCompany() != null) {
+                return cita.getMascota().getApoderado().getUser().getCompany().getId();
+            }
+        } catch (Exception ignored) {}
+        return null;
     }
 
     private PagoResponse toResponse(Purchase pago, BigDecimal cambio) {

@@ -28,6 +28,9 @@ public class Raza {
     @Column(nullable = false)
     private Boolean activo = true;
 
+    @Column(name = "company_id")
+    private Long companyId;
+
     @Column(name = "created_by", length = 100)
     private String createdBy;
 
