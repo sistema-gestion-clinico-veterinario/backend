@@ -242,20 +242,6 @@ public class CitaServiceImpl implements CitaService {
             throw new IllegalArgumentException("No se puede iniciar la atención porque la mascota está inactiva");
         }
 
-        java.math.BigDecimal total = cita.getTotalServicio();
-        if (total != null && total.compareTo(java.math.BigDecimal.ZERO) > 0) {
-            java.math.BigDecimal pagado = cita.getMontoPagado() != null ? cita.getMontoPagado() : java.math.BigDecimal.ZERO;
-            java.math.BigDecimal mitad = total.multiply(new java.math.BigDecimal("0.5"));
-            if (pagado.compareTo(mitad) < 0) {
-                throw new IllegalArgumentException(
-                    "Para iniciar la atención se debe haber abonado al menos el 50% del costo. " +
-                    "Total: S/ " + total.setScale(2, java.math.RoundingMode.HALF_UP) +
-                    " — Pagado: S/ " + pagado.setScale(2, java.math.RoundingMode.HALF_UP) +
-                    " — Mínimo requerido: S/ " + mitad.setScale(2, java.math.RoundingMode.HALF_UP)
-                );
-            }
-        }
-
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             java.time.LocalDateTime ahora = veterinaria.vargasvet.util.AppClock.now();
             java.time.LocalDateTime inicioCita = cita.getFechaHoraInicio();
