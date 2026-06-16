@@ -16,6 +16,7 @@ public class MenuItemDTO {
     private Integer orden;
     private Integer ordenGrupo;
     private boolean activo;
+    private String icono;
     private boolean leer;
     private boolean escribir;
     private boolean modificar;

@@ -206,6 +206,7 @@ public class MenuBuilderService {
                 .orden(vista.getOrden())
                 .ordenGrupo(vista.getOrdenGrupo())
                 .activo(vista.isActivo())
+                .icono(vista.getIcono())
                 .leer(permiso != null && permiso.isLeer())
                 .escribir(permiso != null && permiso.isEscribir())
                 .modificar(permiso != null && permiso.isModificar())
