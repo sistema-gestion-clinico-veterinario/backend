@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -94,6 +95,10 @@ public class CompanyServiceImpl implements CompanyService {
         Company company = new Company();
         updateEntityFromDTO(company, dto);
         company.setActivo(true);
+        company.setCreatedAt(LocalDateTime.now());
+        company.setCreatedBy(SecurityUtils.getCurrentUserEmail());
+        company.setUpdatedAt(LocalDateTime.now());
+        company.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
         Company savedCompany = companyRepository.save(company);
         saveOperatingHours(savedCompany, dto.getOperatingHours());
         return mapToDTO(savedCompany);
@@ -109,6 +114,8 @@ public class CompanyServiceImpl implements CompanyService {
             throw new IllegalStateException("La empresa está inactiva. Solo un super administrador puede modificarla.");
         }
         updateEntityFromDTO(company, dto);
+        company.setUpdatedAt(LocalDateTime.now());
+        company.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
         Company savedCompany = companyRepository.save(company);
         saveOperatingHours(savedCompany, dto.getOperatingHours());
         return mapToDTO(savedCompany);
@@ -120,6 +127,8 @@ public class CompanyServiceImpl implements CompanyService {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + id));
         company.setActivo(!company.isActivo());
+        company.setUpdatedAt(LocalDateTime.now());
+        company.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
         return toListResponse(companyRepository.save(company));
     }
 
@@ -187,6 +196,10 @@ public class CompanyServiceImpl implements CompanyService {
         dto.setWebsite(company.getWebsite());
         dto.setDescription(company.getDescription());
         dto.setBusinessHours(company.getBusinessHours());
+        dto.setCreatedAt(company.getCreatedAt());
+        dto.setUpdatedAt(company.getUpdatedAt());
+        dto.setCreatedBy(company.getCreatedBy());
+        dto.setUpdatedBy(company.getUpdatedBy());
         
         dto.setOperatingHours(companyOperatingHourRepository.findByCompanyId(company.getId()).stream()
                 .map(h -> {

@@ -7,6 +7,8 @@ import veterinaria.vargasvet.dto.request.MascotaRequest;
 import veterinaria.vargasvet.dto.response.MascotaResponse;
 
 public interface MascotaService {
+    MascotaResponse obtenerPorId(Long id);
+    MascotaResponse obtenerPorUuid(String uuid);
     MascotaResponse registerMascota(MascotaRequest request);
     MascotaResponse updateMascota(Long id, MascotaRequest request);
     void cambiarEstado(Long id, EstadoMascotaRequest request);

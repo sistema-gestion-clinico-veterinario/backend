@@ -32,6 +32,7 @@ public class WebSecurityConfig {
 
     private final JWTFilter jwtFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final veterinaria.vargasvet.security.RateLimitFilter rateLimitFilter;
 
     @Value("${cors.allowed-origins:https://systemvetfrontend.vercel.app,http://localhost:4200}")
     private String allowedOriginsRaw;
@@ -78,7 +79,13 @@ public class WebSecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
-        // JWT Filter
+        // Rate Limit Filter (antes que JWT)
+        http.addFilterBefore(
+                rateLimitFilter,
+                UsernamePasswordAuthenticationFilter.class
+        );
+
+        // JWT Filter (despues de rate limit)
         http.addFilterBefore(
                 jwtFilter,
                 UsernamePasswordAuthenticationFilter.class

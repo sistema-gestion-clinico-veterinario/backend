@@ -15,6 +15,7 @@ import veterinaria.vargasvet.repository.UsuarioRepository;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -51,7 +52,7 @@ public class TokenProvider {
             this.privateKey = loadPrivateKey(privateKeyPath);
             this.publicKey = loadPublicKey(publicKeyPath);
         } catch (Exception e) {
-            System.err.println("Error cargando claves RSA: " + e.getMessage());
+            throw new IllegalStateException("Error cargando claves RSA: " + e.getMessage(), e);
         }
     }
 
@@ -175,9 +176,7 @@ public class TokenProvider {
     }
 
     private PrivateKey loadPrivateKey(String resourcePath) throws Exception {
-        Resource resource = resourceLoader.getResource(resourcePath);
-        byte[] keyBytes = readAllBytes(resource);
-        String key = new String(keyBytes)
+        String key = loadPemContent(resourcePath)
                 .replaceAll("-----BEGIN PRIVATE KEY-----", "")
                 .replaceAll("-----END PRIVATE KEY-----", "")
                 .replaceAll("\\s+", "");
@@ -187,15 +186,23 @@ public class TokenProvider {
     }
 
     private PublicKey loadPublicKey(String resourcePath) throws Exception {
-        Resource resource = resourceLoader.getResource(resourcePath);
-        byte[] keyBytes = readAllBytes(resource);
-        String key = new String(keyBytes)
+        String key = loadPemContent(resourcePath)
                 .replaceAll("-----BEGIN PUBLIC KEY-----", "")
                 .replaceAll("-----END PUBLIC KEY-----", "")
                 .replaceAll("\\s+", "");
         byte[] decoded = Base64.getDecoder().decode(key);
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(decoded);
         return KeyFactory.getInstance("RSA").generatePublic(keySpec);
+    }
+
+    private String loadPemContent(String value) throws IOException {
+        String normalized = value.replace("\\n", "\n").trim();
+        if (normalized.startsWith("-----BEGIN")) {
+            return normalized;
+        }
+
+        Resource resource = resourceLoader.getResource(value);
+        return new String(readAllBytes(resource), StandardCharsets.UTF_8);
     }
 
     private byte[] readAllBytes(Resource resource) throws IOException {

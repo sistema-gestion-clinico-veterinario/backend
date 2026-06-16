@@ -19,5 +19,8 @@ public class ApoderadoPerfilResponse {
     private String referencias;
     private String observaciones;
     private Integer companyId;
+    private String companyName;
+    private String companyPhone;
+    private Boolean currentlyOpen;
     private List<MascotaResponse> mascotas;
 }
