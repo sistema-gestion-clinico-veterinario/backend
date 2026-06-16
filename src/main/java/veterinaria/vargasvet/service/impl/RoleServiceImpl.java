@@ -49,7 +49,6 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(readOnly = true)
     public List<RolDTO> getSystemRoles() {
         return roleRepository.findByCompanyIsNull().stream()
-                .filter(r -> r.getName().equals("ROLE_SUPER_ADMIN") || r.getName().equals("ROLE_ADMIN"))
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
