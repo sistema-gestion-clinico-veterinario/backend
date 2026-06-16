@@ -21,7 +21,7 @@ public class VistaService {
 
     @Transactional(readOnly = true)
     public List<VistaDTO> listarTodas() {
-        return vistaRepository.findByActivoTrue().stream()
+        return vistaRepository.findAll().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
