@@ -12,6 +12,7 @@ import veterinaria.vargasvet.service.StorageService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class StorageServiceImpl implements StorageService {
@@ -43,8 +44,11 @@ public class StorageServiceImpl implements StorageService {
         try {
             String mime = file.getContentType() != null ? file.getContentType() : "";
             String resourceType = mime.startsWith("image/") ? "image" : "raw";
+            String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "file";
+            String ext = originalName.contains(".") ? originalName.substring(originalName.lastIndexOf(".")).toLowerCase() : "";
+            String publicId = UUID.randomUUID().toString().replace("-", "") + ext;
             Map<?, ?> result = cloudinary.uploader().upload(file.getBytes(),
-                    ObjectUtils.asMap("resource_type", resourceType));
+                    ObjectUtils.asMap("resource_type", resourceType, "public_id", publicId));
             return (String) result.get("secure_url");
         } catch (IOException e) {
             throw new RuntimeException("Error al subir archivo a Cloudinary", e);
@@ -56,8 +60,9 @@ public class StorageServiceImpl implements StorageService {
         try {
             String ext = extension != null ? extension.toLowerCase() : "";
             String resourceType = (ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png")) ? "image" : "raw";
+            String publicId = UUID.randomUUID().toString().replace("-", "") + ext;
             Map<?, ?> result = cloudinary.uploader().upload(content,
-                    ObjectUtils.asMap("resource_type", resourceType));
+                    ObjectUtils.asMap("resource_type", resourceType, "public_id", publicId));
             return (String) result.get("secure_url");
         } catch (IOException e) {
             throw new RuntimeException("Error al subir archivo a Cloudinary", e);
