@@ -69,7 +69,7 @@ public class ConsultaMapper {
                 response.setMascotaId(mascota.getId());
                 response.setMascotaNombre(mascota.getNombreCompleto());
                 response.setEspecie(mascota.getEspecie() != null ? mascota.getEspecie().name() : mascota.getOtraEspecie());
-                response.setRaza(mascota.getRaza());
+                response.setRaza(mascota.getRaza() != null ? mascota.getRaza().getNombre() : null);
                 response.setSexo(mascota.getSexo() != null ? mascota.getSexo().name() : null);
                 response.setColor(mascota.getColor());
                 response.setSenasParticulares(mascota.getSenasParticulares());

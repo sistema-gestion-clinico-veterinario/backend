@@ -52,7 +52,7 @@
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;Spring Boot.VargasvetApplication.executor&quot;: &quot;Run&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/integraciones-modelos&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;bugfix/enterprise&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -104,11 +104,15 @@
       <workItem from="1780931667423" duration="3396000" />
       <workItem from="1780975724514" duration="4783000" />
       <workItem from="1781015298317" duration="5071000" />
-      <workItem from="1781047744376" duration="9639000" />
-      <workItem from="1781401219958" duration="6196000" />
-      <workItem from="1781449290981" duration="2740000" />
-      <workItem from="1781538616659" duration="1204000" />
-      <workItem from="1781579235743" duration="900000" />
+      <workItem from="1781047744376" duration="11722000" />
+      <workItem from="1781068670743" duration="757000" />
+      <workItem from="1781153814691" duration="1742000" />
+      <workItem from="1781238906065" duration="2190000" />
+      <workItem from="1781277159608" duration="934000" />
+      <workItem from="1781289661131" duration="620000" />
+      <workItem from="1781295436480" duration="3147000" />
+      <workItem from="1781321923398" duration="4898000" />
+      <workItem from="1781352686741" duration="3643000" />
     </task>
     <servers />
   </component>
