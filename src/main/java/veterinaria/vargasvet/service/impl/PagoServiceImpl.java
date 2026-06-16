@@ -74,7 +74,6 @@ public class PagoServiceImpl implements PagoService {
         }
 
         BigDecimal total = cita.getTotalServicio() != null ? cita.getTotalServicio() : BigDecimal.ZERO;
-        BigDecimal mitad = total.divide(BigDecimal.valueOf(2), 2, java.math.RoundingMode.HALF_UP);
 
         BigDecimal montoRecibido = null;
         BigDecimal cambio = null;
@@ -85,11 +84,6 @@ public class PagoServiceImpl implements PagoService {
         if (request.getMetodoPago() == MetodoPago.EFECTIVO) {
             if (request.getMontoRecibido() == null) {
                 throw new IllegalArgumentException("El monto recibido es obligatorio para pagos en efectivo");
-            }
-            if (request.getMontoRecibido().compareTo(mitad) < 0) {
-                throw new IllegalArgumentException(
-                    "El monto mínimo aceptado es S/ " + mitad + " (50% del total de S/ " + total + ")"
-                );
             }
             montoRecibido = request.getMontoRecibido();
             if (montoRecibido.compareTo(total) >= 0) {
