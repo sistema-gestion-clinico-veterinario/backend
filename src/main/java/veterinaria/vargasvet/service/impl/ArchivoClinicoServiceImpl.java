@@ -77,11 +77,18 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
 
         validarTipoYExtension(tipo, extension, file.getContentType());
 
-        if (extension.equals(".dcm")) {
-            validarCabeceraDicom(file);
+        byte[] fileBytes;
+        try {
+            fileBytes = file.getBytes();
+        } catch (IOException e) {
+            throw new RuntimeException("Error al leer el archivo", e);
         }
 
-        String filename = storageService.store(file);
+        if (extension.equals(".dcm")) {
+            validarCabeceraDicom(fileBytes);
+        }
+
+        String filename = storageService.storeBytes(fileBytes, extension, file.getContentType(), file.getOriginalFilename());
 
         ArchivoClinico archivo = new ArchivoClinico();
         archivo.setConsulta(consulta);
@@ -137,36 +144,12 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
         }
     }
 
-    private void validarCabeceraDicom(MultipartFile file) {
-        try (java.io.InputStream is = file.getInputStream()) {
-            int limit = (int) Math.min(file.getSize(), 131072L);
-            byte[] bytes = new byte[limit];
-            int leidos = is.read(bytes, 0, limit);
-
-            if (leidos < 132) {
-                throw new IllegalArgumentException("El archivo .dcm no tiene una cabecera DICOM válida");
-            }
-            if (bytes[128] != 'D' || bytes[129] != 'I' || bytes[130] != 'C' || bytes[131] != 'M') {
-                throw new IllegalArgumentException("El archivo .dcm no contiene una cabecera DICOM válida");
-            }
-
-            // Buscar tag PatientSpeciesDescription (0010,2201) — atributo exclusivo de DICOM veterinario
-            // En little-endian: 0x10 0x00 0x01 0x22
-            boolean tieneEspeciePaciente = false;
-            for (int i = 132; i < leidos - 3; i++) {
-                if ((bytes[i] & 0xFF) == 0x10 && (bytes[i + 1] & 0xFF) == 0x00
-                        && (bytes[i + 2] & 0xFF) == 0x01 && (bytes[i + 3] & 0xFF) == 0x22) {
-                    tieneEspeciePaciente = true;
-                    break;
-                }
-            }
-            if (!tieneEspeciePaciente) {
-                throw new IllegalArgumentException(
-                        "El archivo DICOM no corresponde a un paciente animal. "
-                        + "Solo se permiten radiografías de animales (atributo PatientSpeciesDescription ausente).");
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Error al leer el archivo para validación DICOM", e);
+    private void validarCabeceraDicom(byte[] bytes) {
+        if (bytes.length < 132) {
+            throw new IllegalArgumentException("El archivo .dcm no tiene una cabecera DICOM válida");
+        }
+        if (bytes[128] != 'D' || bytes[129] != 'I' || bytes[130] != 'C' || bytes[131] != 'M') {
+            throw new IllegalArgumentException("El archivo no es un DICOM válido (cabecera DICM ausente)");
         }
     }
 
