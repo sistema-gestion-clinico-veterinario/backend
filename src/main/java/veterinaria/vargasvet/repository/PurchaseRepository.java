@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.Purchase;
+import veterinaria.vargasvet.domain.enums.PaymentStatus;
 import veterinaria.vargasvet.domain.enums.TipoPurchase;
 
 import java.util.Optional;
@@ -17,6 +18,8 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
     Optional<Purchase> findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(Long citaId, TipoPurchase tipoPurchase);
 
     boolean existsByCitaIdAndTipoPurchase(Long citaId, TipoPurchase tipoPurchase);
+
+    boolean existsByCitaIdAndTipoPurchaseAndPaymentStatusNot(Long citaId, TipoPurchase tipoPurchase, PaymentStatus paymentStatus);
 
     Page<Purchase> findAllByTipoPurchaseOrderByCreatedAtDesc(TipoPurchase tipoPurchase, Pageable pageable);
 
