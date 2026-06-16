@@ -10,12 +10,12 @@ import veterinaria.vargasvet.domain.enums.EspecieMascota;
 public class RazaRequest {
 
     @NotBlank(message = "El nombre de la raza es obligatorio")
-    @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
+    @Size(max = 100, message = "El nombre no debe superar 100 caracteres")
     private String nombre;
 
-    @Size(max = 300, message = "La descripcion no debe superar 300 caracteres")
+    @Size(max = 500, message = "La descripción no debe superar 500 caracteres")
     private String descripcion;
 
-    @NotNull(message = "Debe seleccionar una especie")
+    @NotNull(message = "La especie es obligatoria")
     private EspecieMascota especie;
 }

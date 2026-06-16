@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class RazaResponse {
+
     private Long id;
     private String nombre;
     private String descripcion;
