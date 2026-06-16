@@ -57,9 +57,15 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public String storeBytes(byte[] content, String extension) {
+        return storeBytes(content, extension, null, null);
+    }
+
+    @Override
+    public String storeBytes(byte[] content, String extension, String mimeType, String originalFilename) {
         try {
             String ext = extension != null ? extension.toLowerCase() : "";
-            String resourceType = (ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png")) ? "image" : "raw";
+            String effectiveMime = mimeType != null ? mimeType : "";
+            String resourceType = effectiveMime.startsWith("image/") ? "image" : "raw";
             String publicId = UUID.randomUUID().toString().replace("-", "") + ext;
             Map<?, ?> result = cloudinary.uploader().upload(content,
                     ObjectUtils.asMap("resource_type", resourceType, "public_id", publicId));
