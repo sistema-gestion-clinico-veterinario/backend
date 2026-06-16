@@ -29,11 +29,16 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
 
     private static final Set<String> EXTENSIONES_RADIOGRAFIA = Set.of(".dcm", ".jpg", ".jpeg");
     private static final Set<String> EXTENSIONES_LABORATORIO = Set.of(".jpg", ".jpeg", ".png", ".pdf");
+    private static final Set<String> EXTENSIONES_DOCUMENTO   = Set.of(".docx", ".doc");
 
     private static final Set<String> MIMES_RADIOGRAFIA = Set.of(
             "application/dicom", "application/octet-stream", "image/jpeg");
     private static final Set<String> MIMES_LABORATORIO = Set.of(
             "image/jpeg", "image/png", "application/pdf");
+    private static final Set<String> MIMES_DOCUMENTO = Set.of(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/msword",
+            "application/octet-stream");
 
     private final ConsultaRepository consultaRepository;
     private final ArchivoClinicoRepository archivoClinicoRepository;
@@ -119,20 +124,46 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
             if (mimeType != null && !MIMES_LABORATORIO.contains(mimeType)) {
                 throw new IllegalArgumentException("Tipo de archivo no válido para hemogramas");
             }
+        } else if (tipo == TipoArchivo.DOCUMENTO) {
+            if (!EXTENSIONES_DOCUMENTO.contains(extension)) {
+                throw new IllegalArgumentException(
+                        "Extensión no permitida para documentos. Use: .docx, .doc");
+            }
+            if (mimeType != null && !MIMES_DOCUMENTO.contains(mimeType)) {
+                throw new IllegalArgumentException("Tipo de archivo no válido para documentos Word");
+            }
         } else {
-            throw new IllegalArgumentException("Tipo de examen no válido. Use RADIOGRAFIA o LABORATORIO");
+            throw new IllegalArgumentException("Tipo de archivo no válido.");
         }
     }
 
     private void validarCabeceraDicom(MultipartFile file) {
-        try {
-            byte[] cabecera = new byte[132];
-            int leidos = file.getInputStream().read(cabecera, 0, 132);
+        try (java.io.InputStream is = file.getInputStream()) {
+            int limit = (int) Math.min(file.getSize(), 131072L);
+            byte[] bytes = new byte[limit];
+            int leidos = is.read(bytes, 0, limit);
+
             if (leidos < 132) {
                 throw new IllegalArgumentException("El archivo .dcm no tiene una cabecera DICOM válida");
             }
-            if (cabecera[128] != 'D' || cabecera[129] != 'I' || cabecera[130] != 'C' || cabecera[131] != 'M') {
+            if (bytes[128] != 'D' || bytes[129] != 'I' || bytes[130] != 'C' || bytes[131] != 'M') {
                 throw new IllegalArgumentException("El archivo .dcm no contiene una cabecera DICOM válida");
+            }
+
+            // Buscar tag PatientSpeciesDescription (0010,2201) — atributo exclusivo de DICOM veterinario
+            // En little-endian: 0x10 0x00 0x01 0x22
+            boolean tieneEspeciePaciente = false;
+            for (int i = 132; i < leidos - 3; i++) {
+                if ((bytes[i] & 0xFF) == 0x10 && (bytes[i + 1] & 0xFF) == 0x00
+                        && (bytes[i + 2] & 0xFF) == 0x01 && (bytes[i + 3] & 0xFF) == 0x22) {
+                    tieneEspeciePaciente = true;
+                    break;
+                }
+            }
+            if (!tieneEspeciePaciente) {
+                throw new IllegalArgumentException(
+                        "El archivo DICOM no corresponde a un paciente animal. "
+                        + "Solo se permiten radiografías de animales (atributo PatientSpeciesDescription ausente).");
             }
         } catch (IOException e) {
             throw new RuntimeException("Error al leer el archivo para validación DICOM", e);
