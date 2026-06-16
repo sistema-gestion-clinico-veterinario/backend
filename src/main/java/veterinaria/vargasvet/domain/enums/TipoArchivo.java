@@ -6,5 +6,6 @@ public enum TipoArchivo {
     LABORATORIO,
     RADIOGRAFIA,
     ECOGRAFIA,
+    DOCUMENTO,
     OTRO
 }
