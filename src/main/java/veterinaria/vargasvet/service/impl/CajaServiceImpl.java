@@ -10,13 +10,16 @@ import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.entity.MovimientoCaja;
 import veterinaria.vargasvet.domain.enums.ConceptoMovimiento;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
+import veterinaria.vargasvet.domain.enums.PaymentStatus;
 import veterinaria.vargasvet.domain.enums.TipoMovimiento;
+import veterinaria.vargasvet.domain.enums.TipoPurchase;
 import veterinaria.vargasvet.dto.request.MovimientoEgresoRequest;
 import veterinaria.vargasvet.dto.response.MovimientoCajaResponse;
 import veterinaria.vargasvet.dto.response.ResumenCajaResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.MovimientoCajaRepository;
+import veterinaria.vargasvet.repository.PurchaseRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CajaService;
 
@@ -31,6 +34,7 @@ public class CajaServiceImpl implements CajaService {
 
     private final MovimientoCajaRepository movimientoRepo;
     private final CitaRepository citaRepository;
+    private final PurchaseRepository purchaseRepository;
 
     @Override
     @Transactional
@@ -85,6 +89,12 @@ public class CajaServiceImpl implements CajaService {
 
         cita.setMontoPagado(BigDecimal.ZERO);
         citaRepository.save(cita);
+
+        purchaseRepository.findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(citaId, TipoPurchase.SERVICIO_CITA)
+                .ifPresent(p -> {
+                    p.setPaymentStatus(PaymentStatus.REFUNDED);
+                    purchaseRepository.save(p);
+                });
 
         return toResponse(saved);
     }
