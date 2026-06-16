@@ -148,6 +148,13 @@
 			<version>1.38.0</version>
 		</dependency>
 
+		<!-- Rate Limiting -->
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j-core</artifactId>
+			<version>8.10.1</version>
+		</dependency>
+
 	</dependencies>
 
 	<dependencyManagement>
