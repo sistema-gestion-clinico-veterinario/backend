@@ -49,12 +49,19 @@ public class ArchivoClinicoController {
 
     @GetMapping("/{id}/content")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
-    public ResponseEntity<Resource> servirContenido(
+    public ResponseEntity<?> servirContenido(
             @PathVariable("consultationId") Long consultaId,
             @PathVariable Long id,
             @RequestParam(defaultValue = "false") boolean descargar) {
         accesoValidator.validarLeer("VISTA_HISTORIAS");
         ArchivoClinicoResponse meta = archivoClinicoService.obtenerPorId(id);
+
+        if (meta.getUrl() != null && meta.getUrl().startsWith("http")) {
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header(HttpHeaders.LOCATION, meta.getUrl())
+                    .build();
+        }
+
         Resource resource = archivoClinicoService.servirContenido(id);
         String contentType = meta.getTipoMime() != null ? meta.getTipoMime() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
         String disposition = descargar
