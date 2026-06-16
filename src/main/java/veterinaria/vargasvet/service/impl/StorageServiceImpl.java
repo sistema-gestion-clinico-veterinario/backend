@@ -1,94 +1,89 @@
 package veterinaria.vargasvet.service.impl;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import veterinaria.vargasvet.service.StorageService;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.UUID;
+import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class StorageServiceImpl implements StorageService {
 
-    @Value("${storage.location}")
-    private String storageLocation;
+    @Value("${cloudinary.cloud-name}")
+    private String cloudName;
 
-    private Path rootLocation;
+    @Value("${cloudinary.api-key}")
+    private String apiKey;
+
+    @Value("${cloudinary.api-secret}")
+    private String apiSecret;
+
+    private Cloudinary cloudinary;
 
     @Override
     @PostConstruct
     public void init() {
-        rootLocation = Paths.get(storageLocation);
-        try {
-            Files.createDirectories(rootLocation);
-        } catch (IOException e) {
-            throw new RuntimeException("No se pudo inicializar el directorio de almacenamiento", e);
-        }
+        cloudinary = new Cloudinary(ObjectUtils.asMap(
+                "cloud_name", cloudName,
+                "api_key",    apiKey,
+                "api_secret", apiSecret,
+                "secure",     true
+        ));
     }
 
     @Override
     public String store(MultipartFile file) {
-        String originalFilename = file.getOriginalFilename();
-        String extension = "";
-        if (originalFilename != null && originalFilename.contains(".")) {
-            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        }
-        String filename = UUID.randomUUID() + extension;
         try {
-            Files.copy(file.getInputStream(), rootLocation.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            Map<?, ?> result = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+            return (String) result.get("secure_url");
         } catch (IOException e) {
-            throw new RuntimeException("Error al guardar el archivo: " + filename, e);
+            throw new RuntimeException("Error al subir archivo a Cloudinary", e);
         }
-        return filename;
     }
 
     @Override
     public String storeBytes(byte[] content, String extension) {
-        String filename = UUID.randomUUID() + "." + extension;
         try {
-            Files.write(rootLocation.resolve(filename), content);
+            Map<?, ?> result = cloudinary.uploader().upload(content,
+                    ObjectUtils.asMap("resource_type", "auto"));
+            return (String) result.get("secure_url");
         } catch (IOException e) {
-            throw new RuntimeException("Error al guardar el archivo: " + filename, e);
+            throw new RuntimeException("Error al subir archivo a Cloudinary", e);
         }
-        return filename;
+    }
+
+    @Override
+    public void delete(String url) {
+        try {
+            String publicId = extractPublicId(url);
+            cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+        } catch (IOException e) {
+            throw new RuntimeException("Error al eliminar archivo de Cloudinary", e);
+        }
     }
 
     @Override
     public Path load(String filename) {
-        return rootLocation.resolve(filename);
+        throw new UnsupportedOperationException("Archivos servidos directamente desde Cloudinary");
     }
 
     @Override
     public Resource loadAsResource(String filename) {
-        try {
-            Path file = load(filename);
-            Resource resource = new UrlResource(file.toUri());
-            if (resource.exists() || resource.isReadable()) {
-                return resource;
-            }
-            throw new RuntimeException("No se puede leer el archivo: " + filename);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("No se puede leer el archivo: " + filename, e);
-        }
+        throw new UnsupportedOperationException("Archivos servidos directamente desde Cloudinary");
     }
 
-    @Override
-    public void delete(String filename) {
-        try {
-            Files.deleteIfExists(rootLocation.resolve(filename));
-        } catch (IOException e) {
-            throw new RuntimeException("Error al eliminar el archivo: " + filename, e);
-        }
+    private String extractPublicId(String url) {
+        String[] parts = url.split("/upload/");
+        if (parts.length < 2) return url;
+        String afterUpload = parts[1].replaceFirst("v\\d+/", "");
+        int dot = afterUpload.lastIndexOf('.');
+        return dot > 0 ? afterUpload.substring(0, dot) : afterUpload;
     }
 }

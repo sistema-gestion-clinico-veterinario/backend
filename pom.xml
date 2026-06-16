@@ -141,11 +141,11 @@
 			<version>2.1.29</version>
 		</dependency>
 
-		<!-- Bucket4j: Rate Limiting -->
+		<!-- Cloudinary -->
 		<dependency>
-			<groupId>com.bucket4j</groupId>
-			<artifactId>bucket4j-core</artifactId>
-			<version>8.10.1</version>
+			<groupId>com.cloudinary</groupId>
+			<artifactId>cloudinary-http44</artifactId>
+			<version>1.38.0</version>
 		</dependency>
 
 	</dependencies>
