@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 
+import java.util.Optional;
 import java.util.List;
 
 @Repository
@@ -53,4 +54,6 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
 
     @Query("SELECT COUNT(m) FROM Mascota m WHERE m.apoderado.user.company.id = :companyId")
     long countByCompanyId(@Param("companyId") Integer companyId);
+
+    Optional<Mascota> findByUuid(String uuid);
 }

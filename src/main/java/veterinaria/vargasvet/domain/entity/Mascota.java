@@ -23,8 +23,10 @@ public class Mascota {
     @Column(nullable = false)
     private String nombreCompleto;
 
-    @Column(nullable = false)
-    private String raza;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "raza_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private Raza raza;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "especie", nullable = false)

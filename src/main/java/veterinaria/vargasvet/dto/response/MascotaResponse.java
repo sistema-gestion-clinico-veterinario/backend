@@ -14,6 +14,8 @@ public class MascotaResponse {
     private EspecieMascota especie;
     private String otraEspecie;
     private String raza;
+    private Long razaId;
+    private String razaNombre;
     private SexoMascota sexo;
     private LocalDate fechaNacimiento;
     private Double peso;
