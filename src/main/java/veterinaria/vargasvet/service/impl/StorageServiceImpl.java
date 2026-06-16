@@ -41,7 +41,8 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public String store(MultipartFile file) {
         try {
-            Map<?, ?> result = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+            Map<?, ?> result = cloudinary.uploader().upload(file.getBytes(),
+                    ObjectUtils.asMap("resource_type", "auto"));
             return (String) result.get("secure_url");
         } catch (IOException e) {
             throw new RuntimeException("Error al subir archivo a Cloudinary", e);
@@ -83,7 +84,9 @@ public class StorageServiceImpl implements StorageService {
         String[] parts = url.split("/upload/");
         if (parts.length < 2) return url;
         String afterUpload = parts[1].replaceFirst("v\\d+/", "");
+        String resourceType = url.contains("/raw/upload/") ? "raw" : "image";
         int dot = afterUpload.lastIndexOf('.');
-        return dot > 0 ? afterUpload.substring(0, dot) : afterUpload;
+        String publicId = dot > 0 ? afterUpload.substring(0, dot) : afterUpload;
+        return resourceType.equals("raw") ? publicId + "." + afterUpload.substring(dot + 1) : publicId;
     }
 }
