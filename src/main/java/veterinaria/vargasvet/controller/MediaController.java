@@ -1,18 +1,11 @@
 package veterinaria.vargasvet.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import veterinaria.vargasvet.dto.UploadMediaDTO;
 import veterinaria.vargasvet.service.StorageService;
-
-import java.io.IOException;
-import java.nio.file.Files;
 
 @RequiredArgsConstructor
 @RequestMapping("/media")
@@ -23,28 +16,12 @@ public class MediaController {
 
     @PostMapping("/upload")
     public UploadMediaDTO uploadMedia(@RequestParam("file") MultipartFile multipartFile) {
-        String path = storageService.store(multipartFile);
-        return new UploadMediaDTO(path);
+        String url = storageService.store(multipartFile);
+        return new UploadMediaDTO(url);
     }
 
     @GetMapping("/{filename:.+}")
-    public ResponseEntity<Resource> getResource(@PathVariable String filename) {
-        try {
-            Resource resource = storageService.loadAsResource(filename);
-
-            String contentType = Files.probeContentType(resource.getFile().toPath());
-            if (contentType == null) {
-                contentType = "application/octet-stream";
-            }
-
-            return ResponseEntity
-                    .ok()
-                    .header(HttpHeaders.CONTENT_TYPE, contentType)
-                    .body(resource);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    public ResponseEntity<Void> getResource(@PathVariable String filename) {
+        return ResponseEntity.notFound().build();
     }
 }
