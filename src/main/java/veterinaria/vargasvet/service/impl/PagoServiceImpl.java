@@ -69,7 +69,7 @@ public class PagoServiceImpl implements PagoService {
             throw new IllegalArgumentException("No se puede registrar un pago para una cita con estado: " + cita.getEstado());
         }
 
-        if (purchaseRepository.existsByCitaIdAndTipoPurchase(cita.getId(), TipoPurchase.SERVICIO_CITA)) {
+        if (purchaseRepository.existsByCitaIdAndTipoPurchaseAndPaymentStatusNot(cita.getId(), TipoPurchase.SERVICIO_CITA, PaymentStatus.REFUNDED)) {
             throw new IllegalArgumentException("La cita ya tiene un pago registrado");
         }
 
