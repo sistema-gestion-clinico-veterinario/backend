@@ -496,7 +496,20 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         }
 
         Usuario usuario = refreshToken.getUsuario();
-        
+
+        boolean esSuperAdmin = usuario.getUsuariosPorRol().stream()
+                .anyMatch(upr -> "ROLE_SUPER_ADMIN".equals(upr.getRol().getName()));
+
+        if (!usuario.isActivo()) {
+            refreshTokenRepository.delete(refreshToken);
+            throw new DisabledException("La cuenta está suspendida");
+        }
+
+        if (!esSuperAdmin && usuario.getCompany() != null && !usuario.getCompany().isActivo()) {
+            refreshTokenRepository.delete(refreshToken);
+            throw new DisabledException("La empresa está desactivada. Contacta al administrador del sistema.");
+        }
+
         List<String> userRoles = usuario.getUsuariosPorRol().stream()
                 .map(upr -> upr.getRol().getName())
                 .collect(Collectors.toList());
