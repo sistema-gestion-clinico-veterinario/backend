@@ -664,10 +664,11 @@ public class CitaServiceImpl implements CitaService {
         }
     }
 
+    // TEMPORAL (periodo de pruebas): validación de fecha pasada desactivada. Revertir el cuerpo original cuando termine.
     private void validarFechaCitaNoPasada(LocalDateTime fechaInicio) {
-        if (fechaInicio != null && fechaInicio.isBefore(veterinaria.vargasvet.util.AppClock.now().minusMinutes(1))) {
-            throw new IllegalArgumentException("La fecha de la cita no puede ser anterior al momento actual");
-        }
+        // if (fechaInicio != null && fechaInicio.isBefore(veterinaria.vargasvet.util.AppClock.now().minusMinutes(1))) {
+        //     throw new IllegalArgumentException("La fecha de la cita no puede ser anterior al momento actual");
+        // }
     }
 
     private void validarPermisoEmpresa(Cita cita) {
