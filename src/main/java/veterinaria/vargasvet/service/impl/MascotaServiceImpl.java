@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Apoderado;
+import veterinaria.vargasvet.domain.entity.HistoriaClinica;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.dto.request.MascotaRequest;
@@ -15,6 +16,7 @@ import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.mapper.MascotaMapper;
 import veterinaria.vargasvet.repository.ApoderadoRepository;
 import veterinaria.vargasvet.repository.CitaRepository;
+import veterinaria.vargasvet.repository.HistoriaClinicaRepository;
 import veterinaria.vargasvet.repository.MascotaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.MascotaService;
@@ -29,6 +31,7 @@ public class MascotaServiceImpl implements MascotaService {
     private final MascotaRepository mascotaRepository;
     private final ApoderadoRepository apoderadoRepository;
     private final CitaRepository citaRepository;
+    private final HistoriaClinicaRepository historiaClinicaRepository;
     private final MascotaMapper mascotaMapper;
     private final BusinessValidator businessValidator;
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
@@ -91,6 +94,12 @@ public class MascotaServiceImpl implements MascotaService {
         mascota.setApoderado(apoderado);
 
         Mascota savedMascota = mascotaRepository.save(mascota);
+
+        HistoriaClinica hc = new HistoriaClinica();
+        hc.setMascota(savedMascota);
+        hc.setNumeroHc(String.format("HC-%06d", savedMascota.getId()));
+        hc.setActiva(true);
+        historiaClinicaRepository.save(hc);
 
         auditLogService.log(
             "REGISTRAR_MASCOTA",
