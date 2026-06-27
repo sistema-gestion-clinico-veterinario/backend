@@ -181,6 +181,7 @@ public class CompanyServiceImpl implements CompanyService {
         response.setEmail(company.getEmail());
         response.setActivo(company.isActivo());
         response.setBusinessHours(company.getBusinessHours());
+        response.setLogoUrl(company.getLogoUrl());
         return response;
     }
 
