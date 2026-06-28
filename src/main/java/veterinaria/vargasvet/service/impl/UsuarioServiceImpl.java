@@ -73,6 +73,9 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Value("${app.company.address}")
     private String companyAddress;
 
+    @Value("${jwt.absolute-timeout-seconds}")
+    private long absoluteTimeoutSeconds;
+
     @Override
     @Transactional
     public UserProfileDTO register(UserRegistrationDTO registrationDTO) {
@@ -185,7 +188,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRole));
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRole);
         String jwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, permissions, companyId);
-        String refreshToken = createRefreshToken(usuario, activeRole);
+        String refreshToken = createRefreshToken(usuario, activeRole, Instant.now());
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
@@ -240,7 +243,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), roleName));
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), roleName);
         String jwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, permissions, companyId);
-        String refreshToken = createRefreshToken(usuario, roleName);
+        Instant sessionStartedAt = refreshTokenRepository.findByUsuario(usuario)
+                .map(RefreshToken::getSessionStartedAt)
+                .orElse(Instant.now());
+        String refreshToken = createRefreshToken(usuario, roleName, sessionStartedAt);
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
@@ -495,6 +501,12 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             throw new BadCredentialsException("Refresh token expirado. Por favor, inicie sesión nuevamente.");
         }
 
+        Instant now = veterinaria.vargasvet.util.AppClock.instantNow();
+        if (refreshToken.getSessionStartedAt().plusSeconds(absoluteTimeoutSeconds).isBefore(now)) {
+            refreshTokenRepository.delete(refreshToken);
+            throw new BadCredentialsException("La sesión ha expirado. Por favor, inicie sesión nuevamente.");
+        }
+
         Usuario usuario = refreshToken.getUsuario();
 
         boolean esSuperAdmin = usuario.getUsuariosPorRol().stream()
@@ -527,7 +539,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRole);
         String newJwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, permissions, companyId);
 
-        String newRefreshToken = createRefreshToken(usuario, activeRole);
+        String newRefreshToken = createRefreshToken(usuario, activeRole, refreshToken.getSessionStartedAt());
         refreshTokenRepository.delete(refreshToken);
 
         AuthResponse response = new AuthResponse();
@@ -547,14 +559,16 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         return response;
     }
 
-    private String createRefreshToken(Usuario usuario, String activeRole) {
+    private String createRefreshToken(Usuario usuario, String activeRole, Instant sessionStartedAt) {
         String token = tokenProvider.createRefreshToken(usuario.getEmail(), activeRole);
-        Instant expiryDate = veterinaria.vargasvet.util.AppClock.instantNow().plusSeconds(604800); // 7 días
+        Instant now = veterinaria.vargasvet.util.AppClock.instantNow();
+        Instant expiryDate = now.plusSeconds(604800); // 7 días
 
         RefreshToken refreshToken = RefreshToken.builder()
                 .usuario(usuario)
                 .token(token)
                 .expiryDate(expiryDate)
+                .sessionStartedAt(sessionStartedAt)
                 .build();
 
         refreshTokenRepository.save(refreshToken);

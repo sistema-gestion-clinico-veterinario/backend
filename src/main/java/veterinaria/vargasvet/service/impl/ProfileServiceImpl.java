@@ -3,6 +3,7 @@ package veterinaria.vargasvet.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import veterinaria.vargasvet.domain.entity.Apoderado;
 import veterinaria.vargasvet.domain.entity.Empleado;
 import veterinaria.vargasvet.domain.entity.HorarioEmpleado;
 import veterinaria.vargasvet.domain.entity.Usuario;
@@ -10,6 +11,7 @@ import veterinaria.vargasvet.dto.request.ProfileUpdateRequest;
 import veterinaria.vargasvet.dto.response.HorarioEmpleadoResponse;
 import veterinaria.vargasvet.dto.response.ProfileResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
+import veterinaria.vargasvet.repository.ApoderadoRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.HorarioEmpleadoRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
@@ -28,16 +30,15 @@ public class ProfileServiceImpl implements ProfileService {
     private final UsuarioRepository usuarioRepository;
     private final EmpleadoRepository empleadoRepository;
     private final HorarioEmpleadoRepository horarioEmpleadoRepository;
+    private final ApoderadoRepository apoderadoRepository;
 
     @Override
     @Transactional(readOnly = true)
     public ProfileResponse getMyProfile() {
         Usuario usuario = getCurrentUser();
         Optional<Empleado> empleadoOpt = empleadoRepository.findByUserId(usuario.getId());
+        Optional<Apoderado> apoderadoOpt = Optional.empty();
 
-        // Vista previa segura para Super Admin y Admin:
-        // Si el usuario no tiene un registro de Empleado, le permitimos visualizar el perfil
-        // del primer empleado registrado EN SU SEDE/CLÍNICA activa para cargar sus horarios de demostración.
         if (empleadoOpt.isEmpty() && (SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin())) {
             Integer companyId = SecurityUtils.getCurrentCompanyId();
             if (companyId != null) {
@@ -53,7 +54,11 @@ public class ProfileServiceImpl implements ProfileService {
             }
         }
 
-        return buildResponse(usuario, empleadoOpt.orElse(null));
+        if (empleadoOpt.isEmpty()) {
+            apoderadoOpt = apoderadoRepository.findByUserId(usuario.getId());
+        }
+
+        return buildResponse(usuario, empleadoOpt.orElse(null), apoderadoOpt.orElse(null));
     }
 
     @Override
@@ -68,6 +73,7 @@ public class ProfileServiceImpl implements ProfileService {
         usuarioRepository.save(usuario);
 
         Optional<Empleado> empleadoOpt = empleadoRepository.findByUserId(usuario.getId());
+        Optional<Apoderado> apoderadoOpt = Optional.empty();
         empleadoOpt.ifPresent(empleado -> {
             if (dto.getObservaciones() != null) empleado.setObservaciones(dto.getObservaciones());
             if (dto.getFotoUrl() != null) empleado.setFotoUrl(dto.getFotoUrl());
@@ -75,7 +81,11 @@ public class ProfileServiceImpl implements ProfileService {
             empleadoRepository.save(empleado);
         });
 
-        return buildResponse(usuario, empleadoOpt.orElse(null));
+        if (empleadoOpt.isEmpty()) {
+            apoderadoOpt = apoderadoRepository.findByUserId(usuario.getId());
+        }
+
+        return buildResponse(usuario, empleadoOpt.orElse(null), apoderadoOpt.orElse(null));
     }
 
     private Usuario getCurrentUser() {
@@ -84,7 +94,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
     }
 
-    private ProfileResponse buildResponse(Usuario usuario, Empleado empleado) {
+    private ProfileResponse buildResponse(Usuario usuario, Empleado empleado, Apoderado apoderado) {
         ProfileResponse res = new ProfileResponse();
         res.setId(usuario.getId());
         res.setEmail(usuario.getEmail());
@@ -126,6 +136,10 @@ public class ProfileServiceImpl implements ProfileService {
                     })
                     .collect(Collectors.toList());
             res.setHorarios(horarios);
+        } else if (apoderado != null) {
+            res.setEmpleado(false);
+            res.setTipoDocumento(apoderado.getTipoDocumentoIdentidad() != null ? apoderado.getTipoDocumentoIdentidad().name() : null);
+            res.setGenero(apoderado.getGenero() != null ? apoderado.getGenero().name() : null);
         }
 
         return res;
