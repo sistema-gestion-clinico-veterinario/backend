@@ -26,6 +26,9 @@ public class RefreshToken {
     @Column(nullable = false)
     private Instant expiryDate;
 
+    @Column(nullable = false)
+    private Instant sessionStartedAt;
+
     @ManyToOne
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
     private Usuario usuario;
