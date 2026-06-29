@@ -48,6 +48,10 @@ public class UsuarioPorRolService {
         UsuarioPorRol upr = usuarioPorRolRepository.findById(usuarioPorRolId)
                 .orElseThrow(() -> new ResourceNotFoundException("AsignacionRol no encontrada"));
 
+        if (!upr.getUsuario().isActivo()) {
+            throw new IllegalArgumentException("No se puede asignar permisos a un usuario inactivo");
+        }
+
         Vista vista = vistaRepository.findById(vistaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vista no encontrada"));
 

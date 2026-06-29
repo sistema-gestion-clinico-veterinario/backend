@@ -16,5 +16,6 @@ public class LoginDTO {
 
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(max = 72, message = "La contrasena no debe superar 72 caracteres")
+    @Pattern(regexp = "^\\S+$", message = "La contraseña no debe contener espacios")
     private String password;
 }
