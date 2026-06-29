@@ -140,6 +140,19 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
     @Override
     @Transactional
+    public void setupAccount(String token, String password) {
+        Usuario usuario = usuarioRepository.findByVerificationToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Token de verificación inválido o expirado"));
+
+        usuario.setPassword(passwordEncoder.encode(password));
+        usuario.setEmailVerified(true);
+        usuario.setActivo(true);
+        usuario.setVerificationToken(null);
+        usuarioRepository.save(usuario);
+    }
+
+    @Override
+    @Transactional
     public void resendVerificationToken(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
@@ -158,7 +171,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Override
     @Transactional
     public AuthResponse login(LoginDTO loginDTO) {
-        Usuario usuario = usuarioRepository.findByEmail(loginDTO.getEmail())
+        String email = loginDTO.getEmail() != null ? loginDTO.getEmail().trim() : null;
+        loginDTO.setEmail(email);
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("Credenciales inválidas"));
 
         if (!passwordEncoder.matches(loginDTO.getPassword(), usuario.getPassword())) {
