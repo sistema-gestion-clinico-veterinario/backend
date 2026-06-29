@@ -47,17 +47,23 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 ? request.getUserPrincipal().getName()
                 : null;
 
-        boolean allowed = true;
+        boolean allowed;
 
         if (path.contains("/auth/login")) {
             allowed = resolveBucket("login:" + ip, 5, Duration.ofMinutes(1)).tryConsume(1);
-        } else if (path.contains("/auth/refresh") && user != null) {
-            allowed = resolveBucket("refresh:" + user, 10, Duration.ofMinutes(1)).tryConsume(1);
+        } else if (path.contains("/auth/refresh")) {
+            // El access token ya está vencido en este endpoint (por eso se refresca),
+            // por lo que JWTFilter nunca autentica esta request: se limita por IP, no por usuario.
+            allowed = resolveBucket("refresh:" + ip, 10, Duration.ofMinutes(1)).tryConsume(1);
         } else if (path.contains("/media/upload")) {
             String key = user != null ? "upload:" + user : "upload:" + ip;
             allowed = resolveBucket(key, 10, Duration.ofMinutes(1)).tryConsume(1);
         } else if (user != null) {
             allowed = resolveBucket("global:" + user, 200, Duration.ofMinutes(1)).tryConsume(1);
+        } else {
+            // Endpoints públicos sin autenticación (registro, recuperación de contraseña, etc.):
+            // sin esto quedaban sin ningún límite y expuestos a abuso.
+            allowed = resolveBucket("anon:" + ip, 60, Duration.ofMinutes(1)).tryConsume(1);
         }
 
         if (!allowed) {
