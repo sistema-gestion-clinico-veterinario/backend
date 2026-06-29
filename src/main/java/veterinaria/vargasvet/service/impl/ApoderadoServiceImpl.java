@@ -52,6 +52,9 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     @Value("${app.frontend.login-url}")
     private String loginUrl;
 
+    @Value("${app.frontend.verify-url}")
+    private String frontendVerifyUrl;
+
     @Value("${app.company.name}")
     private String defaultCompanyName;
 
@@ -97,9 +100,11 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         usuario.setDni(dto.getNumeroDocumento());
         usuario.setTelefono(dto.getTelefono());
         usuario.setDireccion(dto.getDireccion());
-        usuario.setPassword(passwordEncoder.encode(dto.getNumeroDocumento()));
-        usuario.setActivo(true);
-        usuario.setEmailVerified(true);
+        String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        usuario.setPassword(passwordEncoder.encode(tempPassword));
+        usuario.setActivo(false);
+        usuario.setEmailVerified(false);
+        usuario.setVerificationToken(UUID.randomUUID().toString());
         businessValidator.checkCompanyActiva(companyIdToUse);
         usuario.setCompany(companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
@@ -124,7 +129,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
         Apoderado savedApoderado = apoderadoRepository.save(apoderado);
 
-        sendWelcomeEmail(savedUser, dto.getNombre() + " " + dto.getApellido(), dto.getNumeroDocumento());
+        sendVerificationEmail(savedUser, dto.getNombre() + " " + dto.getApellido());
 
         auditLogService.log(
             "CREAR_APODERADO",
@@ -137,30 +142,29 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         return profileDTO;
     }
 
-    private void sendWelcomeEmail(Usuario usuario, String nombre, String DNI) {
+    private void sendVerificationEmail(Usuario usuario, String nombre) {
         try {
             String resolvedCompanyName = usuario.getCompany() != null ? usuario.getCompany().getName() : defaultCompanyName;
             String resolvedLogo = (usuario.getCompany() != null && usuario.getCompany().getLogoUrl() != null) ? usuario.getCompany().getLogoUrl() : defaultCompanyLogo;
             java.util.Map<String, Object> model = new java.util.HashMap<>();
             model.put("nombre", nombre);
             model.put("email", usuario.getEmail());
-            model.put("tempPassword", DNI);
             model.put("companyName", resolvedCompanyName);
             model.put("companyLogo", resolvedLogo);
             model.put("companyEmail", companyEmail);
             model.put("companyPhone", companyPhone);
             model.put("companyAddress", companyAddress);
-            model.put("verificationLink", loginUrl);
+            model.put("verificationLink", frontendVerifyUrl + usuario.getVerificationToken());
 
             veterinaria.vargasvet.dto.Mail mail = emailService.createMail(
                     usuario.getEmail(),
-                    "¡Bienvenido a la familia de " + resolvedCompanyName + "!",
+                    "Activa tu cuenta en " + resolvedCompanyName,
                     model
             );
 
-            emailService.sendEmail(mail, "email/welcome-apoderado-template");
+            emailService.sendEmail(mail, "email/welcome-template");
         } catch (Exception e) {
-            System.err.println("[WARNING] No se pudo enviar el correo de bienvenida al apoderado " + usuario.getEmail() + ": " + e.getMessage());
+            System.err.println("[WARNING] No se pudo enviar el correo de verificación al apoderado " + usuario.getEmail() + ": " + e.getMessage());
         }
     }
 

@@ -87,7 +87,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         usuario.setTelefono(dto.getTelefono());
         usuario.setDireccion(dto.getDireccion());
         
-        String tempPassword = dto.getNumeroDocumento();
+        String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
         usuario.setPassword(passwordEncoder.encode(tempPassword));
         usuario.setActivo(false);
         usuario.setEmailVerified(false);
@@ -460,7 +460,11 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     public void assignBulkSchedule(Long empleadoId, veterinaria.vargasvet.dto.request.BulkScheduleRequest request) {
         Empleado empleado = empleadoRepository.findById(empleadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
-        
+
+        if (!Boolean.TRUE.equals(empleado.getEstado())) {
+            throw new IllegalStateException("No se puede asignar horario a un empleado inactivo");
+        }
+
         String adminEmail = SecurityUtils.getCurrentUserEmail();
         LocalDate start = request.getStartDate();
         LocalDate end = request.getEndDate();
@@ -578,6 +582,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Horario no encontrado"));
         
         Empleado empleado = horario.getEmpleado();
+
+        if (!Boolean.TRUE.equals(empleado.getEstado())) {
+            throw new IllegalStateException("No se puede modificar el horario de un empleado inactivo");
+        }
         LocalDate fecha = request.getFecha() != null ? request.getFecha() : horario.getFecha();
         
         validarHorarioContraEmpresa(empleado.getUser().getCompany().getId(), fecha, request.getHoraInicio(), request.getHoraFin());
@@ -602,9 +610,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Override
     @Transactional
     public void deleteHorario(Long horarioId) {
-        if (!horarioEmpleadoRepository.existsById(horarioId)) {
-            throw new ResourceNotFoundException("Horario no encontrado");
+        HorarioEmpleado horario = horarioEmpleadoRepository.findById(horarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Horario no encontrado"));
+
+        if (!Boolean.TRUE.equals(horario.getEmpleado().getEstado())) {
+            throw new IllegalStateException("No se puede eliminar el horario de un empleado inactivo");
         }
+
         horarioEmpleadoRepository.deleteById(horarioId);
     }
 
@@ -766,6 +778,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         Empleado empleado = empleadoRepository.findById(empleadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
 
+        if (!Boolean.TRUE.equals(empleado.getEstado())) {
+            throw new IllegalStateException("No se puede clonar horario de un empleado inactivo");
+        }
+
         Integer companyId = empleado.getUser().getCompany().getId();
         LocalDate sourceEnd = sourceStart.plusDays(6);
         LocalDate targetEnd = targetStart.plusDays(6);
@@ -891,6 +907,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         Empleado empleado = empleadoRepository.findById(empleadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
 
+        if (!Boolean.TRUE.equals(empleado.getEstado())) {
+            throw new IllegalStateException("No se puede clonar horario de un empleado inactivo");
+        }
+
         Integer companyId = empleado.getUser().getCompany().getId();
         String adminEmail  = SecurityUtils.getCurrentUserEmail();
 
@@ -993,6 +1013,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     public void deleteBulkSchedule(Long empleadoId, java.time.LocalDate startDate, java.time.LocalDate endDate, List<String> dias) {
         Empleado empleado = empleadoRepository.findById(empleadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
+
+        if (!Boolean.TRUE.equals(empleado.getEstado())) {
+            throw new IllegalStateException("No se puede eliminar horario de un empleado inactivo");
+        }
 
         if (startDate.isAfter(endDate)) {
             throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la de fin");
