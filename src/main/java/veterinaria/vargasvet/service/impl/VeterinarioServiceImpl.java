@@ -70,7 +70,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         usuario.setDni(dto.getNumeroDocumento());
         usuario.setTelefono(dto.getTelefono());
         usuario.setDireccion(dto.getDireccion());
-        String tempPassword = dto.getNumeroDocumento();
+        String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
         usuario.setPassword(passwordEncoder.encode(tempPassword));
         usuario.setActivo(false);
         usuario.setEmailVerified(false);

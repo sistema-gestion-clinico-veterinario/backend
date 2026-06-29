@@ -544,6 +544,10 @@ public class CitaServiceImpl implements CitaService {
         Empleado veterinario = empleadoRepository.findById(request.getVeterinarioId())
                 .orElseThrow(() -> new ResourceNotFoundException("Veterinario no encontrado"));
 
+        if (!Boolean.TRUE.equals(veterinario.getEstado())) {
+            throw new IllegalArgumentException("No se puede reprogramar la cita a un empleado inactivo");
+        }
+
         LocalDateTime fechaInicio = request.getFechaHoraInicio();
         validarFechaCitaNoPasada(fechaInicio);
         LocalDateTime fechaFin = fechaInicio.plusMinutes(cita.getDuracionMinutos());

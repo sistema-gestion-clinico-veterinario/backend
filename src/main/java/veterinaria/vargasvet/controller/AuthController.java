@@ -38,6 +38,12 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Correo verificado exitosamente. Ya puedes iniciar sesión.", null));
     }
 
+    @PostMapping("/setup-account")
+    public ResponseEntity<ApiResponse<Void>> setupAccount(@Valid @RequestBody veterinaria.vargasvet.dto.request.SetupAccountRequest request) {
+        usuarioService.setupAccount(request.getToken(), request.getPassword());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Cuenta activada y contraseña creada exitosamente", null));
+    }
+
     @PostMapping("/resend-verification")
     public ResponseEntity<ApiResponse<Void>> resendVerification(@RequestParam String email) {
         usuarioService.resendVerificationToken(email);
