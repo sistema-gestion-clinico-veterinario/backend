@@ -9,6 +9,7 @@ import lombok.Data;
 public class ChangePasswordDTO {
     @NotBlank(message = "La contraseña actual es obligatoria")
     @Size(max = 72, message = "La contrasena actual no debe superar 72 caracteres")
+    @Pattern(regexp = "^\\S+$", message = "La contrasena actual no debe contener espacios")
     private String oldPassword;
 
     @NotBlank(message = "La nueva contraseña es obligatoria")

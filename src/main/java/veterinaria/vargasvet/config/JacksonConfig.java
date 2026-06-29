@@ -19,7 +19,12 @@ public class JacksonConfig {
             @Override
             public String deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                 String value = p.getValueAsString();
-                return value != null ? value.trim() : null;
+                if (value == null) return null;
+                String fieldName = p.currentName();
+                if (fieldName != null && fieldName.toLowerCase().contains("password")) {
+                    return value;
+                }
+                return value.trim();
             }
         });
         return module;
