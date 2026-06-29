@@ -79,16 +79,16 @@ public class WebSecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
-        // Rate Limit Filter (antes que JWT)
-        http.addFilterBefore(
-                rateLimitFilter,
-                UsernamePasswordAuthenticationFilter.class
-        );
-
-        // JWT Filter (despues de rate limit)
+        // JWT Filter (identifica al usuario)
         http.addFilterBefore(
                 jwtFilter,
                 UsernamePasswordAuthenticationFilter.class
+        );
+
+        // Rate Limit Filter (despues de JWT, para poder limitar por usuario autenticado)
+        http.addFilterAfter(
+                rateLimitFilter,
+                JWTFilter.class
         );
 
         return http.build();
