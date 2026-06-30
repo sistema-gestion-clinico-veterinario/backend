@@ -12,6 +12,7 @@ import veterinaria.vargasvet.domain.entity.TipoEmpleado;
 import veterinaria.vargasvet.dto.request.ServicioRequest;
 import veterinaria.vargasvet.dto.response.ServicioResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
+import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.ServiciosVeterinariosRepository;
 import veterinaria.vargasvet.repository.TipoEmpleadoRepository;
@@ -28,6 +29,7 @@ public class ServicioServiceImpl implements ServicioService {
     private final ServiciosVeterinariosRepository servicioRepository;
     private final CompanyRepository companyRepository;
     private final TipoEmpleadoRepository tipoEmpleadoRepository;
+    private final CitaRepository citaRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -115,6 +117,9 @@ public class ServicioServiceImpl implements ServicioService {
         ServiciosVeterinarios servicio = servicioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Servicio no encontrado con ID: " + id));
         validarPermisoSobreServicio(servicio);
+        if (citaRepository.existsByServicioId(id)) {
+            throw new IllegalArgumentException("No se puede eliminar el servicio porque ya ha sido utilizado en citas");
+        }
         servicio.setActivo(false);
         servicioRepository.save(servicio);
     }

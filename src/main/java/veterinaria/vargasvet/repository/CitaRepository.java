@@ -144,4 +144,6 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
            "WHERE c.mascota.id = :mascotaId AND c.eliminada = false AND UPPER(t.nombre) = 'GROMMER' " +
            "ORDER BY c.fechaHoraInicio DESC")
     java.util.List<Cita> findServiciosNoMedicosParaMascota(@Param("mascotaId") Long mascotaId);
+
+    boolean existsByServicioId(@Param("servicioId") Long servicioId);
 }

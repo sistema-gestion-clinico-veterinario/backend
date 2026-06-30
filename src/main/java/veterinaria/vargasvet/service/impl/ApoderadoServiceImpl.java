@@ -111,7 +111,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
         Usuario savedUser = usuarioRepository.save(usuario);
 
-        Role apoderadoRole = roleRepository.findByName("ROLE_APODERADO")
+        Role apoderadoRole = roleRepository.findFirstByName("ROLE_APODERADO")
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Error de configuración: El rol 'ROLE_APODERADO' no existe."));
         UsuarioPorRol upr = new UsuarioPorRol();
