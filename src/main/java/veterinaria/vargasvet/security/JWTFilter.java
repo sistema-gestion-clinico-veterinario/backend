@@ -16,6 +16,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
 import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
+import veterinaria.vargasvet.security.UsuarioPrincipal;
 
 import java.io.IOException;
 
@@ -66,12 +67,24 @@ public class JWTFilter extends GenericFilterBean {
                     String activeRole = authentication.getAuthorities().stream()
                             .map(GrantedAuthority::getAuthority)
                             .filter(a -> a.startsWith("ROLE_"))
+                            .filter(a -> !a.equals("ROLE_SUPER_ADMIN"))
                             .findFirst()
                             .orElse(null);
                     if (activeRole != null) {
-                        boolean roleInactivo = roleRepository.findByName(activeRole)
-                                .map(role -> !role.isActivo())
-                                .orElse(false);
+                        Integer companyId = authentication.getPrincipal() instanceof UsuarioPrincipal up
+                                ? up.getCompanyId() : null;
+                        boolean roleInactivo;
+                        if (companyId != null) {
+                            roleInactivo = roleRepository.findByNameAndCompanyId(activeRole, companyId)
+                                    .map(role -> !role.isActivo())
+                                    .orElse(false);
+                        } else {
+                            roleInactivo = roleRepository.findAllByName(activeRole).stream()
+                                    .filter(r -> r.getCompany() == null)
+                                    .findFirst()
+                                    .map(role -> !role.isActivo())
+                                    .orElse(false);
+                        }
                         if (roleInactivo) {
                             SecurityContextHolder.clearContext();
                             HttpServletResponse httpResponse = (HttpServletResponse) response;

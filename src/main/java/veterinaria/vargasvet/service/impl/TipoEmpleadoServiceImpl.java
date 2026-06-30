@@ -33,9 +33,16 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
         return tipoEmpleadoRepository.findAll();
     }
 
+    private void validarNombre(String nombre) {
+        if (nombre != null && !nombre.matches("^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s()\\-]+$")) {
+            throw new IllegalArgumentException("El nombre solo puede contener letras, espacios, guiones y paréntesis");
+        }
+    }
+
     @Override
     @Transactional
     public TipoEmpleado create(TipoEmpleado tipo) {
+        validarNombre(tipo.getNombre());
         Integer companyIdToUse;
         if (veterinaria.vargasvet.security.SecurityUtils.isSuperAdmin()) {
             if (tipo.getCompany() == null || tipo.getCompany().getId() == null) {
@@ -58,6 +65,7 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
     @Override
     @Transactional
     public TipoEmpleado update(Long id, TipoEmpleado tipo) {
+        validarNombre(tipo.getNombre());
         TipoEmpleado existing = tipoEmpleadoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado"));
 
