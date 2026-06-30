@@ -21,7 +21,7 @@ public class Role {
     @Column
     private String descripcion;
 
-    @Column(name = "activo", nullable = false)
+    @Column(name = "activo", nullable = false, columnDefinition = "boolean default true")
     private boolean activo = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
