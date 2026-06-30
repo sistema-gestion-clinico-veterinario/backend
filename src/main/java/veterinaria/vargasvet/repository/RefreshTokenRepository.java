@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
     Optional<RefreshToken> findByToken(String token);
     Optional<RefreshToken> findByUsuario(Usuario usuario);
+    Optional<RefreshToken> findFirstByUsuarioOrderByExpiryDateDesc(Usuario usuario);
     
     @Modifying
     @org.springframework.transaction.annotation.Transactional
