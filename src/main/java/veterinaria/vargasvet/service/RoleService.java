@@ -11,6 +11,7 @@ public interface RoleService {
     List<RolDTO> getSystemRoles();
     RolDTO createRole(String nombre, String descripcion, Integer companyId);
     RolDTO updateRole(Integer id, String nombre, String descripcion);
+    RolDTO toggleActivo(Integer id);
     void deleteRole(Integer id);
 
     List<RolVistaPermisoDTO> getVistasByRole(Integer roleId);

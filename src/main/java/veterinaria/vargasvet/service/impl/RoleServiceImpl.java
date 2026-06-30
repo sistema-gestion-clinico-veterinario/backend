@@ -93,6 +93,15 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
+    public RolDTO toggleActivo(Integer id) {
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
+        role.setActivo(!role.isActivo());
+        return toDTO(roleRepository.save(role));
+    }
+
+    @Override
+    @Transactional
     public void deleteRole(Integer id) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
@@ -167,6 +176,7 @@ public class RoleServiceImpl implements RoleService {
         dto.setId(role.getId());
         dto.setName(role.getName());
         dto.setDescripcion(role.getDescripcion());
+        dto.setActivo(role.isActivo());
         dto.setCompanyId(role.getCompany() != null ? role.getCompany().getId() : null);
         return dto;
     }
@@ -179,8 +189,8 @@ public class RoleServiceImpl implements RoleService {
         if (!normalizado.startsWith("ROLE_")) {
             normalizado = "ROLE_" + normalizado;
         }
-        if (!normalizado.matches("^ROLE_[A-Z0-9_Ñ]{2,60}$")) {
-            throw new IllegalArgumentException("El rol solo puede contener letras, numeros y guion bajo");
+        if (!normalizado.matches("^ROLE_[A-Z_Ñ]{2,60}$")) {
+            throw new IllegalArgumentException("El rol solo puede contener letras y guion bajo");
         }
         return normalizado;
     }
