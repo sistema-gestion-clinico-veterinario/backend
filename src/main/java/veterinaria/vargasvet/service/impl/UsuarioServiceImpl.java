@@ -195,6 +195,13 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         String activeRole = resolveActiveRole(assignedRoles);
 
+        boolean activeRoleActivo = usuario.getUsuariosPorRol().stream()
+                .filter(upr -> upr.getRol().getName().equals(activeRole))
+                .anyMatch(upr -> upr.getRol().isActivo());
+        if (!activeRoleActivo && !assignedRoles.isEmpty()) {
+            throw new DisabledException("Tu rol activo se encuentra desactivado. Contacta al administrador.");
+        }
+
         List<String> activeRolesList = activeRole != null
                 ? java.util.Collections.singletonList(activeRole)
                 : java.util.Collections.emptyList();
@@ -251,6 +258,13 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         if (!assignedRoles.contains(roleName)) {
             throw new IllegalArgumentException("El usuario no tiene asignado el rol solicitado");
+        }
+
+        boolean roleActivo = usuario.getUsuariosPorRol().stream()
+                .filter(upr -> upr.getRol().getName().equals(roleName))
+                .anyMatch(upr -> upr.getRol().isActivo());
+        if (!roleActivo) {
+            throw new IllegalArgumentException("El rol seleccionado se encuentra desactivado");
         }
 
         List<String> activeRolesList = java.util.Collections.singletonList(roleName);
