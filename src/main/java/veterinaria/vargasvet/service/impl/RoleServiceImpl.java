@@ -56,9 +56,9 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional
     public RolDTO createRole(String nombre, String descripcion, Integer companyId) {
-        nombre = normalizarNombreRol(nombre);
+        nombre =         normalizarNombreRol(nombre);
         descripcion = normalizarDescripcion(descripcion);
-        validarDuplicado(nombre);
+        validarDuplicado(nombre, companyId);
 
         Role role = new Role();
         role.setName(nombre);
@@ -82,7 +82,8 @@ public class RoleServiceImpl implements RoleService {
         boolean esProtegido = role.getName().equals("ROLE_SUPER_ADMIN") || role.getName().equals("ROLE_ADMIN");
         if (!esProtegido) {
             nombre = normalizarNombreRol(nombre);
-            validarDuplicadoEdicion(id, nombre);
+            Integer companyId = role.getCompany() != null ? role.getCompany().getId() : null;
+            validarDuplicadoEdicion(id, nombre, companyId);
             role.setName(nombre);
         }
         role.setDescripcion(normalizarDescripcion(descripcion));
@@ -178,7 +179,7 @@ public class RoleServiceImpl implements RoleService {
         if (!normalizado.startsWith("ROLE_")) {
             normalizado = "ROLE_" + normalizado;
         }
-        if (!normalizado.matches("^ROLE_[A-Z0-9_]{2,60}$")) {
+        if (!normalizado.matches("^ROLE_[A-Z0-9_Ñ]{2,60}$")) {
             throw new IllegalArgumentException("El rol solo puede contener letras, numeros y guion bajo");
         }
         return normalizado;
@@ -193,17 +194,28 @@ public class RoleServiceImpl implements RoleService {
         return value;
     }
 
-    private void validarDuplicado(String nombre) {
-        if (roleRepository.existsByName(nombre)) {
-            throw new IllegalArgumentException("Ya existe un rol con ese nombre");
+    private void validarDuplicado(String nombre, Integer companyId) {
+        boolean existe = companyId != null
+                ? roleRepository.existsByNameAndCompanyId(nombre, companyId)
+                : roleRepository.existsByNameAndCompanyIsNull(nombre);
+        if (existe) {
+            throw new IllegalArgumentException("Ya existe un rol con ese nombre en esta empresa");
         }
     }
 
-    private void validarDuplicadoEdicion(Integer id, String nombre) {
-        roleRepository.findByName(nombre)
-                .filter(existing -> !existing.getId().equals(id))
-                .ifPresent(existing -> {
-                    throw new IllegalArgumentException("Ya existe un rol con ese nombre");
-                });
+    private void validarDuplicadoEdicion(Integer id, String nombre, Integer companyId) {
+        if (companyId != null) {
+            roleRepository.findByNameAndCompanyId(nombre, companyId)
+                    .filter(existing -> !existing.getId().equals(id))
+                    .ifPresent(existing -> {
+                        throw new IllegalArgumentException("Ya existe un rol con ese nombre en esta empresa");
+                    });
+        } else {
+            roleRepository.findByName(nombre)
+                    .filter(existing -> !existing.getId().equals(id) && existing.getCompany() == null)
+                    .ifPresent(existing -> {
+                        throw new IllegalArgumentException("Ya existe un rol con ese nombre en el sistema");
+                    });
+        }
     }
 }

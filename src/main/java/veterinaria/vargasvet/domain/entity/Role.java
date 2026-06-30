@@ -15,7 +15,7 @@ public class Role {
     private Integer id;
 
     @EqualsAndHashCode.Include
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Column
