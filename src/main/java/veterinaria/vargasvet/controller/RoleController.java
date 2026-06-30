@@ -3,6 +3,7 @@ package veterinaria.vargasvet.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.response.RolDTO;
@@ -21,11 +22,13 @@ public class RoleController {
     private final RoleService roleService;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<ApiResponse<List<RolDTO>>> getAllRoles() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Lista de roles", roleService.getAllRoles()));
     }
 
     @GetMapping("/company")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<ApiResponse<List<RolDTO>>> getRolesByCompany(
             @RequestParam(required = false) Integer companyId) {
 
@@ -42,11 +45,13 @@ public class RoleController {
     }
 
     @GetMapping("/system")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<ApiResponse<List<RolDTO>>> getSystemRoles() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Roles del sistema", roleService.getSystemRoles()));
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<ApiResponse<RolDTO>> createRole(@RequestBody Map<String, Object> body) {
         String nombre      = body.get("name") != null ? (String) body.get("name") : (String) body.get("nombre");
         String descripcion = (String) body.get("descripcion");
@@ -60,6 +65,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<ApiResponse<RolDTO>> updateRole(
             @PathVariable Integer id,
             @RequestBody Map<String, Object> body) {
@@ -70,23 +76,27 @@ public class RoleController {
     }
 
     @PatchMapping("/{id}/toggle-active")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<ApiResponse<RolDTO>> toggleActivo(@PathVariable Integer id) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Estado del rol actualizado", roleService.toggleActivo(id)));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<ApiResponse<Void>> deleteRole(@PathVariable Integer id) {
         roleService.deleteRole(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Rol eliminado", null));
     }
 
     @GetMapping("/{id}/views")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<ApiResponse<List<RolVistaPermisoDTO>>> getVistas(@PathVariable Integer id) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Vistas del rol",
                 roleService.getVistasByRole(id)));
     }
 
     @PutMapping("/{id}/views")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<ApiResponse<List<RolVistaPermisoDTO>>> saveVistas(
             @PathVariable Integer id,
             @RequestBody List<RolVistaPermisoDTO> permisos) {
