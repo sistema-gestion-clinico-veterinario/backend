@@ -44,7 +44,7 @@ public class SetupController {
 
         Usuario saved = usuarioRepository.save(admin);
 
-        roleRepository.findByName("ROLE_SUPER_ADMIN").ifPresent(role -> {
+        roleRepository.findFirstByName("ROLE_SUPER_ADMIN").ifPresent(role -> {
             UsuarioPorRol upr = new UsuarioPorRol();
             upr.setUsuario(saved);
             upr.setRol(role);
