@@ -59,6 +59,7 @@ public class WebSecurityConfig {
                                 "/auth/reset-password",
                                 "/auth/validate-reset-token",
                                 "/setup/**",
+                                "/auth/setup-account",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
