@@ -91,7 +91,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         Usuario saved = usuarioRepository.save(usuario);
 
-        roleRepository.findByName("ROLE_VETERINARIO").ifPresent(role -> {
+        roleRepository.findFirstByName("ROLE_VETERINARIO").ifPresent(role -> {
             UsuarioPorRol upr = new UsuarioPorRol();
             upr.setUsuario(saved);
             upr.setRol(role);

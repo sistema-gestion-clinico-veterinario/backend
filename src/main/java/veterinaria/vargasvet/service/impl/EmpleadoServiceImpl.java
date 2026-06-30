@@ -116,8 +116,9 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
             usuarioPorRolRepository.deleteByUsuarioId(savedUser.getId());
             for (String roleName : new java.util.LinkedHashSet<>(dto.getRoles())) {
-                Role role = roleRepository.findByName(roleName)
-                        .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado: " + roleName));
+                Role role = roleRepository.findByNameAndCompanyId(roleName, companyIdToUse)
+                        .orElseGet(() -> roleRepository.findFirstByName(roleName)
+                                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado: " + roleName)));
                 UsuarioPorRol upr = new UsuarioPorRol();
                 upr.setUsuario(savedUser);
                 upr.setRol(role);
@@ -202,11 +203,19 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         if (dto.getNumeroDocumento() != null && !dto.getNumeroDocumento().equals(usuario.getDni())) {
             if (usuarioRepository.existsByDni(dto.getNumeroDocumento())) {
-                throw new IllegalArgumentException("El DNI/Documento ya estÃ¡ registrado por otro usuario");
+                throw new IllegalArgumentException("El DNI/Documento ya está registrado por otro usuario");
             }
             usuario.setDni(dto.getNumeroDocumento());
         }
 
+
+        if (dto.getEmail() != null && !dto.getEmail().equals(usuario.getEmail())) {
+            if (usuarioRepository.existsByEmail(dto.getEmail())) {
+                throw new IllegalArgumentException("El correo electrónico ya está en uso");
+            }
+            usuario.setEmail(dto.getEmail());
+            usuario.setEmailVerified(false);
+        }
 
         if (dto.getNombre() != null) usuario.setNombre(dto.getNombre());
         if (dto.getApellido() != null) usuario.setApellido(dto.getApellido());
@@ -224,7 +233,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             usuarioPorRolRepository.deleteByUsuarioId(usuario.getId());
             for (String roleName : new java.util.LinkedHashSet<>(dto.getRoles())) {
                 Role role = roleRepository.findByNameAndCompanyId(roleName, companyIdToUse)
-                        .orElseGet(() -> roleRepository.findByName(roleName)
+                        .orElseGet(() -> roleRepository.findFirstByName(roleName)
                                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado: " + roleName)));
                 UsuarioPorRol upr = new UsuarioPorRol();
                 upr.setUsuario(usuario);
@@ -253,7 +262,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             empleado.getTiposEmpleado().retainAll(newTipos);
             empleado.getTiposEmpleado().addAll(newTipos);
         }
-        boolean isVeterinario = usuario.getUsuariosPorRol().stream().anyMatch(upr -> upr.getRol().getName().equals("ROLE_VETERINARIO"));
+        boolean isVeterinario = dto.getRoles() != null && dto.getRoles().contains("ROLE_VETERINARIO");
+        if (isVeterinario) {
+            if (dto.getNumeroColegiatura() != null) {
+                empleado.setNumeroColegiatura(dto.getNumeroColegiatura());
+            }
+        }
         if (isVeterinario && dto.getEspecialidades() != null) {
             java.util.Set<Especialidad> newEspecialidades = new java.util.HashSet<>();
             for (String nombre : dto.getEspecialidades()) {
@@ -350,14 +364,17 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             return;
         }
 
+        Usuario usuario = empleado.getUser();
+        String empEmail = usuario.getEmail();
+        String empNombre = usuario.getNombre() + " " + usuario.getApellido();
+        Integer usuarioId = usuario.getId();
+
         horarioEmpleadoRepository.deleteByEmpleadoId(empleadoId);
         empleado.getEspecialidades().clear();
         empleado.getTiposEmpleado().clear();
-        String empEmail = empleado.getUser().getEmail();
-        String empNombre = empleado.getUser().getNombre() + " " + empleado.getUser().getApellido();
-        usuarioPorRolRepository.deleteByUsuarioId(empleado.getUser().getId());
+        usuarioPorRolRepository.deleteByUsuarioId(usuarioId);
         empleadoRepository.delete(empleado);
-        usuarioRepository.delete(empleado.getUser());
+        usuarioRepository.deleteById(usuarioId);
 
         auditLogService.log(
             "ELIMINAR_EMPLEADO",

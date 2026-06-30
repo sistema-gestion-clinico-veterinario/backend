@@ -78,7 +78,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
 
         Usuario savedUser = usuarioRepository.save(usuario);
 
-        roleRepository.findByName("ROLE_VETERINARIO").ifPresent(role -> {
+        roleRepository.findFirstByName("ROLE_VETERINARIO").ifPresent(role -> {
             UsuarioPorRol upr = new UsuarioPorRol();
             upr.setUsuario(savedUser);
             upr.setRol(role);
