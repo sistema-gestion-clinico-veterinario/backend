@@ -152,6 +152,10 @@ public class RoleServiceImpl implements RoleService {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
 
+        if (!role.isActivo()) {
+            throw new IllegalArgumentException("No se pueden asignar permisos a un rol inactivo");
+        }
+
         rolVistaPermisoRepository.deleteByRolId(roleId);
         rolVistaPermisoRepository.flush();
 
