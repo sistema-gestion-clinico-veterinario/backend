@@ -9,10 +9,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
+import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 
 import java.io.IOException;
@@ -22,6 +24,7 @@ import java.io.IOException;
 public class JWTFilter extends GenericFilterBean {
     private final TokenProvider tokenProvider;
     private final UsuarioRepository usuarioRepository;
+    private final RoleRepository roleRepository;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -58,6 +61,25 @@ public class JWTFilter extends GenericFilterBean {
                         httpResponse.setContentType("application/json");
                         httpResponse.getWriter().write("{\"error\":\"Acceso denegado. La empresa o el usuario está inactivo.\"}");
                         return;
+                    }
+
+                    String activeRole = authentication.getAuthorities().stream()
+                            .map(GrantedAuthority::getAuthority)
+                            .filter(a -> a.startsWith("ROLE_"))
+                            .findFirst()
+                            .orElse(null);
+                    if (activeRole != null) {
+                        boolean roleInactivo = roleRepository.findByName(activeRole)
+                                .map(role -> !role.isActivo())
+                                .orElse(false);
+                        if (roleInactivo) {
+                            SecurityContextHolder.clearContext();
+                            HttpServletResponse httpResponse = (HttpServletResponse) response;
+                            httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            httpResponse.setContentType("application/json");
+                            httpResponse.getWriter().write("{\"error\":\"Acceso denegado. El rol asignado se encuentra desactivado.\"}");
+                            return;
+                        }
                     }
                 }
 
