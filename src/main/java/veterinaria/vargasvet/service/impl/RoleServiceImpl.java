@@ -225,8 +225,9 @@ public class RoleServiceImpl implements RoleService {
                         throw new IllegalArgumentException("Ya existe un rol con ese nombre en esta empresa");
                     });
         } else {
-            roleRepository.findByName(nombre)
+            roleRepository.findAllByName(nombre).stream()
                     .filter(existing -> !existing.getId().equals(id) && existing.getCompany() == null)
+                    .findFirst()
                     .ifPresent(existing -> {
                         throw new IllegalArgumentException("Ya existe un rol con ese nombre en el sistema");
                     });
