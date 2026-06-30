@@ -17,6 +17,7 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
 
     private final TipoEmpleadoRepository tipoEmpleadoRepository;
     private final veterinaria.vargasvet.repository.CompanyRepository companyRepository;
+    private final veterinaria.vargasvet.repository.EmpleadoRepository empleadoRepository;
 
     @Override
     public List<TipoEmpleado> findAll(Integer companyId) {
@@ -81,6 +82,7 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
     public void cambiarEstado(Long id, Boolean activo) {
         TipoEmpleado existing = tipoEmpleadoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado"));
+
         existing.setEstado(activo);
         existing.setUpdatedAt(veterinaria.vargasvet.util.AppClock.now());
         tipoEmpleadoRepository.save(existing);
@@ -91,6 +93,9 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
     public void delete(Long id) {
         if (!tipoEmpleadoRepository.existsById(id)) {
             throw new ResourceNotFoundException("Tipo de empleado no encontrado");
+        }
+        if (empleadoRepository.countByTipoEmpleadoId(id) > 0) {
+            throw new IllegalArgumentException("No se puede eliminar el tipo de empleado porque tiene empleados asignados");
         }
         tipoEmpleadoRepository.deleteById(id);
     }
