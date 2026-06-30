@@ -36,9 +36,16 @@ public class EspecialidadServiceImpl implements EspecialidadService {
                 .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada con ID: " + id));
     }
 
+    private void validarNombre(String nombre) {
+        if (nombre != null && !nombre.matches("^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s()\\-]+$")) {
+            throw new IllegalArgumentException("El nombre solo puede contener letras, espacios, guiones y paréntesis");
+        }
+    }
+
     @Override
     @Transactional
     public Especialidad create(Especialidad especialidad) {
+        validarNombre(especialidad.getNombre());
         Integer companyIdToUse;
         if (veterinaria.vargasvet.security.SecurityUtils.isSuperAdmin()) {
             if (especialidad.getCompany() == null || especialidad.getCompany().getId() == null) {
@@ -61,6 +68,7 @@ public class EspecialidadServiceImpl implements EspecialidadService {
     @Override
     @Transactional
     public Especialidad update(Long id, Especialidad especialidad) {
+        validarNombre(especialidad.getNombre());
         Especialidad existing = findById(id);
         existing.setNombre(especialidad.getNombre());
         existing.setDescripcion(especialidad.getDescripcion());

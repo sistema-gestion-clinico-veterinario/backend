@@ -47,9 +47,16 @@ public class ServicioServiceImpl implements ServicioService {
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
+    private void validarNombre(String nombre) {
+        if (nombre != null && !nombre.matches("^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s()\\-]+$")) {
+            throw new IllegalArgumentException("El nombre solo puede contener letras, espacios, guiones y paréntesis");
+        }
+    }
+
     @Override
     @Transactional
     public ServicioResponse crear(ServicioRequest request) {
+        validarNombre(request.getNombre());
         Integer resolvedCompanyId = resolverCompanyIdParaEscritura(request.getCompanyId());
         Company company = companyRepository.findById(resolvedCompanyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + resolvedCompanyId));
@@ -81,6 +88,7 @@ public class ServicioServiceImpl implements ServicioService {
 
         validarPermisoSobreServicio(servicio);
 
+        validarNombre(request.getNombre());
         servicio.setNombre(request.getNombre());
         servicio.setDescripcion(request.getDescripcion());
         servicio.setPrecio(request.getPrecio());
