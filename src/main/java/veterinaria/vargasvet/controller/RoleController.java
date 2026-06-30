@@ -69,6 +69,11 @@ public class RoleController {
                 roleService.updateRole(id, nombre, descripcion)));
     }
 
+    @PatchMapping("/{id}/toggle-active")
+    public ResponseEntity<ApiResponse<RolDTO>> toggleActivo(@PathVariable Integer id) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Estado del rol actualizado", roleService.toggleActivo(id)));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteRole(@PathVariable Integer id) {
         roleService.deleteRole(id);
