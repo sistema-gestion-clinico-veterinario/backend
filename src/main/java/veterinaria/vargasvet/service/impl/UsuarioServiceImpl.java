@@ -259,9 +259,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), roleName));
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), roleName);
         String jwt = tokenProvider.createToken(usuario.getEmail(), activeRolesList, permissions, companyId);
-        Instant sessionStartedAt = refreshTokenRepository.findByUsuario(usuario)
+        Instant sessionStartedAt = refreshTokenRepository.findFirstByUsuarioOrderByExpiryDateDesc(usuario)
                 .map(RefreshToken::getSessionStartedAt)
                 .orElse(Instant.now());
+        refreshTokenRepository.deleteByUsuario(usuario);
         String refreshToken = createRefreshToken(usuario, roleName, sessionStartedAt);
 
         AuthResponse response = new AuthResponse();
