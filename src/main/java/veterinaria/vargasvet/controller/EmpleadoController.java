@@ -104,14 +104,14 @@ public class EmpleadoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('EMPLEADO_DELETE')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'EMPLEADO_DELETE')")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         empleadoService.eliminar(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Empleado eliminado exitosamente", null));
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('EMPLEADO_STATUS')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'EMPLEADO_STATUS')")
     public ResponseEntity<ApiResponse<Void>> cambiarEstado(@PathVariable Long id, @RequestParam Boolean active) {
         empleadoService.cambiarEstado(id, active);
         String mensaje = active ? "Empleado activado exitosamente" : "Empleado desactivado exitosamente";
