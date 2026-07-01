@@ -3,6 +3,7 @@ package veterinaria.vargasvet.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -58,4 +59,12 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
 
     @Query("SELECT COUNT(e) FROM Empleado e WHERE EXISTS (SELECT t FROM e.tiposEmpleado t WHERE t.id = :tipoEmpleadoId)")
     long countByTipoEmpleadoId(@Param("tipoEmpleadoId") Long tipoEmpleadoId);
+
+    @Modifying
+    @Query(value = "DELETE FROM empleado_especialidad WHERE empleado_id = :empleadoId", nativeQuery = true)
+    void removeEspecialidades(@Param("empleadoId") Long empleadoId);
+
+    @Modifying
+    @Query(value = "DELETE FROM empleado_tipo_empleado WHERE empleado_id = :empleadoId", nativeQuery = true)
+    void removeTiposEmpleado(@Param("empleadoId") Long empleadoId);
 }
