@@ -369,11 +369,11 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         String empNombre = usuario.getNombre() + " " + usuario.getApellido();
         Integer usuarioId = usuario.getId();
 
-        horarioEmpleadoRepository.deleteByEmpleadoId(empleadoId);
-        empleado.getEspecialidades().clear();
-        empleado.getTiposEmpleado().clear();
         usuarioPorRolRepository.deleteByUsuarioId(usuarioId);
-        empleadoRepository.delete(empleado);
+        empleadoRepository.removeEspecialidades(empleadoId);
+        empleadoRepository.removeTiposEmpleado(empleadoId);
+        horarioEmpleadoRepository.deleteByEmpleadoId(empleadoId);
+        empleadoRepository.deleteById(empleadoId);
         usuarioRepository.deleteById(usuarioId);
 
         auditLogService.log(
