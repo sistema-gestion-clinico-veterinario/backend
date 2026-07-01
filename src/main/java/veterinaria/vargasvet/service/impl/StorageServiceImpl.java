@@ -1,57 +1,61 @@
 package veterinaria.vargasvet.service.impl;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import veterinaria.vargasvet.service.StorageService;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 @Service
 public class StorageServiceImpl implements StorageService {
 
-    @Value("${cloudinary.cloud-name}")
-    private String cloudName;
+    @Value("${supabase.url}")
+    private String supabaseUrl;
 
-    @Value("${cloudinary.api-key}")
-    private String apiKey;
+    @Value("${supabase.service-role-key}")
+    private String serviceRoleKey;
 
-    @Value("${cloudinary.api-secret}")
-    private String apiSecret;
+    @Value("${supabase.bucket}")
+    private String bucketName;
 
-    private Cloudinary cloudinary;
+    private RestTemplate restTemplate;
 
     @Override
     @PostConstruct
     public void init() {
-        cloudinary = new Cloudinary(ObjectUtils.asMap(
-                "cloud_name", cloudName,
-                "api_key",    apiKey,
-                "api_secret", apiSecret,
-                "secure",     true
-        ));
+        restTemplate = new RestTemplate();
     }
 
     @Override
     public String store(MultipartFile file) {
         try {
-            String mime = file.getContentType() != null ? file.getContentType() : "";
-            String resourceType = mime.startsWith("image/") ? "image" : "raw";
             String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "file";
             String ext = originalName.contains(".") ? originalName.substring(originalName.lastIndexOf(".")).toLowerCase() : "";
-            String publicId = UUID.randomUUID().toString().replace("-", "") + ext;
-            Map<?, ?> result = cloudinary.uploader().upload(file.getBytes(),
-                    ObjectUtils.asMap("resource_type", resourceType, "public_id", publicId));
-            return (String) result.get("secure_url");
+            String fileName = UUID.randomUUID().toString().replace("-", "") + ext;
+            String mime = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+
+            String url = supabaseUrl + "/storage/v1/object/" + bucketName + "/" + fileName;
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + serviceRoleKey);
+            headers.setContentType(MediaType.parseMediaType(mime));
+            HttpEntity<byte[]> entity = new HttpEntity<>(file.getBytes(), headers);
+            restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+
+            return supabaseUrl + "/storage/v1/object/public/" + bucketName + "/" + fileName;
         } catch (IOException e) {
-            throw new RuntimeException("Error al subir archivo a Cloudinary", e);
+            throw new RuntimeException("Error al subir archivo a Supabase Storage", e);
         }
     }
 
@@ -62,46 +66,46 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public String storeBytes(byte[] content, String extension, String mimeType, String originalFilename) {
-        try {
-            String ext = extension != null ? extension.toLowerCase() : "";
-            String effectiveMime = mimeType != null ? mimeType : "";
-            String resourceType = effectiveMime.startsWith("image/") ? "image" : "raw";
-            String publicId = UUID.randomUUID().toString().replace("-", "") + ext;
-            Map<?, ?> result = cloudinary.uploader().upload(content,
-                    ObjectUtils.asMap("resource_type", resourceType, "public_id", publicId));
-            return (String) result.get("secure_url");
-        } catch (IOException e) {
-            throw new RuntimeException("Error al subir archivo a Cloudinary", e);
-        }
+        String ext = extension != null ? extension.toLowerCase() : "";
+        String fileName = UUID.randomUUID().toString().replace("-", "") + ext;
+        String effectiveMime = mimeType != null ? mimeType : "application/octet-stream";
+
+        String url = supabaseUrl + "/storage/v1/object/" + bucketName + "/" + fileName;
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + serviceRoleKey);
+        headers.setContentType(MediaType.parseMediaType(effectiveMime));
+        HttpEntity<byte[]> entity = new HttpEntity<>(content, headers);
+        restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+
+        return supabaseUrl + "/storage/v1/object/public/" + bucketName + "/" + fileName;
     }
 
     @Override
     public void delete(String url) {
-        try {
-            String publicId = extractPublicId(url);
-            cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
-        } catch (IOException e) {
-            throw new RuntimeException("Error al eliminar archivo de Cloudinary", e);
-        }
+        String fileName = extractFileName(url);
+        String deleteUrl = supabaseUrl + "/storage/v1/object/" + bucketName;
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + serviceRoleKey);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, List<String>>> entity = new HttpEntity<>(
+                Map.of("prefixes", List.of(fileName)), headers);
+        restTemplate.exchange(deleteUrl, HttpMethod.DELETE, entity, Void.class);
     }
 
     @Override
     public Path load(String filename) {
-        throw new UnsupportedOperationException("Archivos servidos directamente desde Cloudinary");
+        throw new UnsupportedOperationException("Archivos servidos directamente desde Supabase Storage");
     }
 
     @Override
     public Resource loadAsResource(String filename) {
-        throw new UnsupportedOperationException("Archivos servidos directamente desde Cloudinary");
+        throw new UnsupportedOperationException("Archivos servidos directamente desde Supabase Storage");
     }
 
-    private String extractPublicId(String url) {
-        String[] parts = url.split("/upload/");
-        if (parts.length < 2) return url;
-        String afterUpload = parts[1].replaceFirst("v\\d+/", "");
-        String resourceType = url.contains("/raw/upload/") ? "raw" : "image";
-        int dot = afterUpload.lastIndexOf('.');
-        String publicId = dot > 0 ? afterUpload.substring(0, dot) : afterUpload;
-        return resourceType.equals("raw") ? publicId + "." + afterUpload.substring(dot + 1) : publicId;
+    private String extractFileName(String url) {
+        String prefix = "/storage/v1/object/public/" + bucketName + "/";
+        int idx = url.indexOf(prefix);
+        if (idx == -1) return url;
+        return url.substring(idx + prefix.length());
     }
 }
