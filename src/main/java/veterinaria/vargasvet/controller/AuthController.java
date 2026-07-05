@@ -1,7 +1,10 @@
 package veterinaria.vargasvet.controller;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +20,13 @@ import veterinaria.vargasvet.service.UsuarioService;
 @RequiredArgsConstructor
 public class AuthController {
 
+    private static final String ACCESS_TOKEN_COOKIE = "access_token";
+    private static final String REFRESH_TOKEN_COOKIE = "refresh_token";
+
     private final UsuarioService usuarioService;
+
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserProfileDTO>> register(@Valid @RequestBody UserRegistrationDTO registrationDTO) {
@@ -27,8 +36,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginDTO loginDTO,
+                                                           HttpServletResponse httpResponse) {
         AuthResponse response = usuarioService.login(loginDTO);
+        setAuthCookies(httpResponse, response.getToken(), response.getRefreshToken());
         return ResponseEntity.ok(new ApiResponse<>(true, "Login exitoso", response));
     }
 
@@ -70,17 +81,31 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@RequestBody java.util.Map<String, String> request) {
-        String refreshToken = request.get("refreshToken");
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@RequestBody(required = false) java.util.Map<String, String> request,
+                                                             @CookieValue(value = REFRESH_TOKEN_COOKIE, required = false) String refreshTokenCookie,
+                                                             HttpServletResponse httpResponse) {
+        String refreshToken = refreshTokenCookie;
+        if (refreshToken == null && request != null) {
+            refreshToken = request.get("refreshToken");
+        }
         AuthResponse response = usuarioService.refreshToken(refreshToken);
+        setAuthCookies(httpResponse, response.getToken(), response.getRefreshToken());
         return ResponseEntity.ok(new ApiResponse<>(true, "Token refrescado exitosamente", response));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletResponse httpResponse) {
+        clearAuthCookies(httpResponse);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Sesión cerrada exitosamente", null));
+    }
+
     @PostMapping("/switch-role")
-    public ResponseEntity<ApiResponse<AuthResponse>> switchRole(@RequestBody java.util.Map<String, String> request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> switchRole(@RequestBody java.util.Map<String, String> request,
+                                                                HttpServletResponse httpResponse) {
         String roleName = request.get("roleName");
         String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
         AuthResponse response = usuarioService.switchRole(email, roleName);
+        setAuthCookies(httpResponse, response.getToken(), response.getRefreshToken());
         return ResponseEntity.ok(new ApiResponse<>(true, "Rol cambiado exitosamente", response));
     }
 
@@ -100,5 +125,25 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody veterinaria.vargasvet.dto.request.ResetPasswordRequest request) {
         usuarioService.resetPasswordWithToken(request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Contraseña restablecida exitosamente", null));
+    }
+
+    private void setAuthCookies(HttpServletResponse response, String accessToken, String refreshToken) {
+        addCookie(response, ACCESS_TOKEN_COOKIE, accessToken, 1800);
+        addCookie(response, REFRESH_TOKEN_COOKIE, refreshToken, 604800);
+    }
+
+    private void clearAuthCookies(HttpServletResponse response) {
+        addCookie(response, ACCESS_TOKEN_COOKIE, "", 0);
+        addCookie(response, REFRESH_TOKEN_COOKIE, "", 0);
+    }
+
+    private void addCookie(HttpServletResponse response, String name, String value, int maxAgeSeconds) {
+        Cookie cookie = new Cookie(name, value);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(cookieSecure);
+        cookie.setPath("/");
+        cookie.setMaxAge(maxAgeSeconds);
+        cookie.setAttribute("SameSite", "Lax");
+        response.addCookie(cookie);
     }
 }
