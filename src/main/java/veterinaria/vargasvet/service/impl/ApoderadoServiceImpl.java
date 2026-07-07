@@ -267,11 +267,13 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         if (!mascotaRepository.findByApoderadoId(apoderado.getId()).isEmpty()) {
             throw new IllegalArgumentException("No se puede eliminar un propietario que tiene mascotas registradas");
         }
-        String clientNombre = apoderado.getUser().getNombre() + " " + apoderado.getUser().getApellido();
-        String clientEmail = apoderado.getUser().getEmail();
+        Usuario usuario = apoderado.getUser();
+        String clientNombre = usuario.getNombre() + " " + usuario.getApellido();
+        String clientEmail = usuario.getEmail();
+        usuario.setApoderado(null);
+        refreshTokenRepository.deleteByUsuario(usuario);
         apoderadoRepository.delete(apoderado);
-        refreshTokenRepository.deleteByUsuario(apoderado.getUser());
-        usuarioRepository.delete(apoderado.getUser());
+        usuarioRepository.delete(usuario);
 
         auditLogService.log(
             "ELIMINAR_APODERADO",
