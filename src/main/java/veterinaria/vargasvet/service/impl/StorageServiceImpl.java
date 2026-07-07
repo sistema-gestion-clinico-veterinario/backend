@@ -93,6 +93,11 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
+    public byte[] fetch(String url) {
+        return restTemplate.getForObject(url, byte[].class);
+    }
+
+    @Override
     public Path load(String filename) {
         throw new UnsupportedOperationException("Archivos servidos directamente desde Supabase Storage");
     }
