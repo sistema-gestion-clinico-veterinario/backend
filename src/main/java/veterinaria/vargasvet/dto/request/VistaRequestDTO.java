@@ -14,6 +14,7 @@ public class VistaRequestDTO {
 
     @NotBlank(message = "El nombre de la vista es obligatorio")
     @Size(min = 2, max = 80, message = "El nombre debe tener entre 2 y 80 caracteres")
+    @Pattern(regexp = "^(?=.*[\\p{L}\\p{N}])(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*$", message = "El nombre contiene caracteres no permitidos")
     private String nombre;
 
     @Size(max = 120, message = "La ruta no debe superar 120 caracteres")
@@ -29,5 +30,6 @@ public class VistaRequestDTO {
     private boolean activo = true;
 
     @Size(max = 60, message = "El ícono no debe superar 60 caracteres")
+    @Pattern(regexp = "^$|^[A-Za-z0-9_\\s-]+$", message = "El icono contiene caracteres no permitidos")
     private String icono;
 }

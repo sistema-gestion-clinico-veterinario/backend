@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.TipoConsulta;
 
@@ -31,21 +33,45 @@ public class ConsultaRequest {
     @Min(value = 1, message = "La frecuencia respiratoria debe ser mayor a 0")
     @Max(value = 200, message = "La frecuencia respiratoria no debe superar 200 rpm")
     private Integer frecuenciaRespiratoria;
+    @Size(max = 80, message = "Las mucosas no deben superar 80 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las mucosas contienen caracteres no permitidos")
     private String mucosas;
+    @Size(max = 80, message = "La turgencia de piel no debe superar 80 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "La turgencia de piel contiene caracteres no permitidos")
     private String turgenciaPiel;
     private Boolean vacunacionAlDia;
     private Boolean desparasitacionAlDia;
 
+    @Size(min = 5, max = 250, message = "El motivo debe tener entre 5 y 250 caracteres")
+    @Pattern(regexp = "^(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "El motivo contiene caracteres no permitidos")
     private String motivoConsulta;
+    @Size(max = 1000, message = "La anamnesis no debe superar 1000 caracteres")
+    @Pattern(regexp = "^(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "La anamnesis contiene caracteres no permitidos")
     private String anamnesis;
+    @Size(max = 1000, message = "El examen fisico no debe superar 1000 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "El examen fisico contiene caracteres no permitidos")
     private String examenFisico;
+    @Size(max = 500, message = "Las observaciones no deben superar 500 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las observaciones contienen caracteres no permitidos")
     private String observaciones;
 
+    @Size(max = 500, message = "Los antecedentes no deben superar 500 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Los antecedentes contienen caracteres no permitidos")
     private String antecedentesEnfermedades;
+    @Size(max = 500, message = "Los antecedentes no deben superar 500 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Los antecedentes contienen caracteres no permitidos")
     private String antecedentesProcedimientos;
+    @Size(max = 500, message = "Los antecedentes no deben superar 500 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Los antecedentes contienen caracteres no permitidos")
     private String antecedentesPersonales;
+    @Size(max = 500, message = "Los antecedentes no deben superar 500 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Los antecedentes contienen caracteres no permitidos")
     private String antecedentesFamiliares;
+    @Size(max = 20, message = "El grupo sanguineo no debe superar 20 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "El grupo sanguineo contiene caracteres no permitidos")
     private String grupoSanguineo;
 
+    @Size(max = 500, message = "Las indicaciones no deben superar 500 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las indicaciones contienen caracteres no permitidos")
     private String indicacionesReceta;
 }
