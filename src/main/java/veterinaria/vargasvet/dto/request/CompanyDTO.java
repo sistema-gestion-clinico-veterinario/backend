@@ -36,6 +36,7 @@ public class CompanyDTO {
     @NotBlank(message = "El correo de contacto es obligatorio")
     @Email(message = "El formato del correo es inválido")
     @Size(max = 100, message = "El correo no debe superar 100 caracteres")
+    @Pattern(regexp = "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$", message = "El correo debe estar en minusculas y tener un formato valido")
     private String email;
 
     private String logoUrl;
@@ -45,10 +46,11 @@ public class CompanyDTO {
     private String website;
 
     @Size(max = 500, message = "La descripcion no debe superar 500 caracteres")
-    @Pattern(regexp = "^$|\\S(?:.*\\S)?", message = "La descripcion no debe tener espacios al inicio o al final")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "La descripcion contiene caracteres no permitidos")
     private String description;
 
     @Size(max = 100, message = "El horario comercial no debe superar 100 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*$", message = "El horario comercial contiene caracteres no permitidos")
     private String businessHours;
     
     private List<@Valid CompanyOperatingHourDTO> operatingHours;
