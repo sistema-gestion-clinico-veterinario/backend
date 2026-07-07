@@ -17,14 +17,16 @@ public class CompanyDTO {
 
     @NotBlank(message = "El nombre de la empresa es obligatorio")
     @Size(min = 3, max = 100, message = "El nombre debe tener entre 3 y 100 caracteres")
+    @Pattern(regexp = "^(?=.*\\p{L})[\\p{L}\\p{N}\\s.&,()'\\-]+$", message = "El nombre debe contener letras y solo caracteres permitidos")
     private String name;
 
     @NotBlank(message = "El RUC es obligatorio")
-    @Pattern(regexp = "(10|15|17|20)\\d{9}", message = "El RUC debe tener 11 digitos y un prefijo valido")
+    @Pattern(regexp = "(10|20)\\d{9}", message = "El RUC debe tener 11 digitos y empezar con 10 o 20")
     private String ruc;
 
     @NotBlank(message = "La dirección es obligatoria")
     @Size(min = 5, max = 200, message = "La direccion debe tener entre 5 y 200 caracteres")
+    @Pattern(regexp = "^[\\p{L}\\p{N}\\s.,#\\-/°:]+$", message = "La direccion contiene caracteres no permitidos")
     private String address;
 
     @NotBlank(message = "El teléfono es obligatorio")
@@ -39,10 +41,11 @@ public class CompanyDTO {
     private String logoUrl;
 
     @Size(max = 200, message = "El sitio web no debe superar 200 caracteres")
-    @Pattern(regexp = "^$|^https?://.+", message = "El sitio web debe iniciar con http:// o https://")
+    @Pattern(regexp = "^$|^https?://\\S+", message = "El sitio web debe iniciar con http:// o https:// y no contener espacios")
     private String website;
 
     @Size(max = 500, message = "La descripcion no debe superar 500 caracteres")
+    @Pattern(regexp = "^$|\\S(?:.*\\S)?", message = "La descripcion no debe tener espacios al inicio o al final")
     private String description;
 
     @Size(max = 100, message = "El horario comercial no debe superar 100 caracteres")
