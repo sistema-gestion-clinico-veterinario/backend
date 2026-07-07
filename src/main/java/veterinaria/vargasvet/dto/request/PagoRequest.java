@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.MetodoPago;
 
@@ -34,5 +36,7 @@ public class PagoRequest {
 
     /** Email del pagador — requerido por MercadoPago para pagos Yape */
     @Email(message = "El formato del correo del pagador es invalido")
+    @Size(max = 100, message = "El correo del pagador no debe superar 100 caracteres")
+    @Pattern(regexp = "^$|^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$", message = "El correo del pagador debe estar en minusculas y tener un formato valido")
     private String payerEmail;
 }
