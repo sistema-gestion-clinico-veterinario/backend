@@ -5,12 +5,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8ef16273-d33e-4236-ac8a-9607d61e8aac" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/AuthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/VeterinarioServiceImplTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/VeterinarioServiceImplTestTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/ApoderadoServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/ApoderadoServiceImpl.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JUnit5 Test Class" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -48,6 +58,9 @@
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;Spring Boot.VargasvetApplication.executor&quot;: &quot;Run&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary&quot;: &quot;JUnit5&quot;,
+    &quot;com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit5&quot;: &quot;&quot;,
+    &quot;com.intellij.testIntegration.createTest.CreateTestDialog.includeInheritedMembers&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;bugfix/correcciones-qa&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -58,6 +71,14 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="CreateTestDialog.Recents.Supers">
+      <recent name="" />
+    </key>
+    <key name="CreateTestDialog.RecentsKey">
+      <recent name="veterinaria.vargasvet.service.impl" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="VargasvetApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
       <module name="vargasvet" />
@@ -123,7 +144,9 @@
       <workItem from="1782831732973" duration="5455000" />
       <workItem from="1782922021914" duration="1904000" />
       <workItem from="1783220605912" duration="594000" />
-      <workItem from="1783224605766" duration="666000" />
+      <workItem from="1783224605766" duration="2205000" />
+      <workItem from="1783289896763" duration="1146000" />
+      <workItem from="1783400718424" duration="843000" />
     </task>
     <servers />
   </component>
