@@ -286,7 +286,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     @Transactional(readOnly = true)
     public Page<ApoderadoListResponse> listar(Integer companyId, String nombre, String numeroDocumento, int page, int size) {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
-        String nombreFiltro = (nombre != null && !nombre.isBlank()) ? nombre.trim() : null;
+        String nombreFiltro = (nombre != null && !nombre.isBlank()) ? nombre.trim().replaceAll("\\s+", " ") : null;
         String docFiltro = (numeroDocumento != null && !numeroDocumento.isBlank()) ? numeroDocumento.trim() : null;
         return apoderadoRepository.buscar(resolvedCompanyId, nombreFiltro, docFiltro,
                 PageRequest.of(page, size, Sort.unsorted()))
