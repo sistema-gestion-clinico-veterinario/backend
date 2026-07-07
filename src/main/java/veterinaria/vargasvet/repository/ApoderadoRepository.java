@@ -13,12 +13,12 @@ public interface ApoderadoRepository extends JpaRepository<Apoderado, Long> {
 
     @Query(value = "SELECT a FROM Apoderado a JOIN a.user u " +
                    "WHERE u.company.id = :companyId " +
-                   "AND (:nombre IS NULL OR LOWER(CAST(CONCAT(u.nombre, ' ', u.apellido) AS text)) LIKE LOWER(CAST(CONCAT('%', :nombre, '%') AS text))) " +
+                   "AND (:nombre IS NULL OR LOWER(CAST(CONCAT(u.nombre, ' ', u.apellido) AS text)) LIKE LOWER(CAST(CONCAT('%', REPLACE(:nombre, ' ', '%'), '%') AS text))) " +
                    "AND (:numeroDocumento IS NULL OR a.numeroDocumento LIKE CAST(CONCAT('%', :numeroDocumento, '%') AS text)) " +
                    "ORDER BY u.apellido ASC, u.nombre ASC",
            countQuery = "SELECT COUNT(a) FROM Apoderado a JOIN a.user u " +
                         "WHERE u.company.id = :companyId " +
-                        "AND (:nombre IS NULL OR LOWER(CAST(CONCAT(u.nombre, ' ', u.apellido) AS text)) LIKE LOWER(CAST(CONCAT('%', :nombre, '%') AS text))) " +
+                        "AND (:nombre IS NULL OR LOWER(CAST(CONCAT(u.nombre, ' ', u.apellido) AS text)) LIKE LOWER(CAST(CONCAT('%', REPLACE(:nombre, ' ', '%'), '%') AS text))) " +
                         "AND (:numeroDocumento IS NULL OR a.numeroDocumento LIKE CAST(CONCAT('%', :numeroDocumento, '%') AS text))")
     Page<Apoderado> buscar(@Param("companyId") Integer companyId,
                            @Param("nombre") String nombre,
