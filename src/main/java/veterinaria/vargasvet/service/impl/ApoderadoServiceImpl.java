@@ -17,6 +17,7 @@ import veterinaria.vargasvet.mapper.UserMapper;
 import veterinaria.vargasvet.repository.ApoderadoRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.MascotaRepository;
+import veterinaria.vargasvet.repository.RefreshTokenRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
@@ -40,6 +41,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     private final UsuarioRepository usuarioRepository;
     private final ApoderadoRepository apoderadoRepository;
     private final MascotaRepository mascotaRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final RoleRepository roleRepository;
     private final veterinaria.vargasvet.repository.UsuarioPorRolRepository usuarioPorRolRepository;
     private final CompanyRepository companyRepository;
@@ -268,6 +270,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         String clientNombre = apoderado.getUser().getNombre() + " " + apoderado.getUser().getApellido();
         String clientEmail = apoderado.getUser().getEmail();
         apoderadoRepository.delete(apoderado);
+        refreshTokenRepository.deleteByUsuario(apoderado.getUser());
         usuarioRepository.delete(apoderado.getUser());
 
         auditLogService.log(
