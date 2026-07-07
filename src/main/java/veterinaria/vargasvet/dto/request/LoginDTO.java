@@ -10,7 +10,7 @@ import lombok.Data;
 public class LoginDTO {
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El email debe ser válido")
-    @Pattern(regexp = "^\\S+@\\S+\\.\\S+$", message = "El email no debe contener espacios")
+    @Pattern(regexp = "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$", message = "El email debe estar en minusculas y tener un formato valido")
     @Size(max = 255, message = "El email no debe superar 255 caracteres")
     private String email;
 

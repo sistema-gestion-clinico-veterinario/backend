@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -18,10 +19,12 @@ public class ServicioRequest {
 
     @NotBlank(message = "El nombre del servicio es obligatorio")
     @Size(min = 2, max = 80, message = "El nombre debe tener entre 2 y 80 caracteres")
+    @Pattern(regexp = "^[\\p{L}\\s]+$", message = "El nombre solo debe contener letras y espacios")
     private String nombre;
 
     @NotBlank(message = "La descripción es obligatoria")
     @Size(max = 300, message = "La descripcion no debe superar 300 caracteres")
+    @Pattern(regexp = "^(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "La descripcion contiene caracteres no permitidos")
     private String descripcion;
 
     @NotNull(message = "El precio es obligatorio")
