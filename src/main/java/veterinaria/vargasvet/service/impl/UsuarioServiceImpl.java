@@ -590,6 +590,16 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         return response;
     }
 
+    @Override
+    @Transactional
+    public void revokeRefreshToken(String refreshToken) {
+        if (refreshToken == null) {
+            return;
+        }
+        refreshTokenRepository.findByToken(refreshToken)
+                .ifPresent(refreshTokenRepository::delete);
+    }
+
     private String createRefreshToken(Usuario usuario, String activeRole, Instant sessionStartedAt) {
         String token = tokenProvider.createRefreshToken(usuario.getEmail(), activeRole);
         Instant now = veterinaria.vargasvet.util.AppClock.instantNow();
