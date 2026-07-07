@@ -1,11 +1,5 @@
 package veterinaria.vargasvet.service.impl;
 
-import com.mercadopago.client.payment.PaymentClient;
-import com.mercadopago.client.payment.PaymentCreateRequest;
-import com.mercadopago.client.payment.PaymentPayerRequest;
-import com.mercadopago.exceptions.MPApiException;
-import com.mercadopago.exceptions.MPException;
-import com.mercadopago.resources.payment.Payment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -30,6 +24,7 @@ import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.PurchaseRepository;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CajaService;
+import veterinaria.vargasvet.service.MercadoPagoYapeGateway;
 import veterinaria.vargasvet.service.PagoService;
 
 import org.springframework.data.domain.Page;
@@ -55,6 +50,7 @@ public class PagoServiceImpl implements PagoService {
     private final RestTemplate restTemplate;
     private final AuditLogService auditLogService;
     private final CajaService cajaService;
+    private final MercadoPagoYapeGateway mercadoPagoYapeGateway;
 
     @Value("${mercadopago.public-key}")
     private String mpPublicKey;
@@ -104,36 +100,19 @@ public class PagoServiceImpl implements PagoService {
             }
 
             // Paso 1: obtener token Yape desde MercadoPago (sin CORS — llamada server-side)
-            String yapeMpToken = obtenerTokenYape(request.getYapePhoneNumber(), request.getYapeOtp());
+            MercadoPagoYapeGateway.YapePaymentResult mpPayment = mercadoPagoYapeGateway.createPayment(
+                    total,
+                    request.getYapePhoneNumber(),
+                    request.getYapeOtp(),
+                    request.getPayerEmail()
+            );
+            mercadoPagoId = mpPayment.id();
+            mpStatus = mpPayment.status();
 
-            // Paso 2: crear el pago con el token obtenido
-            try {
-                PaymentClient client = new PaymentClient();
-                PaymentCreateRequest mpRequest = PaymentCreateRequest.builder()
-                        .transactionAmount(total)
-                        .token(yapeMpToken)
-                        .installments(1)
-                        .paymentMethodId("yape")
-                        .description("Pago de servicio veterinario - VargasVet")
-                        .payer(PaymentPayerRequest.builder()
-                                .email(request.getPayerEmail())
-                                .build())
-                        .build();
-
-                Payment mpPayment = client.create(mpRequest);
-                mercadoPagoId = String.valueOf(mpPayment.getId());
-                mpStatus = mpPayment.getStatus();
-
-                if (!"approved".equals(mpStatus)) {
-                    throw new IllegalArgumentException(traducirRechazoYape(mpPayment.getStatusDetail()));
-                }
-                estado = PaymentStatus.PAID;
-
-            } catch (MPApiException e) {
-                throw new RuntimeException("Error de MercadoPago al crear pago: " + e.getApiResponse().getContent());
-            } catch (MPException e) {
-                throw new RuntimeException("Error al conectar con MercadoPago: " + e.getMessage());
+            if (!"approved".equals(mpStatus)) {
+                throw new IllegalArgumentException(traducirRechazoYape(mpPayment.statusDetail()));
             }
+            estado = PaymentStatus.PAID;
         }
 
         Purchase pago = new Purchase();
