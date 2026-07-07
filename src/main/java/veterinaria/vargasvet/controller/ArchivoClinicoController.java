@@ -24,6 +24,7 @@ public class ArchivoClinicoController {
 
     private final ArchivoClinicoService archivoClinicoService;
     private final AccesoValidator accesoValidator;
+    private final veterinaria.vargasvet.service.StorageService storageService;
 
     @PostMapping(consumes = "multipart/form-data")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
@@ -55,18 +56,20 @@ public class ArchivoClinicoController {
             @RequestParam(defaultValue = "false") boolean descargar) {
         accesoValidator.validarLeer("VISTA_HISTORIAS");
         ArchivoClinicoResponse meta = archivoClinicoService.obtenerPorId(id);
-
-        if (meta.getUrl() != null && meta.getUrl().startsWith("http")) {
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .header(HttpHeaders.LOCATION, meta.getUrl())
-                    .build();
-        }
-
-        Resource resource = archivoClinicoService.servirContenido(id);
         String contentType = meta.getTipoMime() != null ? meta.getTipoMime() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
         String disposition = descargar
                 ? "attachment; filename=\"" + meta.getNombre() + "\""
                 : "inline; filename=\"" + meta.getNombre() + "\"";
+
+        if (meta.getUrl() != null && meta.getUrl().startsWith("http")) {
+            byte[] contenido = storageService.fetch(meta.getUrl());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, disposition)
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .body(contenido);
+        }
+
+        Resource resource = archivoClinicoService.servirContenido(id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition)
                 .contentType(MediaType.parseMediaType(contentType))

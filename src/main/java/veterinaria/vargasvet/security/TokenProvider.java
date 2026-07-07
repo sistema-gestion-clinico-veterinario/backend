@@ -85,6 +85,7 @@ public class TokenProvider {
 
         JwtBuilder builder = Jwts.builder()
                 .subject(email)
+                .id(UUID.randomUUID().toString())
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(privateKey);
