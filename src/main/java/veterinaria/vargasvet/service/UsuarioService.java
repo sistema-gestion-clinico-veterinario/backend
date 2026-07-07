@@ -20,4 +20,5 @@ public interface UsuarioService {
     boolean validateResetToken(String token);
     AuthResponse refreshToken(String refreshToken);
     AuthResponse switchRole(String email, String roleName);
+    void revokeRefreshToken(String refreshToken);
 }
