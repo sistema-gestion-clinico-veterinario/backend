@@ -21,6 +21,11 @@ public class MeaningfulTextValidator implements ConstraintValidator<MeaningfulTe
         if (trimmed.matches("^[\\p{Punct}\\p{S}\\s]+$")) return false;
         if (requireLetter && !trimmed.matches(".*\\p{L}.*")) return false;
         if (requireLetter && trimmed.matches("^\\d+$")) return false;
+        if (trimmed.matches(".*[\\p{Punct}\\p{S}]{6,}.*")) return false;
+        long punctuationCount = trimmed.codePoints()
+                .filter(cp -> !Character.isLetterOrDigit(cp) && !Character.isWhitespace(cp))
+                .count();
+        if (punctuationCount >= 8 && ((double) punctuationCount / trimmed.length()) > 0.45) return false;
         if (trimmed.matches("(?is).*<\\s*/?\\s*(script|iframe|object|embed|style|img|svg|body|html|link|meta)\\b.*")) return false;
         return !trimmed.matches("(?is).*(javascript:|data:text/html|on\\w+\\s*=).*");
     }

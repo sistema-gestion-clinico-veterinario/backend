@@ -58,15 +58,17 @@ public class ServicioServiceImpl implements ServicioService {
     @Override
     @Transactional
     public ServicioResponse crear(ServicioRequest request) {
-        validarNombre(request.getNombre());
+        String nombre = request.getNombre().trim();
+        String descripcion = request.getDescripcion().trim();
+        validarNombre(nombre);
         Integer resolvedCompanyId = resolverCompanyIdParaEscritura(request.getCompanyId());
         Company company = companyRepository.findById(resolvedCompanyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + resolvedCompanyId));
 
         ServiciosVeterinarios servicio = new ServiciosVeterinarios();
         servicio.setCompany(company);
-        servicio.setNombre(request.getNombre());
-        servicio.setDescripcion(request.getDescripcion());
+        servicio.setNombre(nombre);
+        servicio.setDescripcion(descripcion);
         servicio.setPrecio(request.getPrecio());
         servicio.setDisponible(request.getDisponible() != null ? request.getDisponible() : true);
         servicio.setActivo(true);
@@ -90,9 +92,11 @@ public class ServicioServiceImpl implements ServicioService {
 
         validarPermisoSobreServicio(servicio);
 
-        validarNombre(request.getNombre());
-        servicio.setNombre(request.getNombre());
-        servicio.setDescripcion(request.getDescripcion());
+        String nombre = request.getNombre().trim();
+        String descripcion = request.getDescripcion().trim();
+        validarNombre(nombre);
+        servicio.setNombre(nombre);
+        servicio.setDescripcion(descripcion);
         servicio.setPrecio(request.getPrecio());
         if (request.getDisponible() != null) {
             servicio.setDisponible(request.getDisponible());
