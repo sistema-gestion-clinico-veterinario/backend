@@ -3,6 +3,7 @@ package veterinaria.vargasvet.dto.request;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.ConceptoMovimiento;
@@ -18,6 +19,7 @@ public class MovimientoEgresoRequest {
 
     @NotBlank
     @Size(max = 300)
+    @Pattern(regexp = "^(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "La descripcion contiene caracteres no permitidos")
     private String descripcion;
 
     @NotNull

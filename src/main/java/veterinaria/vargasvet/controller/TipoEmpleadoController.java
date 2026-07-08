@@ -1,5 +1,6 @@
 package veterinaria.vargasvet.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -36,14 +37,14 @@ public class TipoEmpleadoController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('TIPO_EMPLEADO_CREATE')")
-    public ResponseEntity<ApiResponse<TipoEmpleado>> create(@RequestBody TipoEmpleado tipo) {
+    public ResponseEntity<ApiResponse<TipoEmpleado>> create(@Valid @RequestBody TipoEmpleado tipo) {
         TipoEmpleado created = tipoEmpleadoService.create(tipo);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, "Tipo de empleado creado", created));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('TIPO_EMPLEADO_UPDATE')")
-    public ResponseEntity<ApiResponse<TipoEmpleado>> update(@PathVariable Long id, @RequestBody TipoEmpleado tipo) {
+    public ResponseEntity<ApiResponse<TipoEmpleado>> update(@PathVariable Long id, @Valid @RequestBody TipoEmpleado tipo) {
         TipoEmpleado updated = tipoEmpleadoService.update(id, tipo);
         return ResponseEntity.ok(new ApiResponse<>(true, "Tipo de empleado actualizado", updated));
     }

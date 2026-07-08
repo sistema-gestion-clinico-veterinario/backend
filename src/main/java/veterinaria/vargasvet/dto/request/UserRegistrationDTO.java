@@ -5,12 +5,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import veterinaria.vargasvet.validation.MeaningfulText;
 
 @Data
 public class UserRegistrationDTO {
     @Email(message = "El correo electrónico no es válido")
     @NotBlank(message = "El correo electrónico es obligatorio")
     @Size(max = 255, message = "El correo no debe superar 255 caracteres")
+    @Pattern(regexp = "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$", message = "El correo debe estar en minusculas y tener un formato valido")
     private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
@@ -20,10 +22,12 @@ public class UserRegistrationDTO {
 
     @NotBlank(message = "El nombre es obligatorio")
     @Size(min = 2, max = 80, message = "El nombre debe tener entre 2 y 80 caracteres")
+    @Pattern(regexp = "^[\\p{L}\\s]+$", message = "El nombre solo debe contener letras y espacios")
     private String nombre;
 
     @NotBlank(message = "El apellido es obligatorio")
     @Size(min = 2, max = 80, message = "El apellido debe tener entre 2 y 80 caracteres")
+    @Pattern(regexp = "^[\\p{L}\\s]+$", message = "El apellido solo debe contener letras y espacios")
     private String apellido;
 
     @Pattern(regexp = "^$|^\\d{8}$", message = "El DNI debe tener 8 digitos")
@@ -33,6 +37,8 @@ public class UserRegistrationDTO {
     private String telefono;
 
     @Size(max = 200, message = "La direccion no debe superar 200 caracteres")
+    @Pattern(regexp = "^$|^[\\p{L}\\p{N}\\s.,#\\-/°:]+$", message = "La direccion contiene caracteres no permitidos")
+    @MeaningfulText(message = "La direccion debe contener texto real, no solo numeros o simbolos")
     private String direccion;
     private Integer companyId;
 }

@@ -24,7 +24,11 @@ public class JacksonConfig {
                 if (fieldName != null && fieldName.toLowerCase().contains("password")) {
                     return value;
                 }
-                return value.trim();
+                return value
+                        .replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "")
+                        .replaceAll("(?is)<\\s*script\\b[^>]*>.*?<\\s*/\\s*script\\s*>", "")
+                        .trim()
+                        .replaceAll("[ \t\\x0B\f\r]+", " ");
             }
         });
         return module;
