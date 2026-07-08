@@ -162,10 +162,15 @@ public class PagoServiceImpl implements PagoService {
     @Transactional(readOnly = true)
     public Page<PagoListResponse> listarTodos(int page, int size, Integer companyId) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        if (companyId != null) {
-            return purchaseRepository.findByCompanyId(companyId, TipoPurchase.SERVICIO_CITA, pageable)
+        Integer resolvedCompanyId = SecurityUtils.isSuperAdmin()
+                ? companyId
+                : SecurityUtils.getCurrentCompanyId();
+
+        if (resolvedCompanyId != null) {
+            return purchaseRepository.findByCompanyId(resolvedCompanyId, TipoPurchase.SERVICIO_CITA, pageable)
                     .map(this::toListResponse);
         }
+
         return purchaseRepository.findAllByTipoPurchaseOrderByCreatedAtDesc(TipoPurchase.SERVICIO_CITA, pageable)
                 .map(this::toListResponse);
     }
@@ -173,40 +178,18 @@ public class PagoServiceImpl implements PagoService {
     @Override
     @Transactional(readOnly = true)
     public Page<PagoListResponse> listarHistorialPorEmpresa(int page, int size, Integer companyId) {
-        if (companyId == null) {
-            return Page.empty();
+        PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Integer resolvedCompanyId = SecurityUtils.isSuperAdmin()
+                ? companyId
+                : SecurityUtils.getCurrentCompanyId();
+
+        if (resolvedCompanyId != null) {
+            return purchaseRepository.findByCompanyId(resolvedCompanyId, TipoPurchase.SERVICIO_CITA, pageable)
+                    .map(this::toListResponse);
         }
 
-        // Fetch purchases not linked to citas — covers all future item types (virtual store, etc.)
-        List<PagoListResponse> nonCitaPurchases = purchaseRepository
-                .findByUserCompanyIdNonCita(companyId, PageRequest.of(0, 200, Sort.by("createdAt").descending()))
-                .getContent().stream()
-                .map(this::toListResponse)
-                .collect(Collectors.toList());
-
-        // Fetch all citas by company — covers paid + unpaid appointments
-        List<PagoListResponse> citas = citaRepository
-                .findByCompanyIdPaginated(companyId, PageRequest.of(0, 200, Sort.by("fechaHoraInicio").descending()))
-                .getContent().stream()
-                .map(this::toListResponseFromCita)
-                .collect(Collectors.toList());
-
-        List<PagoListResponse> allItems = new ArrayList<>();
-        allItems.addAll(citas);
-        allItems.addAll(nonCitaPurchases);
-
-        allItems.sort(Comparator.comparing(PagoListResponse::getFechaPago,
-                Comparator.nullsLast(Comparator.reverseOrder())));
-
-        int total = allItems.size();
-        int start = page * size;
-        int end = Math.min(start + size, total);
-
-        List<PagoListResponse> content = start < total
-                ? allItems.subList(start, end)
-                : Collections.emptyList();
-
-        return new PageImpl<>(content, PageRequest.of(page, size), total);
+        return purchaseRepository.findAllByTipoPurchaseOrderByCreatedAtDesc(TipoPurchase.SERVICIO_CITA, pageable)
+                .map(this::toListResponse);
     }
 
     private PagoListResponse toListResponseFromCita(Cita cita) {
