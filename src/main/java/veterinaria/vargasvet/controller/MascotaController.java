@@ -63,7 +63,7 @@ public class MascotaController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('PET_UPDATE')")
-    public ResponseEntity<ApiResponse<MascotaResponse>> updateMascota(@PathVariable Long id, @RequestBody MascotaRequest request) {
+    public ResponseEntity<ApiResponse<MascotaResponse>> updateMascota(@PathVariable Long id, @Valid @RequestBody MascotaRequest request) {
         MascotaResponse response = mascotaService.updateMascota(id, request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la mascota actualizados exitosamente", response));
     }

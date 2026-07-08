@@ -157,7 +157,7 @@ public class CompanyServiceImpl implements CompanyService {
         if (hoursDTO == null || hoursDTO.isEmpty()) return;
         
         for (CompanyOperatingHourDTO hDTO : hoursDTO) {
-            DiaSemana dia = DiaSemana.valueOf(hDTO.getDiaSemana());
+            DiaSemana dia = hDTO.getDiaSemana();
             CompanyOperatingHour hour = companyOperatingHourRepository
                     .findByCompanyIdAndDiaSemana(company.getId(), dia)
                     .orElse(new CompanyOperatingHour());
@@ -205,7 +205,7 @@ public class CompanyServiceImpl implements CompanyService {
         dto.setOperatingHours(companyOperatingHourRepository.findByCompanyId(company.getId()).stream()
                 .map(h -> {
                     CompanyOperatingHourDTO hDTO = new CompanyOperatingHourDTO();
-                    hDTO.setDiaSemana(h.getDiaSemana().name());
+                    hDTO.setDiaSemana(h.getDiaSemana());
                     hDTO.setOpeningTime(h.getOpeningTime());
                     hDTO.setClosingTime(h.getClosingTime());
                     hDTO.setIsOpen(h.getIsOpen());
