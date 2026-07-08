@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
+import veterinaria.vargasvet.validation.MeaningfulText;
 
 @Data
 public class RazaRequest {
@@ -17,6 +18,7 @@ public class RazaRequest {
 
     @Size(max = 500, message = "La descripción no debe superar 500 caracteres")
     @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "La descripcion contiene caracteres no permitidos")
+    @MeaningfulText(message = "La descripcion debe contener texto real, no solo numeros o simbolos")
     private String descripcion;
 
     @NotNull(message = "La especie es obligatoria")

@@ -3,8 +3,10 @@ package veterinaria.vargasvet.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import veterinaria.vargasvet.validation.MeaningfulText;
 
 import java.time.LocalDateTime;
 
@@ -19,16 +21,19 @@ public class CitaRequest {
 
     @NotBlank(message = "El motivo de la cita es obligatorio")
     @Size(min = 5, max = 250, message = "El motivo debe tener entre 5 y 250 caracteres")
+    @MeaningfulText(message = "El motivo debe contener texto real, no solo numeros o simbolos")
     @Pattern(regexp = "^(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "El motivo contiene caracteres no permitidos")
     private String motivoCita;
 
     @NotNull(message = "La fecha y hora de la cita son obligatorias")
+    @Future(message = "La fecha y hora de la cita deben ser futuras")
     private LocalDateTime fechaHoraInicio;
 
     @NotNull(message = "El servicio es obligatorio")
     private Long servicioId;
 
     @Size(max = 500, message = "Las notas no deben superar 500 caracteres")
+    @MeaningfulText(message = "Las notas deben contener texto real, no solo numeros o simbolos")
     @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las notas contienen caracteres no permitidos")
     private String notas;
     private Long version;

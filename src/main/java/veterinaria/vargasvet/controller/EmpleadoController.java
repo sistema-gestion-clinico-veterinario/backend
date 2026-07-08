@@ -65,7 +65,7 @@ public class EmpleadoController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('EMPLEADO_UPDATE')")
-    public ResponseEntity<ApiResponse<UserProfileDTO>> updateEmpleado(@PathVariable Long id, @RequestBody EmpleadoRequest dto) {
+    public ResponseEntity<ApiResponse<UserProfileDTO>> updateEmpleado(@PathVariable Long id, @Valid @RequestBody EmpleadoRequest dto) {
         UserProfileDTO profile = empleadoService.updateEmpleado(id, dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos del empleado actualizados exitosamente", profile));
     }
@@ -81,7 +81,7 @@ public class EmpleadoController {
 
     @PostMapping("/{id}/schedule-bulk")
     @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
-    public ResponseEntity<ApiResponse<Void>> assignBulkSchedule(@PathVariable Long id, @RequestBody BulkScheduleRequest request) {
+    public ResponseEntity<ApiResponse<Void>> assignBulkSchedule(@PathVariable Long id, @Valid @RequestBody BulkScheduleRequest request) {
         accesoValidator.validarEscribir("VISTA_HORARIOS");
         empleadoService.assignBulkSchedule(id, request);
         auditLogService.log("ASIGNAR_HORARIO_MASIVO", "Horario", "Asignó horario masivo al empleado con ID: " + id + " desde " + request.getStartDate() + " hasta " + request.getEndDate());

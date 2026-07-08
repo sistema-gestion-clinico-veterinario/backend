@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.Genero;
 import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
+import veterinaria.vargasvet.validation.MeaningfulText;
 
 import java.util.Set;
 
@@ -27,6 +28,7 @@ public class VeterinarioRegistrationDTO {
     @NotBlank(message = "El número de colegiatura es obligatorio")
     @Size(max = 30, message = "El numero de colegiatura no debe superar 30 caracteres")
     @Pattern(regexp = "^(?=.*[\\p{L}\\p{N}])(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*$", message = "El numero de colegiatura contiene caracteres no permitidos")
+    @MeaningfulText(requireLetter = false, message = "El numero de colegiatura no puede estar compuesto solo por simbolos")
     private String numeroColegiatura;
 
     @NotEmpty(message = "Debe especificar al menos una especialidad")
@@ -43,12 +45,16 @@ public class VeterinarioRegistrationDTO {
     private String telefono;
 
     // Campos opcionales
+    @Size(max = 500, message = "La URL de foto no debe superar 500 caracteres")
+    @Pattern(regexp = "^$|^https?://[^\\s<>]+$", message = "La URL de foto debe iniciar con http:// o https:// y no contener espacios")
     private String fotoUrl;
     @Size(max = 200, message = "La direccion no debe superar 200 caracteres")
     @Pattern(regexp = "^$|^[\\p{L}\\p{N}\\s.,#\\-/°:]+$", message = "La direccion contiene caracteres no permitidos")
+    @MeaningfulText(message = "La direccion debe contener texto real, no solo numeros o simbolos")
     private String direccion;
     @Size(max = 500, message = "Las observaciones no deben superar 500 caracteres")
     @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las observaciones contienen caracteres no permitidos")
+    @MeaningfulText(message = "Las observaciones deben contener texto real, no solo numeros o simbolos")
     private String observaciones;
 
     // Campos adicionales necesarios para la entidad base

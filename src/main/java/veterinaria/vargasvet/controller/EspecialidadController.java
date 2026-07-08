@@ -1,5 +1,6 @@
 package veterinaria.vargasvet.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -36,13 +37,13 @@ public class EspecialidadController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ESPECIALIDAD_CREATE')")
-    public ResponseEntity<Especialidad> create(@RequestBody Especialidad especialidad) {
+    public ResponseEntity<Especialidad> create(@Valid @RequestBody Especialidad especialidad) {
         return ResponseEntity.status(HttpStatus.CREATED).body(especialidadService.create(especialidad));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ESPECIALIDAD_UPDATE')")
-    public Especialidad update(@PathVariable Long id, @RequestBody Especialidad especialidad) {
+    public Especialidad update(@PathVariable Long id, @Valid @RequestBody Especialidad especialidad) {
         return especialidadService.update(id, especialidad);
     }
 

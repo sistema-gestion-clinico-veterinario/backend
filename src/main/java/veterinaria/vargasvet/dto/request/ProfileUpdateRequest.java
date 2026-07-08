@@ -3,6 +3,7 @@ package veterinaria.vargasvet.dto.request;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import veterinaria.vargasvet.validation.MeaningfulText;
 
 @Data
 public class ProfileUpdateRequest {
@@ -19,12 +20,15 @@ public class ProfileUpdateRequest {
 
     @Size(max = 200, message = "La direccion no debe superar 200 caracteres")
     @Pattern(regexp = "^$|^[\\p{L}\\p{N}\\s.,#\\-/°:]+$", message = "La direccion contiene caracteres no permitidos")
+    @MeaningfulText(message = "La direccion debe contener texto real, no solo numeros o simbolos")
     private String direccion;
 
     @Size(max = 500, message = "Las observaciones no deben superar 500 caracteres")
     @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las observaciones contienen caracteres no permitidos")
+    @MeaningfulText(message = "Las observaciones deben contener texto real, no solo numeros o simbolos")
     private String observaciones;
 
     @Size(max = 500, message = "La URL de foto no debe superar 500 caracteres")
+    @Pattern(regexp = "^$|^https?://[^\\s<>]+$", message = "La URL de foto debe iniciar con http:// o https:// y no contener espacios")
     private String fotoUrl;
 }

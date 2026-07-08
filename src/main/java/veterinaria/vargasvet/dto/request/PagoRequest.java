@@ -1,5 +1,6 @@
 package veterinaria.vargasvet.dto.request;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
@@ -39,4 +40,14 @@ public class PagoRequest {
     @Size(max = 100, message = "El correo del pagador no debe superar 100 caracteres")
     @Pattern(regexp = "^$|^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$", message = "El correo del pagador debe estar en minusculas y tener un formato valido")
     private String payerEmail;
+
+    @AssertTrue(message = "Para pagar con Yape debe ingresar telefono, codigo OTP y correo del pagador")
+    public boolean isDatosYapeCompletos() {
+        return metodoPago != MetodoPago.YAPE || (yapePhoneNumber != null && yapeOtp != null && payerEmail != null && !payerEmail.isBlank());
+    }
+
+    @AssertTrue(message = "El monto recibido es obligatorio para pagos en efectivo")
+    public boolean isMontoEfectivoValido() {
+        return metodoPago != MetodoPago.EFECTIVO || montoRecibido != null;
+    }
 }

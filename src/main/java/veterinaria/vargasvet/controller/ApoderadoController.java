@@ -54,7 +54,7 @@ public class ApoderadoController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('APODERADO_UPDATE')")
-    public ResponseEntity<ApiResponse<UserProfileDTO>> updateApoderado(@PathVariable Long id, @RequestBody ApoderadoRequest dto) {
+    public ResponseEntity<ApiResponse<UserProfileDTO>> updateApoderado(@PathVariable Long id, @Valid @RequestBody ApoderadoRequest dto) {
         UserProfileDTO profile = apoderadoService.updateApoderado(id, dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos del dueño actualizados exitosamente", profile));
     }
