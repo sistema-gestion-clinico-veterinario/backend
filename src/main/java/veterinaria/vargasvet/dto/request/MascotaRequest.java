@@ -6,10 +6,12 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.domain.enums.SexoMascota;
+import veterinaria.vargasvet.validation.MeaningfulText;
 
 import java.time.LocalDate;
 
@@ -18,12 +20,14 @@ public class MascotaRequest {
 
     @NotBlank(message = "El nombre de la mascota es obligatorio")
     @Size(min = 2, max = 80, message = "El nombre debe tener entre 2 y 80 caracteres")
+    @Pattern(regexp = "^[\\p{L}\\s]+$", message = "El nombre solo debe contener letras y espacios")
     private String nombreCompleto;
 
     @NotNull(message = "Debe seleccionar una especie")
     private EspecieMascota especie;
 
     @Size(max = 60, message = "La especie personalizada no debe superar 60 caracteres")
+    @Pattern(regexp = "^$|^[\\p{L}\\s]+$", message = "La especie personalizada solo debe contener letras y espacios")
     private String otraEspecie;
 
     @NotNull(message = "Debe seleccionar una raza")
@@ -41,17 +45,26 @@ public class MascotaRequest {
     private Double peso;
 
     @Size(max = 50, message = "El color no debe superar 50 caracteres")
+    @Pattern(regexp = "^$|^[\\p{L}\\s]+$", message = "El color solo debe contener letras y espacios")
     private String color;
 
     @Size(max = 300, message = "Las senas particulares no deben superar 300 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las senas particulares contienen caracteres no permitidos")
+    @MeaningfulText(message = "Las senas particulares deben contener texto real, no solo numeros o simbolos")
     private String senasParticulares;
     private Boolean esterilizado;
+    @Size(max = 500, message = "La URL de foto no debe superar 500 caracteres")
+    @Pattern(regexp = "^$|^https?://[^\\s<>]+$", message = "La URL de foto debe iniciar con http:// o https:// y no contener espacios")
     private String fotoUrl;
 
     @Size(max = 30, message = "El microchip no debe superar 30 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*$", message = "El microchip contiene caracteres no permitidos")
+    @MeaningfulText(requireLetter = false, message = "El microchip no puede estar compuesto solo por simbolos")
     private String numeroMicrochip;
 
     @Size(max = 500, message = "Las observaciones no deben superar 500 caracteres")
+    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las observaciones contienen caracteres no permitidos")
+    @MeaningfulText(message = "Las observaciones deben contener texto real, no solo numeros o simbolos")
     private String observaciones;
 
     @NotNull(message = "Debe vincular un apoderado (dueño) a la mascota")
