@@ -31,7 +31,7 @@ public interface HistoriaClinicaRepository extends JpaRepository<HistoriaClinica
                    "AND (CAST(:nombrePropietario AS varchar) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE CAST(:nombrePropietario AS varchar)) " +
                    "AND (CAST(:fechaDesde AS varchar) IS NULL OR EXISTS (SELECT 1 FROM consulta c WHERE c.historia_clinica_id = hc.id AND c.fecha_consulta >= CAST(:fechaDesde AS timestamp))) " +
                    "AND (CAST(:fechaHasta AS varchar) IS NULL OR EXISTS (SELECT 1 FROM consulta c WHERE c.historia_clinica_id = hc.id AND c.fecha_consulta <= CAST(:fechaHasta AS timestamp))) " +
-                   "ORDER BY hc.numero_hc DESC",
+                   "ORDER BY hc.numero_hc ASC",
            countQuery = "SELECT COUNT(*) FROM historia_clinica hc " +
                         "JOIN mascota m ON m.id = hc.mascota_id " +
                         "JOIN apoderado a ON a.id = m.apoderado_id " +

@@ -21,6 +21,7 @@ public class ServicioRequest {
     @NotBlank(message = "El nombre del servicio es obligatorio")
     @Size(min = 2, max = 80, message = "El nombre debe tener entre 2 y 80 caracteres")
     @Pattern(regexp = "^[\\p{L}\\s]+$", message = "El nombre solo debe contener letras y espacios")
+    @MeaningfulText(message = "El nombre del servicio debe contener texto real")
     private String nombre;
 
     @NotBlank(message = "La descripción es obligatoria")
