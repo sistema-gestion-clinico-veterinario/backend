@@ -20,6 +20,7 @@ import veterinaria.vargasvet.service.StorageService;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +40,10 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/msword",
             "application/octet-stream");
+    private static final Pattern HAS_LETTER_OR_NUMBER = Pattern.compile(".*[\\p{L}\\p{N}].*");
+    private static final Pattern HAS_LETTER = Pattern.compile(".*\\p{L}.*");
+    private static final Pattern UNSAFE_TEXT = Pattern.compile(".*[{}\\[\\]<>*|\\\\^~`=@].*");
+    private static final Pattern XSS_SIGNAL = Pattern.compile("(?i).*(<\\s*script|javascript:|on\\w+\\s*=|</?\\s*[a-z][^>]*>).*");
 
     private final ConsultaRepository consultaRepository;
     private final ArchivoClinicoRepository archivoClinicoRepository;
@@ -88,6 +93,7 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
             validarCabeceraDicom(fileBytes);
         }
 
+        String descripcionNormalizada = normalizarDescripcion(descripcion);
         String filename = storageService.storeBytes(fileBytes, extension, file.getContentType(), file.getOriginalFilename());
 
         ArchivoClinico archivo = new ArchivoClinico();
@@ -97,7 +103,7 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
         archivo.setTipoMime(file.getContentType());
         archivo.setTamanioBytes(file.getSize());
         archivo.setUrl(filename);
-        archivo.setDescripcion(descripcion);
+        archivo.setDescripcion(descripcionNormalizada);
         archivo.setSubidoPor(SecurityUtils.getCurrentUserEmail());
 
         return toResponse(archivoClinicoRepository.save(archivo));
@@ -151,6 +157,23 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
         if (bytes[128] != 'D' || bytes[129] != 'I' || bytes[130] != 'C' || bytes[131] != 'M') {
             throw new IllegalArgumentException("El archivo no es un DICOM válido (cabecera DICM ausente)");
         }
+    }
+
+    private String normalizarDescripcion(String descripcion) {
+        if (descripcion == null || descripcion.isBlank()) {
+            return null;
+        }
+        String value = descripcion.trim().replaceAll("[\\t\\x0B\\f\\r]+", " ").replaceAll(" {2,}", " ");
+        if (value.length() > 300) {
+            throw new IllegalArgumentException("La descripcion no debe superar 300 caracteres");
+        }
+        if (!HAS_LETTER_OR_NUMBER.matcher(value).matches() || !HAS_LETTER.matcher(value).matches()) {
+            throw new IllegalArgumentException("La descripcion debe contener texto real, no solo numeros o simbolos");
+        }
+        if (UNSAFE_TEXT.matcher(value).matches() || XSS_SIGNAL.matcher(value).matches()) {
+            throw new IllegalArgumentException("La descripcion contiene caracteres no permitidos");
+        }
+        return value;
     }
 
     @Override

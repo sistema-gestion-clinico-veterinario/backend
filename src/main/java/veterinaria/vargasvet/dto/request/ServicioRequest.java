@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import veterinaria.vargasvet.validation.MeaningfulText;
 
 import java.math.BigDecimal;
 
@@ -25,6 +26,7 @@ public class ServicioRequest {
     @NotBlank(message = "La descripción es obligatoria")
     @Size(max = 300, message = "La descripcion no debe superar 300 caracteres")
     @Pattern(regexp = "^(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "La descripcion contiene caracteres no permitidos")
+    @MeaningfulText(message = "La descripcion debe contener texto real, no solo numeros o simbolos")
     private String descripcion;
 
     @NotNull(message = "El precio es obligatorio")

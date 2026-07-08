@@ -1,15 +1,16 @@
 package veterinaria.vargasvet.dto.request;
 
 import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import veterinaria.vargasvet.domain.enums.DiaSemana;
+
 import java.time.LocalTime;
 
 @Data
 public class CompanyOperatingHourDTO {
-    @NotBlank(message = "El dia de atencion es obligatorio")
-    private String diaSemana;
+    @NotNull(message = "El dia de atencion es obligatorio")
+    private DiaSemana diaSemana;
     private LocalTime openingTime;
     private LocalTime closingTime;
 

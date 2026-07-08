@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import veterinaria.vargasvet.validation.MeaningfulText;
 
 @Data
 public class UserRegistrationDTO {
@@ -37,6 +38,7 @@ public class UserRegistrationDTO {
 
     @Size(max = 200, message = "La direccion no debe superar 200 caracteres")
     @Pattern(regexp = "^$|^[\\p{L}\\p{N}\\s.,#\\-/°:]+$", message = "La direccion contiene caracteres no permitidos")
+    @MeaningfulText(message = "La direccion debe contener texto real, no solo numeros o simbolos")
     private String direccion;
     private Integer companyId;
 }

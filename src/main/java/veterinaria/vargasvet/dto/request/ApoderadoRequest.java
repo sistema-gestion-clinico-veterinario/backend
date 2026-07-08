@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.Genero;
 import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
+import veterinaria.vargasvet.validation.MeaningfulText;
 
 @Data
 public class ApoderadoRequest {
@@ -37,14 +38,17 @@ public class ApoderadoRequest {
     @NotBlank(message = "La direccion es obligatoria")
     @Size(max = 200, message = "La direccion no debe superar 200 caracteres")
     @Pattern(regexp = "^[\\p{L}\\p{N}\\s.,#\\-/°:]+$", message = "La direccion contiene caracteres no permitidos")
+    @MeaningfulText(message = "La direccion debe contener texto real, no solo numeros o simbolos")
     private String direccion;
     @NotNull
     private Genero genero;
     @Size(max = 500, message = "Las referencias no deben superar 500 caracteres")
     @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las referencias contienen caracteres no permitidos")
+    @MeaningfulText(message = "Las referencias deben contener texto real, no solo numeros o simbolos")
     private String referencias;
     @Size(max = 500, message = "Las observaciones no deben superar 500 caracteres")
     @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las observaciones contienen caracteres no permitidos")
+    @MeaningfulText(message = "Las observaciones deben contener texto real, no solo numeros o simbolos")
     private String observaciones;
     private Integer companyId;
 
