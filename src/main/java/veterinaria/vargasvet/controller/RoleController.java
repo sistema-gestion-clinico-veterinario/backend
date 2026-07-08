@@ -1,18 +1,19 @@
 package veterinaria.vargasvet.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
+import veterinaria.vargasvet.dto.request.RoleRequest;
 import veterinaria.vargasvet.dto.response.RolDTO;
 import veterinaria.vargasvet.dto.response.RolVistaPermisoDTO;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.RoleService;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/admin/roles")
@@ -52,12 +53,11 @@ public class RoleController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_MANAGE')")
-    public ResponseEntity<ApiResponse<RolDTO>> createRole(@RequestBody Map<String, Object> body) {
-        String nombre      = body.get("name") != null ? (String) body.get("name") : (String) body.get("nombre");
-        String descripcion = (String) body.get("descripcion");
-        Object companyIdRaw = body.get("companyId");
+    public ResponseEntity<ApiResponse<RolDTO>> createRole(@Valid @RequestBody RoleRequest body) {
+        String nombre      = body.getName() != null ? body.getName() : body.getNombre();
+        String descripcion = body.getDescripcion();
         Integer companyId  = SecurityUtils.isSuperAdmin()
-                ? (companyIdRaw != null ? ((Number) companyIdRaw).intValue() : null)
+                ? body.getCompanyId()
                 : SecurityUtils.getCurrentCompanyId();
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -68,9 +68,9 @@ public class RoleController {
     @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('ROLE_MANAGE')")
     public ResponseEntity<ApiResponse<RolDTO>> updateRole(
             @PathVariable Integer id,
-            @RequestBody Map<String, Object> body) {
-        String nombre      = body.get("name") != null ? (String) body.get("name") : (String) body.get("nombre");
-        String descripcion = (String) body.get("descripcion");
+            @Valid @RequestBody RoleRequest body) {
+        String nombre      = body.getName() != null ? body.getName() : body.getNombre();
+        String descripcion = body.getDescripcion();
         return ResponseEntity.ok(new ApiResponse<>(true, "Rol actualizado",
                 roleService.updateRole(id, nombre, descripcion)));
     }
