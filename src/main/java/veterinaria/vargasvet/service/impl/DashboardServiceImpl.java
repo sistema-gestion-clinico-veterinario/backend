@@ -40,6 +40,10 @@ public class DashboardServiceImpl implements DashboardService {
             // Stats globales para SuperAdmin si no hay empresa seleccionada
             builder.totalPacientes(mascotaRepository.count());
             builder.totalCitas(citaRepository.count());
+            builder.totalCitasHoy(citaRepository.countGlobalByDateRange(
+                    veterinaria.vargasvet.util.AppClock.today().atStartOfDay(),
+                    veterinaria.vargasvet.util.AppClock.today().atTime(java.time.LocalTime.MAX)
+            ));
             builder.totalEmpleados(empleadoRepository.count());
         }
 
