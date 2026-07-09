@@ -30,8 +30,10 @@ public interface HistoriaClinicaRepository extends JpaRepository<HistoriaClinica
                    "AND (CAST(:numeroHc AS varchar) IS NULL OR hc.numero_hc = CAST(:numeroHc AS varchar)) " +
                    "AND (CAST(:nombrePaciente AS varchar) IS NULL OR LOWER(m.nombre_completo) LIKE CAST(:nombrePaciente AS varchar)) " +
                    "AND (CAST(:nombrePropietario AS varchar) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE CAST(:nombrePropietario AS varchar)) " +
-                   "AND (CAST(:fechaDesde AS varchar) IS NULL OR EXISTS (SELECT 1 FROM consulta c WHERE c.historia_clinica_id = hc.id AND c.fecha_consulta >= CAST(:fechaDesde AS timestamp))) " +
-                   "AND (CAST(:fechaHasta AS varchar) IS NULL OR EXISTS (SELECT 1 FROM consulta c WHERE c.historia_clinica_id = hc.id AND c.fecha_consulta <= CAST(:fechaHasta AS timestamp))) " +
+                   "AND ((CAST(:fechaDesde AS varchar) IS NULL AND CAST(:fechaHasta AS varchar) IS NULL) " +
+                   "OR EXISTS (SELECT 1 FROM consulta c WHERE c.historia_clinica_id = hc.id " +
+                   "AND (CAST(:fechaDesde AS varchar) IS NULL OR c.fecha_consulta >= CAST(:fechaDesde AS timestamp)) " +
+                   "AND (CAST(:fechaHasta AS varchar) IS NULL OR c.fecha_consulta <= CAST(:fechaHasta AS timestamp)))) " +
                    "ORDER BY hc.numero_hc ASC",
            countQuery = "SELECT COUNT(*) FROM historia_clinica hc " +
                         "JOIN mascota m ON m.id = hc.mascota_id " +
@@ -41,8 +43,10 @@ public interface HistoriaClinicaRepository extends JpaRepository<HistoriaClinica
                         "AND (CAST(:numeroHc AS varchar) IS NULL OR hc.numero_hc = CAST(:numeroHc AS varchar)) " +
                         "AND (CAST(:nombrePaciente AS varchar) IS NULL OR LOWER(m.nombre_completo) LIKE CAST(:nombrePaciente AS varchar)) " +
                         "AND (CAST(:nombrePropietario AS varchar) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE CAST(:nombrePropietario AS varchar)) " +
-                        "AND (CAST(:fechaDesde AS varchar) IS NULL OR EXISTS (SELECT 1 FROM consulta c WHERE c.historia_clinica_id = hc.id AND c.fecha_consulta >= CAST(:fechaDesde AS timestamp))) " +
-                        "AND (CAST(:fechaHasta AS varchar) IS NULL OR EXISTS (SELECT 1 FROM consulta c WHERE c.historia_clinica_id = hc.id AND c.fecha_consulta <= CAST(:fechaHasta AS timestamp)))",
+                        "AND ((CAST(:fechaDesde AS varchar) IS NULL AND CAST(:fechaHasta AS varchar) IS NULL) " +
+                        "OR EXISTS (SELECT 1 FROM consulta c WHERE c.historia_clinica_id = hc.id " +
+                        "AND (CAST(:fechaDesde AS varchar) IS NULL OR c.fecha_consulta >= CAST(:fechaDesde AS timestamp)) " +
+                        "AND (CAST(:fechaHasta AS varchar) IS NULL OR c.fecha_consulta <= CAST(:fechaHasta AS timestamp))))",
            nativeQuery = true)
     Page<HistoriaClinica> buscar(
             @Param("isSuperAdmin") boolean isSuperAdmin,
@@ -60,8 +64,10 @@ public interface HistoriaClinicaRepository extends JpaRepository<HistoriaClinica
                    "JOIN usuario u ON u.id = a.user_id " +
                    "WHERE (:isSuperAdmin = true OR u.company_id = :companyId) " +
                    "AND (CAST(:numeroHc AS varchar) IS NULL OR hc.numero_hc = CAST(:numeroHc AS varchar)) " +
-                   "AND (CAST(:fechaDesde AS varchar) IS NULL OR EXISTS (SELECT 1 FROM consulta c WHERE c.historia_clinica_id = hc.id AND c.fecha_consulta >= CAST(:fechaDesde AS timestamp))) " +
-                   "AND (CAST(:fechaHasta AS varchar) IS NULL OR EXISTS (SELECT 1 FROM consulta c WHERE c.historia_clinica_id = hc.id AND c.fecha_consulta <= CAST(:fechaHasta AS timestamp))) " +
+                   "AND ((CAST(:fechaDesde AS varchar) IS NULL AND CAST(:fechaHasta AS varchar) IS NULL) " +
+                   "OR EXISTS (SELECT 1 FROM consulta c WHERE c.historia_clinica_id = hc.id " +
+                   "AND (CAST(:fechaDesde AS varchar) IS NULL OR c.fecha_consulta >= CAST(:fechaDesde AS timestamp)) " +
+                   "AND (CAST(:fechaHasta AS varchar) IS NULL OR c.fecha_consulta <= CAST(:fechaHasta AS timestamp)))) " +
                    "ORDER BY hc.numero_hc ASC",
            nativeQuery = true)
     List<HistoriaClinica> buscarCandidatosParaBusquedaFlexible(
