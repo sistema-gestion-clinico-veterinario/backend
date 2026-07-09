@@ -130,7 +130,13 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Transactional
     public void verifyEmail(String token) {
         Usuario usuario = usuarioRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new ResourceNotFoundException("Token de verificación inválido"));
+                .orElseThrow(() -> new ResourceNotFoundException("Token de verificacion invalido"));
+
+        if (usuario.isEmailVerified() || usuario.isPasswordChanged()) {
+            usuario.setVerificationToken(null);
+            usuarioRepository.save(usuario);
+            throw new IllegalArgumentException("La cuenta ya fue activada. Inicia sesion o recupera tu contrasena.");
+        }
 
         usuario.setEmailVerified(true);
         usuario.setActivo(true);
@@ -142,9 +148,16 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Transactional
     public void setupAccount(String token, String password) {
         Usuario usuario = usuarioRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new ResourceNotFoundException("Token de verificación inválido o expirado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Token de verificacion invalido o expirado"));
+
+        if (usuario.isEmailVerified() || usuario.isPasswordChanged()) {
+            usuario.setVerificationToken(null);
+            usuarioRepository.save(usuario);
+            throw new IllegalArgumentException("La cuenta ya fue activada. Usa recuperacion de contrasena si necesitas cambiarla.");
+        }
 
         usuario.setPassword(passwordEncoder.encode(password));
+        usuario.setPasswordChanged(true);
         usuario.setEmailVerified(true);
         usuario.setActivo(true);
         usuario.setVerificationToken(null);
@@ -157,8 +170,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
-        if (usuario.isEmailVerified()) {
-            throw new IllegalArgumentException("El correo ya ha sido verificado");
+        if (usuario.isEmailVerified() || usuario.isPasswordChanged() || usuario.isActivo()) {
+            usuario.setVerificationToken(null);
+            usuarioRepository.save(usuario);
+            throw new IllegalArgumentException("La cuenta ya fue activada. Usa recuperacion de contrasena si necesitas cambiarla.");
         }
 
         String newToken = UUID.randomUUID().toString();
