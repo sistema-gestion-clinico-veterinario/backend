@@ -14,6 +14,17 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
     @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.company WHERE u.email = :email")
     Optional<Usuario> findByEmailWithCompany(@Param("email") String email);
+
+    @Query("""
+            SELECT COUNT(upr) > 0
+            FROM UsuarioPorRol upr
+            JOIN upr.usuario u
+            JOIN upr.rol r
+            WHERE u.email = :email
+              AND r.name = 'ROLE_SUPER_ADMIN'
+            """)
+    boolean hasSuperAdminRole(@Param("email") String email);
+
     boolean existsByEmail(String email);
     boolean existsByDni(String dni);
     boolean existsByTelefono(String telefono);
