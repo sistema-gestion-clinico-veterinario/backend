@@ -13,7 +13,7 @@ public class ChangePasswordDTO {
     private String oldPassword;
 
     @NotBlank(message = "La nueva contraseña es obligatoria")
-    @Size(min = 6, max = 72, message = "La nueva contrasena debe tener entre 6 y 72 caracteres")
-    @Pattern(regexp = "^\\S+$", message = "La nueva contrasena no debe contener espacios")
+    @Size(min = 8, max = 72, message = "La nueva contrasena debe tener entre 8 y 72 caracteres")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s])\\S+$", message = "La nueva contrasena debe incluir mayuscula, minuscula, numero y simbolo, sin espacios")
     private String newPassword;
 }
