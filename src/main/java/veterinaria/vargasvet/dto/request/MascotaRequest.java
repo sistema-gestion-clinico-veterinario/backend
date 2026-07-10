@@ -87,4 +87,20 @@ public class MascotaRequest {
             case EXOTICO, OTRO -> peso >= 0.01 && peso <= 120.0;
         };
     }
+
+    @AssertTrue(message = "La edad no corresponde al rango esperado para la especie")
+    public boolean isEdadValidaParaEspecie() {
+        if (fechaNacimiento == null || especie == null) return true;
+        LocalDate fechaMinima = LocalDate.now().minusYears(maxEdadPorEspecie());
+        return !fechaNacimiento.isBefore(fechaMinima);
+    }
+
+    private int maxEdadPorEspecie() {
+        return switch (especie) {
+            case PERRO, GATO -> 20;
+            case AVE -> 80;
+            case REPTIL, EXOTICO, OTRO -> 100;
+            case ROEDOR -> 15;
+        };
+    }
 }
