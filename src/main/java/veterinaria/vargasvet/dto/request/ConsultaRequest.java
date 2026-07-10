@@ -17,6 +17,7 @@ public class ConsultaRequest {
     @NotNull(message = "El campo version es requerido para evitar ediciones simultáneas")
     private Long version;
 
+    @NotNull(message = "El tipo de consulta es requerido")
     private TipoConsulta tipoConsulta;
 
     @DecimalMin(value = "0.01", message = "El peso debe ser mayor a 0")
@@ -45,9 +46,6 @@ public class ConsultaRequest {
     private Boolean vacunacionAlDia;
     private Boolean desparasitacionAlDia;
 
-    @Size(min = 5, max = 250, message = "El motivo debe tener entre 5 y 250 caracteres")
-    @MeaningfulText(message = "El motivo debe contener texto real, no solo numeros o simbolos")
-    @Pattern(regexp = "^(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "El motivo contiene caracteres no permitidos")
     private String motivoConsulta;
     @Size(max = 1000, message = "La anamnesis no debe superar 1000 caracteres")
     @MeaningfulText(message = "La anamnesis debe contener texto real, no solo numeros o simbolos")

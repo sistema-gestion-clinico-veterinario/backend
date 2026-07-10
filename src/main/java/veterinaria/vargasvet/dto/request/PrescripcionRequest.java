@@ -2,6 +2,7 @@ package veterinaria.vargasvet.dto.request;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -39,6 +40,7 @@ public class PrescripcionRequest {
     private String frecuencia;
 
     @Min(value = 1, message = "La duracion debe ser al menos de 1 dia")
+    @Max(value = 365, message = "La duracion no debe superar 365 dias")
     private Integer duracionDias;
 
     @NotBlank(message = "La vía de administración es obligatoria")
