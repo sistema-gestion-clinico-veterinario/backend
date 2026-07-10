@@ -39,6 +39,11 @@ public class JWTFilter extends GenericFilterBean {
             return;
         }
 
+        if (isPublicAuthEndpoint(httpRequest)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         String token = resolveToken(httpRequest);
 
         if (token != null) {
@@ -104,6 +109,30 @@ public class JWTFilter extends GenericFilterBean {
         }
 
         chain.doFilter(request, response);
+    }
+
+    private boolean isPublicAuthEndpoint(HttpServletRequest request) {
+        String path = request.getServletPath();
+        String method = request.getMethod();
+
+        return path.equals("/auth/login")
+                || path.equals("/auth/refresh")
+                || path.equals("/auth/logout")
+                || path.equals("/auth/forgot-password")
+                || path.equals("/auth/reset-password")
+                || path.equals("/auth/validate-reset-token")
+                || path.equals("/auth/setup-account")
+                || path.equals("/auth/resend-verification")
+                || path.startsWith("/auth/verify/")
+                || path.startsWith("/auth/register")
+                || path.startsWith("/setup/")
+                || path.startsWith("/v3/api-docs/")
+                || path.startsWith("/swagger-ui/")
+                || path.equals("/swagger-ui.html")
+                || path.startsWith("/ws/")
+                || path.startsWith("/media/")
+                || path.equals("/error")
+                || ("GET".equalsIgnoreCase(method) && path.startsWith("/media/"));
     }
 
     private String resolveToken(HttpServletRequest request) {
