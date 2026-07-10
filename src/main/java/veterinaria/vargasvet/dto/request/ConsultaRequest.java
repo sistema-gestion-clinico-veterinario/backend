@@ -37,11 +37,11 @@ public class ConsultaRequest {
     private Integer frecuenciaRespiratoria;
     @Size(max = 80, message = "Las mucosas no deben superar 80 caracteres")
     @MeaningfulText(message = "Las mucosas deben contener texto real, no solo numeros o simbolos")
-    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las mucosas contienen caracteres no permitidos")
+    @Pattern(regexp = "^$|(?=.*\\p{L})(?=\\S)(?!.*\\d)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las mucosas deben contener solo texto descriptivo, sin numeros ni simbolos especiales")
     private String mucosas;
     @Size(max = 80, message = "La turgencia de piel no debe superar 80 caracteres")
     @MeaningfulText(message = "La turgencia de piel debe contener texto real, no solo numeros o simbolos")
-    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "La turgencia de piel contiene caracteres no permitidos")
+    @Pattern(regexp = "^$|(?=.*\\p{L})(?=\\S)(?!.*\\d)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "La turgencia de piel debe contener solo texto descriptivo, sin numeros ni simbolos especiales")
     private String turgenciaPiel;
     private Boolean vacunacionAlDia;
     private Boolean desparasitacionAlDia;
