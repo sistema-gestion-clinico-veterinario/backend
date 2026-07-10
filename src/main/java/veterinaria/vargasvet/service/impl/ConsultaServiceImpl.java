@@ -82,8 +82,8 @@ public class ConsultaServiceImpl implements ConsultaService {
         if (request.getExamenFisico() != null) consulta.setExamenFisico(request.getExamenFisico());
         if (request.getObservaciones() != null) consulta.setObservaciones(request.getObservaciones());
         if (request.getIndicacionesReceta() != null) consulta.setIndicacionesReceta(request.getIndicacionesReceta());
-        if (request.getMotivoConsulta() != null && !request.getMotivoConsulta().isBlank()) {
-            consulta.setMotivoConsulta(request.getMotivoConsulta());
+        if (consulta.getCita() != null && consulta.getCita().getMotivoCita() != null && !consulta.getCita().getMotivoCita().isBlank()) {
+            consulta.setMotivoConsulta(consulta.getCita().getMotivoCita());
         }
 
         HistoriaClinica hc = consulta.getHistoriaClinica();
