@@ -45,11 +45,12 @@ public class JWTFilter extends GenericFilterBean {
             try {
                 Authentication authentication = tokenProvider.getAuthentication(token);
 
+                String email = authentication.getName();
                 boolean esSuperAdmin = authentication.getAuthorities().stream()
-                        .anyMatch(a -> "ROLE_SUPER_ADMIN".equals(a.getAuthority()));
+                        .anyMatch(a -> "ROLE_SUPER_ADMIN".equals(a.getAuthority()))
+                        || usuarioRepository.hasSuperAdminRole(email);
 
                 if (!esSuperAdmin) {
-                    String email = authentication.getName();
                     boolean bloqueado = usuarioRepository.findByEmailWithCompany(email).map(usuario -> {
                         if (!usuario.isActivo()) return true;
                         return usuario.getCompany() != null && !usuario.getCompany().isActivo();
