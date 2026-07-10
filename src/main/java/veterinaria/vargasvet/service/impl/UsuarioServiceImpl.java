@@ -208,6 +208,11 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .map(upr -> upr.getRol().getName())
                 .collect(Collectors.toList());
 
+        boolean esSuperAdmin = assignedRoles.contains("ROLE_SUPER_ADMIN");
+        if (!esSuperAdmin && usuario.getCompany() != null && !usuario.getCompany().isActivo()) {
+            throw new DisabledException("Acceso denegado. La empresa asociada a tu usuario esta inactiva. Contacta al administrador.");
+        }
+
         String activeRole = resolveActiveRole(assignedRoles);
 
         boolean activeRoleActivo = usuario.getUsuariosPorRol().stream()
