@@ -18,12 +18,12 @@ public class PrescripcionRequest {
 
     @NotBlank(message = "El medicamento es obligatorio")
     @Size(max = 80, message = "El medicamento no debe superar 80 caracteres")
-    @Pattern(regexp = "^(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "El medicamento contiene caracteres no permitidos")
+    @Pattern(regexp = "^(?=.*\\p{L})(?=\\S)(?!.*\\d)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "El medicamento debe contener solo texto, sin numeros ni simbolos especiales")
     @MeaningfulText(message = "El medicamento debe contener texto real, no solo numeros o simbolos")
     private String medicamento;
 
     @Size(max = 80, message = "El principio activo no debe superar 80 caracteres")
-    @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "El principio activo contiene caracteres no permitidos")
+    @Pattern(regexp = "^$|(?=.*\\p{L})(?=\\S)(?!.*\\d)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "El principio activo debe contener solo texto, sin numeros ni simbolos especiales")
     @MeaningfulText(message = "El principio activo debe contener texto real, no solo numeros o simbolos")
     private String principioActivo;
 
