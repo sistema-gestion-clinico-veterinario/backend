@@ -12,8 +12,9 @@ import veterinaria.vargasvet.validation.MeaningfulText;
 public class RazaRequest {
 
     @NotBlank(message = "El nombre de la raza es obligatorio")
-    @Size(max = 100, message = "El nombre no debe superar 100 caracteres")
+    @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
     @Pattern(regexp = "^[\\p{L}\\s]+$", message = "El nombre solo debe contener letras y espacios")
+    @MeaningfulText(message = "El nombre de la raza debe contener texto real")
     private String nombre;
 
     @Size(max = 500, message = "La descripción no debe superar 500 caracteres")
