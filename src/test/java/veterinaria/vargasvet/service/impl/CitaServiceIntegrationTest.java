@@ -2,6 +2,7 @@ package veterinaria.vargasvet.service.impl;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -21,6 +22,8 @@ import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.domain.enums.EstadoConsulta;
 import veterinaria.vargasvet.domain.enums.Genero;
 import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
+import veterinaria.vargasvet.dto.request.CitaReprogramacionRequest;
+import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.mapper.CitaMapper;
 import veterinaria.vargasvet.repository.ApoderadoRepository;
@@ -46,6 +49,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -100,6 +104,7 @@ class CitaServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("[BB-009] Iniciar atencion crea consulta e historia clinica")
     void iniciarAtencionCreaHistoriaClinicaConsultaYActualizaEstadoDeCita() {
         Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().minusMinutes(20));
 
@@ -110,6 +115,78 @@ class CitaServiceIntegrationTest {
         assertThat(historiaClinicaRepository.findByMascotaId(cita.getMascota().getId())).isPresent();
         assertThat(consultaRepository.findById(consultaId).orElseThrow().getEstado()).isEqualTo(EstadoConsulta.ABIERTA);
         assertThat(consultaRepository.findById(consultaId).orElseThrow().getCita().getId()).isEqualTo(cita.getId());
+    }
+
+    @Test
+    @DisplayName("[BB-004] Agendar una cita valida persiste la cita programada")
+    void agendarCitaValidaPersisteCitaProgramada() {
+        Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        CitaRequest request = requestDesde(plantilla, LocalDateTime.now().plusDays(3));
+        citaRepository.delete(plantilla);
+        citaRepository.flush();
+
+        citaService.createCita(request);
+
+        Cita creada = citaRepository.findAll().getFirst();
+        assertThat(creada.getEstado()).isEqualTo(EstadoCita.PROGRAMADA);
+        assertThat(creada.getMascota().getId()).isEqualTo(request.getMascotaId());
+        assertThat(creada.getFechaHoraInicio()).isEqualTo(request.getFechaHoraInicio());
+    }
+
+    @Test
+    @DisplayName("[BB-005] Agendar una cita en fecha pasada es rechazado")
+    void agendarCitaEnFechaPasadaEsRechazado() {
+        Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        CitaRequest request = requestDesde(plantilla, LocalDateTime.now().minusDays(1));
+        citaRepository.delete(plantilla);
+        citaRepository.flush();
+
+        assertThatThrownBy(() -> citaService.createCita(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no puede ser anterior");
+        assertThat(citaRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("[BB-006] Reprogramar una cita valida actualiza fecha y estado")
+    void reprogramarCitaValidaActualizaFechaYEstado() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        cita.setEsEmergencia(true);
+        citaRepository.saveAndFlush(cita);
+        LocalDateTime nuevaFecha = LocalDateTime.now().plusDays(4).withSecond(0).withNano(0);
+
+        citaService.reprogramarCita(cita.getId(), reprogramacion(cita, nuevaFecha));
+
+        Cita actualizada = citaRepository.findById(cita.getId()).orElseThrow();
+        assertThat(actualizada.getEstado()).isEqualTo(EstadoCita.REPROGRAMADA);
+        assertThat(actualizada.getFechaHoraInicio()).isEqualTo(nuevaFecha);
+    }
+
+    @Test
+    @DisplayName("[BB-007][DEF-BB-007] Caracteriza que una cita cancelada se reprograma indebidamente")
+    void citaCanceladaActualmentePuedeReprogramarse() {
+        Cita cita = crearCita(EstadoCita.CANCELADA, LocalDateTime.now().plusDays(2));
+        cita.setEsEmergencia(true);
+        citaRepository.saveAndFlush(cita);
+
+        citaService.reprogramarCita(
+                cita.getId(),
+                reprogramacion(cita, LocalDateTime.now().plusDays(4).withSecond(0).withNano(0))
+        );
+
+        assertThat(citaRepository.findById(cita.getId()).orElseThrow().getEstado())
+                .isEqualTo(EstadoCita.REPROGRAMADA);
+    }
+
+    @Test
+    @DisplayName("[BB-008] Cancelar una cita activa cambia su estado a cancelada")
+    void cancelarCitaActivaCambiaEstadoACancelada() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+
+        citaService.cancelarCita(cita.getId(), "Solicitud del cliente");
+
+        assertThat(citaRepository.findById(cita.getId()).orElseThrow().getEstado())
+                .isEqualTo(EstadoCita.CANCELADA);
     }
 
     @Test
@@ -181,6 +258,25 @@ class CitaServiceIntegrationTest {
         cita.setEliminada(false);
         cita.setEsEmergencia(false);
         return citaRepository.save(cita);
+    }
+
+    private CitaRequest requestDesde(Cita cita, LocalDateTime fechaInicio) {
+        CitaRequest request = new CitaRequest();
+        request.setMascotaId(cita.getMascota().getId());
+        request.setVeterinarioId(cita.getEmpleado().getId());
+        request.setServicioId(cita.getServicio().getId());
+        request.setMotivoCita("Control general");
+        request.setFechaHoraInicio(fechaInicio.withSecond(0).withNano(0));
+        request.setEsEmergencia(true);
+        return request;
+    }
+
+    private CitaReprogramacionRequest reprogramacion(Cita cita, LocalDateTime fechaInicio) {
+        CitaReprogramacionRequest request = new CitaReprogramacionRequest();
+        request.setVeterinarioId(cita.getEmpleado().getId());
+        request.setFechaHoraInicio(fechaInicio);
+        request.setMotivoReprogramacion("Cambio solicitado por el cliente");
+        return request;
     }
 
     private Usuario usuario(String prefix, Company company) {

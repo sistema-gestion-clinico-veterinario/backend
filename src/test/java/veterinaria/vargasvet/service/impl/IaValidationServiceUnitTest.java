@@ -1,5 +1,6 @@
 package veterinaria.vargasvet.service.impl;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -99,6 +100,7 @@ class IaValidationServiceUnitTest {
     }
 
     @Test
+    @DisplayName("[BB-014] Analizar radiografia con formato invalido es rechazado")
     void analizarRadiografia_rechazaFormatoNoSoportado() throws Exception {
         RadiografiaIAServiceImpl service = new RadiografiaIAServiceImpl(radiografiaIAClient);
         MultipartFile file = new MockMultipartFile("file", "rx.pdf", "application/pdf", "pdf".getBytes());
