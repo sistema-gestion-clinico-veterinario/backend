@@ -2,6 +2,7 @@ package veterinaria.vargasvet.service.impl;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -85,6 +86,7 @@ class ConsultaServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("[BB-010] Registrar datos clinicos validos persiste la consulta")
     void actualizarConsultaPersisteDatosClinicosYSincronizaHistoriaYMascota() {
         Consulta consulta = crearConsultaAbiertaCompleta();
         ConsultaRequest request = new ConsultaRequest();
@@ -143,6 +145,7 @@ class ConsultaServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("[BB-011] Cerrar una consulta incompleta es rechazado")
     void cerrarConsultaRechazaFaltaDeAnamnesisSinCambiarEstado() {
         Consulta consulta = crearConsultaAbiertaCompleta();
         consulta.setAnamnesis(" ");
@@ -161,6 +164,7 @@ class ConsultaServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("[BB-012] Consultar historia mantiene las consultas de la mascota")
     void historiaClinicaMantieneConsultaRelacionadaPorCitaYMascota() {
         Consulta consulta = crearConsultaAbiertaCompleta();
 
