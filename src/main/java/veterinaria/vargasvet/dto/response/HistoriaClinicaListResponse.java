@@ -12,6 +12,8 @@ public class HistoriaClinicaListResponse {
     private String especie;
     private String raza;
     private String propietarioNombre;
+    private Integer companyId;
+    private String companyName;
     private LocalDateTime fechaUltimaConsulta;
     private Boolean activa;
 }
