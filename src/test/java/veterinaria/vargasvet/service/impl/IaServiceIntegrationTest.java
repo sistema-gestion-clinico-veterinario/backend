@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.service.impl;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -41,6 +42,7 @@ class IaServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("[BB-013] Analizar laboratorio valido muestra la interpretacion de IA")
     void laboratorioIaEnviaArchivoYMapeaRespuestaExterna() {
         server.expect(requestTo("http://ia.test/ia/laboratorio"))
                 .andExpect(method(HttpMethod.POST))
