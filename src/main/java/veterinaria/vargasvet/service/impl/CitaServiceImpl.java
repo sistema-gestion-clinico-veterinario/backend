@@ -309,6 +309,8 @@ public class CitaServiceImpl implements CitaService {
     @Transactional(readOnly = true)
     public Page<CitaResponse> listar(Integer companyId, LocalDate fecha, EstadoCita estado, Long veterinarioId, int page, int size) {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
+        LocalDateTime fechaInicio = fecha != null ? fecha.atStartOfDay() : null;
+        LocalDateTime fechaFin = fecha != null ? fecha.plusDays(1).atStartOfDay() : null;
         Long filteredVeterinarioId = veterinarioId;
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             if (!accesoValidator.puedeLeer("CITA_VER_TODAS") && filteredVeterinarioId == null) {
@@ -318,7 +320,7 @@ public class CitaServiceImpl implements CitaService {
             }
         }
         
-        return citaRepository.buscar(resolvedCompanyId, fecha, estado, filteredVeterinarioId,
+        return citaRepository.buscar(resolvedCompanyId, fechaInicio, fechaFin, estado, filteredVeterinarioId,
                 PageRequest.of(page, size, Sort.unsorted()))
                 .map(citaMapper::toResponse);
     }
