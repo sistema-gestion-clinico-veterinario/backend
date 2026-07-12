@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Repository
@@ -54,17 +53,20 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     @Query(value = "SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
                    "LEFT JOIN FETCH c.consulta " +
                     "WHERE u.company.id = :companyId AND c.eliminada = false " +
-                    "AND (CAST(:fecha AS date) IS NULL OR CAST(c.fechaHoraInicio AS date) = :fecha) " +
+                    "AND (CAST(:fechaInicio AS localdatetime) IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
+                    "AND (CAST(:fechaFin AS localdatetime) IS NULL OR c.fechaHoraInicio < :fechaFin) " +
                     "AND (CAST(:estado AS text) IS NULL OR c.estado = :estado) " +
                     "AND (:veterinarioId IS NULL OR c.empleado.id = :veterinarioId) " +
                     "ORDER BY c.fechaHoraInicio DESC",
             countQuery = "SELECT COUNT(c) FROM Cita c JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
                          "WHERE u.company.id = :companyId AND c.eliminada = false " +
-                        "AND (CAST(:fecha AS date) IS NULL OR CAST(c.fechaHoraInicio AS date) = :fecha) " +
+                        "AND (CAST(:fechaInicio AS localdatetime) IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
+                        "AND (CAST(:fechaFin AS localdatetime) IS NULL OR c.fechaHoraInicio < :fechaFin) " +
                         "AND (CAST(:estado AS text) IS NULL OR c.estado = :estado) " +
                         "AND (:veterinarioId IS NULL OR c.empleado.id = :veterinarioId)")
     Page<Cita> buscar(@Param("companyId") Integer companyId,
-                      @Param("fecha") LocalDate fecha,
+                      @Param("fechaInicio") LocalDateTime fechaInicio,
+                      @Param("fechaFin") LocalDateTime fechaFin,
                       @Param("estado") EstadoCita estado,
                       @Param("veterinarioId") Long veterinarioId,
                       Pageable pageable);
@@ -80,9 +82,9 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     @Query("SELECT c FROM Cita c WHERE c.empleado.id = :empleadoId " +
            "AND c.estado NOT IN ('CANCELADA', 'ELIMINADA') AND c.eliminada = false " +
            "AND CAST(c.fechaHoraInicio AS date) BETWEEN :startDate AND :endDate")
-    java.util.List<Cita> findByEmpleadoIdAndDateRange(@Param("empleadoId") Long empleadoId, 
-                                                       @Param("startDate") LocalDate startDate, 
-                                                       @Param("endDate") LocalDate endDate);
+    java.util.List<Cita> findByEmpleadoIdAndDateRange(@Param("empleadoId") Long empleadoId,
+                                                       @Param("startDate") java.time.LocalDate startDate,
+                                                       @Param("endDate") java.time.LocalDate endDate);
 
     @Query("SELECT c FROM Cita c WHERE c.mascota.apoderado.id = :apoderadoId AND c.eliminada = false ORDER BY c.fechaHoraInicio DESC")
     java.util.List<Cita> findByApoderadoId(@Param("apoderadoId") Long apoderadoId);
@@ -103,13 +105,13 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     Page<Cita> findByApoderadoIdAndMascotaIdPaginated(@Param("apoderadoId") Long apoderadoId, @Param("mascotaId") Long mascotaId, Pageable pageable);
 
     @Query("SELECT c FROM Cita c WHERE c.empleado.id = :empleadoId AND c.estado NOT IN ('CANCELADA', 'ELIMINADA') AND c.eliminada = false AND CAST(c.fechaHoraInicio AS date) = :fecha")
-    java.util.List<Cita> findActiveByEmpleadoIdAndFecha(@Param("empleadoId") Long empleadoId, @Param("fecha") LocalDate fecha);
+    java.util.List<Cita> findActiveByEmpleadoIdAndFecha(@Param("empleadoId") Long empleadoId, @Param("fecha") java.time.LocalDate fecha);
 
     @Query("SELECT c FROM Cita c WHERE c.empleado.id = :empleadoId AND c.estado NOT IN ('CANCELADA', 'ELIMINADA') AND c.eliminada = false AND CAST(c.fechaHoraInicio AS date) = CAST(:fecha AS date)")
     java.util.List<Cita> findActiveByEmpleadoIdAndFechaString(@Param("empleadoId") Long empleadoId, @Param("fecha") String fecha);
 
     @Query("SELECT c FROM Cita c WHERE c.mascota.apoderado.id = :apoderadoId AND c.estado NOT IN ('CANCELADA', 'ELIMINADA') AND c.eliminada = false AND CAST(c.fechaHoraInicio AS date) = :fecha")
-    java.util.List<Cita> findActiveByApoderadoIdAndFecha(@Param("apoderadoId") Long apoderadoId, @Param("fecha") LocalDate fecha);
+    java.util.List<Cita> findActiveByApoderadoIdAndFecha(@Param("apoderadoId") Long apoderadoId, @Param("fecha") java.time.LocalDate fecha);
 
     @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.user.company.id = :companyId " +
            "AND c.eliminada = false AND c.estado NOT IN ('CANCELADA', 'ELIMINADA') " +
