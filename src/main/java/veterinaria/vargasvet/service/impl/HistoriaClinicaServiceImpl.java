@@ -2,7 +2,6 @@ package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -30,7 +29,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
-import java.text.Normalizer;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -64,23 +62,24 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         }
 
         String hcFiltro = (numeroHc != null && !numeroHc.isBlank()) ? numeroHc.trim() : null;
-        String pacienteFiltro = (nombrePaciente != null && !nombrePaciente.isBlank()) ? "%" + nombrePaciente.trim().toLowerCase() + "%" : null;
-        String propietarioFiltro = (nombrePropietario != null && !nombrePropietario.isBlank()) ? "%" + nombrePropietario.trim().toLowerCase() + "%" : null;
-        String desdeStr = fechaDesde != null ? fechaDesde.toString() + " 00:00:00" : null;
-        String hastaStr = fechaHasta != null ? fechaHasta.toString() + " 23:59:59" : null;
+        String pacienteFiltro = normalizarFiltroTexto(nombrePaciente);
+        String propietarioFiltro = normalizarFiltroTexto(nombrePropietario);
+        LocalDateTime desde = fechaDesde != null ? fechaDesde.atStartOfDay() : null;
+        LocalDateTime hasta = fechaHasta != null ? fechaHasta.plusDays(1).atStartOfDay() : null;
 
         PageRequest pageRequest = PageRequest.of(page, size, Sort.unsorted());
         Page<HistoriaClinica> pageHc;
 
         if (pacienteFiltro != null || propietarioFiltro != null) {
-            pageHc = buscarConCoincidenciaFlexible(
+            pageHc = historiaClinicaRepository.buscarConCoincidenciaFlexible(
                     isSuperAdmin, effectiveCompanyId, hcFiltro,
-                    nombrePaciente, nombrePropietario,
-                    desdeStr, hastaStr, pageRequest);
+                    pacienteFiltro, propietarioFiltro,
+                    desde, hasta,
+                    pageRequest);
         } else {
             pageHc = historiaClinicaRepository.buscar(
                     isSuperAdmin, effectiveCompanyId, hcFiltro, null, null,
-                    desdeStr, hastaStr,
+                    desde, hasta,
                     pageRequest);
         }
 
@@ -95,111 +94,9 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         return pageHc.map(hc -> toListResponse(hc, ultimasFechas.get(hc.getId())));
     }
 
-    private Page<HistoriaClinica> buscarConCoincidenciaFlexible(boolean isSuperAdmin,
-                                                                Integer effectiveCompanyId,
-                                                                String hcFiltro,
-                                                                String nombrePaciente,
-                                                                String nombrePropietario,
-                                                                String desdeStr,
-                                                                String hastaStr,
-                                                                PageRequest pageRequest) {
-        String pacienteQuery = normalizarTexto(nombrePaciente);
-        String propietarioQuery = normalizarTexto(nombrePropietario);
-
-        List<HistoriaClinica> filtradas = historiaClinicaRepository.buscarCandidatosParaBusquedaFlexible(
-                        isSuperAdmin, effectiveCompanyId, hcFiltro, desdeStr, hastaStr)
-                .stream()
-                .filter(hc -> coincideNombrePaciente(hc, pacienteQuery))
-                .filter(hc -> coincideNombrePropietario(hc, propietarioQuery))
-                .sorted(Comparator.comparing(HistoriaClinica::getNumeroHc))
-                .toList();
-
-        int start = Math.toIntExact(Math.min(pageRequest.getOffset(), filtradas.size()));
-        int end = Math.min(start + pageRequest.getPageSize(), filtradas.size());
-        return new PageImpl<>(filtradas.subList(start, end), pageRequest, filtradas.size());
-    }
-
-    private boolean coincideNombrePaciente(HistoriaClinica hc, String query) {
-        if (query == null || query.isBlank()) return true;
-        String nombre = hc.getMascota() != null ? normalizarTexto(hc.getMascota().getNombreCompleto()) : "";
-        return coincideTextoFlexible(nombre, query);
-    }
-
-    private boolean coincideNombrePropietario(HistoriaClinica hc, String query) {
-        if (query == null || query.isBlank()) return true;
-        if (hc.getMascota() == null || hc.getMascota().getApoderado() == null || hc.getMascota().getApoderado().getUser() == null) {
-            return false;
-        }
-        Usuario user = hc.getMascota().getApoderado().getUser();
-        String propietario = normalizarTexto((user.getNombre() == null ? "" : user.getNombre()) + " " + (user.getApellido() == null ? "" : user.getApellido()));
-        return coincideTextoFlexible(propietario, query);
-    }
-
-    private boolean coincideTextoFlexible(String candidate, String query) {
-        if (query == null || query.isBlank()) return true;
-        if (candidate == null || candidate.isBlank()) return false;
-        if (candidate.isBlank()) return false;
-        if (candidate.contains(query) || query.contains(candidate)) return true;
-
-        String[] candidateTokens = candidate.split("\\s+");
-        String[] queryTokens = query.split("\\s+");
-        for (String queryToken : queryTokens) {
-            if (queryToken.length() < 3) {
-                if (!candidate.contains(queryToken)) return false;
-                continue;
-            }
-
-            boolean tokenMatch = false;
-            for (String candidateToken : candidateTokens) {
-                if (candidateToken.contains(queryToken) || queryToken.contains(candidateToken)) {
-                    tokenMatch = true;
-                    break;
-                }
-                if (distanciaLevenshtein(candidateToken, queryToken) <= distanciaMaximaPermitida(queryToken.length())) {
-                    tokenMatch = true;
-                    break;
-                }
-            }
-            if (!tokenMatch) return false;
-        }
-        return true;
-    }
-
-    private int distanciaMaximaPermitida(int length) {
-        if (length <= 4) return 1;
-        if (length <= 8) return 2;
-        return 3;
-    }
-
-    private int distanciaLevenshtein(String a, String b) {
-        int[] previous = new int[b.length() + 1];
-        int[] current = new int[b.length() + 1];
-
-        for (int j = 0; j <= b.length(); j++) {
-            previous[j] = j;
-        }
-
-        for (int i = 1; i <= a.length(); i++) {
-            current[0] = i;
-            for (int j = 1; j <= b.length(); j++) {
-                int cost = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
-                current[j] = Math.min(
-                        Math.min(current[j - 1] + 1, previous[j] + 1),
-                        previous[j - 1] + cost
-                );
-            }
-            int[] temp = previous;
-            previous = current;
-            current = temp;
-        }
-        return previous[b.length()];
-    }
-
-    private String normalizarTexto(String value) {
+    private String normalizarFiltroTexto(String value) {
         if (value == null) return null;
-        String normalized = Normalizer.normalize(value.trim().toLowerCase(), Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "")
-                .replaceAll("[^a-z0-9\\s]", " ")
+        String normalized = value.trim().toLowerCase()
                 .replaceAll("\\s+", " ")
                 .trim();
         return normalized.isBlank() ? null : normalized;
