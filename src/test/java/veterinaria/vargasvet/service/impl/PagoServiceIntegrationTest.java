@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.service.impl;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -116,6 +117,7 @@ class PagoServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("[BB-015A] Yape sandbox aprobado registra el pago en entorno local")
     void registrarPagoYapeAprobadoSandboxPersisteTrazabilidadMercadoPago() {
         Cita cita = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
         when(mercadoPagoYapeGateway.createPayment(
@@ -141,6 +143,7 @@ class PagoServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("[BB-015B] Yape sandbox rechazado no registra el pago en entorno local")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void registrarPagoYapeRechazadoSandboxNoPersistePurchaseNiActualizaCita() {
         Cita cita = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
