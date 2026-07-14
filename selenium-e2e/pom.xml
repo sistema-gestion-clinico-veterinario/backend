@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>veterinaria.vargasvet</groupId>
+    <artifactId>selenium-e2e</artifactId>
+    <version>1.0.0</version>
+    <name>VargasVet Selenium E2E</name>
+
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <selenium.version>4.33.0</selenium.version>
+        <junit.version>5.12.2</junit.version>
+        <gson.version>2.13.1</gson.version>
+        <e2e.baseUrl>http://127.0.0.1:4200</e2e.baseUrl>
+        <e2e.apiUrl>http://127.0.0.1:8080/api/v1</e2e.apiUrl>
+        <e2e.headless>false</e2e.headless>
+        <e2e.video>false</e2e.video>
+        <e2e.slowMo>150</e2e.slowMo>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>${selenium.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.3</version>
+                <configuration>
+                    <useModulePath>false</useModulePath>
+                    <systemPropertyVariables>
+                        <e2e.baseUrl>${e2e.baseUrl}</e2e.baseUrl>
+                        <e2e.apiUrl>${e2e.apiUrl}</e2e.apiUrl>
+                        <e2e.headless>${e2e.headless}</e2e.headless>
+                        <e2e.video>${e2e.video}</e2e.video>
+                        <e2e.slowMo>${e2e.slowMo}</e2e.slowMo>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
