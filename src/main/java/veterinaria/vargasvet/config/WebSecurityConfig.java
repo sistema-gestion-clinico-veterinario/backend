@@ -60,6 +60,7 @@ public class WebSecurityConfig {
                                 "/auth/forgot-password",
                                 "/auth/reset-password",
                                 "/auth/validate-reset-token",
+                                "/health",
                                 "/setup/**",
                                 "/auth/setup-account",
                                 "/v3/api-docs/**",
