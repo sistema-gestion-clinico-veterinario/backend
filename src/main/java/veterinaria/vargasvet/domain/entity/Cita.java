@@ -94,6 +94,9 @@ public class Cita {
     @OneToOne(mappedBy = "cita", fetch = FetchType.LAZY)
     private Consulta consulta;
 
+    @OneToMany(mappedBy = "citaSuspende", fetch = FetchType.LAZY)
+    private List<ControlPreventivo> controlesPreventivos = new ArrayList<>();
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

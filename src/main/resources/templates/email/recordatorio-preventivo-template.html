@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Controles preventivos</title>
+</head>
+<body style="margin:0;background:#f4f7fa;font-family:Arial,sans-serif;color:#243447">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:24px 12px;background:#f4f7fa">
+    <tr><td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #dce5ec">
+            <tr><td style="padding:24px 28px;background:#0066aa;color:#ffffff">
+                <h1 style="margin:0;font-size:22px">Controles preventivos</h1>
+                <p style="margin:8px 0 0" th:text="${companyName}">Veterinaria</p>
+            </td></tr>
+            <tr><td style="padding:28px">
+                <p style="margin-top:0">Hola, <strong th:text="${nombre}">propietario</strong>:</p>
+                <p>Estos son los controles preventivos que requieren su atencion:</p>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse">
+                    <tr th:each="item : ${controles}">
+                        <td style="padding:14px 0;border-bottom:1px solid #e6edf2">
+                            <strong th:text="${item.mascota}">Mascota</strong><br>
+                            <span th:text="${item.control}">Control</span><br>
+                            <span th:text="${#temporals.format(item.fecha, 'dd/MM/yyyy')}">Fecha</span>
+                            <span style="font-weight:bold;color:#b45309" th:text="${' - ' + item.estado}">Estado</span>
+                        </td>
+                    </tr>
+                </table>
+                <p style="margin-bottom:0;margin-top:24px">Comuniquese con la veterinaria para coordinar la atencion.</p>
+            </td></tr>
+        </table>
+    </td></tr>
+</table>
+</body>
+</html>
