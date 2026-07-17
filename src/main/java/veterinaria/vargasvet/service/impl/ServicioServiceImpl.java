@@ -74,6 +74,8 @@ public class ServicioServiceImpl implements ServicioService {
         servicio.setActivo(true);
         servicio.setDuracionEstimada(request.getDuracionEstimada());
         servicio.setPermiteEmergencia(request.getPermiteEmergencia() != null ? request.getPermiteEmergencia() : Boolean.FALSE);
+        servicio.setTipoControlPreventivo(request.getTipoControlPreventivo() != null
+                ? request.getTipoControlPreventivo() : veterinaria.vargasvet.domain.enums.TipoControlServicio.NO_APLICA);
 
         if (request.getTipoEmpleadoId() != null) {
             TipoEmpleado tipo = tipoEmpleadoRepository.findById(request.getTipoEmpleadoId())
@@ -103,6 +105,8 @@ public class ServicioServiceImpl implements ServicioService {
         }
         servicio.setDuracionEstimada(request.getDuracionEstimada());
         servicio.setPermiteEmergencia(request.getPermiteEmergencia() != null ? request.getPermiteEmergencia() : Boolean.FALSE);
+        servicio.setTipoControlPreventivo(request.getTipoControlPreventivo() != null
+                ? request.getTipoControlPreventivo() : veterinaria.vargasvet.domain.enums.TipoControlServicio.NO_APLICA);
 
         if (request.getTipoEmpleadoId() != null) {
             TipoEmpleado tipo = tipoEmpleadoRepository.findById(request.getTipoEmpleadoId())
@@ -152,6 +156,7 @@ public class ServicioServiceImpl implements ServicioService {
         }
         r.setDuracionEstimada(s.getDuracionEstimada());
         r.setPermiteEmergencia(s.getPermiteEmergencia());
+        r.setTipoControlPreventivo(s.getTipoControlPreventivo());
         if (s.getTipoEmpleado() != null) {
             r.setTipoEmpleadoId(s.getTipoEmpleado().getId());
             r.setTipoEmpleadoNombre(s.getTipoEmpleado().getNombre());

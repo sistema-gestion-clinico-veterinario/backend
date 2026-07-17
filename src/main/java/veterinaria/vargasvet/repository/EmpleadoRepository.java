@@ -1,7 +1,9 @@
 package veterinaria.vargasvet.repository;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,6 +15,10 @@ import java.util.Optional;
 
 @Repository
 public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT e FROM Empleado e WHERE e.id = :id")
+    Optional<Empleado> findByIdForAppointmentWrite(@Param("id") Long id);
 
     Optional<Empleado> findByNumeroColegiatura(String numeroColegiatura);
     boolean existsByNumeroColegiatura(String numeroColegiatura);

@@ -3,6 +3,7 @@ package veterinaria.vargasvet.mapper;
 import org.springframework.stereotype.Component;
 import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.dto.response.CitaResponse;
+import java.util.List;
 
 @Component
 public class CitaMapper {
@@ -54,6 +55,8 @@ public class CitaMapper {
         response.setEsEmergencia(cita.getEsEmergencia());
         response.setTotalServicio(cita.getTotalServicio());
         response.setMontoPagado(cita.getMontoPagado());
+        response.setControlPreventivoIds(cita.getControlesPreventivos() == null ? List.of()
+                : cita.getControlesPreventivos().stream().map(c -> c.getId()).toList());
 
         if (cita.getEmpleado() != null && cita.getEmpleado().getUser() != null
                 && cita.getEmpleado().getUser().getCompany() != null) {

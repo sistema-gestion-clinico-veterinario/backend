@@ -8,6 +8,9 @@ import veterinaria.vargasvet.domain.enums.DiaSemana;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.domain.enums.EstadoConsulta;
 import veterinaria.vargasvet.domain.enums.TipoConsulta;
+import veterinaria.vargasvet.domain.enums.TipoControlPreventivo;
+import veterinaria.vargasvet.domain.enums.TipoControlServicio;
+import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
 import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.request.CitaReprogramacionRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
@@ -57,6 +60,8 @@ public class CitaServiceImpl implements CitaService {
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
     private final EmailService emailService;
     private final SimpMessagingTemplate messagingTemplate;
+    @org.springframework.beans.factory.annotation.Autowired
+    private ControlPreventivoRepository controlPreventivoRepository;
 
     private static final int DURACION_ESTIMADA_MINUTOS = 20;
 
@@ -81,7 +86,10 @@ public class CitaServiceImpl implements CitaService {
                 && mascota.getApoderado().getUser().getCompany() != null
                 ? mascota.getApoderado().getUser().getCompany().getId() : null);
 
-        Empleado veterinario = empleadoRepository.findById(request.getVeterinarioId())
+        // Serializa las altas de citas del mismo profesional. Sin este bloqueo, dos
+        // solicitudes concurrentes pueden superar juntas la consulta de solapamiento
+        // y guardar dos reservas para la misma franja.
+        Empleado veterinario = empleadoRepository.findByIdForAppointmentWrite(request.getVeterinarioId())
                 .orElseThrow(() -> new ResourceNotFoundException("Veterinario no encontrado con ID: " + request.getVeterinarioId()));
 
         if (veterinario.getUser() == null) {
@@ -192,6 +200,7 @@ public class CitaServiceImpl implements CitaService {
         usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setCreadoPor);
 
         Cita savedCita = citaRepository.save(cita);
+        vincularControlesPreventivos(savedCita, servicio, request.getControlPreventivoIds());
 
         auditLogService.log(
             getCitaCompanyId(savedCita),
@@ -353,6 +362,7 @@ public class CitaServiceImpl implements CitaService {
 
         cita.setEstado(EstadoCita.CANCELADA);
         cita.setMotivoCancelacion(motivo);
+        liberarControlesPreventivos(cita);
         citaRepository.save(cita);
 
         broadcastCitaEvent("CANCELAR_CITA", cita, citaMapper.toResponse(cita));
@@ -495,6 +505,11 @@ public class CitaServiceImpl implements CitaService {
             cita.setTotalServicio(servicio.getPrecio());
         }
 
+        if (request.getControlPreventivoIds() != null) {
+            liberarControlesPreventivos(cita);
+            vincularControlesPreventivos(cita, servicio, request.getControlPreventivoIds());
+        }
+
         Cita updatedCita = citaRepository.save(cita);
         CitaResponse updatedResponse = citaMapper.toResponse(updatedCita);
         broadcastCitaEvent("ACTUALIZAR_CITA", updatedCita, updatedResponse);
@@ -517,6 +532,52 @@ public class CitaServiceImpl implements CitaService {
         reprogramacion.setFechaHoraInicio(request.getFechaHoraInicio());
         reprogramacion.setMotivoReprogramacion(request.getNotas());
         return reprogramarCita(id, reprogramacion);
+    }
+
+    private void vincularControlesPreventivos(Cita cita, ServiciosVeterinarios servicio, java.util.List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return;
+        if (servicio == null || servicio.getTipoControlPreventivo() == null
+                || servicio.getTipoControlPreventivo() == TipoControlServicio.NO_APLICA) {
+            throw new IllegalArgumentException("El servicio seleccionado no admite controles preventivos");
+        }
+        TipoControlPreventivo esperado = servicio.getTipoControlPreventivo() == TipoControlServicio.VACUNACION
+                ? TipoControlPreventivo.VACUNACION : TipoControlPreventivo.DESPARASITACION;
+        java.util.List<ControlPreventivo> controles = controlPreventivoRepository.findAllById(ids);
+        if (controles.size() != new java.util.HashSet<>(ids).size()) {
+            throw new IllegalArgumentException("Uno o mas controles preventivos no existen");
+        }
+        for (ControlPreventivo control : controles) {
+            if (!control.getMascota().getId().equals(cita.getMascota().getId()) || control.getTipo() != esperado) {
+                throw new IllegalArgumentException("El control preventivo no corresponde a la mascota o al servicio");
+            }
+            if (control.getEstado() == EstadoControlPreventivo.APLICADO
+                    || control.getEstado() == EstadoControlPreventivo.CANCELADO) {
+                throw new IllegalArgumentException("No se puede vincular un control preventivo cerrado");
+            }
+            control.setCitaSuspende(cita);
+            control.setEstado(EstadoControlPreventivo.SUSPENDIDO_POR_CITA);
+            control.setEstadoModificadoPor(SecurityUtils.getCurrentUserEmail());
+            control.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
+            control.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
+        }
+        controlPreventivoRepository.saveAll(controles);
+    }
+
+    private void liberarControlesPreventivos(Cita cita) {
+        if (controlPreventivoRepository == null) return;
+        java.util.List<ControlPreventivo> controles = controlPreventivoRepository.findByCitaSuspendeId(cita.getId());
+        java.time.LocalDate hoy = veterinaria.vargasvet.util.AppClock.today();
+        for (ControlPreventivo control : controles) {
+            control.setCitaSuspende(null);
+            control.setEstado(control.getFechaRecomendada().isBefore(hoy) ? EstadoControlPreventivo.ATRASADO
+                    : control.getFechaRecomendada().isEqual(hoy) ? EstadoControlPreventivo.PENDIENTE
+                    : !control.getFechaRecomendada().isAfter(hoy.plusDays(7)) ? EstadoControlPreventivo.PROXIMO
+                    : EstadoControlPreventivo.PROGRAMADO);
+            control.setEstadoModificadoPor(SecurityUtils.getCurrentUserEmail());
+            control.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
+            control.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
+        }
+        controlPreventivoRepository.saveAll(controles);
     }
 
     @Override
