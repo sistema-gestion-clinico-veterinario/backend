@@ -31,4 +31,6 @@ public class HistoriaClinicaDetalleResponse {
     private String grupoSanguineo;
 
     private List<ConsultaResumenResponse> consultas;
+    private List<ControlPreventivoResponse> controlesPreventivos;
+    private List<AplicacionPreventivaResponse> aplicacionesPreventivas;
 }

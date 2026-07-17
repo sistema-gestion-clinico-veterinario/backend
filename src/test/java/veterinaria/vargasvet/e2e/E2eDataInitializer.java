@@ -12,6 +12,7 @@ import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.CompanyOperatingHour;
 import veterinaria.vargasvet.domain.entity.Empleado;
+import veterinaria.vargasvet.domain.entity.EmpleadoServicio;
 import veterinaria.vargasvet.domain.entity.HorarioEmpleado;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.entity.Raza;
@@ -57,6 +58,7 @@ public class E2eDataInitializer implements CommandLineRunner {
 
     public static final String ADMIN_EMAIL = "e2e.admin@vargasvet.test";
     public static final String ADMIN_PASSWORD = "E2eTest!123";
+    public static final String USER_PASSWORD = "E2eUser!123";
 
     private final CompanyRepository companyRepository;
     private final UsuarioRepository usuarioRepository;
@@ -80,61 +82,164 @@ public class E2eDataInitializer implements CommandLineRunner {
     public void run(String... args) {
         Company company = seedCompany();
         Role superAdmin = roleRepository.findFirstByName("ROLE_SUPER_ADMIN").orElseThrow();
-        seedSystemRole("ROLE_APODERADO", "Propietario de mascotas");
+        Role adminRole = roleRepository.findFirstByName("ROLE_ADMIN").orElseThrow();
+        Role ownerRole = seedRole("ROLE_APODERADO", "Propietario de mascotas", null);
+        Role vetRole = seedRole("ROLE_VETERINARIO", "Veterinario E2E", null);
+        Role restrictedRole = seedRole("ROLE_E2E_RESTRINGIDO", "Rol desactivable Selenium", company);
         seedLaboratorioView(superAdmin);
+        seedRolePermissions(ownerRole, "VISTA_APODERADO_DASHBOARD", "VISTA_MIS_CITAS", "VISTA_MIS_MASCOTAS",
+                "VISTA_MI_HISTORIAL", "VISTA_MIS_RECETAS", "VISTA_MIS_PAGOS", "VISTA_PROFILE");
+        seedRolePermissions(vetRole, "VISTA_EMPLEADO_DASHBOARD", "VISTA_CITAS_AGENDA", "VISTA_HISTORIAS",
+                "VISTA_RECETAS", "VISTA_MASCOTAS", "VISTA_LABORATORIO", "VISTA_MI_HORARIO", "VISTA_PROFILE");
+        seedRolePermissions(adminRole, "VISTA_DASHBOARD");
+        seedRolePermissions(restrictedRole, "VISTA_DASHBOARD", "VISTA_PROFILE");
         Usuario admin = seedAdmin(company, superAdmin);
         Apoderado apoderado = seedApoderado(company);
+        assignRole(apoderado.getUser(), ownerRole);
+        Apoderado otherOwner = seedApoderado(company, "e2e.other.owner@vargasvet.test", "Beatriz", "Aislada", "70000011");
+        assignRole(otherOwner.getUser(), ownerRole);
         Raza raza = seedRaza(company);
         Mascota mascota = seedMascota(apoderado, raza);
+        Mascota secondPet = seedMascota(apoderado, raza, "Nube E2E");
+        Mascota thirdPet = seedMascota(apoderado, raza, "Sol E2E");
+        Mascota foreignPet = seedMascota(otherOwner, raza, "Mascota Ajena E2E");
         Empleado veterinario = seedVeterinario(company);
+        assignRole(veterinario.getUser(), vetRole);
         ServiciosVeterinarios servicio = seedServicio(company);
+        assignService(veterinario, servicio);
+        ServiciosVeterinarios toggleService = seedServicio(company, "Servicio Desactivable E2E", false);
+        assignService(veterinario, toggleService);
+        Empleado toggleEmployee = seedVeterinario(company, "e2e.toggle.vet@vargasvet.test", "Teresa", "Desactivable",
+                "70000012", "CMVP-E2E-002");
+        assignRole(toggleEmployee.getUser(), vetRole);
+        assignService(toggleEmployee, servicio);
+        Empleado activationEmployee = seedActivationEmployee(company, vetRole);
+        Usuario restrictedUser = usuarioRepository.save(user("e2e.restricted@vargasvet.test", "Rol", "Restringido", company));
+        assignRole(restrictedUser, restrictedRole);
+
+        Company toggleCompany = seedCompany("Clínica Desactivable E2E", "20999999992", "e2e.toggle.company@vargasvet.test");
+        Usuario toggleCompanyAdmin = usuarioRepository.save(user("e2e.company.admin@vargasvet.test", "Admin", "Empresa", toggleCompany));
+        assignRole(toggleCompanyAdmin, adminRole);
         seedOperatingHours(company, veterinario);
+        seedEmployeeSchedules(toggleEmployee);
 
         LocalDate date = LocalDate.now().plusDays(2);
         LocalDateTime clinicalStart = LocalDateTime.now().minusMinutes(5);
         Cita reprogramar = seedCita(mascota, veterinario, servicio, date.atTime(9, 0), "E2E REPROGRAMAR");
         Cita cancelar = seedCita(mascota, veterinario, servicio, date.atTime(10, 0), "E2E CANCELAR");
         Cita consulta = seedCita(mascota, veterinario, servicio, clinicalStart, "E2E CONSULTA");
+        Cita consultaConcurrente = seedCita(secondPet, veterinario, servicio, clinicalStart.plusMinutes(1), "E2E CONSULTA CONCURRENTE");
+        Cita consultaIa = seedCita(thirdPet, veterinario, servicio, clinicalStart.plusMinutes(2), "E2E CONSULTA IA");
         Cita pago = seedCita(mascota, veterinario, servicio, date.atTime(12, 0), "E2E PAGO YAPE");
+        Cita historicalService = seedCita(secondPet, veterinario, toggleService, date.plusDays(3).atTime(15, 0), "E2E SERVICIO HISTORICO");
 
         fixtureRegistry.put("adminEmail", ADMIN_EMAIL);
         fixtureRegistry.put("adminPassword", ADMIN_PASSWORD);
+        fixtureRegistry.put("userPassword", USER_PASSWORD);
         fixtureRegistry.put("companyId", company.getId());
+        fixtureRegistry.put("companyName", company.getName());
         fixtureRegistry.put("ownerId", apoderado.getId());
+        fixtureRegistry.put("ownerEmail", apoderado.getUser().getEmail());
+        fixtureRegistry.put("ownerPassword", USER_PASSWORD);
+        fixtureRegistry.put("otherOwnerId", otherOwner.getId());
         fixtureRegistry.put("petId", mascota.getId());
         fixtureRegistry.put("petUuid", mascota.getUuid());
         fixtureRegistry.put("petName", mascota.getNombreCompleto());
+        fixtureRegistry.put("secondPetId", secondPet.getId());
+        fixtureRegistry.put("secondPetName", secondPet.getNombreCompleto());
+        fixtureRegistry.put("thirdPetId", thirdPet.getId());
+        fixtureRegistry.put("thirdPetName", thirdPet.getNombreCompleto());
+        fixtureRegistry.put("foreignPetId", foreignPet.getId());
+        fixtureRegistry.put("foreignPetName", foreignPet.getNombreCompleto());
         fixtureRegistry.put("vetId", veterinario.getId());
+        fixtureRegistry.put("vetEmail", veterinario.getUser().getEmail());
+        fixtureRegistry.put("vetPassword", USER_PASSWORD);
+        fixtureRegistry.put("vetName", veterinario.getUser().getNombre() + " " + veterinario.getUser().getApellido());
         fixtureRegistry.put("serviceId", servicio.getId());
+        fixtureRegistry.put("serviceName", servicio.getNombre());
+        fixtureRegistry.put("toggleServiceId", toggleService.getId());
+        fixtureRegistry.put("toggleServiceName", toggleService.getNombre());
+        fixtureRegistry.put("toggleEmployeeId", toggleEmployee.getId());
+        fixtureRegistry.put("toggleEmployeeName", toggleEmployee.getUser().getNombre() + " " + toggleEmployee.getUser().getApellido());
         fixtureRegistry.put("appointmentDate", date.toString());
+        fixtureRegistry.put("concurrencyDate", date.plusDays(2).toString());
+        fixtureRegistry.put("quotaDate", date.plusDays(4).toString());
+        fixtureRegistry.put("rescheduleTargetDate", date.plusDays(1).toString());
+        fixtureRegistry.put("historicalServiceDate", date.plusDays(3).toString());
         fixtureRegistry.put("clinicalAppointmentDate", clinicalStart.toLocalDate().toString());
         fixtureRegistry.put("reprogramAppointmentId", reprogramar.getId());
         fixtureRegistry.put("cancelAppointmentId", cancelar.getId());
         fixtureRegistry.put("clinicalAppointmentId", consulta.getId());
+        fixtureRegistry.put("concurrentClinicalAppointmentId", consultaConcurrente.getId());
+        fixtureRegistry.put("iaClinicalAppointmentId", consultaIa.getId());
         fixtureRegistry.put("paymentAppointmentId", pago.getId());
+        fixtureRegistry.put("historicalServiceAppointmentId", historicalService.getId());
         fixtureRegistry.put("adminUserId", admin.getId());
+        fixtureRegistry.put("toggleCompanyId", toggleCompany.getId());
+        fixtureRegistry.put("toggleCompanyName", toggleCompany.getName());
+        fixtureRegistry.put("toggleCompanyAdminEmail", toggleCompanyAdmin.getEmail());
+        fixtureRegistry.put("toggleCompanyAdminPassword", USER_PASSWORD);
+        fixtureRegistry.put("restrictedRoleId", restrictedRole.getId());
+        fixtureRegistry.put("restrictedRoleName", restrictedRole.getName());
+        fixtureRegistry.put("restrictedUserEmail", restrictedUser.getEmail());
+        fixtureRegistry.put("restrictedUserPassword", USER_PASSWORD);
+        fixtureRegistry.put("activationEmployeeId", activationEmployee.getId());
+        fixtureRegistry.put("activationEmail", activationEmployee.getUser().getEmail());
+        fixtureRegistry.put("activationToken", activationEmployee.getUser().getVerificationToken());
     }
 
     private Company seedCompany() {
+        return seedCompany("VargasVet E2E", "20999999991", "e2e@vargasvet.test");
+    }
+
+    private Company seedCompany(String name, String ruc, String email) {
         Company company = new Company();
-        company.setName("VargasVet E2E");
-        company.setRuc("20999999991");
+        company.setName(name);
+        company.setRuc(ruc);
         company.setAddress("Av. Pruebas 123");
         company.setPhone("999888777");
-        company.setEmail("e2e@vargasvet.test");
+        company.setEmail(email);
         company.setActivo(true);
         return companyRepository.save(company);
     }
 
-    private void seedSystemRole(String name, String description) {
-        if (roleRepository.existsByName(name)) {
-            return;
-        }
+    private Role seedRole(String name, String description, Company company) {
+        Role existing = company == null
+                ? roleRepository.findFirstByName(name).orElse(null)
+                : roleRepository.findByNameAndCompanyId(name, company.getId()).orElse(null);
+        if (existing != null) return existing;
         Role role = new Role();
         role.setName(name);
         role.setDescripcion(description);
         role.setActivo(true);
-        roleRepository.save(role);
+        role.setCompany(company);
+        return roleRepository.save(role);
+    }
+
+    private void seedRolePermissions(Role role, String... viewCodes) {
+        for (String code : viewCodes) {
+            Vista view = vistaRepository.findByCodigo(code).orElse(null);
+            if (view == null) continue;
+            boolean exists = rolVistaPermisoRepository.findByRolId(role.getId()).stream()
+                    .anyMatch(permission -> permission.getVista().getId().equals(view.getId()));
+            if (exists) continue;
+            RolVistaPermiso permission = new RolVistaPermiso();
+            permission.setRol(role);
+            permission.setVista(view);
+            permission.setLeer(true);
+            permission.setEscribir(true);
+            permission.setModificar(true);
+            permission.setEliminar(true);
+            rolVistaPermisoRepository.save(permission);
+        }
+    }
+
+    private void assignRole(Usuario user, Role role) {
+        if (usuarioPorRolRepository.existsByUsuarioIdAndRolId(user.getId(), role.getId())) return;
+        UsuarioPorRol assignment = new UsuarioPorRol();
+        assignment.setUsuario(user);
+        assignment.setRol(role);
+        usuarioPorRolRepository.save(assignment);
     }
 
     private Usuario seedAdmin(Company company, Role role) {
@@ -175,11 +280,15 @@ public class E2eDataInitializer implements CommandLineRunner {
     }
 
     private Apoderado seedApoderado(Company company) {
-        Usuario owner = usuarioRepository.save(user("e2e.owner@vargasvet.test", "Ana", "Pruebas", company));
+        return seedApoderado(company, "e2e.owner@vargasvet.test", "Ana", "Pruebas", "70000001");
+    }
+
+    private Apoderado seedApoderado(Company company, String email, String name, String lastName, String document) {
+        Usuario owner = usuarioRepository.save(user(email, name, lastName, company));
         Apoderado apoderado = new Apoderado();
         apoderado.setUser(owner);
         apoderado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
-        apoderado.setNumeroDocumento("70000001");
+        apoderado.setNumeroDocumento(document);
         apoderado.setGenero(Genero.FEMENINO);
         return apoderadoRepository.save(apoderado);
     }
@@ -195,8 +304,12 @@ public class E2eDataInitializer implements CommandLineRunner {
     }
 
     private Mascota seedMascota(Apoderado apoderado, Raza raza) {
+        return seedMascota(apoderado, raza, "Luna E2E");
+    }
+
+    private Mascota seedMascota(Apoderado apoderado, Raza raza, String name) {
         Mascota mascota = new Mascota();
-        mascota.setNombreCompleto("Luna E2E");
+        mascota.setNombreCompleto(name);
         mascota.setEspecie(EspecieMascota.PERRO);
         mascota.setSexo(SexoMascota.HEMBRA);
         mascota.setFechaNacimiento(LocalDate.now().minusYears(3));
@@ -210,28 +323,54 @@ public class E2eDataInitializer implements CommandLineRunner {
     }
 
     private Empleado seedVeterinario(Company company) {
-        Usuario user = usuarioRepository.save(user("e2e.vet@vargasvet.test", "Victor", "Veterinario", company));
+        return seedVeterinario(company, "e2e.vet@vargasvet.test", "Victor", "Veterinario", "70000002", "CMVP-E2E-001");
+    }
+
+    private Empleado seedVeterinario(Company company, String email, String name, String lastName, String document, String license) {
+        Usuario user = usuarioRepository.save(user(email, name, lastName, company));
         Empleado empleado = new Empleado();
         empleado.setUser(user);
         empleado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
-        empleado.setNumeroDocumentoIdentidad("70000002");
+        empleado.setNumeroDocumentoIdentidad(document);
         empleado.setGenero(Genero.MASCULINO);
-        empleado.setNumeroColegiatura("CMVP-E2E-001");
+        empleado.setNumeroColegiatura(license);
         empleado.setEstado(true);
         return empleadoRepository.save(empleado);
     }
 
+    private Empleado seedActivationEmployee(Company company, Role role) {
+        Empleado employee = seedVeterinario(company, "e2e.activation@vargasvet.test", "Alicia", "Activación",
+                "70000013", "CMVP-E2E-003");
+        Usuario user = employee.getUser();
+        user.setActivo(false);
+        user.setEmailVerified(false);
+        user.setPasswordChanged(false);
+        user.setVerificationToken("selenium-e2e-activation-token");
+        usuarioRepository.save(user);
+        assignRole(user, role);
+        return employee;
+    }
+
     private ServiciosVeterinarios seedServicio(Company company) {
+        return seedServicio(company, "Consulta general E2E", true);
+    }
+
+    private ServiciosVeterinarios seedServicio(Company company, String name, boolean emergency) {
         ServiciosVeterinarios service = new ServiciosVeterinarios();
         service.setCompany(company);
-        service.setNombre("Consulta general E2E");
+        service.setNombre(name);
         service.setDescripcion("Servicio aislado para pruebas E2E");
         service.setPrecio(new BigDecimal("100.00"));
         service.setDuracionEstimada(30);
         service.setDisponible(true);
         service.setActivo(true);
-        service.setPermiteEmergencia(true);
+        service.setPermiteEmergencia(emergency);
         return serviciosVeterinariosRepository.save(service);
+    }
+
+    private void assignService(Empleado employee, ServiciosVeterinarios service) {
+        employee.getServicios().add(new EmpleadoServicio(employee, service));
+        empleadoRepository.save(employee);
     }
 
     private void seedOperatingHours(Company company, Empleado empleado) {
@@ -245,7 +384,11 @@ public class E2eDataInitializer implements CommandLineRunner {
             companyOperatingHourRepository.save(companyHour);
         }
 
-        for (int offset = 0; offset < 14; offset++) {
+        seedEmployeeSchedules(empleado);
+    }
+
+    private void seedEmployeeSchedules(Empleado empleado) {
+        for (int offset = 0; offset < 21; offset++) {
             LocalDate date = LocalDate.now().plusDays(offset);
             HorarioEmpleado schedule = new HorarioEmpleado();
             schedule.setEmpleado(empleado);
@@ -284,7 +427,7 @@ public class E2eDataInitializer implements CommandLineRunner {
     private Usuario user(String email, String nombre, String apellido, Company company) {
         Usuario user = new Usuario();
         user.setEmail(email);
-        user.setPassword(passwordEncoder.encode("E2eUser!123"));
+        user.setPassword(passwordEncoder.encode(USER_PASSWORD));
         user.setNombre(nombre);
         user.setApellido(apellido);
         user.setDni(String.valueOf(71000000 + usuarioRepository.count()));
