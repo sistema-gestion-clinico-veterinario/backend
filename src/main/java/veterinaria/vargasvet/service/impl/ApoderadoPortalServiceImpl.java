@@ -199,6 +199,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
                     r.setCompanyId(s.getCompany().getId());
                     r.setCompanyName(s.getCompany().getName());
                     r.setDuracionEstimada(s.getDuracionEstimada());
+                    r.setTipoControlPreventivo(s.getTipoControlPreventivo());
                     if (s.getTipoEmpleado() != null) {
                         r.setTipoEmpleadoId(s.getTipoEmpleado().getId());
                         r.setTipoEmpleadoNombre(s.getTipoEmpleado().getNombre());

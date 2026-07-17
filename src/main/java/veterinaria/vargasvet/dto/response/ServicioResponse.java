@@ -3,6 +3,7 @@ package veterinaria.vargasvet.dto.response;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import veterinaria.vargasvet.domain.enums.TipoControlServicio;
 
 @Data
 public class ServicioResponse {
@@ -18,4 +19,5 @@ public class ServicioResponse {
     private Boolean permiteEmergencia;
     private Long tipoEmpleadoId;
     private String tipoEmpleadoNombre;
+    private TipoControlServicio tipoControlPreventivo;
 }

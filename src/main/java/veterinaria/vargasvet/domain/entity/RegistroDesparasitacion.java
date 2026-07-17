@@ -8,55 +8,40 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "registro_vacunas")
-public class RegistroVacuna {
-
+@Table(name = "registro_desparasitaciones")
+public class RegistroDesparasitacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "historia_clinica_id", nullable = false)
     private HistoriaClinica historiaClinica;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "consulta_id", nullable = true)
+    @JoinColumn(name = "consulta_id")
     private Consulta consulta;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "veterinario_id")
     private Empleado veterinario;
-
-    @Column(name = "nombre_vacuna", nullable = false, length = 200)
-    private String nombreVacuna;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tipo_vacuna_id")
-    private TipoVacuna tipoVacuna;
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "control_preventivo_id")
     private ControlPreventivo controlPreventivo;
-
+    @Column(nullable = false, length = 100)
+    private String producto;
     @Column(name = "fecha_aplicacion", nullable = false)
     private LocalDate fechaAplicacion;
-
-    @Column(name = "fecha_proxima_dosis")
-    private LocalDate fechaProximaDosis;
-
-    @Column(name = "periodicidad_meses")
+    @Column(name = "periodicidad_meses", nullable = false)
     private Integer periodicidadMeses;
-
+    @Column(name = "fecha_proxima_aplicacion", nullable = false)
+    private LocalDate fechaProximaAplicacion;
     @Column(nullable = false)
     private Boolean activo = true;
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    @Column(name = "created_by", updatable = false, length = 150, columnDefinition = "varchar(150) default 'SYSTEM'")
+    @Column(name = "created_by", nullable = false, updatable = false, length = 150)
     private String createdBy;
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-    @Column(name = "updated_by", length = 150, columnDefinition = "varchar(150) default 'SYSTEM'")
+    @Column(name = "updated_by", nullable = false, length = 150)
     private String updatedBy;
     @Column(name = "estado_modificado_por", length = 150)
     private String estadoModificadoPor;
@@ -64,11 +49,7 @@ public class RegistroVacuna {
     private LocalDateTime fechaModificacionEstado;
 
     @PrePersist
-    protected void onCreate() {
-        createdAt = veterinaria.vargasvet.util.AppClock.now();
-        updatedAt = createdAt;
-    }
-
+    void onCreate() { createdAt = veterinaria.vargasvet.util.AppClock.now(); updatedAt = createdAt; }
     @PreUpdate
-    protected void onUpdate() { updatedAt = veterinaria.vargasvet.util.AppClock.now(); }
+    void onUpdate() { updatedAt = veterinaria.vargasvet.util.AppClock.now(); }
 }

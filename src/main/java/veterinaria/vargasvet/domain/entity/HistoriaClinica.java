@@ -47,6 +47,9 @@ public class HistoriaClinica {
     private List<RegistroVacuna> vacunas = new ArrayList<>();
 
     @OneToMany(mappedBy = "historiaClinica", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<RegistroDesparasitacion> desparasitaciones = new ArrayList<>();
+
+    @OneToMany(mappedBy = "historiaClinica", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<RegistroAlergia> alergias = new ArrayList<>();
 
     @OneToMany(mappedBy = "historiaClinica", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

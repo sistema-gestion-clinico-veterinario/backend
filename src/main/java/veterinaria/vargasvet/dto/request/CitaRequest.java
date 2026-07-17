@@ -9,6 +9,7 @@ import lombok.Data;
 import veterinaria.vargasvet.validation.MeaningfulText;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class CitaRequest {
@@ -38,4 +39,5 @@ public class CitaRequest {
     private String notas;
     private Long version;
     private Boolean esEmergencia = false;
+    private List<Long> controlPreventivoIds;
 }

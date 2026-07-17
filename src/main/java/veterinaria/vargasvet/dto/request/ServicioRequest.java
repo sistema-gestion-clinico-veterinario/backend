@@ -12,6 +12,7 @@ import lombok.Data;
 import veterinaria.vargasvet.validation.MeaningfulText;
 
 import java.math.BigDecimal;
+import veterinaria.vargasvet.domain.enums.TipoControlServicio;
 
 @Data
 public class ServicioRequest {
@@ -45,4 +46,6 @@ public class ServicioRequest {
     private Boolean permiteEmergencia = false;
 
     private Long tipoEmpleadoId;
+
+    private TipoControlServicio tipoControlPreventivo = TipoControlServicio.NO_APLICA;
 }
