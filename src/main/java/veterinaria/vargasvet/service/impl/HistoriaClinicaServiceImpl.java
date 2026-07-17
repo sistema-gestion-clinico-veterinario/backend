@@ -39,6 +39,8 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
     private final HistoriaClinicaRepository historiaClinicaRepository;
     private final ConsultaRepository consultaRepository;
     private final ArchivoClinicoServiceImpl archivoClinicoService;
+    @org.springframework.beans.factory.annotation.Autowired
+    private veterinaria.vargasvet.service.ControlPreventivoService controlPreventivoService;
 
     @Override
     @Transactional(readOnly = true)
@@ -224,6 +226,10 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
                 .toList();
 
         response.setConsultas(consultas);
+        if (mascota != null && controlPreventivoService != null) {
+            response.setControlesPreventivos(controlPreventivoService.listarControles(mascota.getId()));
+            response.setAplicacionesPreventivas(controlPreventivoService.listarAplicaciones(mascota.getId()));
+        }
         return response;
     }
 

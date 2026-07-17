@@ -5,6 +5,7 @@ import veterinaria.vargasvet.domain.enums.EstadoCita;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class CitaResponse {
@@ -30,4 +31,5 @@ public class CitaResponse {
     private BigDecimal totalServicio;
     private BigDecimal montoPagado;
     private Integer companyId;
+    private List<Long> controlPreventivoIds;
 }

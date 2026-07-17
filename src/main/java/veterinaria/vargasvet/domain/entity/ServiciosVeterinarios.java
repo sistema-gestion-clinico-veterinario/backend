@@ -6,6 +6,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import veterinaria.vargasvet.domain.enums.TipoControlServicio;
 
 @Data
 @Entity
@@ -40,6 +41,11 @@ public class ServiciosVeterinarios {
 
     @Column(name = "permite_emergencia", nullable = false, columnDefinition = "boolean default false")
     private Boolean permiteEmergencia = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_control_preventivo", nullable = false, length = 30,
+            columnDefinition = "varchar(30) default 'NO_APLICA'")
+    private TipoControlServicio tipoControlPreventivo = TipoControlServicio.NO_APLICA;
 
     @OneToMany(mappedBy = "servicio", cascade = CascadeType.ALL)
     private List<EmpleadoServicio> empleados;

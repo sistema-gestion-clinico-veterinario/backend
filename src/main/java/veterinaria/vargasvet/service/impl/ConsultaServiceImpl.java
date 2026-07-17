@@ -32,6 +32,8 @@ public class ConsultaServiceImpl implements ConsultaService {
     private final CitaRepository citaRepository;
     private final ConsultaMapper consultaMapper;
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
+    @org.springframework.beans.factory.annotation.Autowired
+    private veterinaria.vargasvet.repository.ControlPreventivoRepository controlPreventivoRepository;
 
     @Override
     @Transactional
@@ -164,6 +166,7 @@ public class ConsultaServiceImpl implements ConsultaService {
         if (cita != null) {
             cita.setEstado(EstadoCita.COMPLETADA);
             citaRepository.save(cita);
+            liberarControlesNoAplicados(cita);
         }
 
         Consulta savedConsulta = consultaRepository.saveAndFlush(consulta);
@@ -190,5 +193,27 @@ public class ConsultaServiceImpl implements ConsultaService {
         if (consulta.getAnamnesis() == null || consulta.getAnamnesis().isBlank()) {
             throw new IllegalArgumentException("La anamnesis es obligatoria para cerrar la consulta");
         }
+    }
+
+    private void liberarControlesNoAplicados(Cita cita) {
+        if (controlPreventivoRepository == null) return;
+        java.time.LocalDate hoy = veterinaria.vargasvet.util.AppClock.today();
+        java.util.List<veterinaria.vargasvet.domain.entity.ControlPreventivo> controles =
+                controlPreventivoRepository.findByCitaSuspendeId(cita.getId());
+        for (veterinaria.vargasvet.domain.entity.ControlPreventivo control : controles) {
+            if (control.getEstado() != veterinaria.vargasvet.domain.enums.EstadoControlPreventivo.SUSPENDIDO_POR_CITA) continue;
+            control.setCitaSuspende(null);
+            control.setEstado(control.getFechaRecomendada().isBefore(hoy)
+                    ? veterinaria.vargasvet.domain.enums.EstadoControlPreventivo.ATRASADO
+                    : control.getFechaRecomendada().isEqual(hoy)
+                    ? veterinaria.vargasvet.domain.enums.EstadoControlPreventivo.PENDIENTE
+                    : !control.getFechaRecomendada().isAfter(hoy.plusDays(7))
+                    ? veterinaria.vargasvet.domain.enums.EstadoControlPreventivo.PROXIMO
+                    : veterinaria.vargasvet.domain.enums.EstadoControlPreventivo.PROGRAMADO);
+            control.setEstadoModificadoPor(SecurityUtils.getCurrentUserEmail());
+            control.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
+            control.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
+        }
+        controlPreventivoRepository.saveAll(controles);
     }
 }
