@@ -32,69 +32,84 @@ class IaValidationServiceUnitTest {
 
     @Test
     void analizarLaboratorio_rechazaArchivoVacio() throws Exception {
+        // Arrange
         LaboratorioIAServiceImpl service = new LaboratorioIAServiceImpl(laboratorioIAClient);
         MultipartFile file = new MockMultipartFile("archivo", "hemograma.pdf", "application/pdf", new byte[0]);
 
+        // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> service.analizarLaboratorio(file, "PERRO")
         );
 
+        // Assert
         assertEquals("El archivo no puede estar vacío.", ex.getMessage());
         verify(laboratorioIAClient, never()).analizar(file, "PERRO");
     }
 
     @Test
     void analizarLaboratorio_rechazaExtensionNoSoportada() throws Exception {
+        // Arrange
         LaboratorioIAServiceImpl service = new LaboratorioIAServiceImpl(laboratorioIAClient);
         MultipartFile file = new MockMultipartFile("archivo", "hemograma.exe", "application/octet-stream", "x".getBytes());
 
+        // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> service.analizarLaboratorio(file, "GATO")
         );
 
+        // Assert
         assertEquals("Formato no soportado: \".exe\". Use PDF, JPG, PNG, BMP o TIFF.", ex.getMessage());
         verify(laboratorioIAClient, never()).analizar(file, "GATO");
     }
 
     @Test
     void analizarLaboratorio_retornaRespuestaDelClienteCuandoArchivoEsValido() throws Exception {
+        // Arrange
         LaboratorioIAServiceImpl service = new LaboratorioIAServiceImpl(laboratorioIAClient);
         MultipartFile file = new MockMultipartFile("archivo", "hemograma.pdf", "application/pdf", "pdf".getBytes());
         LaboratorioIAResponse expected = new LaboratorioIAResponse();
         expected.setEspecie("PERRO");
         when(laboratorioIAClient.analizar(file, "PERRO")).thenReturn(expected);
 
+        // Act
         LaboratorioIAResponse response = service.analizarLaboratorio(file, "PERRO");
 
+        // Assert
         assertSame(expected, response);
     }
 
     @Test
     void analizarLaboratorio_envuelveErrorDelCliente() throws Exception {
+        // Arrange
         LaboratorioIAServiceImpl service = new LaboratorioIAServiceImpl(laboratorioIAClient);
         MultipartFile file = new MockMultipartFile("archivo", "hemograma.pdf", "application/pdf", "pdf".getBytes());
         when(laboratorioIAClient.analizar(file, "PERRO")).thenThrow(new IOException("timeout"));
 
+        // Act
         RuntimeException ex = assertThrows(
                 RuntimeException.class,
                 () -> service.analizarLaboratorio(file, "PERRO")
         );
 
+        // Assert
         assertEquals("Error al conectar con el servicio de análisis de laboratorio: timeout", ex.getMessage());
     }
 
     @Test
     void analizarRadiografia_rechazaArchivoVacio() throws Exception {
+        // Arrange
         RadiografiaIAServiceImpl service = new RadiografiaIAServiceImpl(radiografiaIAClient);
         MultipartFile file = new MockMultipartFile("file", "rx.dcm", "application/dicom", new byte[0]);
 
+        // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> service.analizarRadiografia(file)
         );
 
+        // Assert
         assertEquals("El archivo de radiografía no puede estar vacío.", ex.getMessage());
         verify(radiografiaIAClient, never()).predict(file);
     }
@@ -102,28 +117,34 @@ class IaValidationServiceUnitTest {
     @Test
     @DisplayName("[BB-014] Analizar radiografia con formato invalido es rechazado")
     void analizarRadiografia_rechazaFormatoNoSoportado() throws Exception {
+        // Arrange
         RadiografiaIAServiceImpl service = new RadiografiaIAServiceImpl(radiografiaIAClient);
         MultipartFile file = new MockMultipartFile("file", "rx.pdf", "application/pdf", "pdf".getBytes());
 
+        // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> service.analizarRadiografia(file)
         );
 
+        // Assert
         assertEquals("Formato no soportado. Use DICOM (.dcm), PNG o JPG.", ex.getMessage());
         verify(radiografiaIAClient, never()).predict(file);
     }
 
     @Test
     void analizarRadiografia_retornaRespuestaDelClienteCuandoArchivoEsValido() throws Exception {
+        // Arrange
         RadiografiaIAServiceImpl service = new RadiografiaIAServiceImpl(radiografiaIAClient);
         MultipartFile file = new MockMultipartFile("file", "rx.dcm", "application/dicom", "dicom".getBytes());
         RadiografiaPrediccionResponse expected = new RadiografiaPrediccionResponse();
         expected.setModel("rx-model");
         when(radiografiaIAClient.predict(file)).thenReturn(expected);
 
+        // Act
         RadiografiaPrediccionResponse response = service.analizarRadiografia(file);
 
+        // Assert
         assertSame(expected, response);
     }
 }

@@ -63,51 +63,61 @@ class PagoServiceUnitTest {
 
     @Test
     void registrar_rechazaCitaCancelada() {
+        // Arrange
         PagoServiceImpl service = service();
         PagoRequest request = efectivoRequest(10L, new BigDecimal("100.00"));
         when(citaRepository.findById(10L)).thenReturn(Optional.of(cita(10L, EstadoCita.CANCELADA, BigDecimal.ZERO)));
 
+        // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> service.registrar(request)
         );
 
+        // Assert
         assertEquals("No se puede registrar un pago para una cita con estado: CANCELADA", ex.getMessage());
         verify(purchaseRepository, never()).save(any(Purchase.class));
     }
 
     @Test
     void registrar_rechazaCitaConPagoPrevio() {
+        // Arrange
         PagoServiceImpl service = service();
         PagoRequest request = efectivoRequest(10L, new BigDecimal("100.00"));
         when(citaRepository.findById(10L)).thenReturn(Optional.of(cita(10L, EstadoCita.PROGRAMADA, new BigDecimal("80.00"))));
 
+        // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> service.registrar(request)
         );
 
+        // Assert
         assertEquals("La cita ya tiene un pago registrado", ex.getMessage());
         verify(purchaseRepository, never()).save(any(Purchase.class));
     }
 
     @Test
     void registrar_rechazaPagoEfectivoSinMontoRecibido() {
+        // Arrange
         PagoServiceImpl service = service();
         PagoRequest request = efectivoRequest(10L, null);
         when(citaRepository.findById(10L)).thenReturn(Optional.of(cita(10L, EstadoCita.PROGRAMADA, BigDecimal.ZERO)));
 
+        // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> service.registrar(request)
         );
 
+        // Assert
         assertEquals("El monto recibido es obligatorio para pagos en efectivo", ex.getMessage());
         verify(purchaseRepository, never()).save(any(Purchase.class));
     }
 
     @Test
     void registrar_pagoEfectivoCompletoGuardaPagoPaidYCalculaCambio() {
+        // Arrange
         PagoServiceImpl service = service();
         Cita cita = cita(10L, EstadoCita.PROGRAMADA, BigDecimal.ZERO);
         PagoRequest request = efectivoRequest(10L, new BigDecimal("120.00"));
@@ -119,8 +129,10 @@ class PagoServiceUnitTest {
             return pago;
         });
 
+        // Act
         PagoResponse response = service.registrar(request);
 
+        // Assert
         ArgumentCaptor<Purchase> captor = ArgumentCaptor.forClass(Purchase.class);
         verify(purchaseRepository).save(captor.capture());
         Purchase saved = captor.getValue();
@@ -133,6 +145,7 @@ class PagoServiceUnitTest {
 
     @Test
     void obtenerPorCita_calculaCambioCuandoMontoRecibidoSuperaTotal() {
+        // Arrange
         PagoServiceImpl service = service();
         Cita cita = cita(10L, EstadoCita.PROGRAMADA, BigDecimal.ZERO);
         Purchase pago = new Purchase();
@@ -145,8 +158,10 @@ class PagoServiceUnitTest {
         when(purchaseRepository.findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(10L, TipoPurchase.SERVICIO_CITA))
                 .thenReturn(Optional.of(pago));
 
+        // Act
         PagoResponse response = service.obtenerPorCita(10L);
 
+        // Assert
         assertEquals(new BigDecimal("30.00"), response.getCambio());
         assertEquals(PaymentStatus.PAID, response.getEstado());
     }
