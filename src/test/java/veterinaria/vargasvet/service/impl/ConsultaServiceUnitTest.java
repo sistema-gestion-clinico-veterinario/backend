@@ -70,16 +70,23 @@ class ConsultaServiceUnitTest {
 
     @Test
     void updateConsulta_lanzaResourceNotFoundSiConsultaNoExiste() {
+        // Arrange
         ConsultaServiceImpl service = service();
         ConsultaRequest request = new ConsultaRequest();
         request.setVersion(1L);
         when(consultaRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> service.updateConsulta(99L, request));
+        // Act
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> service.updateConsulta(99L, request));
+
+        // Assert
+        assertEquals(ResourceNotFoundException.class, ex.getClass());
     }
 
     @Test
     void updateConsulta_lanzaExcepcionCuandoVersionNoCoincide() {
+        // Arrange
         ConsultaServiceImpl service = service();
         Consulta consulta = consultaAbiertaCompleta();
         consulta.setVersion(2L);
@@ -87,17 +94,20 @@ class ConsultaServiceUnitTest {
         request.setVersion(1L);
         when(consultaRepository.findById(10L)).thenReturn(Optional.of(consulta));
 
+        // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> service.updateConsulta(10L, request)
         );
 
+        // Assert
         assertEquals("La consulta ha sido modificada por otro usuario. Por favor, refresque la página.", ex.getMessage());
         verify(consultaRepository, never()).saveAndFlush(any(Consulta.class));
     }
 
     @Test
     void updateConsulta_actualizaPesoDeMascotaYAntecedentes() {
+        // Arrange
         autenticarSuperAdmin();
         ConsultaServiceImpl service = service();
         Consulta consulta = consultaAbiertaCompleta();
@@ -111,8 +121,10 @@ class ConsultaServiceUnitTest {
         when(consultaRepository.saveAndFlush(consulta)).thenReturn(consulta);
         when(consultaMapper.toResponse(consulta)).thenReturn(mapped);
 
+        // Act
         ConsultaResponse response = service.updateConsulta(10L, request);
 
+        // Assert
         assertEquals(mapped, response);
         assertEquals(12.4, consulta.getPesoEnConsulta());
         assertEquals(12.4, consulta.getHistoriaClinica().getMascota().getPeso());
@@ -123,6 +135,7 @@ class ConsultaServiceUnitTest {
 
     @Test
     void cerrarConsulta_lanzaExcepcionSiFaltanCamposObligatorios() {
+        // Arrange
         autenticarSuperAdmin();
         ConsultaServiceImpl service = service();
         Consulta consulta = consultaAbiertaCompleta();
@@ -131,11 +144,13 @@ class ConsultaServiceUnitTest {
         request.setVersion(1L);
         when(consultaRepository.findById(10L)).thenReturn(Optional.of(consulta));
 
+        // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> service.cerrarConsulta(10L, request)
         );
 
+        // Assert
         assertEquals("La anamnesis es obligatoria para cerrar la consulta", ex.getMessage());
         verify(citaRepository, never()).save(any(Cita.class));
         verify(consultaRepository, never()).saveAndFlush(any(Consulta.class));
@@ -143,6 +158,7 @@ class ConsultaServiceUnitTest {
 
     @Test
     void cerrarConsulta_cierraConsultaYCompletaCitaAsociada() {
+        // Arrange
         autenticarSuperAdmin();
         ConsultaServiceImpl service = service();
         Consulta consulta = consultaAbiertaCompleta();
@@ -154,8 +170,10 @@ class ConsultaServiceUnitTest {
         when(consultaRepository.saveAndFlush(consulta)).thenReturn(consulta);
         when(consultaMapper.toResponse(consulta)).thenReturn(mapped);
 
+        // Act
         ConsultaResponse response = service.cerrarConsulta(10L, request);
 
+        // Assert
         assertEquals(mapped, response);
         assertEquals(EstadoConsulta.CERRADA, consulta.getEstado());
         assertEquals(EstadoCita.COMPLETADA, consulta.getCita().getEstado());
