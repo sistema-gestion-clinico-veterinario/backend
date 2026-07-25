@@ -44,25 +44,18 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ConsultaServiceUnitTest {
-
     @Mock
     private ConsultaRepository consultaRepository;
-
     @Mock
     private HistoriaClinicaRepository historiaClinicaRepository;
-
     @Mock
     private MascotaRepository mascotaRepository;
-
     @Mock
     private CitaRepository citaRepository;
-
     @Mock
     private ConsultaMapper consultaMapper;
-
     @Mock
     private AuditLogService auditLogService;
-
     @AfterEach
     void clearSecurityContext() {
         SecurityContextHolder.clearContext();
@@ -75,11 +68,9 @@ class ConsultaServiceUnitTest {
         ConsultaRequest request = new ConsultaRequest();
         request.setVersion(1L);
         when(consultaRepository.findById(99L)).thenReturn(Optional.empty());
-
         // Act
         ResourceNotFoundException ex =
                 assertThrows(ResourceNotFoundException.class, () -> service.updateConsulta(99L, request));
-
         // Assert
         assertEquals(ResourceNotFoundException.class, ex.getClass());
     }
@@ -93,13 +84,11 @@ class ConsultaServiceUnitTest {
         ConsultaRequest request = new ConsultaRequest();
         request.setVersion(1L);
         when(consultaRepository.findById(10L)).thenReturn(Optional.of(consulta));
-
         // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> service.updateConsulta(10L, request)
         );
-
         // Assert
         assertEquals("La consulta ha sido modificada por otro usuario. Por favor, refresque la página.", ex.getMessage());
         verify(consultaRepository, never()).saveAndFlush(any(Consulta.class));
@@ -149,7 +138,6 @@ class ConsultaServiceUnitTest {
                 IllegalArgumentException.class,
                 () -> service.cerrarConsulta(10L, request)
         );
-
         // Assert
         assertEquals("La anamnesis es obligatoria para cerrar la consulta", ex.getMessage());
         verify(citaRepository, never()).save(any(Cita.class));

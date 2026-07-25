@@ -7,8 +7,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,10 +18,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@Profile("!e2e")
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
+
+    @Value("${app.rate-limit.enabled:true}")
+    private boolean enabled;
 
     private Bucket resolveBucket(String key, int capacity, Duration period) {
         return buckets.computeIfAbsent(key, k ->
@@ -35,6 +37,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
+
+        if (!enabled) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         String path = request.getRequestURI();
         String method = request.getMethod();

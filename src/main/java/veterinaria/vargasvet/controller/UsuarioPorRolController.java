@@ -7,6 +7,7 @@ import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRolPermiso;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.response.MenuItemDTO;
+import veterinaria.vargasvet.dto.response.UsuarioRolResponse;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.MenuBuilderService;
@@ -25,7 +26,7 @@ public class UsuarioPorRolController {
     private final UsuarioRepository usuarioRepository;
 
     @GetMapping("/{userId}/roles")
-    public ResponseEntity<ApiResponse<List<UsuarioPorRol>>> listarRoles(@PathVariable("userId") Integer usuarioId) {
+    public ResponseEntity<ApiResponse<List<UsuarioRolResponse>>> listarRoles(@PathVariable("userId") Integer usuarioId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Roles del usuario",
                 usuarioPorRolService.listarPorUsuario(usuarioId)));
     }

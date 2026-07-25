@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.*;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
+import veterinaria.vargasvet.dto.response.UsuarioRolResponse;
 import veterinaria.vargasvet.repository.*;
 
 import java.util.List;
@@ -20,8 +21,26 @@ public class UsuarioPorRolService {
     private final VistaRepository vistaRepository;
 
     @Transactional(readOnly = true)
-    public List<UsuarioPorRol> listarPorUsuario(Integer usuarioId) {
-        return usuarioPorRolRepository.findByUsuarioId(usuarioId);
+    public List<UsuarioRolResponse> listarPorUsuario(Integer usuarioId) {
+        return usuarioPorRolRepository.findByUsuarioIdAndRolActivoWithPermisos(usuarioId, null).stream()
+                .map(asignacion -> new UsuarioRolResponse(
+                        asignacion.getId(),
+                        asignacion.getUsuario().getId(),
+                        asignacion.getRol().getId(),
+                        asignacion.getRol().getName(),
+                        asignacion.getPermisos() == null ? List.of() : asignacion.getPermisos().stream()
+                                .map(permiso -> new UsuarioRolResponse.PermisoResponse(
+                                        permiso.getId(),
+                                        permiso.getVista().getId(),
+                                        permiso.getVista().getCodigo(),
+                                        permiso.isLeer(),
+                                        permiso.isEscribir(),
+                                        permiso.isModificar(),
+                                        permiso.isEliminar()
+                                ))
+                                .toList()
+                ))
+                .toList();
     }
 
     @Transactional

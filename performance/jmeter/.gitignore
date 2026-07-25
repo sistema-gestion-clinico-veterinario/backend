@@ -1,0 +1,5 @@
+config/load-test.local.properties
+config/transactions.local.csv
+results/*
+!results/.gitkeep
+

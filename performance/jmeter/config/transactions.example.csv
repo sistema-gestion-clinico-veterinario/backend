@@ -1,0 +1,6 @@
+case_id,method,path,body,expected_code
+PC-014,POST,/appointments,"{""mascotaId"":1,""veterinarioId"":1,""motivoCita"":""Prueba de carga controlada"",""fechaHoraInicio"":""2026-12-15T09:00:00"",""servicioId"":1,""notas"":""Dato desechable"",""esEmergencia"":false}",201
+PC-015,PATCH,/appointments/1/reschedule,"{""veterinarioId"":1,""fechaHoraInicio"":""2026-12-16T09:00:00"",""motivoReprogramacion"":""Prueba de carga controlada""}",200
+PC-016,DELETE,/appointments/2/cancel?motivo=Prueba%20de%20carga,,200
+PC-017,POST,/payments,"{""citaId"":3,""metodoPago"":""EFECTIVO"",""montoRecibido"":100.00}",201
+

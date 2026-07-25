@@ -27,19 +27,14 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CoreBusinessServiceUnitTest {
-
     @Mock
     private CompanyRepository companyRepository;
-
     @Mock
     private RoleRepository roleRepository;
-
     @Mock
     private VistaRepository vistaRepository;
-
     @Mock
     private RolVistaPermisoRepository rolVistaPermisoRepository;
-
     @InjectMocks
     private BusinessValidator businessValidator;
 
@@ -50,13 +45,11 @@ class CoreBusinessServiceUnitTest {
         company.setId(7);
         company.setActivo(false);
         when(companyRepository.findById(7)).thenReturn(Optional.of(company));
-
         // Act
         IllegalStateException ex = assertThrows(
                 IllegalStateException.class,
                 () -> businessValidator.checkCompanyActiva(7)
         );
-
         // Assert
         assertEquals("La empresa está inactiva. No se pueden realizar operaciones de escritura.", ex.getMessage());
     }
@@ -69,13 +62,11 @@ class CoreBusinessServiceUnitTest {
         role.setId(1);
         role.setName("ROLE_ADMIN");
         when(roleRepository.findById(1)).thenReturn(Optional.of(role));
-
         // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> roleService.deleteRole(1)
         );
-
         // Assert
         assertEquals("No se puede eliminar un rol del sistema", ex.getMessage());
         verify(roleRepository, never()).delete(any(Role.class));
@@ -107,13 +98,11 @@ class CoreBusinessServiceUnitTest {
         role.setName("ROLE_RECEPCION");
         role.setActivo(false);
         when(roleRepository.findById(4)).thenReturn(Optional.of(role));
-
         // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> roleService.saveVistasByRole(4, List.of(new RolVistaPermisoDTO()))
         );
-
         // Assert
         assertEquals("No se pueden asignar permisos a un rol inactivo", ex.getMessage());
         verify(rolVistaPermisoRepository, never()).deleteByRolId(4);

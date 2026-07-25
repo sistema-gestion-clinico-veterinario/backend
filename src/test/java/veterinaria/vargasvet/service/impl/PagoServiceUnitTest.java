@@ -42,38 +42,29 @@ class PagoServiceUnitTest {
 
     @Mock
     private CitaRepository citaRepository;
-
     @Mock
     private PurchaseRepository purchaseRepository;
-
     @Mock
     private UsuarioRepository usuarioRepository;
-
     @Mock
     private RestTemplate restTemplate;
-
     @Mock
     private AuditLogService auditLogService;
-
     @Mock
     private CajaService cajaService;
-
     @Mock
     private MercadoPagoYapeGateway mercadoPagoYapeGateway;
-
     @Test
     void registrar_rechazaCitaCancelada() {
         // Arrange
         PagoServiceImpl service = service();
         PagoRequest request = efectivoRequest(10L, new BigDecimal("100.00"));
         when(citaRepository.findById(10L)).thenReturn(Optional.of(cita(10L, EstadoCita.CANCELADA, BigDecimal.ZERO)));
-
         // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> service.registrar(request)
         );
-
         // Assert
         assertEquals("No se puede registrar un pago para una cita con estado: CANCELADA", ex.getMessage());
         verify(purchaseRepository, never()).save(any(Purchase.class));
@@ -85,13 +76,11 @@ class PagoServiceUnitTest {
         PagoServiceImpl service = service();
         PagoRequest request = efectivoRequest(10L, new BigDecimal("100.00"));
         when(citaRepository.findById(10L)).thenReturn(Optional.of(cita(10L, EstadoCita.PROGRAMADA, new BigDecimal("80.00"))));
-
         // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> service.registrar(request)
         );
-
         // Assert
         assertEquals("La cita ya tiene un pago registrado", ex.getMessage());
         verify(purchaseRepository, never()).save(any(Purchase.class));
@@ -103,13 +92,11 @@ class PagoServiceUnitTest {
         PagoServiceImpl service = service();
         PagoRequest request = efectivoRequest(10L, null);
         when(citaRepository.findById(10L)).thenReturn(Optional.of(cita(10L, EstadoCita.PROGRAMADA, BigDecimal.ZERO)));
-
         // Act
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
                 () -> service.registrar(request)
         );
-
         // Assert
         assertEquals("El monto recibido es obligatorio para pagos en efectivo", ex.getMessage());
         verify(purchaseRepository, never()).save(any(Purchase.class));
@@ -128,10 +115,8 @@ class PagoServiceUnitTest {
             pago.setCreatedAt(LocalDateTime.of(2026, 7, 7, 10, 0));
             return pago;
         });
-
         // Act
         PagoResponse response = service.registrar(request);
-
         // Assert
         ArgumentCaptor<Purchase> captor = ArgumentCaptor.forClass(Purchase.class);
         verify(purchaseRepository).save(captor.capture());
@@ -157,7 +142,6 @@ class PagoServiceUnitTest {
         pago.setPaymentStatus(PaymentStatus.PAID);
         when(purchaseRepository.findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(10L, TipoPurchase.SERVICIO_CITA))
                 .thenReturn(Optional.of(pago));
-
         // Act
         PagoResponse response = service.obtenerPorCita(10L);
 
@@ -165,7 +149,6 @@ class PagoServiceUnitTest {
         assertEquals(new BigDecimal("30.00"), response.getCambio());
         assertEquals(PaymentStatus.PAID, response.getEstado());
     }
-
     private PagoServiceImpl service() {
         return new PagoServiceImpl(
                 citaRepository,
@@ -177,7 +160,6 @@ class PagoServiceUnitTest {
                 mercadoPagoYapeGateway
         );
     }
-
     private PagoRequest efectivoRequest(Long citaId, BigDecimal montoRecibido) {
         PagoRequest request = new PagoRequest();
         request.setCitaId(citaId);
@@ -185,23 +167,18 @@ class PagoServiceUnitTest {
         request.setMontoRecibido(montoRecibido);
         return request;
     }
-
     private Cita cita(Long id, EstadoCita estado, BigDecimal montoPagado) {
         Company company = new Company();
         company.setId(3);
-
         Usuario usuario = new Usuario();
         usuario.setNombre("Ana");
         usuario.setApellido("Lopez");
         usuario.setCompany(company);
-
         Apoderado apoderado = new Apoderado();
         apoderado.setUser(usuario);
-
         Mascota mascota = new Mascota();
         mascota.setNombreCompleto("Firulais");
         mascota.setApoderado(apoderado);
-
         Cita cita = new Cita();
         cita.setId(id);
         cita.setEstado(estado);

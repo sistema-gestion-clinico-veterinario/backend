@@ -56,7 +56,6 @@ import static org.mockito.Mockito.when;
 
 @DataJpaTest
 class CitaServiceIntegrationTest {
-
     @Autowired private CitaRepository citaRepository;
     @Autowired private MascotaRepository mascotaRepository;
     @Autowired private EmpleadoRepository empleadoRepository;
@@ -71,12 +70,10 @@ class CitaServiceIntegrationTest {
     @Autowired private ApoderadoRepository apoderadoRepository;
 
     private CitaServiceImpl citaService;
-
     @BeforeEach
     void setUp() {
         CitaMapper citaMapper = mock(CitaMapper.class);
         when(citaMapper.toResponse(any(Cita.class))).thenReturn(new CitaResponse());
-
         citaService = new CitaServiceImpl(
                 citaRepository,
                 mascotaRepository,
@@ -97,12 +94,10 @@ class CitaServiceIntegrationTest {
         );
         autenticarSuperAdmin();
     }
-
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
     }
-
     @Test
     @DisplayName("[BB-009] Iniciar atencion crea consulta e historia clinica")
     void iniciarAtencionCreaHistoriaClinicaConsultaYActualizaEstadoDeCita() {

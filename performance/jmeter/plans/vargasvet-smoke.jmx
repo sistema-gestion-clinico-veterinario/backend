@@ -1,0 +1,726 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="VargasVet - humo PC-001 a PC-013" enabled="true">
+      <stringProp name="TestPlan.comments">Suite VargasVet de pruebas de carga con Apache JMeter</stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="Variables">
+        <collectionProp name="Arguments.arguments" />
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath" />
+    </TestPlan>
+    <hashTree>
+      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="Variables de la prueba" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="protocol" elementType="Argument">
+            <stringProp name="Argument.name">protocol</stringProp>
+            <stringProp name="Argument.value">${__P(protocol,http)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="host" elementType="Argument">
+            <stringProp name="Argument.name">host</stringProp>
+            <stringProp name="Argument.value">${__P(host,127.0.0.1)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="port" elementType="Argument">
+            <stringProp name="Argument.name">port</stringProp>
+            <stringProp name="Argument.value">${__P(port,8080)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="base_path" elementType="Argument">
+            <stringProp name="Argument.name">base_path</stringProp>
+            <stringProp name="Argument.value">${__P(base_path,/api/v1)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="company_id" elementType="Argument">
+            <stringProp name="Argument.name">company_id</stringProp>
+            <stringProp name="Argument.value">${__P(company_id,1)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="pet_id" elementType="Argument">
+            <stringProp name="Argument.name">pet_id</stringProp>
+            <stringProp name="Argument.value">${__P(pet_id,1)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="employee_id" elementType="Argument">
+            <stringProp name="Argument.name">employee_id</stringProp>
+            <stringProp name="Argument.value">${__P(employee_id,1)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="service_id" elementType="Argument">
+            <stringProp name="Argument.name">service_id</stringProp>
+            <stringProp name="Argument.value">${__P(service_id,1)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="appointment_date" elementType="Argument">
+            <stringProp name="Argument.name">appointment_date</stringProp>
+            <stringProp name="Argument.value">${__P(appointment_date,2026-12-15)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="consultation_id" elementType="Argument">
+            <stringProp name="Argument.name">consultation_id</stringProp>
+            <stringProp name="Argument.value">${__P(consultation_id,0)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="payment_appointment_id" elementType="Argument">
+            <stringProp name="Argument.name">payment_appointment_id</stringProp>
+            <stringProp name="Argument.value">${__P(payment_appointment_id,1)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="page_size" elementType="Argument">
+            <stringProp name="Argument.name">page_size</stringProp>
+            <stringProp name="Argument.value">${__P(page_size,10)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="connect_timeout_ms" elementType="Argument">
+            <stringProp name="Argument.name">connect_timeout_ms</stringProp>
+            <stringProp name="Argument.value">${__P(connect_timeout_ms,5000)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="response_timeout_ms" elementType="Argument">
+            <stringProp name="Argument.name">response_timeout_ms</stringProp>
+            <stringProp name="Argument.value">${__P(response_timeout_ms,30000)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="email" elementType="Argument">
+            <stringProp name="Argument.name">email</stringProp>
+            <stringProp name="Argument.value">${__groovy(System.getenv('LOAD_TEST_EMAIL') ?: '')}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="password" elementType="Argument">
+            <stringProp name="Argument.name">password</stringProp>
+            <stringProp name="Argument.value">${__groovy(System.getenv('LOAD_TEST_PASSWORD') ?: '')}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </Arguments>
+      <hashTree />
+      <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Cabeceras HTTP" enabled="true">
+        <collectionProp name="HeaderManager.headers">
+          <elementProp name="" elementType="Header">
+            <stringProp name="Header.name">Content-Type</stringProp>
+            <stringProp name="Header.value">application/json</stringProp>
+          </elementProp>
+          <elementProp name="" elementType="Header">
+            <stringProp name="Header.name">Accept</stringProp>
+            <stringProp name="Header.value">application/json</stringProp>
+          </elementProp>
+        </collectionProp>
+      </HeaderManager>
+      <hashTree />
+      <CookieManager guiclass="CookiePanel" testclass="CookieManager" testname="Cookies por usuario" enabled="true">
+        <collectionProp name="CookieManager.cookies" />
+        <boolProp name="CookieManager.clearEachIteration">false</boolProp>
+        <boolProp name="CookieManager.controlledByThreadGroup">false</boolProp>
+        <stringProp name="CookieManager.policy">standard</stringProp>
+      </CookieManager>
+      <hashTree />
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Usuarios virtuales" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">${__P(loops,-1)}</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">${__P(users,1)}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${__P(ramp_seconds,1)}</stringProp>
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+        <stringProp name="ThreadGroup.duration">${__P(duration_seconds,30)}</stringProp>
+        <stringProp name="ThreadGroup.delay">0</stringProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+      </ThreadGroup>
+      <hashTree>
+        <OnceOnlyController guiclass="OnceOnlyControllerGui" testclass="OnceOnlyController" testname="Autenticación por usuario" enabled="true" />
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PC-001 - Inicio de sesión" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{"email":"${email}","password":"${password}"}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="HTTPSampler.domain">${host}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">${protocol}</stringProp>
+            <stringProp name="HTTPSampler.connect_timeout">${connect_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.response_timeout">${response_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${base_path}/auth/login</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Código HTTP inesperado</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree />
+            <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Respuesta funcional exitosa" enabled="true">
+              <stringProp name="cacheKey">true</stringProp>
+              <stringProp name="filename" />
+              <stringProp name="parameters" />
+              <stringProp name="script">def text = prev.getResponseDataAsString()
+if (!(text.contains('\"success\":true') || text.contains('\"success\": true'))) {
+  AssertionResult.setFailure(true)
+  AssertionResult.setFailureMessage('La respuesta no contiene success=true')
+}</stringProp>
+              <stringProp name="scriptLanguage">groovy</stringProp>
+            </JSR223Assertion>
+            <hashTree />
+            <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extraer tokens" enabled="true">
+              <stringProp name="JSONPostProcessor.referenceNames">access_token;refresh_token</stringProp>
+              <stringProp name="JSONPostProcessor.jsonPathExprs">$.data.token;$.data.refreshToken</stringProp>
+              <stringProp name="JSONPostProcessor.match_numbers">1;1</stringProp>
+              <stringProp name="JSONPostProcessor.defaultValues">NOT_FOUND;NOT_FOUND</stringProp>
+            </JSONPostProcessor>
+            <hashTree />
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PC-002 - Renovación del token" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{"refreshToken":"${refresh_token}"}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+            <stringProp name="HTTPSampler.domain">${host}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">${protocol}</stringProp>
+            <stringProp name="HTTPSampler.connect_timeout">${connect_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.response_timeout">${response_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${base_path}/auth/refresh</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Código HTTP inesperado</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree />
+            <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Respuesta funcional exitosa" enabled="true">
+              <stringProp name="cacheKey">true</stringProp>
+              <stringProp name="filename" />
+              <stringProp name="parameters" />
+              <stringProp name="script">def text = prev.getResponseDataAsString()
+if (!(text.contains('\"success\":true') || text.contains('\"success\": true'))) {
+  AssertionResult.setFailure(true)
+  AssertionResult.setFailureMessage('La respuesta no contiene success=true')
+}</stringProp>
+              <stringProp name="scriptLanguage">groovy</stringProp>
+            </JSR223Assertion>
+            <hashTree />
+            <JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extraer tokens" enabled="true">
+              <stringProp name="JSONPostProcessor.referenceNames">access_token;refresh_token</stringProp>
+              <stringProp name="JSONPostProcessor.jsonPathExprs">$.data.token;$.data.refreshToken</stringProp>
+              <stringProp name="JSONPostProcessor.match_numbers">1;1</stringProp>
+              <stringProp name="JSONPostProcessor.defaultValues">NOT_FOUND;NOT_FOUND</stringProp>
+            </JSONPostProcessor>
+            <hashTree />
+          </hashTree>
+        </hashTree>
+        <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Recorrido completo de lectura" enabled="true" />
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PC-003 - Estadísticas del dashboard" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="">
+              <collectionProp name="Arguments.arguments" />
+            </elementProp>
+            <stringProp name="HTTPSampler.domain">${host}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">${protocol}</stringProp>
+            <stringProp name="HTTPSampler.connect_timeout">${connect_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.response_timeout">${response_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${base_path}/dashboard/stats?companyId=${company_id}</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Código HTTP inesperado</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree />
+            <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Respuesta funcional exitosa" enabled="true">
+              <stringProp name="cacheKey">true</stringProp>
+              <stringProp name="filename" />
+              <stringProp name="parameters" />
+              <stringProp name="script">def text = prev.getResponseDataAsString()
+if (!(text.contains('\"success\":true') || text.contains('\"success\": true'))) {
+  AssertionResult.setFailure(true)
+  AssertionResult.setFailureMessage('La respuesta no contiene success=true')
+}</stringProp>
+              <stringProp name="scriptLanguage">groovy</stringProp>
+            </JSR223Assertion>
+            <hashTree />
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PC-004 - Listado de mascotas" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="">
+              <collectionProp name="Arguments.arguments" />
+            </elementProp>
+            <stringProp name="HTTPSampler.domain">${host}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">${protocol}</stringProp>
+            <stringProp name="HTTPSampler.connect_timeout">${connect_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.response_timeout">${response_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${base_path}/pets?companyId=${company_id}&amp;page=0&amp;size=${page_size}</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Código HTTP inesperado</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree />
+            <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Respuesta funcional exitosa" enabled="true">
+              <stringProp name="cacheKey">true</stringProp>
+              <stringProp name="filename" />
+              <stringProp name="parameters" />
+              <stringProp name="script">def text = prev.getResponseDataAsString()
+if (!(text.contains('\"success\":true') || text.contains('\"success\": true'))) {
+  AssertionResult.setFailure(true)
+  AssertionResult.setFailureMessage('La respuesta no contiene success=true')
+}</stringProp>
+              <stringProp name="scriptLanguage">groovy</stringProp>
+            </JSR223Assertion>
+            <hashTree />
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PC-005 - Detalle de mascota" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="">
+              <collectionProp name="Arguments.arguments" />
+            </elementProp>
+            <stringProp name="HTTPSampler.domain">${host}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">${protocol}</stringProp>
+            <stringProp name="HTTPSampler.connect_timeout">${connect_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.response_timeout">${response_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${base_path}/pets/${pet_id}</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Código HTTP inesperado</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree />
+            <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Respuesta funcional exitosa" enabled="true">
+              <stringProp name="cacheKey">true</stringProp>
+              <stringProp name="filename" />
+              <stringProp name="parameters" />
+              <stringProp name="script">def text = prev.getResponseDataAsString()
+if (!(text.contains('\"success\":true') || text.contains('\"success\": true'))) {
+  AssertionResult.setFailure(true)
+  AssertionResult.setFailureMessage('La respuesta no contiene success=true')
+}</stringProp>
+              <stringProp name="scriptLanguage">groovy</stringProp>
+            </JSR223Assertion>
+            <hashTree />
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PC-006 - Listado de citas" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="">
+              <collectionProp name="Arguments.arguments" />
+            </elementProp>
+            <stringProp name="HTTPSampler.domain">${host}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">${protocol}</stringProp>
+            <stringProp name="HTTPSampler.connect_timeout">${connect_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.response_timeout">${response_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${base_path}/appointments?companyId=${company_id}&amp;page=0&amp;size=${page_size}</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Código HTTP inesperado</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree />
+            <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Respuesta funcional exitosa" enabled="true">
+              <stringProp name="cacheKey">true</stringProp>
+              <stringProp name="filename" />
+              <stringProp name="parameters" />
+              <stringProp name="script">def text = prev.getResponseDataAsString()
+if (!(text.contains('\"success\":true') || text.contains('\"success\": true'))) {
+  AssertionResult.setFailure(true)
+  AssertionResult.setFailureMessage('La respuesta no contiene success=true')
+}</stringProp>
+              <stringProp name="scriptLanguage">groovy</stringProp>
+            </JSR223Assertion>
+            <hashTree />
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PC-007 - Disponibilidad de citas" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="">
+              <collectionProp name="Arguments.arguments" />
+            </elementProp>
+            <stringProp name="HTTPSampler.domain">${host}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">${protocol}</stringProp>
+            <stringProp name="HTTPSampler.connect_timeout">${connect_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.response_timeout">${response_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${base_path}/appointments/availability?empleadoId=${employee_id}&amp;fecha=${appointment_date}&amp;servicioId=${service_id}</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Código HTTP inesperado</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree />
+            <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Respuesta funcional exitosa" enabled="true">
+              <stringProp name="cacheKey">true</stringProp>
+              <stringProp name="filename" />
+              <stringProp name="parameters" />
+              <stringProp name="script">def text = prev.getResponseDataAsString()
+if (!(text.contains('\"success\":true') || text.contains('\"success\": true'))) {
+  AssertionResult.setFailure(true)
+  AssertionResult.setFailureMessage('La respuesta no contiene success=true')
+}</stringProp>
+              <stringProp name="scriptLanguage">groovy</stringProp>
+            </JSR223Assertion>
+            <hashTree />
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PC-008 - Servicios de una mascota" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="">
+              <collectionProp name="Arguments.arguments" />
+            </elementProp>
+            <stringProp name="HTTPSampler.domain">${host}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">${protocol}</stringProp>
+            <stringProp name="HTTPSampler.connect_timeout">${connect_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.response_timeout">${response_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${base_path}/appointments/mascota/${pet_id}/servicios</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Código HTTP inesperado</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree />
+            <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Respuesta funcional exitosa" enabled="true">
+              <stringProp name="cacheKey">true</stringProp>
+              <stringProp name="filename" />
+              <stringProp name="parameters" />
+              <stringProp name="script">def text = prev.getResponseDataAsString()
+if (!(text.contains('\"success\":true') || text.contains('\"success\": true'))) {
+  AssertionResult.setFailure(true)
+  AssertionResult.setFailureMessage('La respuesta no contiene success=true')
+}</stringProp>
+              <stringProp name="scriptLanguage">groovy</stringProp>
+            </JSR223Assertion>
+            <hashTree />
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PC-009 - Listado de historias clínicas" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="">
+              <collectionProp name="Arguments.arguments" />
+            </elementProp>
+            <stringProp name="HTTPSampler.domain">${host}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">${protocol}</stringProp>
+            <stringProp name="HTTPSampler.connect_timeout">${connect_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.response_timeout">${response_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${base_path}/medical-records?companyId=${company_id}&amp;page=0&amp;size=${page_size}</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Código HTTP inesperado</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree />
+            <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Respuesta funcional exitosa" enabled="true">
+              <stringProp name="cacheKey">true</stringProp>
+              <stringProp name="filename" />
+              <stringProp name="parameters" />
+              <stringProp name="script">def text = prev.getResponseDataAsString()
+if (!(text.contains('\"success\":true') || text.contains('\"success\": true'))) {
+  AssertionResult.setFailure(true)
+  AssertionResult.setFailureMessage('La respuesta no contiene success=true')
+}</stringProp>
+              <stringProp name="scriptLanguage">groovy</stringProp>
+            </JSR223Assertion>
+            <hashTree />
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PC-010 - Historia clínica de mascota" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="">
+              <collectionProp name="Arguments.arguments" />
+            </elementProp>
+            <stringProp name="HTTPSampler.domain">${host}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">${protocol}</stringProp>
+            <stringProp name="HTTPSampler.connect_timeout">${connect_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.response_timeout">${response_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${base_path}/medical-records/pet/${pet_id}</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Código HTTP inesperado</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree />
+            <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Respuesta funcional exitosa" enabled="true">
+              <stringProp name="cacheKey">true</stringProp>
+              <stringProp name="filename" />
+              <stringProp name="parameters" />
+              <stringProp name="script">def text = prev.getResponseDataAsString()
+if (!(text.contains('\"success\":true') || text.contains('\"success\": true'))) {
+  AssertionResult.setFailure(true)
+  AssertionResult.setFailureMessage('La respuesta no contiene success=true')
+}</stringProp>
+              <stringProp name="scriptLanguage">groovy</stringProp>
+            </JSR223Assertion>
+            <hashTree />
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PC-012 - Controles preventivos" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="">
+              <collectionProp name="Arguments.arguments" />
+            </elementProp>
+            <stringProp name="HTTPSampler.domain">${host}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">${protocol}</stringProp>
+            <stringProp name="HTTPSampler.connect_timeout">${connect_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.response_timeout">${response_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${base_path}/preventive-controls/pets/${pet_id}</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Código HTTP inesperado</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree />
+            <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Respuesta funcional exitosa" enabled="true">
+              <stringProp name="cacheKey">true</stringProp>
+              <stringProp name="filename" />
+              <stringProp name="parameters" />
+              <stringProp name="script">def text = prev.getResponseDataAsString()
+if (!(text.contains('\"success\":true') || text.contains('\"success\": true'))) {
+  AssertionResult.setFailure(true)
+  AssertionResult.setFailureMessage('La respuesta no contiene success=true')
+}</stringProp>
+              <stringProp name="scriptLanguage">groovy</stringProp>
+            </JSR223Assertion>
+            <hashTree />
+          </hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PC-013 - Historial de pagos" enabled="true">
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="">
+              <collectionProp name="Arguments.arguments" />
+            </elementProp>
+            <stringProp name="HTTPSampler.domain">${host}</stringProp>
+            <stringProp name="HTTPSampler.port">${port}</stringProp>
+            <stringProp name="HTTPSampler.protocol">${protocol}</stringProp>
+            <stringProp name="HTTPSampler.connect_timeout">${connect_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.response_timeout">${response_timeout_ms}</stringProp>
+            <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+            <stringProp name="HTTPSampler.path">${base_path}/payments/history?companyId=${company_id}&amp;page=0&amp;size=${page_size}</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Código HTTP inesperado</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree />
+            <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Respuesta funcional exitosa" enabled="true">
+              <stringProp name="cacheKey">true</stringProp>
+              <stringProp name="filename" />
+              <stringProp name="parameters" />
+              <stringProp name="script">def text = prev.getResponseDataAsString()
+if (!(text.contains('\"success\":true') || text.contains('\"success\": true'))) {
+  AssertionResult.setFailure(true)
+  AssertionResult.setFailureMessage('La respuesta no contiene success=true')
+}</stringProp>
+              <stringProp name="scriptLanguage">groovy</stringProp>
+            </JSR223Assertion>
+            <hashTree />
+          </hashTree>
+          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="PC-011 disponible" enabled="true">
+            <stringProp name="IfController.condition">${__groovy(vars.get('consultation_id') != '0')}</stringProp>
+            <boolProp name="IfController.evaluateAll">false</boolProp>
+            <boolProp name="IfController.useExpression">true</boolProp>
+          </IfController>
+          <hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PC-011 - Consulta clínica por ID" enabled="true">
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="">
+                <collectionProp name="Arguments.arguments" />
+              </elementProp>
+              <stringProp name="HTTPSampler.domain">${host}</stringProp>
+              <stringProp name="HTTPSampler.port">${port}</stringProp>
+              <stringProp name="HTTPSampler.protocol">${protocol}</stringProp>
+              <stringProp name="HTTPSampler.connect_timeout">${connect_timeout_ms}</stringProp>
+              <stringProp name="HTTPSampler.response_timeout">${response_timeout_ms}</stringProp>
+              <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+              <stringProp name="HTTPSampler.path">${base_path}/consultations/${consultation_id}</stringProp>
+              <stringProp name="HTTPSampler.method">GET</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+              <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+            </HTTPSamplerProxy>
+            <hashTree>
+              <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="HTTP 200" enabled="true">
+                <collectionProp name="Asserion.test_strings">
+                  <stringProp name="1">200</stringProp>
+                </collectionProp>
+                <stringProp name="Assertion.custom_message">Código HTTP inesperado</stringProp>
+                <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+                <boolProp name="Assertion.assume_success">false</boolProp>
+                <intProp name="Assertion.test_type">8</intProp>
+              </ResponseAssertion>
+              <hashTree />
+              <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="Respuesta funcional exitosa" enabled="true">
+                <stringProp name="cacheKey">true</stringProp>
+                <stringProp name="filename" />
+                <stringProp name="parameters" />
+                <stringProp name="script">def text = prev.getResponseDataAsString()
+if (!(text.contains('\"success\":true') || text.contains('\"success\": true'))) {
+  AssertionResult.setFailure(true)
+  AssertionResult.setFailureMessage('La respuesta no contiene success=true')
+}</stringProp>
+                <stringProp name="scriptLanguage">groovy</stringProp>
+              </JSR223Assertion>
+              <hashTree />
+            </hashTree>
+          </hashTree>
+        </hashTree>
+        <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Pausa realista" enabled="true">
+          <stringProp name="ConstantTimer.delay">${__P(think_time_ms,500)}</stringProp>
+          <stringProp name="RandomTimer.range">${__P(think_time_range_ms,1000)}</stringProp>
+        </UniformRandomTimer>
+        <hashTree />
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
