@@ -47,6 +47,17 @@ public class ControlPreventivoController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Control programado", service.programar(petId, request)));
     }
 
+    @PutMapping("/{controlId}/schedule")
+    public ResponseEntity<ApiResponse<ControlPreventivoResponse>> reprogramar(@PathVariable Long controlId,
+            @Valid @RequestBody ReprogramarControlPreventivoRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Control reprogramado", service.reprogramar(controlId, request)));
+    }
+
+    @PatchMapping("/{controlId}/cancel")
+    public ResponseEntity<ApiResponse<ControlPreventivoResponse>> cancelar(@PathVariable Long controlId) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Control cancelado", service.cancelar(controlId)));
+    }
+
     @PostMapping("/consultations/{consultationId}/vaccinations")
     public ResponseEntity<ApiResponse<ControlPreventivoResponse>> vacunar(@PathVariable Long consultationId,
             @Valid @RequestBody RegistroVacunacionRequest request) {

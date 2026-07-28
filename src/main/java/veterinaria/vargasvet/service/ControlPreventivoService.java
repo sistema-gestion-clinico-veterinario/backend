@@ -13,6 +13,8 @@ public interface ControlPreventivoService {
     List<ControlPreventivoResponse> listarControles(Long mascotaId);
     List<AplicacionPreventivaResponse> listarAplicaciones(Long mascotaId);
     ControlPreventivoResponse programar(Long mascotaId, ControlPreventivoRequest request);
+    ControlPreventivoResponse reprogramar(Long controlId, ReprogramarControlPreventivoRequest request);
+    ControlPreventivoResponse cancelar(Long controlId);
     ControlPreventivoResponse registrarVacunacion(Long consultaId, RegistroVacunacionRequest request);
     ControlPreventivoResponse registrarDesparasitacion(Long consultaId, RegistroDesparasitacionRequest request);
 }
