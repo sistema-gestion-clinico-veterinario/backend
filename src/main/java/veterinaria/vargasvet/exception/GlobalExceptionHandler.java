@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     public ResponseEntity<ApiResponse<Void>> handleOptimisticLocking(ObjectOptimisticLockingFailureException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ApiResponse<>(false, "La consulta fue modificada por otro usuario. Recarga e intenta de nuevo.", null));
+                .body(new ApiResponse<>(false, "La consulta cambió mientras editabas. Tus datos continúan en pantalla; no recargues la página y vuelve a intentar.", null));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

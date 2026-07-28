@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.*;
 import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
+import veterinaria.vargasvet.domain.enums.EstadoConsulta;
 import veterinaria.vargasvet.domain.enums.TipoControlPreventivo;
 import veterinaria.vargasvet.dto.request.*;
 import veterinaria.vargasvet.dto.response.AplicacionPreventivaResponse;
@@ -102,9 +103,36 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
         Mascota mascota = obtenerMascotaAutorizada(mascotaId);
         TipoVacuna tipoVacuna = validarTipoVacuna(request.getTipo(), request.getTipoVacunaId(), mascota);
         String nombre = tipoVacuna != null ? tipoVacuna.getNombre() : normalizarNombre(request.getNombreControl());
+        validarControlDuplicado(mascota.getId(), request.getTipo(), tipoVacuna, nombre, request.getFechaRecomendada(), null);
         ControlPreventivo control = nuevoControl(mascota, request.getTipo(), tipoVacuna, nombre, request.getFechaRecomendada(), actor());
         auditLogService.log("PROGRAMAR_CONTROL_PREVENTIVO", "Historias Clinicas",
                 "Se programo " + nombre + " para la mascota " + mascota.getNombreCompleto());
+        return toControlResponse(controlRepository.save(control));
+    }
+
+    @Override
+    @Transactional
+    public ControlPreventivoResponse reprogramar(Long controlId, ReprogramarControlPreventivoRequest request) {
+        ControlPreventivo control = obtenerControlAbiertoAutorizado(controlId);
+        validarControlDuplicado(control.getMascota().getId(), control.getTipo(), control.getTipoVacuna(),
+                control.getNombreControl(), request.getFechaRecomendada(), control.getId());
+        control.setFechaRecomendada(request.getFechaRecomendada());
+        control.setCitaSuspende(null);
+        cambiarEstado(control, EstadoControlPreventivo.PROGRAMADO, actor());
+        actualizarEstadoPorFecha(control);
+        auditLogService.log("REPROGRAMAR_CONTROL_PREVENTIVO", "Historias Clinicas",
+                "Se reprogramo " + control.getNombreControl() + " para " + request.getFechaRecomendada());
+        return toControlResponse(controlRepository.save(control));
+    }
+
+    @Override
+    @Transactional
+    public ControlPreventivoResponse cancelar(Long controlId) {
+        ControlPreventivo control = obtenerControlAbiertoAutorizado(controlId);
+        control.setCitaSuspende(null);
+        cambiarEstado(control, EstadoControlPreventivo.CANCELADO, actor());
+        auditLogService.log("CANCELAR_CONTROL_PREVENTIVO", "Historias Clinicas",
+                "Se cancelo " + control.getNombreControl() + " para la mascota " + control.getMascota().getNombreCompleto());
         return toControlResponse(controlRepository.save(control));
     }
 
@@ -114,9 +142,9 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
         Consulta consulta = obtenerConsultaAutorizada(consultaId);
         Mascota mascota = consulta.getHistoriaClinica().getMascota();
         TipoVacuna tipoVacuna = validarTipoVacuna(TipoControlPreventivo.VACUNACION, request.getTipoVacunaId(), mascota);
-        LocalDate proxima = request.getFechaProximaDosis() != null ? request.getFechaProximaDosis()
-                : request.getFechaAplicacion().plusMonths(request.getPeriodicidadMeses());
-        validarFechas(request.getFechaAplicacion(), proxima);
+        LocalDate proxima = calcularProximaFecha(request.getFechaAplicacion(), request.getFechaProximaDosis(),
+                request.getPeriodicidadMeses());
+        validarFechas(mascota, request.getFechaAplicacion(), proxima);
         String actor = actor();
         ControlPreventivo actual = completarControl(request.getControlPreventivoId(), mascota,
                 TipoControlPreventivo.VACUNACION, tipoVacuna.getId(), actor);
@@ -135,9 +163,12 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
         registro.setUpdatedBy(actor);
         vacunaRepository.save(registro);
 
-        ControlPreventivo siguiente = nuevoControl(mascota, TipoControlPreventivo.VACUNACION,
-                tipoVacuna, tipoVacuna.getNombre(), proxima, actor);
-        siguiente = controlRepository.save(siguiente);
+        ControlPreventivo siguiente = encontrarControlDuplicado(mascota.getId(), TipoControlPreventivo.VACUNACION,
+                tipoVacuna, tipoVacuna.getNombre(), proxima);
+        if (siguiente == null) {
+            siguiente = controlRepository.save(nuevoControl(mascota, TipoControlPreventivo.VACUNACION,
+                    tipoVacuna, tipoVacuna.getNombre(), proxima, actor));
+        }
         consulta.setVacunacionAlDia(!hayPendientes(mascota.getId(), TipoControlPreventivo.VACUNACION));
         consultaRepository.save(consulta);
         auditLogService.log("REGISTRAR_VACUNACION", "Historias Clinicas",
@@ -150,9 +181,9 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     public ControlPreventivoResponse registrarDesparasitacion(Long consultaId, RegistroDesparasitacionRequest request) {
         Consulta consulta = obtenerConsultaAutorizada(consultaId);
         Mascota mascota = consulta.getHistoriaClinica().getMascota();
-        LocalDate proxima = request.getFechaProximaAplicacion() != null ? request.getFechaProximaAplicacion()
-                : request.getFechaAplicacion().plusMonths(request.getPeriodicidadMeses());
-        validarFechas(request.getFechaAplicacion(), proxima);
+        LocalDate proxima = calcularProximaFecha(request.getFechaAplicacion(), request.getFechaProximaAplicacion(),
+                request.getPeriodicidadMeses());
+        validarFechas(mascota, request.getFechaAplicacion(), proxima);
         String actor = actor();
         ControlPreventivo actual = completarControl(request.getControlPreventivoId(), mascota,
                 TipoControlPreventivo.DESPARASITACION, null, actor);
@@ -170,9 +201,12 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
         registro.setUpdatedBy(actor);
         desparasitacionRepository.save(registro);
 
-        ControlPreventivo siguiente = nuevoControl(mascota, TipoControlPreventivo.DESPARASITACION,
-                null, request.getProducto().trim(), proxima, actor);
-        siguiente = controlRepository.save(siguiente);
+        ControlPreventivo siguiente = encontrarControlDuplicado(mascota.getId(), TipoControlPreventivo.DESPARASITACION,
+                null, request.getProducto().trim(), proxima);
+        if (siguiente == null) {
+            siguiente = controlRepository.save(nuevoControl(mascota, TipoControlPreventivo.DESPARASITACION,
+                    null, request.getProducto().trim(), proxima, actor));
+        }
         consulta.setDesparasitacionAlDia(!hayPendientes(mascota.getId(), TipoControlPreventivo.DESPARASITACION));
         consultaRepository.save(consulta);
         auditLogService.log("REGISTRAR_DESPARASITACION", "Historias Clinicas",
@@ -245,6 +279,19 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
         Consulta consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada"));
         validarCompany(consulta.getHistoriaClinica().getMascota());
+        if (consulta.getEstado() == EstadoConsulta.CERRADA) {
+            throw new IllegalArgumentException("No se pueden registrar aplicaciones en una consulta cerrada");
+        }
+        if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()
+                && !SecurityUtils.hasAuthority("CLINICAL_RECORD_MANAGE")) {
+            Integer usuarioActual = SecurityUtils.getCurrentUserId();
+            boolean esVeterinarioAsignado = consulta.getVeterinario() != null
+                    && consulta.getVeterinario().getUser() != null
+                    && consulta.getVeterinario().getUser().getId().equals(usuarioActual);
+            if (!esVeterinarioAsignado) {
+                throw new IllegalArgumentException("Solo el veterinario asignado puede registrar la aplicacion");
+            }
+        }
         return consulta;
     }
 
@@ -270,9 +317,61 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
         return vacuna;
     }
 
-    private void validarFechas(LocalDate aplicacion, LocalDate proxima) {
+    private void validarFechas(Mascota mascota, LocalDate aplicacion, LocalDate proxima) {
         if (aplicacion.isAfter(AppClock.today())) throw new IllegalArgumentException("La fecha de aplicacion no puede ser futura");
-        if (!proxima.isAfter(aplicacion)) throw new IllegalArgumentException("La proxima aplicacion debe ser posterior");
+        if (mascota.getFechaNacimiento() != null && aplicacion.isBefore(mascota.getFechaNacimiento())) {
+            throw new IllegalArgumentException("La fecha de aplicacion no puede ser anterior al nacimiento de la mascota");
+        }
+        if (proxima != null && !proxima.isAfter(aplicacion)) {
+            throw new IllegalArgumentException("La proxima aplicacion debe ser posterior");
+        }
+    }
+
+    private LocalDate calcularProximaFecha(LocalDate aplicacion, LocalDate fechaExplicita,
+                                           Integer periodicidadMeses) {
+        if (fechaExplicita != null) return fechaExplicita;
+        if (periodicidadMeses == null) {
+            throw new IllegalArgumentException("Indique la proxima fecha o una periodicidad");
+        }
+        return aplicacion.plusMonths(periodicidadMeses);
+    }
+
+    private ControlPreventivo obtenerControlAbiertoAutorizado(Long id) {
+        ControlPreventivo control = controlRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Control preventivo no encontrado"));
+        validarCompany(control.getMascota());
+        if (!ESTADOS_ABIERTOS.contains(control.getEstado())) {
+            throw new IllegalArgumentException("El control ya se encuentra cerrado");
+        }
+        return control;
+    }
+
+    private void validarControlDuplicado(Long mascotaId, TipoControlPreventivo tipo, TipoVacuna vacuna,
+                                         String nombre, LocalDate fecha, Long controlExcluido) {
+        boolean duplicado = vacuna != null
+                ? controlRepository.existsByMascotaIdAndTipoVacunaIdAndFechaRecomendadaAndEstadoIn(
+                        mascotaId, vacuna.getId(), fecha, ESTADOS_ABIERTOS)
+                : controlRepository.existsByMascotaIdAndTipoAndNombreControlIgnoreCaseAndFechaRecomendadaAndEstadoIn(
+                        mascotaId, tipo, nombre, fecha, ESTADOS_ABIERTOS);
+        if (duplicado && controlExcluido == null) {
+            throw new IllegalArgumentException("Ya existe un control abierto igual para la misma fecha");
+        }
+        if (duplicado && controlExcluido != null) {
+            boolean esElMismo = controlRepository.findById(controlExcluido)
+                    .map(c -> c.getFechaRecomendada().equals(fecha)).orElse(false);
+            if (!esElMismo) throw new IllegalArgumentException("Ya existe un control abierto igual para la misma fecha");
+        }
+    }
+
+    private ControlPreventivo encontrarControlDuplicado(Long mascotaId, TipoControlPreventivo tipo,
+                                                        TipoVacuna vacuna, String nombre, LocalDate fecha) {
+        return controlRepository.findByMascotaIdOrderByFechaRecomendadaDesc(mascotaId).stream()
+                .filter(c -> ESTADOS_ABIERTOS.contains(c.getEstado()))
+                .filter(c -> c.getTipo() == tipo && c.getFechaRecomendada().equals(fecha))
+                .filter(c -> vacuna != null
+                        ? c.getTipoVacuna() != null && vacuna.getId().equals(c.getTipoVacuna().getId())
+                        : c.getNombreControl().equalsIgnoreCase(nombre))
+                .findFirst().orElse(null);
     }
 
     private String normalizarNombre(String nombre) {

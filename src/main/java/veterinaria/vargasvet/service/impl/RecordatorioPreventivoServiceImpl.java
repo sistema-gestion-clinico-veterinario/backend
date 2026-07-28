@@ -43,7 +43,9 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
         for (ControlPreventivo control : candidatos) {
             TipoAvisoRecordatorio tipoAviso = determinarAviso(control, hoy);
             actualizarEstado(control, hoy);
-            if (tipoAviso == null || recordatorioRepository.existsByControlPreventivoIdAndTipoAviso(control.getId(), tipoAviso)) {
+            if (tipoAviso == null || recordatorioRepository
+                    .existsByControlPreventivoIdAndTipoAvisoAndFechaProgramada(
+                            control.getId(), tipoAviso, control.getFechaRecomendada())) {
                 continue;
             }
             Long apoderadoId = control.getMascota().getApoderado().getId();
@@ -51,11 +53,7 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
                     .add(new AvisoPendiente(control, tipoAviso));
         }
 
-        LocalDateTime limiteFrecuencia = AppClock.now().minusDays(7);
         porApoderado.forEach((apoderadoId, avisos) -> {
-            if (recordatorioRepository.countByApoderadoIdAndFechaEnvioAfter(apoderadoId, limiteFrecuencia) > 0) {
-                return;
-            }
             enviarConsolidado(avisos, hoy);
         });
     }
@@ -102,8 +100,8 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
 
     private TipoAvisoRecordatorio determinarAviso(ControlPreventivo control, LocalDate hoy) {
         LocalDate fecha = control.getFechaRecomendada();
-        if (!hoy.isBefore(fecha.plusDays(7))) return TipoAvisoRecordatorio.ATRASADO;
-        if (!hoy.isBefore(fecha)) return TipoAvisoRecordatorio.PENDIENTE;
+        if (hoy.isAfter(fecha)) return TipoAvisoRecordatorio.ATRASADO;
+        if (hoy.isEqual(fecha)) return TipoAvisoRecordatorio.PENDIENTE;
         if (!hoy.isBefore(fecha.minusDays(7))) return TipoAvisoRecordatorio.PROXIMO;
         return null;
     }

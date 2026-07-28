@@ -16,6 +16,12 @@ public interface ControlPreventivoRepository extends JpaRepository<ControlPreven
     List<ControlPreventivo> findByCitaSuspendeId(Long citaId);
     boolean existsByMascotaIdAndTipoAndEstadoIn(Long mascotaId, TipoControlPreventivo tipo,
                                                 Collection<EstadoControlPreventivo> estados);
+    boolean existsByMascotaIdAndTipoVacunaIdAndFechaRecomendadaAndEstadoIn(
+            Long mascotaId, Long tipoVacunaId, LocalDate fechaRecomendada,
+            Collection<EstadoControlPreventivo> estados);
+    boolean existsByMascotaIdAndTipoAndNombreControlIgnoreCaseAndFechaRecomendadaAndEstadoIn(
+            Long mascotaId, TipoControlPreventivo tipo, String nombreControl, LocalDate fechaRecomendada,
+            Collection<EstadoControlPreventivo> estados);
 
     @Query("SELECT cp FROM ControlPreventivo cp " +
            "JOIN FETCH cp.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +

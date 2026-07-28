@@ -42,7 +42,7 @@ public class ConsultaServiceImpl implements ConsultaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + id));
 
         if (!consulta.getVersion().equals(request.getVersion())) {
-            throw new IllegalArgumentException("La consulta ha sido modificada por otro usuario. Por favor, refresque la página.");
+            throw new IllegalArgumentException("La consulta cambió mientras editabas. Tus datos continúan en pantalla; no recargues la página y vuelve a intentar.");
         }
 
         boolean puedeModificarPorPermiso = SecurityUtils.hasAuthority("CLINICAL_RECORD_MANAGE");
@@ -131,7 +131,7 @@ public class ConsultaServiceImpl implements ConsultaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + id));
 
         if (!consulta.getVersion().equals(request.getVersion())) {
-            throw new IllegalArgumentException("La consulta ha sido modificada por otro usuario. Por favor, refresque la página.");
+            throw new IllegalArgumentException("La consulta cambió mientras editabas. Tus datos continúan en pantalla; no recargues la página y vuelve a intentar.");
         }
 
         boolean puedeCerrarPorPermiso = SecurityUtils.hasAuthority("CLINICAL_RECORD_MANAGE");
