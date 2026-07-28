@@ -2,6 +2,7 @@ package veterinaria.vargasvet.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.FutureOrPresent;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.TipoControlPreventivo;
 
@@ -15,5 +16,6 @@ public class ControlPreventivoRequest {
     @Size(max = 100)
     private String nombreControl;
     @NotNull
+    @FutureOrPresent
     private LocalDate fechaRecomendada;
 }
