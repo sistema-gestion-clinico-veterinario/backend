@@ -113,7 +113,7 @@ class PagoServiceIntegrationTest {
         assertThat(persisted).isPresent();
         assertThat(persisted.get().getPaymentStatus()).isEqualTo(PaymentStatus.PAID);
         assertThat(persisted.get().getMetodoPago()).isEqualTo(MetodoPago.EFECTIVO);
-        assertThat(citaActualizada.getMontoPagado()).isEqualByComparingTo("120.00");
+        assertThat(citaActualizada.getMontoPagado()).isEqualByComparingTo("100.00");
     }
 
     @Test

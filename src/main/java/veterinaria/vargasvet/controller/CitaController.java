@@ -12,6 +12,7 @@ import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.request.CitaReprogramacionRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
+import veterinaria.vargasvet.dto.response.AgendaCountersResponse;
 import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.CitaService;
 import veterinaria.vargasvet.service.AuditLogService;
@@ -44,15 +45,30 @@ public class CitaController {
     public ResponseEntity<ApiResponse<Page<CitaResponse>>> listar(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
             @RequestParam(required = false) EstadoCita estado,
             @RequestParam(required = false) Long veterinarioId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         accesoValidator.validarLeer("VISTA_CITAS_AGENDA");
-        Page<CitaResponse> resultado = citaService.listar(companyId, fecha, estado, veterinarioId, page, size);
+        Page<CitaResponse> resultado = citaService.listar(
+                companyId, fecha, fechaDesde, fechaHasta, estado, veterinarioId, page, size);
         auditLogService.log(companyId, "CONSULTAR_CITAS", "Citas", "Consultó la lista de citas.");
         String mensaje = resultado.isEmpty() ? "No se encontraron citas" : "Citas recuperadas con éxito";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));
+    }
+
+    @GetMapping("/counters")
+    public ResponseEntity<ApiResponse<AgendaCountersResponse>> obtenerContadores(
+            @RequestParam(required = false) Integer companyId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+            @RequestParam(required = false) Long veterinarioId) {
+        accesoValidator.validarLeer("VISTA_CITAS_AGENDA");
+        AgendaCountersResponse resultado = citaService.obtenerContadores(
+                companyId, fechaDesde, fechaHasta, veterinarioId);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Contadores de agenda recuperados con éxito", resultado));
     }
 
     @PostMapping
