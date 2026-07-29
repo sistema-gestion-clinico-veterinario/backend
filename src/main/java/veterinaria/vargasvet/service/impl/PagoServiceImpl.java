@@ -72,6 +72,7 @@ public class PagoServiceImpl implements PagoService {
         BigDecimal total = cita.getTotalServicio() != null ? cita.getTotalServicio() : BigDecimal.ZERO;
 
         BigDecimal montoRecibido = null;
+        BigDecimal montoAplicado = total;
         BigDecimal cambio = null;
         PaymentStatus estado = PaymentStatus.PAID;
         String mercadoPagoId = null;
@@ -82,6 +83,7 @@ public class PagoServiceImpl implements PagoService {
                 throw new IllegalArgumentException("El monto recibido es obligatorio para pagos en efectivo");
             }
             montoRecibido = request.getMontoRecibido();
+            montoAplicado = montoRecibido.min(total);
             if (montoRecibido.compareTo(total) >= 0) {
                 cambio = montoRecibido.subtract(total);
             } else {
@@ -128,7 +130,7 @@ public class PagoServiceImpl implements PagoService {
 
         Purchase savedPago = purchaseRepository.save(pago);
 
-        cita.setMontoPagado(montoRecibido != null ? montoRecibido : total);
+        cita.setMontoPagado(montoAplicado);
         citaRepository.save(cita);
 
         auditLogService.log(

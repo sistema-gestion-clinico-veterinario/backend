@@ -56,8 +56,7 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
                     "AND (CAST(:fechaInicio AS localdatetime) IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
                     "AND (CAST(:fechaFin AS localdatetime) IS NULL OR c.fechaHoraInicio < :fechaFin) " +
                     "AND (CAST(:estado AS text) IS NULL OR c.estado = :estado) " +
-                    "AND (:veterinarioId IS NULL OR c.empleado.id = :veterinarioId) " +
-                    "ORDER BY c.fechaHoraInicio DESC",
+                    "AND (:veterinarioId IS NULL OR c.empleado.id = :veterinarioId)",
             countQuery = "SELECT COUNT(c) FROM Cita c JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
                          "WHERE u.company.id = :companyId AND c.eliminada = false " +
                         "AND (CAST(:fechaInicio AS localdatetime) IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
@@ -70,6 +69,18 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
                       @Param("estado") EstadoCita estado,
                       @Param("veterinarioId") Long veterinarioId,
                       Pageable pageable);
+
+    @Query("SELECT c.estado, COUNT(c) FROM Cita c " +
+           "JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
+           "WHERE u.company.id = :companyId AND c.eliminada = false " +
+           "AND c.fechaHoraInicio >= :fechaInicio AND c.fechaHoraInicio < :fechaFin " +
+           "AND (:veterinarioId IS NULL OR c.empleado.id = :veterinarioId) " +
+           "GROUP BY c.estado")
+    java.util.List<Object[]> contarPorEstado(
+            @Param("companyId") Integer companyId,
+            @Param("fechaInicio") LocalDateTime fechaInicio,
+            @Param("fechaFin") LocalDateTime fechaFin,
+            @Param("veterinarioId") Long veterinarioId);
 
     @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.user.company.id = :companyId AND c.eliminada = false")
     long countByCompanyId(@Param("companyId") Integer companyId);

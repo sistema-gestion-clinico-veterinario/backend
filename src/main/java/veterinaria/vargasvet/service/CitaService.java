@@ -5,6 +5,7 @@ import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.request.CitaReprogramacionRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
+import veterinaria.vargasvet.dto.response.AgendaCountersResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -12,7 +13,20 @@ import java.util.List;
 public interface CitaService {
     CitaResponse createCita(CitaRequest request);
     Long iniciarAtencion(Long id);
-    Page<CitaResponse> listar(Integer companyId, LocalDate fecha, EstadoCita estado, Long veterinarioId, int page, int size);
+    Page<CitaResponse> listar(
+            Integer companyId,
+            LocalDate fecha,
+            LocalDate fechaDesde,
+            LocalDate fechaHasta,
+            EstadoCita estado,
+            Long veterinarioId,
+            int page,
+            int size);
+    AgendaCountersResponse obtenerContadores(
+            Integer companyId,
+            LocalDate fechaDesde,
+            LocalDate fechaHasta,
+            Long veterinarioId);
     void cancelarCita(Long id, String motivo);
     void eliminarCita(Long id);
     CitaResponse actualizarCita(Long id, CitaRequest request);

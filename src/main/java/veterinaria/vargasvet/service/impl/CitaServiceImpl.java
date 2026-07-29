@@ -14,6 +14,7 @@ import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
 import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.request.CitaReprogramacionRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
+import veterinaria.vargasvet.dto.response.AgendaCountersResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.mapper.CitaMapper;
 import veterinaria.vargasvet.repository.*;
@@ -316,10 +317,34 @@ public class CitaServiceImpl implements CitaService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<CitaResponse> listar(Integer companyId, LocalDate fecha, EstadoCita estado, Long veterinarioId, int page, int size) {
+    public Page<CitaResponse> listar(
+            Integer companyId,
+            LocalDate fecha,
+            LocalDate fechaDesde,
+            LocalDate fechaHasta,
+            EstadoCita estado,
+            Long veterinarioId,
+            int page,
+            int size) {
+        if (fecha != null && (fechaDesde != null || fechaHasta != null)) {
+            throw new IllegalArgumentException("Use fecha o un rango de fechas, no ambos");
+        }
+        if ((fechaDesde == null) != (fechaHasta == null)) {
+            throw new IllegalArgumentException("Debe indicar fechaDesde y fechaHasta");
+        }
+        if (fechaDesde != null && fechaDesde.isAfter(fechaHasta)) {
+            throw new IllegalArgumentException("La fecha inicial no puede ser posterior a la fecha final");
+        }
+        if (fechaDesde != null
+                && java.time.temporal.ChronoUnit.DAYS.between(fechaDesde, fechaHasta) > 89) {
+            throw new IllegalArgumentException("El rango de la agenda no puede superar 90 días");
+        }
+
         Integer resolvedCompanyId = resolverCompanyId(companyId);
-        LocalDateTime fechaInicio = fecha != null ? fecha.atStartOfDay() : null;
-        LocalDateTime fechaFin = fecha != null ? fecha.plusDays(1).atStartOfDay() : null;
+        LocalDate effectiveDesde = fecha != null ? fecha : fechaDesde;
+        LocalDate effectiveHasta = fecha != null ? fecha : fechaHasta;
+        LocalDateTime fechaInicio = effectiveDesde != null ? effectiveDesde.atStartOfDay() : null;
+        LocalDateTime fechaFin = effectiveHasta != null ? effectiveHasta.plusDays(1).atStartOfDay() : null;
         Long filteredVeterinarioId = veterinarioId;
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             if (!accesoValidator.puedeLeer("CITA_VER_TODAS") && filteredVeterinarioId == null) {
@@ -329,9 +354,64 @@ public class CitaServiceImpl implements CitaService {
             }
         }
         
-        return citaRepository.buscar(resolvedCompanyId, fechaInicio, fechaFin, estado, filteredVeterinarioId,
-                PageRequest.of(page, size, Sort.unsorted()))
+        Sort sort = fechaDesde != null
+                ? Sort.by(Sort.Direction.ASC, "fechaHoraInicio")
+                : Sort.by(Sort.Direction.DESC, "fechaHoraInicio");
+        return citaRepository.buscar(
+                resolvedCompanyId, fechaInicio, fechaFin, estado, filteredVeterinarioId,
+                PageRequest.of(page, size, sort))
                 .map(citaMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AgendaCountersResponse obtenerContadores(
+            Integer companyId,
+            LocalDate fechaDesde,
+            LocalDate fechaHasta,
+            Long veterinarioId) {
+        if (fechaDesde == null || fechaHasta == null) {
+            throw new IllegalArgumentException("Debe indicar fechaDesde y fechaHasta");
+        }
+        if (fechaDesde.isAfter(fechaHasta)) {
+            throw new IllegalArgumentException("La fecha inicial no puede ser posterior a la fecha final");
+        }
+        if (java.time.temporal.ChronoUnit.DAYS.between(fechaDesde, fechaHasta) > 89) {
+            throw new IllegalArgumentException("El rango de la agenda no puede superar 90 días");
+        }
+
+        Integer resolvedCompanyId = resolverCompanyId(companyId);
+        Long filteredVeterinarioId = veterinarioId;
+        if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()
+                && !accesoValidator.puedeLeer("CITA_VER_TODAS")
+                && filteredVeterinarioId == null) {
+            filteredVeterinarioId = empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail())
+                    .map(Empleado::getId)
+                    .orElse(-1L);
+        }
+
+        long programadas = 0;
+        long enProceso = 0;
+        long completadas = 0;
+        long canceladas = 0;
+        for (Object[] fila : citaRepository.contarPorEstado(
+                resolvedCompanyId,
+                fechaDesde.atStartOfDay(),
+                fechaHasta.plusDays(1).atStartOfDay(),
+                filteredVeterinarioId)) {
+            EstadoCita estado = (EstadoCita) fila[0];
+            long total = (Long) fila[1];
+            switch (estado) {
+                case PROGRAMADA -> programadas = total;
+                case EN_PROCESO -> enProceso = total;
+                case COMPLETADA -> completadas = total;
+                case CANCELADA -> canceladas = total;
+                default -> {
+                    // Los demás estados continúan visibles en la agenda, pero no tienen contador propio.
+                }
+            }
+        }
+        return new AgendaCountersResponse(programadas, enProceso, completadas, canceladas);
     }
 
     @Override
