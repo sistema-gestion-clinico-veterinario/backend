@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
+//este es el proyecto
 @Service
 @RequiredArgsConstructor
 public class ReportesClinicosServiceImpl implements ReportesClinicosService {
@@ -51,8 +51,8 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
         if (hasta.isBefore(desde)) {
             throw new IllegalArgumentException("La fecha hasta no puede ser anterior a la fecha desde");
         }
-        if (ChronoUnit.DAYS.between(desde, hasta) > 730) {
-            throw new IllegalArgumentException("El rango máximo permitido para reportes es de 24 meses");
+        if (ChronoUnit.DAYS.between(desde, hasta) > 1110) {
+            throw new IllegalArgumentException("El rango máximo permitido para reportes es de 36 meses");
         }
 
         if (targetCompanyId == null) {
