@@ -370,14 +370,13 @@ public class CitaServiceImpl implements CitaService {
             LocalDate fechaDesde,
             LocalDate fechaHasta,
             Long veterinarioId) {
-        if (fechaDesde == null || fechaHasta == null) {
-            throw new IllegalArgumentException("Debe indicar fechaDesde y fechaHasta");
-        }
-        if (fechaDesde.isAfter(fechaHasta)) {
-            throw new IllegalArgumentException("La fecha inicial no puede ser posterior a la fecha final");
-        }
-        if (java.time.temporal.ChronoUnit.DAYS.between(fechaDesde, fechaHasta) > 89) {
-            throw new IllegalArgumentException("El rango de la agenda no puede superar 90 días");
+        if (fechaDesde != null && fechaHasta != null) {
+            if (fechaDesde.isAfter(fechaHasta)) {
+                throw new IllegalArgumentException("La fecha inicial no puede ser posterior a la fecha final");
+            }
+            if (java.time.temporal.ChronoUnit.DAYS.between(fechaDesde, fechaHasta) > 89) {
+                throw new IllegalArgumentException("El rango de la agenda no puede superar 90 días");
+            }
         }
 
         Integer resolvedCompanyId = resolverCompanyId(companyId);
@@ -390,14 +389,17 @@ public class CitaServiceImpl implements CitaService {
                     .orElse(-1L);
         }
 
+        LocalDateTime fechaInicio = fechaDesde != null ? fechaDesde.atStartOfDay() : null;
+        LocalDateTime fechaFin = fechaHasta != null ? fechaHasta.plusDays(1).atStartOfDay() : null;
+
         long programadas = 0;
         long enProceso = 0;
         long completadas = 0;
         long canceladas = 0;
         for (Object[] fila : citaRepository.contarPorEstado(
                 resolvedCompanyId,
-                fechaDesde.atStartOfDay(),
-                fechaHasta.plusDays(1).atStartOfDay(),
+                fechaInicio,
+                fechaFin,
                 filteredVeterinarioId)) {
             EstadoCita estado = (EstadoCita) fila[0];
             long total = (Long) fila[1];

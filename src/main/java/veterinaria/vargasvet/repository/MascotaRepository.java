@@ -56,4 +56,15 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
     long countByCompanyId(@Param("companyId") Integer companyId);
 
     Optional<Mascota> findByUuid(String uuid);
+
+    @Query("SELECT m.especie, COUNT(m) FROM Mascota m " +
+           "JOIN m.apoderado a JOIN a.user u " +
+           "WHERE u.company.id = :companyId AND m.activo = true " +
+           "GROUP BY m.especie")
+    List<Object[]> countByEspecie(@Param("companyId") Integer companyId);
+
+    @Query("SELECT m.fechaNacimiento FROM Mascota m " +
+           "JOIN m.apoderado a JOIN a.user u " +
+           "WHERE u.company.id = :companyId AND m.activo = true AND m.fechaNacimiento IS NOT NULL")
+    List<java.time.LocalDate> findFechasNacimientoByCompany(@Param("companyId") Integer companyId);
 }

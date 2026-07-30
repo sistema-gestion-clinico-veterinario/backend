@@ -62,8 +62,8 @@ public class CitaController {
     @GetMapping("/counters")
     public ResponseEntity<ApiResponse<AgendaCountersResponse>> obtenerContadores(
             @RequestParam(required = false) Integer companyId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
             @RequestParam(required = false) Long veterinarioId) {
         accesoValidator.validarLeer("VISTA_CITAS_AGENDA");
         AgendaCountersResponse resultado = citaService.obtenerContadores(

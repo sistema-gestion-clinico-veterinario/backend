@@ -73,7 +73,8 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     @Query("SELECT c.estado, COUNT(c) FROM Cita c " +
            "JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
            "WHERE u.company.id = :companyId AND c.eliminada = false " +
-           "AND c.fechaHoraInicio >= :fechaInicio AND c.fechaHoraInicio < :fechaFin " +
+           "AND (:fechaInicio IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
+           "AND (:fechaFin IS NULL OR c.fechaHoraInicio < :fechaFin) " +
            "AND (:veterinarioId IS NULL OR c.empleado.id = :veterinarioId) " +
            "GROUP BY c.estado")
     java.util.List<Object[]> contarPorEstado(
