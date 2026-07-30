@@ -15,4 +15,16 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long> {
 
     @Query("SELECT c.historiaClinica.id, MAX(c.fechaConsulta) FROM Consulta c WHERE c.historiaClinica.id IN :ids GROUP BY c.historiaClinica.id")
     List<Object[]> findUltimasFechasConsulta(@Param("ids") List<Long> ids);
+
+    @Query("SELECT c.tipoConsulta, COUNT(c) FROM Consulta c " +
+           "JOIN c.historiaClinica h JOIN h.mascota m JOIN m.apoderado a JOIN a.user u " +
+           "WHERE u.company.id = :companyId " +
+           "GROUP BY c.tipoConsulta")
+    List<Object[]> countByTipoConsulta(@Param("companyId") Integer companyId);
+
+    @Query("SELECT c.estado, COUNT(c) FROM Consulta c " +
+           "JOIN c.historiaClinica h JOIN h.mascota m JOIN m.apoderado a JOIN a.user u " +
+           "WHERE u.company.id = :companyId " +
+           "GROUP BY c.estado")
+    List<Object[]> countPorEstado(@Param("companyId") Integer companyId);
 }
