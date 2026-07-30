@@ -27,4 +27,16 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long> {
            "WHERE u.company.id = :companyId " +
            "GROUP BY c.estado")
     List<Object[]> countPorEstado(@Param("companyId") Integer companyId);
+
+    @Query("SELECT CONCAT(u.nombre, ' ', u.apellido), COUNT(c) FROM Consulta c " +
+           "JOIN c.veterinario e JOIN e.user u " +
+           "WHERE u.company.id = :companyId " +
+           "GROUP BY u.nombre, u.apellido")
+    List<Object[]> countByVeterinario(@Param("companyId") Integer companyId);
+
+    @Query("SELECT COUNT(c) FROM Consulta c " +
+           "JOIN c.historiaClinica h JOIN h.mascota m JOIN m.apoderado a JOIN a.user u " +
+           "WHERE u.company.id = :companyId " +
+           "GROUP BY m.id")
+    List<Long> countConsultasPorMascota(@Param("companyId") Integer companyId);
 }
