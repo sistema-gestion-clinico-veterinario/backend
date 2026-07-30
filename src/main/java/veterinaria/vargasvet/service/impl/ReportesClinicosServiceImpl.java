@@ -270,7 +270,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
     }
 
     private String nombreVeterinario(Cita cita) {
-        if (cita.getEmpleado().getUser() == null) return "Sin asignar";
+        if (cita.getEmpleado() == null || cita.getEmpleado().getUser() == null) return "Sin asignar";
         String nombre = cita.getEmpleado().getUser().getNombre();
         String apellido = cita.getEmpleado().getUser().getApellido();
         return ((nombre != null ? nombre : "") + " " + (apellido != null ? apellido : "")).trim();
