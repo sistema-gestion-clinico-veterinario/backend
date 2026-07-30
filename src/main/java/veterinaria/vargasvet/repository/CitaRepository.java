@@ -7,12 +7,35 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.Cita;
+import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface CitaRepository extends JpaRepository<Cita, Long> {
+
+    @Query("SELECT DISTINCT c FROM Cita c " +
+           "JOIN FETCH c.mascota m " +
+           "JOIN FETCH m.apoderado a " +
+           "JOIN FETCH a.user u " +
+           "JOIN FETCH c.empleado e " +
+           "LEFT JOIN FETCH e.user eu " +
+           "LEFT JOIN FETCH c.servicio s " +
+           "LEFT JOIN FETCH c.consulta co " +
+           "WHERE u.company.id = :companyId " +
+           "AND c.eliminada = false " +
+           "AND c.fechaHoraInicio >= :fechaInicio " +
+           "AND c.fechaHoraInicio < :fechaFin " +
+           "AND (:veterinarioId IS NULL OR e.id = :veterinarioId) " +
+           "AND (:especie IS NULL OR m.especie = :especie) " +
+           "ORDER BY c.fechaHoraInicio")
+    List<Cita> findForClinicalReport(@Param("companyId") Integer companyId,
+                                     @Param("fechaInicio") LocalDateTime fechaInicio,
+                                     @Param("fechaFin") LocalDateTime fechaFin,
+                                     @Param("veterinarioId") Long veterinarioId,
+                                     @Param("especie") EspecieMascota especie);
 
     @Query("SELECT COUNT(c) > 0 FROM Cita c WHERE c.empleado.id = :veterinarioId " +
            "AND c.estado NOT IN ('CANCELADA', 'ELIMINADA') AND c.eliminada = false " +
@@ -160,4 +183,11 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     java.util.List<Cita> findServiciosNoMedicosParaMascota(@Param("mascotaId") Long mascotaId);
 
     boolean existsByServicioId(@Param("servicioId") Long servicioId);
+
+    @Query("SELECT s.nombre, COUNT(c) FROM Cita c " +
+           "JOIN c.servicio s " +
+           "JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
+           "WHERE u.company.id = :companyId AND c.eliminada = false AND c.estado NOT IN ('CANCELADA', 'ELIMINADA') " +
+           "GROUP BY s.nombre")
+    java.util.List<Object[]> countByServicio(@Param("companyId") Integer companyId);
 }
