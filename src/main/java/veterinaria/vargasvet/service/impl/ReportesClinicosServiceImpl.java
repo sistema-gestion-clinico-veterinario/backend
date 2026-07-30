@@ -70,7 +70,14 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
         List<Cita> anteriores = citaRepository.findForClinicalReport(
                 targetCompanyId, anteriorDesde.atStartOfDay(), desde.atStartOfDay(), veterinarioId, especie);
 
-        Set<Mascota> pacientes = actuales.stream().map(Cita::getMascota).collect(Collectors.toSet());
+        List<Mascota> pacientes = new ArrayList<>(actuales.stream()
+                .map(Cita::getMascota)
+                .collect(Collectors.toMap(
+                        Mascota::getId,
+                        Function.identity(),
+                        (primera, repetida) -> primera,
+                        LinkedHashMap::new))
+                .values());
 
         return ReportesClinicosDTO.builder()
                 .fechaDesde(desde.toString())
@@ -181,7 +188,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
         return values.entrySet().stream().map(e -> item(e.getKey(), e.getValue())).toList();
     }
 
-    private List<ReportesClinicosDTO.ItemCount> calcularRangosEdad(Set<Mascota> mascotas, LocalDate referencia) {
+    private List<ReportesClinicosDTO.ItemCount> calcularRangosEdad(List<Mascota> mascotas, LocalDate referencia) {
         Map<String, Long> rangos = new LinkedHashMap<>();
         rangos.put("Cachorro (0-1 año)", 0L);
         rangos.put("Joven (1-3 años)", 0L);
@@ -248,7 +255,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
     }
 
     private List<ReportesClinicosDTO.ItemCount> groupMascotas(
-            Set<Mascota> mascotas, Function<Mascota, String> labelFn) {
+            List<Mascota> mascotas, Function<Mascota, String> labelFn) {
         return mascotas.stream()
                 .collect(Collectors.groupingBy(labelFn, Collectors.counting()))
                 .entrySet().stream()
