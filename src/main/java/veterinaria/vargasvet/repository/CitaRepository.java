@@ -32,7 +32,7 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
             "AND c.eliminada = false " +
             "AND c.fechaHoraInicio >= :fechaInicio " +
             "AND c.fechaHoraInicio < :fechaFin " +
-            "AND (CAST(:veterinarioId AS long) IS NULL OR e.id = :veterinarioId) " +
+            "AND (CAST(:veterinarioId AS string) IS NULL OR e.id = :veterinarioId) " +
             "AND (CAST(:especie AS string) IS NULL OR m.especie = :especie) " +
             "ORDER BY c.fechaHoraInicio")
     List<Cita> findForClinicalReport(@Param("companyId") Integer companyId,
@@ -49,11 +49,10 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     @Query("SELECT c.estado AS estado, COUNT(c) AS total FROM Cita c " +
             "JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
             "WHERE u.company.id = :companyId AND c.eliminada = false " +
-            "AND (CAST(:fechaInicio AS localdatetime) IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
-            "AND (CAST(:fechaFin AS localdatetime) IS NULL OR c.fechaHoraInicio < :fechaFin) " +
-            "AND (CAST(:veterinarioId AS long) IS NULL OR c.empleado.id = :veterinarioId) " +
+            "AND (CAST(:fechaInicio AS string) IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
+            "AND (CAST(:fechaFin AS string) IS NULL OR c.fechaHoraInicio < :fechaFin) " +
+            "AND (CAST(:veterinarioId AS string) IS NULL OR c.empleado.id = :veterinarioId) " +
             "GROUP BY c.estado")
-
     List<EstadoCount> contarPorEstado(@Param("companyId") Integer companyId,
                                       @Param("fechaInicio") LocalDateTime fechaInicio,
                                       @Param("fechaFin") LocalDateTime fechaFin,
@@ -72,7 +71,7 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     List<ServicioCount> countByServicio(@Param("companyId") Integer companyId);
 
     @Query("SELECT COUNT(c) > 0 FROM Cita c WHERE c.empleado.id = :veterinarioId " +
-            "AND (CAST(:citaId AS long) IS NULL OR c.id <> :citaId) " +
+            "AND (CAST(:citaId AS string) IS NULL OR c.id <> :citaId) " +
             "AND " + ESTADOS_NO_ACTIVOS + " " +
             "AND c.fechaHoraInicio < :fechaHoraFin " +
             "AND c.fechaHoraFin > :fechaHoraInicio")
@@ -81,8 +80,21 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
                                              @Param("fechaHoraFin") LocalDateTime fechaHoraFin,
                                              @Param("citaId") Long citaId);
 
+    default boolean existsOverlappingCita(Long veterinarioId,
+                                          LocalDateTime fechaHoraInicio,
+                                          LocalDateTime fechaHoraFin) {
+        return existsOverlappingCitaVeterinario(veterinarioId, fechaHoraInicio, fechaHoraFin, null);
+    }
+
+    default boolean existsOverlappingCitaExcludeSelf(Long veterinarioId,
+                                                     LocalDateTime fechaHoraInicio,
+                                                     LocalDateTime fechaHoraFin,
+                                                     Long citaId) {
+        return existsOverlappingCitaVeterinario(veterinarioId, fechaHoraInicio, fechaHoraFin, citaId);
+    }
+
     @Query("SELECT COUNT(c) > 0 FROM Cita c WHERE c.mascota.id = :mascotaId " +
-            "AND (CAST(:citaId AS long) IS NULL OR c.id <> :citaId) " +
+            "AND (CAST(:citaId AS string) IS NULL OR c.id <> :citaId) " +
             "AND " + ESTADOS_NO_ACTIVOS + " " +
             "AND c.fechaHoraInicio < :fechaHoraFin " +
             "AND c.fechaHoraFin > :fechaHoraInicio")
@@ -91,19 +103,32 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
                                          @Param("fechaHoraFin") LocalDateTime fechaHoraFin,
                                          @Param("citaId") Long citaId);
 
+    default boolean existsOverlappingCitaMascota(Long mascotaId,
+                                                 LocalDateTime fechaHoraInicio,
+                                                 LocalDateTime fechaHoraFin) {
+        return existsOverlappingCitaMascota(mascotaId, fechaHoraInicio, fechaHoraFin, null);
+    }
+
+    default boolean existsOverlappingCitaMascotaExcludeSelf(Long mascotaId,
+                                                            LocalDateTime fechaHoraInicio,
+                                                            LocalDateTime fechaHoraFin,
+                                                            Long citaId) {
+        return existsOverlappingCitaMascota(mascotaId, fechaHoraInicio, fechaHoraFin, citaId);
+    }
+
     @Query(value = "SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
             "LEFT JOIN FETCH c.consulta " +
             "WHERE u.company.id = :companyId AND c.eliminada = false " +
-            "AND (CAST(:fechaInicio AS localdatetime) IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
-            "AND (CAST(:fechaFin AS localdatetime) IS NULL OR c.fechaHoraInicio < :fechaFin) " +
-            "AND (CAST(:estado AS text) IS NULL OR c.estado = :estado) " +
-            "AND (CAST(:veterinarioId AS long) IS NULL OR c.empleado.id = :veterinarioId)",
+            "AND (CAST(:fechaInicio AS string) IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
+            "AND (CAST(:fechaFin AS string) IS NULL OR c.fechaHoraInicio < :fechaFin) " +
+            "AND (CAST(:estado AS string) IS NULL OR c.estado = :estado) " +
+            "AND (CAST(:veterinarioId AS string) IS NULL OR c.empleado.id = :veterinarioId)",
             countQuery = "SELECT COUNT(c) FROM Cita c JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
                     "WHERE u.company.id = :companyId AND c.eliminada = false " +
-                    "AND (CAST(:fechaInicio AS localdatetime) IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
-                    "AND (CAST(:fechaFin AS localdatetime) IS NULL OR c.fechaHoraInicio < :fechaFin) " +
-                    "AND (CAST(:estado AS text) IS NULL OR c.estado = :estado) " +
-                    "AND (CAST(:veterinarioId AS long) IS NULL OR c.empleado.id = :veterinarioId)")
+                    "AND (CAST(:fechaInicio AS string) IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
+                    "AND (CAST(:fechaFin AS string) IS NULL OR c.fechaHoraInicio < :fechaFin) " +
+                    "AND (CAST(:estado AS string) IS NULL OR c.estado = :estado) " +
+                    "AND (CAST(:veterinarioId AS string) IS NULL OR c.empleado.id = :veterinarioId)")
     Page<Cita> buscar(@Param("companyId") Integer companyId,
                       @Param("fechaInicio") LocalDateTime fechaInicio,
                       @Param("fechaFin") LocalDateTime fechaFin,
@@ -168,6 +193,21 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     Page<Cita> findByMascota_Apoderado_IdAndMascota_IdAndEliminadaFalseOrderByFechaHoraInicioDesc(
             Long apoderadoId, Long mascotaId, Pageable pageable);
+
+    default Page<Cita> findByApoderadoIdPaginated(Long apoderadoId, Pageable pageable) {
+        return findByMascota_Apoderado_IdAndEliminadaFalseOrderByFechaHoraInicioDesc(apoderadoId, pageable);
+    }
+
+    default Page<Cita> findByApoderadoIdAndMascotaIdPaginated(Long apoderadoId, Long mascotaId, Pageable pageable) {
+        return findByMascota_Apoderado_IdAndMascota_IdAndEliminadaFalseOrderByFechaHoraInicioDesc(
+                apoderadoId, mascotaId, pageable);
+    }
+
+    @Query("SELECT c FROM Cita c WHERE c.empleado.id = :empleadoId " +
+            "AND " + ESTADOS_NO_ACTIVOS + " " +
+            "AND CAST(c.fechaHoraInicio AS date) = CAST(:fecha AS date)")
+    List<Cita> findActiveByEmpleadoIdAndFechaString(@Param("empleadoId") Long empleadoId,
+                                                    @Param("fecha") String fecha);
 
     @Query("SELECT c FROM Cita c WHERE c.mascota.apoderado.id = :apoderadoId " +
             "AND " + ESTADOS_NO_ACTIVOS + " " +

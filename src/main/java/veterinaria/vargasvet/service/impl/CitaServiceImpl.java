@@ -396,18 +396,16 @@ public class CitaServiceImpl implements CitaService {
         long enProceso = 0;
         long completadas = 0;
         long canceladas = 0;
-        for (Object[] fila : citaRepository.contarPorEstado(
+        for (CitaRepository.EstadoCount fila : citaRepository.contarPorEstado(
                 resolvedCompanyId,
                 fechaInicio,
                 fechaFin,
                 filteredVeterinarioId)) {
-            EstadoCita estado = (EstadoCita) fila[0];
-            long total = (Long) fila[1];
-            switch (estado) {
-                case PROGRAMADA -> programadas = total;
-                case EN_PROCESO -> enProceso = total;
-                case COMPLETADA -> completadas = total;
-                case CANCELADA -> canceladas = total;
+            switch (fila.getEstado()) {
+                case PROGRAMADA -> programadas = fila.getTotal();
+                case EN_PROCESO -> enProceso = fila.getTotal();
+                case COMPLETADA -> completadas = fila.getTotal();
+                case CANCELADA -> canceladas = fila.getTotal();
                 default -> {
                     // Los demás estados continúan visibles en la agenda, pero no tienen contador propio.
                 }
