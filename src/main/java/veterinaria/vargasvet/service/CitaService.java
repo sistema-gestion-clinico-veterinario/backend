@@ -13,6 +13,8 @@ import java.util.List;
 public interface CitaService {
     CitaResponse createCita(CitaRequest request);
     Long iniciarAtencion(Long id);
+    boolean requiereConsultaClinica(Long id);
+    CitaResponse finalizarServicio(Long id, String notas);
     Page<CitaResponse> listar(
             Integer companyId,
             LocalDate fecha,
