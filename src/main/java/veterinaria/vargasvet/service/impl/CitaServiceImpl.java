@@ -230,9 +230,7 @@ public class CitaServiceImpl implements CitaService {
         }
 
         if (cita.getEstado() == EstadoCita.EN_PROCESO) {
-            boolean esGroomerEnProceso = cita.getEmpleado().getTiposEmpleado().stream()
-                    .anyMatch(t -> "GROMMER".equalsIgnoreCase(t.getNombre()));
-            if (esGroomerEnProceso) return null;
+            if (!requiereConsultaClinica(cita)) return null;
             if (cita.getConsulta() != null) {
                 return cita.getConsulta().getId();
             }
@@ -274,8 +272,7 @@ public class CitaServiceImpl implements CitaService {
             throw new IllegalArgumentException("El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.");
         }
 
-        boolean esGroomer = cita.getEmpleado().getTiposEmpleado().stream()
-                .anyMatch(t -> "GROMMER".equalsIgnoreCase(t.getNombre()));
+        boolean esServicioNoMedico = !requiereConsultaClinica(cita);
 
         cita.setEstado(EstadoCita.EN_PROCESO);
         citaRepository.save(cita);
@@ -284,10 +281,10 @@ public class CitaServiceImpl implements CitaService {
             getCitaCompanyId(cita),
             "INICIAR_ATENCION",
             "Citas",
-            "Se inició la atención " + (esGroomer ? "de grooming" : "médica") + " de la mascota " + cita.getMascota().getNombreCompleto() + " con el empleado " + (cita.getEmpleado().getUser() != null ? (cita.getEmpleado().getUser().getNombre() + " " + cita.getEmpleado().getUser().getApellido()) : "sin usuario") + " el " + cita.getFechaHoraInicio()
+            "Se inició la atención " + (esServicioNoMedico ? "de servicio" : "médica") + " de la mascota " + cita.getMascota().getNombreCompleto() + " con el empleado " + (cita.getEmpleado().getUser() != null ? (cita.getEmpleado().getUser().getNombre() + " " + cita.getEmpleado().getUser().getApellido()) : "sin usuario") + " el " + cita.getFechaHoraInicio()
         );
 
-        if (esGroomer) {
+        if (esServicioNoMedico) {
             broadcastCitaEvent("INICIAR_ATENCION", cita, citaMapper.toResponse(cita));
             return null;
         }
@@ -313,6 +310,53 @@ public class CitaServiceImpl implements CitaService {
         Consulta savedConsulta = consultaRepository.save(consulta);
         broadcastCitaEvent("INICIAR_ATENCION", cita, citaMapper.toResponse(cita));
         return savedConsulta.getId();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean requiereConsultaClinica(Long id) {
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
+        validarPermisoEmpresa(cita);
+        return requiereConsultaClinica(cita);
+    }
+
+    @Override
+    @Transactional
+    public CitaResponse finalizarServicio(Long id, String notas) {
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
+        validarPermisoEmpresa(cita);
+
+        if (requiereConsultaClinica(cita)) {
+            throw new IllegalArgumentException("Las atenciones médicas se completan cerrando su consulta clínica");
+        }
+        if (cita.getEstado() != EstadoCita.EN_PROCESO) {
+            throw new IllegalArgumentException("Solo se puede finalizar un servicio que está en proceso");
+        }
+        if (notas != null && !notas.isBlank()) {
+            String notasLimpias = notas.trim();
+            if (notasLimpias.length() > 1000) {
+                throw new IllegalArgumentException("Las observaciones no deben superar 1000 caracteres");
+            }
+            cita.setNotas(notasLimpias);
+        }
+        cita.setEstado(EstadoCita.COMPLETADA);
+        Cita saved = citaRepository.save(cita);
+        CitaResponse response = citaMapper.toResponse(saved);
+
+        auditLogService.log(
+                getCitaCompanyId(saved),
+                "FINALIZAR_SERVICIO",
+                "Citas",
+                "Se finalizó el servicio " + (saved.getServicio() != null ? saved.getServicio().getNombre() : "no médico")
+                        + " de la mascota " + saved.getMascota().getNombreCompleto());
+        broadcastCitaEvent("FINALIZAR_SERVICIO", saved, response);
+        return response;
+    }
+
+    private boolean requiereConsultaClinica(Cita cita) {
+        return cita.getServicio() == null || cita.getServicio().requiereConsultaClinica();
     }
 
     @Override
@@ -999,7 +1043,9 @@ public class CitaServiceImpl implements CitaService {
     @Override
     @Transactional(readOnly = true)
     public java.util.List<CitaResponse> getServiciosNoMedicos(Long mascotaId) {
-        return citaRepository.findServiciosNoMedicosParaMascota(mascotaId)
+        java.util.List<Cita> servicios = citaRepository.findServiciosNoMedicosParaMascota(mascotaId);
+        servicios.forEach(this::validarPermisoEmpresa);
+        return servicios
                 .stream().map(citaMapper::toResponse).collect(java.util.stream.Collectors.toList());
     }
 }
