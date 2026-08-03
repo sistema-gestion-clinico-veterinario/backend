@@ -220,8 +220,25 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     boolean existsCitaVigenteByMascotaId(@Param("mascotaId") Long mascotaId,
                                          @Param("ahora") LocalDateTime ahora);
 
-    @Query("SELECT c FROM Cita c JOIN c.empleado e JOIN e.tiposEmpleado t " +
-            "WHERE c.mascota.id = :mascotaId AND c.eliminada = false AND UPPER(t.nombre) = 'GROMMER' " +
-            "ORDER BY c.fechaHoraInicio DESC")
-    List<Cita> findServiciosNoMedicosParaMascota(@Param("mascotaId") Long mascotaId);
+    @Query("SELECT COUNT(c) > 0 FROM Cita c WHERE c.empleado.id = :empleadoId " +
+           "AND c.eliminada = false " +
+           "AND c.fechaHoraInicio >= :ahora " +
+           "AND c.estado IN ('PROGRAMADA', 'PENDIENTE', 'CONFIRMADA', 'REPROGRAMADA', 'SALA_DE_ESPERA', 'EN_PROCESO')")
+    boolean existsCitaVigenteByEmpleadoId(@Param("empleadoId") Long empleadoId,
+                                          @Param("ahora") LocalDateTime ahora);
+
+    @Query("SELECT DISTINCT c FROM Cita c JOIN c.servicio s JOIN s.tipoEmpleado t " +
+           "WHERE c.mascota.id = :mascotaId AND c.eliminada = false " +
+           "AND UPPER(t.nombre) IN ('GROMMER', 'GROOMER') " +
+           "ORDER BY c.fechaHoraInicio DESC")
+    java.util.List<Cita> findServiciosNoMedicosParaMascota(@Param("mascotaId") Long mascotaId);
+
+    boolean existsByServicioId(@Param("servicioId") Long servicioId);
+
+    @Query("SELECT s.nombre, COUNT(c) FROM Cita c " +
+           "JOIN c.servicio s " +
+           "JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
+           "WHERE u.company.id = :companyId AND c.eliminada = false AND c.estado NOT IN ('CANCELADA', 'ELIMINADA') " +
+           "GROUP BY s.nombre")
+    java.util.List<Object[]> countByServicio(@Param("companyId") Integer companyId);
 }

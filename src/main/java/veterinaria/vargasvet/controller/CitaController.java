@@ -103,9 +103,21 @@ public class CitaController {
     @PatchMapping("/{id}/start")
     public ResponseEntity<ApiResponse<Long>> iniciarAtencion(@PathVariable Long id) {
         accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
-        accesoValidator.validarEscribir("VISTA_HISTORIAS");
+        if (citaService.requiereConsultaClinica(id)) {
+            accesoValidator.validarEscribir("VISTA_HISTORIAS");
+        }
         Long consultaId = citaService.iniciarAtencion(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Atención iniciada con éxito", consultaId));
+    }
+
+    @PatchMapping("/{id}/finish-service")
+    public ResponseEntity<ApiResponse<CitaResponse>> finalizarServicio(
+            @PathVariable Long id,
+            @RequestBody(required = false) java.util.Map<String, String> body) {
+        accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
+        String notas = body != null ? body.get("notas") : null;
+        CitaResponse response = citaService.finalizarServicio(id, notas);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Servicio finalizado con éxito", response));
     }
 
     @DeleteMapping("/{id}")

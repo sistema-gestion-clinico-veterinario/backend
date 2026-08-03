@@ -39,6 +39,9 @@ public class CitaMapper {
         if (cita.getServicio() != null) {
             response.setServicioId(cita.getServicio().getId());
             response.setServicioNombre(cita.getServicio().getNombre());
+            response.setRequiereConsultaClinica(cita.getServicio().requiereConsultaClinica());
+        } else {
+            response.setRequiereConsultaClinica(true);
         }
 
         response.setMotivoCita(cita.getMotivoCita());

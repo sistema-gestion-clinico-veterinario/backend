@@ -20,6 +20,7 @@ public class CitaResponse {
     private String veterinarioNombre;
     private Long servicioId;
     private String servicioNombre;
+    private Boolean requiereConsultaClinica;
     private String motivoCita;
     private LocalDateTime fechaHoraInicio;
     private LocalDateTime fechaHoraFin;
