@@ -15,6 +15,7 @@ public class PagoResponse {
     private BigDecimal monto;
     private BigDecimal montoRecibido;
     private BigDecimal cambio;
+    private BigDecimal saldoPendiente;
     private LocalDateTime fechaPago;
     private PaymentStatus estado;
     private String mercadoPagoId;

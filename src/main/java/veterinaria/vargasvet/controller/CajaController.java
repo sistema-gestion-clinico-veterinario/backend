@@ -11,7 +11,10 @@ import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.MovimientoEgresoRequest;
 import veterinaria.vargasvet.dto.response.MovimientoCajaResponse;
 import veterinaria.vargasvet.dto.response.ResumenCajaResponse;
+import veterinaria.vargasvet.dto.request.DetalleCuentaRequest;
+import veterinaria.vargasvet.dto.response.CuentaCitaResponse;
 import veterinaria.vargasvet.service.CajaService;
+import veterinaria.vargasvet.service.CuentaCitaService;
 
 import java.time.LocalDate;
 
@@ -21,6 +24,46 @@ import java.time.LocalDate;
 public class CajaController {
 
     private final CajaService cajaService;
+    private final CuentaCitaService cuentaCitaService;
+
+    @GetMapping("/cuentas/pendientes")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")
+    public ResponseEntity<ApiResponse<Page<CuentaCitaResponse>>> listarPendientes(
+            @RequestParam(required = false) Integer companyId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Cuentas pendientes recuperadas",
+                cuentaCitaService.listarPendientes(companyId, page, size)));
+    }
+
+    @GetMapping("/cuentas/{citaId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")
+    public ResponseEntity<ApiResponse<CuentaCitaResponse>> obtenerCuenta(@PathVariable Long citaId) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Cuenta recuperada", cuentaCitaService.obtener(citaId)));
+    }
+
+    @PostMapping("/cuentas/{citaId}/detalles")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    public ResponseEntity<ApiResponse<CuentaCitaResponse>> agregarDetalle(
+            @PathVariable Long citaId, @Valid @RequestBody DetalleCuentaRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Concepto agregado", cuentaCitaService.agregarDetalle(citaId, request)));
+    }
+
+    @PutMapping("/cuentas/{citaId}/detalles/{detalleId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    public ResponseEntity<ApiResponse<CuentaCitaResponse>> actualizarDetalle(
+            @PathVariable Long citaId, @PathVariable Long detalleId,
+            @Valid @RequestBody DetalleCuentaRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Concepto actualizado",
+                cuentaCitaService.actualizarDetalle(citaId, detalleId, request)));
+    }
+
+    @DeleteMapping("/cuentas/{citaId}/detalles/{detalleId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    public ResponseEntity<ApiResponse<CuentaCitaResponse>> eliminarDetalle(
+            @PathVariable Long citaId, @PathVariable Long detalleId) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Concepto eliminado", cuentaCitaService.eliminarDetalle(citaId, detalleId)));
+    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")
