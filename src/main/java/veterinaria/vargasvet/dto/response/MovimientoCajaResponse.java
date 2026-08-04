@@ -3,6 +3,7 @@ package veterinaria.vargasvet.dto.response;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.ConceptoMovimiento;
 import veterinaria.vargasvet.domain.enums.TipoMovimiento;
+import veterinaria.vargasvet.domain.enums.MetodoPago;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ public class MovimientoCajaResponse {
     private TipoMovimiento tipo;
     private ConceptoMovimiento concepto;
     private BigDecimal monto;
+    private MetodoPago metodoPago;
     private Long citaId;
     private String descripcion;
     private LocalDateTime fecha;

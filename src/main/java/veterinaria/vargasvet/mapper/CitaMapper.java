@@ -15,6 +15,7 @@ public class CitaMapper {
 
         CitaResponse response = new CitaResponse();
         response.setId(cita.getId());
+        response.setNumeroCita(cita.getNumeroCita());
         response.setVersion(cita.getVersion());
         
         if (cita.getMascota() != null) {

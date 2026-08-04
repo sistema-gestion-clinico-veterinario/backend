@@ -29,17 +29,21 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
     private final DetalleCuentaCitaRepository detalleRepository;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public Page<CuentaCitaResponse> listarPendientes(Integer companyId, int page, int size) {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
         return citaRepository.findCuentasPendientes(resolvedCompanyId, PageRequest.of(page, size))
-                .map(cita -> map(cita, detalleRepository.findByCitaIdOrderByCreatedAtAscIdAsc(cita.getId())));
+                .map(cita -> {
+                    asegurarNumeroCita(cita);
+                    return map(cita, detalleRepository.findByCitaIdOrderByCreatedAtAscIdAsc(cita.getId()));
+                });
     }
 
     @Override
     @Transactional
     public CuentaCitaResponse obtener(Long citaId) {
         Cita cita = obtenerCitaAutorizada(citaId);
+        asegurarNumeroCita(cita);
         asegurarServicioBase(cita);
         return map(cita, detalleRepository.findByCitaIdOrderByCreatedAtAscIdAsc(citaId));
     }
@@ -192,6 +196,7 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
 
         CuentaCitaResponse response = new CuentaCitaResponse();
         response.setCitaId(cita.getId());
+        response.setNumeroCita(cita.getNumeroCita());
         response.setMascotaNombre(cita.getMascota().getNombreCompleto());
         String nombre = cita.getMascota().getApoderado().getUser().getNombre();
         String apellido = cita.getMascota().getApoderado().getUser().getApellido();
@@ -206,6 +211,13 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
         response.setEstadoPago(pagado.signum() == 0 ? "PENDIENTE" : saldo.signum() == 0 ? "PAGADA" : "PAGO_PARCIAL");
         response.setDetalles(detalles.stream().map(this::mapDetalle).toList());
         return response;
+    }
+
+    private void asegurarNumeroCita(Cita cita) {
+        if (cita.getNumeroCita() != null && !cita.getNumeroCita().isBlank()) return;
+        String fecha = cita.getFechaHoraInicio().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+        cita.setNumeroCita("CIT-" + fecha + "-" + java.util.UUID.randomUUID().toString().substring(0, 6).toUpperCase());
+        citaRepository.save(cita);
     }
 
     private DetalleCuentaResponse mapDetalle(DetalleCuentaCita detalle) {

@@ -5,7 +5,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.client.RestTemplate;
 import veterinaria.vargasvet.domain.entity.Apoderado;
 import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.entity.Company;
@@ -23,7 +22,6 @@ import veterinaria.vargasvet.repository.PurchaseRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CajaService;
-import veterinaria.vargasvet.service.MercadoPagoYapeGateway;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -50,16 +48,10 @@ class PagoServiceUnitTest {
     private UsuarioRepository usuarioRepository;
 
     @Mock
-    private RestTemplate restTemplate;
-
-    @Mock
     private AuditLogService auditLogService;
 
     @Mock
     private CajaService cajaService;
-
-    @Mock
-    private MercadoPagoYapeGateway mercadoPagoYapeGateway;
 
     @Test
     void registrar_rechazaCitaCancelada() {
@@ -77,18 +69,23 @@ class PagoServiceUnitTest {
     }
 
     @Test
-    void registrar_rechazaCitaConPagoPrevio() {
+    void registrar_completaSaldoDeCitaConPagoParcialPrevio() {
         PagoServiceImpl service = service();
         PagoRequest request = efectivoRequest(10L, new BigDecimal("100.00"));
-        when(citaRepository.findById(10L)).thenReturn(Optional.of(cita(10L, EstadoCita.PROGRAMADA, new BigDecimal("80.00"))));
+        Cita cita = cita(10L, EstadoCita.PROGRAMADA, new BigDecimal("80.00"));
+        when(citaRepository.findById(10L)).thenReturn(Optional.of(cita));
+        when(purchaseRepository.save(any(Purchase.class))).thenAnswer(invocation -> {
+            Purchase pago = invocation.getArgument(0);
+            pago.setId(87L);
+            return pago;
+        });
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
-                () -> service.registrar(request)
-        );
+        PagoResponse response = service.registrar(request);
 
-        assertEquals("La cita ya tiene un pago registrado", ex.getMessage());
-        verify(purchaseRepository, never()).save(any(Purchase.class));
+        assertEquals(new BigDecimal("20.00"), response.getMonto());
+        assertEquals(new BigDecimal("80.00"), response.getCambio());
+        assertEquals(new BigDecimal("0.00"), response.getSaldoPendiente());
+        assertEquals(new BigDecimal("100.00"), cita.getMontoPagado());
     }
 
     @Test
@@ -156,10 +153,8 @@ class PagoServiceUnitTest {
                 citaRepository,
                 purchaseRepository,
                 usuarioRepository,
-                restTemplate,
                 auditLogService,
-                cajaService,
-                mercadoPagoYapeGateway
+                cajaService
         );
     }
 

@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 public class PagoResponse {
     private Long id;
     private Long citaId;
+    private String numeroCita;
     private MetodoPago metodoPago;
     private BigDecimal monto;
     private BigDecimal montoRecibido;

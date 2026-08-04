@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.ConceptoMovimiento;
 import veterinaria.vargasvet.domain.enums.TipoMovimiento;
+import veterinaria.vargasvet.domain.enums.MetodoPago;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -27,6 +28,10 @@ public class MovimientoCaja {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal monto;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "metodo_pago", length = 20)
+    private MetodoPago metodoPago;
 
     @Column(name = "cita_id")
     private Long citaId;
