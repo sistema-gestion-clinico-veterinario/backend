@@ -5,9 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 import veterinaria.vargasvet.domain.entity.Apoderado;
 import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.entity.Company;
@@ -35,7 +33,6 @@ import veterinaria.vargasvet.repository.ServiciosVeterinariosRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CajaService;
-import veterinaria.vargasvet.service.MercadoPagoYapeGateway;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -44,11 +41,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @DataJpaTest
 class PagoServiceIntegrationTest {
@@ -79,22 +72,18 @@ class PagoServiceIntegrationTest {
 
     private AuditLogService auditLogService;
     private CajaService cajaService;
-    private MercadoPagoYapeGateway mercadoPagoYapeGateway;
     private PagoServiceImpl pagoService;
 
     @BeforeEach
     void setUp() {
         auditLogService = mock(AuditLogService.class);
         cajaService = mock(CajaService.class);
-        mercadoPagoYapeGateway = mock(MercadoPagoYapeGateway.class);
         pagoService = new PagoServiceImpl(
                 citaRepository,
                 purchaseRepository,
                 usuarioRepository,
-                mock(RestTemplate.class),
                 auditLogService,
-                cajaService,
-                mercadoPagoYapeGateway
+                cajaService
         );
     }
 
@@ -117,17 +106,11 @@ class PagoServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("[BB-015A] Yape sandbox aprobado registra el pago en entorno local")
-    void registrarPagoYapeAprobadoSandboxPersisteTrazabilidadMercadoPago() {
+    @DisplayName("Yape se registra como método manual sin pasarela externa")
+    void registrarPagoYapeManualPersistePago() {
         Cita cita = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
-        when(mercadoPagoYapeGateway.createPayment(
-                new BigDecimal("100.00"),
-                111111111L,
-                123456,
-                "cliente@yape.test"
-        )).thenReturn(new MercadoPagoYapeGateway.YapePaymentResult("mp-approved-001", "approved", null));
 
-        PagoResponse response = pagoService.registrar(pagoYape(cita.getId(), 111111111L));
+        PagoResponse response = pagoService.registrar(pagoYape(cita.getId()));
 
         Purchase persisted = purchaseRepository
                 .findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(cita.getId(), TipoPurchase.SERVICIO_CITA)
@@ -135,37 +118,9 @@ class PagoServiceIntegrationTest {
         Cita citaActualizada = citaRepository.findById(cita.getId()).orElseThrow();
 
         assertThat(response.getEstado()).isEqualTo(PaymentStatus.PAID);
-        assertThat(response.getMercadoPagoId()).isEqualTo("mp-approved-001");
-        assertThat(response.getMpStatus()).isEqualTo("approved");
         assertThat(persisted.getMetodoPago()).isEqualTo(MetodoPago.YAPE);
-        assertThat(persisted.getMercadoPagoId()).isEqualTo("mp-approved-001");
+        assertThat(persisted.getMercadoPagoId()).isNull();
         assertThat(citaActualizada.getMontoPagado()).isEqualByComparingTo("100.00");
-    }
-
-    @Test
-    @DisplayName("[BB-015B] Yape sandbox rechazado no registra el pago en entorno local")
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    void registrarPagoYapeRechazadoSandboxNoPersistePurchaseNiActualizaCita() {
-        Cita cita = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
-        when(mercadoPagoYapeGateway.createPayment(
-                new BigDecimal("100.00"),
-                111111113L,
-                123456,
-                "cliente@yape.test"
-        )).thenReturn(new MercadoPagoYapeGateway.YapePaymentResult(null, "rejected", "cc_rejected_insufficient_amount"));
-
-        assertThatThrownBy(() -> pagoService.registrar(pagoYape(cita.getId(), 111111113L)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Saldo insuficiente en Yape");
-
-        assertThat(purchaseRepository.findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(
-                cita.getId(),
-                TipoPurchase.SERVICIO_CITA
-        )).isEmpty();
-        assertThat(citaRepository.findById(cita.getId()).orElseThrow().getMontoPagado())
-                .isEqualByComparingTo("0.00");
-        verify(auditLogService, never()).log(any(), any(), any());
-        verify(cajaService, never()).registrarIngresoPorCita(any(), any(), any());
     }
 
     @Test
@@ -190,13 +145,10 @@ class PagoServiceIntegrationTest {
         return request;
     }
 
-    private PagoRequest pagoYape(Long citaId, Long phoneNumber) {
+    private PagoRequest pagoYape(Long citaId) {
         PagoRequest request = new PagoRequest();
         request.setCitaId(citaId);
         request.setMetodoPago(MetodoPago.YAPE);
-        request.setYapePhoneNumber(phoneNumber);
-        request.setYapeOtp(123456);
-        request.setPayerEmail("cliente@yape.test");
         return request;
     }
 

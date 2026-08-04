@@ -15,6 +15,9 @@ import veterinaria.vargasvet.dto.request.DetalleCuentaRequest;
 import veterinaria.vargasvet.dto.response.CuentaCitaResponse;
 import veterinaria.vargasvet.service.CajaService;
 import veterinaria.vargasvet.service.CuentaCitaService;
+import veterinaria.vargasvet.dto.request.AperturaCajaRequest;
+import veterinaria.vargasvet.dto.request.ArqueoCajaRequest;
+import veterinaria.vargasvet.dto.response.SesionCajaResponse;
 
 import java.time.LocalDate;
 
@@ -25,6 +28,31 @@ public class CajaController {
 
     private final CajaService cajaService;
     private final CuentaCitaService cuentaCitaService;
+
+    @GetMapping("/sesion")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")
+    public ResponseEntity<ApiResponse<SesionCajaResponse>> obtenerSesion(@RequestParam Integer companyId) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Estado de caja recuperado",
+                cajaService.obtenerSesionActual(companyId)));
+    }
+
+    @PostMapping("/sesion/abrir")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    public ResponseEntity<ApiResponse<SesionCajaResponse>> abrirCaja(@Valid @RequestBody AperturaCajaRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Caja abierta", cajaService.abrirCaja(request)));
+    }
+
+    @PostMapping("/sesion/arqueo")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    public ResponseEntity<ApiResponse<SesionCajaResponse>> arquearCaja(@Valid @RequestBody ArqueoCajaRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Arqueo registrado", cajaService.arquearCaja(request)));
+    }
+
+    @PostMapping("/sesion/cerrar")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    public ResponseEntity<ApiResponse<SesionCajaResponse>> cerrarCaja(@Valid @RequestBody ArqueoCajaRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Caja cerrada", cajaService.cerrarCaja(request)));
+    }
 
     @GetMapping("/cuentas/pendientes")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")

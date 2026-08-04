@@ -1,16 +1,8 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.entity.Purchase;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
@@ -24,11 +16,9 @@ import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.PurchaseRepository;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CajaService;
-import veterinaria.vargasvet.service.MercadoPagoYapeGateway;
 import veterinaria.vargasvet.service.PagoService;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import veterinaria.vargasvet.dto.response.PagoListResponse;
@@ -36,9 +26,6 @@ import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,13 +34,8 @@ public class PagoServiceImpl implements PagoService {
     private final CitaRepository citaRepository;
     private final PurchaseRepository purchaseRepository;
     private final UsuarioRepository usuarioRepository;
-    private final RestTemplate restTemplate;
     private final AuditLogService auditLogService;
     private final CajaService cajaService;
-    private final MercadoPagoYapeGateway mercadoPagoYapeGateway;
-
-    @Value("${mercadopago.public-key}")
-    private String mpPublicKey;
 
     @Override
     @Transactional
@@ -91,31 +73,12 @@ public class PagoServiceImpl implements PagoService {
             if (montoRecibido.compareTo(montoAplicado) < 0) {
                 throw new IllegalArgumentException("El monto recibido no cubre el importe a aplicar");
             }
+            if (montoRecibido.compareTo(new BigDecimal("10000.00")) > 0) {
+                throw new IllegalArgumentException("El monto recibido no puede superar S/ 10,000.00");
+            }
             cambio = montoRecibido.subtract(montoAplicado);
-
-        } else if (request.getMetodoPago() == MetodoPago.YAPE) {
-            if (request.getYapePhoneNumber() == null) {
-                throw new IllegalArgumentException("El número de teléfono Yape es obligatorio");
-            }
-            if (request.getYapeOtp() == null) {
-                throw new IllegalArgumentException("El código OTP de Yape es obligatorio");
-            }
-            if (request.getPayerEmail() == null || request.getPayerEmail().isBlank()) {
-                throw new IllegalArgumentException("El email del pagador es obligatorio para pagos con Yape");
-            }
-
-            // Paso 1: obtener token Yape desde MercadoPago (sin CORS — llamada server-side)
-            MercadoPagoYapeGateway.YapePaymentResult mpPayment = mercadoPagoYapeGateway.createPayment(
-                    montoAplicado,
-                    request.getYapePhoneNumber(),
-                    request.getYapeOtp(),
-                    request.getPayerEmail()
-            );
-            mercadoPagoId = mpPayment.id();
-            mpStatus = mpPayment.status();
-
-            if (!"approved".equals(mpStatus)) {
-                throw new IllegalArgumentException(traducirRechazoYape(mpPayment.statusDetail()));
+            if (cambio.compareTo(new BigDecimal("1000.00")) > 0) {
+                throw new IllegalArgumentException("El vuelto no puede superar S/ 1,000.00; verifique el monto recibido");
             }
         }
 
@@ -142,13 +105,13 @@ public class PagoServiceImpl implements PagoService {
         );
 
         Integer companyId = getCitaCompanyId(cita);
-        cajaService.registrarIngresoPorCita(cita, companyId, montoAplicado);
+        cajaService.registrarIngresoPorCita(cita, companyId, montoAplicado, request.getMetodoPago());
 
         return toResponse(savedPago, cambio);
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public PagoResponse obtenerPorCita(Long citaId) {
         Purchase pago = purchaseRepository
                 .findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(citaId, TipoPurchase.SERVICIO_CITA)
@@ -163,7 +126,7 @@ public class PagoServiceImpl implements PagoService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public Page<PagoListResponse> listarTodos(int page, int size, Integer companyId) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Integer resolvedCompanyId = SecurityUtils.isSuperAdmin()
@@ -180,7 +143,7 @@ public class PagoServiceImpl implements PagoService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public Page<PagoListResponse> listarHistorialPorEmpresa(int page, int size, Integer companyId) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Integer resolvedCompanyId = SecurityUtils.isSuperAdmin()
@@ -199,6 +162,7 @@ public class PagoServiceImpl implements PagoService {
     private PagoListResponse toListResponseFromCita(Cita cita) {
         PagoListResponse r = new PagoListResponse();
         r.setCitaId(cita.getId());
+        r.setNumeroCita(asegurarNumeroCita(cita));
         r.setId(cita.getId());
 
         Purchase purchase = null;
@@ -260,7 +224,7 @@ public class PagoServiceImpl implements PagoService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public Page<PagoListResponse> listarMisPagos(int page, int size) {
         String email = SecurityUtils.getCurrentUserEmail();
         veterinaria.vargasvet.domain.entity.Usuario user = usuarioRepository.findByEmail(email)
@@ -288,6 +252,7 @@ public class PagoServiceImpl implements PagoService {
 
         if (p.getCita() != null) {
             r.setCitaId(p.getCita().getId());
+            r.setNumeroCita(asegurarNumeroCita(p.getCita()));
             r.setEstadoCita(p.getCita().getEstado() != null ? p.getCita().getEstado().name() : null);
             if (p.getCita().getMascota() != null) {
                 r.setMascotaNombre(p.getCita().getMascota().getNombreCompleto());
@@ -320,58 +285,6 @@ public class PagoServiceImpl implements PagoService {
         return r;
     }
 
-    private String traducirRechazoYape(String statusDetail) {
-        if (statusDetail == null) return "Pago Yape rechazado por MercadoPago.";
-        return switch (statusDetail) {
-            case "cc_rejected_insufficient_amount" ->
-                "Saldo insuficiente en Yape. El cliente debe recargar su cuenta.";
-            case "cc_rejected_call_for_authorize" ->
-                "Yape requiere autorización del cliente. Debe aprobar el pago en su app.";
-            case "cc_rejected_bad_filled_security_code" ->
-                "Código OTP incorrecto. Verifique el código con el cliente e intente de nuevo.";
-            case "cc_rejected_max_attempts" ->
-                "Demasiados intentos fallidos. Espere unos minutos antes de intentar de nuevo.";
-            default ->
-                "Pago Yape rechazado. Motivo: " + statusDetail;
-        };
-    }
-
-    /**
-     * Llama a la API de MercadoPago Yape para obtener el token de pago.
-     * Se ejecuta server-side para evitar restricciones CORS del browser.
-     */
-    private String obtenerTokenYape(Long phoneNumber, Integer otp) {
-        String url = "https://api.mercadopago.com/platforms/pci/yape/v1/payment?public_key=" + mpPublicKey;
-
-        // MP espera phoneNumber y otp como strings (ver cURL oficial de MP)
-        String requestId = UUID.randomUUID().toString();
-        String jsonBody = "{\"phoneNumber\":\"" + phoneNumber
-                + "\",\"otp\":\"" + otp
-                + "\",\"requestId\":\"" + requestId + "\"}";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
-
-        try {
-            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, entity, Map.class);
-            Map<?, ?> responseBody = response.getBody();
-            if (responseBody == null || responseBody.get("id") == null) {
-                throw new IllegalArgumentException("Respuesta inválida de MercadoPago Yape");
-            }
-            return (String) responseBody.get("id");
-        } catch (HttpClientErrorException e) {
-            // Exponer el error real de MP para diagnóstico
-            throw new IllegalArgumentException(
-                "MP Yape error " + e.getStatusCode() + ": " + e.getResponseBodyAsString()
-            );
-        } catch (IllegalArgumentException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("Error al conectar con MercadoPago Yape: " + e.getMessage());
-        }
-    }
-
     private Integer getCitaCompanyId(Cita cita) {
         try {
             if (cita.getMascota() != null && cita.getMascota().getApoderado() != null
@@ -383,10 +296,22 @@ public class PagoServiceImpl implements PagoService {
         return null;
     }
 
+    private String asegurarNumeroCita(Cita cita) {
+        if (cita.getNumeroCita() == null || cita.getNumeroCita().isBlank()) {
+            String fecha = cita.getFechaHoraInicio() != null
+                    ? cita.getFechaHoraInicio().toLocalDate().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE)
+                    : java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
+            cita.setNumeroCita("CIT-" + fecha + "-" + java.util.UUID.randomUUID().toString().substring(0, 6).toUpperCase());
+            citaRepository.save(cita);
+        }
+        return cita.getNumeroCita();
+    }
+
     private PagoResponse toResponse(Purchase pago, BigDecimal cambio) {
         PagoResponse response = new PagoResponse();
         response.setId(pago.getId());
         response.setCitaId(pago.getCita().getId());
+        response.setNumeroCita(asegurarNumeroCita(pago.getCita()));
         response.setMetodoPago(pago.getMetodoPago());
         response.setMonto(pago.getTotal());
         response.setMontoRecibido(pago.getMontoRecibido());
