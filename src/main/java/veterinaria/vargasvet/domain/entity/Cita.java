@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 @Data
 @Entity
@@ -17,6 +19,9 @@ public class Cita {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "numero_cita", unique = true, length = 24)
+    private String numeroCita;
 
     @Version
     private Long version = 0L;
@@ -105,6 +110,10 @@ public class Cita {
 
     @PrePersist
     protected void onCreate() {
+        if (numeroCita == null || numeroCita.isBlank()) {
+            String fecha = veterinaria.vargasvet.util.AppClock.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            numeroCita = "CIT-" + fecha + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        }
         createdAt = veterinaria.vargasvet.util.AppClock.now();
         updatedAt = veterinaria.vargasvet.util.AppClock.now();
     }

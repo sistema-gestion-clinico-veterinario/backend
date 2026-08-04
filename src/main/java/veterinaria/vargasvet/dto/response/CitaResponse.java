@@ -10,6 +10,7 @@ import java.util.List;
 @Data
 public class CitaResponse {
     private Long id;
+    private String numeroCita;
     private Long version;
     private Long mascotaId;
     private String mascotaNombre;

@@ -10,6 +10,7 @@ import java.util.List;
 @Data
 public class CuentaCitaResponse {
     private Long citaId;
+    private String numeroCita;
     private String mascotaNombre;
     private String apoderadoNombre;
     private String servicioNombre;
