@@ -157,6 +157,18 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     Page<Cita> findByMascota_Apoderado_User_Company_IdAndEliminadaFalseOrderByFechaHoraInicioDesc(
             Integer companyId, Pageable pageable);
 
+    @Query(value = "SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a " +
+            "JOIN FETCH a.user u LEFT JOIN FETCH c.servicio s " +
+            "WHERE u.company.id = :companyId AND c.eliminada = false " +
+            "AND c.estado NOT IN ('CANCELADA', 'ELIMINADA', 'NO_ASISTIO') " +
+            "AND COALESCE(c.totalServicio, 0) > COALESCE(c.montoPagado, 0) " +
+            "ORDER BY c.fechaHoraInicio DESC",
+            countQuery = "SELECT COUNT(c) FROM Cita c JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
+                    "WHERE u.company.id = :companyId AND c.eliminada = false " +
+                    "AND c.estado NOT IN ('CANCELADA', 'ELIMINADA', 'NO_ASISTIO') " +
+                    "AND COALESCE(c.totalServicio, 0) > COALESCE(c.montoPagado, 0)")
+    Page<Cita> findCuentasPendientes(@Param("companyId") Integer companyId, Pageable pageable);
+
     boolean existsByEmpleadoId(Long empleadoId);
 
     boolean existsByServicioId(Long servicioId);

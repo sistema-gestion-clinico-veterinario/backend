@@ -165,7 +165,7 @@ class PagoServiceIntegrationTest {
         assertThat(citaRepository.findById(cita.getId()).orElseThrow().getMontoPagado())
                 .isEqualByComparingTo("0.00");
         verify(auditLogService, never()).log(any(), any(), any());
-        verify(cajaService, never()).registrarIngresoPorCita(any(), any());
+        verify(cajaService, never()).registrarIngresoPorCita(any(), any(), any());
     }
 
     @Test
