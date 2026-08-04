@@ -65,16 +65,21 @@ public class PagoServiceImpl implements PagoService {
             throw new IllegalArgumentException("No se puede registrar un pago para una cita con estado: " + cita.getEstado());
         }
 
-        if (cita.getMontoPagado() != null && cita.getMontoPagado().compareTo(BigDecimal.ZERO) > 0) {
-            throw new IllegalArgumentException("La cita ya tiene un pago registrado");
+        BigDecimal total = cita.getTotalServicio() != null ? cita.getTotalServicio() : BigDecimal.ZERO;
+        BigDecimal pagadoActual = cita.getMontoPagado() != null ? cita.getMontoPagado() : BigDecimal.ZERO;
+        BigDecimal saldo = total.subtract(pagadoActual);
+        if (saldo.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("La cuenta de la cita ya se encuentra pagada");
         }
 
-        BigDecimal total = cita.getTotalServicio() != null ? cita.getTotalServicio() : BigDecimal.ZERO;
+        BigDecimal montoAplicado = request.getMonto() != null ? request.getMonto() : saldo;
+        if (montoAplicado.compareTo(BigDecimal.ZERO) <= 0 || montoAplicado.compareTo(saldo) > 0) {
+            throw new IllegalArgumentException("El monto debe ser mayor a cero y no superar el saldo pendiente de S/ " + saldo);
+        }
 
         BigDecimal montoRecibido = null;
-        BigDecimal montoAplicado = total;
         BigDecimal cambio = null;
-        PaymentStatus estado = PaymentStatus.PAID;
+        PaymentStatus estado = montoAplicado.compareTo(saldo) == 0 ? PaymentStatus.PAID : PaymentStatus.PENDING;
         String mercadoPagoId = null;
         String mpStatus = null;
 
@@ -83,12 +88,10 @@ public class PagoServiceImpl implements PagoService {
                 throw new IllegalArgumentException("El monto recibido es obligatorio para pagos en efectivo");
             }
             montoRecibido = request.getMontoRecibido();
-            montoAplicado = montoRecibido.min(total);
-            if (montoRecibido.compareTo(total) >= 0) {
-                cambio = montoRecibido.subtract(total);
-            } else {
-                estado = PaymentStatus.PENDING;
+            if (montoRecibido.compareTo(montoAplicado) < 0) {
+                throw new IllegalArgumentException("El monto recibido no cubre el importe a aplicar");
             }
+            cambio = montoRecibido.subtract(montoAplicado);
 
         } else if (request.getMetodoPago() == MetodoPago.YAPE) {
             if (request.getYapePhoneNumber() == null) {
@@ -103,7 +106,7 @@ public class PagoServiceImpl implements PagoService {
 
             // Paso 1: obtener token Yape desde MercadoPago (sin CORS — llamada server-side)
             MercadoPagoYapeGateway.YapePaymentResult mpPayment = mercadoPagoYapeGateway.createPayment(
-                    total,
+                    montoAplicado,
                     request.getYapePhoneNumber(),
                     request.getYapeOtp(),
                     request.getPayerEmail()
@@ -114,13 +117,12 @@ public class PagoServiceImpl implements PagoService {
             if (!"approved".equals(mpStatus)) {
                 throw new IllegalArgumentException(traducirRechazoYape(mpPayment.statusDetail()));
             }
-            estado = PaymentStatus.PAID;
         }
 
         Purchase pago = new Purchase();
         pago.setCita(cita);
         pago.setMetodoPago(request.getMetodoPago());
-        pago.setTotal(total);
+        pago.setTotal(montoAplicado);
         pago.setMontoRecibido(montoRecibido);
         pago.setPaymentStatus(estado);
         pago.setTipoPurchase(TipoPurchase.SERVICIO_CITA);
@@ -130,17 +132,17 @@ public class PagoServiceImpl implements PagoService {
 
         Purchase savedPago = purchaseRepository.save(pago);
 
-        cita.setMontoPagado(montoAplicado);
+        cita.setMontoPagado(pagadoActual.add(montoAplicado));
         citaRepository.save(cita);
 
         auditLogService.log(
             "REGISTRAR_PAGO",
             "Facturación",
-            "Se registró un pago por un monto total de S/ " + total + " para la cita de la mascota " + cita.getMascota().getNombreCompleto() + " con método de pago: " + request.getMetodoPago()
+            "Se registró un pago de S/ " + montoAplicado + " para la cita de la mascota " + cita.getMascota().getNombreCompleto() + " con método de pago: " + request.getMetodoPago()
         );
 
         Integer companyId = getCitaCompanyId(cita);
-        cajaService.registrarIngresoPorCita(cita, companyId);
+        cajaService.registrarIngresoPorCita(cita, companyId, montoAplicado);
 
         return toResponse(savedPago, cambio);
     }
@@ -389,6 +391,9 @@ public class PagoServiceImpl implements PagoService {
         response.setMonto(pago.getTotal());
         response.setMontoRecibido(pago.getMontoRecibido());
         response.setCambio(cambio);
+        BigDecimal totalCuenta = pago.getCita().getTotalServicio() != null ? pago.getCita().getTotalServicio() : BigDecimal.ZERO;
+        BigDecimal totalPagado = pago.getCita().getMontoPagado() != null ? pago.getCita().getMontoPagado() : BigDecimal.ZERO;
+        response.setSaldoPendiente(totalCuenta.subtract(totalPagado).max(BigDecimal.ZERO));
         response.setFechaPago(pago.getCreatedAt());
         response.setEstado(pago.getPaymentStatus());
         response.setMercadoPagoId(pago.getMercadoPagoId());

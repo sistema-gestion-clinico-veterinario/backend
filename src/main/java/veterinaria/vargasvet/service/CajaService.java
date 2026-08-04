@@ -10,7 +10,7 @@ import java.time.LocalDate;
 
 public interface CajaService {
 
-    void registrarIngresoPorCita(Cita cita, Integer companyId);
+    void registrarIngresoPorCita(Cita cita, Integer companyId, java.math.BigDecimal monto);
 
     MovimientoCajaResponse registrarDevolucion(Long citaId);
 

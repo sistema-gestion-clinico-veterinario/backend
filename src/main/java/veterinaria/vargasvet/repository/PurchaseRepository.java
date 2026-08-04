@@ -11,11 +11,15 @@ import veterinaria.vargasvet.domain.enums.PaymentStatus;
 import veterinaria.vargasvet.domain.enums.TipoPurchase;
 
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
 
     Optional<Purchase> findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(Long citaId, TipoPurchase tipoPurchase);
+
+    List<Purchase> findByCitaIdAndTipoPurchaseAndPaymentStatusNot(
+            Long citaId, TipoPurchase tipoPurchase, PaymentStatus paymentStatus);
 
     boolean existsByCitaIdAndTipoPurchase(Long citaId, TipoPurchase tipoPurchase);
 

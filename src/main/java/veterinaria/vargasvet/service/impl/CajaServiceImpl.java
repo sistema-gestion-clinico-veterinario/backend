@@ -38,15 +38,14 @@ public class CajaServiceImpl implements CajaService {
 
     @Override
     @Transactional
-    public void registrarIngresoPorCita(Cita cita, Integer companyId) {
-        if (companyId == null || cita.getMontoPagado() == null
-                || cita.getMontoPagado().compareTo(BigDecimal.ZERO) <= 0) {
+    public void registrarIngresoPorCita(Cita cita, Integer companyId, BigDecimal monto) {
+        if (companyId == null || monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
         MovimientoCaja m = new MovimientoCaja();
         m.setTipo(TipoMovimiento.INGRESO);
         m.setConcepto(ConceptoMovimiento.PAGO_CITA);
-        m.setMonto(cita.getMontoPagado());
+        m.setMonto(monto);
         m.setCitaId(cita.getId());
         m.setDescripcion("Pago cita #" + cita.getId() + " - " + cita.getMascota().getNombreCompleto());
         m.setRegistradoPor(SecurityUtils.getCurrentUserEmail());
@@ -90,11 +89,9 @@ public class CajaServiceImpl implements CajaService {
         cita.setMontoPagado(BigDecimal.ZERO);
         citaRepository.save(cita);
 
-        purchaseRepository.findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(citaId, TipoPurchase.SERVICIO_CITA)
-                .ifPresent(p -> {
-                    p.setPaymentStatus(PaymentStatus.REFUNDED);
-                    purchaseRepository.save(p);
-                });
+        purchaseRepository.findByCitaIdAndTipoPurchaseAndPaymentStatusNot(
+                        citaId, TipoPurchase.SERVICIO_CITA, PaymentStatus.REFUNDED)
+                .forEach(p -> p.setPaymentStatus(PaymentStatus.REFUNDED));
 
         return toResponse(saved);
     }

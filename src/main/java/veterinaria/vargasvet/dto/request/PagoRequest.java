@@ -22,6 +22,10 @@ public class PagoRequest {
     @NotNull(message = "El método de pago es obligatorio")
     private MetodoPago metodoPago;
 
+    /** Importe que se aplicará al saldo. Si se omite, se cobra el saldo completo. */
+    @DecimalMin(value = "0.01", message = "El monto a pagar debe ser mayor a 0")
+    private BigDecimal monto;
+
     @DecimalMin(value = "0.01", message = "El monto recibido debe ser mayor a 0")
     private BigDecimal montoRecibido;
 
