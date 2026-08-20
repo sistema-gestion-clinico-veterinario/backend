@@ -115,6 +115,7 @@ public class DataInitializer implements CommandLineRunner {
         seed("VISTA_RECETAS",      "Recetas",            "/recetas",            "CLINICA", 3, clinica, null);
         seed("VISTA_HISTORIAS",    "Historias Clínicas", "/historias-clinicas", "CLINICA", 4, clinica, null);
         seed("VISTA_CITAS_AGENDA", "Agenda de Citas",    "/citas/agenda",       "CLINICA", 5, clinica, null);
+        seed("VISTA_CARTILLA",     "Cartilla de Vacunas","/historias-clinicas/cartilla", "CLINICA", 6, clinica, null);
 
         seed("VISTA_APODERADO_DASHBOARD", "Mi Portal",    "/apoderado/dashboard",    "APODERADO", 1, portalApoderado, null);
         seed("VISTA_MIS_MASCOTAS",        "Mis Mascotas", "/apoderado/mis-mascotas", "APODERADO", 2, portalApoderado, null);
