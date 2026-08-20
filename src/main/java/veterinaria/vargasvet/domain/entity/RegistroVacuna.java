@@ -5,6 +5,8 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import veterinaria.vargasvet.domain.enums.IntervaloUnidad;
 
 @Data
 @Entity
@@ -50,6 +52,37 @@ public class RegistroVacuna {
 
     @Column(name = "periodicidad_meses")
     private Integer periodicidadMeses;
+
+    @Column(name = "intervalo_cantidad")
+    private Integer intervaloCantidad;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "intervalo_unidad", length = 20)
+    private IntervaloUnidad intervaloUnidad;
+
+    @Column(length = 80)
+    private String lote;
+
+    @Column(name = "fecha_vencimiento_producto")
+    private LocalDate fechaVencimientoProducto;
+
+    @Column(precision = 10, scale = 3)
+    private BigDecimal dosis;
+
+    @Column(name = "unidad_dosis", length = 30)
+    private String unidadDosis;
+
+    @Column(name = "via_administracion", length = 50)
+    private String viaAdministracion;
+
+    @Column(name = "sitio_aplicacion", length = 100)
+    private String sitioAplicacion;
+
+    @Column(name = "peso_kg", precision = 8, scale = 2)
+    private BigDecimal pesoKg;
+
+    @Column(length = 500)
+    private String observaciones;
 
     @Column(nullable = false)
     private Boolean activo = true;
