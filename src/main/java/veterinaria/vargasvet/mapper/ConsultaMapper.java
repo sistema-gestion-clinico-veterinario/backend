@@ -37,8 +37,10 @@ public class ConsultaMapper {
         response.setFrecuenciaRespiratoria(consulta.getFrecuenciaRespiratoria());
         response.setMucosas(consulta.getMucosas());
         response.setTurgenciaPiel(consulta.getTurgenciaPiel());
-        response.setVacunacionAlDia(consulta.getVacunacionAlDia());
-        response.setDesparasitacionAlDia(consulta.getDesparasitacionAlDia());
+        response.setVacunacionAplicada(consulta.getVacunacionAplicada());
+        response.setObservacionVacunacion(consulta.getObservacionVacunacion());
+        response.setDesparasitacionAplicada(consulta.getDesparasitacionAplicada());
+        response.setObservacionDesparasitacion(consulta.getObservacionDesparasitacion());
         response.setObservaciones(consulta.getObservaciones());
         response.setFechaCierre(consulta.getFechaCierre());
         response.setCerradoPor(consulta.getCerradoPor());
