@@ -44,4 +44,5 @@ public class CartillaController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Cartilla de la mascota recuperada",
                 controlPreventivoService.listarAplicaciones(petId)));
     }
+
 }

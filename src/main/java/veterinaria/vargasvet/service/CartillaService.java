@@ -8,4 +8,5 @@ public interface CartillaService {
     CartillaAplicacionResponse registrarVacunacion(CartillaAplicacionRequest request);
 
     CartillaAplicacionResponse registrarDesparasitacion(CartillaAplicacionRequest request);
+
 }

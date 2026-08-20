@@ -5,6 +5,8 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import veterinaria.vargasvet.domain.enums.IntervaloUnidad;
 
 @Data
 @Entity
@@ -28,14 +30,38 @@ public class RegistroDesparasitacion {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "control_preventivo_id")
     private ControlPreventivo controlPreventivo;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tipo_desparasitante_id")
+    private TipoDesparasitante tipoDesparasitante;
     @Column(nullable = false, length = 100)
     private String producto;
     @Column(name = "fecha_aplicacion", nullable = false)
     private LocalDate fechaAplicacion;
-    @Column(name = "periodicidad_meses", nullable = false)
+    @Column(name = "periodicidad_meses")
     private Integer periodicidadMeses;
-    @Column(name = "fecha_proxima_aplicacion", nullable = false)
+    @Column(name = "intervalo_cantidad")
+    private Integer intervaloCantidad;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "intervalo_unidad", length = 20)
+    private IntervaloUnidad intervaloUnidad;
+    @Column(name = "fecha_proxima_aplicacion")
     private LocalDate fechaProximaAplicacion;
+    @Column(length = 80)
+    private String lote;
+    @Column(name = "fecha_vencimiento_producto")
+    private LocalDate fechaVencimientoProducto;
+    @Column(precision = 10, scale = 3)
+    private BigDecimal dosis;
+    @Column(name = "unidad_dosis", length = 30)
+    private String unidadDosis;
+    @Column(name = "via_administracion", length = 50)
+    private String viaAdministracion;
+    @Column(name = "sitio_aplicacion", length = 100)
+    private String sitioAplicacion;
+    @Column(name = "peso_kg", precision = 8, scale = 2)
+    private BigDecimal pesoKg;
+    @Column(length = 500)
+    private String observaciones;
     @Column(nullable = false)
     private Boolean activo = true;
     @Column(name = "created_at", nullable = false, updatable = false)
