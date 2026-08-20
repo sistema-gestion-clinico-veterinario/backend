@@ -1,10 +1,12 @@
 package veterinaria.vargasvet.dto.request;
 
 import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import veterinaria.vargasvet.domain.enums.IntervaloUnidad;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,8 +22,8 @@ public class CartillaAplicacionRequest {
     @NotNull(message = "Debe seleccionar la mascota")
     private Long mascotaId;
 
-    /** Veterinario que aplica. Si no se envía, se usa el usuario autenticado. */
-    private Long empleadoId;
+    /** Control pendiente que esta aplicacion completa. */
+    private Long controlPreventivoId;
 
     /** Servicio preventivo configurado (tipo_control_preventivo) para precio y nombre. */
     @NotNull(message = "Debe seleccionar el servicio preventivo")
@@ -40,11 +42,39 @@ public class CartillaAplicacionRequest {
     @NotNull(message = "La fecha de aplicacion es requerida")
     private LocalDate fechaAplicacion;
 
-    @NotNull(message = "La periodicidad es requerida")
     @Min(1) @Max(120)
     private Integer periodicidadMeses;
 
+    /** Intervalo flexible para esquemas expresados en dias, semanas o meses. */
+    @Min(1) @Max(3650)
+    private Integer intervaloCantidad;
+
+    private IntervaloUnidad intervaloUnidad;
+
     private LocalDate fechaProxima;
+
+    @Size(max = 80, message = "El lote no debe superar 80 caracteres")
+    private String lote;
+
+    private LocalDate fechaVencimientoProducto;
+
+    @DecimalMin(value = "0.001", message = "La dosis debe ser mayor a cero")
+    private BigDecimal dosis;
+
+    @Size(max = 30, message = "La unidad de dosis no debe superar 30 caracteres")
+    private String unidadDosis;
+
+    @Size(max = 50, message = "La via de administracion no debe superar 50 caracteres")
+    private String viaAdministracion;
+
+    @Size(max = 100, message = "El sitio de aplicacion no debe superar 100 caracteres")
+    private String sitioAplicacion;
+
+    @DecimalMin(value = "0.01", message = "El peso debe ser mayor a cero")
+    private BigDecimal pesoKg;
+
+    @Size(max = 500, message = "Las observaciones no deben superar 500 caracteres")
+    private String observaciones;
 
     /** Solo informativo; se toma del servicio si no llega. */
     private BigDecimal total;

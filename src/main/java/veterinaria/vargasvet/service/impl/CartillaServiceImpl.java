@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.*;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
+import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
 import veterinaria.vargasvet.domain.enums.TipoControlPreventivo;
 import veterinaria.vargasvet.domain.enums.TipoControlServicio;
 import veterinaria.vargasvet.dto.request.CartillaAplicacionRequest;
@@ -19,10 +20,17 @@ import veterinaria.vargasvet.util.AppClock;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.EnumSet;
 
 @Service
 @RequiredArgsConstructor
 public class CartillaServiceImpl implements CartillaService {
+
+    private static final EnumSet<EstadoControlPreventivo> ESTADOS_ABIERTOS = EnumSet.of(
+            EstadoControlPreventivo.PROGRAMADO, EstadoControlPreventivo.PROXIMO,
+            EstadoControlPreventivo.PENDIENTE, EstadoControlPreventivo.ATRASADO,
+            EstadoControlPreventivo.SUSPENDIDO_POR_CITA);
 
     private final MascotaRepository mascotaRepository;
     private final HistoriaClinicaRepository historiaClinicaRepository;
@@ -32,6 +40,7 @@ public class CartillaServiceImpl implements CartillaService {
     private final TipoDesparasitanteRepository tipoDesparasitanteRepository;
     private final RegistroVacunaRepository vacunaRepository;
     private final RegistroDesparasitacionRepository desparasitacionRepository;
+    private final ControlPreventivoRepository controlRepository;
     private final CitaRepository citaRepository;
     private final AuditLogService auditLogService;
 
@@ -58,7 +67,7 @@ public class CartillaServiceImpl implements CartillaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada"));
         validarCompany(mascota);
 
-        Empleado empleado = resolverEmpleado(request.getEmpleadoId());
+        Empleado empleado = resolverEmpleado(mascota);
         ServiciosVeterinarios servicio = validarServicioPreventivo(request.getServicioId(), tipo, mascota);
 
         TipoVacuna tipoVacuna = null;
@@ -72,12 +81,13 @@ public class CartillaServiceImpl implements CartillaService {
             nombre = tipoDesparasitante.getNombre();
         }
 
+        validarDatosAplicacion(request);
         LocalDate aplicacion = request.getFechaAplicacion();
-        LocalDate proxima = calcularProxima(aplicacion, request.getFechaProxima(), request.getPeriodicidadMeses());
+        LocalDate proxima = calcularProxima(aplicacion, request);
         validarFechas(mascota, aplicacion, proxima);
 
-        BigDecimal total = request.getTotal() != null ? request.getTotal()
-                : (tipo == TipoControlPreventivo.VACUNACION ? tipoVacuna.getPrecio() : tipoDesparasitante.getPrecio());
+        BigDecimal total = tipo == TipoControlPreventivo.VACUNACION
+                ? tipoVacuna.getPrecio() : tipoDesparasitante.getPrecio();
 
         String actor = actor();
 
@@ -90,7 +100,10 @@ public class CartillaServiceImpl implements CartillaService {
                     return historiaClinicaRepository.save(nueva);
                 });
 
-        Cita cobro = crearCitaCobro(mascota, empleado, servicio, tipo.name(), total);
+        ControlPreventivo controlAplicado = completarControl(request.getControlPreventivoId(), mascota,
+                tipo, tipoVacuna);
+
+        Cita cobro = crearCitaCobro(mascota, empleado, servicio, tipo.name(), total, aplicacion);
         citaRepository.save(cobro);
 
         if (tipo == TipoControlPreventivo.VACUNACION) {
@@ -99,19 +112,22 @@ public class CartillaServiceImpl implements CartillaService {
             registro.setConsulta(null);
             registro.setCita(cobro);
             registro.setVeterinario(empleado);
+            registro.setControlPreventivo(controlAplicado);
             registro.setTipoVacuna(tipoVacuna);
             registro.setNombreVacuna(nombre);
             registro.setFechaAplicacion(aplicacion);
             registro.setPeriodicidadMeses(request.getPeriodicidadMeses());
             registro.setFechaProximaDosis(proxima);
+            copiarTrazabilidad(request, registro);
             registro.setCreatedBy(actor);
             registro.setUpdatedBy(actor);
             vacunaRepository.save(registro);
+            crearSiguienteControl(mascota, tipo, tipoVacuna, nombre, proxima, actor);
             auditLogService.log("REGISTRAR_VACUNACION_CARTILLA", "Cartilla",
                     "Se registro la vacuna " + nombre + " para " + mascota.getNombreCompleto()
                             + " (codigo de cobro " + cobro.getNumeroCita() + ")");
             return toResponse(registro.getId(), tipo, mascota, hc, nombre, aplicacion, proxima,
-                    request.getPeriodicidadMeses(), empleado, cobro, total);
+                    request, empleado, cobro, total);
         }
 
         RegistroDesparasitacion registro = new RegistroDesparasitacion();
@@ -119,25 +135,30 @@ public class CartillaServiceImpl implements CartillaService {
         registro.setConsulta(null);
         registro.setCita(cobro);
         registro.setVeterinario(empleado);
+        registro.setControlPreventivo(controlAplicado);
+        registro.setTipoDesparasitante(tipoDesparasitante);
         registro.setProducto(nombre);
         registro.setFechaAplicacion(aplicacion);
         registro.setPeriodicidadMeses(request.getPeriodicidadMeses());
         registro.setFechaProximaAplicacion(proxima);
+        copiarTrazabilidad(request, registro);
         registro.setCreatedBy(actor);
         registro.setUpdatedBy(actor);
         desparasitacionRepository.save(registro);
+        crearSiguienteControl(mascota, tipo, null, nombre, proxima, actor);
         auditLogService.log("REGISTRAR_DESPARASITACION_CARTILLA", "Cartilla",
                 "Se registro la desparasitacion de " + mascota.getNombreCompleto()
                         + " (codigo de cobro " + cobro.getNumeroCita() + ")");
         return toResponse(registro.getId(), tipo, mascota, hc, nombre, aplicacion, proxima,
-                request.getPeriodicidadMeses(), empleado, cobro, total);
+                request, empleado, cobro, total);
     }
 
     private Cita crearCitaCobro(Mascota mascota, Empleado empleado, ServiciosVeterinarios servicio,
-                                String motivo, BigDecimal total) {
+                                String motivo, BigDecimal total, LocalDate fechaAplicacion) {
         int duracion = servicio.getDuracionEstimada() != null && servicio.getDuracionEstimada() > 0
                 ? servicio.getDuracionEstimada() : 30;
-        LocalDateTime ahora = AppClock.now();
+        LocalDateTime ahora = fechaAplicacion.isEqual(AppClock.today())
+                ? AppClock.now() : fechaAplicacion.atTime(LocalTime.NOON);
         Cita cita = new Cita();
         cita.setMascota(mascota);
         cita.setEmpleado(empleado);
@@ -146,23 +167,26 @@ public class CartillaServiceImpl implements CartillaService {
         cita.setFechaHoraInicio(ahora);
         cita.setFechaHoraFin(ahora.plusMinutes(duracion));
         cita.setDuracionMinutos(duracion);
-        cita.setEstado(EstadoCita.PROGRAMADA);
+        cita.setEstado(EstadoCita.COMPLETADA);
         cita.setTotalServicio(total);
         cita.setMontoPagado(BigDecimal.ZERO);
         cita.setEsEmergencia(false);
         return cita;
     }
 
-    private Empleado resolverEmpleado(Long empleadoId) {
-        if (empleadoId != null) {
-            return empleadoRepository.findById(empleadoId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
-        }
+    private Empleado resolverEmpleado(Mascota mascota) {
         Integer userId = SecurityUtils.getCurrentUserId();
-        if (userId != null) {
-            return empleadoRepository.findByUserId(userId).orElse(null);
+        Empleado empleado = userId == null ? null : empleadoRepository.findByUserId(userId).orElse(null);
+        if (empleado == null) {
+            throw new IllegalArgumentException("El usuario autenticado no esta asociado a un profesional activo");
         }
-        return null;
+        Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
+        if (empleado.getUser() == null || empleado.getUser().getCompany() == null
+                || !companyId.equals(empleado.getUser().getCompany().getId())
+                || !Boolean.TRUE.equals(empleado.getEstado())) {
+            throw new IllegalArgumentException("El profesional no pertenece a la veterinaria o se encuentra inactivo");
+        }
+        return empleado;
     }
 
     private ServiciosVeterinarios validarServicioPreventivo(Long servicioId, TipoControlPreventivo tipo, Mascota mascota) {
@@ -172,11 +196,11 @@ public class CartillaServiceImpl implements CartillaService {
         if (!servicio.getCompany().getId().equals(companyId)) {
             throw new IllegalArgumentException("El servicio no pertenece a la veterinaria de la mascota");
         }
-        // Se acepta tanto el servicio que coincide con el tipo como un preventivo generico,
-        // pero se exige que no sea NO_APLICA para evitar cobros sin control.
-        if (servicio.getTipoControlPreventivo() == null
-                || servicio.getTipoControlPreventivo() == TipoControlServicio.NO_APLICA) {
-            throw new IllegalArgumentException("El servicio seleccionado no es preventivo");
+        TipoControlServicio esperado = tipo == TipoControlPreventivo.VACUNACION
+                ? TipoControlServicio.VACUNACION : TipoControlServicio.DESPARASITACION;
+        if (servicio.getTipoControlPreventivo() != esperado) {
+            throw new IllegalArgumentException("El servicio seleccionado no corresponde a "
+                    + (tipo == TipoControlPreventivo.VACUNACION ? "vacunacion" : "desparasitacion"));
         }
         return servicio;
     }
@@ -203,12 +227,32 @@ public class CartillaServiceImpl implements CartillaService {
         return desparasitante;
     }
 
-    private LocalDate calcularProxima(LocalDate aplicacion, LocalDate fechaExplicita, Integer periodicidadMeses) {
-        if (fechaExplicita != null) return fechaExplicita;
-        if (periodicidadMeses == null) {
-            throw new IllegalArgumentException("Indique la proxima fecha o una periodicidad");
+    private LocalDate calcularProxima(LocalDate aplicacion, CartillaAplicacionRequest request) {
+        if (request.getFechaProxima() != null) return request.getFechaProxima();
+        if (request.getIntervaloCantidad() != null && request.getIntervaloUnidad() != null) {
+            return switch (request.getIntervaloUnidad()) {
+                case DIAS -> aplicacion.plusDays(request.getIntervaloCantidad());
+                case SEMANAS -> aplicacion.plusWeeks(request.getIntervaloCantidad());
+                case MESES -> aplicacion.plusMonths(request.getIntervaloCantidad());
+            };
         }
-        return aplicacion.plusMonths(periodicidadMeses);
+        if (request.getPeriodicidadMeses() != null) return aplicacion.plusMonths(request.getPeriodicidadMeses());
+        throw new IllegalArgumentException("Indique la proxima fecha o un intervalo de aplicacion");
+    }
+
+    private void validarDatosAplicacion(CartillaAplicacionRequest request) {
+        boolean cantidad = request.getIntervaloCantidad() != null;
+        boolean unidad = request.getIntervaloUnidad() != null;
+        if (cantidad != unidad) {
+            throw new IllegalArgumentException("El intervalo requiere cantidad y unidad");
+        }
+        if (request.getDosis() != null && (request.getUnidadDosis() == null || request.getUnidadDosis().isBlank())) {
+            throw new IllegalArgumentException("Indique la unidad de la dosis");
+        }
+        if (request.getFechaVencimientoProducto() != null
+                && request.getFechaVencimientoProducto().isBefore(request.getFechaAplicacion())) {
+            throw new IllegalArgumentException("No se puede aplicar un producto vencido");
+        }
     }
 
     private void validarFechas(Mascota mascota, LocalDate aplicacion, LocalDate proxima) {
@@ -232,6 +276,90 @@ public class CartillaServiceImpl implements CartillaService {
         }
     }
 
+    private ControlPreventivo completarControl(Long controlId, Mascota mascota,
+                                                TipoControlPreventivo tipo, TipoVacuna vacuna) {
+        if (controlId == null) return null;
+        ControlPreventivo control = controlRepository.findById(controlId)
+                .orElseThrow(() -> new ResourceNotFoundException("Control preventivo no encontrado"));
+        if (!control.getMascota().getId().equals(mascota.getId()) || control.getTipo() != tipo) {
+            throw new IllegalArgumentException("El control no corresponde a la mascota o al tipo de aplicacion");
+        }
+        if (vacuna != null && (control.getTipoVacuna() == null
+                || !vacuna.getId().equals(control.getTipoVacuna().getId()))) {
+            throw new IllegalArgumentException("La vacuna aplicada no corresponde al control seleccionado");
+        }
+        if (!ESTADOS_ABIERTOS.contains(control.getEstado())) {
+            throw new IllegalArgumentException("El control seleccionado ya fue cerrado");
+        }
+        control.setEstado(EstadoControlPreventivo.APLICADO);
+        control.setCitaSuspende(null);
+        control.setEstadoModificadoPor(actor());
+        control.setFechaModificacionEstado(AppClock.now());
+        control.setUpdatedBy(actor());
+        return controlRepository.save(control);
+    }
+
+    private void crearSiguienteControl(Mascota mascota, TipoControlPreventivo tipo, TipoVacuna vacuna,
+                                       String nombre, LocalDate fecha, String actor) {
+        if (fecha == null) return;
+        boolean existe = vacuna != null
+                ? controlRepository.existsByMascotaIdAndTipoVacunaIdAndFechaRecomendadaAndEstadoIn(
+                        mascota.getId(), vacuna.getId(), fecha, ESTADOS_ABIERTOS)
+                : controlRepository.existsByMascotaIdAndTipoAndNombreControlIgnoreCaseAndFechaRecomendadaAndEstadoIn(
+                        mascota.getId(), tipo, nombre, fecha, ESTADOS_ABIERTOS);
+        if (existe) return;
+        ControlPreventivo siguiente = new ControlPreventivo();
+        siguiente.setMascota(mascota);
+        siguiente.setTipo(tipo);
+        siguiente.setTipoVacuna(vacuna);
+        siguiente.setNombreControl(nombre);
+        siguiente.setFechaRecomendada(fecha);
+        siguiente.setCreatedBy(actor);
+        siguiente.setUpdatedBy(actor);
+        siguiente.setEstadoModificadoPor(actor);
+        siguiente.setFechaModificacionEstado(AppClock.now());
+        siguiente.setEstado(estadoParaFecha(fecha));
+        controlRepository.save(siguiente);
+    }
+
+    private EstadoControlPreventivo estadoParaFecha(LocalDate fecha) {
+        LocalDate hoy = AppClock.today();
+        if (fecha.isBefore(hoy)) return EstadoControlPreventivo.ATRASADO;
+        if (fecha.isEqual(hoy)) return EstadoControlPreventivo.PENDIENTE;
+        if (!fecha.isAfter(hoy.plusDays(7))) return EstadoControlPreventivo.PROXIMO;
+        return EstadoControlPreventivo.PROGRAMADO;
+    }
+
+    private void copiarTrazabilidad(CartillaAplicacionRequest request, RegistroVacuna registro) {
+        registro.setIntervaloCantidad(request.getIntervaloCantidad());
+        registro.setIntervaloUnidad(request.getIntervaloUnidad());
+        registro.setLote(normalizar(request.getLote()));
+        registro.setFechaVencimientoProducto(request.getFechaVencimientoProducto());
+        registro.setDosis(request.getDosis());
+        registro.setUnidadDosis(normalizar(request.getUnidadDosis()));
+        registro.setViaAdministracion(normalizar(request.getViaAdministracion()));
+        registro.setSitioAplicacion(normalizar(request.getSitioAplicacion()));
+        registro.setPesoKg(request.getPesoKg());
+        registro.setObservaciones(normalizar(request.getObservaciones()));
+    }
+
+    private void copiarTrazabilidad(CartillaAplicacionRequest request, RegistroDesparasitacion registro) {
+        registro.setIntervaloCantidad(request.getIntervaloCantidad());
+        registro.setIntervaloUnidad(request.getIntervaloUnidad());
+        registro.setLote(normalizar(request.getLote()));
+        registro.setFechaVencimientoProducto(request.getFechaVencimientoProducto());
+        registro.setDosis(request.getDosis());
+        registro.setUnidadDosis(normalizar(request.getUnidadDosis()));
+        registro.setViaAdministracion(normalizar(request.getViaAdministracion()));
+        registro.setSitioAplicacion(normalizar(request.getSitioAplicacion()));
+        registro.setPesoKg(request.getPesoKg());
+        registro.setObservaciones(normalizar(request.getObservaciones()));
+    }
+
+    private String normalizar(String valor) {
+        return valor == null || valor.isBlank() ? null : valor.trim();
+    }
+
     private String actor() {
         String email = SecurityUtils.getCurrentUserEmail();
         return email == null || email.isBlank() ? "SYSTEM" : email;
@@ -239,7 +367,7 @@ public class CartillaServiceImpl implements CartillaService {
 
     private CartillaAplicacionResponse toResponse(Long registroId, TipoControlPreventivo tipo, Mascota mascota,
                                                   HistoriaClinica hc, String nombre, LocalDate aplicacion,
-                                                  LocalDate proxima, Integer periodicidad, Empleado empleado,
+                                                  LocalDate proxima, CartillaAplicacionRequest request, Empleado empleado,
                                                   Cita cobro, BigDecimal total) {
         return CartillaAplicacionResponse.builder()
                 .registroId(registroId)
@@ -250,8 +378,18 @@ public class CartillaServiceImpl implements CartillaService {
                 .nombre(nombre)
                 .fechaAplicacion(aplicacion)
                 .fechaProxima(proxima)
-                .periodicidadMeses(periodicidad)
+                .periodicidadMeses(request.getPeriodicidadMeses())
+                .intervaloCantidad(request.getIntervaloCantidad())
+                .intervaloUnidad(request.getIntervaloUnidad())
                 .veterinarioNombre(nombreVeterinario(empleado))
+                .lote(normalizar(request.getLote()))
+                .fechaVencimientoProducto(request.getFechaVencimientoProducto())
+                .dosis(request.getDosis())
+                .unidadDosis(normalizar(request.getUnidadDosis()))
+                .viaAdministracion(normalizar(request.getViaAdministracion()))
+                .sitioAplicacion(normalizar(request.getSitioAplicacion()))
+                .pesoKg(request.getPesoKg())
+                .observaciones(normalizar(request.getObservaciones()))
                 .citaId(cobro.getId())
                 .codigoCobro(cobro.getNumeroCita())
                 .total(total)

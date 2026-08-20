@@ -122,12 +122,22 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
                 AplicacionPreventivaResponse.builder().id(v.getId()).tipo(TipoControlPreventivo.VACUNACION)
                         .nombreControl(v.getNombreVacuna()).fechaAplicacion(v.getFechaAplicacion())
                         .periodicidadMeses(v.getPeriodicidadMeses()).fechaProximaAplicacion(v.getFechaProximaDosis())
-                        .veterinarioNombre(nombreVeterinario(v.getVeterinario())).build()));
+                        .intervaloCantidad(v.getIntervaloCantidad()).intervaloUnidad(v.getIntervaloUnidad())
+                        .veterinarioNombre(nombreVeterinario(v.getVeterinario()))
+                        .lote(v.getLote()).fechaVencimientoProducto(v.getFechaVencimientoProducto())
+                        .dosis(v.getDosis()).unidadDosis(v.getUnidadDosis())
+                        .viaAdministracion(v.getViaAdministracion()).sitioAplicacion(v.getSitioAplicacion())
+                        .pesoKg(v.getPesoKg()).observaciones(v.getObservaciones()).build()));
         desparasitacionRepository.findByHistoriaClinicaMascotaIdOrderByFechaAplicacionDesc(mascotaId).forEach(d -> resultado.add(
                 AplicacionPreventivaResponse.builder().id(d.getId()).tipo(TipoControlPreventivo.DESPARASITACION)
                         .nombreControl(d.getProducto()).fechaAplicacion(d.getFechaAplicacion())
                         .periodicidadMeses(d.getPeriodicidadMeses()).fechaProximaAplicacion(d.getFechaProximaAplicacion())
-                        .veterinarioNombre(nombreVeterinario(d.getVeterinario())).build()));
+                        .intervaloCantidad(d.getIntervaloCantidad()).intervaloUnidad(d.getIntervaloUnidad())
+                        .veterinarioNombre(nombreVeterinario(d.getVeterinario()))
+                        .lote(d.getLote()).fechaVencimientoProducto(d.getFechaVencimientoProducto())
+                        .dosis(d.getDosis()).unidadDosis(d.getUnidadDosis())
+                        .viaAdministracion(d.getViaAdministracion()).sitioAplicacion(d.getSitioAplicacion())
+                        .pesoKg(d.getPesoKg()).observaciones(d.getObservaciones()).build()));
         resultado.sort((a, b) -> b.getFechaAplicacion().compareTo(a.getFechaAplicacion()));
         return resultado;
     }
