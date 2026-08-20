@@ -31,7 +31,7 @@ public class Cita {
     private Mascota mascota;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "empleado_id", nullable = false)
+    @JoinColumn(name = "empleado_id", nullable = true)
     private Empleado empleado;
 
     @ManyToOne(fetch = FetchType.LAZY)

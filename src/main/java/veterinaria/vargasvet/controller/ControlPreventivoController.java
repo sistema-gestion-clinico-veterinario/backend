@@ -9,6 +9,7 @@ import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.*;
 import veterinaria.vargasvet.dto.response.AplicacionPreventivaResponse;
 import veterinaria.vargasvet.dto.response.ControlPreventivoResponse;
+import veterinaria.vargasvet.dto.response.TipoDesparasitanteResponse;
 import veterinaria.vargasvet.dto.response.TipoVacunaResponse;
 import veterinaria.vargasvet.service.ControlPreventivoService;
 
@@ -29,6 +30,16 @@ public class ControlPreventivoController {
     @PostMapping("/vaccine-types")
     public ResponseEntity<ApiResponse<TipoVacunaResponse>> crearTipo(@Valid @RequestBody TipoVacunaRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Vacuna creada", service.crearTipoVacuna(request)));
+    }
+
+    @GetMapping("/pets/{petId}/deworming-products")
+    public ResponseEntity<ApiResponse<List<TipoDesparasitanteResponse>>> listarDesparasitantes(@PathVariable Long petId) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitantes recuperados", service.listarTiposDesparasitante(petId)));
+    }
+
+    @PostMapping("/deworming-products")
+    public ResponseEntity<ApiResponse<TipoDesparasitanteResponse>> crearDesparasitante(@Valid @RequestBody TipoDesparasitanteRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitante creado", service.crearTipoDesparasitante(request)));
     }
 
     @GetMapping("/pets/{petId}")
