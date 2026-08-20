@@ -356,7 +356,14 @@ public class CitaServiceImpl implements CitaService {
     }
 
     private boolean requiereConsultaClinica(Cita cita) {
-        return cita.getServicio() == null || cita.getServicio().requiereConsultaClinica();
+        if (cita.getServicio() == null) return true;
+        // Las citas de vacunacion/desparasitacion NO generan ficha de consulta;
+        // se atienden desde la cartilla de la mascota.
+        if (cita.getServicio().getTipoControlPreventivo() != null
+                && cita.getServicio().getTipoControlPreventivo() != TipoControlServicio.NO_APLICA) {
+            return false;
+        }
+        return cita.getServicio().requiereConsultaClinica();
     }
 
     @Override

@@ -24,6 +24,10 @@ public class RegistroVacuna {
     private Consulta consulta;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cita_id", nullable = true)
+    private Cita cita;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "veterinario_id")
     private Empleado veterinario;
 

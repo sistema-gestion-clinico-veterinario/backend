@@ -78,8 +78,10 @@ public class ConsultaServiceImpl implements ConsultaService {
         if (request.getFrecuenciaRespiratoria() != null) consulta.setFrecuenciaRespiratoria(request.getFrecuenciaRespiratoria());
         if (request.getMucosas() != null) consulta.setMucosas(request.getMucosas());
         if (request.getTurgenciaPiel() != null) consulta.setTurgenciaPiel(request.getTurgenciaPiel());
-        if (request.getVacunacionAlDia() != null) consulta.setVacunacionAlDia(request.getVacunacionAlDia());
-        if (request.getDesparasitacionAlDia() != null) consulta.setDesparasitacionAlDia(request.getDesparasitacionAlDia());
+        if (request.getVacunacionAplicada() != null) consulta.setVacunacionAplicada(request.getVacunacionAplicada());
+        if (request.getObservacionVacunacion() != null) consulta.setObservacionVacunacion(request.getObservacionVacunacion());
+        if (request.getDesparasitacionAplicada() != null) consulta.setDesparasitacionAplicada(request.getDesparasitacionAplicada());
+        if (request.getObservacionDesparasitacion() != null) consulta.setObservacionDesparasitacion(request.getObservacionDesparasitacion());
         if (request.getAnamnesis() != null) consulta.setAnamnesis(request.getAnamnesis());
         if (request.getExamenFisico() != null) consulta.setExamenFisico(request.getExamenFisico());
         if (request.getObservaciones() != null) consulta.setObservaciones(request.getObservaciones());

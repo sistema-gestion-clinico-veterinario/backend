@@ -60,11 +60,17 @@ public class Consulta {
     @Column(name = "turgencia_piel")
     private String turgenciaPiel;
 
-    @Column(name = "vacunacion_al_dia")
-    private Boolean vacunacionAlDia;
+    @Column(name = "vacunacion_aplicada")
+    private Boolean vacunacionAplicada;
 
-    @Column(name = "desparasitacion_al_dia")
-    private Boolean desparasitacionAlDia;
+    @Column(name = "desparasitacion_aplicada")
+    private Boolean desparasitacionAplicada;
+
+    @Column(name = "observacion_vacunacion", columnDefinition = "TEXT")
+    private String observacionVacunacion;
+
+    @Column(name = "observacion_desparasitacion", columnDefinition = "TEXT")
+    private String observacionDesparasitacion;
 
     @Column(name = "motivo_consulta", columnDefinition = "TEXT", nullable = false)
     private String motivoConsulta;

@@ -20,6 +20,9 @@ public class RegistroDesparasitacion {
     @JoinColumn(name = "consulta_id")
     private Consulta consulta;
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cita_id")
+    private Cita cita;
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "veterinario_id")
     private Empleado veterinario;
     @OneToOne(fetch = FetchType.LAZY)

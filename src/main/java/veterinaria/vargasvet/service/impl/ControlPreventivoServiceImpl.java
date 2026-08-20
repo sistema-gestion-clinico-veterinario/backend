@@ -169,8 +169,6 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
             siguiente = controlRepository.save(nuevoControl(mascota, TipoControlPreventivo.VACUNACION,
                     tipoVacuna, tipoVacuna.getNombre(), proxima, actor));
         }
-        consulta.setVacunacionAlDia(!hayPendientes(mascota.getId(), TipoControlPreventivo.VACUNACION));
-        consultaRepository.save(consulta);
         auditLogService.log("REGISTRAR_VACUNACION", "Historias Clinicas",
                 "Se registro la vacuna " + tipoVacuna.getNombre() + " para " + mascota.getNombreCompleto());
         return toControlResponse(siguiente);
@@ -207,8 +205,6 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
             siguiente = controlRepository.save(nuevoControl(mascota, TipoControlPreventivo.DESPARASITACION,
                     null, request.getProducto().trim(), proxima, actor));
         }
-        consulta.setDesparasitacionAlDia(!hayPendientes(mascota.getId(), TipoControlPreventivo.DESPARASITACION));
-        consultaRepository.save(consulta);
         auditLogService.log("REGISTRAR_DESPARASITACION", "Historias Clinicas",
                 "Se registro la desparasitacion de " + mascota.getNombreCompleto());
         return toControlResponse(siguiente);
@@ -377,11 +373,6 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     private String normalizarNombre(String nombre) {
         if (nombre == null || nombre.isBlank()) throw new IllegalArgumentException("Debe indicar el control preventivo");
         return nombre.trim();
-    }
-
-    private boolean hayPendientes(Long mascotaId, TipoControlPreventivo tipo) {
-        return controlRepository.existsByMascotaIdAndTipoAndEstadoIn(mascotaId, tipo,
-                EnumSet.of(EstadoControlPreventivo.PENDIENTE, EstadoControlPreventivo.ATRASADO));
     }
 
     private String actor() {

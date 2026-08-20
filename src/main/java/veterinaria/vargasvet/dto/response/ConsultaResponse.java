@@ -46,8 +46,10 @@ public class ConsultaResponse {
     private Integer frecuenciaRespiratoria;
     private String mucosas;
     private String turgenciaPiel;
-    private Boolean vacunacionAlDia;
-    private Boolean desparasitacionAlDia;
+    private Boolean vacunacionAplicada;
+    private String observacionVacunacion;
+    private Boolean desparasitacionAplicada;
+    private String observacionDesparasitacion;
     private String observaciones;
 
 
