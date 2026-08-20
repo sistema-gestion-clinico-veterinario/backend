@@ -30,6 +30,9 @@ public class CartillaAplicacionRequest {
     /** Obligatorio si el tipo es VACUNACION. */
     private Long tipoVacunaId;
 
+    /** Obligatorio si el tipo es DESPARASITACION (catálogo de desparasitantes). */
+    private Long tipoDesparasitanteId;
+
     /** Obligatorio si el tipo es DESPARASITACION. */
     @Size(max = 100, message = "El producto no debe superar 100 caracteres")
     private String producto;

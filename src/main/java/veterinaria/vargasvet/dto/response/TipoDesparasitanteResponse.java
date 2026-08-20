@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 
 @Data
 @Builder
-public class TipoVacunaResponse {
+public class TipoDesparasitanteResponse {
     private Long id;
     private String nombre;
     private EspecieMascota especie;
