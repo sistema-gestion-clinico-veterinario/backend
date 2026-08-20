@@ -10,6 +10,7 @@ import veterinaria.vargasvet.domain.enums.TipoControlPreventivo;
 import veterinaria.vargasvet.dto.request.*;
 import veterinaria.vargasvet.dto.response.AplicacionPreventivaResponse;
 import veterinaria.vargasvet.dto.response.ControlPreventivoResponse;
+import veterinaria.vargasvet.dto.response.TipoDesparasitanteResponse;
 import veterinaria.vargasvet.dto.response.TipoVacunaResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.*;
@@ -32,6 +33,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
             EstadoControlPreventivo.SUSPENDIDO_POR_CITA);
 
     private final TipoVacunaRepository tipoVacunaRepository;
+    private final TipoDesparasitanteRepository tipoDesparasitanteRepository;
     private final ControlPreventivoRepository controlRepository;
     private final RegistroVacunaRepository vacunaRepository;
     private final RegistroDesparasitacionRepository desparasitacionRepository;
@@ -64,9 +66,42 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
         tipo.setNombre(request.getNombre().trim());
         tipo.setEspecie(request.getEspecie());
         tipo.setPeriodicidadMesesSugerida(request.getPeriodicidadMesesSugerida());
+        tipo.setPrecio(request.getPrecio());
         tipo.setCreatedBy(actor);
         tipo.setUpdatedBy(actor);
         return toTipoResponse(tipoVacunaRepository.save(tipo));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TipoDesparasitanteResponse> listarTiposDesparasitante(Long mascotaId) {
+        Mascota mascota = obtenerMascotaAutorizada(mascotaId);
+        Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
+        return tipoDesparasitanteRepository.findByCompanyIdAndEspecieAndActivoTrueOrderByNombre(companyId, mascota.getEspecie())
+                .stream().map(this::toDesparasitanteResponse).toList();
+    }
+
+    @Override
+    @Transactional
+    public TipoDesparasitanteResponse crearTipoDesparasitante(TipoDesparasitanteRequest request) {
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        if (companyId == null) throw new IllegalArgumentException("Debe seleccionar una veterinaria");
+        if (tipoDesparasitanteRepository.existsByCompanyIdAndNombreIgnoreCaseAndEspecie(
+                companyId, request.getNombre().trim(), request.getEspecie())) {
+            throw new IllegalArgumentException("Ya existe un desparasitante con ese nombre para la especie seleccionada");
+        }
+        Company company = new Company();
+        company.setId(companyId);
+        String actor = actor();
+        TipoDesparasitante tipo = new TipoDesparasitante();
+        tipo.setCompany(company);
+        tipo.setNombre(request.getNombre().trim());
+        tipo.setEspecie(request.getEspecie());
+        tipo.setPeriodicidadMesesSugerida(request.getPeriodicidadMesesSugerida());
+        tipo.setPrecio(request.getPrecio());
+        tipo.setCreatedBy(actor);
+        tipo.setUpdatedBy(actor);
+        return toDesparasitanteResponse(tipoDesparasitanteRepository.save(tipo));
     }
 
     @Override
@@ -387,7 +422,12 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
 
     private TipoVacunaResponse toTipoResponse(TipoVacuna v) {
         return TipoVacunaResponse.builder().id(v.getId()).nombre(v.getNombre()).especie(v.getEspecie())
-                .periodicidadMesesSugerida(v.getPeriodicidadMesesSugerida()).build();
+                .periodicidadMesesSugerida(v.getPeriodicidadMesesSugerida()).precio(v.getPrecio()).build();
+    }
+
+    private TipoDesparasitanteResponse toDesparasitanteResponse(TipoDesparasitante d) {
+        return TipoDesparasitanteResponse.builder().id(d.getId()).nombre(d.getNombre()).especie(d.getEspecie())
+                .periodicidadMesesSugerida(d.getPeriodicidadMesesSugerida()).precio(d.getPrecio()).build();
     }
 
     private ControlPreventivoResponse toControlResponse(ControlPreventivo c) {

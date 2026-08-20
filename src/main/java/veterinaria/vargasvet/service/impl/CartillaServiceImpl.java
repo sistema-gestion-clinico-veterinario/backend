@@ -29,6 +29,7 @@ public class CartillaServiceImpl implements CartillaService {
     private final EmpleadoRepository empleadoRepository;
     private final ServiciosVeterinariosRepository serviciosRepository;
     private final TipoVacunaRepository tipoVacunaRepository;
+    private final TipoDesparasitanteRepository tipoDesparasitanteRepository;
     private final RegistroVacunaRepository vacunaRepository;
     private final RegistroDesparasitacionRepository desparasitacionRepository;
     private final CitaRepository citaRepository;
@@ -46,8 +47,8 @@ public class CartillaServiceImpl implements CartillaService {
     @Override
     @Transactional
     public CartillaAplicacionResponse registrarDesparasitacion(CartillaAplicacionRequest request) {
-        if (request.getProducto() == null || request.getProducto().isBlank()) {
-            throw new IllegalArgumentException("Debe indicar el producto de desparasitacion");
+        if (request.getTipoDesparasitanteId() == null) {
+            throw new IllegalArgumentException("Debe seleccionar el desparasitante");
         }
         return registrar(request, TipoControlPreventivo.DESPARASITACION);
     }
@@ -61,12 +62,14 @@ public class CartillaServiceImpl implements CartillaService {
         ServiciosVeterinarios servicio = validarServicioPreventivo(request.getServicioId(), tipo, mascota);
 
         TipoVacuna tipoVacuna = null;
+        TipoDesparasitante tipoDesparasitante = null;
         String nombre;
         if (tipo == TipoControlPreventivo.VACUNACION) {
             tipoVacuna = validarTipoVacuna(request.getTipoVacunaId(), mascota);
             nombre = tipoVacuna.getNombre();
         } else {
-            nombre = request.getProducto().trim();
+            tipoDesparasitante = validarTipoDesparasitante(request.getTipoDesparasitanteId(), mascota);
+            nombre = tipoDesparasitante.getNombre();
         }
 
         LocalDate aplicacion = request.getFechaAplicacion();
@@ -74,7 +77,7 @@ public class CartillaServiceImpl implements CartillaService {
         validarFechas(mascota, aplicacion, proxima);
 
         BigDecimal total = request.getTotal() != null ? request.getTotal()
-                : servicio.getPrecio();
+                : (tipo == TipoControlPreventivo.VACUNACION ? tipoVacuna.getPrecio() : tipoDesparasitante.getPrecio());
 
         String actor = actor();
 
@@ -187,6 +190,17 @@ public class CartillaServiceImpl implements CartillaService {
             throw new IllegalArgumentException("La vacuna no corresponde a la especie o veterinaria de la mascota");
         }
         return vacuna;
+    }
+
+    private TipoDesparasitante validarTipoDesparasitante(Long id, Mascota mascota) {
+        TipoDesparasitante desparasitante = tipoDesparasitanteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Desparasitante no encontrado"));
+        Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
+        if (!desparasitante.getCompany().getId().equals(companyId)
+                || desparasitante.getEspecie() != mascota.getEspecie() || !desparasitante.getActivo()) {
+            throw new IllegalArgumentException("El desparasitante no corresponde a la especie o veterinaria de la mascota");
+        }
+        return desparasitante;
     }
 
     private LocalDate calcularProxima(LocalDate aplicacion, LocalDate fechaExplicita, Integer periodicidadMeses) {

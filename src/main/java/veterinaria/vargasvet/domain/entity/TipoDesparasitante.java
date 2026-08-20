@@ -9,10 +9,10 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "tipo_vacuna", uniqueConstraints = @UniqueConstraint(
-        name = "uk_tipo_vacuna_company_nombre_especie",
+@Table(name = "tipo_desparasitante", uniqueConstraints = @UniqueConstraint(
+        name = "uk_tipo_desparasitante_company_nombre_especie",
         columnNames = {"company_id", "nombre", "especie"}))
-public class TipoVacuna {
+public class TipoDesparasitante {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
