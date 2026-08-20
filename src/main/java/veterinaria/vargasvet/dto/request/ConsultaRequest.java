@@ -43,8 +43,10 @@ public class ConsultaRequest {
     @MeaningfulText(message = "La turgencia de piel debe contener texto real, no solo numeros o simbolos")
     @Pattern(regexp = "^$|(?=.*\\p{L})(?=\\S)(?!.*\\d)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "La turgencia de piel debe contener solo texto descriptivo, sin numeros ni simbolos especiales")
     private String turgenciaPiel;
-    private Boolean vacunacionAlDia;
-    private Boolean desparasitacionAlDia;
+    private Boolean vacunacionAplicada;
+    private String observacionVacunacion;
+    private Boolean desparasitacionAplicada;
+    private String observacionDesparasitacion;
 
     private String motivoConsulta;
     @Size(max = 1000, message = "La anamnesis no debe superar 1000 caracteres")
