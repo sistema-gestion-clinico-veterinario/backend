@@ -67,6 +67,11 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
         tipo.setEspecie(request.getEspecie());
         tipo.setPeriodicidadMesesSugerida(request.getPeriodicidadMesesSugerida());
         tipo.setPrecio(request.getPrecio());
+        tipo.setLote(normalizar(request.getLote()));
+        tipo.setFechaVencimientoProducto(request.getFechaVencimientoProducto());
+        tipo.setDosis(request.getDosis());
+        tipo.setUnidadDosis(normalizar(request.getUnidadDosis()));
+        tipo.setViaAdministracion(normalizar(request.getViaAdministracion()));
         tipo.setCreatedBy(actor);
         tipo.setUpdatedBy(actor);
         return toTipoResponse(tipoVacunaRepository.save(tipo));
@@ -99,6 +104,11 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
         tipo.setEspecie(request.getEspecie());
         tipo.setPeriodicidadMesesSugerida(request.getPeriodicidadMesesSugerida());
         tipo.setPrecio(request.getPrecio());
+        tipo.setLote(normalizar(request.getLote()));
+        tipo.setFechaVencimientoProducto(request.getFechaVencimientoProducto());
+        tipo.setDosis(request.getDosis());
+        tipo.setUnidadDosis(normalizar(request.getUnidadDosis()));
+        tipo.setViaAdministracion(normalizar(request.getViaAdministracion()));
         tipo.setCreatedBy(actor);
         tipo.setUpdatedBy(actor);
         return toDesparasitanteResponse(tipoDesparasitanteRepository.save(tipo));
@@ -432,12 +442,20 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
 
     private TipoVacunaResponse toTipoResponse(TipoVacuna v) {
         return TipoVacunaResponse.builder().id(v.getId()).nombre(v.getNombre()).especie(v.getEspecie())
-                .periodicidadMesesSugerida(v.getPeriodicidadMesesSugerida()).precio(v.getPrecio()).build();
+                .periodicidadMesesSugerida(v.getPeriodicidadMesesSugerida()).precio(v.getPrecio())
+                .lote(v.getLote()).fechaVencimientoProducto(v.getFechaVencimientoProducto())
+                .dosis(v.getDosis()).unidadDosis(v.getUnidadDosis()).viaAdministracion(v.getViaAdministracion()).build();
     }
 
     private TipoDesparasitanteResponse toDesparasitanteResponse(TipoDesparasitante d) {
         return TipoDesparasitanteResponse.builder().id(d.getId()).nombre(d.getNombre()).especie(d.getEspecie())
-                .periodicidadMesesSugerida(d.getPeriodicidadMesesSugerida()).precio(d.getPrecio()).build();
+                .periodicidadMesesSugerida(d.getPeriodicidadMesesSugerida()).precio(d.getPrecio())
+                .lote(d.getLote()).fechaVencimientoProducto(d.getFechaVencimientoProducto())
+                .dosis(d.getDosis()).unidadDosis(d.getUnidadDosis()).viaAdministracion(d.getViaAdministracion()).build();
+    }
+
+    private String normalizar(String valor) {
+        return valor == null || valor.isBlank() ? null : valor.trim();
     }
 
     private ControlPreventivoResponse toControlResponse(ControlPreventivo c) {

@@ -5,6 +5,7 @@ import lombok.Data;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -33,6 +34,21 @@ public class TipoDesparasitante {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
+
+    @Column(length = 80)
+    private String lote;
+
+    @Column(name = "fecha_vencimiento_producto")
+    private LocalDate fechaVencimientoProducto;
+
+    @Column(precision = 10, scale = 3)
+    private BigDecimal dosis;
+
+    @Column(name = "unidad_dosis", length = 30)
+    private String unidadDosis;
+
+    @Column(name = "via_administracion", length = 50)
+    private String viaAdministracion;
 
     @Column(nullable = false)
     private Boolean activo = true;

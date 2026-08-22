@@ -3,6 +3,7 @@ package veterinaria.vargasvet.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import veterinaria.vargasvet.domain.entity.*;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
@@ -22,6 +23,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +46,7 @@ public class CartillaServiceImpl implements CartillaService {
     private final ControlPreventivoRepository controlRepository;
     private final CitaRepository citaRepository;
     private final AuditLogService auditLogService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     @Transactional
@@ -68,7 +72,7 @@ public class CartillaServiceImpl implements CartillaService {
         validarCompany(mascota);
 
         Empleado empleado = resolverEmpleado(mascota);
-        ServiciosVeterinarios servicio = validarServicioPreventivo(request.getServicioId(), tipo, mascota);
+        ServiciosVeterinarios servicio = resolverServicioPreventivo(request.getServicioId(), tipo, mascota);
 
         TipoVacuna tipoVacuna = null;
         TipoDesparasitante tipoDesparasitante = null;
@@ -76,9 +80,11 @@ public class CartillaServiceImpl implements CartillaService {
         if (tipo == TipoControlPreventivo.VACUNACION) {
             tipoVacuna = validarTipoVacuna(request.getTipoVacunaId(), mascota);
             nombre = tipoVacuna.getNombre();
+            completarDesdeCatalogo(request, tipoVacuna);
         } else {
             tipoDesparasitante = validarTipoDesparasitante(request.getTipoDesparasitanteId(), mascota);
             nombre = tipoDesparasitante.getNombre();
+            completarDesdeCatalogo(request, tipoDesparasitante);
         }
 
         validarDatosAplicacion(request);
@@ -105,6 +111,7 @@ public class CartillaServiceImpl implements CartillaService {
 
         Cita cobro = crearCitaCobro(mascota, empleado, servicio, tipo.name(), total, aplicacion);
         citaRepository.save(cobro);
+        notificarCaja(cobro, mascota, tipo, total);
 
         if (tipo == TipoControlPreventivo.VACUNACION) {
             RegistroVacuna registro = new RegistroVacuna();
@@ -189,7 +196,17 @@ public class CartillaServiceImpl implements CartillaService {
         return empleado;
     }
 
-    private ServiciosVeterinarios validarServicioPreventivo(Long servicioId, TipoControlPreventivo tipo, Mascota mascota) {
+    private ServiciosVeterinarios resolverServicioPreventivo(Long servicioId, TipoControlPreventivo tipo, Mascota mascota) {
+        if (servicioId == null) {
+            Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
+            TipoControlServicio esperado = tipo == TipoControlPreventivo.VACUNACION
+                    ? TipoControlServicio.VACUNACION : TipoControlServicio.DESPARASITACION;
+            return serviciosRepository.findByCompanyIdAndDisponibleTrueAndActivoTrue(companyId).stream()
+                    .filter(s -> s.getTipoControlPreventivo() == esperado)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("No existe un servicio activo configurado para "
+                            + (tipo == TipoControlPreventivo.VACUNACION ? "vacunacion" : "desparasitacion")));
+        }
         ServiciosVeterinarios servicio = serviciosRepository.findById(servicioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Servicio preventivo no encontrado"));
         Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
@@ -228,6 +245,7 @@ public class CartillaServiceImpl implements CartillaService {
     }
 
     private LocalDate calcularProxima(LocalDate aplicacion, CartillaAplicacionRequest request) {
+        if (Boolean.FALSE.equals(request.getProgramarProximoControl())) return null;
         if (request.getFechaProxima() != null) return request.getFechaProxima();
         if (request.getIntervaloCantidad() != null && request.getIntervaloUnidad() != null) {
             return switch (request.getIntervaloUnidad()) {
@@ -237,7 +255,7 @@ public class CartillaServiceImpl implements CartillaService {
             };
         }
         if (request.getPeriodicidadMeses() != null) return aplicacion.plusMonths(request.getPeriodicidadMeses());
-        throw new IllegalArgumentException("Indique la proxima fecha o un intervalo de aplicacion");
+        return null;
     }
 
     private void validarDatosAplicacion(CartillaAplicacionRequest request) {
@@ -354,6 +372,38 @@ public class CartillaServiceImpl implements CartillaService {
         registro.setSitioAplicacion(normalizar(request.getSitioAplicacion()));
         registro.setPesoKg(request.getPesoKg());
         registro.setObservaciones(normalizar(request.getObservaciones()));
+    }
+
+    private void completarDesdeCatalogo(CartillaAplicacionRequest request, TipoVacuna producto) {
+        if (!Boolean.FALSE.equals(request.getProgramarProximoControl()) && request.getPeriodicidadMeses() == null && request.getIntervaloCantidad() == null && request.getFechaProxima() == null
+                && producto.getPeriodicidadMesesSugerida() != null) request.setPeriodicidadMeses(producto.getPeriodicidadMesesSugerida());
+        if (request.getLote() == null) request.setLote(producto.getLote());
+        if (request.getFechaVencimientoProducto() == null) request.setFechaVencimientoProducto(producto.getFechaVencimientoProducto());
+        if (request.getDosis() == null) request.setDosis(producto.getDosis());
+        if (request.getUnidadDosis() == null) request.setUnidadDosis(producto.getUnidadDosis());
+        if (request.getViaAdministracion() == null) request.setViaAdministracion(producto.getViaAdministracion());
+    }
+
+    private void completarDesdeCatalogo(CartillaAplicacionRequest request, TipoDesparasitante producto) {
+        if (!Boolean.FALSE.equals(request.getProgramarProximoControl()) && request.getPeriodicidadMeses() == null && request.getIntervaloCantidad() == null && request.getFechaProxima() == null
+                && producto.getPeriodicidadMesesSugerida() != null) request.setPeriodicidadMeses(producto.getPeriodicidadMesesSugerida());
+        if (request.getLote() == null) request.setLote(producto.getLote());
+        if (request.getFechaVencimientoProducto() == null) request.setFechaVencimientoProducto(producto.getFechaVencimientoProducto());
+        if (request.getDosis() == null) request.setDosis(producto.getDosis());
+        if (request.getUnidadDosis() == null) request.setUnidadDosis(producto.getUnidadDosis());
+        if (request.getViaAdministracion() == null) request.setViaAdministracion(producto.getViaAdministracion());
+    }
+
+    private void notificarCaja(Cita cobro, Mascota mascota, TipoControlPreventivo tipo, BigDecimal total) {
+        Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
+        Map<String, Object> event = new HashMap<>();
+        event.put("tipo", "CUENTA_PREVENTIVA_CREADA");
+        event.put("citaId", cobro.getId());
+        event.put("numeroCita", cobro.getNumeroCita());
+        event.put("mascotaNombre", mascota.getNombreCompleto());
+        event.put("control", tipo.name());
+        event.put("total", total);
+        messagingTemplate.convertAndSend("/topic/caja/" + companyId, event);
     }
 
     private String normalizar(String valor) {
