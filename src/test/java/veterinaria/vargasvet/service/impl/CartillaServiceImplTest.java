@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import veterinaria.vargasvet.domain.entity.*;
 import veterinaria.vargasvet.domain.enums.*;
 import veterinaria.vargasvet.dto.request.CartillaAplicacionRequest;
@@ -39,6 +40,7 @@ class CartillaServiceImplTest {
     @Mock ControlPreventivoRepository controlRepository;
     @Mock CitaRepository citaRepository;
     @Mock AuditLogService auditLogService;
+    @Mock SimpMessagingTemplate messagingTemplate;
 
     @InjectMocks CartillaServiceImpl service;
 
@@ -159,6 +161,7 @@ class CartillaServiceImplTest {
         verify(citaRepository).save(citaCaptor.capture());
         assertThat(citaCaptor.getValue().getEstado()).isEqualTo(EstadoCita.COMPLETADA);
         assertThat(citaCaptor.getValue().getTotalServicio()).isEqualByComparingTo("95.00");
+        verify(messagingTemplate).convertAndSend(eq("/topic/caja/7"), any(Object.class));
 
         ArgumentCaptor<ControlPreventivo> controlCaptor = ArgumentCaptor.forClass(ControlPreventivo.class);
         verify(controlRepository, times(2)).save(controlCaptor.capture());
