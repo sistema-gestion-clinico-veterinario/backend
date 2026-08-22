@@ -9,6 +9,7 @@ import lombok.Data;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Data
 public class TipoDesparasitanteRequest {
@@ -20,4 +21,9 @@ public class TipoDesparasitanteRequest {
     private Integer periodicidadMesesSugerida;
     @NotNull(message = "Debe indicar el precio")
     private BigDecimal precio;
+    @Size(max = 80) private String lote;
+    private LocalDate fechaVencimientoProducto;
+    private BigDecimal dosis;
+    @Size(max = 30) private String unidadDosis;
+    @Size(max = 50) private String viaAdministracion;
 }

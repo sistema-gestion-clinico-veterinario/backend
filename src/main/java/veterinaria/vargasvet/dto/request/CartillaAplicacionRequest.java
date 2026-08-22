@@ -26,7 +26,6 @@ public class CartillaAplicacionRequest {
     private Long controlPreventivoId;
 
     /** Servicio preventivo configurado (tipo_control_preventivo) para precio y nombre. */
-    @NotNull(message = "Debe seleccionar el servicio preventivo")
     private Long servicioId;
 
     /** Obligatorio si el tipo es VACUNACION. */
@@ -52,6 +51,9 @@ public class CartillaAplicacionRequest {
     private IntervaloUnidad intervaloUnidad;
 
     private LocalDate fechaProxima;
+
+    /** Permite registrar una última dosis sin generar un control posterior. */
+    private Boolean programarProximoControl = true;
 
     @Size(max = 80, message = "El lote no debe superar 80 caracteres")
     private String lote;
