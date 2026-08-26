@@ -7,10 +7,15 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import veterinaria.vargasvet.domain.entity.*;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
+import veterinaria.vargasvet.domain.enums.EspecieMascota;
+import veterinaria.vargasvet.domain.enums.IntervaloUnidad;
 import veterinaria.vargasvet.domain.enums.TipoControlPreventivo;
 import veterinaria.vargasvet.domain.enums.TipoControlServicio;
+import veterinaria.vargasvet.dto.request.CartillaAplicacionEditRequest;
 import veterinaria.vargasvet.dto.request.CartillaAplicacionRequest;
 import veterinaria.vargasvet.dto.response.CartillaAplicacionResponse;
+import veterinaria.vargasvet.dto.response.MascotaCartillaResponse;
+import veterinaria.vargasvet.mapper.MascotaCartillaMapper;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.*;
 import veterinaria.vargasvet.security.SecurityUtils;
@@ -25,6 +30,10 @@ import java.time.LocalTime;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +56,7 @@ public class CartillaServiceImpl implements CartillaService {
     private final CitaRepository citaRepository;
     private final AuditLogService auditLogService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final MascotaCartillaMapper mascotaCartillaMapper;
 
     @Override
     @Transactional
@@ -64,6 +74,31 @@ public class CartillaServiceImpl implements CartillaService {
             throw new IllegalArgumentException("Debe seleccionar el desparasitante");
         }
         return registrar(request, TipoControlPreventivo.DESPARASITACION);
+    }
+
+    @Override
+    public Page<MascotaCartillaResponse> listarMascotasConCartilla(Integer companyId, String nombre, EspecieMascota especie, Boolean activo, Pageable pageable) {
+        Page<Mascota> mascotas = mascotaRepository.buscar(companyId, nombre, especie, null, activo, pageable);
+
+        return mascotas.map(m -> {
+            LocalDate fv = vacunaRepository
+                    .findFirstByHistoriaClinicaMascotaIdOrderByFechaAplicacionDesc(m.getId())
+                    .map(RegistroVacuna::getFechaAplicacion)
+                    .orElse(null);
+            LocalDate fd = desparasitacionRepository
+                    .findFirstByHistoriaClinicaMascotaIdOrderByFechaAplicacionDesc(m.getId())
+                    .map(RegistroDesparasitacion::getFechaAplicacion)
+                    .orElse(null);
+
+            LocalDate fechaUltima;
+            if (fv != null && fd != null) {
+                fechaUltima = fv.isAfter(fd) ? fv : fd;
+            } else {
+                fechaUltima = fv != null ? fv : fd;
+            }
+
+            return mascotaCartillaMapper.toResponse(m, fechaUltima);
+        });
     }
 
     private CartillaAplicacionResponse registrar(CartillaAplicacionRequest request, TipoControlPreventivo tipo) {
@@ -404,6 +439,156 @@ public class CartillaServiceImpl implements CartillaService {
         event.put("control", tipo.name());
         event.put("total", total);
         messagingTemplate.convertAndSend("/topic/caja/" + companyId, event);
+    }
+
+    @Override
+    @Transactional
+    public CartillaAplicacionResponse editarVacunacion(Long id, CartillaAplicacionEditRequest request) {
+        RegistroVacuna registro = vacunaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Registro de vacuna no encontrado"));
+        validarCompany(registro.getHistoriaClinica().getMascota());
+
+        if (request.getFechaAplicacion() != null) registro.setFechaAplicacion(request.getFechaAplicacion());
+        if (request.getLote() != null) registro.setLote(normalizar(request.getLote()));
+        if (request.getFechaVencimientoProducto() != null) registro.setFechaVencimientoProducto(request.getFechaVencimientoProducto());
+        if (request.getDosis() != null) registro.setDosis(request.getDosis());
+        if (request.getUnidadDosis() != null) registro.setUnidadDosis(normalizar(request.getUnidadDosis()));
+        if (request.getViaAdministracion() != null) registro.setViaAdministracion(normalizar(request.getViaAdministracion()));
+        if (request.getSitioAplicacion() != null) registro.setSitioAplicacion(normalizar(request.getSitioAplicacion()));
+        if (request.getPesoKg() != null) registro.setPesoKg(request.getPesoKg());
+        if (request.getObservaciones() != null) registro.setObservaciones(normalizar(request.getObservaciones()));
+        if (request.getIntervaloCantidad() != null) registro.setIntervaloCantidad(request.getIntervaloCantidad());
+        if (request.getIntervaloUnidad() != null) registro.setIntervaloUnidad(IntervaloUnidad.valueOf(request.getIntervaloUnidad()));
+
+        registro.setUpdatedBy(actor());
+        vacunaRepository.save(registro);
+
+        Mascota mascota = registro.getHistoriaClinica().getMascota();
+        auditLogService.log("EDITAR_VACUNACION_CARTILLA", "Cartilla",
+                "Se edito la vacuna " + registro.getNombreVacuna() + " de " + mascota.getNombreCompleto());
+
+        return toResponse(registro);
+    }
+
+    @Override
+    @Transactional
+    public CartillaAplicacionResponse editarDesparasitacion(Long id, CartillaAplicacionEditRequest request) {
+        RegistroDesparasitacion registro = desparasitacionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Registro de desparasitacion no encontrado"));
+        validarCompany(registro.getHistoriaClinica().getMascota());
+
+        if (request.getFechaAplicacion() != null) registro.setFechaAplicacion(request.getFechaAplicacion());
+        if (request.getLote() != null) registro.setLote(normalizar(request.getLote()));
+        if (request.getFechaVencimientoProducto() != null) registro.setFechaVencimientoProducto(request.getFechaVencimientoProducto());
+        if (request.getDosis() != null) registro.setDosis(request.getDosis());
+        if (request.getUnidadDosis() != null) registro.setUnidadDosis(normalizar(request.getUnidadDosis()));
+        if (request.getViaAdministracion() != null) registro.setViaAdministracion(normalizar(request.getViaAdministracion()));
+        if (request.getSitioAplicacion() != null) registro.setSitioAplicacion(normalizar(request.getSitioAplicacion()));
+        if (request.getPesoKg() != null) registro.setPesoKg(request.getPesoKg());
+        if (request.getObservaciones() != null) registro.setObservaciones(normalizar(request.getObservaciones()));
+        if (request.getIntervaloCantidad() != null) registro.setIntervaloCantidad(request.getIntervaloCantidad());
+        if (request.getIntervaloUnidad() != null) registro.setIntervaloUnidad(IntervaloUnidad.valueOf(request.getIntervaloUnidad()));
+
+        registro.setUpdatedBy(actor());
+        desparasitacionRepository.save(registro);
+
+        Mascota mascota = registro.getHistoriaClinica().getMascota();
+        auditLogService.log("EDITAR_DESPARASITACION_CARTILLA", "Cartilla",
+                "Se edito la desparasitacion " + registro.getProducto() + " de " + mascota.getNombreCompleto());
+
+        return toResponse(registro);
+    }
+
+    @Override
+    @Transactional
+    public void cambiarEstadoVacunacion(Long id, boolean activo) {
+        RegistroVacuna registro = vacunaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Registro de vacuna no encontrado"));
+        validarCompany(registro.getHistoriaClinica().getMascota());
+
+        registro.setActivo(activo);
+        registro.setEstadoModificadoPor(actor());
+        registro.setFechaModificacionEstado(AppClock.now());
+        registro.setUpdatedBy(actor());
+        vacunaRepository.save(registro);
+
+        Mascota mascota = registro.getHistoriaClinica().getMascota();
+        auditLogService.log(activo ? "ACTIVAR_VACUNACION" : "DESACTIVAR_VACUNACION", "Cartilla",
+                (activo ? "Se activo" : "Se desactivo") + " la vacuna " + registro.getNombreVacuna()
+                        + " de " + mascota.getNombreCompleto());
+    }
+
+    @Override
+    @Transactional
+    public void cambiarEstadoDesparasitacion(Long id, boolean activo) {
+        RegistroDesparasitacion registro = desparasitacionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Registro de desparasitacion no encontrado"));
+        validarCompany(registro.getHistoriaClinica().getMascota());
+
+        registro.setActivo(activo);
+        registro.setEstadoModificadoPor(actor());
+        registro.setFechaModificacionEstado(AppClock.now());
+        registro.setUpdatedBy(actor());
+        desparasitacionRepository.save(registro);
+
+        Mascota mascota = registro.getHistoriaClinica().getMascota();
+        auditLogService.log(activo ? "ACTIVAR_DESPARASITACION" : "DESACTIVAR_DESPARASITACION", "Cartilla",
+                (activo ? "Se activo" : "Se desactivo") + " la desparasitacion " + registro.getProducto()
+                        + " de " + mascota.getNombreCompleto());
+    }
+
+    private CartillaAplicacionResponse toResponse(RegistroVacuna registro) {
+        Mascota mascota = registro.getHistoriaClinica().getMascota();
+        Empleado emp = registro.getVeterinario();
+        return CartillaAplicacionResponse.builder()
+                .registroId(registro.getId())
+                .tipo(TipoControlPreventivo.VACUNACION)
+                .mascotaId(mascota.getId())
+                .mascotaNombre(mascota.getNombreCompleto())
+                .numeroHc(registro.getHistoriaClinica().getNumeroHc())
+                .nombre(registro.getNombreVacuna())
+                .fechaAplicacion(registro.getFechaAplicacion())
+                .fechaProxima(registro.getFechaProximaDosis())
+                .periodicidadMeses(registro.getPeriodicidadMeses())
+                .intervaloCantidad(registro.getIntervaloCantidad())
+                .intervaloUnidad(registro.getIntervaloUnidad())
+                .veterinarioNombre(nombreVeterinario(emp))
+                .lote(registro.getLote())
+                .fechaVencimientoProducto(registro.getFechaVencimientoProducto())
+                .dosis(registro.getDosis())
+                .unidadDosis(registro.getUnidadDosis())
+                .viaAdministracion(registro.getViaAdministracion())
+                .sitioAplicacion(registro.getSitioAplicacion())
+                .pesoKg(registro.getPesoKg())
+                .observaciones(registro.getObservaciones())
+                .build();
+    }
+
+    private CartillaAplicacionResponse toResponse(RegistroDesparasitacion registro) {
+        Mascota mascota = registro.getHistoriaClinica().getMascota();
+        Empleado emp = registro.getVeterinario();
+        return CartillaAplicacionResponse.builder()
+                .registroId(registro.getId())
+                .tipo(TipoControlPreventivo.DESPARASITACION)
+                .mascotaId(mascota.getId())
+                .mascotaNombre(mascota.getNombreCompleto())
+                .numeroHc(registro.getHistoriaClinica().getNumeroHc())
+                .nombre(registro.getProducto())
+                .fechaAplicacion(registro.getFechaAplicacion())
+                .fechaProxima(registro.getFechaProximaAplicacion())
+                .periodicidadMeses(registro.getPeriodicidadMeses())
+                .intervaloCantidad(registro.getIntervaloCantidad())
+                .intervaloUnidad(registro.getIntervaloUnidad())
+                .veterinarioNombre(nombreVeterinario(emp))
+                .lote(registro.getLote())
+                .fechaVencimientoProducto(registro.getFechaVencimientoProducto())
+                .dosis(registro.getDosis())
+                .unidadDosis(registro.getUnidadDosis())
+                .viaAdministracion(registro.getViaAdministracion())
+                .sitioAplicacion(registro.getSitioAplicacion())
+                .pesoKg(registro.getPesoKg())
+                .observaciones(registro.getObservaciones())
+                .build();
     }
 
     private String normalizar(String valor) {
