@@ -1,34 +1,168 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controles preventivos</title>
+    <style>
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; display: block; }
+        body { margin: 0; padding: 0; background-color: #f2f2f2; font-family: 'Barlow', Arial, sans-serif; }
+    </style>
 </head>
-<body style="margin:0;background:#f4f7fa;font-family:Arial,sans-serif;color:#243447">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:24px 12px;background:#f4f7fa">
-    <tr><td align="center">
-        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #dce5ec">
-            <tr><td style="padding:24px 28px;background:#0066aa;color:#ffffff">
-                <h1 style="margin:0;font-size:22px">Controles preventivos</h1>
-                <p style="margin:8px 0 0" th:text="${companyName}">Veterinaria</p>
-            </td></tr>
-            <tr><td style="padding:28px">
-                <p style="margin-top:0">Hola, <strong th:text="${nombre}">propietario</strong>:</p>
-                <p>Estos son los controles preventivos que requieren su atencion:</p>
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse">
-                    <tr th:each="item : ${controles}">
-                        <td style="padding:14px 0;border-bottom:1px solid #e6edf2">
-                            <strong th:text="${item.mascota}">Mascota</strong><br>
-                            <span th:text="${item.control}">Control</span><br>
-                            <span th:text="${#temporals.format(item.fecha, 'dd/MM/yyyy')}">Fecha</span>
-                            <span style="font-weight:bold;color:#b45309" th:text="${' - ' + item.estado}">Estado</span>
-                        </td>
-                    </tr>
-                </table>
-                <p style="margin-bottom:0;margin-top:24px">Comuniquese con la veterinaria para coordinar la atencion.</p>
-            </td></tr>
-        </table>
-    </td></tr>
+<body style="margin:0;padding:0;background-color:#f2f2f2;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f2f2f2;">
+    <tr>
+        <td align="center" style="padding:40px 16px;">
+            <table role="presentation" width="580" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;width:100%;background:#ffffff;border:1px solid #e4e4e4;">
+
+                <!-- HEADER -->
+                <tr>
+                    <td style="background-color:#ffffff;padding:32px 40px 24px;border-bottom:2px solid #0066aa;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td style="vertical-align:middle;">
+                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td th:if="${companyLogo != null}" style="padding-right:12px;vertical-align:middle;">
+                                                <img th:src="${companyLogo}" alt="Logo" width="42" height="42" style="border-radius:50%;width:42px;height:42px;object-fit:cover;">
+                                            </td>
+                                            <td style="vertical-align:middle;">
+                                                <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:15px;font-weight:700;color:#111111;" th:text="${companyName}">Veterinaria</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td align="right" style="vertical-align:middle;">
+                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td style="background-color:#e0f2fe;padding:5px 12px;border:1px solid #7dd3fc;">
+                                                <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#0369a1;letter-spacing:1.8px;text-transform:uppercase;">Controles Preventivos</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- TITULO -->
+                <tr>
+                    <td style="padding:32px 40px 0;">
+                        <p style="margin:0 0 4px;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#0066aa;letter-spacing:2.5px;text-transform:uppercase;">Recordatorio de salud</p>
+                        <p style="margin:0 0 8px;font-family:'Barlow',Arial,sans-serif;font-size:24px;font-weight:700;color:#111111;line-height:1.25;">Tus controles preventivos pendientes</p>
+                        <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:14px;color:#888888;line-height:1.75;">Hola, <span style="color:#111111;font-weight:600;" th:text="${nombre}">Propietario</span>. Estos son los controles preventivos de tus mascotas que requieren atención.</p>
+                    </td>
+                </tr>
+
+                <!-- RESUMEN -->
+                <tr>
+                    <td style="padding:24px 40px 0;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f0f9ff;border:1px solid #bae6fd;">
+                            <tr>
+                                <td style="padding:16px 22px;">
+                                    <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:13px;color:#0369a1;line-height:1.6;">
+                                        <span style="font-weight:700;" th:text="${totalControles}">0</span> control(es) pendiente(s) al <span style="font-weight:600;" th:text="${#temporals.format(fechaProceso, 'dd/MM/yyyy')}">—</span>
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- CONTROLES -->
+                <tr>
+                    <td style="padding:24px 40px 0;">
+                        <p style="margin:0 0 14px;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#aaaaaa;letter-spacing:2px;text-transform:uppercase;">Detalle de controles</p>
+
+                        <th:block th:each="item, iter : ${controles}">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" th:style="${iter.index > 0 ? 'margin-top:12px;' : ''} + 'border:1px solid #e4e4e4;'">
+                                <!-- Barra de estado -->
+                                <tr>
+                                    <td th:if="${item.esAtrasado}" style="padding:0;background-color:#fef2f2;border-left:4px solid #ef4444;height:4px;font-size:0;line-height:0;">&nbsp;</td>
+                                    <td th:if="${item.esPendiente}" style="padding:0;background-color:#fefce8;border-left:4px solid #eab308;height:4px;font-size:0;line-height:0;">&nbsp;</td>
+                                    <td th:if="${item.esProximo}" style="padding:0;background-color:#f0fdf4;border-left:4px solid #22c55e;height:4px;font-size:0;line-height:0;">&nbsp;</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:18px 22px;">
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td style="vertical-align:top;">
+                                                    <p style="margin:0 0 4px;font-family:'Barlow',Arial,sans-serif;font-size:16px;font-weight:700;color:#111111;" th:text="${item.mascota}">Mascota</p>
+                                                    <p style="margin:0 0 2px;font-family:'Barlow',Arial,sans-serif;font-size:13px;color:#555555;">
+                                                        <span style="font-weight:600;" th:text="${item.tipoDisplay}">Tipo</span> — <span th:text="${item.control}">Control</span>
+                                                    </p>
+                                                    <p style="margin:8px 0 0;font-family:'Barlow',Arial,sans-serif;font-size:12px;color:#888888;">
+                                                        Fecha recomendada: <span style="font-weight:600;color:#111111;" th:text="${#temporals.format(item.fecha, 'dd/MM/yyyy')}">—</span>
+                                                        <span style="margin-left:6px;font-weight:600;" th:if="${item.esAtrasado}" th:text="' · ' + ${item.resumenDias}" th:style="'color:#ef4444;'">—</span>
+                                                        <span style="margin-left:6px;font-weight:600;" th:if="${item.esPendiente}" th:text="' · ' + ${item.resumenDias}" th:style="'color:#eab308;'">—</span>
+                                                        <span style="margin-left:6px;font-weight:600;" th:if="${item.esProximo}" th:text="' · ' + ${item.resumenDias}" th:style="'color:#16a34a;'">—</span>
+                                                    </p>
+                                                </td>
+                                                <td align="right" style="vertical-align:top;">
+                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                                        <tr>
+                                                            <td th:if="${item.esAtrasado}" style="background-color:#fef2f2;padding:4px 10px;border:1px solid #fecaca;">
+                                                                <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#dc2626;letter-spacing:1.2px;text-transform:uppercase;">Atrasado</p>
+                                                            </td>
+                                                            <td th:if="${item.esPendiente}" style="background-color:#fefce8;padding:4px 10px;border:1px solid #fde68a;">
+                                                                <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#b45309;letter-spacing:1.2px;text-transform:uppercase;">Pendiente</p>
+                                                            </td>
+                                                            <td th:if="${item.esProximo}" style="background-color:#f0fdf4;padding:4px 10px;border:1px solid #bbf7d0;">
+                                                                <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#16a34a;letter-spacing:1.2px;text-transform:uppercase;">Próximo</p>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </th:block>
+                    </td>
+                </tr>
+
+                <!-- CONTACTO -->
+                <tr th:if="${companyEmail != null or companyPhone != null or companyAddress != null}">
+                    <td style="padding:28px 40px 0;">
+                        <p style="margin:0 0 14px;font-family:'Barlow',Arial,sans-serif;font-size:10px;font-weight:700;color:#aaaaaa;letter-spacing:2px;text-transform:uppercase;">¿Necesitas coordinar tu visita?</p>
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8f8f8;border:1px solid #eeeeee;">
+                            <tr>
+                                <td style="padding:18px 22px;">
+                                    <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:13px;color:#555555;line-height:2.1;">
+                                        <span style="font-weight:600;color:#111111;" th:text="${companyName}">—</span><br>
+                                        <span th:if="${companyEmail != null}" th:text="${companyEmail}">—</span><br th:if="${companyEmail != null}">
+                                        <span th:if="${companyPhone != null}" th:text="${companyPhone}">—</span><br th:if="${companyPhone != null}">
+                                        <span th:if="${companyAddress != null}" th:text="${companyAddress}">—</span>
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- FOOTER -->
+                <tr>
+                    <td style="background-color:#f8f8f8;border-top:1px solid #eeeeee;padding:18px 40px;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td>
+                                    <p style="margin:0;font-family:'Barlow',Arial,sans-serif;font-size:12px;color:#bbbbbb;">© 2025 <span style="color:#888888;font-weight:600;" th:text="${companyName}">Veterinaria</span>. Todos los derechos reservados.</p>
+                                </td>
+                                <td align="right" th:if="${companyEmail != null}">
+                                    <a th:href="'mailto:' + ${companyEmail}" th:text="${companyEmail}" style="font-family:'Barlow',Arial,sans-serif;font-size:12px;color:#0066aa;text-decoration:none;">correo</a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
 </table>
 </body>
 </html>

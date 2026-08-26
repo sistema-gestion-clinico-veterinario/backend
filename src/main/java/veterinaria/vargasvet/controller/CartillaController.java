@@ -14,6 +14,7 @@ import veterinaria.vargasvet.dto.request.CartillaAplicacionRequest;
 import veterinaria.vargasvet.dto.response.AplicacionPreventivaResponse;
 import veterinaria.vargasvet.dto.response.CartillaAplicacionResponse;
 import veterinaria.vargasvet.dto.response.MascotaCartillaResponse;
+import veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CartillaService;
@@ -95,6 +96,14 @@ public class CartillaController {
             @PathVariable Long id, @RequestParam boolean activo) {
         cartillaService.cambiarEstadoDesparasitacion(id, activo);
         return ResponseEntity.ok(new ApiResponse<>(true, activo ? "Desparasitacion activada" : "Desparasitacion desactivada", null));
+    }
+
+    @GetMapping("/recordatorios-whatsapp")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
+    public ResponseEntity<ApiResponse<java.util.List<veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse>>> recordatoriosWhatsApp() {
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Recordatorios recuperados",
+                cartillaService.listarRecordatoriosWhatsApp(companyId)));
     }
 
 }
