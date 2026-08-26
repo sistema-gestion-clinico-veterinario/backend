@@ -11,6 +11,15 @@ public class MascotaCartillaResponse {
     private String especie;
     private String razaNombre;
     private String apoderadoNombreCompleto;
+    private String apoderadoTelefono;
+    private Long apoderadoId;
     private Boolean activo;
     private LocalDate fechaUltimaAplicacion;
+    private String controlPendienteNombre;
+    private String controlPendienteTipo;
+    private LocalDate controlPendienteFecha;
+    private String controlPendienteEstado;
+    private Integer controlPendienteDiasRestantes;
+    private String controlPendienteResumen;
+    private Long controlPendienteId;
 }

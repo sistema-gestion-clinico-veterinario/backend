@@ -49,4 +49,11 @@ public interface ControlPreventivoRepository extends JpaRepository<ControlPreven
            "ORDER BY cp.fechaRecomendada ASC")
     List<ControlPreventivo> findPendientesByCompany(@Param("companyId") Integer companyId,
                                                      @Param("estados") Collection<EstadoControlPreventivo> estados);
+
+    @Query("SELECT cp FROM ControlPreventivo cp " +
+           "WHERE cp.mascota.id = :mascotaId " +
+           "AND cp.estado IN :estados " +
+           "ORDER BY cp.fechaRecomendada ASC")
+    List<ControlPreventivo> findNextPendingByMascota(@Param("mascotaId") Long mascotaId,
+                                                      @Param("estados") Collection<EstadoControlPreventivo> estados);
 }
