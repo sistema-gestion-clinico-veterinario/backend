@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8ef16273-d33e-4236-ac8a-9607d61e8aac" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/RecordatorioPreventivoServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/RecordatorioPreventivoServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/email/recordatorio-preventivo-template.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/email/recordatorio-preventivo-template.html" afterDir="false" />
-    </list>
+    <list default="true" id="8ef16273-d33e-4236-ac8a-9607d61e8aac" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -175,7 +171,7 @@
       <workItem from="1785787783915" duration="2000" />
       <workItem from="1785816305272" duration="588000" />
       <workItem from="1787365733264" duration="710000" />
-      <workItem from="1787769464652" duration="1269000" />
+      <workItem from="1787769464652" duration="2588000" />
     </task>
     <servers />
   </component>
