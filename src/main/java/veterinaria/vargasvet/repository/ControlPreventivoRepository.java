@@ -25,7 +25,6 @@ public interface ControlPreventivoRepository extends JpaRepository<ControlPreven
 
     @Query("SELECT cp FROM ControlPreventivo cp " +
            "JOIN FETCH cp.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
-           "LEFT JOIN FETCH cp.tipoVacuna " +
            "WHERE cp.fechaRecomendada <= :hasta AND cp.estado IN :estados " +
            "AND m.activo = true AND u.activo = true AND u.emailVerified = true")
     List<ControlPreventivo> findReminderCandidates(@Param("hasta") LocalDate hasta,
@@ -33,7 +32,6 @@ public interface ControlPreventivoRepository extends JpaRepository<ControlPreven
 
     @Query("SELECT cp FROM ControlPreventivo cp " +
            "JOIN FETCH cp.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
-           "LEFT JOIN FETCH cp.tipoVacuna " +
            "WHERE u.company.id = :companyId " +
            "AND cp.fechaRecomendada BETWEEN :desde AND :hasta " +
            "AND cp.estado IN :estados " +
@@ -45,11 +43,17 @@ public interface ControlPreventivoRepository extends JpaRepository<ControlPreven
 
     @Query("SELECT cp FROM ControlPreventivo cp " +
            "JOIN FETCH cp.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
-           "LEFT JOIN FETCH cp.tipoVacuna " +
            "WHERE u.company.id = :companyId " +
            "AND cp.estado IN :estados " +
            "AND m.activo = true AND u.activo = true " +
            "ORDER BY cp.fechaRecomendada ASC")
     List<ControlPreventivo> findPendientesByCompany(@Param("companyId") Integer companyId,
                                                      @Param("estados") Collection<EstadoControlPreventivo> estados);
+
+    @Query("SELECT cp FROM ControlPreventivo cp " +
+           "WHERE cp.mascota.id = :mascotaId " +
+           "AND cp.estado IN :estados " +
+           "ORDER BY cp.fechaRecomendada ASC")
+    List<ControlPreventivo> findNextPendingByMascota(@Param("mascotaId") Long mascotaId,
+                                                      @Param("estados") Collection<EstadoControlPreventivo> estados);
 }

@@ -80,6 +80,13 @@ public class CartillaServiceImpl implements CartillaService {
     public Page<MascotaCartillaResponse> listarMascotasConCartilla(Integer companyId, String nombre, EspecieMascota especie, Boolean activo, Pageable pageable) {
         Page<Mascota> mascotas = mascotaRepository.buscar(companyId, nombre, especie, null, activo, pageable);
 
+        var estadosPendientes = java.util.List.of(
+            EstadoControlPreventivo.PROGRAMADO,
+            EstadoControlPreventivo.PROXIMO,
+            EstadoControlPreventivo.PENDIENTE,
+            EstadoControlPreventivo.ATRASADO
+        );
+
         return mascotas.map(m -> {
             LocalDate fv = vacunaRepository
                     .findFirstByHistoriaClinicaMascotaIdOrderByFechaAplicacionDesc(m.getId())
@@ -97,7 +104,13 @@ public class CartillaServiceImpl implements CartillaService {
                 fechaUltima = fv != null ? fv : fd;
             }
 
-            return mascotaCartillaMapper.toResponse(m, fechaUltima);
+            ControlPreventivo controlPendiente = controlRepository
+                    .findNextPendingByMascota(m.getId(), estadosPendientes)
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+
+            return mascotaCartillaMapper.toResponse(m, fechaUltima, controlPendiente);
         });
     }
 
