@@ -6,10 +6,13 @@ import org.springframework.data.repository.query.Param;
 import veterinaria.vargasvet.domain.entity.RegistroVacuna;
 
 import java.util.List;
+import java.util.Optional;
 import java.time.LocalDate;
 
 public interface RegistroVacunaRepository extends JpaRepository<RegistroVacuna, Long> {
     List<RegistroVacuna> findByHistoriaClinicaMascotaIdOrderByFechaAplicacionDesc(Long mascotaId);
+
+    Optional<RegistroVacuna> findFirstByHistoriaClinicaMascotaIdOrderByFechaAplicacionDesc(Long mascotaId);
 
     @Query("SELECT r FROM RegistroVacuna r " +
            "JOIN r.historiaClinica h JOIN h.mascota m JOIN m.apoderado a JOIN a.user u " +

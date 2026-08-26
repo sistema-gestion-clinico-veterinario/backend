@@ -2,13 +2,20 @@ package veterinaria.vargasvet.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
+import veterinaria.vargasvet.dto.request.CartillaAplicacionEditRequest;
 import veterinaria.vargasvet.dto.request.CartillaAplicacionRequest;
 import veterinaria.vargasvet.dto.response.AplicacionPreventivaResponse;
 import veterinaria.vargasvet.dto.response.CartillaAplicacionResponse;
+import veterinaria.vargasvet.dto.response.MascotaCartillaResponse;
+import veterinaria.vargasvet.domain.enums.EspecieMascota;
+import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CartillaService;
 import veterinaria.vargasvet.service.ControlPreventivoService;
 
@@ -43,6 +50,51 @@ public class CartillaController {
     public ResponseEntity<ApiResponse<List<AplicacionPreventivaResponse>>> cartilla(@PathVariable Long petId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Cartilla de la mascota recuperada",
                 controlPreventivoService.listarAplicaciones(petId)));
+    }
+
+    @GetMapping("/pets")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
+    public ResponseEntity<ApiResponse<Page<MascotaCartillaResponse>>> listarMascotasConCartilla(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) EspecieMascota especie,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Mascotas con cartilla",
+                cartillaService.listarMascotasConCartilla(companyId, nombre, especie, true,
+                        PageRequest.of(page, size, Sort.by("nombreCompleto").ascending()))));
+    }
+
+    @PutMapping("/vaccinations/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    public ResponseEntity<ApiResponse<CartillaAplicacionResponse>> editarVacunacion(
+            @PathVariable Long id, @Valid @RequestBody CartillaAplicacionEditRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Vacunacion actualizada",
+                cartillaService.editarVacunacion(id, request)));
+    }
+
+    @PatchMapping("/vaccinations/{id}/status")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> cambiarEstadoVacunacion(
+            @PathVariable Long id, @RequestParam boolean activo) {
+        cartillaService.cambiarEstadoVacunacion(id, activo);
+        return ResponseEntity.ok(new ApiResponse<>(true, activo ? "Vacunacion activada" : "Vacunacion desactivada", null));
+    }
+
+    @PutMapping("/dewormings/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    public ResponseEntity<ApiResponse<CartillaAplicacionResponse>> editarDesparasitacion(
+            @PathVariable Long id, @Valid @RequestBody CartillaAplicacionEditRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitacion actualizada",
+                cartillaService.editarDesparasitacion(id, request)));
+    }
+
+    @PatchMapping("/dewormings/{id}/status")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    public ResponseEntity<ApiResponse<Void>> cambiarEstadoDesparasitacion(
+            @PathVariable Long id, @RequestParam boolean activo) {
+        cartillaService.cambiarEstadoDesparasitacion(id, activo);
+        return ResponseEntity.ok(new ApiResponse<>(true, activo ? "Desparasitacion activada" : "Desparasitacion desactivada", null));
     }
 
 }

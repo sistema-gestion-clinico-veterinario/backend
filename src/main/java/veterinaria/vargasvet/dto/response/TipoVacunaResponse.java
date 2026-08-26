@@ -20,4 +20,5 @@ public class TipoVacunaResponse {
     private BigDecimal dosis;
     private String unidadDosis;
     private String viaAdministracion;
+    private Boolean activo;
 }

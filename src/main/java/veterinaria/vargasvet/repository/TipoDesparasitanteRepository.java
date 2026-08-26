@@ -1,5 +1,7 @@
 package veterinaria.vargasvet.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.TipoDesparasitante;
@@ -14,4 +16,6 @@ public interface TipoDesparasitanteRepository extends JpaRepository<TipoDesparas
             Integer companyId, EspecieMascota especie);
 
     boolean existsByCompanyIdAndNombreIgnoreCaseAndEspecie(Integer companyId, String nombre, EspecieMascota especie);
+
+    Page<TipoDesparasitante> findByCompanyId(Integer companyId, Pageable pageable);
 }

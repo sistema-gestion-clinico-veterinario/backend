@@ -2,6 +2,9 @@ package veterinaria.vargasvet.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +14,7 @@ import veterinaria.vargasvet.dto.response.AplicacionPreventivaResponse;
 import veterinaria.vargasvet.dto.response.ControlPreventivoResponse;
 import veterinaria.vargasvet.dto.response.TipoDesparasitanteResponse;
 import veterinaria.vargasvet.dto.response.TipoVacunaResponse;
+import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.ControlPreventivoService;
 
 import java.util.List;
@@ -79,5 +83,61 @@ public class ControlPreventivoController {
     public ResponseEntity<ApiResponse<ControlPreventivoResponse>> desparasitar(@PathVariable Long consultationId,
             @Valid @RequestBody RegistroDesparasitacionRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitacion registrada", service.registrarDesparasitacion(consultationId, request)));
+    }
+
+    @GetMapping("/company/vaccine-types")
+    public ResponseEntity<ApiResponse<Page<TipoVacunaResponse>>> listarTiposVacunaPorCompany(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Vacunas recuperadas",
+                service.listarTiposVacunaPorCompany(companyId, PageRequest.of(page, size, Sort.by("nombre").ascending()))));
+    }
+
+    @GetMapping("/company/deworming-products")
+    public ResponseEntity<ApiResponse<Page<TipoDesparasitanteResponse>>> listarDesparasitantesPorCompany(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitantes recuperados",
+                service.listarTiposDesparasitantePorCompany(companyId, PageRequest.of(page, size, Sort.by("nombre").ascending()))));
+    }
+
+    @PutMapping("/vaccine-types/{id}")
+    public ResponseEntity<ApiResponse<TipoVacunaResponse>> actualizarTipoVacuna(
+            @PathVariable Long id, @Valid @RequestBody TipoVacunaRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Vacuna actualizada", service.actualizarTipoVacuna(id, request)));
+    }
+
+    @PatchMapping("/vaccine-types/{id}/status")
+    public ResponseEntity<ApiResponse<Void>> cambiarEstadoTipoVacuna(
+            @PathVariable Long id, @RequestParam boolean activo) {
+        service.cambiarEstadoTipoVacuna(id, activo);
+        return ResponseEntity.ok(new ApiResponse<>(true, activo ? "Vacuna activada" : "Vacuna desactivada", null));
+    }
+
+    @DeleteMapping("/vaccine-types/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminarTipoVacuna(@PathVariable Long id) {
+        service.eliminarTipoVacuna(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Vacuna eliminada", null));
+    }
+
+    @PutMapping("/deworming-products/{id}")
+    public ResponseEntity<ApiResponse<TipoDesparasitanteResponse>> actualizarTipoDesparasitante(
+            @PathVariable Long id, @Valid @RequestBody TipoDesparasitanteRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitante actualizado", service.actualizarTipoDesparasitante(id, request)));
+    }
+
+    @PatchMapping("/deworming-products/{id}/status")
+    public ResponseEntity<ApiResponse<Void>> cambiarEstadoTipoDesparasitante(
+            @PathVariable Long id, @RequestParam boolean activo) {
+        service.cambiarEstadoTipoDesparasitante(id, activo);
+        return ResponseEntity.ok(new ApiResponse<>(true, activo ? "Desparasitante activado" : "Desparasitante desactivado", null));
+    }
+
+    @DeleteMapping("/deworming-products/{id}")
+    public ResponseEntity<ApiResponse<Void>> eliminarTipoDesparasitante(@PathVariable Long id) {
+        service.eliminarTipoDesparasitante(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitante eliminado", null));
     }
 }
