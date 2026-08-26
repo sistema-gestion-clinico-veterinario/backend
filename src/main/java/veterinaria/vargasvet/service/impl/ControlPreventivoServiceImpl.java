@@ -1,6 +1,8 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.*;
@@ -397,6 +399,94 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
         return control;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<TipoVacunaResponse> listarTiposVacunaPorCompany(Integer companyId, Pageable pageable) {
+        return tipoVacunaRepository.findByCompanyId(companyId, pageable).map(this::toTipoResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<TipoDesparasitanteResponse> listarTiposDesparasitantePorCompany(Integer companyId, Pageable pageable) {
+        return tipoDesparasitanteRepository.findByCompanyId(companyId, pageable).map(this::toDesparasitanteResponse);
+    }
+
+    @Override
+    @Transactional
+    public TipoVacunaResponse actualizarTipoVacuna(Long id, TipoVacunaRequest request) {
+        TipoVacuna tipo = tipoVacunaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vacuna no encontrada"));
+        tipo.setNombre(request.getNombre().trim());
+        tipo.setEspecie(request.getEspecie());
+        tipo.setPeriodicidadMesesSugerida(request.getPeriodicidadMesesSugerida());
+        tipo.setPrecio(request.getPrecio());
+        tipo.setLote(normalizar(request.getLote()));
+        tipo.setFechaVencimientoProducto(request.getFechaVencimientoProducto());
+        tipo.setDosis(request.getDosis());
+        tipo.setUnidadDosis(normalizar(request.getUnidadDosis()));
+        tipo.setViaAdministracion(normalizar(request.getViaAdministracion()));
+        tipo.setUpdatedBy(actor());
+        return toTipoResponse(tipoVacunaRepository.save(tipo));
+    }
+
+    @Override
+    @Transactional
+    public TipoDesparasitanteResponse actualizarTipoDesparasitante(Long id, TipoDesparasitanteRequest request) {
+        TipoDesparasitante tipo = tipoDesparasitanteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Desparasitante no encontrado"));
+        tipo.setNombre(request.getNombre().trim());
+        tipo.setEspecie(request.getEspecie());
+        tipo.setPeriodicidadMesesSugerida(request.getPeriodicidadMesesSugerida());
+        tipo.setPrecio(request.getPrecio());
+        tipo.setLote(normalizar(request.getLote()));
+        tipo.setFechaVencimientoProducto(request.getFechaVencimientoProducto());
+        tipo.setDosis(request.getDosis());
+        tipo.setUnidadDosis(normalizar(request.getUnidadDosis()));
+        tipo.setViaAdministracion(normalizar(request.getViaAdministracion()));
+        tipo.setUpdatedBy(actor());
+        return toDesparasitanteResponse(tipoDesparasitanteRepository.save(tipo));
+    }
+
+    @Override
+    @Transactional
+    public void cambiarEstadoTipoVacuna(Long id, boolean activo) {
+        TipoVacuna tipo = tipoVacunaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vacuna no encontrada"));
+        tipo.setActivo(activo);
+        tipo.setUpdatedBy(actor());
+        tipoVacunaRepository.save(tipo);
+    }
+
+    @Override
+    @Transactional
+    public void cambiarEstadoTipoDesparasitante(Long id, boolean activo) {
+        TipoDesparasitante tipo = tipoDesparasitanteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Desparasitante no encontrado"));
+        tipo.setActivo(activo);
+        tipo.setUpdatedBy(actor());
+        tipoDesparasitanteRepository.save(tipo);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarTipoVacuna(Long id) {
+        TipoVacuna tipo = tipoVacunaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vacuna no encontrada"));
+        tipo.setActivo(false);
+        tipo.setUpdatedBy(actor());
+        tipoVacunaRepository.save(tipo);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarTipoDesparasitante(Long id) {
+        TipoDesparasitante tipo = tipoDesparasitanteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Desparasitante no encontrado"));
+        tipo.setActivo(false);
+        tipo.setUpdatedBy(actor());
+        tipoDesparasitanteRepository.save(tipo);
+    }
+
     private void validarControlDuplicado(Long mascotaId, TipoControlPreventivo tipo, TipoVacuna vacuna,
                                          String nombre, LocalDate fecha, Long controlExcluido) {
         boolean duplicado = vacuna != null
@@ -444,14 +534,16 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
         return TipoVacunaResponse.builder().id(v.getId()).nombre(v.getNombre()).especie(v.getEspecie())
                 .periodicidadMesesSugerida(v.getPeriodicidadMesesSugerida()).precio(v.getPrecio())
                 .lote(v.getLote()).fechaVencimientoProducto(v.getFechaVencimientoProducto())
-                .dosis(v.getDosis()).unidadDosis(v.getUnidadDosis()).viaAdministracion(v.getViaAdministracion()).build();
+                .dosis(v.getDosis()).unidadDosis(v.getUnidadDosis()).viaAdministracion(v.getViaAdministracion())
+                .activo(v.getActivo()).build();
     }
 
     private TipoDesparasitanteResponse toDesparasitanteResponse(TipoDesparasitante d) {
         return TipoDesparasitanteResponse.builder().id(d.getId()).nombre(d.getNombre()).especie(d.getEspecie())
                 .periodicidadMesesSugerida(d.getPeriodicidadMesesSugerida()).precio(d.getPrecio())
                 .lote(d.getLote()).fechaVencimientoProducto(d.getFechaVencimientoProducto())
-                .dosis(d.getDosis()).unidadDosis(d.getUnidadDosis()).viaAdministracion(d.getViaAdministracion()).build();
+                .dosis(d.getDosis()).unidadDosis(d.getUnidadDosis()).viaAdministracion(d.getViaAdministracion())
+                .activo(d.getActivo()).build();
     }
 
     private String normalizar(String valor) {
