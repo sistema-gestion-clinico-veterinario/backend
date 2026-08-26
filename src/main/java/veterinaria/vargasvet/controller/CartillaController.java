@@ -61,6 +61,10 @@ public class CartillaController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Integer companyId = SecurityUtils.getCurrentCompanyId();
+        if (companyId == null) {
+            return ResponseEntity.ok(new ApiResponse<>(true, "Mascotas con cartilla",
+                    Page.empty(PageRequest.of(page, size))));
+        }
         return ResponseEntity.ok(new ApiResponse<>(true, "Mascotas con cartilla",
                 cartillaService.listarMascotasConCartilla(companyId, nombre, especie, true,
                         PageRequest.of(page, size, Sort.by("nombreCompleto").ascending()))));
