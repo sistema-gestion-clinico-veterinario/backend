@@ -10,6 +10,7 @@ import veterinaria.vargasvet.domain.entity.RecordatorioPreventivo;
 import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
 import veterinaria.vargasvet.domain.enums.EstadoRecordatorio;
 import veterinaria.vargasvet.domain.enums.TipoAvisoRecordatorio;
+import veterinaria.vargasvet.domain.enums.TipoControlPreventivo;
 import veterinaria.vargasvet.dto.Mail;
 import veterinaria.vargasvet.repository.ControlPreventivoRepository;
 import veterinaria.vargasvet.repository.RecordatorioPreventivoRepository;
@@ -63,22 +64,45 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
         avisos.sort(Comparator.comparing((AvisoPendiente a) -> prioridad(a.tipoAviso()))
                 .thenComparing(a -> a.control().getFechaRecomendada()));
         var usuario = avisos.get(0).control().getMascota().getApoderado().getUser();
+        var company = usuario.getCompany();
+
         List<Map<String, Object>> controles = avisos.stream().map(aviso -> {
+            ControlPreventivo c = aviso.control();
+            LocalDate fecha = c.getFechaRecomendada();
+            long dias = java.time.temporal.ChronoUnit.DAYS.between(hoy, fecha);
+            String resumenDias;
+            if (dias < 0) resumenDias = "Hace " + Math.abs(dias) + " día(s)";
+            else if (dias == 0) resumenDias = "Es hoy";
+            else resumenDias = "En " + dias + " día(s)";
+
             Map<String, Object> item = new HashMap<>();
-            item.put("mascota", aviso.control().getMascota().getNombreCompleto());
-            item.put("control", aviso.control().getNombreControl());
-            item.put("tipo", aviso.control().getTipo().name());
-            item.put("fecha", aviso.control().getFechaRecomendada());
+            item.put("mascota", c.getMascota().getNombreCompleto());
+            item.put("control", c.getNombreControl());
+            item.put("tipo", c.getTipo().name());
+            item.put("tipoDisplay", c.getTipo() == TipoControlPreventivo.VACUNACION
+                    ? "Vacunación" : "Desparasitación");
+            item.put("fecha", fecha);
             item.put("estado", aviso.tipoAviso().name());
+            item.put("resumenDias", resumenDias);
+            item.put("esAtrasado", aviso.tipoAviso() == TipoAvisoRecordatorio.ATRASADO);
+            item.put("esPendiente", aviso.tipoAviso() == TipoAvisoRecordatorio.PENDIENTE);
+            item.put("esProximo", aviso.tipoAviso() == TipoAvisoRecordatorio.PROXIMO);
             return item;
         }).toList();
 
         Map<String, Object> model = new HashMap<>();
         model.put("nombre", (usuario.getNombre() + " " + usuario.getApellido()).trim());
         model.put("controles", controles);
+        model.put("totalControles", controles.size());
         model.put("fechaProceso", hoy);
-        String companyName = usuario.getCompany() == null ? "su veterinaria" : usuario.getCompany().getName();
+        String companyName = company == null ? "su veterinaria" : company.getName();
         model.put("companyName", companyName);
+        if (company != null) {
+            model.put("companyLogo", company.getLogoUrl());
+            model.put("companyEmail", company.getEmail());
+            model.put("companyPhone", company.getPhone());
+            model.put("companyAddress", company.getAddress());
+        }
         Mail mail = emailService.createMail(usuario.getEmail(), "Controles preventivos de sus mascotas - " + companyName, model);
         emailService.sendEmail(mail, "email/recordatorio-preventivo-template");
 

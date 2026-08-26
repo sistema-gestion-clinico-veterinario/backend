@@ -42,4 +42,14 @@ public interface ControlPreventivoRepository extends JpaRepository<ControlPreven
                                                   @Param("desde") LocalDate desde,
                                                   @Param("hasta") LocalDate hasta,
                                                   @Param("estados") Collection<EstadoControlPreventivo> estados);
+
+    @Query("SELECT cp FROM ControlPreventivo cp " +
+           "JOIN FETCH cp.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
+           "LEFT JOIN FETCH cp.tipoVacuna " +
+           "WHERE u.company.id = :companyId " +
+           "AND cp.estado IN :estados " +
+           "AND m.activo = true AND u.activo = true " +
+           "ORDER BY cp.fechaRecomendada ASC")
+    List<ControlPreventivo> findPendientesByCompany(@Param("companyId") Integer companyId,
+                                                     @Param("estados") Collection<EstadoControlPreventivo> estados);
 }

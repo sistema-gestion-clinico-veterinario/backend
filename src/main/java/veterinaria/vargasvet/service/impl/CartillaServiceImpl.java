@@ -635,4 +635,56 @@ public class CartillaServiceImpl implements CartillaService {
         if (empleado == null || empleado.getUser() == null) return null;
         return (empleado.getUser().getNombre() + " " + empleado.getUser().getApellido()).trim();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse> listarRecordatoriosWhatsApp(Integer companyId) {
+        LocalDate hoy = AppClock.today();
+        var candidatos = controlRepository.findPendientesByCompany(companyId,
+                EnumSet.of(EstadoControlPreventivo.PROGRAMADO, EstadoControlPreventivo.PROXIMO,
+                        EstadoControlPreventivo.PENDIENTE, EstadoControlPreventivo.ATRASADO));
+
+        return candidatos.stream().map(cp -> {
+            Mascota m = cp.getMascota();
+            var apoderado = m.getApoderado();
+            var user = apoderado.getUser();
+            LocalDate fecha = cp.getFechaRecomendada();
+            long dias = java.time.temporal.ChronoUnit.DAYS.between(hoy, fecha);
+            String resumenDias;
+            String estado;
+            if (dias < 0) { resumenDias = "Venció hace " + Math.abs(dias) + " día(s)"; estado = "ATRASADO"; }
+            else if (dias == 0) { resumenDias = "Es hoy"; estado = "PENDIENTE"; }
+            else { resumenDias = "En " + dias + " día(s)"; estado = "PROXIMO"; }
+
+            String tipoDisplay = cp.getTipo() == TipoControlPreventivo.VACUNACION ? "Vacunación" : "Desparasitación";
+            String nombreControl = cp.getNombreControl();
+            String telefono = user.getTelefono();
+
+            String mensaje = String.format(
+                    "Hola %s, le recordamos que %s tiene un control de %s programado para el %s (%s). " +
+                    "Por favor coordinar su atención. - %s",
+                    user.getNombre() != null ? user.getNombre().split(" ")[0] : "estimado/a",
+                    m.getNombreCompleto(),
+                    tipoDisplay,
+                    fecha.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    resumenDias,
+                    user.getCompany() != null ? user.getCompany().getName() : "Veterinaria"
+            );
+
+            return veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse.builder()
+                    .controlId(cp.getId())
+                    .mascotaNombre(m.getNombreCompleto())
+                    .apoderadoId(apoderado.getId())
+                    .apoderadoNombre((user.getNombre() + " " + user.getApellido()).trim())
+                    .apoderadoTelefono(telefono)
+                    .tipoControl(tipoDisplay)
+                    .nombreControl(nombreControl)
+                    .fechaRecomendada(fecha)
+                    .estado(estado)
+                    .diasRestantes((int) dias)
+                    .resumenDias(resumenDias)
+                    .mensajeWhatsApp(mensaje)
+                    .build();
+        }).toList();
+    }
 }
