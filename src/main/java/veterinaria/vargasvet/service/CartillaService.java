@@ -7,6 +7,9 @@ import veterinaria.vargasvet.dto.request.CartillaAplicacionEditRequest;
 import veterinaria.vargasvet.dto.request.CartillaAplicacionRequest;
 import veterinaria.vargasvet.dto.response.CartillaAplicacionResponse;
 import veterinaria.vargasvet.dto.response.MascotaCartillaResponse;
+import veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse;
+
+import java.util.List;
 
 public interface CartillaService {
 
@@ -23,4 +26,6 @@ public interface CartillaService {
     void cambiarEstadoVacunacion(Long id, boolean activo);
 
     void cambiarEstadoDesparasitacion(Long id, boolean activo);
+
+    List<RecordatorioWhatsAppResponse> listarRecordatoriosWhatsApp(Integer companyId);
 }
