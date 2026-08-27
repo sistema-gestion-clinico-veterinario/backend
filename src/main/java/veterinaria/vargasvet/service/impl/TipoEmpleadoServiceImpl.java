@@ -2,6 +2,8 @@ package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.TipoEmpleado;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
@@ -9,7 +11,6 @@ import veterinaria.vargasvet.repository.TipoEmpleadoRepository;
 import veterinaria.vargasvet.service.TipoEmpleadoService;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -20,18 +21,12 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
     private final veterinaria.vargasvet.repository.EmpleadoRepository empleadoRepository;
 
     @Override
-    public List<TipoEmpleado> findAll(Integer companyId) {
-        // Si se pasa companyId explícito (SUPER_ADMIN seleccionó empresa), usar ese
-        if (companyId != null) {
-            return tipoEmpleadoRepository.findByCompanyId(companyId);
-        }
-        // Si es ADMIN u otro rol, usar el companyId del token
-        Integer tokenCompanyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
-        if (tokenCompanyId != null) {
-            return tipoEmpleadoRepository.findByCompanyId(tokenCompanyId);
-        }
-        // SUPER_ADMIN sin companyId: retorna todo
-        return tipoEmpleadoRepository.findAll();
+    @Transactional(readOnly = true)
+    public Page<TipoEmpleado> findAll(Integer companyId, Pageable pageable) {
+        Integer resolvedCompanyId = resolveCompanyId(companyId);
+        return resolvedCompanyId == null
+                ? tipoEmpleadoRepository.findAll(pageable)
+                : tipoEmpleadoRepository.findByCompanyId(resolvedCompanyId, pageable);
     }
 
     private void validarNombre(String nombre) {
@@ -69,6 +64,7 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
         validarNombre(tipo.getNombre());
         TipoEmpleado existing = tipoEmpleadoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado"));
+        validateCompany(existing);
 
         existing.setNombre(tipo.getNombre());
         if (tipo.getDescripcion() != null) existing.setDescripcion(tipo.getDescripcion());
@@ -82,6 +78,7 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
     public void cambiarEstado(Long id, Boolean activo) {
         TipoEmpleado existing = tipoEmpleadoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado"));
+        validateCompany(existing);
 
         existing.setEstado(activo);
         existing.setUpdatedAt(veterinaria.vargasvet.util.AppClock.now());
@@ -91,12 +88,25 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
     @Override
     @Transactional
     public void delete(Long id) {
-        if (!tipoEmpleadoRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Tipo de empleado no encontrado");
-        }
+        TipoEmpleado existing = tipoEmpleadoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado"));
+        validateCompany(existing);
         if (empleadoRepository.countByTipoEmpleadoId(id) > 0) {
             throw new IllegalArgumentException("No se puede eliminar el tipo de empleado porque tiene empleados asignados");
         }
-        tipoEmpleadoRepository.deleteById(id);
+        tipoEmpleadoRepository.delete(existing);
+    }
+
+    private Integer resolveCompanyId(Integer requestedCompanyId) {
+        if (veterinaria.vargasvet.security.SecurityUtils.isSuperAdmin()) return requestedCompanyId;
+        return veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+    }
+
+    private void validateCompany(TipoEmpleado tipo) {
+        if (veterinaria.vargasvet.security.SecurityUtils.isSuperAdmin()) return;
+        Integer currentCompanyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+        if (tipo.getCompany() == null || !tipo.getCompany().getId().equals(currentCompanyId)) {
+            throw new ResourceNotFoundException("Tipo de empleado no encontrado");
+        }
     }
 }

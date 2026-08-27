@@ -2,6 +2,7 @@ package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.PageRequest;
 import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
@@ -44,7 +45,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
     @Override
     public ReportesClinicosDTO obtenerReportes(Integer companyId, LocalDate fechaDesde, LocalDate fechaHasta,
                                                Long veterinarioId, EspecieMascota especie) {
-        Integer targetCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId();
+        Integer targetCompanyId = resolveCompanyId(companyId);
         LocalDate hoy = AppClock.today();
         LocalDate desde = fechaDesde != null ? fechaDesde : hoy.withDayOfMonth(1);
         LocalDate hasta = fechaHasta != null ? fechaHasta : hoy;
@@ -99,6 +100,13 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                 .proximasDesparasitaciones(findProximasDesparasitaciones(targetCompanyId))
                 .controlesPreventivosProximos(findControlesPreventivosProximos(targetCompanyId))
                 .build();
+    }
+
+    private Integer resolveCompanyId(Integer requestedCompanyId) {
+        if (SecurityUtils.isSuperAdmin()) {
+            return requestedCompanyId;
+        }
+        return SecurityUtils.getCurrentCompanyId();
     }
 
     private ReportesClinicosDTO.Resumen calcularResumen(List<Cita> citas, LocalDate desde, LocalDate hasta) {
@@ -294,27 +302,26 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
 
     private List<ReportesClinicosDTO.ProximaAplicacion> findProximasVacunas(Integer companyId) {
         LocalDate hoy = AppClock.today();
-        return registroVacunaRepository.findProximasVacunas(companyId, hoy, hoy.plusDays(30)).stream()
+        return registroVacunaRepository.findProximasVacunas(companyId, hoy, hoy.plusDays(30), PageRequest.of(0, 5)).stream()
                 .map(r -> ReportesClinicosDTO.ProximaAplicacion.builder()
                         .mascota(r.getHistoriaClinica().getMascota().getNombreCompleto())
                         .producto(r.getNombreVacuna())
                         .fechaProxima(r.getFechaProximaDosis().toString())
                         .tipoControl("VACUNACION")
                         .build())
-                .limit(5)
                 .toList();
     }
 
     private List<ReportesClinicosDTO.ProximaAplicacion> findProximasDesparasitaciones(Integer companyId) {
         LocalDate hoy = AppClock.today();
-        return registroDesparasitacionRepository.findProximasDesparasitaciones(companyId, hoy, hoy.plusDays(30)).stream()
+        return registroDesparasitacionRepository.findProximasDesparasitaciones(
+                        companyId, hoy, hoy.plusDays(30), PageRequest.of(0, 5)).stream()
                 .map(r -> ReportesClinicosDTO.ProximaAplicacion.builder()
                         .mascota(r.getHistoriaClinica().getMascota().getNombreCompleto())
                         .producto(r.getProducto())
                         .fechaProxima(r.getFechaProximaAplicacion().toString())
                         .tipoControl("DESPARASITACION")
                         .build())
-                .limit(5)
                 .toList();
     }
 
@@ -324,14 +331,14 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                 veterinaria.vargasvet.domain.enums.EstadoControlPreventivo.PROGRAMADO,
                 veterinaria.vargasvet.domain.enums.EstadoControlPreventivo.PROXIMO,
                 veterinaria.vargasvet.domain.enums.EstadoControlPreventivo.PENDIENTE);
-        return controlPreventivoRepository.findProximosByCompany(companyId, hoy, hoy.plusDays(30), estados).stream()
+        return controlPreventivoRepository.findProximosByCompany(
+                        companyId, hoy, hoy.plusDays(30), estados, PageRequest.of(0, 5)).stream()
                 .map(cp -> ReportesClinicosDTO.ProximaAplicacion.builder()
                         .mascota(cp.getMascota().getNombreCompleto())
                         .producto(cp.getNombreControl())
                         .fechaProxima(cp.getFechaRecomendada().toString())
                         .tipoControl(cp.getTipo().name())
                         .build())
-                .limit(5)
                 .toList();
     }
 

@@ -11,11 +11,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
-import veterinaria.vargasvet.repository.UsuarioRepository;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -40,11 +40,16 @@ public class TokenProvider {
     @Value("${jwt.public-key:classpath:keys/public_key.pem}")
     private String publicKeyPath;
 
+    @Value("${jwt.issuer:systemvet-api}")
+    private String issuer;
+
+    @Value("${jwt.audience:systemvet-web}")
+    private String audience;
+
     private PrivateKey privateKey;
     private PublicKey publicKey;
 
     private final ResourceLoader resourceLoader;
-    private final UsuarioRepository usuarioRepository;
 
     @PostConstruct
     public void init() {
@@ -56,22 +61,24 @@ public class TokenProvider {
         }
     }
 
-    public String createToken(String email, List<String> roles, Integer companyId) {
-        return createToken(email, roles, Collections.emptyList(), companyId);
-    }
-
-    public String createToken(String email, List<String> roles, List<String> permissions, Integer companyId) {
+    public String createToken(Integer userId, String email, List<String> roles,
+                              List<String> permissions, Integer companyId) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + (jwtValidityInSeconds * 1000));
 
         return Jwts.builder()
                 .subject(email)
+                .issuer(issuer)
+                .audience().add(audience).and()
+                .id(UUID.randomUUID().toString())
+                .claim("token_type", "access")
+                .claim("userId", userId)
                 .claim("roles", roles)
                 .claim("permissions", permissions)
                 .claim("companyId", companyId)
                 .issuedAt(now)
                 .expiration(validity)
-                .signWith(privateKey)
+                .signWith(privateKey, Jwts.SIG.RS256)
                 .compact();
     }
 
@@ -80,15 +87,23 @@ public class TokenProvider {
     }
 
     public String createRefreshToken(String email, String activeRole) {
+        return createRefreshToken(email, activeRole, UUID.randomUUID().toString());
+    }
+
+    public String createRefreshToken(String email, String activeRole, String familyId) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + (refreshTokenValidityInSeconds * 1000));
 
         JwtBuilder builder = Jwts.builder()
                 .subject(email)
+                .issuer(issuer)
+                .audience().add(audience).and()
                 .id(UUID.randomUUID().toString())
+                .claim("token_type", "refresh")
+                .claim("familyId", familyId)
                 .issuedAt(now)
                 .expiration(validity)
-                .signWith(privateKey);
+                .signWith(privateKey, Jwts.SIG.RS256);
 
         if (activeRole != null && !activeRole.isBlank()) {
             builder.claim("activeRole", activeRole);
@@ -99,11 +114,7 @@ public class TokenProvider {
 
     public Optional<String> getActiveRoleFromRefreshToken(String token) {
         try {
-            Claims claims = Jwts.parser()
-                    .verifyWith(publicKey)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+            Claims claims = parseRefreshClaims(token);
             return Optional.ofNullable(claims.get("activeRole", String.class));
         } catch (JwtException | IllegalArgumentException e) {
             return Optional.empty();
@@ -112,11 +123,7 @@ public class TokenProvider {
 
     public Optional<String> getEmailFromToken(String token) {
         try {
-            Claims claims = Jwts.parser()
-                    .verifyWith(publicKey)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+            Claims claims = parseRefreshClaims(token);
             return Optional.ofNullable(claims.getSubject());
         } catch (JwtException | IllegalArgumentException e) {
             return Optional.empty();
@@ -125,10 +132,7 @@ public class TokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser()
-                    .verifyWith(publicKey)
-                    .build()
-                    .parseSignedClaims(token);
+            parseAccessClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
@@ -136,11 +140,46 @@ public class TokenProvider {
     }
 
     public Authentication getAuthentication(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(publicKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        Claims claims = parseAccessClaims(token);
+
+        return authenticationFromClaims(token, claims);
+    }
+
+    public IssuedRealtimeTicket createRealtimeTicket(Integer userId, String email,
+                                                      List<String> authorities, Integer companyId) {
+        Instant issuedAt = veterinaria.vargasvet.util.AppClock.instantNow();
+        Instant expiresAt = issuedAt.plusSeconds(60);
+        String jti = UUID.randomUUID().toString();
+        String token = Jwts.builder()
+                .subject(email)
+                .issuer(issuer)
+                .audience().add(audience).and()
+                .id(jti)
+                .claim("token_type", "realtime")
+                .claim("userId", userId)
+                .claim("roles", authorities.stream().filter(a -> a.startsWith("ROLE_")).toList())
+                .claim("permissions", authorities.stream().filter(a -> !a.startsWith("ROLE_")).toList())
+                .claim("companyId", companyId)
+                .issuedAt(Date.from(issuedAt))
+                .expiration(Date.from(expiresAt))
+                .signWith(privateKey, Jwts.SIG.RS256)
+                .compact();
+        return new IssuedRealtimeTicket(token, jti, issuedAt, expiresAt);
+    }
+
+    public RealtimeTicketDetails getRealtimeTicketDetails(String ticket) {
+        Claims claims = parser().require("token_type", "realtime").build()
+                .parseSignedClaims(ticket).getPayload();
+        if (claims.getId() == null || claims.getExpiration() == null) {
+            throw new MalformedJwtException("Ticket realtime incompleto");
+        }
+        return new RealtimeTicketDetails(
+                authenticationFromClaims(ticket, claims),
+                claims.getId(),
+                claims.getExpiration().toInstant());
+    }
+
+    private Authentication authenticationFromClaims(String token, Claims claims) {
 
         List<GrantedAuthority> authorities = new ArrayList<>();
         List<?> roles = claims.get("roles", List.class);
@@ -161,9 +200,10 @@ public class TokenProvider {
         String email = claims.getSubject();
         Integer companyId = claims.get("companyId", Integer.class);
 
-        Integer userId = usuarioRepository.findByEmail(email)
-                .map(usuario -> usuario.getId())
-                .orElse(null);
+        Integer userId = claims.get("userId", Integer.class);
+        if (userId == null || email == null || email.isBlank()) {
+            throw new MalformedJwtException("Token sin identidad de usuario");
+        }
 
         UsuarioPrincipal principal = new UsuarioPrincipal(
                 userId,
@@ -175,6 +215,36 @@ public class TokenProvider {
 
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
+
+    public RefreshTokenDetails getRefreshTokenDetails(String token) {
+        Claims claims = parseRefreshClaims(token);
+        return new RefreshTokenDetails(
+                claims.getSubject(),
+                claims.getId(),
+                claims.get("familyId", String.class),
+                claims.get("activeRole", String.class));
+    }
+
+    private Claims parseAccessClaims(String token) {
+        return parser().require("token_type", "access").build()
+                .parseSignedClaims(token).getPayload();
+    }
+
+    private Claims parseRefreshClaims(String token) {
+        return parser().require("token_type", "refresh").build()
+                .parseSignedClaims(token).getPayload();
+    }
+
+    private JwtParserBuilder parser() {
+        return Jwts.parser()
+                .verifyWith(publicKey)
+                .requireIssuer(issuer)
+                .requireAudience(audience);
+    }
+
+    public record RefreshTokenDetails(String email, String jti, String familyId, String activeRole) {}
+    public record IssuedRealtimeTicket(String token, String jti, Instant issuedAt, Instant expiresAt) {}
+    public record RealtimeTicketDetails(Authentication authentication, String jti, Instant expiresAt) {}
 
     private PrivateKey loadPrivateKey(String resourcePath) throws Exception {
         String key = loadPemContent(resourcePath)

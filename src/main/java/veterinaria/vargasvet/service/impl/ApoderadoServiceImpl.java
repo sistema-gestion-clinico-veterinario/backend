@@ -21,6 +21,7 @@ import veterinaria.vargasvet.repository.RefreshTokenRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.security.SecurityTokenUtils;
 import veterinaria.vargasvet.service.ApoderadoService;
 import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.util.BusinessValidator;
@@ -106,7 +107,9 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         usuario.setPassword(passwordEncoder.encode(tempPassword));
         usuario.setActivo(false);
         usuario.setEmailVerified(false);
-        usuario.setVerificationToken(UUID.randomUUID().toString());
+        String verificationToken = SecurityTokenUtils.generate();
+        usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
+        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(24));
         businessValidator.checkCompanyActiva(companyIdToUse);
         usuario.setCompany(companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
@@ -131,7 +134,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
         Apoderado savedApoderado = apoderadoRepository.save(apoderado);
 
-        sendVerificationEmail(savedUser, dto.getNombre() + " " + dto.getApellido());
+        sendVerificationEmail(savedUser, dto.getNombre() + " " + dto.getApellido(), verificationToken);
 
         auditLogService.log(
             "CREAR_APODERADO",
@@ -144,7 +147,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         return profileDTO;
     }
 
-    private void sendVerificationEmail(Usuario usuario, String nombre) {
+    private void sendVerificationEmail(Usuario usuario, String nombre, String verificationToken) {
         try {
             String resolvedCompanyName = usuario.getCompany() != null ? usuario.getCompany().getName() : defaultCompanyName;
             String resolvedLogo = (usuario.getCompany() != null && usuario.getCompany().getLogoUrl() != null) ? usuario.getCompany().getLogoUrl() : defaultCompanyLogo;
@@ -156,7 +159,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             model.put("companyEmail", companyEmail);
             model.put("companyPhone", companyPhone);
             model.put("companyAddress", companyAddress);
-            model.put("verificationLink", frontendVerifyUrl + usuario.getVerificationToken());
+            model.put("verificationLink", frontendVerifyUrl + verificationToken);
 
             veterinaria.vargasvet.dto.Mail mail = emailService.createMail(
                     usuario.getEmail(),

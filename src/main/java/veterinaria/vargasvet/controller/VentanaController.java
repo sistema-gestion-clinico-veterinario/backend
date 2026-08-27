@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import veterinaria.vargasvet.domain.entity.Ventana;
 import veterinaria.vargasvet.dto.ApiResponse;
@@ -15,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/windows")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VISTA_VENTANAS')")
 public class VentanaController {
 
     private final VentanaService ventanaService;

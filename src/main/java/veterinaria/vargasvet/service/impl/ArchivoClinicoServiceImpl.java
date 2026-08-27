@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import org.springframework.security.access.AccessDeniedException;
 
 @Service
 @RequiredArgsConstructor
@@ -55,13 +56,7 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
         Consulta consulta = consultaRepository.findById(consultaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + consultaId));
 
-        if (!SecurityUtils.isSuperAdmin()) {
-            Integer companyId = SecurityUtils.getCurrentCompanyId();
-            if (consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null ||
-                !consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany().getId().equals(companyId)) {
-                throw new IllegalArgumentException("No tienes permiso para cargar archivos en esta consulta");
-            }
-        }
+        assertConsultaAccess(consulta);
 
         if (consulta.getEstado() == EstadoConsulta.CERRADA && !puedeModificarArchivoCerrado()) {
             throw new IllegalArgumentException("No se pueden cargar archivos en una historia clínica cerrada");
@@ -112,9 +107,9 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
     @Override
     @Transactional(readOnly = true)
     public List<ArchivoClinicoResponse> listarPorConsulta(Long consultaId) {
-        if (!consultaRepository.existsById(consultaId)) {
-            throw new ResourceNotFoundException("Consulta no encontrada con ID: " + consultaId);
-        }
+        Consulta consulta = consultaRepository.findById(consultaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + consultaId));
+        assertConsultaAccess(consulta);
         return archivoClinicoRepository.findByConsultaId(consultaId).stream()
                 .map(this::toResponse)
                 .toList();
@@ -179,8 +174,10 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
     @Override
     @Transactional(readOnly = true)
     public ArchivoClinicoResponse obtenerPorId(Long id) {
-        return toResponse(archivoClinicoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Archivo no encontrado con ID: " + id)));
+        ArchivoClinico archivo = archivoClinicoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Archivo no encontrado con ID: " + id));
+        assertConsultaAccess(archivo.getConsulta());
+        return toResponse(archivo);
     }
 
     @Override
@@ -188,6 +185,7 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
     public Resource servirContenido(Long id) {
         ArchivoClinico archivo = archivoClinicoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Archivo no encontrado con ID: " + id));
+        assertConsultaAccess(archivo.getConsulta());
         return storageService.loadAsResource(archivo.getUrl());
     }
 
@@ -196,6 +194,7 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
     public void eliminar(Long id) {
         ArchivoClinico archivo = archivoClinicoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Archivo no encontrado con ID: " + id));
+        assertConsultaAccess(archivo.getConsulta());
         if (archivo.getConsulta().getEstado() == EstadoConsulta.CERRADA && !puedeModificarArchivoCerrado()) {
             throw new IllegalArgumentException("No se pueden eliminar archivos de una historia clínica cerrada");
         }
@@ -205,6 +204,18 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
 
     private boolean puedeModificarArchivoCerrado() {
         return SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin();
+    }
+
+    private void assertConsultaAccess(Consulta consulta) {
+        if (SecurityUtils.isSuperAdmin()) return;
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        Integer ownerCompanyId = consulta.getHistoriaClinica().getMascota().getApoderado()
+                .getUser().getCompany() != null
+                ? consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany().getId()
+                : null;
+        if (companyId == null || !companyId.equals(ownerCompanyId)) {
+            throw new AccessDeniedException("No tiene acceso a archivos clínicos de otra empresa");
+        }
     }
 
     public ArchivoClinicoResponse toResponse(ArchivoClinico archivo) {

@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.VistaRequestDTO;
 import veterinaria.vargasvet.dto.response.VistaDTO;
@@ -16,6 +17,7 @@ import veterinaria.vargasvet.dto.request.VistaReorderDTO;
 @RestController
 @RequestMapping("/admin/views")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VISTA_VENTANAS')")
 public class VistaController {
 
     private final VistaService vistaService;

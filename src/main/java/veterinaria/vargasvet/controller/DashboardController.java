@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.response.DashboardStatsDTO;
+import veterinaria.vargasvet.dto.response.DashboardOverviewDTO;
 import veterinaria.vargasvet.service.DashboardService;
 
 @RestController
@@ -23,5 +24,12 @@ public class DashboardController {
     public ResponseEntity<ApiResponse<DashboardStatsDTO>> getStats(@RequestParam(required = false) Integer companyId) {
         DashboardStatsDTO stats = dashboardService.getStats(companyId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Estadísticas recuperadas con éxito", stats));
+    }
+
+    @GetMapping("/overview")
+    public ResponseEntity<ApiResponse<DashboardOverviewDTO>> getOverview(
+            @RequestParam(required = false) Integer companyId) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Dashboard recuperado con éxito",
+                dashboardService.getOverview(companyId)));
     }
 }

@@ -2,6 +2,7 @@ package veterinaria.vargasvet.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.response.ReportesClinicosDTO;
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/clinical-reports")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('ADMIN_DASHBOARD')")
 public class ReportesClinicosController {
 
     private final ReportesClinicosService reportesClinicosService;

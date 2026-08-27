@@ -21,6 +21,7 @@ import java.util.List;
 import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.service.EmpleadoService;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.security.SecurityTokenUtils;
 import veterinaria.vargasvet.util.BusinessValidator;
 import java.time.LocalDate;
 import java.time.DayOfWeek;
@@ -91,7 +92,9 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         usuario.setPassword(passwordEncoder.encode(tempPassword));
         usuario.setActivo(false);
         usuario.setEmailVerified(false);
-        usuario.setVerificationToken(UUID.randomUUID().toString());
+        String verificationToken = SecurityTokenUtils.generate();
+        usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
+        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(24));
 
         Integer companyIdToUse;
         if (SecurityUtils.isSuperAdmin()) {
@@ -167,7 +170,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             guardarHorarios(savedEmpleado, dto.getHorarios());
         }
 
-        sendWelcomeEmail(savedUser, dto.getNombre(), tempPassword);
+        sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
 
         auditLogService.log(
             "CREAR_EMPLEADO",
@@ -691,7 +694,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 }).toList();
     }
 
-    private void sendWelcomeEmail(Usuario usuario, String nombre, String tempPassword) {
+    private void sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken) {
         try {
             Map<String, Object> model = new HashMap<>();
             String resolvedCompanyName = usuario.getCompany() != null ? usuario.getCompany().getName() : "VargasVet";
@@ -702,7 +705,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             model.put("companyEmail", companyEmail);
             model.put("companyPhone", companyPhone);
             model.put("companyAddress", companyAddress);
-            model.put("verificationLink", frontendVerifyUrl + usuario.getVerificationToken());
+            model.put("verificationLink", frontendVerifyUrl + verificationToken);
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),

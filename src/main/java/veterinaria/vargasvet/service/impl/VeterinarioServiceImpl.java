@@ -14,6 +14,7 @@ import veterinaria.vargasvet.mapper.UserMapper;
 import veterinaria.vargasvet.repository.*;
 import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.service.VeterinarioService;
+import veterinaria.vargasvet.security.SecurityTokenUtils;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -74,7 +75,9 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         usuario.setPassword(passwordEncoder.encode(tempPassword));
         usuario.setActivo(false);
         usuario.setEmailVerified(false);
-        usuario.setVerificationToken(UUID.randomUUID().toString());
+        String verificationToken = SecurityTokenUtils.generate();
+        usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
+        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(24));
 
         Usuario savedUser = usuarioRepository.save(usuario);
 
@@ -108,12 +111,12 @@ public class VeterinarioServiceImpl implements VeterinarioService {
 
         empleadoRepository.save(empleado);
 
-        sendWelcomeEmail(savedUser, dto.getNombre(), tempPassword);
+        sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
 
         return userMapper.toProfileDTO(savedUser);
     }
 
-    private void sendWelcomeEmail(Usuario usuario, String nombre, String tempPassword) {
+    private void sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken) {
         try {
             Map<String, Object> model = new HashMap<>();
             model.put("nombre", nombre);
@@ -122,7 +125,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
             model.put("companyEmail", companyEmail);
             model.put("companyPhone", companyPhone);
             model.put("companyAddress", companyAddress);
-            model.put("verificationLink", frontendVerifyUrl + usuario.getVerificationToken());
+            model.put("verificationLink", frontendVerifyUrl + verificationToken);
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),

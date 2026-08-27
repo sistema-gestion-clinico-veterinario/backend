@@ -3,6 +3,7 @@ package veterinaria.vargasvet.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRolPermiso;
 import veterinaria.vargasvet.dto.ApiResponse;
@@ -25,12 +26,14 @@ public class UsuarioPorRolController {
     private final UsuarioRepository usuarioRepository;
 
     @GetMapping("/{userId}/roles")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('VISTA_ROLES')")
     public ResponseEntity<ApiResponse<List<UsuarioPorRol>>> listarRoles(@PathVariable("userId") Integer usuarioId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Roles del usuario",
                 usuarioPorRolService.listarPorUsuario(usuarioId)));
     }
 
     @PostMapping("/{userId}/roles/{roleId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('VISTA_ROLES')")
     public ResponseEntity<ApiResponse<UsuarioPorRol>> asignarRol(
             @PathVariable("userId") Integer usuarioId,
             @PathVariable("roleId") Integer rolId) {
@@ -39,12 +42,14 @@ public class UsuarioPorRolController {
     }
 
     @DeleteMapping("/roles/{userRoleId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('VISTA_ROLES')")
     public ResponseEntity<ApiResponse<Void>> revocarRol(@PathVariable("userRoleId") Integer usuarioPorRolId) {
         usuarioPorRolService.revocarRol(usuarioPorRolId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Rol revocado", null));
     }
 
     @PostMapping("/roles/{userRoleId}/permissions")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('VISTA_ROLES')")
     public ResponseEntity<ApiResponse<UsuarioPorRolPermiso>> asignarPermiso(
             @PathVariable("userRoleId") Integer usuarioPorRolId,
             @RequestBody Map<String, Object> body) {
@@ -62,6 +67,7 @@ public class UsuarioPorRolController {
     }
 
     @GetMapping("/me/menu")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<MenuItemDTO>>> miMenu(
             @RequestParam(required = false) String rol) {
 

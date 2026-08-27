@@ -1,7 +1,7 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -21,27 +21,15 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuditLogServiceImpl implements AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
-    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     private final SimpMessagingTemplate messagingTemplate;
     private final CompanyRepository companyRepository;
 
-    @Autowired(required = false)
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
     private jakarta.servlet.http.HttpServletRequest httpServletRequest;
-
-    @jakarta.annotation.PostConstruct
-    public void init() {
-        try {
-            // Eliminar la columna con tipo incorrecto (bytea) y recrearla como VARCHAR(255) al inicio
-            jdbcTemplate.execute("ALTER TABLE audit_logs DROP COLUMN IF EXISTS user_email");
-            jdbcTemplate.execute("ALTER TABLE audit_logs ADD COLUMN user_email VARCHAR(255)");
-            System.out.println("SCHEMA FIX: Column audit_logs.user_email successfully recreated as VARCHAR(255).");
-        } catch (Exception e) {
-            System.err.println("SCHEMA FIX WARNING: Could not recreate user_email column: " + e.getMessage());
-        }
-    }
 
     @Override
     @Transactional
@@ -80,7 +68,7 @@ public class AuditLogServiceImpl implements AuditLogService {
                         .map(Company::getName)
                         .orElse(null);
             } catch (Exception e) {
-                System.err.println("AUDIT WARNING: Could not fetch company name: " + e.getMessage());
+                log.warn("No se pudo resolver el nombre de empresa para auditoría (companyId={})", finalCompanyId);
             }
         }
 
@@ -92,7 +80,6 @@ public class AuditLogServiceImpl implements AuditLogService {
                 referer = httpServletRequest.getHeader("referer");
             }
             if (referer != null) {
-                System.out.println("AUDIT REFERER DETECTADO: " + referer);
                 String refLower = referer.toLowerCase();
                 String detailsSuffix = "";
                 
@@ -139,8 +126,7 @@ public class AuditLogServiceImpl implements AuditLogService {
 
         AuditLog saved = auditLogRepository.save(auditLog);
 
-        // Transmitir en tiempo real a través de WebSockets de forma segura de manera asíncrona
-        java.util.concurrent.CompletableFuture.runAsync(() -> {
+        Runnable publish = () -> {
             try {
                 AuditLogDTO dto = AuditLogDTO.builder()
                         .id(saved.getId())
@@ -163,15 +149,32 @@ public class AuditLogServiceImpl implements AuditLogService {
                     messagingTemplate.convertAndSend("/topic/audit-logs/" + companyId, dto);
                 }
             } catch (Exception e) {
-                System.err.println("WS ERROR: No se pudo transmitir el log de auditoría por WebSockets: " + e.getMessage());
+                log.warn("No se pudo publicar el evento de auditoría por WebSocket (auditId={})", saved.getId());
             }
-        });
+        };
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() { publish.run(); }
+                    });
+        } else {
+            publish.run();
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<AuditLog> getLogs(Integer companyId, String userEmail, String action, String module, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
-        return auditLogRepository.filterLogs(companyId, userEmail, action, module, startDate, endDate, pageable);
+        Integer resolvedCompanyId = SecurityUtils.isSuperAdmin()
+                ? companyId
+                : SecurityUtils.getCurrentCompanyId();
+        if (!SecurityUtils.isSuperAdmin() && resolvedCompanyId == null) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "El usuario autenticado no tiene una empresa asignada");
+        }
+        return auditLogRepository.filterLogs(resolvedCompanyId, userEmail, action, module,
+                startDate, endDate, pageable);
     }
 
     private String getClientIp() {
