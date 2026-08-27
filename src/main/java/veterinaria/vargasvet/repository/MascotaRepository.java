@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 
@@ -32,7 +34,7 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
                                        @Param("activo") Boolean activo,
                                        Pageable pageable);
 
-    @Query(value = "SELECT m FROM Mascota m JOIN m.apoderado a JOIN a.user u " +
+    @Query(value = "SELECT m FROM Mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
                    "WHERE u.company.id = :companyId " +
                    "AND (CAST(:nombre AS text) IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                    "AND (:especie IS NULL OR m.especie = :especie) " +
@@ -56,6 +58,10 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
     long countByCompanyId(@Param("companyId") Integer companyId);
 
     Optional<Mascota> findByUuid(String uuid);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT m FROM Mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u WHERE m.id = :id")
+    Optional<Mascota> findByIdForUpdate(@Param("id") Long id);
 
     @Query("SELECT m.especie, COUNT(m) FROM Mascota m " +
            "JOIN m.apoderado a JOIN a.user u " +

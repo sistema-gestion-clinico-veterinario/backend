@@ -15,9 +15,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
-import veterinaria.vargasvet.repository.RoleRepository;
+import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
-import veterinaria.vargasvet.security.UsuarioPrincipal;
 
 import java.io.IOException;
 
@@ -26,7 +25,7 @@ import java.io.IOException;
 public class JWTFilter extends GenericFilterBean {
     private final TokenProvider tokenProvider;
     private final UsuarioRepository usuarioRepository;
-    private final RoleRepository roleRepository;
+    private final UsuarioPorRolRepository usuarioPorRolRepository;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -51,55 +50,29 @@ public class JWTFilter extends GenericFilterBean {
                 Authentication authentication = tokenProvider.getAuthentication(token);
 
                 String email = authentication.getName();
-                boolean esSuperAdmin = authentication.getAuthorities().stream()
-                        .anyMatch(a -> "ROLE_SUPER_ADMIN".equals(a.getAuthority()))
-                        || usuarioRepository.hasSuperAdminRole(email);
+                String activeRole = authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .filter(a -> a.startsWith("ROLE_"))
+                        .findFirst()
+                        .orElse(null);
+                if (activeRole == null || !usuarioPorRolRepository.hasActiveAssignedRole(email, activeRole)) {
+                    throw new org.springframework.security.authentication.BadCredentialsException(
+                            "El rol de la sesión ya no está disponible");
+                }
+                boolean esSuperAdmin = "ROLE_SUPER_ADMIN".equals(activeRole);
 
-                if (!esSuperAdmin) {
-                    boolean bloqueado = usuarioRepository.findByEmailWithCompany(email).map(usuario -> {
-                        if (!usuario.isActivo()) return true;
-                        return usuario.getCompany() != null && !usuario.getCompany().isActivo();
-                    }).orElse(true);
+                boolean bloqueado = usuarioRepository.findByEmailWithCompany(email).map(usuario -> {
+                    if (!usuario.isActivo()) return true;
+                    return !esSuperAdmin && usuario.getCompany() != null && !usuario.getCompany().isActivo();
+                }).orElse(true);
 
-                    if (bloqueado) {
-                        SecurityContextHolder.clearContext();
-                        HttpServletResponse httpResponse = (HttpServletResponse) response;
-                        httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                        httpResponse.setContentType("application/json");
-                        httpResponse.getWriter().write("{\"error\":\"Acceso denegado. La empresa o el usuario está inactivo.\"}");
-                        return;
-                    }
-
-                    String activeRole = authentication.getAuthorities().stream()
-                            .map(GrantedAuthority::getAuthority)
-                            .filter(a -> a.startsWith("ROLE_"))
-                            .filter(a -> !a.equals("ROLE_SUPER_ADMIN"))
-                            .findFirst()
-                            .orElse(null);
-                    if (activeRole != null) {
-                        Integer companyId = authentication.getPrincipal() instanceof UsuarioPrincipal up
-                                ? up.getCompanyId() : null;
-                        boolean roleInactivo;
-                        if (companyId != null) {
-                            roleInactivo = roleRepository.findByNameAndCompanyId(activeRole, companyId)
-                                    .map(role -> !role.isActivo())
-                                    .orElse(false);
-                        } else {
-                            roleInactivo = roleRepository.findAllByName(activeRole).stream()
-                                    .filter(r -> r.getCompany() == null)
-                                    .findFirst()
-                                    .map(role -> !role.isActivo())
-                                    .orElse(false);
-                        }
-                        if (roleInactivo) {
-                            SecurityContextHolder.clearContext();
-                            HttpServletResponse httpResponse = (HttpServletResponse) response;
-                            httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                            httpResponse.setContentType("application/json");
-                            httpResponse.getWriter().write("{\"error\":\"Acceso denegado. El rol asignado se encuentra desactivado.\"}");
-                            return;
-                        }
-                    }
+                if (bloqueado) {
+                    SecurityContextHolder.clearContext();
+                    HttpServletResponse httpResponse = (HttpServletResponse) response;
+                    httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    httpResponse.setContentType("application/json");
+                    httpResponse.getWriter().write("{\"error\":\"Acceso denegado. La empresa o el usuario está inactivo.\"}");
+                    return;
                 }
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -123,14 +96,12 @@ public class JWTFilter extends GenericFilterBean {
                 || path.equals("/auth/validate-reset-token")
                 || path.equals("/auth/setup-account")
                 || path.equals("/auth/resend-verification")
-                || path.startsWith("/auth/verify/")
                 || path.startsWith("/auth/register")
                 || path.startsWith("/setup/")
                 || path.startsWith("/v3/api-docs/")
                 || path.startsWith("/swagger-ui/")
                 || path.equals("/swagger-ui.html")
                 || path.startsWith("/ws/")
-                || path.startsWith("/media/")
                 || path.equals("/error")
                 || ("GET".equalsIgnoreCase(method) && path.startsWith("/media/"));
     }

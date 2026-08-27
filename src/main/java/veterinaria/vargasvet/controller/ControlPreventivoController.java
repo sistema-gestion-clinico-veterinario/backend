@@ -90,8 +90,10 @@ public class ControlPreventivoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Integer companyId = SecurityUtils.getCurrentCompanyId();
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
         return ResponseEntity.ok(new ApiResponse<>(true, "Vacunas recuperadas",
-                service.listarTiposVacunaPorCompany(companyId, PageRequest.of(page, size, Sort.by("nombre").ascending()))));
+                service.listarTiposVacunaPorCompany(companyId, PageRequest.of(safePage, safeSize, Sort.by("nombre").ascending()))));
     }
 
     @GetMapping("/company/deworming-products")
@@ -99,8 +101,10 @@ public class ControlPreventivoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Integer companyId = SecurityUtils.getCurrentCompanyId();
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
         return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitantes recuperados",
-                service.listarTiposDesparasitantePorCompany(companyId, PageRequest.of(page, size, Sort.by("nombre").ascending()))));
+                service.listarTiposDesparasitantePorCompany(companyId, PageRequest.of(safePage, safeSize, Sort.by("nombre").ascending()))));
     }
 
     @PutMapping("/vaccine-types/{id}")

@@ -19,6 +19,9 @@ import veterinaria.vargasvet.service.RoleService;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Objects;
+import org.springframework.security.access.AccessDeniedException;
+import veterinaria.vargasvet.security.SecurityUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +36,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(readOnly = true)
     public List<RolDTO> getAllRoles() {
         return roleRepository.findAll().stream()
+                .filter(this::canReadRole)
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -40,6 +44,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(readOnly = true)
     public List<RolDTO> getRolesByCompany(Integer companyId) {
+        assertCompanyAccess(companyId);
         return roleRepository.findByCompanyId(companyId).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -56,6 +61,13 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional
     public RolDTO createRole(String nombre, String descripcion, Integer companyId) {
+        if (!SecurityUtils.isSuperAdmin()) {
+            Integer currentCompanyId = requireCurrentCompany();
+            if (companyId != null && !Objects.equals(companyId, currentCompanyId)) {
+                throw new AccessDeniedException("No puede crear roles para otra empresa");
+            }
+            companyId = currentCompanyId;
+        }
         nombre =         normalizarNombreRol(nombre);
         descripcion = normalizarDescripcion(descripcion);
         validarDuplicado(nombre, companyId);
@@ -78,6 +90,7 @@ public class RoleServiceImpl implements RoleService {
     public RolDTO updateRole(Integer id, String nombre, String descripcion) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
+        assertCanManageRole(role);
 
         boolean esProtegido = role.getName().equals("ROLE_SUPER_ADMIN") || role.getName().equals("ROLE_ADMIN");
         if (!esProtegido) {
@@ -96,6 +109,7 @@ public class RoleServiceImpl implements RoleService {
     public RolDTO toggleActivo(Integer id) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
+        assertCanManageRole(role);
         role.setActivo(!role.isActivo());
         return toDTO(roleRepository.save(role));
     }
@@ -105,6 +119,7 @@ public class RoleServiceImpl implements RoleService {
     public void deleteRole(Integer id) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
+        assertCanManageRole(role);
 
         if (role.getName().startsWith("ROLE_SUPER_ADMIN") || role.getName().equals("ROLE_ADMIN")) {
             throw new IllegalArgumentException("No se puede eliminar un rol del sistema");
@@ -116,8 +131,11 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional(readOnly = true)
     public List<RolVistaPermisoDTO> getVistasByRole(Integer roleId) {
-        roleRepository.findById(roleId)
+        Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
+        if (!canReadRole(role)) {
+            throw new AccessDeniedException("No tiene acceso a este rol");
+        }
 
         List<Vista> todasLasVistas = vistaRepository.findByActivoTrueOrderByNombreAsc();
         Map<Integer, RolVistaPermiso> permisosPorVista = rolVistaPermisoRepository
@@ -151,6 +169,7 @@ public class RoleServiceImpl implements RoleService {
     public List<RolVistaPermisoDTO> saveVistasByRole(Integer roleId, List<RolVistaPermisoDTO> permisos) {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
+        assertCanManageRole(role);
 
         if (!role.isActivo()) {
             throw new IllegalArgumentException("No se pueden asignar permisos a un rol inactivo");
@@ -232,5 +251,33 @@ public class RoleServiceImpl implements RoleService {
                         throw new IllegalArgumentException("Ya existe un rol con ese nombre en el sistema");
                     });
         }
+    }
+
+    private boolean canReadRole(Role role) {
+        if (SecurityUtils.isSuperAdmin()) return true;
+        Integer roleCompanyId = role.getCompany() != null ? role.getCompany().getId() : null;
+        return roleCompanyId == null || Objects.equals(roleCompanyId, SecurityUtils.getCurrentCompanyId());
+    }
+
+    private void assertCanManageRole(Role role) {
+        if (SecurityUtils.isSuperAdmin()) return;
+        Integer roleCompanyId = role.getCompany() != null ? role.getCompany().getId() : null;
+        if (roleCompanyId == null || !Objects.equals(roleCompanyId, requireCurrentCompany())) {
+            throw new AccessDeniedException("No puede modificar un rol global o de otra empresa");
+        }
+    }
+
+    private void assertCompanyAccess(Integer companyId) {
+        if (!SecurityUtils.isSuperAdmin() && !Objects.equals(companyId, requireCurrentCompany())) {
+            throw new AccessDeniedException("No tiene acceso a los roles de otra empresa");
+        }
+    }
+
+    private Integer requireCurrentCompany() {
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        if (companyId == null) {
+            throw new AccessDeniedException("El usuario no tiene una empresa asignada");
+        }
+        return companyId;
     }
 }

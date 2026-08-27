@@ -40,13 +40,18 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
                         EstadoControlPreventivo.PROXIMO, EstadoControlPreventivo.PENDIENTE,
                         EstadoControlPreventivo.ATRASADO));
 
+        Set<ReminderKey> existentes = candidatos.isEmpty() ? Set.of() : recordatorioRepository
+                .findExistingKeys(candidatos.stream().map(ControlPreventivo::getId).toList())
+                .stream()
+                .map(item -> new ReminderKey(item.getControlId(), item.getTipoAviso(), item.getFechaProgramada()))
+                .collect(java.util.stream.Collectors.toSet());
+
         Map<Long, List<AvisoPendiente>> porApoderado = new LinkedHashMap<>();
         for (ControlPreventivo control : candidatos) {
             TipoAvisoRecordatorio tipoAviso = determinarAviso(control, hoy);
             actualizarEstado(control, hoy);
-            if (tipoAviso == null || recordatorioRepository
-                    .existsByControlPreventivoIdAndTipoAvisoAndFechaProgramada(
-                            control.getId(), tipoAviso, control.getFechaRecomendada())) {
+            if (tipoAviso == null || existentes.contains(
+                    new ReminderKey(control.getId(), tipoAviso, control.getFechaRecomendada()))) {
                 continue;
             }
             Long apoderadoId = control.getMascota().getApoderado().getId();
@@ -54,8 +59,14 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
                     .add(new AvisoPendiente(control, tipoAviso));
         }
 
+        if (porApoderado.isEmpty()) return;
+        Set<Long> avisadosRecientemente = new HashSet<>(recordatorioRepository
+                .findApoderadoIdsWithRecentReminder(porApoderado.keySet(), AppClock.now().minusDays(7)));
+
         porApoderado.forEach((apoderadoId, avisos) -> {
-            enviarConsolidado(avisos, hoy);
+            if (!avisadosRecientemente.contains(apoderadoId)) {
+                enviarConsolidado(avisos, hoy);
+            }
         });
     }
 
@@ -153,4 +164,5 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
     }
 
     private record AvisoPendiente(ControlPreventivo control, TipoAvisoRecordatorio tipoAviso) {}
+    private record ReminderKey(Long controlId, TipoAvisoRecordatorio tipoAviso, LocalDate fechaProgramada) {}
 }

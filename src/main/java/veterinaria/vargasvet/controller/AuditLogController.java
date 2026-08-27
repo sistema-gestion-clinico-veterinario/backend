@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/admin/audit-logs")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
 public class AuditLogController {
 
     private final AuditLogService auditLogService;
@@ -54,7 +54,9 @@ public class AuditLogController {
             sortOrder = sortOrder.ascending();
         }
 
-        Pageable pageable = PageRequest.of(page, size, sortOrder);
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        Pageable pageable = PageRequest.of(safePage, safeSize, sortOrder);
 
         // Práctica de Alta Seguridad: Auditar al Auditor.
         // Solo se audita cuando el frontend envía initialLoad=true (únicamente en ngOnInit).

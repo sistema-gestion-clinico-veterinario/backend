@@ -46,6 +46,27 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
         Long getTotal();
     }
 
+    interface FechaCount {
+        LocalDate getFecha();
+        Long getTotal();
+    }
+
+    @Query("SELECT CAST(c.fechaHoraInicio AS date) AS fecha, COUNT(c) AS total FROM Cita c " +
+            "WHERE c.mascota.apoderado.user.company.id = :companyId " +
+            "AND " + ESTADOS_NO_ACTIVOS + " " +
+            "AND c.fechaHoraInicio >= :start AND c.fechaHoraInicio < :end " +
+            "GROUP BY CAST(c.fechaHoraInicio AS date)")
+    List<FechaCount> countDailyByCompanyAndDateRange(@Param("companyId") Integer companyId,
+                                                      @Param("start") LocalDateTime start,
+                                                      @Param("end") LocalDateTime end);
+
+    @Query("SELECT CAST(c.fechaHoraInicio AS date) AS fecha, COUNT(c) AS total FROM Cita c " +
+            "WHERE " + ESTADOS_NO_ACTIVOS + " " +
+            "AND c.fechaHoraInicio >= :start AND c.fechaHoraInicio < :end " +
+            "GROUP BY CAST(c.fechaHoraInicio AS date)")
+    List<FechaCount> countDailyGlobalByDateRange(@Param("start") LocalDateTime start,
+                                                  @Param("end") LocalDateTime end);
+
     @Query("SELECT c.estado AS estado, COUNT(c) AS total FROM Cita c " +
             "JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
             "WHERE u.company.id = :companyId AND c.eliminada = false " +

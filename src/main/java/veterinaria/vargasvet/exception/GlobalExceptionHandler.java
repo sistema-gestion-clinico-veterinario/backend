@@ -10,20 +10,31 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import veterinaria.vargasvet.dto.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBadCredentials(BadCredentialsException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleBadCredentials(BadCredentialsException ex,
+                                                                  HttpServletRequest request) {
+        String message = request.getRequestURI().endsWith("/auth/login")
+                ? "Credenciales inválidas"
+                : "La sesión no es válida o ha expirado";
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ApiResponse<>(false, ex.getMessage(), null));
+                .body(new ApiResponse<>(false, message, null));
     }
 
     @ExceptionHandler(DisabledException.class)
-    public ResponseEntity<ApiResponse<Void>> handleDisabled(DisabledException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleDisabled(DisabledException ex,
+                                                            HttpServletRequest request) {
+        String message = request.getRequestURI().endsWith("/auth/login")
+                ? "Credenciales inválidas"
+                : "La sesión no está habilitada";
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ApiResponse<>(false, ex.getMessage(), null));
+                .body(new ApiResponse<>(false, message, null));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -67,8 +78,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex,
+                                                                    HttpServletRequest request) {
+        log.error("Error no controlado procesando {} {}", request.getMethod(), request.getRequestURI(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiResponse<>(false, ex.getMessage() != null ? ex.getMessage() : "Error interno del servidor", null));
+                .body(new ApiResponse<>(false, "No se pudo procesar la solicitud", null));
     }
 }

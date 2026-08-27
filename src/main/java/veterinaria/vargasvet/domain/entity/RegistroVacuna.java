@@ -10,12 +10,18 @@ import veterinaria.vargasvet.domain.enums.IntervaloUnidad;
 
 @Data
 @Entity
-@Table(name = "registro_vacunas")
+@Table(name = "registro_vacunas", indexes = {
+        @Index(name = "idx_registro_vacunas_historia_fecha", columnList = "historia_clinica_id,fecha_aplicacion"),
+        @Index(name = "idx_registro_vacunas_proxima", columnList = "fecha_proxima_dosis,activo")
+})
 public class RegistroVacuna {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    private Long version = 0L;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "historia_clinica_id", nullable = false)

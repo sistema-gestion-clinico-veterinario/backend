@@ -41,16 +41,20 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public String store(MultipartFile file) {
         try {
-            String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "file";
-            String ext = originalName.contains(".") ? originalName.substring(originalName.lastIndexOf(".")).toLowerCase() : "";
+            byte[] content = file.getBytes();
+            DetectedImage image = detectImage(content);
+            if (image == null) {
+                throw new IllegalArgumentException("Solo se permiten imágenes JPEG, PNG o WebP válidas");
+            }
+            String ext = image.extension();
             String fileName = UUID.randomUUID().toString().replace("-", "") + ext;
-            String mime = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
+            String mime = image.mimeType();
 
             String url = supabaseUrl + "/storage/v1/object/" + bucketName + "/" + fileName;
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + serviceRoleKey);
             headers.setContentType(MediaType.parseMediaType(mime));
-            HttpEntity<byte[]> entity = new HttpEntity<>(file.getBytes(), headers);
+            HttpEntity<byte[]> entity = new HttpEntity<>(content, headers);
             restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
 
             return supabaseUrl + "/storage/v1/object/public/" + bucketName + "/" + fileName;
@@ -58,6 +62,24 @@ public class StorageServiceImpl implements StorageService {
             throw new RuntimeException("Error al subir archivo a Supabase Storage", e);
         }
     }
+
+    private DetectedImage detectImage(byte[] bytes) {
+        if (bytes == null || bytes.length < 12) return null;
+        if ((bytes[0] & 0xff) == 0xff && (bytes[1] & 0xff) == 0xd8 && (bytes[2] & 0xff) == 0xff) {
+            return new DetectedImage(".jpg", "image/jpeg");
+        }
+        if ((bytes[0] & 0xff) == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4e && bytes[3] == 0x47
+                && bytes[4] == 0x0d && bytes[5] == 0x0a && bytes[6] == 0x1a && bytes[7] == 0x0a) {
+            return new DetectedImage(".png", "image/png");
+        }
+        if (bytes[0] == 'R' && bytes[1] == 'I' && bytes[2] == 'F' && bytes[3] == 'F'
+                && bytes[8] == 'W' && bytes[9] == 'E' && bytes[10] == 'B' && bytes[11] == 'P') {
+            return new DetectedImage(".webp", "image/webp");
+        }
+        return null;
+    }
+
+    private record DetectedImage(String extension, String mimeType) {}
 
     @Override
     public String storeBytes(byte[] content, String extension) {
@@ -94,6 +116,21 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public byte[] fetch(String url) {
+        java.net.URI requested = java.net.URI.create(url);
+        java.net.URI storageBase = java.net.URI.create(supabaseUrl);
+        String expectedPrefix = "/storage/v1/object/public/" + bucketName + "/";
+        boolean localStorage = "localhost".equalsIgnoreCase(storageBase.getHost())
+                || "127.0.0.1".equals(storageBase.getHost());
+        boolean secureScheme = "https".equalsIgnoreCase(requested.getScheme())
+                || (localStorage && "http".equalsIgnoreCase(requested.getScheme()));
+        if (!secureScheme
+                || !java.util.Objects.equals(requested.getScheme(), storageBase.getScheme())
+                || !java.util.Objects.equals(requested.getHost(), storageBase.getHost())
+                || requested.getPort() != storageBase.getPort()
+                || requested.normalize().getPath() == null
+                || !requested.normalize().getPath().startsWith(expectedPrefix)) {
+            throw new IllegalArgumentException("URL de almacenamiento no permitida");
+        }
         return restTemplate.getForObject(url, byte[].class);
     }
 

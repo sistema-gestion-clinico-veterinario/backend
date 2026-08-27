@@ -24,6 +24,7 @@ import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CompanyService;
 import veterinaria.vargasvet.util.BusinessValidator;
+import org.springframework.security.access.AccessDeniedException;
 
 @Service
 @RequiredArgsConstructor
@@ -41,10 +42,12 @@ public class CompanyServiceImpl implements CompanyService {
         if (companyId != null) {
             company = companyRepository.findById(companyId)
                     .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + companyId));
-        } else {
+        } else if (SecurityUtils.isSuperAdmin()) {
             company = companyRepository.findAll().stream()
                     .findFirst()
                     .orElseThrow(() -> new ResourceNotFoundException("No se ha configurado ninguna empresa aún"));
+        } else {
+            throw new AccessDeniedException("El usuario no tiene una empresa asignada");
         }
         return mapToDTO(company);
     }
@@ -54,10 +57,15 @@ public class CompanyServiceImpl implements CompanyService {
     public CompanyDTO updateCompanyInfo(CompanyDTO dto) {
         Integer id = dto.getId();
         if (id == null) {
-            return companyRepository.findAll().stream()
-                    .findFirst()
-                    .map(c -> update(c.getId(), dto))
-                    .orElseGet(() -> save(dto));
+            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
+            if (currentCompanyId != null) {
+                return update(currentCompanyId, dto);
+            }
+            if (!SecurityUtils.isSuperAdmin()) {
+                throw new AccessDeniedException("El usuario no tiene una empresa asignada");
+            }
+            return companyRepository.findAll().stream().findFirst()
+                    .map(c -> update(c.getId(), dto)).orElseGet(() -> save(dto));
         }
         return update(id, dto);
     }
@@ -137,7 +145,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
         if (currentCompanyId == null || !currentCompanyId.equals(companyId)) {
-            throw new IllegalArgumentException("No tienes permiso para acceder a otra empresa");
+            throw new AccessDeniedException("No tiene permiso para acceder a otra empresa");
         }
     }
 

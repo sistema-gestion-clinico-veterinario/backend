@@ -2,6 +2,8 @@ package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Especialidad;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
@@ -9,7 +11,6 @@ import veterinaria.vargasvet.repository.EspecialidadRepository;
 import veterinaria.vargasvet.service.EspecialidadService;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,21 +20,21 @@ public class EspecialidadServiceImpl implements EspecialidadService {
     private final veterinaria.vargasvet.repository.CompanyRepository companyRepository;
 
     @Override
-    public List<Especialidad> findAll(Integer companyId) {
-        if (companyId != null) {
-            return especialidadRepository.findByCompanyId(companyId);
-        }
-        Integer currentCompanyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
-        if (currentCompanyId != null) {
-            return especialidadRepository.findByCompanyId(currentCompanyId);
-        }
-        return especialidadRepository.findAll();
+    @Transactional(readOnly = true)
+    public Page<Especialidad> findAll(Integer companyId, Pageable pageable) {
+        Integer resolvedCompanyId = resolveCompanyId(companyId);
+        return resolvedCompanyId == null
+                ? especialidadRepository.findAll(pageable)
+                : especialidadRepository.findByCompanyId(resolvedCompanyId, pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Especialidad findById(Long id) {
-        return especialidadRepository.findById(id)
+        Especialidad especialidad = especialidadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada con ID: " + id));
+        validateCompany(especialidad);
+        return especialidad;
     }
 
     private void validarNombre(String nombre) {
@@ -79,9 +80,19 @@ public class EspecialidadServiceImpl implements EspecialidadService {
     @Override
     @Transactional
     public void delete(Long id) {
-        if (!especialidadRepository.existsById(id)) {
+        especialidadRepository.delete(findById(id));
+    }
+
+    private Integer resolveCompanyId(Integer requestedCompanyId) {
+        if (veterinaria.vargasvet.security.SecurityUtils.isSuperAdmin()) return requestedCompanyId;
+        return veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+    }
+
+    private void validateCompany(Especialidad especialidad) {
+        if (veterinaria.vargasvet.security.SecurityUtils.isSuperAdmin()) return;
+        Integer currentCompanyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+        if (especialidad.getCompany() == null || !especialidad.getCompany().getId().equals(currentCompanyId)) {
             throw new ResourceNotFoundException("Especialidad no encontrada");
         }
-        especialidadRepository.deleteById(id);
     }
 }

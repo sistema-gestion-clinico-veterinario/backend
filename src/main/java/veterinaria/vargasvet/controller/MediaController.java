@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.security.access.prepost.PreAuthorize;
 import veterinaria.vargasvet.dto.UploadMediaDTO;
 import veterinaria.vargasvet.service.StorageService;
 
@@ -15,6 +16,7 @@ public class MediaController {
     private final StorageService storageService;
 
     @PostMapping("/upload")
+    @PreAuthorize("isAuthenticated()")
     public UploadMediaDTO uploadMedia(@RequestParam("file") MultipartFile multipartFile) {
         String url = storageService.store(multipartFile);
         return new UploadMediaDTO(url);

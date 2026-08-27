@@ -92,7 +92,7 @@ class ConsultaServiceUnitTest {
                 () -> service.updateConsulta(10L, request)
         );
 
-        assertEquals("La consulta ha sido modificada por otro usuario. Por favor, refresque la página.", ex.getMessage());
+        assertEquals("La consulta cambió mientras editabas. Tus datos continúan en pantalla; no recargues la página y vuelve a intentar.", ex.getMessage());
         verify(consultaRepository, never()).saveAndFlush(any(Consulta.class));
     }
 

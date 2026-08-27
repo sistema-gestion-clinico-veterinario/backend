@@ -13,7 +13,11 @@ import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "citas")
+@Table(name = "citas", indexes = {
+        @Index(name = "idx_citas_mascota_fecha", columnList = "mascota_id,fecha_hora_inicio"),
+        @Index(name = "idx_citas_empleado_fecha", columnList = "empleado_id,fecha_hora_inicio"),
+        @Index(name = "idx_citas_fecha_estado", columnList = "fecha_hora_inicio,estado")
+})
 public class Cita {
 
     @Id

@@ -14,6 +14,7 @@ import veterinaria.vargasvet.dto.response.AplicacionPreventivaResponse;
 import veterinaria.vargasvet.dto.response.ControlPreventivoResponse;
 import veterinaria.vargasvet.dto.response.TipoDesparasitanteResponse;
 import veterinaria.vargasvet.dto.response.TipoVacunaResponse;
+import veterinaria.vargasvet.dto.response.CartillaDetalleResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.*;
 import veterinaria.vargasvet.security.SecurityUtils;
@@ -46,7 +47,10 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     @Override
     @Transactional(readOnly = true)
     public List<TipoVacunaResponse> listarTiposVacuna(Long mascotaId) {
-        Mascota mascota = obtenerMascotaAutorizada(mascotaId);
+        return listarTiposVacuna(obtenerMascotaAutorizada(mascotaId));
+    }
+
+    private List<TipoVacunaResponse> listarTiposVacuna(Mascota mascota) {
         Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
         return tipoVacunaRepository.findByCompanyIdAndEspecieAndActivoTrueOrderByNombre(companyId, mascota.getEspecie())
                 .stream().map(this::toTipoResponse).toList();
@@ -82,7 +86,10 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     @Override
     @Transactional(readOnly = true)
     public List<TipoDesparasitanteResponse> listarTiposDesparasitante(Long mascotaId) {
-        Mascota mascota = obtenerMascotaAutorizada(mascotaId);
+        return listarTiposDesparasitante(obtenerMascotaAutorizada(mascotaId));
+    }
+
+    private List<TipoDesparasitanteResponse> listarTiposDesparasitante(Mascota mascota) {
         Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
         return tipoDesparasitanteRepository.findByCompanyIdAndEspecieAndActivoTrueOrderByNombre(companyId, mascota.getEspecie())
                 .stream().map(this::toDesparasitanteResponse).toList();
@@ -120,6 +127,10 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     @Transactional
     public List<ControlPreventivoResponse> listarControles(Long mascotaId) {
         obtenerMascotaAutorizada(mascotaId);
+        return listarControlesAutorizados(mascotaId);
+    }
+
+    private List<ControlPreventivoResponse> listarControlesAutorizados(Long mascotaId) {
         List<ControlPreventivo> controles = controlRepository.findByMascotaIdOrderByFechaRecomendadaDesc(mascotaId);
         controles.forEach(this::actualizarEstadoPorFecha);
         return controles.stream().map(this::toControlResponse).toList();
@@ -129,6 +140,10 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     @Transactional(readOnly = true)
     public List<AplicacionPreventivaResponse> listarAplicaciones(Long mascotaId) {
         obtenerMascotaAutorizada(mascotaId);
+        return listarAplicacionesAutorizadas(mascotaId);
+    }
+
+    private List<AplicacionPreventivaResponse> listarAplicacionesAutorizadas(Long mascotaId) {
         List<AplicacionPreventivaResponse> resultado = new ArrayList<>();
         vacunaRepository.findByHistoriaClinicaMascotaIdOrderByFechaAplicacionDesc(mascotaId).forEach(v -> resultado.add(
                 AplicacionPreventivaResponse.builder().id(v.getId()).tipo(TipoControlPreventivo.VACUNACION)
@@ -156,8 +171,20 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
 
     @Override
     @Transactional
-    public ControlPreventivoResponse programar(Long mascotaId, ControlPreventivoRequest request) {
+    public CartillaDetalleResponse obtenerDetalleCartilla(Long mascotaId) {
         Mascota mascota = obtenerMascotaAutorizada(mascotaId);
+        return CartillaDetalleResponse.builder()
+                .vacunas(listarTiposVacuna(mascota))
+                .desparasitantes(listarTiposDesparasitante(mascota))
+                .controles(listarControlesAutorizados(mascotaId))
+                .aplicaciones(listarAplicacionesAutorizadas(mascotaId))
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ControlPreventivoResponse programar(Long mascotaId, ControlPreventivoRequest request) {
+        Mascota mascota = obtenerMascotaAutorizadaParaActualizar(mascotaId);
         TipoVacuna tipoVacuna = validarTipoVacuna(request.getTipo(), request.getTipoVacunaId(), mascota);
         String nombre = tipoVacuna != null ? tipoVacuna.getNombre() : normalizarNombre(request.getNombreControl());
         validarControlDuplicado(mascota.getId(), request.getTipo(), tipoVacuna, nombre, request.getFechaRecomendada(), null);
@@ -197,7 +224,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     @Transactional
     public ControlPreventivoResponse registrarVacunacion(Long consultaId, RegistroVacunacionRequest request) {
         Consulta consulta = obtenerConsultaAutorizada(consultaId);
-        Mascota mascota = consulta.getHistoriaClinica().getMascota();
+        Mascota mascota = obtenerMascotaAutorizadaParaActualizar(consulta.getHistoriaClinica().getMascota().getId());
         TipoVacuna tipoVacuna = validarTipoVacuna(TipoControlPreventivo.VACUNACION, request.getTipoVacunaId(), mascota);
         LocalDate proxima = calcularProximaFecha(request.getFechaAplicacion(), request.getFechaProximaDosis(),
                 request.getPeriodicidadMeses());
@@ -235,7 +262,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     @Transactional
     public ControlPreventivoResponse registrarDesparasitacion(Long consultaId, RegistroDesparasitacionRequest request) {
         Consulta consulta = obtenerConsultaAutorizada(consultaId);
-        Mascota mascota = consulta.getHistoriaClinica().getMascota();
+        Mascota mascota = obtenerMascotaAutorizadaParaActualizar(consulta.getHistoriaClinica().getMascota().getId());
         LocalDate proxima = calcularProximaFecha(request.getFechaAplicacion(), request.getFechaProximaAplicacion(),
                 request.getPeriodicidadMeses());
         validarFechas(mascota, request.getFechaAplicacion(), proxima);
@@ -328,6 +355,13 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
         return mascota;
     }
 
+    private Mascota obtenerMascotaAutorizadaParaActualizar(Long id) {
+        Mascota mascota = mascotaRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada"));
+        validarCompany(mascota);
+        return mascota;
+    }
+
     private Consulta obtenerConsultaAutorizada(Long id) {
         Consulta consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada"));
@@ -402,13 +436,13 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     @Override
     @Transactional(readOnly = true)
     public Page<TipoVacunaResponse> listarTiposVacunaPorCompany(Integer companyId, Pageable pageable) {
-        return tipoVacunaRepository.findByCompanyId(companyId, pageable).map(this::toTipoResponse);
+        return tipoVacunaRepository.findByCompanyId(resolveCatalogCompanyId(companyId), pageable).map(this::toTipoResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<TipoDesparasitanteResponse> listarTiposDesparasitantePorCompany(Integer companyId, Pageable pageable) {
-        return tipoDesparasitanteRepository.findByCompanyId(companyId, pageable).map(this::toDesparasitanteResponse);
+        return tipoDesparasitanteRepository.findByCompanyId(resolveCatalogCompanyId(companyId), pageable).map(this::toDesparasitanteResponse);
     }
 
     @Override
@@ -416,6 +450,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     public TipoVacunaResponse actualizarTipoVacuna(Long id, TipoVacunaRequest request) {
         TipoVacuna tipo = tipoVacunaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vacuna no encontrada"));
+        validarCatalogCompany(tipo.getCompany(), "Vacuna no encontrada");
         tipo.setNombre(request.getNombre().trim());
         tipo.setEspecie(request.getEspecie());
         tipo.setPeriodicidadMesesSugerida(request.getPeriodicidadMesesSugerida());
@@ -434,6 +469,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     public TipoDesparasitanteResponse actualizarTipoDesparasitante(Long id, TipoDesparasitanteRequest request) {
         TipoDesparasitante tipo = tipoDesparasitanteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Desparasitante no encontrado"));
+        validarCatalogCompany(tipo.getCompany(), "Desparasitante no encontrado");
         tipo.setNombre(request.getNombre().trim());
         tipo.setEspecie(request.getEspecie());
         tipo.setPeriodicidadMesesSugerida(request.getPeriodicidadMesesSugerida());
@@ -452,6 +488,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     public void cambiarEstadoTipoVacuna(Long id, boolean activo) {
         TipoVacuna tipo = tipoVacunaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vacuna no encontrada"));
+        validarCatalogCompany(tipo.getCompany(), "Vacuna no encontrada");
         tipo.setActivo(activo);
         tipo.setUpdatedBy(actor());
         tipoVacunaRepository.save(tipo);
@@ -462,6 +499,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     public void cambiarEstadoTipoDesparasitante(Long id, boolean activo) {
         TipoDesparasitante tipo = tipoDesparasitanteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Desparasitante no encontrado"));
+        validarCatalogCompany(tipo.getCompany(), "Desparasitante no encontrado");
         tipo.setActivo(activo);
         tipo.setUpdatedBy(actor());
         tipoDesparasitanteRepository.save(tipo);
@@ -472,6 +510,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     public void eliminarTipoVacuna(Long id) {
         TipoVacuna tipo = tipoVacunaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vacuna no encontrada"));
+        validarCatalogCompany(tipo.getCompany(), "Vacuna no encontrada");
         tipo.setActivo(false);
         tipo.setUpdatedBy(actor());
         tipoVacunaRepository.save(tipo);
@@ -482,6 +521,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     public void eliminarTipoDesparasitante(Long id) {
         TipoDesparasitante tipo = tipoDesparasitanteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Desparasitante no encontrado"));
+        validarCatalogCompany(tipo.getCompany(), "Desparasitante no encontrado");
         tipo.setActivo(false);
         tipo.setUpdatedBy(actor());
         tipoDesparasitanteRepository.save(tipo);
@@ -544,6 +584,23 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
                 .lote(d.getLote()).fechaVencimientoProducto(d.getFechaVencimientoProducto())
                 .dosis(d.getDosis()).unidadDosis(d.getUnidadDosis()).viaAdministracion(d.getViaAdministracion())
                 .activo(d.getActivo()).build();
+    }
+
+    private Integer resolveCatalogCompanyId(Integer requestedCompanyId) {
+        if (SecurityUtils.isSuperAdmin()) return requestedCompanyId;
+        Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
+        if (currentCompanyId == null) {
+            throw new org.springframework.security.access.AccessDeniedException("El usuario no tiene una empresa asignada");
+        }
+        return currentCompanyId;
+    }
+
+    private void validarCatalogCompany(Company company, String notFoundMessage) {
+        if (SecurityUtils.isSuperAdmin()) return;
+        Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
+        if (currentCompanyId == null || company == null || !currentCompanyId.equals(company.getId())) {
+            throw new ResourceNotFoundException(notFoundMessage);
+        }
     }
 
     private String normalizar(String valor) {
