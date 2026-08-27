@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import veterinaria.vargasvet.domain.entity.Apoderado;
 import veterinaria.vargasvet.domain.entity.Cita;
@@ -15,6 +16,7 @@ import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.ControlPreventivoRepository;
 import veterinaria.vargasvet.repository.RegistroDesparasitacionRepository;
 import veterinaria.vargasvet.repository.RegistroVacunaRepository;
+import veterinaria.vargasvet.security.SecurityUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -25,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
 class ReportesClinicosServiceImplTest {
@@ -67,14 +70,18 @@ class ReportesClinicosServiceImplTest {
         when(citaRepository.findForClinicalReport(
                 eq(1), any(LocalDateTime.class), any(LocalDateTime.class), isNull(), isNull()))
                 .thenReturn(List.of(primera, segunda), List.of());
-        when(registroVacunaRepository.findProximasVacunas(eq(1), any(), any())).thenReturn(List.of());
-        when(registroDesparasitacionRepository.findProximasDesparasitaciones(eq(1), any(), any()))
+        when(registroVacunaRepository.findProximasVacunas(eq(1), any(), any(), any())).thenReturn(List.of());
+        when(registroDesparasitacionRepository.findProximasDesparasitaciones(eq(1), any(), any(), any()))
                 .thenReturn(List.of());
-        when(controlPreventivoRepository.findProximosByCompany(eq(1), any(), any(), anyCollection()))
+        when(controlPreventivoRepository.findProximosByCompany(eq(1), any(), any(), anyCollection(), any()))
                 .thenReturn(List.of());
 
-        ReportesClinicosDTO reporte = assertDoesNotThrow(
-                () -> service.obtenerReportes(1, desde, hasta, null, null));
+        ReportesClinicosDTO reporte;
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+            reporte = assertDoesNotThrow(
+                    () -> service.obtenerReportes(1, desde, hasta, null, null));
+        }
 
         assertThat(reporte.getResumen().getConsultas()).isEqualTo(2);
         assertThat(reporte.getPacientesPorEspecie())

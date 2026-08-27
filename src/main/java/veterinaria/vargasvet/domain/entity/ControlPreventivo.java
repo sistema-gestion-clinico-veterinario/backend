@@ -15,13 +15,17 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Table(name = "control_preventivo", indexes = {
         @Index(name = "idx_control_preventivo_fecha_estado", columnList = "fecha_recomendada,estado"),
-        @Index(name = "idx_control_preventivo_mascota", columnList = "mascota_id")
+        @Index(name = "idx_control_preventivo_mascota", columnList = "mascota_id"),
+        @Index(name = "idx_control_preventivo_mascota_estado_fecha", columnList = "mascota_id,estado,fecha_recomendada")
 })
 public class ControlPreventivo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     private Long id;
+
+    @Version
+    private Long version = 0L;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "mascota_id", nullable = false)

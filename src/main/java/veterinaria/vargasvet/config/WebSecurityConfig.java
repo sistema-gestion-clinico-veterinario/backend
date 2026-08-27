@@ -20,6 +20,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import veterinaria.vargasvet.security.JWTFilter;
 import veterinaria.vargasvet.security.JwtAuthenticationEntryPoint;
+import veterinaria.vargasvet.security.CookieSecurityFilter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,11 +29,13 @@ import java.util.stream.Collectors;
 @Configuration
 @RequiredArgsConstructor
 @EnableWebSecurity
+@EnableMethodSecurity
 public class WebSecurityConfig {
 
     private final JWTFilter jwtFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final veterinaria.vargasvet.security.RateLimitFilter rateLimitFilter;
+    private final CookieSecurityFilter cookieSecurityFilter;
 
     @Value("${cors.allowed-origins:https://systemvetfrontend.vercel.app,http://localhost:4200}")
     private String allowedOriginsRaw;
@@ -55,7 +58,6 @@ public class WebSecurityConfig {
                                 "/auth/refresh",
                                 "/auth/logout",
                                 "/auth/register/**",
-                                "/auth/verify/**",
                                 "/auth/resend-verification",
                                 "/auth/forgot-password",
                                 "/auth/reset-password",
@@ -67,9 +69,13 @@ public class WebSecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/ws/**",
-                                "/media/**",
+                                "/actuator/health",
                                 "/error"
                         ).permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
+
+                        .requestMatchers("/actuator/**").hasRole("SUPER_ADMIN")
 
                         // Todo lo demás requiere auth
                         .anyRequest().authenticated()
@@ -81,7 +87,16 @@ public class WebSecurityConfig {
 
                 .sessionManagement(s -> s
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.deny())
+                        .contentTypeOptions(contentType -> {})
+                        .referrerPolicy(referrer -> referrer.policy(
+                                org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .permissionsPolicyHeader(policy -> policy.policy("camera=(), microphone=(), geolocation=()"))
                 );
+
+        http.addFilterBefore(cookieSecurityFilter, JWTFilter.class);
 
         // JWT Filter (identifica al usuario)
         http.addFilterBefore(
@@ -107,18 +122,13 @@ public class WebSecurityConfig {
                 .map(String::trim)
                 .map(o -> o.endsWith("/") ? o.substring(0, o.length() - 1) : o)
                 .collect(Collectors.toList());
-        origins.add("https://*.vercel.app");
-        origins.add("http://localhost:4200");
-
         config.setAllowedOriginPatterns(origins);
 
         config.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
         ));
 
-        config.setAllowedHeaders(List.of("*"));
-
-        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowedHeaders(List.of("Accept", "Content-Type", "Authorization", "X-Requested-With"));
 
         config.setAllowCredentials(true);
 

@@ -7,6 +7,7 @@ import veterinaria.vargasvet.dto.response.AplicacionPreventivaResponse;
 import veterinaria.vargasvet.dto.response.ControlPreventivoResponse;
 import veterinaria.vargasvet.dto.response.TipoDesparasitanteResponse;
 import veterinaria.vargasvet.dto.response.TipoVacunaResponse;
+import veterinaria.vargasvet.dto.response.CartillaDetalleResponse;
 
 import java.util.List;
 
@@ -17,6 +18,7 @@ public interface ControlPreventivoService {
     TipoDesparasitanteResponse crearTipoDesparasitante(TipoDesparasitanteRequest request);
     List<ControlPreventivoResponse> listarControles(Long mascotaId);
     List<AplicacionPreventivaResponse> listarAplicaciones(Long mascotaId);
+    CartillaDetalleResponse obtenerDetalleCartilla(Long mascotaId);
     ControlPreventivoResponse programar(Long mascotaId, ControlPreventivoRequest request);
     ControlPreventivoResponse reprogramar(Long controlId, ReprogramarControlPreventivoRequest request);
     ControlPreventivoResponse cancelar(Long controlId);

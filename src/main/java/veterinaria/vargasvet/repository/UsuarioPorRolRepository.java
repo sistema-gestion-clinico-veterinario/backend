@@ -21,6 +21,18 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
 
     boolean existsByUsuarioIdAndRolId(Integer usuarioId, Integer rolId);
 
+    @Query("""
+            SELECT COUNT(upr) > 0
+            FROM UsuarioPorRol upr
+            JOIN upr.usuario u
+            JOIN upr.rol r
+            WHERE u.email = :email
+              AND r.name = :roleName
+              AND r.activo = true
+              AND (r.company IS NULL OR r.company.id = u.company.id)
+            """)
+    boolean hasActiveAssignedRole(@Param("email") String email, @Param("roleName") String roleName);
+
     @Query("SELECT upr FROM UsuarioPorRol upr WHERE upr.usuario.id = :usuarioId")
     List<UsuarioPorRol> findConPermisosByUsuarioId(Integer usuarioId);
 

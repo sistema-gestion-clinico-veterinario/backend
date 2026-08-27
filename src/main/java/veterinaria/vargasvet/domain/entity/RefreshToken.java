@@ -20,8 +20,20 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, columnDefinition = "TEXT")
-    private String token;
+    @Column(name = "token", nullable = false, unique = true, columnDefinition = "TEXT")
+    private String tokenHash;
+
+    @Column(name = "jti", length = 36)
+    private String jti;
+
+    @Column(name = "family_id", length = 36)
+    private String familyId;
+
+    @Column(name = "used_at")
+    private Instant usedAt;
+
+    @Column(name = "revoked_at")
+    private Instant revokedAt;
 
     @Column(nullable = false)
     private Instant expiryDate;

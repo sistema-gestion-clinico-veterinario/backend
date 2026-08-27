@@ -105,7 +105,7 @@ class CartillaServiceImplTest {
 
     @Test
     void registrarVacunacionCierraControlCreaSiguienteYCalculaPrecioEnServidor() {
-        when(mascotaRepository.findById(20L)).thenReturn(Optional.of(mascota));
+        when(mascotaRepository.findByIdForUpdate(20L)).thenReturn(Optional.of(mascota));
         when(empleadoRepository.findByUserId(11)).thenReturn(Optional.of(veterinario));
         when(serviciosRepository.findById(40L)).thenReturn(Optional.of(servicio));
         when(tipoVacunaRepository.findById(50L)).thenReturn(Optional.of(vacuna));

@@ -120,7 +120,7 @@ class ConsultaServiceIntegrationTest {
 
         assertThatThrownBy(() -> consultaService.updateConsulta(consulta.getId(), request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("consulta ha sido modificada");
+                .hasMessageContaining("consulta cambió mientras editabas");
 
         Consulta persisted = consultaRepository.findById(consulta.getId()).orElseThrow();
         assertThat(persisted.getPesoEnConsulta()).isEqualTo(10.0);

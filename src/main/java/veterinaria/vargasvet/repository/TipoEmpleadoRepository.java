@@ -1,6 +1,8 @@
 package veterinaria.vargasvet.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.TipoEmpleado;
 
@@ -10,5 +12,6 @@ import java.util.Optional;
 public interface TipoEmpleadoRepository extends JpaRepository<TipoEmpleado, Long> {
     Optional<TipoEmpleado> findByNombre(String nombre);
     java.util.List<TipoEmpleado> findByCompanyId(Integer companyId);
+    Page<TipoEmpleado> findByCompanyId(Integer companyId, Pageable pageable);
     Optional<TipoEmpleado> findByNombreAndCompanyId(String nombre, Integer companyId);
 }

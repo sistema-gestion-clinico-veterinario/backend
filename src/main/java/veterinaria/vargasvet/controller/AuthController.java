@@ -1,13 +1,16 @@
 package veterinaria.vargasvet.controller;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.LoginDTO;
 import veterinaria.vargasvet.dto.request.UserRegistrationDTO;
@@ -31,6 +34,22 @@ public class AuthController {
     @Value("${app.cookie.same-site:Lax}")
     private String cookieSameSite;
 
+    @Value("${jwt.validity-in-seconds:1800}")
+    private long accessTokenMaxAge;
+
+    @Value("${jwt.refresh-validity-in-seconds:604800}")
+    private long refreshTokenMaxAge;
+
+    @PostConstruct
+    void validateCookieConfiguration() {
+        if (!java.util.Set.of("Lax", "Strict", "None").contains(cookieSameSite)) {
+            throw new IllegalStateException("COOKIE_SAME_SITE debe ser Lax, Strict o None");
+        }
+        if ("None".equals(cookieSameSite) && !cookieSecure) {
+            throw new IllegalStateException("Las cookies SameSite=None requieren COOKIE_SECURE=true");
+        }
+    }
+
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserProfileDTO>> register(@Valid @RequestBody UserRegistrationDTO registrationDTO) {
         UserProfileDTO profile = usuarioService.register(registrationDTO);
@@ -46,12 +65,6 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Login exitoso", response));
     }
 
-    @GetMapping("/verify/{token}")
-    public ResponseEntity<ApiResponse<Void>> verifyEmail(@PathVariable String token) {
-        usuarioService.verifyEmail(token);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Correo verificado exitosamente. Ya puedes iniciar sesión.", null));
-    }
-
     @PostMapping("/setup-account")
     public ResponseEntity<ApiResponse<Void>> setupAccount(@Valid @RequestBody veterinaria.vargasvet.dto.request.SetupAccountRequest request) {
         usuarioService.setupAccount(request.getToken(), request.getPassword());
@@ -61,16 +74,19 @@ public class AuthController {
     @PostMapping("/resend-verification")
     public ResponseEntity<ApiResponse<Void>> resendVerification(@RequestParam String email) {
         usuarioService.resendVerificationToken(email);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Correo de verificación reenviado exitosamente.", null));
+        return ResponseEntity.ok(new ApiResponse<>(true,
+                "Si la cuenta requiere verificación, se enviaron las instrucciones.", null));
     }
 
     @GetMapping("/profile/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<UserProfileDTO>> getProfile(@PathVariable Integer id) {
         UserProfileDTO profile = usuarioService.getProfile(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Perfil obtenido", profile));
     }
 
     @PutMapping("/suspend/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> suspendAccount(@PathVariable Integer id) {
         usuarioService.suspendAccount(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cuenta suspendida", null));
@@ -84,14 +100,10 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@RequestBody(required = false) java.util.Map<String, String> request,
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(
                                                              @CookieValue(value = REFRESH_TOKEN_COOKIE, required = false) String refreshTokenCookie,
                                                              HttpServletResponse httpResponse) {
-        String refreshToken = refreshTokenCookie;
-        if (refreshToken == null && request != null) {
-            refreshToken = request.get("refreshToken");
-        }
-        AuthResponse response = usuarioService.refreshToken(refreshToken);
+        AuthResponse response = usuarioService.refreshToken(refreshTokenCookie);
         setAuthCookies(httpResponse, response.getToken(), response.getRefreshToken());
         return ResponseEntity.ok(new ApiResponse<>(true, "Token refrescado exitosamente", response));
     }
@@ -133,22 +145,24 @@ public class AuthController {
     }
 
     private void setAuthCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-        addCookie(response, ACCESS_TOKEN_COOKIE, accessToken, 1800);
-        addCookie(response, REFRESH_TOKEN_COOKIE, refreshToken, 604800);
+        addCookie(response, ACCESS_TOKEN_COOKIE, accessToken, accessTokenMaxAge, "/api/v1");
+        addCookie(response, REFRESH_TOKEN_COOKIE, refreshToken, refreshTokenMaxAge, "/api/v1/auth");
     }
 
     private void clearAuthCookies(HttpServletResponse response) {
-        addCookie(response, ACCESS_TOKEN_COOKIE, "", 0);
-        addCookie(response, REFRESH_TOKEN_COOKIE, "", 0);
+        addCookie(response, ACCESS_TOKEN_COOKIE, "", 0, "/api/v1");
+        addCookie(response, REFRESH_TOKEN_COOKIE, "", 0, "/api/v1/auth");
     }
 
-    private void addCookie(HttpServletResponse response, String name, String value, int maxAgeSeconds) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(cookieSecure);
-        cookie.setPath("/");
-        cookie.setMaxAge(maxAgeSeconds);
-        cookie.setAttribute("SameSite", cookieSameSite);
-        response.addCookie(cookie);
+    private void addCookie(HttpServletResponse response, String name, String value,
+                           long maxAgeSeconds, String path) {
+        ResponseCookie cookie = ResponseCookie.from(name, value == null ? "" : value)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite(cookieSameSite)
+                .path(path)
+                .maxAge(java.time.Duration.ofSeconds(maxAgeSeconds))
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 }

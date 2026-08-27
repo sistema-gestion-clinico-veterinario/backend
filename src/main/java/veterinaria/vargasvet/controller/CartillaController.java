@@ -13,6 +13,7 @@ import veterinaria.vargasvet.dto.request.CartillaAplicacionEditRequest;
 import veterinaria.vargasvet.dto.request.CartillaAplicacionRequest;
 import veterinaria.vargasvet.dto.response.AplicacionPreventivaResponse;
 import veterinaria.vargasvet.dto.response.CartillaAplicacionResponse;
+import veterinaria.vargasvet.dto.response.CartillaDetalleResponse;
 import veterinaria.vargasvet.dto.response.MascotaCartillaResponse;
 import veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
@@ -53,6 +54,13 @@ public class CartillaController {
                 controlPreventivoService.listarAplicaciones(petId)));
     }
 
+    @GetMapping("/pets/{petId}/detail")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
+    public ResponseEntity<ApiResponse<CartillaDetalleResponse>> detalleCartilla(@PathVariable Long petId) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Detalle de cartilla recuperado",
+                controlPreventivoService.obtenerDetalleCartilla(petId)));
+    }
+
     @GetMapping("/pets")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
     public ResponseEntity<ApiResponse<Page<MascotaCartillaResponse>>> listarMascotasConCartilla(
@@ -61,13 +69,15 @@ public class CartillaController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Integer companyId = SecurityUtils.getCurrentCompanyId();
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
         if (companyId == null) {
             return ResponseEntity.ok(new ApiResponse<>(true, "Mascotas con cartilla",
-                    Page.empty(PageRequest.of(page, size))));
+                    Page.empty(PageRequest.of(safePage, safeSize))));
         }
         return ResponseEntity.ok(new ApiResponse<>(true, "Mascotas con cartilla",
                 cartillaService.listarMascotasConCartilla(companyId, nombre, especie, true,
-                        PageRequest.of(page, size, Sort.by("nombreCompleto").ascending()))));
+                        PageRequest.of(safePage, safeSize, Sort.by("nombreCompleto").ascending()))));
     }
 
     @PutMapping("/vaccinations/{id}")

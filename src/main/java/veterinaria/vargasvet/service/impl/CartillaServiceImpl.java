@@ -77,6 +77,7 @@ public class CartillaServiceImpl implements CartillaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<MascotaCartillaResponse> listarMascotasConCartilla(Integer companyId, String nombre, EspecieMascota especie, Boolean activo, Pageable pageable) {
         Page<Mascota> mascotas = mascotaRepository.buscar(companyId, nombre, especie, null, activo, pageable);
 
@@ -87,15 +88,25 @@ public class CartillaServiceImpl implements CartillaService {
             EstadoControlPreventivo.ATRASADO
         );
 
+        java.util.List<Long> mascotaIds = mascotas.getContent().stream().map(Mascota::getId).toList();
+        if (mascotaIds.isEmpty()) return mascotas.map(m -> mascotaCartillaMapper.toResponse(m, null, null));
+
+        Map<Long, LocalDate> ultimasVacunas = vacunaRepository.findUltimasAplicacionesPorMascota(mascotaIds)
+                .stream().collect(java.util.stream.Collectors.toMap(
+                        RegistroVacunaRepository.UltimaAplicacionPorMascota::getMascotaId,
+                        RegistroVacunaRepository.UltimaAplicacionPorMascota::getFecha));
+        Map<Long, LocalDate> ultimasDesparasitaciones = desparasitacionRepository
+                .findUltimasAplicacionesPorMascota(mascotaIds).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        RegistroDesparasitacionRepository.UltimaAplicacionPorMascota::getMascotaId,
+                        RegistroDesparasitacionRepository.UltimaAplicacionPorMascota::getFecha));
+        Map<Long, ControlPreventivo> proximosControles = new HashMap<>();
+        controlRepository.findPendingByMascotas(mascotaIds, estadosPendientes).forEach(control ->
+                proximosControles.putIfAbsent(control.getMascota().getId(), control));
+
         return mascotas.map(m -> {
-            LocalDate fv = vacunaRepository
-                    .findFirstByHistoriaClinicaMascotaIdOrderByFechaAplicacionDesc(m.getId())
-                    .map(RegistroVacuna::getFechaAplicacion)
-                    .orElse(null);
-            LocalDate fd = desparasitacionRepository
-                    .findFirstByHistoriaClinicaMascotaIdOrderByFechaAplicacionDesc(m.getId())
-                    .map(RegistroDesparasitacion::getFechaAplicacion)
-                    .orElse(null);
+            LocalDate fv = ultimasVacunas.get(m.getId());
+            LocalDate fd = ultimasDesparasitaciones.get(m.getId());
 
             LocalDate fechaUltima;
             if (fv != null && fd != null) {
@@ -104,18 +115,12 @@ public class CartillaServiceImpl implements CartillaService {
                 fechaUltima = fv != null ? fv : fd;
             }
 
-            ControlPreventivo controlPendiente = controlRepository
-                    .findNextPendingByMascota(m.getId(), estadosPendientes)
-                    .stream()
-                    .findFirst()
-                    .orElse(null);
-
-            return mascotaCartillaMapper.toResponse(m, fechaUltima, controlPendiente);
+            return mascotaCartillaMapper.toResponse(m, fechaUltima, proximosControles.get(m.getId()));
         });
     }
 
     private CartillaAplicacionResponse registrar(CartillaAplicacionRequest request, TipoControlPreventivo tipo) {
-        Mascota mascota = mascotaRepository.findById(request.getMascotaId())
+        Mascota mascota = mascotaRepository.findByIdForUpdate(request.getMascotaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada"));
         validarCompany(mascota);
 
@@ -451,7 +456,16 @@ public class CartillaServiceImpl implements CartillaService {
         event.put("mascotaNombre", mascota.getNombreCompleto());
         event.put("control", tipo.name());
         event.put("total", total);
-        messagingTemplate.convertAndSend("/topic/caja/" + companyId, event);
+        Runnable publish = () -> messagingTemplate.convertAndSend("/topic/caja/" + companyId, event);
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() { publish.run(); }
+                    });
+        } else {
+            publish.run();
+        }
     }
 
     @Override

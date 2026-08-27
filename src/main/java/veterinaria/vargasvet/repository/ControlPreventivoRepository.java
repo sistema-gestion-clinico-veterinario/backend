@@ -3,6 +3,7 @@ package veterinaria.vargasvet.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Pageable;
 import veterinaria.vargasvet.domain.entity.ControlPreventivo;
 import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
 import veterinaria.vargasvet.domain.enums.TipoControlPreventivo;
@@ -55,5 +56,22 @@ public interface ControlPreventivoRepository extends JpaRepository<ControlPreven
            "AND cp.estado IN :estados " +
            "ORDER BY cp.fechaRecomendada ASC")
     List<ControlPreventivo> findNextPendingByMascota(@Param("mascotaId") Long mascotaId,
-                                                      @Param("estados") Collection<EstadoControlPreventivo> estados);
+                                                       @Param("estados") Collection<EstadoControlPreventivo> estados);
+
+    @Query("SELECT cp FROM ControlPreventivo cp " +
+           "WHERE cp.mascota.id IN :mascotaIds AND cp.estado IN :estados " +
+           "ORDER BY cp.mascota.id, cp.fechaRecomendada ASC")
+    List<ControlPreventivo> findPendingByMascotas(@Param("mascotaIds") Collection<Long> mascotaIds,
+                                                   @Param("estados") Collection<EstadoControlPreventivo> estados);
+
+    @Query("SELECT cp FROM ControlPreventivo cp " +
+           "JOIN FETCH cp.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
+           "WHERE u.company.id = :companyId AND cp.fechaRecomendada BETWEEN :desde AND :hasta " +
+           "AND cp.estado IN :estados AND m.activo = true AND u.activo = true AND u.emailVerified = true " +
+           "ORDER BY cp.fechaRecomendada ASC")
+    List<ControlPreventivo> findProximosByCompany(@Param("companyId") Integer companyId,
+                                                   @Param("desde") LocalDate desde,
+                                                   @Param("hasta") LocalDate hasta,
+                                                   @Param("estados") Collection<EstadoControlPreventivo> estados,
+                                                   Pageable pageable);
 }

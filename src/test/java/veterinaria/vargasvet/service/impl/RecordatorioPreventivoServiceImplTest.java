@@ -37,8 +37,8 @@ class RecordatorioPreventivoServiceImplTest {
         ControlPreventivo vacuna = control(1L, "Antirrabica", TipoControlPreventivo.VACUNACION, 1L);
         ControlPreventivo desparasitacion = control(2L, "Desparasitacion", TipoControlPreventivo.DESPARASITACION, 1L);
         when(controlRepository.findReminderCandidates(any(), any())).thenReturn(List.of(vacuna, desparasitacion));
-        when(recordatorioRepository.existsByControlPreventivoIdAndTipoAviso(anyLong(), any())).thenReturn(false);
-        when(recordatorioRepository.countByApoderadoIdAndFechaEnvioAfter(anyLong(), any())).thenReturn(0L);
+        when(recordatorioRepository.findExistingKeys(anyCollection())).thenReturn(List.of());
+        when(recordatorioRepository.findApoderadoIdsWithRecentReminder(anyCollection(), any())).thenReturn(List.of());
         when(emailService.createMail(anyString(), anyString(), anyMap())).thenReturn(new Mail());
 
         service.procesarRecordatorios();
@@ -51,8 +51,8 @@ class RecordatorioPreventivoServiceImplTest {
     void respetaElIntervaloMinimoDeSieteDiasPorPropietario() {
         when(controlRepository.findReminderCandidates(any(), any()))
                 .thenReturn(List.of(control(1L, "Antirrabica", TipoControlPreventivo.VACUNACION, 1L)));
-        when(recordatorioRepository.existsByControlPreventivoIdAndTipoAviso(anyLong(), any())).thenReturn(false);
-        when(recordatorioRepository.countByApoderadoIdAndFechaEnvioAfter(anyLong(), any())).thenReturn(1L);
+        when(recordatorioRepository.findExistingKeys(anyCollection())).thenReturn(List.of());
+        when(recordatorioRepository.findApoderadoIdsWithRecentReminder(anyCollection(), any())).thenReturn(List.of(1L));
 
         service.procesarRecordatorios();
 

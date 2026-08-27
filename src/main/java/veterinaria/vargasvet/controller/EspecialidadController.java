@@ -3,8 +3,8 @@ package veterinaria.vargasvet.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.domain.entity.Especialidad;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.service.EspecialidadService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/admin/specialties")
@@ -28,10 +26,8 @@ public class EspecialidadController {
             @RequestParam(required = false) Integer companyId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        List<Especialidad> todas = especialidadService.findAll(companyId);
-        int start = Math.min(page * size, todas.size());
-        int end = Math.min(start + size, todas.size());
-        Page<Especialidad> resultado = new PageImpl<>(todas.subList(start, end), PageRequest.of(page, size), todas.size());
+        Page<Especialidad> resultado = especialidadService.findAll(
+                companyId, PageRequest.of(page, size, Sort.by("nombre").ascending()));
         return ResponseEntity.ok(new ApiResponse<>(true, "Especialidades recuperadas con éxito", resultado));
     }
 
