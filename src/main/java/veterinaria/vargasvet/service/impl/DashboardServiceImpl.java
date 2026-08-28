@@ -49,10 +49,12 @@ public class DashboardServiceImpl implements DashboardService {
                 : SecurityUtils.getCurrentCompanyId();
         boolean globalMode = SecurityUtils.isSuperAdmin() && targetCompanyId == null;
 
-        var recentLogs = auditLogService.getLogs(
-                targetCompanyId, null, null, null, null, null,
-                PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "timestamp"))).getContent();
-        var companies = (SecurityUtils.isSuperAdmin() || SecurityUtils.hasAuthority("VISTA_COMPANY"))
+        var recentLogs = canRead("COMPANY_MANAGE")
+                ? auditLogService.getLogs(
+                        targetCompanyId, null, null, null, null, null,
+                        PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "timestamp"))).getContent()
+                : List.<veterinaria.vargasvet.domain.entity.AuditLog>of();
+        var companies = canRead("COMPANY_READ")
                 ? companyService.listarTodas(0, 200).getContent()
                 : List.<veterinaria.vargasvet.dto.response.CompanyListResponse>of();
 
@@ -75,18 +77,29 @@ public class DashboardServiceImpl implements DashboardService {
         return DashboardOverviewDTO.builder()
                 .stats(getStats(targetCompanyId))
                 .recentLogs(recentLogs)
-                .employees(empleadoService.listar(targetCompanyId, null, null, null,
-                        null, null, 0, 5).getContent())
-                .todayAppointments(citaService.listar(targetCompanyId, today, null, null,
-                        null, null, 0, 30).getContent())
-                .pets(mascotaService.listar(targetCompanyId, null, null, null,
-                        null, 0, 6).getContent())
-                .roles(roleService.getRolesByCompany(targetCompanyId))
-                .guardians(apoderadoService.listar(targetCompanyId, null, null, 0, 5).getContent())
-                .schedules(empleadoService.getSchedulesReport(targetCompanyId))
-                .payments(pagoService.listarHistorialPorEmpresa(0, 5, targetCompanyId).getContent())
+                .employees(canRead("EMPLEADO_READ")
+                        ? empleadoService.listar(targetCompanyId, null, null, null,
+                                null, null, 0, 5).getContent() : List.of())
+                .todayAppointments(canRead("CITA_READ")
+                        ? citaService.listar(targetCompanyId, today, null, null,
+                                null, null, 0, 30).getContent() : List.of())
+                .pets(canRead("PET_READ")
+                        ? mascotaService.listar(targetCompanyId, null, null, null,
+                                null, 0, 6).getContent() : List.of())
+                .roles(canRead("ROLE_MANAGE")
+                        ? roleService.getRolesByCompany(targetCompanyId) : List.of())
+                .guardians(canRead("APODERADO_READ")
+                        ? apoderadoService.listar(targetCompanyId, null, null, 0, 5).getContent() : List.of())
+                .schedules(canRead("HORARIO_READ")
+                        ? empleadoService.getSchedulesReportForDate(targetCompanyId, today) : List.of())
+                .payments(canRead("SALE_READ")
+                        ? pagoService.listarHistorialPorEmpresa(0, 5, targetCompanyId).getContent() : List.of())
                 .companies(companies)
                 .build();
+    }
+
+    private boolean canRead(String authority) {
+        return SecurityUtils.isSuperAdmin() || SecurityUtils.hasAuthority(authority);
     }
 
     @Override

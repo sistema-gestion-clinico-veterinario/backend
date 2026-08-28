@@ -1,11 +1,14 @@
 package veterinaria.vargasvet.service.impl;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import veterinaria.vargasvet.domain.entity.Apoderado;
 import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.entity.Company;
@@ -33,11 +36,13 @@ import veterinaria.vargasvet.repository.ServiciosVeterinariosRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CajaService;
+import veterinaria.vargasvet.security.UsuarioPrincipal;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -85,6 +90,11 @@ class PagoServiceIntegrationTest {
                 auditLogService,
                 cajaService
         );
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -207,7 +217,12 @@ class PagoServiceIntegrationTest {
         cita.setMontoPagado(montoPagado);
         cita.setEliminada(false);
         cita.setEsEmergencia(false);
-        return citaRepository.save(cita);
+        Cita saved = citaRepository.save(cita);
+        UsuarioPrincipal principal = new UsuarioPrincipal(
+                apoderadoUser.getId(), apoderadoUser.getEmail(), apoderadoUser.getPassword(), List.of(), company.getId());
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
+        return saved;
     }
 
     private Usuario usuario(String prefix, Company company) {

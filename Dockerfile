@@ -6,19 +6,26 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copiar fuente y compilar
+# Copiar fuente, ejecutar pruebas y compilar
 COPY src ./src
-RUN mvn package -DskipTests -B
+RUN mvn verify -B --no-transfer-progress
 
 # ── Etapa 2: Imagen final (solo JRE) ──────────────────────────
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Directorio para archivos subidos (Render Disk o temporal)
-RUN mkdir -p uploads
+# Ejecutar con una cuenta sin privilegios y dejar escritura solo donde corresponde.
+RUN addgroup -S systemvet && adduser -S systemvet -G systemvet \
+    && mkdir -p /app/uploads \
+    && chown -R systemvet:systemvet /app
 
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build --chown=systemvet:systemvet /app/target/*.jar app.jar
+
+USER systemvet
 
 EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD wget -q -O - http://127.0.0.1:8080/api/v1/actuator/health || exit 1
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

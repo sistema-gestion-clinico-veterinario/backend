@@ -1,6 +1,9 @@
 package veterinaria.vargasvet.service.impl;
 
 import jakarta.annotation.PostConstruct;
+import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
@@ -19,7 +22,10 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class StorageServiceImpl implements StorageService {
+
+    private static final long MAX_MEDIA_BYTES = 5L * 1024 * 1024;
 
     @Value("${supabase.url}")
     private String supabaseUrl;
@@ -29,6 +35,8 @@ public class StorageServiceImpl implements StorageService {
 
     @Value("${supabase.bucket}")
     private String bucketName;
+
+    private final MeterRegistry meterRegistry;
 
     private RestTemplate restTemplate;
 
@@ -41,6 +49,12 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public String store(MultipartFile file) {
         try {
+            if (file.isEmpty()) {
+                throw new IllegalArgumentException("El archivo está vacío");
+            }
+            if (file.getSize() > MAX_MEDIA_BYTES) {
+                throw new IllegalArgumentException("La imagen supera el tamaño máximo permitido de 5 MB");
+            }
             byte[] content = file.getBytes();
             DetectedImage image = detectImage(content);
             if (image == null) {
@@ -56,6 +70,7 @@ public class StorageServiceImpl implements StorageService {
             headers.setContentType(MediaType.parseMediaType(mime));
             HttpEntity<byte[]> entity = new HttpEntity<>(content, headers);
             restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+            recordStoredBytes("media", content.length);
 
             return supabaseUrl + "/storage/v1/object/public/" + bucketName + "/" + fileName;
         } catch (IOException e) {
@@ -98,6 +113,7 @@ public class StorageServiceImpl implements StorageService {
         headers.setContentType(MediaType.parseMediaType(effectiveMime));
         HttpEntity<byte[]> entity = new HttpEntity<>(content, headers);
         restTemplate.exchange(url, HttpMethod.POST, entity, Void.class);
+        recordStoredBytes("clinical", content.length);
 
         return supabaseUrl + "/storage/v1/object/public/" + bucketName + "/" + fileName;
     }
@@ -149,5 +165,14 @@ public class StorageServiceImpl implements StorageService {
         int idx = url.indexOf(prefix);
         if (idx == -1) return url;
         return url.substring(idx + prefix.length());
+    }
+
+    private void recordStoredBytes(String category, int bytes) {
+        DistributionSummary.builder("systemvet.storage.upload.bytes")
+                .description("Bytes almacenados correctamente en el proveedor de archivos")
+                .baseUnit("bytes")
+                .tag("category", category)
+                .register(meterRegistry)
+                .record(bytes);
     }
 }
