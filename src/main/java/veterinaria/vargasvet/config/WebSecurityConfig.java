@@ -96,13 +96,16 @@ public class WebSecurityConfig {
                         .permissionsPolicyHeader(policy -> policy.policy("camera=(), microphone=(), geolocation=()"))
                 );
 
-        http.addFilterBefore(cookieSecurityFilter, JWTFilter.class);
-
-        // JWT Filter (identifica al usuario)
+        // Registrar primero JWT contra un filtro estándar con orden conocido.
+        // Los filtros personalizados pueden referenciarlo después sin depender
+        // del orden en que Spring descubra sus beans.
         http.addFilterBefore(
                 jwtFilter,
                 UsernamePasswordAuthenticationFilter.class
         );
+
+        // Validar el origen de las cookies antes de procesar la autenticación.
+        http.addFilterBefore(cookieSecurityFilter, JWTFilter.class);
 
         // Rate Limit Filter (despues de JWT, para poder limitar por usuario autenticado)
         http.addFilterAfter(
