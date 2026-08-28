@@ -4,8 +4,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import jakarta.persistence.LockModeType;
 import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
@@ -16,6 +18,22 @@ import java.util.List;
 
 @Repository
 public interface CitaRepository extends JpaRepository<Cita, Long> {
+
+    @Query("SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
+            "WHERE c.id = :id AND u.company.id = :companyId")
+    java.util.Optional<Cita> findByIdAndCompanyId(@Param("id") Long id,
+                                                  @Param("companyId") Integer companyId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
+            "WHERE c.id = :id AND u.company.id = :companyId")
+    java.util.Optional<Cita> findByIdAndCompanyIdForUpdate(@Param("id") Long id,
+                                                           @Param("companyId") Integer companyId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
+            "WHERE c.id = :id")
+    java.util.Optional<Cita> findByIdForUpdate(@Param("id") Long id);
 
     String ESTADOS_NO_ACTIVOS = "c.estado NOT IN ('CANCELADA', 'ELIMINADA') AND c.eliminada = false";
     String ESTADOS_VIGENTES = "c.estado IN ('PROGRAMADA', 'PENDIENTE', 'CONFIRMADA', 'REPROGRAMADA', 'SALA_DE_ESPERA', 'EN_PROCESO')";

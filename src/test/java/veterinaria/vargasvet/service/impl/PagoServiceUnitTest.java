@@ -1,7 +1,10 @@
 package veterinaria.vargasvet.service.impl;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -17,15 +20,18 @@ import veterinaria.vargasvet.domain.enums.PaymentStatus;
 import veterinaria.vargasvet.domain.enums.TipoPurchase;
 import veterinaria.vargasvet.dto.request.PagoRequest;
 import veterinaria.vargasvet.dto.response.PagoResponse;
+import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.PurchaseRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CajaService;
+import veterinaria.vargasvet.security.UsuarioPrincipal;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -37,6 +43,11 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PagoServiceUnitTest {
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Mock
     private CitaRepository citaRepository;
@@ -57,7 +68,8 @@ class PagoServiceUnitTest {
     void registrar_rechazaCitaCancelada() {
         PagoServiceImpl service = service();
         PagoRequest request = efectivoRequest(10L, new BigDecimal("100.00"));
-        when(citaRepository.findById(10L)).thenReturn(Optional.of(cita(10L, EstadoCita.CANCELADA, BigDecimal.ZERO)));
+        Cita cita = cita(10L, EstadoCita.CANCELADA, BigDecimal.ZERO);
+        when(citaRepository.findByIdAndCompanyIdForUpdate(10L, 3)).thenReturn(Optional.of(cita));
 
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
@@ -73,7 +85,7 @@ class PagoServiceUnitTest {
         PagoServiceImpl service = service();
         PagoRequest request = efectivoRequest(10L, new BigDecimal("100.00"));
         Cita cita = cita(10L, EstadoCita.PROGRAMADA, new BigDecimal("80.00"));
-        when(citaRepository.findById(10L)).thenReturn(Optional.of(cita));
+        when(citaRepository.findByIdAndCompanyIdForUpdate(10L, 3)).thenReturn(Optional.of(cita));
         when(purchaseRepository.save(any(Purchase.class))).thenAnswer(invocation -> {
             Purchase pago = invocation.getArgument(0);
             pago.setId(87L);
@@ -92,7 +104,8 @@ class PagoServiceUnitTest {
     void registrar_rechazaPagoEfectivoSinMontoRecibido() {
         PagoServiceImpl service = service();
         PagoRequest request = efectivoRequest(10L, null);
-        when(citaRepository.findById(10L)).thenReturn(Optional.of(cita(10L, EstadoCita.PROGRAMADA, BigDecimal.ZERO)));
+        Cita cita = cita(10L, EstadoCita.PROGRAMADA, BigDecimal.ZERO);
+        when(citaRepository.findByIdAndCompanyIdForUpdate(10L, 3)).thenReturn(Optional.of(cita));
 
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
@@ -108,7 +121,7 @@ class PagoServiceUnitTest {
         PagoServiceImpl service = service();
         Cita cita = cita(10L, EstadoCita.PROGRAMADA, BigDecimal.ZERO);
         PagoRequest request = efectivoRequest(10L, new BigDecimal("120.00"));
-        when(citaRepository.findById(10L)).thenReturn(Optional.of(cita));
+        when(citaRepository.findByIdAndCompanyIdForUpdate(10L, 3)).thenReturn(Optional.of(cita));
         when(purchaseRepository.save(any(Purchase.class))).thenAnswer(invocation -> {
             Purchase pago = invocation.getArgument(0);
             pago.setId(88L);
@@ -139,6 +152,7 @@ class PagoServiceUnitTest {
         pago.setTotal(new BigDecimal("100.00"));
         pago.setMontoRecibido(new BigDecimal("130.00"));
         pago.setPaymentStatus(PaymentStatus.PAID);
+        when(citaRepository.findByIdAndCompanyId(10L, 3)).thenReturn(Optional.of(cita));
         when(purchaseRepository.findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(10L, TipoPurchase.SERVICIO_CITA))
                 .thenReturn(Optional.of(pago));
 
@@ -146,6 +160,20 @@ class PagoServiceUnitTest {
 
         assertEquals(new BigDecimal("30.00"), response.getCambio());
         assertEquals(PaymentStatus.PAID, response.getEstado());
+    }
+
+    @Test
+    void registrar_noExponeNiModificaCitaDeOtraEmpresa() {
+        PagoServiceImpl service = service();
+        authenticateTenant(3);
+        PagoRequest request = efectivoRequest(44L, new BigDecimal("100.00"));
+        when(citaRepository.findByIdAndCompanyIdForUpdate(44L, 3)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.registrar(request));
+
+        verify(citaRepository, never()).findByIdForUpdate(44L);
+        verify(purchaseRepository, never()).save(any(Purchase.class));
+        verify(cajaService, never()).registrarIngresoPorCita(any(), any(), any(), any());
     }
 
     private PagoServiceImpl service() {
@@ -188,6 +216,13 @@ class PagoServiceUnitTest {
         cita.setTotalServicio(new BigDecimal("100.00"));
         cita.setMontoPagado(montoPagado);
         cita.setMascota(mascota);
+        authenticateTenant(company.getId());
         return cita;
+    }
+
+    private void authenticateTenant(Integer companyId) {
+        UsuarioPrincipal principal = new UsuarioPrincipal(99, "empleado@test.local", "", List.of(), companyId);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
     }
 }

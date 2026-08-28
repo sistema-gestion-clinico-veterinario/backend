@@ -59,6 +59,16 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
 
     Optional<Mascota> findByUuid(String uuid);
 
+    @Query("SELECT m FROM Mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
+           "WHERE m.id = :id AND u.company.id = :companyId")
+    Optional<Mascota> findByIdAndCompanyId(@Param("id") Long id,
+                                           @Param("companyId") Integer companyId);
+
+    @Query("SELECT m FROM Mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
+           "WHERE m.uuid = :uuid AND u.company.id = :companyId")
+    Optional<Mascota> findByUuidAndCompanyId(@Param("uuid") String uuid,
+                                             @Param("companyId") Integer companyId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT m FROM Mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u WHERE m.id = :id")
     Optional<Mascota> findByIdForUpdate(@Param("id") Long id);

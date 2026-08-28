@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Apoderado;
@@ -113,24 +114,24 @@ public class MascotaServiceImpl implements MascotaService {
     @Override
     @Transactional(readOnly = true)
     public MascotaResponse obtenerPorId(Long id) {
-        Mascota mascota = mascotaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada con ID: " + id));
+        Mascota mascota = findAccessibleById(id);
         return mascotaMapper.toResponse(mascota);
     }
 
     @Override
     @Transactional(readOnly = true)
     public MascotaResponse obtenerPorUuid(String uuid) {
-        Mascota mascota = mascotaRepository.findByUuid(uuid)
-                .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada"));
+        Mascota mascota = SecurityUtils.isSuperAdmin()
+                ? mascotaRepository.findByUuid(uuid).orElseThrow(() -> mascotaNotFound(null))
+                : mascotaRepository.findByUuidAndCompanyId(uuid, requireCompanyId())
+                    .orElseThrow(() -> mascotaNotFound(null));
         return mascotaMapper.toResponse(mascota);
     }
 
     @Override
     @Transactional
     public MascotaResponse updateMascota(Long id, MascotaRequest request) {
-        Mascota mascota = mascotaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada con ID: " + id));
+        Mascota mascota = findAccessibleById(id);
 
         if (!Boolean.TRUE.equals(mascota.getActivo())) {
             throw new IllegalStateException("No se puede editar una mascota inactiva. Active a la mascota primero.");
@@ -139,13 +140,6 @@ public class MascotaServiceImpl implements MascotaService {
             mascota.getApoderado() != null && mascota.getApoderado().getUser() != null
                 && mascota.getApoderado().getUser().getCompany() != null
                 ? mascota.getApoderado().getUser().getCompany().getId() : null);
-
-        if (!SecurityUtils.isSuperAdmin()) {
-            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-            if (mascota.getApoderado().getUser().getCompany() == null || !mascota.getApoderado().getUser().getCompany().getId().equals(currentCompanyId)) {
-                throw new IllegalArgumentException("No tienes permiso para modificar una mascota de otra clínica");
-            }
-        }
 
         if (request.getApoderadoId() != null && !request.getApoderadoId().equals(mascota.getApoderado().getId())) {
             Apoderado nuevoApoderado = apoderadoRepository.findById(request.getApoderadoId())
@@ -207,15 +201,7 @@ public class MascotaServiceImpl implements MascotaService {
     @Override
     @Transactional
     public void cambiarEstado(Long id, veterinaria.vargasvet.dto.request.EstadoMascotaRequest request) {
-        Mascota mascota = mascotaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada con ID: " + id));
-
-        if (!SecurityUtils.isSuperAdmin()) {
-            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-            if (mascota.getApoderado().getUser().getCompany() == null || !mascota.getApoderado().getUser().getCompany().getId().equals(currentCompanyId)) {
-                throw new IllegalArgumentException("No tienes permiso para modificar el estado de una mascota de otra clínica");
-            }
-        }
+        Mascota mascota = findAccessibleById(id);
 
         if (!request.getActive()) {
             if (citaRepository.existsCitaVigenteByMascotaId(id, veterinaria.vargasvet.util.AppClock.now())) {
@@ -268,5 +254,26 @@ public class MascotaServiceImpl implements MascotaService {
             return companyIdParam;
         }
         return SecurityUtils.getCurrentCompanyId();
+    }
+
+    private Mascota findAccessibleById(Long id) {
+        return (SecurityUtils.isSuperAdmin()
+                ? mascotaRepository.findById(id)
+                : mascotaRepository.findByIdAndCompanyId(id, requireCompanyId()))
+                .orElseThrow(() -> mascotaNotFound(id));
+    }
+
+    private Integer requireCompanyId() {
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        if (companyId == null) {
+            throw new AccessDeniedException("El usuario no tiene una empresa asignada");
+        }
+        return companyId;
+    }
+
+    private ResourceNotFoundException mascotaNotFound(Long id) {
+        return new ResourceNotFoundException(id == null
+                ? "Mascota no encontrada"
+                : "Mascota no encontrada con ID: " + id);
     }
 }
