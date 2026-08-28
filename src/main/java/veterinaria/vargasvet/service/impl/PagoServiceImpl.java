@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Cita;
@@ -40,8 +41,7 @@ public class PagoServiceImpl implements PagoService {
     @Override
     @Transactional
     public PagoResponse registrar(PagoRequest request) {
-        Cita cita = citaRepository.findById(request.getCitaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + request.getCitaId()));
+        Cita cita = findAccessibleCita(request.getCitaId(), true);
 
         if (cita.getEstado() == EstadoCita.CANCELADA || cita.getEstado() == EstadoCita.NO_ASISTIO) {
             throw new IllegalArgumentException("No se puede registrar un pago para una cita con estado: " + cita.getEstado());
@@ -111,8 +111,9 @@ public class PagoServiceImpl implements PagoService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public PagoResponse obtenerPorCita(Long citaId) {
+        findAccessibleCita(citaId, false);
         Purchase pago = purchaseRepository
                 .findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(citaId, TipoPurchase.SERVICIO_CITA)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontró un pago para la cita con ID: " + citaId));
@@ -294,6 +295,27 @@ public class PagoServiceImpl implements PagoService {
             }
         } catch (Exception ignored) {}
         return null;
+    }
+
+    private Cita findAccessibleCita(Long citaId, boolean forUpdate) {
+        if (SecurityUtils.isSuperAdmin()) {
+            return (forUpdate ? citaRepository.findByIdForUpdate(citaId) : citaRepository.findById(citaId))
+                    .orElseThrow(() -> citaNotFound(citaId));
+        }
+
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        if (companyId == null) {
+            throw new AccessDeniedException("El usuario no tiene una empresa asignada");
+        }
+
+        return (forUpdate
+                ? citaRepository.findByIdAndCompanyIdForUpdate(citaId, companyId)
+                : citaRepository.findByIdAndCompanyId(citaId, companyId))
+                .orElseThrow(() -> citaNotFound(citaId));
+    }
+
+    private ResourceNotFoundException citaNotFound(Long citaId) {
+        return new ResourceNotFoundException("Cita no encontrada con ID: " + citaId);
     }
 
     private String asegurarNumeroCita(Cita cita) {

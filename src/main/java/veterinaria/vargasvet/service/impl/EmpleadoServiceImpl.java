@@ -682,16 +682,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         return horarioEmpleadoRepository.findByEmpleadoId(empleadoId).stream()
                 .sorted(java.util.Comparator.comparing(HorarioEmpleado::getFecha, java.util.Comparator.nullsFirst(LocalDate::compareTo))
                         .thenComparing(HorarioEmpleado::getHoraInicio))
-                .map(h -> {
-                    HorarioEmpleadoResponse r = new HorarioEmpleadoResponse();
-                    r.setId(h.getId());
-                    r.setFecha(h.getFecha());
-                    r.setDiaSemana(h.getDiaSemana().name());
-                    r.setHoraInicio(h.getHoraInicio());
-                    r.setHoraFin(h.getHoraFin());
-                    r.setActivo(h.getActivo());
-                    return r;
-                }).toList();
+                .map(this::toHorarioResponse)
+                .toList();
     }
 
     private void sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken) {
@@ -1106,5 +1098,43 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                     .horarios(horarios)
                     .build();
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse> getSchedulesReportForDate(
+            Integer companyId, LocalDate date) {
+        Integer resolvedId = resolverCompanyId(companyId);
+        LocalDate targetDate = java.util.Objects.requireNonNull(date, "La fecha del reporte es requerida");
+
+        var employees = empleadoRepository.findDashboardEmployeesByCompanyId(resolvedId);
+        var schedulesByEmployee = horarioEmpleadoRepository
+                .findDashboardSchedulesByCompanyAndDate(resolvedId, targetDate)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        schedule -> schedule.getEmpleado().getId(),
+                        java.util.LinkedHashMap::new,
+                        Collectors.mapping(this::toHorarioResponse, Collectors.toList())
+                ));
+
+        return employees.stream()
+                .map(employee -> veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse.builder()
+                        .empleadoId(employee.getEmpleadoId())
+                        .nombreCompleto(employee.getNombreCompleto())
+                        .cargo(employee.getCargo())
+                        .horarios(schedulesByEmployee.getOrDefault(employee.getEmpleadoId(), List.of()))
+                        .build())
+                .toList();
+    }
+
+    private HorarioEmpleadoResponse toHorarioResponse(HorarioEmpleado horario) {
+        HorarioEmpleadoResponse response = new HorarioEmpleadoResponse();
+        response.setId(horario.getId());
+        response.setFecha(horario.getFecha());
+        response.setDiaSemana(horario.getDiaSemana().name());
+        response.setHoraInicio(horario.getHoraInicio());
+        response.setHoraFin(horario.getHoraFin());
+        response.setActivo(horario.getActivo());
+        return response;
     }
 }

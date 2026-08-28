@@ -16,6 +16,12 @@ import java.util.Optional;
 @Repository
 public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
 
+    interface DashboardEmployeeProjection {
+        Long getEmpleadoId();
+        String getNombreCompleto();
+        String getCargo();
+    }
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM Empleado e WHERE e.id = :id")
     Optional<Empleado> findByIdForAppointmentWrite(@Param("id") Long id);
@@ -53,6 +59,16 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
 
     @Query("SELECT e FROM Empleado e WHERE e.user.company.id = :companyId")
     java.util.List<Empleado> findAllByCompanyId(@Param("companyId") Integer companyId);
+
+    @Query("SELECT e.id AS empleadoId, " +
+           "CONCAT(u.nombre, ' ', u.apellido) AS nombreCompleto, " +
+           "COALESCE(MIN(t.nombre), 'Personal') AS cargo " +
+           "FROM Empleado e JOIN e.user u LEFT JOIN e.tiposEmpleado t " +
+           "WHERE u.company.id = :companyId AND e.estado = true " +
+           "GROUP BY e.id, u.nombre, u.apellido " +
+           "ORDER BY u.apellido ASC, u.nombre ASC")
+    java.util.List<DashboardEmployeeProjection> findDashboardEmployeesByCompanyId(
+            @Param("companyId") Integer companyId);
 
     @Query("SELECT e FROM Empleado e JOIN e.user u " +
            "WHERE u.company.id = :companyId AND e.estado = true " +
