@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -125,7 +126,7 @@ public class WebSecurityConfig {
                 .map(String::trim)
                 .map(o -> o.endsWith("/") ? o.substring(0, o.length() - 1) : o)
                 .collect(Collectors.toList());
-        config.setAllowedOriginPatterns(origins);
+        config.setAllowedOrigins(origins);
 
         config.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
@@ -141,6 +142,30 @@ public class WebSecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+
+    @Bean
+    public FilterRegistrationBean<JWTFilter> jwtFilterRegistration(JWTFilter filter) {
+        return securityFilterRegistration(filter);
+    }
+
+    @Bean
+    public FilterRegistrationBean<CookieSecurityFilter> cookieSecurityFilterRegistration(
+            CookieSecurityFilter filter) {
+        return securityFilterRegistration(filter);
+    }
+
+    @Bean
+    public FilterRegistrationBean<veterinaria.vargasvet.security.RateLimitFilter> rateLimitFilterRegistration(
+            veterinaria.vargasvet.security.RateLimitFilter filter) {
+        return securityFilterRegistration(filter);
+    }
+
+    private <T extends jakarta.servlet.Filter> FilterRegistrationBean<T> securityFilterRegistration(T filter) {
+        FilterRegistrationBean<T> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
