@@ -9,13 +9,16 @@ import veterinaria.vargasvet.domain.entity.RolVistaPermiso;
 import veterinaria.vargasvet.domain.entity.Vista;
 import veterinaria.vargasvet.domain.entity.Ventana;
 import veterinaria.vargasvet.domain.entity.RolVentanaConfiguracion;
+import veterinaria.vargasvet.domain.entity.RolVistaConfiguracion;
 import veterinaria.vargasvet.domain.enums.MenuPresentation;
+import veterinaria.vargasvet.domain.enums.MenuItemType;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.domain.enums.ViewAudience;
 import veterinaria.vargasvet.dto.response.RolDTO;
 import veterinaria.vargasvet.dto.response.RolVistaPermisoDTO;
 import veterinaria.vargasvet.dto.response.RolVentanaConfiguracionDTO;
+import veterinaria.vargasvet.dto.response.RolMenuOrdenItemDTO;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
@@ -23,15 +26,11 @@ import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.VistaRepository;
 import veterinaria.vargasvet.repository.VentanaRepository;
 import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
+import veterinaria.vargasvet.repository.RolVistaConfiguracionRepository;
 import veterinaria.vargasvet.service.RoleService;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Objects;
-import java.util.LinkedHashMap;
-import java.util.HashSet;
-import java.util.Set;
 import org.springframework.security.access.AccessDeniedException;
 import veterinaria.vargasvet.security.SecurityUtils;
 
@@ -45,6 +44,7 @@ public class RoleServiceImpl implements RoleService {
     private final RolVistaPermisoRepository rolVistaPermisoRepository;
     private final VentanaRepository ventanaRepository;
     private final RolVentanaConfiguracionRepository rolVentanaConfiguracionRepository;
+    private final RolVistaConfiguracionRepository rolVistaConfiguracionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -280,8 +280,9 @@ public class RoleServiceImpl implements RoleService {
                 ));
 
         return ventanasLegibles.values().stream()
-                .sorted(java.util.Comparator.comparing(Ventana::getOrden))
                 .map(ventana -> toMenuConfigurationDTO(ventana, configuraciones.get(ventana.getId())))
+                .sorted(Comparator.comparing(RolVentanaConfiguracionDTO::getOrden)
+                        .thenComparing(RolVentanaConfiguracionDTO::getNombre))
                 .toList();
     }
 
@@ -337,6 +338,197 @@ public class RoleServiceImpl implements RoleService {
 
         incrementarVersionPermisos(role);
         return getMenuConfiguration(roleId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RolMenuOrdenItemDTO> getMenuOrder(Integer roleId) {
+        Role role = requireReadableRole(roleId);
+        List<RolVistaPermiso> permisos = readableViewPermissions(role);
+
+        Map<Integer, RolVentanaConfiguracion> configuracionesVentana = rolVentanaConfiguracionRepository
+                .findByRolIdWithVentana(roleId).stream()
+                .collect(Collectors.toMap(config -> config.getVentana().getId(), config -> config));
+        Map<Integer, RolVistaConfiguracion> configuracionesVista = rolVistaConfiguracionRepository
+                .findByRolIdWithVistaAndVentana(roleId).stream()
+                .collect(Collectors.toMap(config -> config.getVista().getId(), config -> config));
+
+        Map<Integer, Ventana> ventanas = new LinkedHashMap<>();
+        Map<Integer, List<Vista>> vistasPorVentana = new LinkedHashMap<>();
+        List<Vista> vistasSueltas = new ArrayList<>();
+
+        for (RolVistaPermiso permiso : permisos) {
+            Vista vista = permiso.getVista();
+            Ventana ventana = vista.getVentana();
+            if (ventana != null && ventana.isActivo()) {
+                ventanas.putIfAbsent(ventana.getId(), ventana);
+                vistasPorVentana.computeIfAbsent(ventana.getId(), ignored -> new ArrayList<>()).add(vista);
+            } else {
+                vistasSueltas.add(vista);
+            }
+        }
+
+        List<RolMenuOrdenItemDTO> resultado = new ArrayList<>();
+        ventanas.forEach((ventanaId, ventana) -> {
+            RolVentanaConfiguracion config = configuracionesVentana.get(ventanaId);
+            RolMenuOrdenItemDTO modulo = toMenuOrderItem(
+                    MenuItemType.MODULE, ventana.getId(), ventana.getCodigo(), ventana.getNombre(),
+                    ventana.getIcono(), config != null ? config.getOrden() : ventana.getOrden());
+            List<RolMenuOrdenItemDTO> vistas = vistasPorVentana.getOrDefault(ventanaId, List.of()).stream()
+                    .map(vista -> toViewOrderItem(vista, configuracionesVista.get(vista.getId())))
+                    .sorted(menuOrderComparator())
+                    .toList();
+            modulo.setVistas(new ArrayList<>(vistas));
+            resultado.add(modulo);
+        });
+
+        vistasSueltas.stream()
+                .map(vista -> toViewOrderItem(vista, configuracionesVista.get(vista.getId())))
+                .forEach(resultado::add);
+        resultado.sort(menuOrderComparator());
+        return resultado;
+    }
+
+    @Override
+    @Transactional
+    public List<RolMenuOrdenItemDTO> saveMenuOrder(Integer roleId, List<RolMenuOrdenItemDTO> items) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
+        assertCanManageRole(role);
+        if (!role.isActivo()) {
+            throw new IllegalArgumentException("No se puede ordenar el menú de un rol inactivo");
+        }
+
+        List<RolVistaPermiso> permisos = readableViewPermissions(role);
+        Map<Integer, Vista> vistasEsperadas = permisos.stream()
+                .map(RolVistaPermiso::getVista)
+                .collect(Collectors.toMap(Vista::getId, vista -> vista));
+        Map<Integer, Ventana> ventanasEsperadas = vistasEsperadas.values().stream()
+                .map(Vista::getVentana)
+                .filter(Objects::nonNull)
+                .filter(Ventana::isActivo)
+                .collect(Collectors.toMap(Ventana::getId, ventana -> ventana, (a, b) -> a));
+
+        List<RolMenuOrdenItemDTO> solicitudes = items != null ? items : List.of();
+        Set<Integer> modulosRecibidos = new HashSet<>();
+        Set<Integer> vistasRecibidas = new HashSet<>();
+        Set<Integer> ordenPrincipal = new HashSet<>();
+
+        for (RolMenuOrdenItemDTO item : solicitudes) {
+            validateOrder(item, ordenPrincipal);
+            if (item.getTipo() == MenuItemType.MODULE) {
+                Ventana ventana = ventanasEsperadas.get(item.getReferenciaId());
+                if (ventana == null || !modulosRecibidos.add(item.getReferenciaId())) {
+                    throw new IllegalArgumentException("El orden contiene módulos duplicados o no asignados al rol");
+                }
+                Set<Integer> ordenVistas = new HashSet<>();
+                for (RolMenuOrdenItemDTO vistaItem : safeChildren(item)) {
+                    validateOrder(vistaItem, ordenVistas);
+                    Vista vista = vistasEsperadas.get(vistaItem.getReferenciaId());
+                    if (vistaItem.getTipo() != MenuItemType.VIEW || vista == null
+                            || vista.getVentana() == null
+                            || !Objects.equals(vista.getVentana().getId(), ventana.getId())
+                            || !vistasRecibidas.add(vista.getId())) {
+                        throw new IllegalArgumentException("El módulo contiene vistas duplicadas o inválidas");
+                    }
+                }
+            } else if (item.getTipo() == MenuItemType.VIEW) {
+                Vista vista = vistasEsperadas.get(item.getReferenciaId());
+                if (vista == null
+                        || (vista.getVentana() != null && vista.getVentana().isActivo())
+                        || !vistasRecibidas.add(vista.getId())) {
+                    throw new IllegalArgumentException("El orden contiene vistas planas duplicadas o inválidas");
+                }
+            } else {
+                throw new IllegalArgumentException("El tipo de elemento del menú es inválido");
+            }
+        }
+
+        if (!modulosRecibidos.equals(ventanasEsperadas.keySet())
+                || !vistasRecibidas.equals(vistasEsperadas.keySet())) {
+            throw new IllegalArgumentException("El orden debe incluir exactamente todos los elementos visibles del rol");
+        }
+
+        Map<Integer, RolVentanaConfiguracion> configVentanas = rolVentanaConfiguracionRepository
+                .findByRolIdWithVentana(roleId).stream()
+                .collect(Collectors.toMap(config -> config.getVentana().getId(), config -> config));
+        for (RolMenuOrdenItemDTO item : solicitudes) {
+            if (item.getTipo() != MenuItemType.MODULE) continue;
+            Ventana ventana = ventanasEsperadas.get(item.getReferenciaId());
+            RolVentanaConfiguracion config = configVentanas.getOrDefault(ventana.getId(), new RolVentanaConfiguracion());
+            if (config.getId() == null) {
+                config.setRol(role);
+                config.setVentana(ventana);
+                config.setPresentacion(ventana.getPresentacionDefault());
+            }
+            config.setOrden(item.getOrden());
+            rolVentanaConfiguracionRepository.save(config);
+        }
+
+        rolVistaConfiguracionRepository.deleteByRolId(roleId);
+        rolVistaConfiguracionRepository.flush();
+        for (RolMenuOrdenItemDTO item : solicitudes) {
+            if (item.getTipo() == MenuItemType.VIEW) {
+                saveViewOrder(role, vistasEsperadas.get(item.getReferenciaId()), item.getOrden());
+            } else {
+                for (RolMenuOrdenItemDTO vistaItem : safeChildren(item)) {
+                    saveViewOrder(role, vistasEsperadas.get(vistaItem.getReferenciaId()), vistaItem.getOrden());
+                }
+            }
+        }
+
+        incrementarVersionPermisos(role);
+        return getMenuOrder(roleId);
+    }
+
+    private List<RolVistaPermiso> readableViewPermissions(Role role) {
+        return rolVistaPermisoRepository.findByRolIdWithVistaAndVentana(role.getId()).stream()
+                .filter(RolVistaPermiso::isLeer)
+                .filter(permiso -> permiso.getVista() != null && permiso.getVista().isActivo())
+                .filter(permiso -> isAudienceCompatible(role.getScope(), permiso.getVista().getAudience()))
+                .toList();
+    }
+
+    private RolMenuOrdenItemDTO toViewOrderItem(Vista vista, RolVistaConfiguracion config) {
+        return toMenuOrderItem(MenuItemType.VIEW, vista.getId(), vista.getCodigo(), vista.getNombre(),
+                vista.getIcono(), config != null ? config.getOrden() : vista.getOrden());
+    }
+
+    private RolMenuOrdenItemDTO toMenuOrderItem(
+            MenuItemType tipo, Integer referenciaId, String codigo, String nombre, String icono, Integer orden) {
+        RolMenuOrdenItemDTO dto = new RolMenuOrdenItemDTO();
+        dto.setTipo(tipo);
+        dto.setReferenciaId(referenciaId);
+        dto.setCodigo(codigo);
+        dto.setNombre(nombre);
+        dto.setIcono(icono);
+        dto.setOrden(orden != null ? orden : 0);
+        return dto;
+    }
+
+    private Comparator<RolMenuOrdenItemDTO> menuOrderComparator() {
+        return Comparator.comparing(RolMenuOrdenItemDTO::getOrden)
+                .thenComparing(RolMenuOrdenItemDTO::getNombre, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(RolMenuOrdenItemDTO::getReferenciaId);
+    }
+
+    private List<RolMenuOrdenItemDTO> safeChildren(RolMenuOrdenItemDTO item) {
+        return item.getVistas() != null ? item.getVistas() : List.of();
+    }
+
+    private void validateOrder(RolMenuOrdenItemDTO item, Set<Integer> usedOrders) {
+        if (item == null || item.getReferenciaId() == null || item.getOrden() == null || item.getOrden() < 0
+                || !usedOrders.add(item.getOrden())) {
+            throw new IllegalArgumentException("El orden contiene posiciones duplicadas o inválidas");
+        }
+    }
+
+    private void saveViewOrder(Role role, Vista vista, Integer orden) {
+        RolVistaConfiguracion config = new RolVistaConfiguracion();
+        config.setRol(role);
+        config.setVista(vista);
+        config.setOrden(orden);
+        rolVistaConfiguracionRepository.save(config);
     }
 
     private RolDTO toDTO(Role role) {
