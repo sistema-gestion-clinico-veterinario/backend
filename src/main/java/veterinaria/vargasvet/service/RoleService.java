@@ -3,6 +3,7 @@ package veterinaria.vargasvet.service;
 import veterinaria.vargasvet.dto.response.RolDTO;
 import veterinaria.vargasvet.dto.response.RolVistaPermisoDTO;
 import veterinaria.vargasvet.dto.response.RolVentanaConfiguracionDTO;
+import veterinaria.vargasvet.dto.response.RolMenuOrdenItemDTO;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 
 import java.util.List;
@@ -24,4 +25,6 @@ public interface RoleService {
             Integer roleId,
             List<RolVentanaConfiguracionDTO> configuraciones
     );
+    List<RolMenuOrdenItemDTO> getMenuOrder(Integer roleId);
+    List<RolMenuOrdenItemDTO> saveMenuOrder(Integer roleId, List<RolMenuOrdenItemDTO> items);
 }

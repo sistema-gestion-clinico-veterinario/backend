@@ -8,6 +8,7 @@ import veterinaria.vargasvet.dto.response.MenuItemDTO;
 import veterinaria.vargasvet.dto.response.MenuStructureDTO;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
 import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
+import veterinaria.vargasvet.repository.RolVistaConfiguracionRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.domain.enums.MenuPresentation;
 import veterinaria.vargasvet.domain.enums.RoleScope;
@@ -23,15 +24,17 @@ public class MenuBuilderService {
     private final UsuarioPorRolRepository usuarioPorRolRepository;
     private final RolVistaPermisoRepository rolVistaPermisoRepository;
     private final RolVentanaConfiguracionRepository rolVentanaConfiguracionRepository;
+    private final RolVistaConfiguracionRepository rolVistaConfiguracionRepository;
 
     @Transactional(readOnly = true)
     public List<MenuItemDTO> construirMenu(Integer usuarioId, Integer roleId) {
-        Map<String, UsuarioPorRolPermiso> permisosPorVista = obtenerAccesoRol(usuarioId, roleId).permisos();
+        EffectiveRoleAccess acceso = obtenerAccesoRol(usuarioId, roleId);
+        Map<String, UsuarioPorRolPermiso> permisosPorVista = acceso.permisos();
         if (permisosPorVista.isEmpty()) return Collections.emptyList();
 
         return permisosPorVista.values().stream()
                 .filter(p -> p.isLeer() && p.getVista() != null && p.getVista().isActivo())
-                .map(p -> toDTO(p.getVista(), p))
+                .map(p -> toDTO(p.getVista(), p, acceso.configuracionesVista().get(p.getVista().getId())))
                 .sorted(Comparator.comparingInt(MenuItemDTO::getOrden))
                 .collect(Collectors.toList());
     }
@@ -53,7 +56,7 @@ public class MenuBuilderService {
                 continue;
             }
 
-            MenuItemDTO dto = toDTO(vista, permiso);
+            MenuItemDTO dto = toDTO(vista, permiso, acceso.configuracionesVista().get(vista.getId()));
             Ventana ventana = vista.getVentana();
             if (ventana != null && ventana.isActivo()) {
                 ventanas.putIfAbsent(ventana.getId(), ventana);
@@ -152,17 +155,27 @@ public class MenuBuilderService {
                         config -> config,
                         (existing, replacement) -> existing
                 ));
-        return new EffectiveRoleAccess(asignacion.getRol(), permisosPorVista, configuraciones);
+        Map<Integer, RolVistaConfiguracion> configuracionesVista = rolVistaConfiguracionRepository
+                .findByRolIdWithVistaAndVentana(asignacion.getRol().getId()).stream()
+                .collect(Collectors.toMap(
+                        config -> config.getVista().getId(),
+                        config -> config,
+                        (existing, replacement) -> existing
+                ));
+        return new EffectiveRoleAccess(asignacion.getRol(), permisosPorVista, configuraciones, configuracionesVista);
     }
 
-    private MenuItemDTO toDTO(Vista vista, UsuarioPorRolPermiso permiso) {
+    private MenuItemDTO toDTO(
+            Vista vista,
+            UsuarioPorRolPermiso permiso,
+            RolVistaConfiguracion configuracion) {
         return MenuItemDTO.builder()
                 .id(vista.getId())
                 .codigo(vista.getCodigo())
                 .nombre(vista.getNombre())
                 .ruta(vista.getRuta())
                 .grupo(vista.getGrupo())
-                .orden(vista.getOrden())
+                .orden(configuracion != null ? configuracion.getOrden() : vista.getOrden())
                 .ordenGrupo(vista.getOrdenGrupo())
                 .activo(vista.isActivo())
                 .icono(vista.getIcono())
@@ -207,12 +220,14 @@ public class MenuBuilderService {
     private record EffectiveRoleAccess(
             Role role,
             Map<String, UsuarioPorRolPermiso> permisos,
-            Map<Integer, RolVentanaConfiguracion> configuraciones) {
+            Map<Integer, RolVentanaConfiguracion> configuraciones,
+            Map<Integer, RolVistaConfiguracion> configuracionesVista) {
 
         private static EffectiveRoleAccess empty() {
             Role emptyRole = new Role();
             emptyRole.setScope(RoleScope.STAFF);
-            return new EffectiveRoleAccess(emptyRole, Collections.emptyMap(), Collections.emptyMap());
+            return new EffectiveRoleAccess(
+                    emptyRole, Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
         }
     }
 }

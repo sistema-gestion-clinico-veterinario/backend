@@ -11,6 +11,7 @@ import veterinaria.vargasvet.dto.request.RoleRequest;
 import veterinaria.vargasvet.dto.response.RolDTO;
 import veterinaria.vargasvet.dto.response.RolVistaPermisoDTO;
 import veterinaria.vargasvet.dto.response.RolVentanaConfiguracionDTO;
+import veterinaria.vargasvet.dto.response.RolMenuOrdenItemDTO;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.RoleService;
@@ -140,6 +141,21 @@ public class RoleController {
             @RequestBody List<RolVentanaConfiguracionDTO> configuraciones) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Organización del menú guardada",
                 roleService.saveMenuConfiguration(id, configuraciones)));
+    }
+
+    @GetMapping("/{id}/menu-order")
+    @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'LEER')")
+    public ResponseEntity<ApiResponse<List<RolMenuOrdenItemDTO>>> getMenuOrder(@PathVariable Integer id) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Orden del menú", roleService.getMenuOrder(id)));
+    }
+
+    @PutMapping("/{id}/menu-order")
+    @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'MODIFICAR')")
+    public ResponseEntity<ApiResponse<List<RolMenuOrdenItemDTO>>> saveMenuOrder(
+            @PathVariable Integer id,
+            @RequestBody List<RolMenuOrdenItemDTO> items) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Orden del menú guardado",
+                roleService.saveMenuOrder(id, items)));
     }
 
     private Integer resolveCompanyId(Integer companyId) {

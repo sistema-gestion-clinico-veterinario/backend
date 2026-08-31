@@ -17,6 +17,7 @@ import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.VistaRepository;
 import veterinaria.vargasvet.repository.VentanaRepository;
 import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
+import veterinaria.vargasvet.repository.RolVistaConfiguracionRepository;
 import veterinaria.vargasvet.util.BusinessValidator;
 
 import java.util.List;
@@ -69,6 +70,9 @@ class CoreBusinessServiceUnitTest {
 
     @Mock
     private RolVentanaConfiguracionRepository rolVentanaConfiguracionRepository;
+
+    @Mock
+    private RolVistaConfiguracionRepository rolVistaConfiguracionRepository;
 
     @InjectMocks
     private BusinessValidator businessValidator;
@@ -153,7 +157,8 @@ class CoreBusinessServiceUnitTest {
                 vistaRepository,
                 rolVistaPermisoRepository,
                 ventanaRepository,
-                rolVentanaConfiguracionRepository
+                rolVentanaConfiguracionRepository,
+                rolVistaConfiguracionRepository
         );
     }
 }
