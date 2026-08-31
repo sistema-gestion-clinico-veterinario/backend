@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.*;
@@ -15,6 +16,7 @@ import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.request.CitaReprogramacionRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.dto.response.AgendaCountersResponse;
+import veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.mapper.CitaMapper;
 import veterinaria.vargasvet.repository.*;
@@ -41,6 +43,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CitaServiceImpl implements CitaService {
@@ -209,6 +212,8 @@ public class CitaServiceImpl implements CitaService {
             "Citas",
             "Se agendó una nueva cita para la mascota " + mascota.getNombreCompleto() + " con el veterinario " + (veterinario.getUser() != null ? (veterinario.getUser().getNombre() + " " + veterinario.getUser().getApellido()) : "sin usuario") + " el " + cita.getFechaHoraInicio()
         );
+
+        enviarEmailConfirmacionCita(savedCita, mascota, veterinario, servicio, company);
 
         CitaResponse createdResponse = citaMapper.toResponse(savedCita);
         broadcastCitaEvent("CREAR_CITA", savedCita, createdResponse);
@@ -1052,5 +1057,146 @@ public class CitaServiceImpl implements CitaService {
         servicios.forEach(this::validarPermisoEmpresa);
         return servicios
                 .stream().map(citaMapper::toResponse).collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<RecordatorioWhatsAppResponse> listarRecordatoriosWhatsApp(Integer companyId) {
+        LocalDate hoy = veterinaria.vargasvet.util.AppClock.today();
+        LocalDateTime desde = hoy.atStartOfDay();
+        LocalDateTime hasta = hoy.plusDays(2).atStartOfDay();
+
+        return citaRepository.findCitasProximasParaRecordatorio(companyId, desde, hasta)
+                .stream()
+                .map(cita -> construirRecordatorioWhatsApp(cita, hoy))
+                .toList();
+    }
+
+    private RecordatorioWhatsAppResponse construirRecordatorioWhatsApp(Cita cita, LocalDate hoy) {
+        Mascota mascota = cita.getMascota();
+        var apoderado = mascota.getApoderado();
+        var usuario = apoderado.getUser();
+        LocalDate fechaCita = cita.getFechaHoraInicio().toLocalDate();
+        long dias = java.time.temporal.ChronoUnit.DAYS.between(hoy, fechaCita);
+        String servicioNombre = cita.getServicio() != null ? cita.getServicio().getNombre() : "Consulta";
+        String horaCita = cita.getFechaHoraInicio().format(DateTimeFormatter.ofPattern("HH:mm"));
+        String fechaCitaTexto = fechaCita.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String resumenDias = dias == 0 ? "Es hoy" : "En " + cantidadDias(dias);
+        String estado = dias == 0 ? "HOY" : "PROXIMO";
+        String nombreVeterinaria = usuario.getCompany() != null && usuario.getCompany().getName() != null
+                && !usuario.getCompany().getName().isBlank()
+                ? usuario.getCompany().getName().trim()
+                : "la clínica veterinaria";
+        String profesionalNombre = cita.getEmpleado() != null && cita.getEmpleado().getUser() != null
+                ? (cita.getEmpleado().getUser().getNombre() + " "
+                    + cita.getEmpleado().getUser().getApellido()).trim()
+                : "nuestro equipo";
+        String mensaje = construirMensajeCita(
+                primerNombre(usuario.getNombre()), mascota.getNombreCompleto(), servicioNombre,
+                fechaCitaTexto, horaCita, profesionalNombre, dias, nombreVeterinaria);
+
+        return RecordatorioWhatsAppResponse.builder()
+                .tipoRecordatorio("CITA")
+                .citaId(cita.getId())
+                .mascotaNombre(mascota.getNombreCompleto())
+                .apoderadoId(apoderado.getId())
+                .apoderadoNombre((usuario.getNombre() + " " + usuario.getApellido()).trim())
+                .apoderadoTelefono(usuario.getTelefono())
+                .tipoControl(servicioNombre)
+                .nombreControl(servicioNombre)
+                .fechaRecomendada(fechaCita)
+                .estado(estado)
+                .diasRestantes((int) dias)
+                .resumenDias(resumenDias)
+                .mensajeWhatsApp(mensaje)
+                .build();
+    }
+
+    private String construirMensajeCita(
+            String nombreCliente,
+            String nombreMascota,
+            String servicioNombre,
+            String fechaCita,
+            String horaCita,
+            String profesionalNombre,
+            long diasRestantes,
+            String nombreVeterinaria) {
+        String referenciaFecha = diasRestantes == 0
+                ? "hoy"
+                : diasRestantes == 1 ? "mañana" : "el " + fechaCita;
+
+        return String.format(
+                "Hola, %s 👋%n%n" +
+                "Te recordamos que *%s* tiene una cita %s en *%s*.%n%n" +
+                "🐾 *Mascota:* %s%n" +
+                "📋 *Servicio:* %s%n" +
+                "📅 *Fecha:* %s%n" +
+                "🕐 *Hora:* %s%n" +
+                "🩺 *Profesional:* %s%n%n" +
+                "Te recomendamos llegar 10 minutos antes. Si necesitas reprogramar, responde a este mensaje con anticipación.",
+                nombreCliente, nombreMascota, referenciaFecha, nombreVeterinaria,
+                nombreMascota, servicioNombre, fechaCita, horaCita, profesionalNombre);
+    }
+
+    private static String primerNombre(String nombreCompleto) {
+        if (nombreCompleto == null || nombreCompleto.isBlank()) return "estimado cliente";
+        return nombreCompleto.trim().split("\\s+")[0];
+    }
+
+    private static String cantidadDias(long dias) {
+        return dias + (dias == 1 ? " día" : " días");
+    }
+
+    private void enviarEmailConfirmacionCita(Cita cita, Mascota mascota, Empleado veterinario,
+                                              ServiciosVeterinarios servicio, Company company) {
+        try {
+            var apoderado = mascota.getApoderado();
+            var user = apoderado.getUser();
+            if (user.getEmail() == null || user.getEmail().isBlank()) {
+                log.warn("No se envía email de confirmación: apoderado sin correo {}", apoderado.getId());
+                return;
+            }
+
+            String nombreApoderado = (user.getNombre() + " " + user.getApellido()).trim();
+            String nombreMascota = mascota.getNombreCompleto();
+            String nombreVeterinario = veterinario.getUser() != null
+                    ? (veterinario.getUser().getNombre() + " " + veterinario.getUser().getApellido()).trim()
+                    : "Por asignar";
+            String servicioNombre = servicio != null ? servicio.getNombre() : "Consulta general";
+
+            DateTimeFormatter fmtFecha = DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", java.util.Locale.forLanguageTag("es"));
+            DateTimeFormatter fmtHora = DateTimeFormatter.ofPattern("HH:mm");
+            String fechaCita = cita.getFechaHoraInicio().format(fmtFecha);
+            String horaCita = cita.getFechaHoraInicio().format(fmtHora);
+
+            String companyName = company != null ? company.getName() : "Veterinaria";
+            String companyEmail = company != null && company.getEmail() != null ? company.getEmail() : "";
+            String companyPhone = company != null && company.getPhone() != null ? company.getPhone() : "";
+            String companyAddress = company != null && company.getAddress() != null ? company.getAddress() : "";
+            String companyLogo = company != null && company.getLogoUrl() != null ? company.getLogoUrl() : null;
+
+            Map<String, Object> model = new HashMap<>();
+            model.put("nombreApoderado", nombreApoderado);
+            model.put("nombreMascota", nombreMascota);
+            model.put("nombreVeterinario", nombreVeterinario);
+            model.put("servicioNombre", servicioNombre);
+            model.put("fechaCita", fechaCita);
+            model.put("horaCita", horaCita);
+            model.put("companyName", companyName);
+            model.put("companyEmail", companyEmail);
+            model.put("companyPhone", companyPhone);
+            model.put("companyAddress", companyAddress);
+            model.put("companyLogo", companyLogo);
+
+            Mail mail = emailService.createMail(
+                    user.getEmail(),
+                    "Cita confirmada - " + nombreMascota + " - " + companyName,
+                    model
+            );
+            emailService.sendEmail(mail, "cita-confirmar-template");
+            log.info("Email de confirmación de cita enviado a {} para cita #{}", user.getEmail(), cita.getNumeroCita());
+        } catch (Exception e) {
+            log.error("Error al enviar email de confirmación de cita {}: {}", cita.getNumeroCita(), e.getMessage());
+        }
     }
 }

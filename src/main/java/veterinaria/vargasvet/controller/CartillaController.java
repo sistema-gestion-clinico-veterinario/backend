@@ -112,12 +112,12 @@ public class CartillaController {
         return ResponseEntity.ok(new ApiResponse<>(true, activo ? "Desparasitacion activada" : "Desparasitacion desactivada", null));
     }
 
-    @GetMapping("/recordatorios-whatsapp")
+    @GetMapping("/preventive-reminders/whatsapp")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
     public ResponseEntity<ApiResponse<java.util.List<veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse>>> recordatoriosWhatsApp() {
         Integer companyId = SecurityUtils.getCurrentCompanyId();
         return ResponseEntity.ok(new ApiResponse<>(true, "Recordatorios recuperados",
-                cartillaService.listarRecordatoriosWhatsApp(companyId)));
+                cartillaService.listarRecordatoriosPreventivosWhatsApp(companyId)));
     }
 
 }

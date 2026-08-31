@@ -81,7 +81,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex,
                                                                     HttpServletRequest request) {
         log.error("Error no controlado procesando {} {}", request.getMethod(), request.getRequestURI(), ex);
+        String mensaje = ex.getMessage() != null ? ex.getMessage() : "No se pudo procesar la solicitud";
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiResponse<>(false, "No se pudo procesar la solicitud", null));
+                .body(new ApiResponse<>(false, mensaje, null));
     }
 }
