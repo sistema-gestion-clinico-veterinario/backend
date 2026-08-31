@@ -8,7 +8,9 @@ import java.time.LocalDate;
 @Data
 @Builder
 public class RecordatorioWhatsAppResponse {
+    private String tipoRecordatorio;
     private Long controlId;
+    private Long citaId;
     private String mascotaNombre;
     private Long apoderadoId;
     private String apoderadoNombre;

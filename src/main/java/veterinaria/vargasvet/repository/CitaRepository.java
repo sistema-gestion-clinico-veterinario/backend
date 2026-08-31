@@ -276,4 +276,19 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
            "AND UPPER(t.nombre) IN ('GROMMER', 'GROOMER') " +
            "ORDER BY c.fechaHoraInicio DESC")
     java.util.List<Cita> findServiciosNoMedicosParaMascota(@Param("mascotaId") Long mascotaId);
+
+    @Query("SELECT c FROM Cita c " +
+           "JOIN c.mascota m " +
+           "JOIN m.apoderado apo " +
+           "JOIN apo.user u " +
+           "WHERE u.company.id = :companyId " +
+           "AND c.eliminada = false " +
+           "AND c.estado IN ('PROGRAMADA', 'PENDIENTE', 'CONFIRMADA', 'REPROGRAMADA') " +
+           "AND c.fechaHoraInicio >= :desde " +
+           "AND c.fechaHoraInicio < :hasta " +
+           "ORDER BY c.fechaHoraInicio ASC")
+    java.util.List<Cita> findCitasProximasParaRecordatorio(
+            @Param("companyId") Integer companyId,
+            @Param("desde") LocalDateTime desde,
+            @Param("hasta") LocalDateTime hasta);
 }

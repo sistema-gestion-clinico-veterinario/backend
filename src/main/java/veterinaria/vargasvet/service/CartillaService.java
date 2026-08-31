@@ -27,5 +27,5 @@ public interface CartillaService {
 
     void cambiarEstadoDesparasitacion(Long id, boolean activo);
 
-    List<RecordatorioWhatsAppResponse> listarRecordatoriosWhatsApp(Integer companyId);
+    List<RecordatorioWhatsAppResponse> listarRecordatoriosPreventivosWhatsApp(Integer companyId);
 }
