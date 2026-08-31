@@ -24,7 +24,7 @@ public class MascotaController {
     private final AuditLogService auditLogService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('PET_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_MASCOTAS', 'LEER')")
     public ResponseEntity<ApiResponse<Page<MascotaResponse>>> listar(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(required = false) String nombre,
@@ -40,21 +40,21 @@ public class MascotaController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('PET_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_MASCOTAS', 'LEER')")
     public ResponseEntity<ApiResponse<MascotaResponse>> obtenerPorId(@PathVariable Long id) {
         MascotaResponse response = mascotaService.obtenerPorId(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Mascota encontrada", response));
     }
 
     @GetMapping("/uuid/{uuid}")
-    @PreAuthorize("hasAuthority('PET_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_MASCOTAS', 'LEER')")
     public ResponseEntity<ApiResponse<MascotaResponse>> obtenerPorUuid(@PathVariable String uuid) {
         MascotaResponse response = mascotaService.obtenerPorUuid(uuid);
         return ResponseEntity.ok(new ApiResponse<>(true, "Mascota encontrada", response));
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('PET_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_MASCOTAS', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<MascotaResponse>> registerMascota(@Valid @RequestBody MascotaRequest request) {
         MascotaResponse response = mascotaService.registerMascota(request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -62,14 +62,14 @@ public class MascotaController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('PET_UPDATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_MASCOTAS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<MascotaResponse>> updateMascota(@PathVariable Long id, @Valid @RequestBody MascotaRequest request) {
         MascotaResponse response = mascotaService.updateMascota(id, request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la mascota actualizados exitosamente", response));
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('PET_STATUS')")
+    @PreAuthorize("@accesoValidator.can('VISTA_MASCOTAS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> cambiarEstado(@PathVariable Long id, @Valid @RequestBody EstadoMascotaRequest request) {
         mascotaService.cambiarEstado(id, request);
         String mensaje = request.getActive() ? "Mascota activada exitosamente" : "Mascota dada de baja exitosamente";

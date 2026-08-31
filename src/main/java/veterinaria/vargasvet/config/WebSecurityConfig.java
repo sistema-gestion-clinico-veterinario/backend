@@ -58,7 +58,6 @@ public class WebSecurityConfig {
                                 "/auth/login",
                                 "/auth/refresh",
                                 "/auth/logout",
-                                "/auth/register/**",
                                 "/auth/resend-verification",
                                 "/auth/forgot-password",
                                 "/auth/reset-password",
@@ -76,7 +75,7 @@ public class WebSecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
 
-                        .requestMatchers("/actuator/**").hasRole("SUPER_ADMIN")
+                        .requestMatchers("/actuator/**").denyAll()
 
                         // Todo lo demás requiere auth
                         .anyRequest().authenticated()

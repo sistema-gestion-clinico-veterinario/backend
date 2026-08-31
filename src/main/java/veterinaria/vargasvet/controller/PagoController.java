@@ -23,7 +23,7 @@ public class PagoController {
     private final AccesoValidator accesoValidator;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'RECEPCIONISTA') or hasAuthority('SALE_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_PAGOS', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<PagoResponse>> registrar(@Valid @RequestBody PagoRequest request) {
         PagoResponse response = pagoService.registrar(request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -31,14 +31,14 @@ public class PagoController {
     }
 
     @GetMapping("/appointment/{appointmentId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA')")
+    @PreAuthorize("@accesoValidator.can('VISTA_PAGOS', 'LEER')")
     public ResponseEntity<ApiResponse<PagoResponse>> obtenerPorCita(@PathVariable("appointmentId") Long citaId) {
         PagoResponse response = pagoService.obtenerPorCita(citaId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Pago recuperado con éxito", response));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_PAGOS', 'LEER')")
     public ResponseEntity<ApiResponse<Page<PagoListResponse>>> listarTodos(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -48,7 +48,7 @@ public class PagoController {
     }
 
     @GetMapping("/portal/my-payments")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@accesoValidator.can('VISTA_MIS_PAGOS', 'LEER')")
     public ResponseEntity<ApiResponse<Page<PagoListResponse>>> misPagos(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -56,7 +56,7 @@ public class PagoController {
     }
 
     @GetMapping("/history")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_PAGOS', 'LEER')")
     public ResponseEntity<ApiResponse<Page<PagoListResponse>>> listarHistorialPorEmpresa(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,

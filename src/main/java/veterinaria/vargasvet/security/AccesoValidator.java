@@ -3,84 +3,66 @@ package veterinaria.vargasvet.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
-import veterinaria.vargasvet.domain.entity.RolVistaPermiso;
-import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
-import veterinaria.vargasvet.domain.entity.UsuarioPorRolPermiso;
-import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
-import veterinaria.vargasvet.repository.UsuarioPorRolPermisoRepository;
-import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
-import veterinaria.vargasvet.repository.UsuarioRepository;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.RoleScope;
 
-import java.util.List;
-import java.util.function.Predicate;
 
 @Component
 @RequiredArgsConstructor
 public class AccesoValidator {
 
-    private final UsuarioPorRolPermisoRepository permisoRepository;
-    private final RolVistaPermisoRepository rolVistaPermisoRepository;
-    private final UsuarioPorRolRepository usuarioPorRolRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final RolePermissionEvaluator rolePermissionEvaluator;
 
     public void validarLeer(String codigoVista) {
-        if (!tienePermiso(codigoVista, UsuarioPorRolPermiso::isLeer, RolVistaPermiso::isLeer))
+        if (!can(codigoVista, "LEER"))
             throw new AccessDeniedException("Sin acceso de lectura a: " + codigoVista);
     }
 
     public void validarEscribir(String codigoVista) {
-        if (!tienePermiso(codigoVista, UsuarioPorRolPermiso::isEscribir, RolVistaPermiso::isEscribir))
+        if (!can(codigoVista, "ESCRIBIR"))
             throw new AccessDeniedException("Sin acceso de escritura a: " + codigoVista);
     }
 
     public void validarModificar(String codigoVista) {
-        if (!tienePermiso(codigoVista, UsuarioPorRolPermiso::isModificar, RolVistaPermiso::isModificar))
+        if (!can(codigoVista, "MODIFICAR"))
             throw new AccessDeniedException("Sin acceso de modificación a: " + codigoVista);
     }
 
     public void validarEliminar(String codigoVista) {
-        if (!tienePermiso(codigoVista, UsuarioPorRolPermiso::isEliminar, RolVistaPermiso::isEliminar))
+        if (!can(codigoVista, "ELIMINAR"))
             throw new AccessDeniedException("Sin acceso de eliminación a: " + codigoVista);
     }
 
     public boolean puedeLeer(String codigoVista) {
-        if (SecurityUtils.isSuperAdmin()) return true;
-        return tienePermiso(codigoVista, UsuarioPorRolPermiso::isLeer, RolVistaPermiso::isLeer);
+        return can(codigoVista, "LEER");
     }
 
-    private boolean tienePermiso(String codigoVista,
-                                  Predicate<UsuarioPorRolPermiso> usuarioCheck,
-                                  Predicate<RolVistaPermiso> rolCheck) {
-        if (SecurityUtils.isSuperAdmin()) return true;
-
-        Integer usuarioId = resolverUsuarioId();
-
-        List<String> rolesActivos = SecurityUtils.getCurrentRoleNames();
-
-        List<UsuarioPorRol> asignaciones = usuarioPorRolRepository.findByUsuarioId(usuarioId).stream()
-                .filter(upr -> rolesActivos.isEmpty() || rolesActivos.contains(upr.getRol().getName()))
-                .toList();
-        for (UsuarioPorRol upr : asignaciones) {
-            List<UsuarioPorRolPermiso> userPermisos = permisoRepository.findByUsuarioPorRolId(upr.getId());
-            if (userPermisos.stream()
-                    .filter(p -> p.getVista().getCodigo().equals(codigoVista))
-                    .anyMatch(usuarioCheck)) {
-                return true;
-            }
-
-            List<RolVistaPermiso> rolPermisos = rolVistaPermisoRepository.findByRolId(upr.getRol().getId());
-            boolean tiene = rolPermisos.stream()
-                    .filter(rp -> rp.getVista().getCodigo().equals(codigoVista))
-                    .anyMatch(rolCheck);
-            if (tiene) return true;
+    public boolean hasPurpose(String purpose) {
+        if (purpose == null || purpose.isBlank()) return false;
+        try {
+            return SecurityUtils.getCurrentRolePurpose()
+                    == RolePurpose.valueOf(purpose.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return false;
         }
-        return false;
     }
 
-    private Integer resolverUsuarioId() {
-        String email = SecurityUtils.getCurrentUserEmail();
-        return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new AccessDeniedException("Usuario no encontrado"))
-                .getId();
+    public boolean hasScope(String scope) {
+        if (scope == null || scope.isBlank()) return false;
+        try {
+            return SecurityUtils.getCurrentRoleScope()
+                    == RoleScope.valueOf(scope.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
+    }
+
+    public boolean can(String codigoVista, String accion) {
+        if (codigoVista == null || codigoVista.isBlank() || accion == null || accion.isBlank()) {
+            return false;
+        }
+
+        return rolePermissionEvaluator.can(SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentRoleId(),
+                codigoVista, accion);
     }
 }

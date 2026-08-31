@@ -19,19 +19,19 @@ public class CompanyController {
     private final CompanyService companyService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('COMPANY_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_COMPANY', 'LEER')")
     public ResponseEntity<ApiResponse<CompanyDTO>> getCompany() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la empresa obtenidos", companyService.getCompanyInfo()));
     }
 
     @GetMapping("/{id:\\d+}")
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('COMPANY_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_COMPANY', 'LEER')")
     public ResponseEntity<ApiResponse<CompanyDTO>> getById(@PathVariable Integer id) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Empresa obtenida con éxito", companyService.findById(id)));
     }
 
     @GetMapping("/list")
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('COMPANY_READ')")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<Page<CompanyListResponse>>> listar(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -41,28 +41,28 @@ public class CompanyController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<CompanyDTO>> saveCompany(@Valid @RequestBody CompanyDTO companyDTO) {
         CompanyDTO saved = companyService.save(companyDTO);
         return ResponseEntity.ok(new ApiResponse<>(true, "Empresa creada correctamente", saved));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('COMPANY_UPDATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_COMPANY', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<CompanyDTO>> updateCompany(@PathVariable Integer id, @Valid @RequestBody CompanyDTO companyDTO) {
         CompanyDTO updated = companyService.update(id, companyDTO);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la empresa actualizados correctamente", updated));
     }
 
     @PutMapping
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN') or hasAuthority('COMPANY_UPDATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_COMPANY', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<CompanyDTO>> updateCompanyLegacy(@Valid @RequestBody CompanyDTO companyDTO) {
         CompanyDTO updated = companyService.updateCompanyInfo(companyDTO);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos de la empresa actualizados correctamente", updated));
     }
 
     @PatchMapping("/{id}/toggle-active")
-    @PreAuthorize("hasAuthority('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<veterinaria.vargasvet.dto.response.CompanyListResponse>> toggleActivo(@PathVariable Integer id) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Estado de empresa actualizado", companyService.toggleActivo(id)));
     }

@@ -23,6 +23,7 @@ import veterinaria.vargasvet.repository.CompanyOperatingHourRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CompanyService;
+import veterinaria.vargasvet.service.CompanyRoleProvisioningService;
 import veterinaria.vargasvet.util.BusinessValidator;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -33,6 +34,7 @@ public class CompanyServiceImpl implements CompanyService {
     private final CompanyRepository companyRepository;
     private final CompanyOperatingHourRepository companyOperatingHourRepository;
     private final BusinessValidator businessValidator;
+    private final CompanyRoleProvisioningService companyRoleProvisioningService;
 
     @Override
     public CompanyDTO getCompanyInfo() {
@@ -108,6 +110,7 @@ public class CompanyServiceImpl implements CompanyService {
         company.setUpdatedAt(LocalDateTime.now());
         company.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
         Company savedCompany = companyRepository.save(company);
+        companyRoleProvisioningService.ensureRequiredRoles(savedCompany);
         saveOperatingHours(savedCompany, dto.getOperatingHours());
         return mapToDTO(savedCompany);
     }

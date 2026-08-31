@@ -21,7 +21,7 @@ public class RazaController {
     private final RazaService razaService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('PET_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_MASCOTAS', 'LEER')")
     public ResponseEntity<ApiResponse<List<RazaResponse>>> listar(
             @RequestParam(required = false) String especie,
             @RequestParam(required = false) Long companyId) {
@@ -30,7 +30,7 @@ public class RazaController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('PET_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_MASCOTAS', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<RazaResponse>> crear(
             @Valid @RequestBody RazaRequest request,
             @RequestParam Long companyId) {

@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.Role;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,8 @@ public interface RoleRepository extends JpaRepository<Role, Integer> {
     Optional<Role> findByNameAndCompanyId(String name, Integer companyId);
 
     Optional<Role> findFirstByName(String name);
+    Optional<Role> findFirstByCompanyIdAndPurpose(Integer companyId, RolePurpose purpose);
+    Optional<Role> findFirstByCompanyIsNullAndPurpose(RolePurpose purpose);
 
     /** Verifica existencia de nombre dentro de una empresa */
     boolean existsByNameAndCompanyId(String name, Integer companyId);

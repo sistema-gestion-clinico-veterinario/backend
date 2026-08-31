@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/windows")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VISTA_VENTANAS')")
+@PreAuthorize("@accesoValidator.can('VISTA_VENTANAS', 'MODIFICAR')")
 public class VentanaController {
 
     private final VentanaService ventanaService;

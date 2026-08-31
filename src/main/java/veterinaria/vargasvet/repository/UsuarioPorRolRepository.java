@@ -19,6 +19,20 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
 
     Optional<UsuarioPorRol> findByUsuarioIdAndRolId(Integer usuarioId, Integer rolId);
 
+    @Query("""
+            SELECT upr
+            FROM UsuarioPorRol upr
+            JOIN FETCH upr.rol rol
+            LEFT JOIN FETCH rol.company
+            WHERE upr.usuario.id = :usuarioId
+              AND rol.id = :rolId
+              AND rol.activo = true
+            """)
+    Optional<UsuarioPorRol> findActiveAssignmentByUsuarioIdAndRoleId(
+            @Param("usuarioId") Integer usuarioId,
+            @Param("rolId") Integer rolId
+    );
+
     boolean existsByUsuarioIdAndRolId(Integer usuarioId, Integer rolId);
 
     @Query("""
@@ -47,6 +61,20 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
               AND (:rolActivo IS NULL OR rol.name = :rolActivo)
             """)
     List<UsuarioPorRol> findByUsuarioIdAndRolActivoWithPermisos(
+            @Param("usuarioId") Integer usuarioId,
+            @Param("rolActivo") String rolActivo
+    );
+
+    @Query("""
+            SELECT DISTINCT upr
+            FROM UsuarioPorRol upr
+            JOIN FETCH upr.rol rol
+            LEFT JOIN FETCH rol.company
+            WHERE upr.usuario.id = :usuarioId
+              AND rol.name = :rolActivo
+              AND rol.activo = true
+            """)
+    List<UsuarioPorRol> findActiveAssignmentsByUsuarioIdAndRoleName(
             @Param("usuarioId") Integer usuarioId,
             @Param("rolActivo") String rolActivo
     );

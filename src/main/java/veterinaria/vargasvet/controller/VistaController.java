@@ -17,7 +17,7 @@ import veterinaria.vargasvet.dto.request.VistaReorderDTO;
 @RestController
 @RequestMapping("/admin/views")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('VISTA_VENTANAS')")
+@PreAuthorize("@accesoValidator.can('VISTA_VENTANAS', 'MODIFICAR')")
 public class VistaController {
 
     private final VistaService vistaService;

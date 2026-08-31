@@ -25,7 +25,7 @@ public class HistoriaClinicaController {
     private final AccesoValidator accesoValidator;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'LEER')")
     public ResponseEntity<ApiResponse<Page<HistoriaClinicaListResponse>>> buscar(
             @RequestParam(required = false) String numeroHc,
             @RequestParam(required = false) String nombrePaciente,
@@ -46,7 +46,7 @@ public class HistoriaClinicaController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'LEER')")
     public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getDetalle(@PathVariable Long id) {
         accesoValidator.validarLeer("VISTA_HISTORIAS");
         HistoriaClinicaDetalleResponse detalle = historiaClinicaService.getDetalle(id);
@@ -55,7 +55,7 @@ public class HistoriaClinicaController {
     }
 
     @GetMapping("/pet/{petId}")
-    @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'LEER')")
     public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getPorMascota(@PathVariable("petId") Long mascotaId) {
         accesoValidator.validarLeer("VISTA_HISTORIAS");
         HistoriaClinicaDetalleResponse detalle = historiaClinicaService.getPorMascota(mascotaId);
@@ -64,7 +64,7 @@ public class HistoriaClinicaController {
     }
 
     @GetMapping("/numero/{numeroHc}")
-    @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'LEER')")
     public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getPorNumeroHc(@PathVariable String numeroHc) {
         accesoValidator.validarLeer("VISTA_HISTORIAS");
         HistoriaClinicaDetalleResponse detalle = historiaClinicaService.getPorNumeroHc(numeroHc);

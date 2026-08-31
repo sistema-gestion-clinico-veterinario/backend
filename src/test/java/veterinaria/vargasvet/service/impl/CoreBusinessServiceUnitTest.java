@@ -15,6 +15,8 @@ import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.VistaRepository;
+import veterinaria.vargasvet.repository.VentanaRepository;
+import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
 import veterinaria.vargasvet.util.BusinessValidator;
 
 import java.util.List;
@@ -29,15 +31,20 @@ import static org.mockito.Mockito.when;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import veterinaria.vargasvet.security.UsuarioPrincipal;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.RoleScope;
 
 @ExtendWith(MockitoExtension.class)
 class CoreBusinessServiceUnitTest {
 
     @BeforeEach
     void authenticateSuperAdmin() {
+        var authorities = List.of(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
+        var principal = new UsuarioPrincipal(1, "test@system.local", "", authorities, null,
+                1, RoleScope.PLATFORM, RolePurpose.PLATFORM_ADMIN, 0L);
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken("test@system.local", null,
-                        List.of(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))));
+                new UsernamePasswordAuthenticationToken(principal, null, authorities));
     }
 
     @AfterEach
@@ -56,6 +63,12 @@ class CoreBusinessServiceUnitTest {
 
     @Mock
     private RolVistaPermisoRepository rolVistaPermisoRepository;
+
+    @Mock
+    private VentanaRepository ventanaRepository;
+
+    @Mock
+    private RolVentanaConfiguracionRepository rolVentanaConfiguracionRepository;
 
     @InjectMocks
     private BusinessValidator businessValidator;
@@ -81,6 +94,7 @@ class CoreBusinessServiceUnitTest {
         Role role = new Role();
         role.setId(1);
         role.setName("ROLE_ADMIN");
+        role.setProtectedRole(true);
         when(roleRepository.findById(1)).thenReturn(Optional.of(role));
 
         IllegalArgumentException ex = assertThrows(
@@ -99,7 +113,7 @@ class CoreBusinessServiceUnitTest {
 
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> roleService.createRole(" veterinario jefe ", "Rol clinico", 3)
+                () -> roleService.createRole(" veterinario jefe ", "Rol clinico", 3, null)
         );
 
         assertEquals("Ya existe un rol con ese nombre en esta empresa", ex.getMessage());
@@ -137,7 +151,9 @@ class CoreBusinessServiceUnitTest {
                 roleRepository,
                 companyRepository,
                 vistaRepository,
-                rolVistaPermisoRepository
+                rolVistaPermisoRepository,
+                ventanaRepository,
+                rolVentanaConfiguracionRepository
         );
     }
 }

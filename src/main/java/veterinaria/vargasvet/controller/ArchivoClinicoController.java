@@ -27,7 +27,7 @@ public class ArchivoClinicoController {
     private final veterinaria.vargasvet.service.StorageService storageService;
 
     @PostMapping(consumes = "multipart/form-data")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<ArchivoClinicoResponse>> subirArchivo(
             @PathVariable("consultationId") Long consultaId,
             @RequestParam("file") MultipartFile file,
@@ -41,7 +41,7 @@ public class ArchivoClinicoController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'LEER')")
     public ResponseEntity<ApiResponse<List<ArchivoClinicoResponse>>> listarArchivos(@PathVariable("consultationId") Long consultaId) {
         accesoValidator.validarLeer("VISTA_HISTORIAS");
         List<ArchivoClinicoResponse> archivos = archivoClinicoService.listarPorConsulta(consultaId);
@@ -49,7 +49,7 @@ public class ArchivoClinicoController {
     }
 
     @GetMapping("/{id}/content")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'LEER')")
     public ResponseEntity<?> servirContenido(
             @PathVariable("consultationId") Long consultaId,
             @PathVariable Long id,
@@ -77,7 +77,7 @@ public class ArchivoClinicoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> eliminar(
             @PathVariable("consultationId") Long consultaId,
             @PathVariable Long id) {

@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
-import veterinaria.vargasvet.domain.entity.UsuarioPorRolPermiso;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.response.MenuItemDTO;
 import veterinaria.vargasvet.repository.UsuarioRepository;
@@ -14,7 +13,6 @@ import veterinaria.vargasvet.service.MenuBuilderService;
 import veterinaria.vargasvet.service.UsuarioPorRolService;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -26,14 +24,14 @@ public class UsuarioPorRolController {
     private final UsuarioRepository usuarioRepository;
 
     @GetMapping("/{userId}/roles")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('VISTA_ROLES')")
+    @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'LEER')")
     public ResponseEntity<ApiResponse<List<UsuarioPorRol>>> listarRoles(@PathVariable("userId") Integer usuarioId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Roles del usuario",
                 usuarioPorRolService.listarPorUsuario(usuarioId)));
     }
 
     @PostMapping("/{userId}/roles/{roleId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('VISTA_ROLES')")
+    @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<UsuarioPorRol>> asignarRol(
             @PathVariable("userId") Integer usuarioId,
             @PathVariable("roleId") Integer rolId) {
@@ -42,40 +40,21 @@ public class UsuarioPorRolController {
     }
 
     @DeleteMapping("/roles/{userRoleId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('VISTA_ROLES')")
+    @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> revocarRol(@PathVariable("userRoleId") Integer usuarioPorRolId) {
         usuarioPorRolService.revocarRol(usuarioPorRolId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Rol revocado", null));
     }
 
-    @PostMapping("/roles/{userRoleId}/permissions")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('VISTA_ROLES')")
-    public ResponseEntity<ApiResponse<UsuarioPorRolPermiso>> asignarPermiso(
-            @PathVariable("userRoleId") Integer usuarioPorRolId,
-            @RequestBody Map<String, Object> body) {
-
-        Integer ventanaId = (Integer) body.get("ventanaId");
-        boolean leer     = Boolean.TRUE.equals(body.get("leer"));
-        boolean escribir = Boolean.TRUE.equals(body.get("escribir"));
-        boolean modificar = Boolean.TRUE.equals(body.get("modificar"));
-        boolean eliminar  = Boolean.TRUE.equals(body.get("eliminar"));
-
-        UsuarioPorRolPermiso permiso = usuarioPorRolService
-                .asignarPermiso(usuarioPorRolId, ventanaId, leer, escribir, modificar, eliminar);
-
-        return ResponseEntity.ok(new ApiResponse<>(true, "Permiso asignado", permiso));
-    }
-
     @GetMapping("/me/menu")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ApiResponse<List<MenuItemDTO>>> miMenu(
-            @RequestParam(required = false) String rol) {
+    public ResponseEntity<ApiResponse<List<MenuItemDTO>>> miMenu() {
 
         String email = SecurityUtils.getCurrentUserEmail();
         Integer usuarioId = usuarioRepository.findByEmail(email)
                 .orElseThrow().getId();
 
-        List<MenuItemDTO> menu = menuBuilderService.construirMenu(usuarioId, rol);
+        List<MenuItemDTO> menu = menuBuilderService.construirMenu(usuarioId, SecurityUtils.getCurrentRoleId());
         return ResponseEntity.ok(new ApiResponse<>(true, "Menú del usuario", menu));
     }
 }

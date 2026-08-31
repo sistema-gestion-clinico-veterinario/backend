@@ -171,17 +171,19 @@ class ConsultaServiceUnitTest {
                 mascotaRepository,
                 citaRepository,
                 consultaMapper,
-                auditLogService
+                auditLogService,
+                org.mockito.Mockito.mock(veterinaria.vargasvet.security.AccesoValidator.class)
         );
     }
 
     private void autenticarSuperAdmin() {
+        var authorities = List.of(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
+        var principal = new veterinaria.vargasvet.security.UsuarioPrincipal(
+                1, "doctor@vargasvet.test", "", authorities, null, 1,
+                veterinaria.vargasvet.domain.enums.RoleScope.PLATFORM,
+                veterinaria.vargasvet.domain.enums.RolePurpose.PLATFORM_ADMIN, 0L);
         SecurityContextHolder.getContext().setAuthentication(
-                new TestingAuthenticationToken(
-                        "doctor@vargasvet.test",
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))
-                )
+                new TestingAuthenticationToken(principal, null, authorities)
         );
     }
 

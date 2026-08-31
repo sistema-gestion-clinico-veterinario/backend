@@ -7,19 +7,31 @@ import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.entity.RolVistaPermiso;
 import veterinaria.vargasvet.domain.entity.Vista;
+import veterinaria.vargasvet.domain.entity.Ventana;
+import veterinaria.vargasvet.domain.entity.RolVentanaConfiguracion;
+import veterinaria.vargasvet.domain.enums.MenuPresentation;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.RoleScope;
+import veterinaria.vargasvet.domain.enums.ViewAudience;
 import veterinaria.vargasvet.dto.response.RolDTO;
 import veterinaria.vargasvet.dto.response.RolVistaPermisoDTO;
+import veterinaria.vargasvet.dto.response.RolVentanaConfiguracionDTO;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.VistaRepository;
+import veterinaria.vargasvet.repository.VentanaRepository;
+import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
 import veterinaria.vargasvet.service.RoleService;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.Objects;
+import java.util.LinkedHashMap;
+import java.util.HashSet;
+import java.util.Set;
 import org.springframework.security.access.AccessDeniedException;
 import veterinaria.vargasvet.security.SecurityUtils;
 
@@ -31,6 +43,8 @@ public class RoleServiceImpl implements RoleService {
     private final CompanyRepository companyRepository;
     private final VistaRepository vistaRepository;
     private final RolVistaPermisoRepository rolVistaPermisoRepository;
+    private final VentanaRepository ventanaRepository;
+    private final RolVentanaConfiguracionRepository rolVentanaConfiguracionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -52,6 +66,20 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<RolDTO> getAssignableRoles(Integer companyId, RoleScope scope) {
+        assertCompanyAccess(companyId);
+        if (scope == null || scope == RoleScope.PLATFORM) {
+            throw new IllegalArgumentException("El alcance asignable debe ser STAFF o CLIENT");
+        }
+        return roleRepository.findByCompanyId(companyId).stream()
+                .filter(Role::isActivo)
+                .filter(role -> role.getScope() == scope)
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<RolDTO> getSystemRoles() {
         return roleRepository.findByCompanyIsNull().stream()
                 .map(this::toDTO)
@@ -60,13 +88,17 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    public RolDTO createRole(String nombre, String descripcion, Integer companyId) {
+    public RolDTO createRole(String nombre, String descripcion, Integer companyId, RoleScope requestedScope) {
+        RoleScope scope = requestedScope != null ? requestedScope : RoleScope.STAFF;
         if (!SecurityUtils.isSuperAdmin()) {
             Integer currentCompanyId = requireCurrentCompany();
             if (companyId != null && !Objects.equals(companyId, currentCompanyId)) {
                 throw new AccessDeniedException("No puede crear roles para otra empresa");
             }
             companyId = currentCompanyId;
+            if (scope == RoleScope.PLATFORM) {
+                throw new AccessDeniedException("Una empresa no puede crear roles de plataforma");
+            }
         }
         nombre =         normalizarNombreRol(nombre);
         descripcion = normalizarDescripcion(descripcion);
@@ -75,6 +107,10 @@ public class RoleServiceImpl implements RoleService {
         Role role = new Role();
         role.setName(nombre);
         role.setDescripcion(descripcion);
+        role.setScope(scope);
+        role.setPurpose(RolePurpose.CUSTOM);
+        role.setSystemManaged(false);
+        role.setProtectedRole(false);
 
         if (companyId != null) {
             Company company = companyRepository.findById(companyId)
@@ -87,17 +123,24 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    public RolDTO updateRole(Integer id, String nombre, String descripcion) {
+    public RolDTO updateRole(Integer id, String nombre, String descripcion, RoleScope requestedScope) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
         assertCanManageRole(role);
 
-        boolean esProtegido = role.getName().equals("ROLE_SUPER_ADMIN") || role.getName().equals("ROLE_ADMIN");
-        if (!esProtegido) {
+        if (role.getPurpose() != RolePurpose.PLATFORM_ADMIN) {
             nombre = normalizarNombreRol(nombre);
             Integer companyId = role.getCompany() != null ? role.getCompany().getId() : null;
             validarDuplicadoEdicion(id, nombre, companyId);
             role.setName(nombre);
+            if (requestedScope != null && !role.isSystemManaged()) {
+                RoleScope newScope = requestedScope;
+                if (!SecurityUtils.isSuperAdmin() && newScope == RoleScope.PLATFORM) {
+                    throw new AccessDeniedException("Una empresa no puede convertir un rol en rol de plataforma");
+                }
+                validateScopeChange(role, newScope);
+                role.setScope(newScope);
+            }
         }
         role.setDescripcion(normalizarDescripcion(descripcion));
 
@@ -110,6 +153,9 @@ public class RoleServiceImpl implements RoleService {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
         assertCanManageRole(role);
+        if (role.isProtectedRole()) {
+            throw new IllegalArgumentException("No se puede desactivar un rol protegido del sistema");
+        }
         role.setActivo(!role.isActivo());
         return toDTO(roleRepository.save(role));
     }
@@ -121,7 +167,7 @@ public class RoleServiceImpl implements RoleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
         assertCanManageRole(role);
 
-        if (role.getName().startsWith("ROLE_SUPER_ADMIN") || role.getName().equals("ROLE_ADMIN")) {
+        if (role.isProtectedRole()) {
             throw new IllegalArgumentException("No se puede eliminar un rol del sistema");
         }
 
@@ -147,6 +193,7 @@ public class RoleServiceImpl implements RoleService {
                 ));
 
         return todasLasVistas.stream()
+                .filter(v -> isAudienceCompatible(role.getScope(), v.getAudience()))
                 .map(v -> {
                     RolVistaPermiso permiso = permisosPorVista.get(v.getId());
                     RolVistaPermisoDTO dto = new RolVistaPermisoDTO();
@@ -155,6 +202,13 @@ public class RoleServiceImpl implements RoleService {
                     dto.setNombre(v.getNombre());
                     dto.setRuta(v.getRuta());
                     dto.setGrupo(v.getGrupo());
+                    dto.setOrden(v.getOrden());
+                    dto.setAudience(v.getAudience());
+                    if (v.getVentana() != null) {
+                        dto.setVentanaId(v.getVentana().getId());
+                        dto.setVentanaCodigo(v.getVentana().getCodigo());
+                        dto.setVentanaNombre(v.getVentana().getNombre());
+                    }
                     dto.setLeer(permiso != null && permiso.isLeer());
                     dto.setEscribir(permiso != null && permiso.isEscribir());
                     dto.setModificar(permiso != null && permiso.isModificar());
@@ -175,6 +229,8 @@ public class RoleServiceImpl implements RoleService {
             throw new IllegalArgumentException("No se pueden asignar permisos a un rol inactivo");
         }
 
+        validarPermisosSolicitados(role, permisos);
+
         rolVistaPermisoRepository.deleteByRolId(roleId);
         rolVistaPermisoRepository.flush();
 
@@ -184,14 +240,103 @@ public class RoleServiceImpl implements RoleService {
             RolVistaPermiso rvp = new RolVistaPermiso();
             rvp.setRol(role);
             rvp.setVista(vista);
-            rvp.setLeer(dto.isLeer());
+            boolean requiereLectura = dto.isEscribir() || dto.isModificar() || dto.isEliminar();
+            rvp.setLeer(dto.isLeer() || requiereLectura);
             rvp.setEscribir(dto.isEscribir());
             rvp.setModificar(dto.isModificar());
             rvp.setEliminar(dto.isEliminar());
             rolVistaPermisoRepository.save(rvp);
         }
 
+        incrementarVersionPermisos(role);
+
         return getVistasByRole(roleId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RolVentanaConfiguracionDTO> getMenuConfiguration(Integer roleId) {
+        Role role = requireReadableRole(roleId);
+        Map<Integer, RolVentanaConfiguracion> configuraciones = rolVentanaConfiguracionRepository
+                .findByRolIdWithVentana(roleId).stream()
+                .collect(Collectors.toMap(
+                        config -> config.getVentana().getId(),
+                        config -> config,
+                        (existing, replacement) -> existing
+                ));
+
+        Map<Integer, Ventana> ventanasLegibles = rolVistaPermisoRepository
+                .findByRolIdWithVistaAndVentana(roleId).stream()
+                .filter(RolVistaPermiso::isLeer)
+                .map(RolVistaPermiso::getVista)
+                .filter(vista -> vista.isActivo() && vista.getVentana() != null && vista.getVentana().isActivo())
+                .filter(vista -> isAudienceCompatible(role.getScope(), vista.getAudience()))
+                .map(Vista::getVentana)
+                .collect(Collectors.toMap(
+                        Ventana::getId,
+                        ventana -> ventana,
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ));
+
+        return ventanasLegibles.values().stream()
+                .sorted(java.util.Comparator.comparing(Ventana::getOrden))
+                .map(ventana -> toMenuConfigurationDTO(ventana, configuraciones.get(ventana.getId())))
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public List<RolVentanaConfiguracionDTO> saveMenuConfiguration(
+            Integer roleId,
+            List<RolVentanaConfiguracionDTO> configuraciones) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
+        assertCanManageRole(role);
+        if (!role.isActivo()) {
+            throw new IllegalArgumentException("No se puede configurar el menú de un rol inactivo");
+        }
+
+        List<RolVentanaConfiguracionDTO> solicitudes = configuraciones != null ? configuraciones : List.of();
+        Set<Integer> ventanasPermitidas = rolVistaPermisoRepository.findByRolIdWithVistaAndVentana(roleId).stream()
+                .filter(RolVistaPermiso::isLeer)
+                .map(RolVistaPermiso::getVista)
+                .filter(vista -> vista.getVentana() != null)
+                .filter(vista -> isAudienceCompatible(role.getScope(), vista.getAudience()))
+                .map(vista -> vista.getVentana().getId())
+                .collect(Collectors.toSet());
+
+        Set<Integer> idsRecibidos = new HashSet<>();
+        for (RolVentanaConfiguracionDTO dto : solicitudes) {
+            if (dto.getVentanaId() == null || !idsRecibidos.add(dto.getVentanaId())) {
+                throw new IllegalArgumentException("La configuración contiene módulos duplicados o inválidos");
+            }
+            if (!ventanasPermitidas.contains(dto.getVentanaId())) {
+                throw new IllegalArgumentException("El rol no tiene vistas legibles en el módulo indicado");
+            }
+            if (dto.getOrden() != null && dto.getOrden() < 0) {
+                throw new IllegalArgumentException("El orden del módulo no puede ser negativo");
+            }
+        }
+
+        rolVentanaConfiguracionRepository.deleteByRolId(roleId);
+        rolVentanaConfiguracionRepository.flush();
+
+        for (RolVentanaConfiguracionDTO dto : solicitudes) {
+            Ventana ventana = ventanaRepository.findById(dto.getVentanaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Módulo no encontrado"));
+            RolVentanaConfiguracion config = new RolVentanaConfiguracion();
+            config.setRol(role);
+            config.setVentana(ventana);
+            config.setPresentacion(dto.getPresentacion() != null
+                    ? dto.getPresentacion()
+                    : ventana.getPresentacionDefault());
+            config.setOrden(dto.getOrden() != null ? dto.getOrden() : ventana.getOrden());
+            rolVentanaConfiguracionRepository.save(config);
+        }
+
+        incrementarVersionPermisos(role);
+        return getMenuConfiguration(roleId);
     }
 
     private RolDTO toDTO(Role role) {
@@ -201,7 +346,66 @@ public class RoleServiceImpl implements RoleService {
         dto.setDescripcion(role.getDescripcion());
         dto.setActivo(role.isActivo());
         dto.setCompanyId(role.getCompany() != null ? role.getCompany().getId() : null);
+        dto.setScope(role.getScope());
+        dto.setPurpose(role.getPurpose());
+        dto.setSystemManaged(role.isSystemManaged());
+        dto.setProtectedRole(role.isProtectedRole());
+        dto.setPermissionVersion(role.getPermissionVersion());
         return dto;
+    }
+
+    private Role requireReadableRole(Integer roleId) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
+        if (!canReadRole(role)) {
+            throw new AccessDeniedException("No tiene acceso a este rol");
+        }
+        return role;
+    }
+
+    private void validarPermisosSolicitados(Role role, List<RolVistaPermisoDTO> permisos) {
+        if (permisos == null) {
+            throw new IllegalArgumentException("Debe enviar la matriz de permisos");
+        }
+        Set<Integer> vistasRecibidas = new HashSet<>();
+        for (RolVistaPermisoDTO dto : permisos) {
+            if (dto.getVistaId() == null || !vistasRecibidas.add(dto.getVistaId())) {
+                throw new IllegalArgumentException("La matriz contiene vistas duplicadas o inválidas");
+            }
+            Vista vista = vistaRepository.findById(dto.getVistaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Vista no encontrada: " + dto.getVistaId()));
+            if (!vista.isActivo() || !isAudienceCompatible(role.getScope(), vista.getAudience())) {
+                throw new AccessDeniedException("La vista no es asignable al alcance del rol: " + vista.getCodigo());
+            }
+        }
+    }
+
+    private boolean isAudienceCompatible(RoleScope scope, ViewAudience audience) {
+        if (scope == RoleScope.PLATFORM || audience == ViewAudience.SHARED) {
+            return true;
+        }
+        return (scope == RoleScope.STAFF && audience == ViewAudience.STAFF)
+                || (scope == RoleScope.CLIENT && audience == ViewAudience.CLIENT);
+    }
+
+    private RolVentanaConfiguracionDTO toMenuConfigurationDTO(
+            Ventana ventana,
+            RolVentanaConfiguracion configuracion) {
+        RolVentanaConfiguracionDTO dto = new RolVentanaConfiguracionDTO();
+        dto.setVentanaId(ventana.getId());
+        dto.setCodigo(ventana.getCodigo());
+        dto.setNombre(ventana.getNombre());
+        dto.setIcono(ventana.getIcono());
+        dto.setPresentacion(configuracion != null
+                ? configuracion.getPresentacion()
+                : ventana.getPresentacionDefault());
+        dto.setOrden(configuracion != null ? configuracion.getOrden() : ventana.getOrden());
+        return dto;
+    }
+
+    private void incrementarVersionPermisos(Role role) {
+        role.setPermissionVersion(role.getPermissionVersion() + 1);
+        roleRepository.save(role);
     }
 
     private String normalizarNombreRol(String nombre) {
@@ -256,7 +460,18 @@ public class RoleServiceImpl implements RoleService {
     private boolean canReadRole(Role role) {
         if (SecurityUtils.isSuperAdmin()) return true;
         Integer roleCompanyId = role.getCompany() != null ? role.getCompany().getId() : null;
-        return roleCompanyId == null || Objects.equals(roleCompanyId, SecurityUtils.getCurrentCompanyId());
+        return roleCompanyId != null && Objects.equals(roleCompanyId, SecurityUtils.getCurrentCompanyId());
+    }
+
+    private void validateScopeChange(Role role, RoleScope newScope) {
+        if (role.getScope() == newScope) return;
+        boolean incompatibleGrant = rolVistaPermisoRepository.findByRolId(role.getId()).stream()
+                .map(RolVistaPermiso::getVista)
+                .anyMatch(vista -> !isAudienceCompatible(newScope, vista.getAudience()));
+        if (incompatibleGrant) {
+            throw new IllegalArgumentException(
+                    "Retire primero los permisos incompatibles antes de cambiar el alcance del rol");
+        }
     }
 
     private void assertCanManageRole(Role role) {

@@ -57,7 +57,7 @@ public class EmpleadoRequest {
     private TipoDocumentoIdentidad tipoDocumento;
 
     @NotEmpty(message = "Debe asignar al menos un rol")
-    private Set<String> roles;
+    private Set<Integer> roleIds;
 
     private Set<String> tiposEmpleado;
     @Size(max = 30, message = "El numero de colegiatura no debe superar 30 caracteres")
@@ -88,8 +88,9 @@ public class EmpleadoRequest {
 
     @AssertTrue(message = "El numero de colegiatura es obligatorio para veterinarios")
     public boolean isColegiaturaValida() {
-        if (roles == null) return true;
-        boolean esVeterinario = roles.stream().anyMatch(rol -> "ROLE_VETERINARIO".equalsIgnoreCase(rol));
+        if (tiposEmpleado == null) return true;
+        boolean esVeterinario = tiposEmpleado.stream()
+                .anyMatch(tipo -> "VETERINARIO".equalsIgnoreCase(tipo));
         return !esVeterinario || (numeroColegiatura != null && !numeroColegiatura.isBlank());
     }
 }

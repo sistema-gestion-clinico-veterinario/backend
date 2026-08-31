@@ -15,7 +15,7 @@ import veterinaria.vargasvet.service.DashboardService;
 @RestController
 @RequestMapping("/dashboard")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+@PreAuthorize("@accesoValidator.can('VISTA_DASHBOARD', 'LEER')")
 public class DashboardController {
 
     private final DashboardService dashboardService;

@@ -14,7 +14,7 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/clinical-reports")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('ADMIN_DASHBOARD')")
+@PreAuthorize("@accesoValidator.can('VISTA_REPORTES', 'LEER')")
 public class ReportesClinicosController {
 
     private final ReportesClinicosService reportesClinicosService;

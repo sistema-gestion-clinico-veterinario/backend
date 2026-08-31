@@ -13,7 +13,6 @@ import veterinaria.vargasvet.dto.request.HorarioEmpleadoRequest;
 import veterinaria.vargasvet.dto.response.EmpleadoListResponse;
 import veterinaria.vargasvet.dto.response.HorarioEmpleadoResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
-import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.EmpleadoService;
 import veterinaria.vargasvet.dto.request.BulkScheduleRequest;
 
@@ -28,10 +27,9 @@ public class EmpleadoController {
 
     private final EmpleadoService empleadoService;
     private final AuditLogService auditLogService;
-    private final AccesoValidator accesoValidator;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('EMPLEADO_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'LEER')")
     public ResponseEntity<ApiResponse<Page<EmpleadoListResponse>>> listar(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(required = false) String nombre,
@@ -48,7 +46,7 @@ public class EmpleadoController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('EMPLEADO_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'LEER')")
     public ResponseEntity<ApiResponse<EmpleadoRequest>> findById(@PathVariable Long id) {
         EmpleadoRequest empleado = empleadoService.findById(id);
         auditLogService.log("CONSULTAR_DETALLE_EMPLEADO", "Empleados", "Consultó el detalle del empleado con ID: " + id + " (" + empleado.getNombre() + " " + empleado.getApellido() + ").");
@@ -56,7 +54,7 @@ public class EmpleadoController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('EMPLEADO_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<UserProfileDTO>> registerEmpleado(@Valid @RequestBody EmpleadoRequest dto) {
         UserProfileDTO profile = empleadoService.registerEmpleado(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -64,38 +62,35 @@ public class EmpleadoController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('EMPLEADO_UPDATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<UserProfileDTO>> updateEmpleado(@PathVariable Long id, @Valid @RequestBody EmpleadoRequest dto) {
         UserProfileDTO profile = empleadoService.updateEmpleado(id, dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos del empleado actualizados exitosamente", profile));
     }
 
     @GetMapping("/{id}/schedule")
-    @PreAuthorize("hasAuthority('CITA_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HORARIOS', 'LEER')")
     public ResponseEntity<ApiResponse<List<HorarioEmpleadoResponse>>> getHorario(@PathVariable Long id) {
-        accesoValidator.validarLeer("VISTA_CITAS_AGENDA");
         List<HorarioEmpleadoResponse> horario = empleadoService.getHorario(id);
         auditLogService.log("CONSULTAR_HORARIO", "Horario", "Consultó el horario del empleado con ID: " + id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario recuperado con éxito", horario));
     }
 
     @PostMapping("/{id}/schedule-bulk")
-    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HORARIOS', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<Void>> assignBulkSchedule(@PathVariable Long id, @Valid @RequestBody BulkScheduleRequest request) {
-        accesoValidator.validarEscribir("VISTA_HORARIOS");
         empleadoService.assignBulkSchedule(id, request);
         auditLogService.log("ASIGNAR_HORARIO_MASIVO", "Horario", "Asignó horario masivo al empleado con ID: " + id + " desde " + request.getStartDate() + " hasta " + request.getEndDate());
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario masivo asignado correctamente", null));
     }
 
     @DeleteMapping("/{id}/schedule-bulk")
-    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HORARIOS', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> deleteBulkSchedule(
             @PathVariable Long id,
             @RequestParam String startDate,
             @RequestParam String endDate,
             @RequestParam(required = false) List<String> dias) {
-        accesoValidator.validarEliminar("VISTA_HORARIOS");
         java.time.LocalDate start = java.time.LocalDate.parse(startDate);
         java.time.LocalDate end = java.time.LocalDate.parse(endDate);
         empleadoService.deleteBulkSchedule(id, start, end, dias);
@@ -104,14 +99,14 @@ public class EmpleadoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'EMPLEADO_DELETE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         empleadoService.eliminar(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Empleado eliminado exitosamente", null));
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'EMPLEADO_STATUS')")
+    @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> cambiarEstado(@PathVariable Long id, @RequestParam Boolean active) {
         empleadoService.cambiarEstado(id, active);
         String mensaje = active ? "Empleado activado exitosamente" : "Empleado desactivado exitosamente";
@@ -119,30 +114,26 @@ public class EmpleadoController {
     }
 
     @DeleteMapping("/schedule/{scheduleId}")
-    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HORARIOS', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> deleteHorario(@PathVariable("scheduleId") Long horarioId) {
-        accesoValidator.validarEliminar("VISTA_HORARIOS");
         empleadoService.deleteHorario(horarioId);
         auditLogService.log("ELIMINAR_TURNO", "Horario", "Eliminó el turno con ID: " + horarioId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario eliminado correctamente", null));
     }
     @PutMapping("/schedule/{scheduleId}")
-    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HORARIOS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> updateHorario(@PathVariable("scheduleId") Long horarioId, @Valid @RequestBody HorarioEmpleadoRequest request) {
-        accesoValidator.validarModificar("VISTA_HORARIOS");
         empleadoService.updateHorario(horarioId, request);
         auditLogService.log("ACTUALIZAR_TURNO", "Horario", "Actualizó el turno con ID: " + horarioId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario actualizado correctamente", null));
     }
 
     @PostMapping("/{id}/clone-week")
-    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HORARIOS', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<Void>> cloneWeekSchedule(
             @PathVariable Long id,
             @RequestParam String sourceWeekStart,
             @RequestParam String targetWeekStart) {
-        accesoValidator.validarEscribir("VISTA_HORARIOS");
-        accesoValidator.validarModificar("VISTA_HORARIOS");
         java.time.LocalDate source = java.time.LocalDate.parse(sourceWeekStart);
         java.time.LocalDate target = java.time.LocalDate.parse(targetWeekStart);
         empleadoService.cloneWeekSchedule(id, source, target);
@@ -151,13 +142,11 @@ public class EmpleadoController {
     }
 
     @PostMapping("/{id}/clone-day")
-    @PreAuthorize("hasAuthority('HORARIO_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HORARIOS', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<Void>> cloneDaySchedule(
             @PathVariable Long id,
             @RequestParam String sourceDate,
             @RequestParam String targetDate) {
-        accesoValidator.validarEscribir("VISTA_HORARIOS");
-        accesoValidator.validarModificar("VISTA_HORARIOS");
         java.time.LocalDate source = java.time.LocalDate.parse(sourceDate);
         java.time.LocalDate target = java.time.LocalDate.parse(targetDate);
         empleadoService.cloneDaySchedule(id, source, target);
@@ -166,10 +155,9 @@ public class EmpleadoController {
     }
 
     @GetMapping("/schedules-report")
-    @PreAuthorize("hasAuthority('HORARIO_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HORARIOS', 'LEER')")
     public ResponseEntity<ApiResponse<List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse>>> getSchedulesReport(
             @RequestParam(required = false) Integer companyId) {
-        accesoValidator.validarLeer("VISTA_HORARIOS");
         List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse> report = empleadoService.getSchedulesReport(companyId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Reporte consolidado recuperado con éxito", report));
     }

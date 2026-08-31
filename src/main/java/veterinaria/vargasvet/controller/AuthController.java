@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.LoginDTO;
 import veterinaria.vargasvet.dto.request.UserRegistrationDTO;
+import veterinaria.vargasvet.dto.request.SwitchRoleRequest;
 import veterinaria.vargasvet.dto.response.AuthResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.service.UsuarioService;
@@ -51,6 +52,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<UserProfileDTO>> register(@Valid @RequestBody UserRegistrationDTO registrationDTO) {
         UserProfileDTO profile = usuarioService.register(registrationDTO);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -79,14 +81,14 @@ public class AuthController {
     }
 
     @GetMapping("/profile/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'LEER')")
     public ResponseEntity<ApiResponse<UserProfileDTO>> getProfile(@PathVariable Integer id) {
         UserProfileDTO profile = usuarioService.getProfile(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Perfil obtenido", profile));
     }
 
     @PutMapping("/suspend/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> suspendAccount(@PathVariable Integer id) {
         usuarioService.suspendAccount(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cuenta suspendida", null));
@@ -117,11 +119,10 @@ public class AuthController {
     }
 
     @PostMapping("/switch-role")
-    public ResponseEntity<ApiResponse<AuthResponse>> switchRole(@RequestBody java.util.Map<String, String> request,
+    public ResponseEntity<ApiResponse<AuthResponse>> switchRole(@Valid @RequestBody SwitchRoleRequest request,
                                                                 HttpServletResponse httpResponse) {
-        String roleName = request.get("roleName");
         String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-        AuthResponse response = usuarioService.switchRole(email, roleName);
+        AuthResponse response = usuarioService.switchRole(email, request.getRoleId());
         setAuthCookies(httpResponse, response.getToken(), response.getRefreshToken());
         return ResponseEntity.ok(new ApiResponse<>(true, "Rol cambiado exitosamente", response));
     }

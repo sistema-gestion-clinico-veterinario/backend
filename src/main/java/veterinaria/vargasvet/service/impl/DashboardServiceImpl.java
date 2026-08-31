@@ -12,6 +12,7 @@ import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.MascotaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.DashboardService;
 import veterinaria.vargasvet.service.ApoderadoService;
 import veterinaria.vargasvet.service.AuditLogService;
@@ -40,6 +41,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final ApoderadoService apoderadoService;
     private final PagoService pagoService;
     private final CompanyService companyService;
+    private final AccesoValidator accesoValidator;
 
     @Override
     @Transactional(readOnly = true)
@@ -49,12 +51,12 @@ public class DashboardServiceImpl implements DashboardService {
                 : SecurityUtils.getCurrentCompanyId();
         boolean globalMode = SecurityUtils.isSuperAdmin() && targetCompanyId == null;
 
-        var recentLogs = canRead("COMPANY_MANAGE")
+        var recentLogs = canRead("VISTA_AUDITORIA_ADMIN")
                 ? auditLogService.getLogs(
                         targetCompanyId, null, null, null, null, null,
                         PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "timestamp"))).getContent()
                 : List.<veterinaria.vargasvet.domain.entity.AuditLog>of();
-        var companies = canRead("COMPANY_READ")
+        var companies = canRead("VISTA_COMPANY")
                 ? companyService.listarTodas(0, 200).getContent()
                 : List.<veterinaria.vargasvet.dto.response.CompanyListResponse>of();
 
@@ -77,29 +79,29 @@ public class DashboardServiceImpl implements DashboardService {
         return DashboardOverviewDTO.builder()
                 .stats(getStats(targetCompanyId))
                 .recentLogs(recentLogs)
-                .employees(canRead("EMPLEADO_READ")
+                .employees(canRead("VISTA_EMPLEADOS")
                         ? empleadoService.listar(targetCompanyId, null, null, null,
                                 null, null, 0, 5).getContent() : List.of())
-                .todayAppointments(canRead("CITA_READ")
+                .todayAppointments(canRead("VISTA_CITAS_AGENDA")
                         ? citaService.listar(targetCompanyId, today, null, null,
                                 null, null, 0, 30).getContent() : List.of())
-                .pets(canRead("PET_READ")
+                .pets(canRead("VISTA_MASCOTAS")
                         ? mascotaService.listar(targetCompanyId, null, null, null,
                                 null, 0, 6).getContent() : List.of())
-                .roles(canRead("ROLE_MANAGE")
+                .roles(canRead("VISTA_ROLES")
                         ? roleService.getRolesByCompany(targetCompanyId) : List.of())
-                .guardians(canRead("APODERADO_READ")
+                .guardians(canRead("VISTA_CLIENTES")
                         ? apoderadoService.listar(targetCompanyId, null, null, 0, 5).getContent() : List.of())
-                .schedules(canRead("HORARIO_READ")
+                .schedules(canRead("VISTA_HORARIOS")
                         ? empleadoService.getSchedulesReportForDate(targetCompanyId, today) : List.of())
-                .payments(canRead("SALE_READ")
+                .payments(canRead("VISTA_PAGOS")
                         ? pagoService.listarHistorialPorEmpresa(0, 5, targetCompanyId).getContent() : List.of())
                 .companies(companies)
                 .build();
     }
 
-    private boolean canRead(String authority) {
-        return SecurityUtils.isSuperAdmin() || SecurityUtils.hasAuthority(authority);
+    private boolean canRead(String viewCode) {
+        return accesoValidator.can(viewCode, "LEER");
     }
 
     @Override

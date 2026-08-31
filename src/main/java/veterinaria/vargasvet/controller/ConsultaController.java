@@ -21,7 +21,7 @@ public class ConsultaController {
     private final AccesoValidator accesoValidator;
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'LEER')")
     public ResponseEntity<ApiResponse<ConsultaResponse>> getConsultaById(@PathVariable Long id) {
         accesoValidator.validarLeer("VISTA_HISTORIAS");
         ConsultaResponse response = consultaService.getConsultaById(id);
@@ -29,7 +29,7 @@ public class ConsultaController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<ConsultaResponse>> updateConsulta(@PathVariable Long id, @Valid @RequestBody ConsultaRequest request) {
         accesoValidator.validarModificar("VISTA_HISTORIAS");
         ConsultaResponse response = consultaService.updateConsulta(id, request);
@@ -37,7 +37,7 @@ public class ConsultaController {
     }
 
     @PatchMapping("/{id}/close")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<ConsultaResponse>> cerrarConsulta(@PathVariable Long id, @Valid @RequestBody CerrarConsultaRequest request) {
         accesoValidator.validarModificar("VISTA_HISTORIAS");
         ConsultaResponse response = consultaService.cerrarConsulta(id, request);

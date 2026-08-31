@@ -10,6 +10,7 @@ import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.entity.Mascota;
+import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.dto.request.ApoderadoRequest;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
@@ -24,6 +25,7 @@ import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.security.SecurityTokenUtils;
 import veterinaria.vargasvet.service.ApoderadoService;
 import veterinaria.vargasvet.service.EmailService;
+import veterinaria.vargasvet.service.CompanyRoleProvisioningService;
 import veterinaria.vargasvet.util.BusinessValidator;
 
 import org.springframework.data.domain.Page;
@@ -33,6 +35,8 @@ import veterinaria.vargasvet.dto.response.ApoderadoListResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -43,14 +47,15 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     private final ApoderadoRepository apoderadoRepository;
     private final MascotaRepository mascotaRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final RoleRepository roleRepository;
     private final veterinaria.vargasvet.repository.UsuarioPorRolRepository usuarioPorRolRepository;
+    private final RoleRepository roleRepository;
     private final CompanyRepository companyRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final BusinessValidator businessValidator;
     private final EmailService emailService;
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
+    private final CompanyRoleProvisioningService companyRoleProvisioningService;
 
     @Value("${app.frontend.login-url}")
     private String loginUrl;
@@ -116,13 +121,14 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
         Usuario savedUser = usuarioRepository.save(usuario);
 
-        Role apoderadoRole = roleRepository.findFirstByName("ROLE_APODERADO")
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Error de configuración: El rol 'ROLE_APODERADO' no existe."));
-        UsuarioPorRol upr = new UsuarioPorRol();
-        upr.setUsuario(savedUser);
-        upr.setRol(apoderadoRole);
-        usuarioPorRolRepository.save(upr);
+        Set<Integer> requestedRoleIds = dto.getRoleIds();
+        if (requestedRoleIds == null || requestedRoleIds.isEmpty()) {
+            Role defaultClientRole = companyRoleProvisioningService
+                    .ensureRequiredRoles(savedUser.getCompany())
+                    .clientPortal();
+            requestedRoleIds = Set.of(defaultClientRole.getId());
+        }
+        replaceClientRoles(savedUser, requestedRoleIds);
 
         Apoderado apoderado = new Apoderado();
         apoderado.setTipoDocumentoIdentidad(dto.getTipoDocumento());
@@ -206,6 +212,10 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         }
 
         usuarioRepository.save(usuario);
+
+        if (dto.getRoleIds() != null) {
+            replaceClientRoles(usuario, dto.getRoleIds());
+        }
 
         if (dto.getGenero() != null) apoderado.setGenero(dto.getGenero());
         if (dto.getTipoDocumento() != null) apoderado.setTipoDocumentoIdentidad(dto.getTipoDocumento());
@@ -322,6 +332,13 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         dto.setTelefono(usuario.getTelefono());
         dto.setDireccion(usuario.getDireccion());
         dto.setCompanyId(usuario.getCompany() != null ? usuario.getCompany().getId() : null);
+        dto.setRoleIds(usuario.getUsuariosPorRol() == null
+                ? Set.of()
+                : usuario.getUsuariosPorRol().stream()
+                    .filter(assignment -> assignment.getRol() != null
+                            && assignment.getRol().getScope() == RoleScope.CLIENT)
+                    .map(assignment -> assignment.getRol().getId())
+                    .collect(java.util.stream.Collectors.toSet()));
 
         dto.setGenero(apoderado.getGenero());
         dto.setTipoDocumento(apoderado.getTipoDocumentoIdentidad());
@@ -329,6 +346,41 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         dto.setObservaciones(apoderado.getObservaciones());
 
         return dto;
+    }
+
+    private void replaceClientRoles(Usuario usuario, Set<Integer> requestedRoleIds) {
+        if (requestedRoleIds == null || requestedRoleIds.isEmpty()) {
+            throw new IllegalArgumentException("Debe asignar al menos un rol de cliente");
+        }
+        if (usuario.getCompany() == null) {
+            throw new IllegalArgumentException("El cliente debe pertenecer a una empresa");
+        }
+
+        Set<Integer> uniqueRoleIds = new HashSet<>(requestedRoleIds);
+        List<Role> roles = roleRepository.findAllById(uniqueRoleIds);
+        if (roles.size() != uniqueRoleIds.size()) {
+            throw new IllegalArgumentException("Uno o más roles seleccionados no existen");
+        }
+
+        Integer companyId = usuario.getCompany().getId();
+        boolean invalidRole = roles.stream().anyMatch(role -> !role.isActivo()
+                || role.getScope() != RoleScope.CLIENT
+                || role.getCompany() == null
+                || !companyId.equals(role.getCompany().getId()));
+        if (invalidRole) {
+            throw new IllegalArgumentException("Solo puede asignar roles de cliente activos de la misma empresa");
+        }
+
+        usuario.getUsuariosPorRol().removeIf(assignment -> assignment.getRol() != null
+                && assignment.getRol().getScope() == RoleScope.CLIENT);
+
+        roles.stream().map(role -> {
+            UsuarioPorRol assignment = new UsuarioPorRol();
+            assignment.setUsuario(usuario);
+            assignment.setRol(role);
+            return assignment;
+        }).forEach(usuario.getUsuariosPorRol()::add);
+        usuarioRepository.save(usuario);
     }
 
     private ApoderadoListResponse toListResponse(Apoderado apoderado) {
