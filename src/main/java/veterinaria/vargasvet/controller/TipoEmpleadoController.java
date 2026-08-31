@@ -21,7 +21,7 @@ public class TipoEmpleadoController {
     private final TipoEmpleadoService tipoEmpleadoService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('TIPO_EMPLEADO_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'LEER')")
     public ResponseEntity<ApiResponse<Page<TipoEmpleado>>> getAll(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(defaultValue = "0") int page,
@@ -32,21 +32,21 @@ public class TipoEmpleadoController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('TIPO_EMPLEADO_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<TipoEmpleado>> create(@Valid @RequestBody TipoEmpleado tipo) {
         TipoEmpleado created = tipoEmpleadoService.create(tipo);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, "Tipo de empleado creado", created));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('TIPO_EMPLEADO_UPDATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<TipoEmpleado>> update(@PathVariable Long id, @Valid @RequestBody TipoEmpleado tipo) {
         TipoEmpleado updated = tipoEmpleadoService.update(id, tipo);
         return ResponseEntity.ok(new ApiResponse<>(true, "Tipo de empleado actualizado", updated));
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('TIPO_EMPLEADO_STATUS')")
+    @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> cambiarEstado(@PathVariable Long id, @RequestParam Boolean active) {
         tipoEmpleadoService.cambiarEstado(id, active);
         String msg = active ? "Tipo de empleado activado" : "Tipo de empleado desactivado";
@@ -54,7 +54,7 @@ public class TipoEmpleadoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('TIPO_EMPLEADO_DELETE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'ELIMINAR')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         tipoEmpleadoService.delete(id);
         return ResponseEntity.noContent().build();

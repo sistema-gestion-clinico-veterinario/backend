@@ -17,10 +17,8 @@ import veterinaria.vargasvet.security.SecurityUtils;
 public class UsuarioPorRolService {
 
     private final UsuarioPorRolRepository usuarioPorRolRepository;
-    private final UsuarioPorRolPermisoRepository permisoRepository;
     private final UsuarioRepository usuarioRepository;
     private final RoleRepository roleRepository;
-    private final VistaRepository vistaRepository;
 
     @Transactional(readOnly = true)
     public List<UsuarioPorRol> listarPorUsuario(Integer usuarioId) {
@@ -41,7 +39,7 @@ public class UsuarioPorRolService {
         Role rol = roleRepository.findById(rolId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
         assertSameTenant(usuario);
-        assertAssignableRole(rol);
+        assertAssignableRole(usuario, rol);
 
         UsuarioPorRol upr = new UsuarioPorRol();
         upr.setUsuario(usuario);
@@ -50,40 +48,11 @@ public class UsuarioPorRolService {
     }
 
     @Transactional
-    public UsuarioPorRolPermiso asignarPermiso(Integer usuarioPorRolId, Integer vistaId,
-                                                boolean leer, boolean escribir,
-                                                boolean modificar, boolean eliminar) {
-        UsuarioPorRol upr = usuarioPorRolRepository.findById(usuarioPorRolId)
-                .orElseThrow(() -> new ResourceNotFoundException("AsignacionRol no encontrada"));
-        assertSameTenant(upr.getUsuario());
-
-        if (!upr.getUsuario().isActivo()) {
-            throw new IllegalArgumentException("No se puede asignar permisos a un usuario inactivo");
-        }
-
-        Vista vista = vistaRepository.findById(vistaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vista no encontrada"));
-
-        UsuarioPorRolPermiso permiso = permisoRepository
-                .findByUsuarioPorRolIdAndVistaCodigo(usuarioPorRolId, vista.getCodigo())
-                .orElse(new UsuarioPorRolPermiso());
-
-        permiso.setUsuarioPorRol(upr);
-        permiso.setVista(vista);
-        permiso.setLeer(leer);
-        permiso.setEscribir(escribir);
-        permiso.setModificar(modificar);
-        permiso.setEliminar(eliminar);
-
-        return permisoRepository.save(permiso);
-    }
-
-    @Transactional
     public void revocarRol(Integer usuarioPorRolId) {
         UsuarioPorRol upr = usuarioPorRolRepository.findById(usuarioPorRolId)
                 .orElseThrow(() -> new ResourceNotFoundException("AsignacionRol no encontrada"));
         assertSameTenant(upr.getUsuario());
-        if (!SecurityUtils.isSuperAdmin() && "ROLE_SUPER_ADMIN".equals(upr.getRol().getName())) {
+        if (!SecurityUtils.isSuperAdmin() && upr.getRol().getScope() == veterinaria.vargasvet.domain.enums.RoleScope.PLATFORM) {
             throw new AccessDeniedException("No puede revocar este rol");
         }
         usuarioPorRolRepository.delete(upr);
@@ -98,15 +67,24 @@ public class UsuarioPorRolService {
         }
     }
 
-    private void assertAssignableRole(Role role) {
+    private void assertAssignableRole(Usuario usuario, Role role) {
         if (SecurityUtils.isSuperAdmin()) return;
-        if ("ROLE_SUPER_ADMIN".equals(role.getName())) {
+        if (role.getScope() == veterinaria.vargasvet.domain.enums.RoleScope.PLATFORM
+                || role.getCompany() == null) {
             throw new AccessDeniedException("No puede asignar este rol");
         }
         Integer roleCompanyId = role.getCompany() != null ? role.getCompany().getId() : null;
         Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
         if (roleCompanyId != null && !Objects.equals(roleCompanyId, currentCompanyId)) {
             throw new AccessDeniedException("No puede asignar un rol de otra empresa");
+        }
+        if (role.getScope() == veterinaria.vargasvet.domain.enums.RoleScope.CLIENT
+                && usuario.getApoderado() == null) {
+            throw new AccessDeniedException("Un rol de cliente solo puede asignarse a un apoderado");
+        }
+        if (role.getScope() == veterinaria.vargasvet.domain.enums.RoleScope.STAFF
+                && usuario.getEmpleado() == null) {
+            throw new AccessDeniedException("Un rol de personal solo puede asignarse a un empleado");
         }
     }
 }

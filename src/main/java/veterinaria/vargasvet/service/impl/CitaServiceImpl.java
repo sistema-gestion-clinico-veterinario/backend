@@ -402,12 +402,10 @@ public class CitaServiceImpl implements CitaService {
         LocalDateTime fechaInicio = effectiveDesde != null ? effectiveDesde.atStartOfDay() : null;
         LocalDateTime fechaFin = effectiveHasta != null ? effectiveHasta.plusDays(1).atStartOfDay() : null;
         Long filteredVeterinarioId = veterinarioId;
-        if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
-            if (!accesoValidator.puedeLeer("CITA_VER_TODAS") && filteredVeterinarioId == null) {
-                filteredVeterinarioId = empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail())
-                        .map(Empleado::getId)
-                        .orElse(-1L);
-            }
+        if (!accesoValidator.can("VISTA_CITAS_AGENDA", "MODIFICAR") && filteredVeterinarioId == null) {
+            filteredVeterinarioId = empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail())
+                    .map(Empleado::getId)
+                    .orElse(-1L);
         }
         
         Sort sort = fechaDesde != null
@@ -437,8 +435,7 @@ public class CitaServiceImpl implements CitaService {
 
         Integer resolvedCompanyId = resolverCompanyId(companyId);
         Long filteredVeterinarioId = veterinarioId;
-        if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()
-                && !accesoValidator.puedeLeer("CITA_VER_TODAS")
+        if (!accesoValidator.can("VISTA_CITAS_AGENDA", "MODIFICAR")
                 && filteredVeterinarioId == null) {
             filteredVeterinarioId = empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail())
                     .map(Empleado::getId)
@@ -478,7 +475,7 @@ public class CitaServiceImpl implements CitaService {
 
         validarPermisoEmpresa(cita);
 
-        if (SecurityUtils.hasRole("ROLE_APODERADO")) {
+        if (SecurityUtils.getCurrentRolePurpose() == veterinaria.vargasvet.domain.enums.RolePurpose.CLIENT_PORTAL) {
             throw new IllegalArgumentException("Un apoderado no tiene permiso para cancelar citas");
         }
 
@@ -491,7 +488,7 @@ public class CitaServiceImpl implements CitaService {
         }
 
         // Regla: 2 horas antes para apoderado, 1 hora para personal administrativo
-        int hoursLimit = SecurityUtils.hasRole("ROLE_APODERADO") ? 2 : 1;
+        int hoursLimit = SecurityUtils.getCurrentRolePurpose() == veterinaria.vargasvet.domain.enums.RolePurpose.CLIENT_PORTAL ? 2 : 1;
         if (veterinaria.vargasvet.util.AppClock.now().isAfter(cita.getFechaHoraInicio().minusHours(hoursLimit))) {
             throw new IllegalArgumentException("No se puede cancelar la cita faltando menos de " + hoursLimit + " horas para su inicio");
         }
@@ -733,7 +730,7 @@ public class CitaServiceImpl implements CitaService {
         }
 
         // Regla: 6 horas antes para apoderado, 1 hora para personal administrativo
-        int hoursLimit = SecurityUtils.hasRole("ROLE_APODERADO") ? 6 : 1;
+        int hoursLimit = SecurityUtils.getCurrentRolePurpose() == veterinaria.vargasvet.domain.enums.RolePurpose.CLIENT_PORTAL ? 6 : 1;
         if (cita.getEstado() == EstadoCita.PROGRAMADA || cita.getEstado() == EstadoCita.REPROGRAMADA) {
             if (veterinaria.vargasvet.util.AppClock.now().isAfter(cita.getFechaHoraInicio().minusHours(hoursLimit))) {
                 throw new IllegalArgumentException("No se puede reprogramar una cita con menos de " + hoursLimit + " horas de anticipación");

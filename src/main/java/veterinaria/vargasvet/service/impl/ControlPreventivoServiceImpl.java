@@ -18,6 +18,7 @@ import veterinaria.vargasvet.dto.response.CartillaDetalleResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.*;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.ControlPreventivoService;
 import veterinaria.vargasvet.util.AppClock;
@@ -43,6 +44,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     private final MascotaRepository mascotaRepository;
     private final ConsultaRepository consultaRepository;
     private final AuditLogService auditLogService;
+    private final AccesoValidator accesoValidator;
 
     @Override
     @Transactional(readOnly = true)
@@ -370,7 +372,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
             throw new IllegalArgumentException("No se pueden registrar aplicaciones en una consulta cerrada");
         }
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()
-                && !SecurityUtils.hasAuthority("CLINICAL_RECORD_MANAGE")) {
+                && !accesoValidator.can("VISTA_CARTILLA", "ESCRIBIR")) {
             Integer usuarioActual = SecurityUtils.getCurrentUserId();
             boolean esVeterinarioAsignado = consulta.getVeterinario() != null
                     && consulta.getVeterinario().getUser() != null

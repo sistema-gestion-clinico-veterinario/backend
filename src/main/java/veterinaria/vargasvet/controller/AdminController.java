@@ -17,7 +17,7 @@ import veterinaria.vargasvet.service.VeterinarioService;
 @RestController
 @RequestMapping("/admin/veterinarians")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'ROLE_ADMIN')")
+@PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'ESCRIBIR')")
 public class AdminController {
 
     private final VeterinarioService veterinarioService;

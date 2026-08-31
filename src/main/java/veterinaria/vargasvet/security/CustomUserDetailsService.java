@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.repository.UsuarioRepository;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -38,7 +39,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         boolean esSuperAdmin = usuario.getUsuariosPorRol().stream()
-                .anyMatch(upr -> "ROLE_SUPER_ADMIN".equals(upr.getRol().getName()));
+                .anyMatch(upr -> upr.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN);
         if (!esSuperAdmin && usuario.getCompany() != null && !usuario.getCompany().isActivo()) {
             throw new UsernameNotFoundException("La empresa está desactivada. Contacta al administrador del sistema.");
         }

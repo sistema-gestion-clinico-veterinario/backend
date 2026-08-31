@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/admin/audit-logs")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+@PreAuthorize("@accesoValidator.can('VISTA_AUDITORIA_ADMIN', 'LEER')")
 public class AuditLogController {
 
     private final AuditLogService auditLogService;
@@ -64,7 +64,7 @@ public class AuditLogController {
         if (initialLoad) {
             String currentUserEmail = SecurityUtils.getCurrentUserEmail();
             Integer currentCompId = SecurityUtils.getCurrentCompanyId();
-            String userRole = SecurityUtils.isSuperAdmin() ? "ROLE_SUPER_ADMIN" : "ROLE_ADMIN";
+            String userRole = SecurityUtils.getCurrentRoleNames().stream().findFirst().orElse("ROL_ACTIVO");
             String details = String.format("El usuario %s consultó el historial de auditoría.", currentUserEmail);
 
             auditLogService.log(

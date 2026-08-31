@@ -15,6 +15,8 @@ import veterinaria.vargasvet.repository.*;
 import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.service.VeterinarioService;
 import veterinaria.vargasvet.security.SecurityTokenUtils;
+import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.domain.enums.RoleScope;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -32,6 +34,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     private final veterinaria.vargasvet.repository.UsuarioPorRolRepository usuarioPorRolRepository;
     private final EspecialidadRepository especialidadRepository;
     private final TipoEmpleadoRepository tipoEmpleadoRepository;
+    private final CompanyRepository companyRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final EmailService emailService;
@@ -78,15 +81,28 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         String verificationToken = SecurityTokenUtils.generate();
         usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
         usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(24));
+        Integer companyId = SecurityUtils.isSuperAdmin() ? dto.getCompanyId() : SecurityUtils.getCurrentCompanyId();
+        if (companyId == null) throw new IllegalArgumentException("Debe seleccionar una empresa");
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
+        usuario.setCompany(company);
 
         Usuario savedUser = usuarioRepository.save(usuario);
 
-        roleRepository.findFirstByName("ROLE_VETERINARIO").ifPresent(role -> {
+        for (Integer roleId : new java.util.LinkedHashSet<>(dto.getRoleIds())) {
+            Role role = roleRepository.findById(roleId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado: " + roleId));
+            Integer roleCompanyId = role.getCompany() != null ? role.getCompany().getId() : null;
+            if (!role.isActivo() || role.getScope() != RoleScope.STAFF
+                    || !java.util.Objects.equals(roleCompanyId, companyId)) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "El rol no pertenece al personal de esta empresa");
+            }
             UsuarioPorRol upr = new UsuarioPorRol();
             upr.setUsuario(savedUser);
             upr.setRol(role);
             usuarioPorRolRepository.save(upr);
-        });
+        }
 
         Empleado empleado = new Empleado();
         empleado.setNumeroColegiatura(dto.getNumeroColegiatura());
@@ -101,12 +117,12 @@ public class VeterinarioServiceImpl implements VeterinarioService {
 
         if (dto.getEspecialidades() != null) {
             empleado.setEspecialidades(dto.getEspecialidades().stream()
-                    .map(nombre -> especialidadRepository.findByNombre(nombre)
+                    .map(nombre -> especialidadRepository.findByNombreAndCompanyId(nombre, companyId)
                             .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada: " + nombre)))
                     .collect(Collectors.toSet()));
         }
 
-        tipoEmpleadoRepository.findByNombre("VETERINARIO")
+        tipoEmpleadoRepository.findByNombreAndCompanyId("VETERINARIO", companyId)
                 .ifPresent(tipo -> empleado.getTiposEmpleado().add(tipo));
 
         empleadoRepository.save(empleado);

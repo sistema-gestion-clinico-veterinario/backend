@@ -14,6 +14,12 @@ import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.VistaRepository;
 import veterinaria.vargasvet.repository.VentanaRepository;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
+import veterinaria.vargasvet.repository.CompanyRepository;
+import veterinaria.vargasvet.service.CompanyRoleProvisioningService;
+import veterinaria.vargasvet.domain.enums.MenuPresentation;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.RoleScope;
+import veterinaria.vargasvet.domain.enums.ViewAudience;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,6 +34,8 @@ public class DataInitializer implements CommandLineRunner {
     private final VistaRepository vistaRepository;
     private final VentanaRepository ventanaRepository;
     private final RolVistaPermisoRepository rolVistaPermisoRepository;
+    private final CompanyRepository companyRepository;
+    private final CompanyRoleProvisioningService companyRoleProvisioningService;
 
     @Override
     @Transactional
@@ -37,6 +45,8 @@ public class DataInitializer implements CommandLineRunner {
         seedRolesIfNotExist();
         seedVentanasIfNotExist();
         seedVistasIfNotExist();
+        companyRepository.findAll().forEach(companyRoleProvisioningService::ensureRequiredRoles);
+        companyRoleProvisioningService.migrateLegacyGlobalAssignments();
         deactivateObsoleteVentanas();
         deactivateObsoleteVistas();
         seedPermisosIfNotExist();
@@ -45,20 +55,22 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedRolesIfNotExist() {
-        createRoleIfNotExists("ROLE_SUPER_ADMIN", "Administrador global del sistema");
-        createRoleIfNotExists("ROLE_ADMIN",       "Administrador de empresa");
+        createSystemRole("ROLE_SUPER_ADMIN", "Administrador global del sistema",
+                RoleScope.PLATFORM, RolePurpose.PLATFORM_ADMIN, true);
     }
 
-    private void createRoleIfNotExists(String nombre, String descripcion) {
-        if (!roleRepository.existsByName(nombre)) {
-            Role role = new Role();
-            role.setName(nombre);
-            role.setDescripcion(descripcion);
-            roleRepository.save(role);
-            log.info(" Rol creado: {}", nombre);
-        } else {
-            log.debug("⏭ Rol ya existe: {}", nombre);
-        }
+    private void createSystemRole(String nombre, String descripcion, RoleScope scope,
+                                  RolePurpose purpose, boolean protectedRole) {
+        Role role = roleRepository.findFirstByCompanyIsNullAndPurpose(purpose).orElseGet(Role::new);
+        boolean esNuevo = role.getId() == null;
+        role.setName(nombre);
+        role.setDescripcion(descripcion);
+        role.setScope(scope);
+        role.setPurpose(purpose);
+        role.setSystemManaged(true);
+        role.setProtectedRole(protectedRole);
+        roleRepository.save(role);
+        log.info(esNuevo ? "Rol del sistema creado: {}" : "Rol del sistema verificado: {}", nombre);
     }
 
     private void seedVentanasIfNotExist() {
@@ -67,6 +79,7 @@ public class DataInitializer implements CommandLineRunner {
         createVentanaIfNotExists("PERSONAL",          "Personal",         "rrhh",           3);
         createVentanaIfNotExists("CLINICA",           "Clínica",          "clinica",         4);
         createVentanaIfNotExists("PORTAL_APODERADO",  "Portal Apoderado", "apoderado",       5);
+        createVentanaIfNotExists("FACTURACION",       "Facturación",      "facturacion",      6);
     }
 
     private void createVentanaIfNotExists(String codigo, String nombre, String grupo, Integer orden) {
@@ -82,6 +95,7 @@ public class DataInitializer implements CommandLineRunner {
         ventana.setGrupo(grupo);
         ventana.setOrden(orden);
         ventana.setActivo(true);
+        ventana.setPresentacionDefault(MenuPresentation.GROUPED);
         ventanaRepository.save(ventana);
 
         if (esNueva) {
@@ -94,6 +108,7 @@ public class DataInitializer implements CommandLineRunner {
         Ventana personal        = ventanaRepository.findByCodigo("PERSONAL");
         Ventana clinica         = ventanaRepository.findByCodigo("CLINICA");
         Ventana portalApoderado = ventanaRepository.findByCodigo("PORTAL_APODERADO");
+        Ventana facturacion     = ventanaRepository.findByCodigo("FACTURACION");
 
         seed("VISTA_DASHBOARD",          "Dashboard",          "/dashboard",          "GENERAL", 1,  null, null);
         seed("VISTA_EMPLEADO_DASHBOARD", "Dashboard Empleado", "/empleado/dashboard", "GENERAL", 2,  null, null);
@@ -104,7 +119,7 @@ public class DataInitializer implements CommandLineRunner {
         seed("VISTA_ROLES",           "Roles",             "/roles",          "ADMIN", 3, administracion, null);
         seed("VISTA_VENTANAS",        "Gestión de Vistas", "/ventanas",       "ADMIN", 4, administracion, null);
         seed("VISTA_COMPLEMENTARIO",  "Complementario",    "/complementario", "ADMIN", 5, administracion, null);
-        seed("VISTA_PAGOS",           "Pagos",             "/pagos",          "ADMIN", 6, administracion, null);
+        seed("VISTA_REPORTES",        "Reportes",          "/reportes",       "ADMIN", 6, administracion, null);
 
         seed("VISTA_EMPLEADOS",  "Empleados",  "/empleados",          "RRHH", 1, personal, null);
         seed("VISTA_HORARIOS",   "Horarios",   "/empleados/horarios", "RRHH", 2, personal, null);
@@ -116,6 +131,10 @@ public class DataInitializer implements CommandLineRunner {
         seed("VISTA_HISTORIAS",    "Historias Clínicas", "/historias-clinicas", "CLINICA", 4, clinica, null);
         seed("VISTA_CITAS_AGENDA", "Agenda de Citas",    "/citas/agenda",       "CLINICA", 5, clinica, null);
         seed("VISTA_CARTILLA",     "Cartilla de Vacunas","/historias-clinicas/cartilla", "CLINICA", 6, clinica, null);
+        seed("VISTA_LABORATORIO",  "Laboratorio",         "/laboratorio", "CLINICA", 7, clinica, null);
+
+        seed("VISTA_CAJA",  "Caja",              "/caja",  "FACTURACION", 1, facturacion, null);
+        seed("VISTA_PAGOS", "Historial de Pagos", "/pagos", "FACTURACION", 2, facturacion, null);
 
         seed("VISTA_APODERADO_DASHBOARD", "Mi Portal",    "/apoderado/dashboard",    "APODERADO", 1, portalApoderado, null);
         seed("VISTA_MIS_MASCOTAS",        "Mis Mascotas", "/apoderado/mis-mascotas", "APODERADO", 2, portalApoderado, null);
@@ -142,13 +161,15 @@ public class DataInitializer implements CommandLineRunner {
         vista.setOrden(orden);
         vista.setVentana(ventana);
         vista.setActivo(true);
+        vista.setAudience(resolveAudience(codigo));
         vista.setParent(parent);
         vistaRepository.save(vista);
         log.info("Vista creada: {} → {}", codigo, ruta);
     }
     private void seedPermisosIfNotExist() {
         log.info("Verificando permisos del SUPER_ADMIN...");
-        Role superAdmin = roleRepository.findByName("ROLE_SUPER_ADMIN").orElse(null);
+        Role superAdmin = roleRepository.findFirstByCompanyIsNullAndPurpose(RolePurpose.PLATFORM_ADMIN)
+                .orElse(null);
 
         if (superAdmin == null) {
             log.warn("ROLE_SUPER_ADMIN no encontrado");
@@ -199,8 +220,21 @@ public class DataInitializer implements CommandLineRunner {
         vista.setOrden(orden);
         vista.setVentana(ventana);
         vista.setActivo(true);
+        vista.setAudience(resolveAudience(codigo));
         vistaRepository.save(vista);
         log.info(" Vista creada: {} → {}", codigo, ruta);
+    }
+
+    private ViewAudience resolveAudience(String codigo) {
+        if ("VISTA_PROFILE".equals(codigo)) {
+            return ViewAudience.SHARED;
+        }
+        if ("VISTA_APODERADO_DASHBOARD".equals(codigo)
+                || codigo.startsWith("VISTA_MIS_")
+                || "VISTA_MI_HISTORIAL".equals(codigo)) {
+            return ViewAudience.CLIENT;
+        }
+        return ViewAudience.STAFF;
     }
 
     private void deactivateObsoleteVistas() {
@@ -287,7 +321,6 @@ public class DataInitializer implements CommandLineRunner {
                 "RECETAS",
                 "SERVICIOS",
                 "APODERADOS",
-                "FACTURACION",
                 "INVENTARIO",
                 "EMPLEADO_DASHBOARD",
                 "MI_HORARIO",

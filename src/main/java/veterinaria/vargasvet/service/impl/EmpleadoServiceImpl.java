@@ -116,12 +116,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         Usuario savedUser = usuarioRepository.save(usuario);
 
-        if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
+        if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
             usuarioPorRolRepository.deleteByUsuarioId(savedUser.getId());
-            for (String roleName : new java.util.LinkedHashSet<>(dto.getRoles())) {
-                Role role = roleRepository.findByNameAndCompanyId(roleName, companyIdToUse)
-                        .orElseGet(() -> roleRepository.findFirstByName(roleName)
-                                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado: " + roleName)));
+            for (Integer roleId : new java.util.LinkedHashSet<>(dto.getRoleIds())) {
+                Role role = resolveStaffRole(roleId, companyIdToUse);
                 UsuarioPorRol upr = new UsuarioPorRol();
                 upr.setUsuario(savedUser);
                 upr.setRol(role);
@@ -141,7 +139,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         empleado.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
 
     
-        boolean isVeterinario = dto.getRoles() != null && dto.getRoles().contains("ROLE_VETERINARIO");
+        boolean isVeterinario = isVeterinario(dto);
         if (isVeterinario) {
             if (dto.getNumeroColegiatura() == null || dto.getNumeroColegiatura().isBlank()) {
                 throw new IllegalArgumentException("El nÃºmero de colegiatura es obligatorio para veterinarios");
@@ -226,18 +224,17 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         if (dto.getDireccion() != null) usuario.setDireccion(dto.getDireccion());
 
 
-        if (dto.getRoles() != null && !dto.getRoles().isEmpty()) {
+        if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
             boolean isTargetSuperAdmin = usuario.getUsuariosPorRol().stream()
-                    .anyMatch(upr -> upr.getRol().getName().equals("ROLE_SUPER_ADMIN"));
+                    .anyMatch(upr -> upr.getRol().getPurpose()
+                            == veterinaria.vargasvet.domain.enums.RolePurpose.PLATFORM_ADMIN);
             if (isTargetSuperAdmin && !SecurityUtils.isSuperAdmin()) {
                 throw new IllegalArgumentException("Solo un Super Admin puede modificar los roles de otro Super Admin");
             }
 
             usuarioPorRolRepository.deleteByUsuarioId(usuario.getId());
-            for (String roleName : new java.util.LinkedHashSet<>(dto.getRoles())) {
-                Role role = roleRepository.findByNameAndCompanyId(roleName, companyIdToUse)
-                        .orElseGet(() -> roleRepository.findFirstByName(roleName)
-                                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado: " + roleName)));
+            for (Integer roleId : new java.util.LinkedHashSet<>(dto.getRoleIds())) {
+                Role role = resolveStaffRole(roleId, companyIdToUse);
                 UsuarioPorRol upr = new UsuarioPorRol();
                 upr.setUsuario(usuario);
                 upr.setRol(role);
@@ -265,7 +262,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             empleado.getTiposEmpleado().retainAll(newTipos);
             empleado.getTiposEmpleado().addAll(newTipos);
         }
-        boolean isVeterinario = dto.getRoles() != null && dto.getRoles().contains("ROLE_VETERINARIO");
+        boolean isVeterinario = isVeterinario(dto);
         if (isVeterinario) {
             if (dto.getNumeroColegiatura() != null) {
                 empleado.setNumeroColegiatura(dto.getNumeroColegiatura());
@@ -748,7 +745,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         dto.setNumeroDocumento(usuario.getDni());
         dto.setTelefono(usuario.getTelefono());
         dto.setDireccion(usuario.getDireccion());
-        dto.setRoles(usuario.getUsuariosPorRol().stream().map(upr -> upr.getRol().getName()).collect(Collectors.toSet()));
+        dto.setRoleIds(usuario.getUsuariosPorRol().stream().map(upr -> upr.getRol().getId()).collect(Collectors.toSet()));
         dto.setCompanyId(usuario.getCompany() != null ? usuario.getCompany().getId() : null);
 
         dto.setGenero(empleado.getGenero());
@@ -1136,5 +1133,23 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         response.setHoraFin(horario.getHoraFin());
         response.setActivo(horario.getActivo());
         return response;
+    }
+
+    private Role resolveStaffRole(Integer roleId, Integer companyId) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado: " + roleId));
+        Integer roleCompanyId = role.getCompany() != null ? role.getCompany().getId() : null;
+        if (!role.isActivo()
+                || role.getScope() != veterinaria.vargasvet.domain.enums.RoleScope.STAFF
+                || !java.util.Objects.equals(roleCompanyId, companyId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "El rol no pertenece al personal de esta empresa");
+        }
+        return role;
+    }
+
+    private boolean isVeterinario(EmpleadoRequest dto) {
+        return dto.getTiposEmpleado() != null && dto.getTiposEmpleado().stream()
+                .anyMatch(tipo -> "VETERINARIO".equalsIgnoreCase(tipo));
     }
 }

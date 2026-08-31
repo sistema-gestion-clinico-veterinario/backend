@@ -5,6 +5,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.RoleScope;
 
 @Component
 public class SecurityUtils {
@@ -17,15 +19,8 @@ public class SecurityUtils {
         return null;
     }
 
-    public static boolean hasRole(String role) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) return false;
-        return auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals(role));
-    }
-
     public static boolean isSuperAdmin() {
-        return hasRole("ROLE_SUPER_ADMIN");
+        return getCurrentRolePurpose() == RolePurpose.PLATFORM_ADMIN;
     }
 
     public static String getCurrentUserEmail() {
@@ -44,12 +39,32 @@ public class SecurityUtils {
         return null;
     }
 
-    public static boolean isAdmin() {
-        return hasRole("ROLE_ADMIN");
+    public static Integer getCurrentRoleId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UsuarioPrincipal principal) {
+            return principal.getActiveRoleId();
+        }
+        return null;
     }
 
-    public static boolean hasAuthority(String authority) {
-        return hasRole(authority);
+    public static RoleScope getCurrentRoleScope() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UsuarioPrincipal principal) {
+            return principal.getActiveRoleScope();
+        }
+        return null;
+    }
+
+    public static RolePurpose getCurrentRolePurpose() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UsuarioPrincipal principal) {
+            return principal.getActiveRolePurpose();
+        }
+        return null;
+    }
+
+    public static boolean isAdmin() {
+        return getCurrentRolePurpose() == RolePurpose.COMPANY_ADMIN;
     }
 
     public static List<String> getCurrentRoleNames() {

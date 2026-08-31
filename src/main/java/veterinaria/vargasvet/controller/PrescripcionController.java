@@ -26,7 +26,7 @@ public class PrescripcionController {
     private final AccesoValidator accesoValidator;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'LEER')")
     public ResponseEntity<ApiResponse<Page<PrescripcionResumenResponse>>> buscar(
             @RequestParam(required = false, defaultValue = "") String query,
             @RequestParam(required = false) Integer companyId,
@@ -47,7 +47,7 @@ public class PrescripcionController {
     }
 
     @PostMapping("/consultation/{consultationId}")
-    @PreAuthorize("hasAuthority('CLINICAL_RECORD_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<PrescripcionResumenResponse>> crear(
             @PathVariable("consultationId") Long consultaId,
             @Valid @RequestBody PrescripcionRequest request) {
@@ -57,7 +57,7 @@ public class PrescripcionController {
     }
 
     @GetMapping("/consultation/{consultationId}")
-    @PreAuthorize("hasAuthority('CLINICAL_RECORD_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'LEER')")
     public ResponseEntity<ApiResponse<List<PrescripcionResumenResponse>>> listarPorConsulta(
             @PathVariable("consultationId") Long consultaId) {
         accesoValidator.validarLeer("VISTA_HISTORIAS");
@@ -65,7 +65,7 @@ public class PrescripcionController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('CLINICAL_RECORD_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<PrescripcionResumenResponse>> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody PrescripcionRequest request) {
@@ -74,7 +74,7 @@ public class PrescripcionController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('CLINICAL_RECORD_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         accesoValidator.validarEliminar("VISTA_HISTORIAS");
         prescripcionService.eliminar(id);

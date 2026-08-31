@@ -21,6 +21,7 @@ import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
 
 @RestController
 @RequestMapping("/setup")
@@ -61,7 +62,7 @@ public class SetupController {
 
         Usuario saved = usuarioRepository.save(admin);
 
-        roleRepository.findFirstByName("ROLE_SUPER_ADMIN").ifPresent(role -> {
+        roleRepository.findFirstByCompanyIsNullAndPurpose(RolePurpose.PLATFORM_ADMIN).ifPresent(role -> {
             UsuarioPorRol upr = new UsuarioPorRol();
             upr.setUsuario(saved);
             upr.setRol(role);

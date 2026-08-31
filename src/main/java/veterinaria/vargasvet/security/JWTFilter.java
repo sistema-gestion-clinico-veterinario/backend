@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
 
 import java.io.IOException;
 
@@ -50,16 +51,22 @@ public class JWTFilter extends GenericFilterBean {
                 Authentication authentication = tokenProvider.getAuthentication(token);
 
                 String email = authentication.getName();
-                String activeRole = authentication.getAuthorities().stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .filter(a -> a.startsWith("ROLE_"))
-                        .findFirst()
-                        .orElse(null);
-                if (activeRole == null || !usuarioPorRolRepository.hasActiveAssignedRole(email, activeRole)) {
+                UsuarioPrincipal principal = authentication.getPrincipal() instanceof UsuarioPrincipal value
+                        ? value : null;
+                if (principal == null || principal.getActiveRoleId() == null) {
                     throw new org.springframework.security.authentication.BadCredentialsException(
-                            "El rol de la sesión ya no está disponible");
+                            "La sesión no contiene un rol activo válido");
                 }
-                boolean esSuperAdmin = "ROLE_SUPER_ADMIN".equals(activeRole);
+
+                var activeAssignment = usuarioPorRolRepository
+                        .findActiveAssignmentByUsuarioIdAndRoleId(principal.getId(), principal.getActiveRoleId())
+                        .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException(
+                                "El rol de la sesión ya no está disponible"));
+                if (activeAssignment.getRol().getPermissionVersion() != principal.getPermissionVersion()) {
+                    throw new org.springframework.security.authentication.CredentialsExpiredException(
+                            "Los permisos de la sesión cambiaron; actualice la sesión");
+                }
+                boolean esSuperAdmin = activeAssignment.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN;
 
                 boolean bloqueado = usuarioRepository.findByEmailWithCompany(email).map(usuario -> {
                     if (!usuario.isActivo()) return true;

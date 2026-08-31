@@ -61,4 +61,8 @@ public class VeterinarioRegistrationDTO {
     private TipoDocumentoIdentidad tipoDocumento;
     private String numeroDocumento;
     private Genero genero;
+    private Integer companyId;
+
+    @NotEmpty(message = "Debe asignar al menos un rol")
+    private Set<Integer> roleIds;
 }

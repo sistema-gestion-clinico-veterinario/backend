@@ -60,6 +60,9 @@ public class UserMapper {
             dto.setSystemRole(usuario.getUsuariosPorRol().stream()
                     .map(upr -> upr.getRol().getName())
                     .collect(Collectors.joining(",")));
+            dto.setRoleIds(usuario.getUsuariosPorRol().stream()
+                    .map(upr -> upr.getRol().getId())
+                    .collect(Collectors.toSet()));
         }
 
         if (usuario.getCompany() != null) {

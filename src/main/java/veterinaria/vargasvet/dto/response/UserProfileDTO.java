@@ -2,6 +2,8 @@ package veterinaria.vargasvet.dto.response;
 
 import lombok.Data;
 
+import java.util.Set;
+
 @Data
 public class UserProfileDTO {
     private Integer id;
@@ -16,4 +18,5 @@ public class UserProfileDTO {
     private Integer companyId;
     private String companyName;
     private Boolean activo;
+    private Set<Integer> roleIds;
 }

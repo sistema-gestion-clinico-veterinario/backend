@@ -23,6 +23,8 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
 import java.util.stream.Collectors;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.RoleScope;
 
 @Component
 @RequiredArgsConstructor
@@ -62,7 +64,9 @@ public class TokenProvider {
     }
 
     public String createToken(Integer userId, String email, List<String> roles,
-                              List<String> permissions, Integer companyId) {
+                              List<String> permissions, Integer companyId,
+                              Integer activeRoleId, RoleScope activeRoleScope,
+                              RolePurpose activeRolePurpose, long permissionVersion) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + (jwtValidityInSeconds * 1000));
 
@@ -76,6 +80,10 @@ public class TokenProvider {
                 .claim("roles", roles)
                 .claim("permissions", permissions)
                 .claim("companyId", companyId)
+                .claim("activeRoleId", activeRoleId)
+                .claim("activeRoleScope", activeRoleScope != null ? activeRoleScope.name() : null)
+                .claim("activeRolePurpose", activeRolePurpose != null ? activeRolePurpose.name() : null)
+                .claim("permissionVersion", permissionVersion)
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(privateKey, Jwts.SIG.RS256)
@@ -91,6 +99,10 @@ public class TokenProvider {
     }
 
     public String createRefreshToken(String email, String activeRole, String familyId) {
+        return createRefreshToken(email, activeRole, null, familyId);
+    }
+
+    public String createRefreshToken(String email, String activeRole, Integer activeRoleId, String familyId) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + (refreshTokenValidityInSeconds * 1000));
 
@@ -107,6 +119,9 @@ public class TokenProvider {
 
         if (activeRole != null && !activeRole.isBlank()) {
             builder.claim("activeRole", activeRole);
+        }
+        if (activeRoleId != null) {
+            builder.claim("activeRoleId", activeRoleId);
         }
 
         return builder.compact();
@@ -146,7 +161,9 @@ public class TokenProvider {
     }
 
     public IssuedRealtimeTicket createRealtimeTicket(Integer userId, String email,
-                                                      List<String> authorities, Integer companyId) {
+                                                      List<String> authorities, Integer companyId,
+                                                      Integer activeRoleId, RoleScope activeRoleScope,
+                                                      RolePurpose activeRolePurpose, long permissionVersion) {
         Instant issuedAt = veterinaria.vargasvet.util.AppClock.instantNow();
         Instant expiresAt = issuedAt.plusSeconds(60);
         String jti = UUID.randomUUID().toString();
@@ -160,6 +177,10 @@ public class TokenProvider {
                 .claim("roles", authorities.stream().filter(a -> a.startsWith("ROLE_")).toList())
                 .claim("permissions", authorities.stream().filter(a -> !a.startsWith("ROLE_")).toList())
                 .claim("companyId", companyId)
+                .claim("activeRoleId", activeRoleId)
+                .claim("activeRoleScope", activeRoleScope != null ? activeRoleScope.name() : null)
+                .claim("activeRolePurpose", activeRolePurpose != null ? activeRolePurpose.name() : null)
+                .claim("permissionVersion", permissionVersion)
                 .issuedAt(Date.from(issuedAt))
                 .expiration(Date.from(expiresAt))
                 .signWith(privateKey, Jwts.SIG.RS256)
@@ -210,7 +231,11 @@ public class TokenProvider {
                 email,
                 "",
                 authorities,
-                companyId
+                companyId,
+                claims.get("activeRoleId", Integer.class),
+                enumClaim(claims, "activeRoleScope", RoleScope.class),
+                enumClaim(claims, "activeRolePurpose", RolePurpose.class),
+                longClaim(claims, "permissionVersion")
         );
 
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
@@ -222,7 +247,8 @@ public class TokenProvider {
                 claims.getSubject(),
                 claims.getId(),
                 claims.get("familyId", String.class),
-                claims.get("activeRole", String.class));
+                claims.get("activeRole", String.class),
+                claims.get("activeRoleId", Integer.class));
     }
 
     private Claims parseAccessClaims(String token) {
@@ -242,7 +268,18 @@ public class TokenProvider {
                 .requireAudience(audience);
     }
 
-    public record RefreshTokenDetails(String email, String jti, String familyId, String activeRole) {}
+    private <E extends Enum<E>> E enumClaim(Claims claims, String name, Class<E> enumType) {
+        String value = claims.get(name, String.class);
+        return value != null ? Enum.valueOf(enumType, value) : null;
+    }
+
+    private long longClaim(Claims claims, String name) {
+        Object value = claims.get(name);
+        return value instanceof Number number ? number.longValue() : 0L;
+    }
+
+    public record RefreshTokenDetails(String email, String jti, String familyId,
+                                      String activeRole, Integer activeRoleId) {}
     public record IssuedRealtimeTicket(String token, String jti, Instant issuedAt, Instant expiresAt) {}
     public record RealtimeTicketDetails(Authentication authentication, String jti, Instant expiresAt) {}
 

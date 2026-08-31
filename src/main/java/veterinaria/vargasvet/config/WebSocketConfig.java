@@ -20,6 +20,8 @@ import org.springframework.security.access.AccessDeniedException;
 import lombok.RequiredArgsConstructor;
 import veterinaria.vargasvet.security.UsuarioPrincipal;
 import veterinaria.vargasvet.service.RealtimeTicketService;
+import veterinaria.vargasvet.security.RolePermissionEvaluator;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
 
 import java.util.Arrays;
 
@@ -29,6 +31,7 @@ import java.util.Arrays;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final RealtimeTicketService ticketService;
+    private final RolePermissionEvaluator rolePermissionEvaluator;
 
     @Value("${cors.allowed-origins:https://systemvetfrontend.vercel.app}")
     private String allowedOrigins;
@@ -88,22 +91,37 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         if (destination == null || !destination.startsWith("/topic/")) {
             throw new AccessDeniedException("Destino WebSocket no permitido");
         }
-        boolean superAdmin = authentication.getAuthorities().stream()
-                .anyMatch(a -> "ROLE_SUPER_ADMIN".equals(a.getAuthority()));
-        boolean admin = authentication.getAuthorities().stream()
-                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
-        if (destination.startsWith("/topic/audit-logs") && !superAdmin && !admin) {
-            throw new AccessDeniedException("Sin acceso a eventos de auditoría");
+        UsuarioPrincipal principal = authentication.getPrincipal() instanceof UsuarioPrincipal value
+                ? value : null;
+        if (principal == null || principal.getActiveRoleId() == null) {
+            throw new AccessDeniedException("La sesión WebSocket no contiene un rol activo");
         }
-        Integer companyId = authentication.getPrincipal() instanceof UsuarioPrincipal principal
-                ? principal.getCompanyId() : null;
+        boolean platformAdmin = principal.getActiveRolePurpose() == RolePurpose.PLATFORM_ADMIN;
+        Integer companyId = principal.getCompanyId();
         String suffix = destination.substring(destination.lastIndexOf('/') + 1);
-        if (suffix.matches("\\d+") && !superAdmin
+        if (suffix.matches("\\d+") && !platformAdmin
                 && (companyId == null || !suffix.equals(companyId.toString()))) {
             throw new AccessDeniedException("Sin acceso a eventos de otra empresa");
         }
-        if (destination.equals("/topic/audit-logs") && !superAdmin) {
-            throw new AccessDeniedException("Solo SUPER_ADMIN puede suscribirse a auditoría global");
+        if (destination.equals("/topic/audit-logs") && !platformAdmin) {
+            throw new AccessDeniedException("Solo la administración de plataforma puede ver eventos globales");
+        }
+        if (destination.startsWith("/topic/audit-logs")
+                && !rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(),
+                        "VISTA_AUDITORIA_ADMIN", "LEER")) {
+            throw new AccessDeniedException("Sin acceso a eventos de auditoría");
+        }
+        if (destination.startsWith("/topic/caja/")
+                && !rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(),
+                        "VISTA_CAJA", "LEER")) {
+            throw new AccessDeniedException("Sin acceso a eventos de caja");
+        }
+        if (destination.startsWith("/topic/citas/")
+                && !rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(),
+                        "VISTA_CITAS_AGENDA", "LEER")
+                && !rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(),
+                        "VISTA_MIS_CITAS", "LEER")) {
+            throw new AccessDeniedException("Sin acceso a eventos de citas");
         }
     }
 }
