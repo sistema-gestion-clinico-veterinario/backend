@@ -17,6 +17,8 @@ import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
 import veterinaria.vargasvet.repository.VistaRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
+import veterinaria.vargasvet.repository.RolVistaConfiguracionRepository;
+import veterinaria.vargasvet.repository.RolVentanaPermisoRepository;
 
 import java.util.Set;
 
@@ -31,11 +33,12 @@ public class CompanyRoleProvisioningService {
     private final RolVistaPermisoRepository rolVistaPermisoRepository;
     private final UsuarioPorRolRepository usuarioPorRolRepository;
     private final RolVentanaConfiguracionRepository rolVentanaConfiguracionRepository;
+    private final RolVistaConfiguracionRepository rolVistaConfiguracionRepository;
+    private final RolVentanaPermisoRepository rolVentanaPermisoRepository;
 
     @Transactional
     public CompanyRoles ensureRequiredRoles(Company company) {
-        Role companyAdmin = ensureRole(company, "ROLE_ADMINISTRADOR", "Administrador de la empresa",
-                RoleScope.STAFF, RolePurpose.COMPANY_ADMIN);
+        Role companyAdmin = ensureGlobalCompanyAdminRole();
         Role clientPortal = ensureRole(company, "ROLE_CLIENTE", "Cliente del portal",
                 RoleScope.CLIENT, RolePurpose.CLIENT_PORTAL);
         return new CompanyRoles(companyAdmin, clientPortal);
@@ -43,29 +46,69 @@ public class CompanyRoleProvisioningService {
 
     @Transactional
     public void migrateLegacyGlobalAssignments() {
+        Role globalCompanyAdmin = ensureGlobalCompanyAdminRole();
         for (UsuarioPorRol assignment : java.util.List.copyOf(usuarioPorRolRepository.findAll())) {
             Role source = assignment.getRol();
             Company company = assignment.getUsuario().getCompany();
-            if (source == null || source.getCompany() != null || company == null
-                    || source.getScope() == RoleScope.PLATFORM) continue;
+            if (source == null || source.getScope() == RoleScope.PLATFORM) continue;
+
+            if (source.getPurpose() == RolePurpose.COMPANY_ADMIN) {
+                migrateAssignment(assignment, globalCompanyAdmin);
+                continue;
+            }
+            if (source.getCompany() != null || company == null) continue;
 
             CompanyRoles required = ensureRequiredRoles(company);
             Role target = switch (source.getPurpose()) {
-                case COMPANY_ADMIN -> required.companyAdmin();
+                case COMPANY_ADMIN -> globalCompanyAdmin;
                 case CLIENT_PORTAL -> required.clientPortal();
                 case CUSTOM -> ensureLegacyCustomRole(company, source);
                 case PLATFORM_ADMIN -> source;
             };
-            if (target.getId().equals(source.getId())) continue;
-
-            if (usuarioPorRolRepository.existsByUsuarioIdAndRolId(
-                    assignment.getUsuario().getId(), target.getId())) {
-                usuarioPorRolRepository.delete(assignment);
-            } else {
-                assignment.setRol(target);
-                usuarioPorRolRepository.save(assignment);
-            }
+            migrateAssignment(assignment, target);
         }
+
+        removeObsoleteCompanyAdminRoles(globalCompanyAdmin.getId());
+    }
+
+    private void migrateAssignment(UsuarioPorRol assignment, Role target) {
+        if (target.getId().equals(assignment.getRol().getId())) return;
+        if (usuarioPorRolRepository.existsByUsuarioIdAndRolId(
+                assignment.getUsuario().getId(), target.getId())) {
+            usuarioPorRolRepository.delete(assignment);
+        } else {
+            assignment.setRol(target);
+            usuarioPorRolRepository.save(assignment);
+        }
+    }
+
+    private Role ensureGlobalCompanyAdminRole() {
+        Role role = roleRepository.findFirstByCompanyIsNullAndPurpose(RolePurpose.COMPANY_ADMIN)
+                .orElseGet(Role::new);
+        role.setName("ROLE_ADMIN");
+        role.setDescripcion("Administrador de empresa");
+        role.setCompany(null);
+        role.setScope(RoleScope.STAFF);
+        role.setPurpose(RolePurpose.COMPANY_ADMIN);
+        role.setSystemManaged(true);
+        role.setProtectedRole(true);
+        role.setActivo(true);
+        Role saved = roleRepository.save(role);
+        ensureDefaultPermissions(saved);
+        return saved;
+    }
+
+    private void removeObsoleteCompanyAdminRoles(Integer globalRoleId) {
+        roleRepository.findAll().stream()
+                .filter(role -> role.getPurpose() == RolePurpose.COMPANY_ADMIN)
+                .filter(role -> !role.getId().equals(globalRoleId))
+                .forEach(role -> {
+                    rolVistaConfiguracionRepository.deleteByRolId(role.getId());
+                    rolVentanaConfiguracionRepository.deleteByRolId(role.getId());
+                    rolVentanaPermisoRepository.deleteByRolId(role.getId());
+                    rolVistaPermisoRepository.deleteByRolId(role.getId());
+                    roleRepository.delete(role);
+                });
     }
 
     private Role ensureLegacyCustomRole(Company company, Role source) {
@@ -127,14 +170,17 @@ public class CompanyRoleProvisioningService {
                     role.setProtectedRole(true);
                     role.setActivo(true);
                     Role saved = roleRepository.save(role);
-                    assignDefaultPermissions(saved);
+                    ensureDefaultPermissions(saved);
                     return saved;
                 });
     }
 
-    private void assignDefaultPermissions(Role role) {
+    private void ensureDefaultPermissions(Role role) {
+        Set<Integer> assignedViewIds = rolVistaPermisoRepository.findByRolId(role.getId()).stream()
+                .map(permission -> permission.getVista().getId())
+                .collect(java.util.stream.Collectors.toSet());
         for (Vista vista : vistaRepository.findByActivoTrue()) {
-            if (!isCompatible(role.getScope(), vista.getAudience())) continue;
+            if (!isCompatible(role.getScope(), vista.getAudience()) || assignedViewIds.contains(vista.getId())) continue;
 
             RolVistaPermiso permission = new RolVistaPermiso();
             permission.setRol(role);

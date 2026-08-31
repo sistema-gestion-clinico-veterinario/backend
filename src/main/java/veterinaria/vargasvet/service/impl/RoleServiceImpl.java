@@ -71,9 +71,17 @@ public class RoleServiceImpl implements RoleService {
         if (scope == null || scope == RoleScope.PLATFORM) {
             throw new IllegalArgumentException("El alcance asignable debe ser STAFF o CLIENT");
         }
-        return roleRepository.findByCompanyId(companyId).stream()
+        java.util.stream.Stream<Role> roles = roleRepository.findByCompanyId(companyId).stream();
+        // La plantilla global COMPANY_ADMIN solo es asignable por la plataforma;
+        // los roles personalizados continúan aislados por empresa.
+        if (scope == RoleScope.STAFF && SecurityUtils.isSuperAdmin()) {
+            roles = java.util.stream.Stream.concat(roles,
+                    roleRepository.findFirstByCompanyIsNullAndPurpose(RolePurpose.COMPANY_ADMIN).stream());
+        }
+        return roles
                 .filter(Role::isActivo)
                 .filter(role -> role.getScope() == scope)
+                .distinct()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
