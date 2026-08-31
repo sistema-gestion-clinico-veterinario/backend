@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import veterinaria.vargasvet.validation.MeaningfulText;
+import veterinaria.vargasvet.domain.enums.RoleScope;
 
 @Data
 public class RoleRequest {
@@ -20,4 +21,6 @@ public class RoleRequest {
     private String descripcion;
 
     private Integer companyId;
+
+    private RoleScope scope;
 }

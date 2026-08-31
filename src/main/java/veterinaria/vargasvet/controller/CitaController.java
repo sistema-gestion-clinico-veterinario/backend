@@ -13,6 +13,7 @@ import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.request.CitaReprogramacionRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.dto.response.AgendaCountersResponse;
+import veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse;
 import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.CitaService;
 import veterinaria.vargasvet.service.AuditLogService;
@@ -69,6 +70,14 @@ public class CitaController {
         AgendaCountersResponse resultado = citaService.obtenerContadores(
                 companyId, fechaDesde, fechaHasta, veterinarioId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Contadores de agenda recuperados con éxito", resultado));
+    }
+
+    @GetMapping("/reminders/whatsapp")
+    public ResponseEntity<ApiResponse<List<RecordatorioWhatsAppResponse>>> recordatoriosWhatsApp() {
+        accesoValidator.validarLeer("VISTA_CITAS_AGENDA");
+        Integer companyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Recordatorios de citas recuperados",
+                citaService.listarRecordatoriosWhatsApp(companyId)));
     }
 
     @PostMapping

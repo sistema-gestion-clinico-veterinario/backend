@@ -18,7 +18,7 @@ public class LaboratorioIAController {
     private final LaboratorioIAService laboratorioIAService;
 
     @PostMapping(value = "/analizar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO')")
+    @PreAuthorize("@accesoValidator.can('VISTA_LABORATORIO', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<LaboratorioIAResponse>> analizarLaboratorio(
             @RequestParam("archivo") MultipartFile archivo,
             @RequestParam(value = "especie", defaultValue = "Perro") String especie) {

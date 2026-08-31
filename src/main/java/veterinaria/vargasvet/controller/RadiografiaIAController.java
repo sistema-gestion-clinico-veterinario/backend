@@ -18,7 +18,7 @@ public class RadiografiaIAController {
     private final RadiografiaIAService radiografiaIAService;
 
     @PostMapping(value = "/analizar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO')")
+    @PreAuthorize("@accesoValidator.can('VISTA_LABORATORIO', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<RadiografiaPrediccionResponse>> analizarRadiografia(
             @RequestParam("file") MultipartFile file) {
         RadiografiaPrediccionResponse resultado = radiografiaIAService.analizarRadiografia(file);

@@ -23,7 +23,7 @@ public class ApoderadoController {
     private final AuditLogService auditLogService;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('APODERADO_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'LEER')")
     public ResponseEntity<ApiResponse<Page<ApoderadoListResponse>>> listar(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(required = false) String nombre,
@@ -37,7 +37,7 @@ public class ApoderadoController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('APODERADO_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'LEER')")
     public ResponseEntity<ApiResponse<ApoderadoRequest>> findById(@PathVariable Long id) {
         ApoderadoRequest apoderado = apoderadoService.findById(id);
         auditLogService.log("CONSULTAR_DETALLE_APODERADO", "Clientes", "Consultó el detalle del propietario con ID: " + id + " (" + apoderado.getNombre() + " " + apoderado.getApellido() + ").");
@@ -45,7 +45,7 @@ public class ApoderadoController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('APODERADO_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<UserProfileDTO>> registerApoderado(@Valid @RequestBody ApoderadoRequest dto) {
         UserProfileDTO profile = apoderadoService.registerApoderado(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -53,21 +53,21 @@ public class ApoderadoController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('APODERADO_UPDATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<UserProfileDTO>> updateApoderado(@PathVariable Long id, @Valid @RequestBody ApoderadoRequest dto) {
         UserProfileDTO profile = apoderadoService.updateApoderado(id, dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Datos del dueño actualizados exitosamente", profile));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('APODERADO_DELETE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         apoderadoService.eliminar(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Propietario eliminado exitosamente", null));
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('APODERADO_STATUS')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> cambiarEstado(@PathVariable Long id, @RequestParam Boolean active) {
         apoderadoService.cambiarEstado(id, active);
         String mensaje = active ? "Dueño activado exitosamente" : "Dueño desactivado exitosamente";

@@ -11,6 +11,8 @@ import veterinaria.vargasvet.domain.enums.Genero;
 import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
 import veterinaria.vargasvet.validation.MeaningfulText;
 
+import java.util.Set;
+
 @Data
 public class ApoderadoRequest {
     private Long id;
@@ -51,6 +53,8 @@ public class ApoderadoRequest {
     @MeaningfulText(message = "Las observaciones deben contener texto real, no solo numeros o simbolos")
     private String observaciones;
     private Integer companyId;
+    @Size(min = 1, message = "Debe asignar al menos un rol de cliente")
+    private Set<Integer> roleIds;
 
     @AssertTrue(message = "El numero de documento no corresponde al tipo seleccionado")
     public boolean isNumeroDocumentoValido() {

@@ -8,6 +8,8 @@ import veterinaria.vargasvet.domain.entity.Usuario;
 
 import java.util.Collection;
 import java.util.Collections;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.RoleScope;
 
 @Data
 public class UsuarioPrincipal implements UserDetails {
@@ -16,13 +18,28 @@ public class UsuarioPrincipal implements UserDetails {
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
     private Integer companyId;
+    private Integer activeRoleId;
+    private RoleScope activeRoleScope;
+    private RolePurpose activeRolePurpose;
+    private long permissionVersion;
 
     public UsuarioPrincipal(Integer id, String email, String password, Collection<? extends GrantedAuthority> authorities, Integer companyId) {
+        this(id, email, password, authorities, companyId, null, null, null, 0L);
+    }
+
+    public UsuarioPrincipal(Integer id, String email, String password,
+                            Collection<? extends GrantedAuthority> authorities, Integer companyId,
+                            Integer activeRoleId, RoleScope activeRoleScope,
+                            RolePurpose activeRolePurpose, long permissionVersion) {
         this.id = id;
         this.email = email;
         this.password = password;
         this.authorities = authorities;
         this.companyId = companyId;
+        this.activeRoleId = activeRoleId;
+        this.activeRoleScope = activeRoleScope;
+        this.activeRolePurpose = activeRolePurpose;
+        this.permissionVersion = permissionVersion;
     }
 
     public static UsuarioPrincipal create(Usuario usuario) {

@@ -22,70 +22,81 @@ import java.util.List;
 @RestController
 @RequestMapping("/preventive-controls")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
 public class ControlPreventivoController {
     private final ControlPreventivoService service;
 
     @GetMapping("/pets/{petId}/vaccine-types")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'LEER')")
     public ResponseEntity<ApiResponse<List<TipoVacunaResponse>>> listarTipos(@PathVariable Long petId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Vacunas recuperadas", service.listarTiposVacuna(petId)));
     }
 
     @PostMapping("/vaccine-types")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<TipoVacunaResponse>> crearTipo(@Valid @RequestBody TipoVacunaRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Vacuna creada", service.crearTipoVacuna(request)));
     }
 
     @GetMapping("/pets/{petId}/deworming-products")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'LEER')")
     public ResponseEntity<ApiResponse<List<TipoDesparasitanteResponse>>> listarDesparasitantes(@PathVariable Long petId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitantes recuperados", service.listarTiposDesparasitante(petId)));
     }
 
     @PostMapping("/deworming-products")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<TipoDesparasitanteResponse>> crearDesparasitante(@Valid @RequestBody TipoDesparasitanteRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitante creado", service.crearTipoDesparasitante(request)));
     }
 
     @GetMapping("/pets/{petId}")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'LEER')")
     public ResponseEntity<ApiResponse<List<ControlPreventivoResponse>>> listar(@PathVariable Long petId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Controles recuperados", service.listarControles(petId)));
     }
 
     @GetMapping("/pets/{petId}/applications")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'LEER')")
     public ResponseEntity<ApiResponse<List<AplicacionPreventivaResponse>>> aplicaciones(@PathVariable Long petId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Aplicaciones recuperadas", service.listarAplicaciones(petId)));
     }
 
     @PostMapping("/pets/{petId}")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<ControlPreventivoResponse>> programar(@PathVariable Long petId,
             @Valid @RequestBody ControlPreventivoRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Control programado", service.programar(petId, request)));
     }
 
     @PutMapping("/{controlId}/schedule")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<ControlPreventivoResponse>> reprogramar(@PathVariable Long controlId,
             @Valid @RequestBody ReprogramarControlPreventivoRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Control reprogramado", service.reprogramar(controlId, request)));
     }
 
     @PatchMapping("/{controlId}/cancel")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<ControlPreventivoResponse>> cancelar(@PathVariable Long controlId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Control cancelado", service.cancelar(controlId)));
     }
 
     @PostMapping("/consultations/{consultationId}/vaccinations")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<ControlPreventivoResponse>> vacunar(@PathVariable Long consultationId,
             @Valid @RequestBody RegistroVacunacionRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Vacunacion registrada", service.registrarVacunacion(consultationId, request)));
     }
 
     @PostMapping("/consultations/{consultationId}/dewormings")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<ControlPreventivoResponse>> desparasitar(@PathVariable Long consultationId,
             @Valid @RequestBody RegistroDesparasitacionRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitacion registrada", service.registrarDesparasitacion(consultationId, request)));
     }
 
     @GetMapping("/company/vaccine-types")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'LEER')")
     public ResponseEntity<ApiResponse<Page<TipoVacunaResponse>>> listarTiposVacunaPorCompany(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -97,6 +108,7 @@ public class ControlPreventivoController {
     }
 
     @GetMapping("/company/deworming-products")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'LEER')")
     public ResponseEntity<ApiResponse<Page<TipoDesparasitanteResponse>>> listarDesparasitantesPorCompany(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -108,12 +120,14 @@ public class ControlPreventivoController {
     }
 
     @PutMapping("/vaccine-types/{id}")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<TipoVacunaResponse>> actualizarTipoVacuna(
             @PathVariable Long id, @Valid @RequestBody TipoVacunaRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Vacuna actualizada", service.actualizarTipoVacuna(id, request)));
     }
 
     @PatchMapping("/vaccine-types/{id}/status")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> cambiarEstadoTipoVacuna(
             @PathVariable Long id, @RequestParam boolean activo) {
         service.cambiarEstadoTipoVacuna(id, activo);
@@ -121,18 +135,21 @@ public class ControlPreventivoController {
     }
 
     @DeleteMapping("/vaccine-types/{id}")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> eliminarTipoVacuna(@PathVariable Long id) {
         service.eliminarTipoVacuna(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Vacuna eliminada", null));
     }
 
     @PutMapping("/deworming-products/{id}")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<TipoDesparasitanteResponse>> actualizarTipoDesparasitante(
             @PathVariable Long id, @Valid @RequestBody TipoDesparasitanteRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitante actualizado", service.actualizarTipoDesparasitante(id, request)));
     }
 
     @PatchMapping("/deworming-products/{id}/status")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> cambiarEstadoTipoDesparasitante(
             @PathVariable Long id, @RequestParam boolean activo) {
         service.cambiarEstadoTipoDesparasitante(id, activo);
@@ -140,6 +157,7 @@ public class ControlPreventivoController {
     }
 
     @DeleteMapping("/deworming-products/{id}")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> eliminarTipoDesparasitante(@PathVariable Long id) {
         service.eliminarTipoDesparasitante(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitante eliminado", null));

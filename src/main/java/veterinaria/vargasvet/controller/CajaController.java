@@ -30,32 +30,32 @@ public class CajaController {
     private final CuentaCitaService cuentaCitaService;
 
     @GetMapping("/sesion")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'LEER')")
     public ResponseEntity<ApiResponse<SesionCajaResponse>> obtenerSesion(@RequestParam Integer companyId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Estado de caja recuperado",
                 cajaService.obtenerSesionActual(companyId)));
     }
 
     @PostMapping("/sesion/abrir")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<SesionCajaResponse>> abrirCaja(@Valid @RequestBody AperturaCajaRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Caja abierta", cajaService.abrirCaja(request)));
     }
 
     @PostMapping("/sesion/arqueo")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<SesionCajaResponse>> arquearCaja(@Valid @RequestBody ArqueoCajaRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Arqueo registrado", cajaService.arquearCaja(request)));
     }
 
     @PostMapping("/sesion/cerrar")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<SesionCajaResponse>> cerrarCaja(@Valid @RequestBody ArqueoCajaRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Caja cerrada", cajaService.cerrarCaja(request)));
     }
 
     @GetMapping("/cuentas/pendientes")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'LEER')")
     public ResponseEntity<ApiResponse<Page<CuentaCitaResponse>>> listarPendientes(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(defaultValue = "0") int page,
@@ -65,20 +65,20 @@ public class CajaController {
     }
 
     @GetMapping("/cuentas/{citaId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'LEER')")
     public ResponseEntity<ApiResponse<CuentaCitaResponse>> obtenerCuenta(@PathVariable Long citaId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Cuenta recuperada", cuentaCitaService.obtener(citaId)));
     }
 
     @PostMapping("/cuentas/{citaId}/detalles")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<CuentaCitaResponse>> agregarDetalle(
             @PathVariable Long citaId, @Valid @RequestBody DetalleCuentaRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Concepto agregado", cuentaCitaService.agregarDetalle(citaId, request)));
     }
 
     @PutMapping("/cuentas/{citaId}/detalles/{detalleId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<CuentaCitaResponse>> actualizarDetalle(
             @PathVariable Long citaId, @PathVariable Long detalleId,
             @Valid @RequestBody DetalleCuentaRequest request) {
@@ -87,14 +87,14 @@ public class CajaController {
     }
 
     @DeleteMapping("/cuentas/{citaId}/detalles/{detalleId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<CuentaCitaResponse>> eliminarDetalle(
             @PathVariable Long citaId, @PathVariable Long detalleId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Concepto eliminado", cuentaCitaService.eliminarDetalle(citaId, detalleId)));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'LEER')")
     public ResponseEntity<ApiResponse<Page<MovimientoCajaResponse>>> listar(
             @RequestParam Integer companyId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
@@ -106,7 +106,7 @@ public class CajaController {
     }
 
     @GetMapping("/resumen")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'LEER')")
     public ResponseEntity<ApiResponse<ResumenCajaResponse>> resumen(
             @RequestParam Integer companyId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
@@ -116,7 +116,7 @@ public class CajaController {
     }
 
     @PostMapping("/egreso")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<MovimientoCajaResponse>> registrarEgreso(
             @Valid @RequestBody MovimientoEgresoRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Egreso registrado",
@@ -124,7 +124,7 @@ public class CajaController {
     }
 
     @PostMapping("/devolucion/{citaId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN') or hasAuthority('SALE_CREATE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<MovimientoCajaResponse>> registrarDevolucion(
             @PathVariable Long citaId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Devolución registrada",

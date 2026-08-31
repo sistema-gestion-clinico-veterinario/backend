@@ -32,7 +32,7 @@ public class CartillaController {
     private final ControlPreventivoService controlPreventivoService;
 
     @PostMapping("/vaccinations")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<CartillaAplicacionResponse>> registrarVacunacion(
             @Valid @RequestBody CartillaAplicacionRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Vacunacion registrada y cobro generado",
@@ -40,7 +40,7 @@ public class CartillaController {
     }
 
     @PostMapping("/dewormings")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<CartillaAplicacionResponse>> registrarDesparasitacion(
             @Valid @RequestBody CartillaAplicacionRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitacion registrada y cobro generado",
@@ -48,21 +48,21 @@ public class CartillaController {
     }
 
     @GetMapping("/pets/{petId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'LEER')")
     public ResponseEntity<ApiResponse<List<AplicacionPreventivaResponse>>> cartilla(@PathVariable Long petId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Cartilla de la mascota recuperada",
                 controlPreventivoService.listarAplicaciones(petId)));
     }
 
     @GetMapping("/pets/{petId}/detail")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'LEER')")
     public ResponseEntity<ApiResponse<CartillaDetalleResponse>> detalleCartilla(@PathVariable Long petId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Detalle de cartilla recuperado",
                 controlPreventivoService.obtenerDetalleCartilla(petId)));
     }
 
     @GetMapping("/pets")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'LEER')")
     public ResponseEntity<ApiResponse<Page<MascotaCartillaResponse>>> listarMascotasConCartilla(
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) EspecieMascota especie,
@@ -81,7 +81,7 @@ public class CartillaController {
     }
 
     @PutMapping("/vaccinations/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<CartillaAplicacionResponse>> editarVacunacion(
             @PathVariable Long id, @Valid @RequestBody CartillaAplicacionEditRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Vacunacion actualizada",
@@ -89,7 +89,7 @@ public class CartillaController {
     }
 
     @PatchMapping("/vaccinations/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> cambiarEstadoVacunacion(
             @PathVariable Long id, @RequestParam boolean activo) {
         cartillaService.cambiarEstadoVacunacion(id, activo);
@@ -97,7 +97,7 @@ public class CartillaController {
     }
 
     @PutMapping("/dewormings/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<CartillaAplicacionResponse>> editarDesparasitacion(
             @PathVariable Long id, @Valid @RequestBody CartillaAplicacionEditRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Desparasitacion actualizada",
@@ -105,19 +105,19 @@ public class CartillaController {
     }
 
     @PatchMapping("/dewormings/{id}/status")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO') or hasAuthority('CLINICAL_RECORD_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> cambiarEstadoDesparasitacion(
             @PathVariable Long id, @RequestParam boolean activo) {
         cartillaService.cambiarEstadoDesparasitacion(id, activo);
         return ResponseEntity.ok(new ApiResponse<>(true, activo ? "Desparasitacion activada" : "Desparasitacion desactivada", null));
     }
 
-    @GetMapping("/recordatorios-whatsapp")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'VETERINARIO', 'RECEPCIONISTA') or hasAuthority('CLINICAL_RECORD_READ')")
+    @GetMapping("/preventive-reminders/whatsapp")
+    @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'LEER')")
     public ResponseEntity<ApiResponse<java.util.List<veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse>>> recordatoriosWhatsApp() {
         Integer companyId = SecurityUtils.getCurrentCompanyId();
         return ResponseEntity.ok(new ApiResponse<>(true, "Recordatorios recuperados",
-                cartillaService.listarRecordatoriosWhatsApp(companyId)));
+                cartillaService.listarRecordatoriosPreventivosWhatsApp(companyId)));
     }
 
 }

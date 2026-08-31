@@ -16,7 +16,7 @@ class VargasvetApplicationTests {
 	@Test
 	void testUpdateRole() {
 		try {
-			roleService.updateRole(3, "ROLE_VETERINARIO", "Rol para médicos veterinarios");
+			roleService.updateRole(3, "ROLE_VETERINARIO", "Rol para médicos veterinarios", null);
 			System.out.println("TEST UPDATE SUCCESSFUL!");
 		} catch (Exception e) {
 			System.out.println("TEST UPDATE FAILED: " + e.getClass().getName() + " -> " + e.getMessage());

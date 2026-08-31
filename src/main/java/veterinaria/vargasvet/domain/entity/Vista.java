@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import java.util.ArrayList;
 import java.util.List;
+import veterinaria.vargasvet.domain.enums.ViewAudience;
 
 @Data
 @Entity
@@ -41,6 +42,10 @@ public class Vista {
 
     @Column(nullable = false)
     private boolean activo = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private ViewAudience audience = ViewAudience.STAFF;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ventana_id", nullable = true)

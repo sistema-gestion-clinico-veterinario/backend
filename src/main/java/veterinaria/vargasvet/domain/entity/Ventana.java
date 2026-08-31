@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import veterinaria.vargasvet.domain.enums.MenuPresentation;
 import java.util.List;
 
 @Data
@@ -43,6 +44,13 @@ public class Ventana {
 
     @Column(nullable = false)
     private boolean activo = true;
+
+    @Column(nullable = true, length = 60)
+    private String icono;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "presentacion_default", nullable = false, length = 16)
+    private MenuPresentation presentacionDefault = MenuPresentation.GROUPED;
 
     @OneToMany(mappedBy = "ventana", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     @ToString.Exclude

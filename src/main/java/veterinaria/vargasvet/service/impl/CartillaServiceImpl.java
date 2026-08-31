@@ -147,6 +147,11 @@ public class CartillaServiceImpl implements CartillaService {
 
         BigDecimal total = tipo == TipoControlPreventivo.VACUNACION
                 ? tipoVacuna.getPrecio() : tipoDesparasitante.getPrecio();
+        if (total == null) {
+            throw new IllegalArgumentException("El precio del "
+                    + (tipo == TipoControlPreventivo.VACUNACION ? "tipo de vacuna" : "desparasitante")
+                    + " no está configurado. Edite el catálogo y asigne un precio.");
+        }
 
         String actor = actor();
 
@@ -665,7 +670,7 @@ public class CartillaServiceImpl implements CartillaService {
 
     @Override
     @Transactional(readOnly = true)
-    public java.util.List<veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse> listarRecordatoriosWhatsApp(Integer companyId) {
+    public java.util.List<veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse> listarRecordatoriosPreventivosWhatsApp(Integer companyId) {
         LocalDate hoy = AppClock.today();
         var candidatos = controlRepository.findPendientesByCompany(companyId,
                 EnumSet.of(EstadoControlPreventivo.PROGRAMADO, EstadoControlPreventivo.PROXIMO,
@@ -679,26 +684,26 @@ public class CartillaServiceImpl implements CartillaService {
             long dias = java.time.temporal.ChronoUnit.DAYS.between(hoy, fecha);
             String resumenDias;
             String estado;
-            if (dias < 0) { resumenDias = "Venció hace " + Math.abs(dias) + " día(s)"; estado = "ATRASADO"; }
+            if (dias < 0) { resumenDias = "Venció hace " + cantidadDias(Math.abs(dias)); estado = "ATRASADO"; }
             else if (dias == 0) { resumenDias = "Es hoy"; estado = "PENDIENTE"; }
-            else { resumenDias = "En " + dias + " día(s)"; estado = "PROXIMO"; }
+            else { resumenDias = "En " + cantidadDias(dias); estado = "PROXIMO"; }
 
             String tipoDisplay = cp.getTipo() == TipoControlPreventivo.VACUNACION ? "Vacunación" : "Desparasitación";
             String nombreControl = cp.getNombreControl();
             String telefono = user.getTelefono();
 
-            String mensaje = String.format(
-                    "Hola %s, le recordamos que %s tiene un control de %s programado para el %s (%s). " +
-                    "Por favor coordinar su atención. - %s",
-                    user.getNombre() != null ? user.getNombre().split(" ")[0] : "estimado/a",
-                    m.getNombreCompleto(),
-                    tipoDisplay,
-                    fecha.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
-                    resumenDias,
-                    user.getCompany() != null ? user.getCompany().getName() : "Veterinaria"
-            );
+            String nombreMascota = m.getNombreCompleto();
+            String nombreVet = user.getCompany() != null && user.getCompany().getName() != null
+                    && !user.getCompany().getName().isBlank()
+                    ? user.getCompany().getName().trim()
+                    : "la clínica veterinaria";
+            String nombreCliente = primerNombre(user.getNombre());
+            String mensaje = construirMensajePreventivo(
+                    nombreCliente, nombreMascota, tipoDisplay, nombreControl,
+                    fecha, dias, nombreVet);
 
             return veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse.builder()
+                    .tipoRecordatorio("PREVENTIVO")
                     .controlId(cp.getId())
                     .mascotaNombre(m.getNombreCompleto())
                     .apoderadoId(apoderado.getId())
@@ -714,4 +719,51 @@ public class CartillaServiceImpl implements CartillaService {
                     .build();
         }).toList();
     }
+
+    private String construirMensajePreventivo(
+            String nombreCliente,
+            String nombreMascota,
+            String tipoControl,
+            String nombreControl,
+            LocalDate fechaRecomendada,
+            long diasRestantes,
+            String nombreVeterinaria) {
+        String detalleControl = nombreControl == null || nombreControl.isBlank()
+                ? tipoControl
+                : tipoControl + " — " + nombreControl.trim();
+        String introduccion;
+        String estadoFecha;
+        if (diasRestantes < 0) {
+            introduccion = "La fecha recomendada para este control ya pasó.";
+            estadoFecha = "Vencido hace " + cantidadDias(Math.abs(diasRestantes));
+        } else if (diasRestantes == 0) {
+            introduccion = "La fecha recomendada para este control es hoy.";
+            estadoFecha = "Pendiente para hoy";
+        } else {
+            introduccion = "Se aproxima la fecha recomendada para este control.";
+            estadoFecha = "Faltan " + cantidadDias(diasRestantes);
+        }
+
+        return String.format(
+                "Hola, %s 👋%n%n" +
+                "Te escribimos de *%s* para recordarte el control preventivo de *%s*. %s%n%n" +
+                "🩺 *Control:* %s%n" +
+                "📅 *Fecha recomendada:* %s%n" +
+                "⏳ *Estado:* %s%n%n" +
+                "Para programar la atención o realizar una consulta, responde a este mensaje.",
+                nombreCliente, nombreVeterinaria, nombreMascota, introduccion,
+                detalleControl,
+                fechaRecomendada.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                estadoFecha);
+    }
+
+    private static String primerNombre(String nombreCompleto) {
+        if (nombreCompleto == null || nombreCompleto.isBlank()) return "estimado cliente";
+        return nombreCompleto.trim().split("\\s+")[0];
+    }
+
+    private static String cantidadDias(long dias) {
+        return dias + (dias == 1 ? " día" : " días");
+    }
+
 }

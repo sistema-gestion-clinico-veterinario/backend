@@ -18,6 +18,7 @@ import veterinaria.vargasvet.repository.ConsultaRepository;
 import veterinaria.vargasvet.repository.HistoriaClinicaRepository;
 import veterinaria.vargasvet.repository.MascotaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.ConsultaService;
 
 import java.time.LocalDateTime;
@@ -32,6 +33,7 @@ public class ConsultaServiceImpl implements ConsultaService {
     private final CitaRepository citaRepository;
     private final ConsultaMapper consultaMapper;
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
+    private final AccesoValidator accesoValidator;
     @org.springframework.beans.factory.annotation.Autowired
     private veterinaria.vargasvet.repository.ControlPreventivoRepository controlPreventivoRepository;
 
@@ -45,7 +47,7 @@ public class ConsultaServiceImpl implements ConsultaService {
             throw new IllegalArgumentException("La consulta cambió mientras editabas. Tus datos continúan en pantalla; no recargues la página y vuelve a intentar.");
         }
 
-        boolean puedeModificarPorPermiso = SecurityUtils.hasAuthority("CLINICAL_RECORD_MANAGE");
+        boolean puedeModificarPorPermiso = accesoValidator.can("VISTA_HISTORIAS", "MODIFICAR");
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
             if (consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null ||
@@ -136,7 +138,7 @@ public class ConsultaServiceImpl implements ConsultaService {
             throw new IllegalArgumentException("La consulta cambió mientras editabas. Tus datos continúan en pantalla; no recargues la página y vuelve a intentar.");
         }
 
-        boolean puedeCerrarPorPermiso = SecurityUtils.hasAuthority("CLINICAL_RECORD_MANAGE");
+        boolean puedeCerrarPorPermiso = accesoValidator.can("VISTA_HISTORIAS", "MODIFICAR");
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
             if (consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null ||

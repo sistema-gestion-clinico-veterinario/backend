@@ -11,6 +11,7 @@ import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.dto.request.LoginDTO;
 import veterinaria.vargasvet.dto.request.UserRegistrationDTO;
 import veterinaria.vargasvet.dto.response.AuthResponse;
+import veterinaria.vargasvet.dto.response.AssignedRoleResponse;
 import veterinaria.vargasvet.dto.response.MenuItemDTO;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
@@ -24,6 +25,7 @@ import veterinaria.vargasvet.domain.entity.RefreshToken;
 import veterinaria.vargasvet.domain.entity.PasswordResetToken;
 import veterinaria.vargasvet.repository.PasswordResetTokenRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
+import veterinaria.vargasvet.repository.CompanyRepository;
 import java.time.Instant;
 import java.time.LocalDateTime;
 
@@ -37,6 +39,7 @@ import veterinaria.vargasvet.service.MenuBuilderService;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.security.SecurityTokenUtils;
 import veterinaria.vargasvet.service.AuditLogService;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
 
 @Service
 @RequiredArgsConstructor
@@ -55,6 +58,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private final UsuarioPorRolRepository usuarioPorRolRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final AuditLogService auditLogService;
+    private final CompanyRepository companyRepository;
 
     @Value("${app.frontend.verify-url}")
     private String frontendVerifyUrl;
@@ -100,15 +104,12 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(24));
         usuario.setEmailVerified(false);
         usuario.setActivo(false);
+        if (registrationDTO.getCompanyId() != null) {
+            usuario.setCompany(companyRepository.findById(registrationDTO.getCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
+        }
 
         Usuario saved = usuarioRepository.save(usuario);
-
-        roleRepository.findFirstByName("ROLE_VETERINARIO").ifPresent(role -> {
-            UsuarioPorRol upr = new UsuarioPorRol();
-            upr.setUsuario(saved);
-            upr.setRol(role);
-            usuarioPorRolRepository.save(upr);
-        });
 
         sendVerificationEmail(saved, verificationToken);
 
@@ -235,19 +236,17 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .map(upr -> upr.getRol().getName())
                 .collect(Collectors.toList());
 
-        boolean esSuperAdmin = assignedRoles.contains("ROLE_SUPER_ADMIN");
+        boolean esSuperAdmin = usuario.getUsuariosPorRol().stream()
+                .anyMatch(upr -> upr.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN);
         if (!esSuperAdmin && usuario.getCompany() != null && !usuario.getCompany().isActivo()) {
             throw new DisabledException("Acceso denegado. La empresa asociada a tu usuario esta inactiva. Contacta al administrador.");
         }
 
-        String activeRole = resolveActiveRole(assignedRoles);
-
-        boolean activeRoleActivo = usuario.getUsuariosPorRol().stream()
-                .filter(upr -> upr.getRol().getName().equals(activeRole))
-                .anyMatch(upr -> upr.getRol().isActivo());
-        if (!activeRoleActivo && !assignedRoles.isEmpty()) {
+        UsuarioPorRol activeAssignment = resolveActiveAssignment(usuario, null, null);
+        if (activeAssignment == null && !assignedRoles.isEmpty()) {
             throw new DisabledException("Tu rol activo se encuentra desactivado. Contacta al administrador.");
         }
+        String activeRole = activeAssignment != null ? activeAssignment.getRol().getName() : null;
 
         List<String> activeRolesList = activeRole != null
                 ? java.util.Collections.singletonList(activeRole)
@@ -255,16 +254,18 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
 
-        List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRole));
-        List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRole);
-        String jwt = tokenProvider.createToken(usuario.getId(), usuario.getEmail(), activeRolesList, permissions, companyId);
-        String refreshToken = createRefreshToken(usuario, activeRole, Instant.now(), UUID.randomUUID().toString());
+        Integer activeRoleId = activeAssignment != null ? activeAssignment.getRol().getId() : null;
+        List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRoleId));
+        List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRoleId);
+        String jwt = createAccessToken(usuario, activeAssignment, activeRolesList, permissions, companyId);
+        String refreshToken = createRefreshToken(usuario, activeAssignment, Instant.now(), UUID.randomUUID().toString());
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
         response.setRefreshToken(refreshToken);
         response.setRoles(activeRolesList);
         response.setAssignedRoles(assignedRoles);
+        response.setAvailableRoles(toAvailableRoles(usuario));
         response.setCompanyId(companyId);
         response.setCompanyName(usuario.getCompany() != null ? usuario.getCompany().getName() : null);
         response.setNombreCompleto(resolveNombreCompleto(usuario));
@@ -277,6 +278,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         );
         response.setMenu(menu);
         response.setPermissions(permissions);
+        populateActiveRole(response, activeAssignment);
 
         // Registrar log de auditoría para Login
         auditLogService.log(
@@ -295,7 +297,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
     @Override
     @Transactional
-    public AuthResponse switchRole(String email, String roleName) {
+    public AuthResponse switchRole(String email, Integer roleId) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
@@ -303,34 +305,32 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .map(upr -> upr.getRol().getName())
                 .collect(Collectors.toList());
 
-        if (!assignedRoles.contains(roleName)) {
-            throw new IllegalArgumentException("El usuario no tiene asignado el rol solicitado");
-        }
-
-        boolean roleActivo = usuario.getUsuariosPorRol().stream()
-                .filter(upr -> upr.getRol().getName().equals(roleName))
-                .anyMatch(upr -> upr.getRol().isActivo());
-        if (!roleActivo) {
+        UsuarioPorRol activeAssignment = resolveActiveAssignment(usuario, roleId, null);
+        if (activeAssignment == null) {
             throw new IllegalArgumentException("El rol seleccionado se encuentra desactivado");
         }
+
+        String roleName = activeAssignment.getRol().getName();
 
         List<String> activeRolesList = java.util.Collections.singletonList(roleName);
         Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
 
-        List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), roleName));
-        List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), roleName);
-        String jwt = tokenProvider.createToken(usuario.getId(), usuario.getEmail(), activeRolesList, permissions, companyId);
+        Integer activeRoleId = activeAssignment.getRol().getId();
+        List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRoleId));
+        List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRoleId);
+        String jwt = createAccessToken(usuario, activeAssignment, activeRolesList, permissions, companyId);
         Instant sessionStartedAt = refreshTokenRepository.findFirstByUsuarioOrderByExpiryDateDesc(usuario)
                 .map(RefreshToken::getSessionStartedAt)
                 .orElse(Instant.now());
         revokeAllSessions(usuario, Instant.now());
-        String refreshToken = createRefreshToken(usuario, roleName, sessionStartedAt, UUID.randomUUID().toString());
+        String refreshToken = createRefreshToken(usuario, activeAssignment, sessionStartedAt, UUID.randomUUID().toString());
 
         AuthResponse response = new AuthResponse();
         response.setToken(jwt);
         response.setRefreshToken(refreshToken);
         response.setRoles(activeRolesList);
         response.setAssignedRoles(assignedRoles);
+        response.setAvailableRoles(toAvailableRoles(usuario));
         response.setCompanyId(companyId);
         response.setCompanyName(usuario.getCompany() != null ? usuario.getCompany().getName() : null);
         response.setNombreCompleto(resolveNombreCompleto(usuario));
@@ -344,6 +344,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         response.setMenu(menu);
         response.setPermissions(permissions);
+        populateActiveRole(response, activeAssignment);
 
         // Registrar log de auditoría para cambio de rol
         auditLogService.log(
@@ -620,7 +621,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         Usuario usuario = refreshToken.getUsuario();
 
         boolean esSuperAdmin = usuario.getUsuariosPorRol().stream()
-                .anyMatch(upr -> "ROLE_SUPER_ADMIN".equals(upr.getRol().getName()));
+                .anyMatch(upr -> upr.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN);
 
         if (!usuario.isActivo()) {
             revokeFamily(refreshToken.getFamilyId(), now);
@@ -636,23 +637,28 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .map(upr -> upr.getRol().getName())
                 .collect(Collectors.toList());
 
-        String activeRole = Optional.ofNullable(tokenDetails.activeRole())
-                .filter(userRoles::contains)
-                .orElseGet(() -> resolveActiveRole(userRoles));
+        UsuarioPorRol activeAssignment = resolveActiveAssignment(
+                usuario, tokenDetails.activeRoleId(), tokenDetails.activeRole());
+        if (activeAssignment == null && !userRoles.isEmpty()) {
+            revokeFamily(refreshToken.getFamilyId(), now);
+            throw new DisabledException("El rol de la sesión ya no está disponible");
+        }
+        String activeRole = activeAssignment != null ? activeAssignment.getRol().getName() : null;
         List<String> activeRolesList = activeRole != null
                 ? Collections.singletonList(activeRole)
                 : Collections.emptyList();
 
         Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
 
-        List<Object> menu = new ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRole));
-        List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRole);
-        String newJwt = tokenProvider.createToken(usuario.getId(), usuario.getEmail(), activeRolesList, permissions, companyId);
+        Integer activeRoleId = activeAssignment != null ? activeAssignment.getRol().getId() : null;
+        List<Object> menu = new ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRoleId));
+        List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRoleId);
+        String newJwt = createAccessToken(usuario, activeAssignment, activeRolesList, permissions, companyId);
 
         refreshToken.setUsedAt(now);
         refreshToken.setRevokedAt(now);
         refreshTokenRepository.save(refreshToken);
-        String newRefreshToken = createRefreshToken(usuario, activeRole,
+        String newRefreshToken = createRefreshToken(usuario, activeAssignment,
                 refreshToken.getSessionStartedAt(), refreshToken.getFamilyId());
 
         AuthResponse response = new AuthResponse();
@@ -660,6 +666,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setRefreshToken(newRefreshToken);
         response.setRoles(activeRolesList);
         response.setAssignedRoles(userRoles);
+        response.setAvailableRoles(toAvailableRoles(usuario));
         response.setCompanyId(companyId);
         response.setCompanyName(usuario.getCompany() != null ? usuario.getCompany().getName() : null);
         response.setNombreCompleto(resolveNombreCompleto(usuario));
@@ -668,6 +675,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setEmpleadoId(usuario.getEmpleado() != null ? Math.toIntExact(usuario.getEmpleado().getId()) : null);
         response.setMenu(menu);
         response.setPermissions(permissions);
+        populateActiveRole(response, activeAssignment);
 
         return response;
     }
@@ -682,9 +690,11 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .ifPresent(token -> revokeFamily(token.getFamilyId(), veterinaria.vargasvet.util.AppClock.instantNow()));
     }
 
-    private String createRefreshToken(Usuario usuario, String activeRole, Instant sessionStartedAt,
+    private String createRefreshToken(Usuario usuario, UsuarioPorRol activeAssignment, Instant sessionStartedAt,
                                       String familyId) {
-        String token = tokenProvider.createRefreshToken(usuario.getEmail(), activeRole, familyId);
+        String activeRole = activeAssignment != null ? activeAssignment.getRol().getName() : null;
+        Integer activeRoleId = activeAssignment != null ? activeAssignment.getRol().getId() : null;
+        String token = tokenProvider.createRefreshToken(usuario.getEmail(), activeRole, activeRoleId, familyId);
         TokenProvider.RefreshTokenDetails details = tokenProvider.getRefreshTokenDetails(token);
         Instant now = veterinaria.vargasvet.util.AppClock.instantNow();
         Instant expiryDate = now.plusSeconds(refreshValiditySeconds);
@@ -741,20 +751,67 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         }
     }
 
-    private String resolveActiveRole(List<String> roles) {
-        if (roles == null || roles.isEmpty()) {
-            return null;
+    private UsuarioPorRol resolveActiveAssignment(Usuario usuario, Integer preferredRoleId, String preferredRoleName) {
+        List<UsuarioPorRol> activeAssignments = usuario.getUsuariosPorRol().stream()
+                .filter(upr -> upr.getRol().isActivo())
+                .toList();
+
+        if (preferredRoleId != null) {
+            Optional<UsuarioPorRol> byId = activeAssignments.stream()
+                    .filter(upr -> Objects.equals(upr.getRol().getId(), preferredRoleId))
+                    .findFirst();
+            if (byId.isPresent()) return byId.get();
+        }
+        if (preferredRoleName != null && !preferredRoleName.isBlank()) {
+            Optional<UsuarioPorRol> byName = activeAssignments.stream()
+                    .filter(upr -> preferredRoleName.equals(upr.getRol().getName()))
+                    .findFirst();
+            if (byName.isPresent()) return byName.get();
         }
 
-        List<String> priority = List.of(
-                "ROLE_SUPER_ADMIN",
-                "ROLE_ADMIN"
-        );
+        return activeAssignments.stream()
+                .min(Comparator.comparingInt(upr -> switch (upr.getRol().getPurpose()) {
+                    case PLATFORM_ADMIN -> 0;
+                    case COMPANY_ADMIN -> 1;
+                    default -> 2;
+                }))
+                .orElse(null);
+    }
 
-        return priority.stream()
-                .filter(roles::contains)
-                .findFirst()
-                .orElse(roles.get(0));
+    private String createAccessToken(Usuario usuario, UsuarioPorRol activeAssignment,
+                                     List<String> activeRoles, List<String> permissions,
+                                     Integer companyId) {
+        if (activeAssignment == null) {
+            return tokenProvider.createToken(usuario.getId(), usuario.getEmail(), activeRoles, permissions,
+                    companyId, null, null, null, 0L);
+        }
+        var role = activeAssignment.getRol();
+        return tokenProvider.createToken(usuario.getId(), usuario.getEmail(), activeRoles, permissions,
+                companyId, role.getId(), role.getScope(), role.getPurpose(), role.getPermissionVersion());
+    }
+
+    private void populateActiveRole(AuthResponse response, UsuarioPorRol activeAssignment) {
+        if (activeAssignment == null) return;
+        var role = activeAssignment.getRol();
+        response.setActiveRoleId(role.getId());
+        response.setActiveRoleName(role.getName());
+        response.setActiveRoleScope(role.getScope());
+        response.setActiveRolePurpose(role.getPurpose());
+        response.setPermissionVersion(role.getPermissionVersion());
+    }
+
+    private List<AssignedRoleResponse> toAvailableRoles(Usuario usuario) {
+        return usuario.getUsuariosPorRol().stream()
+                .map(UsuarioPorRol::getRol)
+                .filter(veterinaria.vargasvet.domain.entity.Role::isActivo)
+                .sorted(Comparator.comparing(veterinaria.vargasvet.domain.entity.Role::getName))
+                .map(role -> AssignedRoleResponse.builder()
+                        .id(role.getId())
+                        .name(role.getName())
+                        .scope(role.getScope())
+                        .purpose(role.getPurpose())
+                        .build())
+                .toList();
     }
 
     private String resolveNombreCompleto(Usuario usuario) {
@@ -766,7 +823,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
     private String resolveUserType(Usuario usuario) {
         boolean isSuperAdmin = usuario.getUsuariosPorRol().stream()
-                .anyMatch(upr -> upr.getRol().getName().equals("ROLE_SUPER_ADMIN"));
+                .anyMatch(upr -> upr.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN);
         if (isSuperAdmin) return "SUPER_ADMIN";
         if (usuario.getEmpleado() != null) return "EMPLEADO";
         return "USUARIO";

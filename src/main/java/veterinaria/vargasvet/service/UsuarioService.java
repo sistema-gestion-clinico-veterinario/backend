@@ -19,6 +19,6 @@ public interface UsuarioService {
     void resetPasswordWithToken(veterinaria.vargasvet.dto.request.ResetPasswordRequest request);
     boolean validateResetToken(String token);
     AuthResponse refreshToken(String refreshToken);
-    AuthResponse switchRole(String email, String roleName);
+    AuthResponse switchRole(String email, Integer roleId);
     void revokeRefreshToken(String refreshToken);
 }

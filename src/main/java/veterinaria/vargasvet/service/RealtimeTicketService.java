@@ -8,6 +8,7 @@ import veterinaria.vargasvet.security.TokenProvider;
 import veterinaria.vargasvet.security.UsuarioPrincipal;
 import veterinaria.vargasvet.domain.entity.RealtimeTicket;
 import veterinaria.vargasvet.repository.RealtimeTicketRepository;
+import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -19,6 +20,7 @@ import java.util.Optional;
 public class RealtimeTicketService {
     private final TokenProvider tokenProvider;
     private final RealtimeTicketRepository realtimeTicketRepository;
+    private final UsuarioPorRolRepository usuarioPorRolRepository;
 
     @Transactional
     public String issue(Authentication authentication) {
@@ -31,7 +33,9 @@ public class RealtimeTicketService {
         }
         TokenProvider.IssuedRealtimeTicket issued = tokenProvider.createRealtimeTicket(
                 userId, authentication.getName(),
-                authentication.getAuthorities().stream().map(a -> a.getAuthority()).toList(), companyId);
+                authentication.getAuthorities().stream().map(a -> a.getAuthority()).toList(), companyId,
+                principal.getActiveRoleId(), principal.getActiveRoleScope(),
+                principal.getActiveRolePurpose(), principal.getPermissionVersion());
         realtimeTicketRepository.save(RealtimeTicket.builder()
                 .jti(issued.jti())
                 .usuarioId(userId)
@@ -45,6 +49,18 @@ public class RealtimeTicketService {
     public Optional<Authentication> consume(String ticket) {
         try {
             TokenProvider.RealtimeTicketDetails details = tokenProvider.getRealtimeTicketDetails(ticket);
+            UsuarioPrincipal principal = details.authentication().getPrincipal() instanceof UsuarioPrincipal value
+                    ? value : null;
+            if (principal == null || principal.getActiveRoleId() == null) {
+                return Optional.empty();
+            }
+            boolean roleIsCurrent = usuarioPorRolRepository
+                    .findActiveAssignmentByUsuarioIdAndRoleId(principal.getId(), principal.getActiveRoleId())
+                    .filter(assignment -> assignment.getRol().getPermissionVersion() == principal.getPermissionVersion())
+                    .isPresent();
+            if (!roleIsCurrent) {
+                return Optional.empty();
+            }
             int consumed = realtimeTicketRepository.consumeOnce(
                     details.jti(), veterinaria.vargasvet.util.AppClock.instantNow());
             if (consumed != 1) {

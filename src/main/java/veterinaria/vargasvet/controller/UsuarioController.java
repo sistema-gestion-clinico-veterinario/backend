@@ -17,7 +17,7 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
 
     @PostMapping("/reset-password")
-    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN', 'USER_MANAGE')")
+    @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody AdminChangePasswordRequest request) {
         usuarioService.resetPassword(request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Contraseña restablecida exitosamente", null));
