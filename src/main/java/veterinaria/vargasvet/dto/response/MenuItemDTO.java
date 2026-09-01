@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
+import veterinaria.vargasvet.domain.enums.DataScope;
 
 @Data
 @Builder
@@ -21,4 +22,5 @@ public class MenuItemDTO {
     private boolean escribir;
     private boolean modificar;
     private boolean eliminar;
+    private DataScope dataScope;
 }

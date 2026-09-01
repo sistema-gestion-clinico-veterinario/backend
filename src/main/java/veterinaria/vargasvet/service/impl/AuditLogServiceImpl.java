@@ -180,11 +180,10 @@ public class AuditLogServiceImpl implements AuditLogService {
     private String getClientIp() {
         if (httpServletRequest == null) return null;
         try {
-            String ip = httpServletRequest.getHeader("X-Forwarded-For");
-            if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-                ip = httpServletRequest.getRemoteAddr();
-            }
-            return ip;
+            // ForwardedHeaderFilter ya normaliza remoteAddr cuando la aplicacion
+            // corre tras el proxy. No confiar directamente en un X-Forwarded-For
+            // enviado por el cliente evita registrar una IP facilmente falsificable.
+            return httpServletRequest.getRemoteAddr();
         } catch (Exception e) {
             return null;
         }

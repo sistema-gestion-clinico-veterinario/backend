@@ -35,6 +35,7 @@ public class SetupController {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+    private final veterinaria.vargasvet.security.PasswordPolicyService passwordPolicyService;
 
     @Value("${app.setup.token:}")
     private String setupToken;
@@ -54,6 +55,8 @@ public class SetupController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("El sistema ya ha sido inicializado. No se pueden crear más administradores base.");
         }
+        passwordPolicyService.validate(registrationDTO.getPassword(), registrationDTO.getEmail(),
+                registrationDTO.getNombre(), registrationDTO.getApellido());
         Usuario admin = userMapper.toEntity(registrationDTO);
         admin.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
         admin.setActivo(true);

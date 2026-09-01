@@ -43,6 +43,9 @@ public class Vista {
     @Column(nullable = false)
     private boolean activo = true;
 
+    @Column(name = "visible_menu", nullable = false)
+    private boolean visibleMenu = true;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
     private ViewAudience audience = ViewAudience.STAFF;

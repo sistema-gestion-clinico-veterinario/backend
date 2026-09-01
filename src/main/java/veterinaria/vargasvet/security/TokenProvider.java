@@ -66,7 +66,8 @@ public class TokenProvider {
     public String createToken(Integer userId, String email, List<String> roles,
                               List<String> permissions, Integer companyId,
                               Integer activeRoleId, RoleScope activeRoleScope,
-                              RolePurpose activeRolePurpose, long permissionVersion) {
+                              RolePurpose activeRolePurpose, long permissionVersion,
+                              long credentialsVersion) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + (jwtValidityInSeconds * 1000));
 
@@ -84,6 +85,7 @@ public class TokenProvider {
                 .claim("activeRoleScope", activeRoleScope != null ? activeRoleScope.name() : null)
                 .claim("activeRolePurpose", activeRolePurpose != null ? activeRolePurpose.name() : null)
                 .claim("permissionVersion", permissionVersion)
+                .claim("credentialsVersion", credentialsVersion)
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(privateKey, Jwts.SIG.RS256)
@@ -103,6 +105,11 @@ public class TokenProvider {
     }
 
     public String createRefreshToken(String email, String activeRole, Integer activeRoleId, String familyId) {
+        return createRefreshToken(email, activeRole, activeRoleId, familyId, 0L);
+    }
+
+    public String createRefreshToken(String email, String activeRole, Integer activeRoleId,
+                                     String familyId, long credentialsVersion) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + (refreshTokenValidityInSeconds * 1000));
 
@@ -113,6 +120,7 @@ public class TokenProvider {
                 .id(UUID.randomUUID().toString())
                 .claim("token_type", "refresh")
                 .claim("familyId", familyId)
+                .claim("credentialsVersion", credentialsVersion)
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(privateKey, Jwts.SIG.RS256);
@@ -237,6 +245,7 @@ public class TokenProvider {
                 enumClaim(claims, "activeRolePurpose", RolePurpose.class),
                 longClaim(claims, "permissionVersion")
         );
+        principal.setCredentialsVersion(longClaim(claims, "credentialsVersion"));
 
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
@@ -248,7 +257,8 @@ public class TokenProvider {
                 claims.getId(),
                 claims.get("familyId", String.class),
                 claims.get("activeRole", String.class),
-                claims.get("activeRoleId", Integer.class));
+                claims.get("activeRoleId", Integer.class),
+                longClaim(claims, "credentialsVersion"));
     }
 
     private Claims parseAccessClaims(String token) {
@@ -279,7 +289,8 @@ public class TokenProvider {
     }
 
     public record RefreshTokenDetails(String email, String jti, String familyId,
-                                      String activeRole, Integer activeRoleId) {}
+                                      String activeRole, Integer activeRoleId,
+                                      long credentialsVersion) {}
     public record IssuedRealtimeTicket(String token, String jti, Instant issuedAt, Instant expiresAt) {}
     public record RealtimeTicketDetails(Authentication authentication, String jti, Instant expiresAt) {}
 

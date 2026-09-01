@@ -140,6 +140,7 @@ public class CompanyRoleProvisioningService {
             permission.setEscribir(original.isEscribir());
             permission.setModificar(original.isModificar());
             permission.setEliminar(original.isEliminar());
+            permission.setDataScope(original.getDataScope());
             rolVistaPermisoRepository.save(permission);
         }
     }
@@ -192,6 +193,9 @@ public class CompanyRoleProvisioningService {
             permission.setEscribir(companyAdmin || clientCanManage);
             permission.setModificar(companyAdmin || clientCanManage);
             permission.setEliminar(companyAdmin || clientCanManage);
+            permission.setDataScope(companyAdmin
+                    ? veterinaria.vargasvet.domain.enums.DataScope.COMPANY
+                    : veterinaria.vargasvet.domain.enums.DataScope.OWN);
             rolVistaPermisoRepository.save(permission);
         }
     }

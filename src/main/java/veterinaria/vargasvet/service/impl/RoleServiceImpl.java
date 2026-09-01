@@ -212,6 +212,7 @@ public class RoleServiceImpl implements RoleService {
                     dto.setGrupo(v.getGrupo());
                     dto.setOrden(v.getOrden());
                     dto.setAudience(v.getAudience());
+                    dto.setVisibleMenu(v.isVisibleMenu());
                     if (v.getVentana() != null) {
                         dto.setVentanaId(v.getVentana().getId());
                         dto.setVentanaCodigo(v.getVentana().getCodigo());
@@ -221,6 +222,7 @@ public class RoleServiceImpl implements RoleService {
                     dto.setEscribir(permiso != null && permiso.isEscribir());
                     dto.setModificar(permiso != null && permiso.isModificar());
                     dto.setEliminar(permiso != null && permiso.isEliminar());
+                    dto.setDataScope(permiso != null ? permiso.getDataScope() : veterinaria.vargasvet.domain.enums.DataScope.OWN);
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -253,6 +255,9 @@ public class RoleServiceImpl implements RoleService {
             rvp.setEscribir(dto.isEscribir());
             rvp.setModificar(dto.isModificar());
             rvp.setEliminar(dto.isEliminar());
+            rvp.setDataScope(dto.getDataScope() != null
+                    ? dto.getDataScope()
+                    : veterinaria.vargasvet.domain.enums.DataScope.OWN);
             rolVistaPermisoRepository.save(rvp);
         }
 

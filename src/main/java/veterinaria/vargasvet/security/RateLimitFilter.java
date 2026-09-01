@@ -22,6 +22,12 @@ import java.time.Duration;
 @Profile("!e2e")
 public class RateLimitFilter extends OncePerRequestFilter {
 
+    private final SharedRateLimitService sharedRateLimitService;
+
+    public RateLimitFilter(SharedRateLimitService sharedRateLimitService) {
+        this.sharedRateLimitService = sharedRateLimitService;
+    }
+
     @Value("${app.rate-limit.login-per-minute:5}")
     private int loginPerMinute;
 
@@ -68,15 +74,18 @@ public class RateLimitFilter extends OncePerRequestFilter {
         boolean allowed;
 
         if (path.contains("/auth/login")) {
-            allowed = resolveBucket("login:" + ip, loginPerMinute, Duration.ofMinutes(1)).tryConsume(1);
+            allowed = sharedRateLimitService.tryConsume(
+                    "login-ip", ip, loginPerMinute, Duration.ofMinutes(1));
         } else if (path.contains("/auth/refresh")) {
             // El access token ya está vencido en este endpoint (por eso se refresca),
             // por lo que JWTFilter nunca autentica esta request: se limita por IP, no por usuario.
-            allowed = resolveBucket("refresh:" + ip, refreshPerMinute, Duration.ofMinutes(1)).tryConsume(1);
+            allowed = sharedRateLimitService.tryConsume(
+                    "refresh-ip", ip, refreshPerMinute, Duration.ofMinutes(1));
         } else if (path.contains("/auth/forgot-password") || path.contains("/auth/reset-password")
+                || path.contains("/auth/email-change/")
                 || path.contains("/auth/resend-verification")) {
-            allowed = resolveBucket("account-recovery:" + ip, passwordResetPerWindow,
-                    Duration.ofMinutes(15)).tryConsume(1);
+            allowed = sharedRateLimitService.tryConsume(
+                    "account-recovery-ip", ip, passwordResetPerWindow, Duration.ofMinutes(15));
         } else if (path.contains("/realtime/ticket")) {
             String key = user != null ? "realtime-ticket:" + user : "realtime-ticket:" + ip;
             allowed = resolveBucket(key, realtimeTicketPerMinute, Duration.ofMinutes(1)).tryConsume(1);
@@ -95,7 +104,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType("application/json");
             response.setHeader("Retry-After", "60");
-            response.getWriter().write("{\"message\":\"Demasiadas solicitudes. Intente nuevamente en un minuto.\"}");
+            response.getWriter().write("{\"success\":false,\"message\":\"Demasiadas solicitudes. Intente nuevamente más tarde.\",\"data\":null}");
             return;
         }
 

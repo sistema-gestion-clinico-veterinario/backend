@@ -33,4 +33,8 @@ public class RolVistaPermiso {
 
     @Column(nullable = false)
     private boolean eliminar = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "data_scope", nullable = false, length = 16)
+    private veterinaria.vargasvet.domain.enums.DataScope dataScope = veterinaria.vargasvet.domain.enums.DataScope.OWN;
 }

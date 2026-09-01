@@ -43,6 +43,13 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>(false, ex.getMessage(), null));
     }
 
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRateLimitExceeded(RateLimitExceededException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", "900")
+                .body(new ApiResponse<>(false, ex.getMessage(), null));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -81,8 +88,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex,
                                                                     HttpServletRequest request) {
         log.error("Error no controlado procesando {} {}", request.getMethod(), request.getRequestURI(), ex);
-        String mensaje = ex.getMessage() != null ? ex.getMessage() : "No se pudo procesar la solicitud";
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiResponse<>(false, mensaje, null));
+                .body(new ApiResponse<>(false,
+                        "Ocurrió un error interno. Si el problema continúa, contacte a soporte.", null));
     }
 }

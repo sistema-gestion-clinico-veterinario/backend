@@ -28,6 +28,7 @@ public class AuthController {
     private static final String REFRESH_TOKEN_COOKIE = "refresh_token";
 
     private final UsuarioService usuarioService;
+    private final veterinaria.vargasvet.service.EmailChangeService emailChangeService;
 
     @Value("${app.cookie.secure:false}")
     private boolean cookieSecure;
@@ -88,7 +89,7 @@ public class AuthController {
     }
 
     @PutMapping("/suspend/{id}")
-    @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'MODIFICAR')")
+    @PreAuthorize("@accesoValidator.can('VISTA_GESTION_CREDENCIALES', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> suspendAccount(@PathVariable Integer id) {
         usuarioService.suspendAccount(id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cuenta suspendida", null));
@@ -99,6 +100,34 @@ public class AuthController {
         String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
         usuarioService.changePassword(email, dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Contraseña actualizada exitosamente", null));
+    }
+
+    @PostMapping("/email-change/request")
+    public ResponseEntity<ApiResponse<Void>> requestEmailChange(
+            @Valid @RequestBody veterinaria.vargasvet.dto.request.RequestEmailChangeDTO request) {
+        String email = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        emailChangeService.requestChange(email, request);
+        return ResponseEntity.ok(new ApiResponse<>(true,
+                "Revisa el correo actual y el nuevo para confirmar el cambio", null));
+    }
+
+    @PostMapping("/email-change/confirm-current")
+    public ResponseEntity<ApiResponse<Boolean>> confirmCurrentEmail(
+            @Valid @RequestBody veterinaria.vargasvet.dto.request.ConfirmSecurityTokenDTO request) {
+        boolean completed = emailChangeService.confirmCurrentEmail(request.getToken());
+        return ResponseEntity.ok(new ApiResponse<>(true,
+                completed ? "Cambio de correo completado" : "Correo actual confirmado; falta confirmar el nuevo correo",
+                completed));
+    }
+
+    @PostMapping("/email-change/confirm-new")
+    public ResponseEntity<ApiResponse<Boolean>> confirmNewEmail(
+            @Valid @RequestBody veterinaria.vargasvet.dto.request.ConfirmSecurityTokenDTO request) {
+        boolean completed = emailChangeService.confirmNewEmail(request.getToken());
+        return ResponseEntity.ok(new ApiResponse<>(true,
+                completed ? "Cambio de correo completado" : "Correo nuevo confirmado; falta confirmar el correo actual",
+                completed));
     }
 
     @PostMapping("/refresh")
@@ -133,8 +162,17 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Si el correo existe, se han enviado las instrucciones para restablecer la contraseña.", null));
     }
 
+    @PostMapping("/validate-reset-token")
+    public ResponseEntity<ApiResponse<Boolean>> validateResetToken(
+            @Valid @RequestBody veterinaria.vargasvet.dto.request.ConfirmSecurityTokenDTO request) {
+        boolean isValid = usuarioService.validateResetToken(request.getToken());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Token validado", isValid));
+    }
+
+    /** Compatibilidad temporal con el frontend anterior durante un despliegue gradual. */
+    @Deprecated(forRemoval = true)
     @GetMapping("/validate-reset-token")
-    public ResponseEntity<ApiResponse<Boolean>> validateResetToken(@RequestParam String token) {
+    public ResponseEntity<ApiResponse<Boolean>> validateResetTokenLegacy(@RequestParam String token) {
         boolean isValid = usuarioService.validateResetToken(token);
         return ResponseEntity.ok(new ApiResponse<>(true, "Token validado", isValid));
     }

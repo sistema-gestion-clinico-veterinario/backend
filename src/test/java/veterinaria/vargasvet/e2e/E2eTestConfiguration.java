@@ -19,7 +19,7 @@ public class E2eTestConfiguration {
 
     @Bean
     RateLimitFilter rateLimitFilter() {
-        return new RateLimitFilter() {
+        return new RateLimitFilter(org.mockito.Mockito.mock(veterinaria.vargasvet.security.SharedRateLimitService.class)) {
             @Override
             protected void doFilterInternal(
                     HttpServletRequest request,
