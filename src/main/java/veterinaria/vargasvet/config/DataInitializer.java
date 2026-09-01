@@ -57,6 +57,8 @@ public class DataInitializer implements CommandLineRunner {
     private void seedRolesIfNotExist() {
         createSystemRole("ROLE_SUPER_ADMIN", "Administrador global del sistema",
                 RoleScope.PLATFORM, RolePurpose.PLATFORM_ADMIN, true);
+        createSystemRole("ROLE_ADMIN", "Administrador de empresa",
+                RoleScope.STAFF, RolePurpose.COMPANY_ADMIN, true);
     }
 
     private void createSystemRole(String nombre, String descripcion, RoleScope scope,

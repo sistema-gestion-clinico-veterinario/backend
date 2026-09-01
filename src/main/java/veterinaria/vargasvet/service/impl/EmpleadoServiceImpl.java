@@ -1139,9 +1139,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado: " + roleId));
         Integer roleCompanyId = role.getCompany() != null ? role.getCompany().getId() : null;
+        boolean globalCompanyAdminAssignable = SecurityUtils.isSuperAdmin() && role.getPurpose()
+                == veterinaria.vargasvet.domain.enums.RolePurpose.COMPANY_ADMIN
+                && roleCompanyId == null;
         if (!role.isActivo()
                 || role.getScope() != veterinaria.vargasvet.domain.enums.RoleScope.STAFF
-                || !java.util.Objects.equals(roleCompanyId, companyId)) {
+                || (!globalCompanyAdminAssignable && !java.util.Objects.equals(roleCompanyId, companyId))) {
             throw new org.springframework.security.access.AccessDeniedException(
                     "El rol no pertenece al personal de esta empresa");
         }
