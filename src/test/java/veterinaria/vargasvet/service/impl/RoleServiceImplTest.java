@@ -10,6 +10,7 @@ import veterinaria.vargasvet.domain.entity.Ventana;
 import veterinaria.vargasvet.domain.entity.Vista;
 import veterinaria.vargasvet.domain.enums.MenuItemType;
 import veterinaria.vargasvet.domain.enums.RoleScope;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.ViewAudience;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
@@ -79,6 +80,41 @@ class RoleServiceImplTest {
 
             assertThrows(AccessDeniedException.class,
                     () -> service.getAssignableRoles(8, RoleScope.CLIENT));
+        }
+    }
+
+    @Test
+    void getAssignableStaffRolesIncludesGlobalCompanyAdminForSuperAdmin() {
+        Company company = company(7);
+        Role customStaff = role(3, company, RoleScope.STAFF, true);
+        Role globalAdmin = role(4, null, RoleScope.STAFF, true);
+        globalAdmin.setPurpose(RolePurpose.COMPANY_ADMIN);
+        when(roleRepository.findByCompanyId(7)).thenReturn(List.of(customStaff));
+        when(roleRepository.findFirstByCompanyIsNullAndPurpose(RolePurpose.COMPANY_ADMIN))
+                .thenReturn(java.util.Optional.of(globalAdmin));
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            var result = service.getAssignableRoles(7, RoleScope.STAFF);
+
+            assertEquals(List.of(3, 4), result.stream().map(dto -> dto.getId()).toList());
+        }
+    }
+
+    @Test
+    void getAssignableStaffRolesDoesNotExposeGlobalAdminToCompanyAdmin() {
+        Company company = company(7);
+        Role customStaff = role(3, company, RoleScope.STAFF, true);
+        when(roleRepository.findByCompanyId(7)).thenReturn(List.of(customStaff));
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(false);
+            security.when(SecurityUtils::getCurrentCompanyId).thenReturn(7);
+
+            var result = service.getAssignableRoles(7, RoleScope.STAFF);
+
+            assertEquals(List.of(3), result.stream().map(dto -> dto.getId()).toList());
         }
     }
 
