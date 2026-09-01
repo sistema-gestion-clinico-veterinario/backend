@@ -26,6 +26,7 @@ import veterinaria.vargasvet.security.SecurityTokenUtils;
 import veterinaria.vargasvet.service.ApoderadoService;
 import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.service.CompanyRoleProvisioningService;
+import veterinaria.vargasvet.service.SessionSecurityService;
 import veterinaria.vargasvet.util.BusinessValidator;
 
 import org.springframework.data.domain.Page;
@@ -56,6 +57,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     private final EmailService emailService;
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
     private final CompanyRoleProvisioningService companyRoleProvisioningService;
+    private final SessionSecurityService sessionSecurityService;
 
     @Value("${app.frontend.login-url}")
     private String loginUrl;
@@ -81,6 +83,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     @Override
     @Transactional
     public UserProfileDTO registerApoderado(ApoderadoRequest dto) {
+        dto.setEmail(dto.getEmail().trim().toLowerCase(java.util.Locale.ROOT));
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("El email ya está registrado");
         }
@@ -182,8 +185,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     @Override
     @Transactional
     public UserProfileDTO updateApoderado(Long id, ApoderadoRequest dto) {
-        Apoderado apoderado = apoderadoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Apoderado no encontrado con ID: " + id));
+        Apoderado apoderado = findAccessibleClient(id);
 
         Usuario usuario = apoderado.getUser();
 
@@ -205,10 +207,8 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         if (dto.getDireccion() != null) usuario.setDireccion(dto.getDireccion());
 
         if (dto.getEmail() != null && !dto.getEmail().equals(usuario.getEmail())) {
-            if (usuarioRepository.existsByEmail(dto.getEmail())) {
-                throw new IllegalArgumentException("El email ya está registrado por otro usuario");
-            }
-            usuario.setEmail(dto.getEmail());
+            throw new IllegalArgumentException(
+                    "El correo de acceso solo puede modificarse mediante el proceso seguro de doble confirmación");
         }
 
         usuarioRepository.save(usuario);
@@ -237,8 +237,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     @Override
     @Transactional
     public void cambiarEstado(Long id, Boolean nuevoEstado) {
-        Apoderado apoderado = apoderadoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Apoderado no encontrado con ID: " + id));
+        Apoderado apoderado = findAccessibleClient(id);
 
         Usuario usuario = apoderado.getUser();
 
@@ -252,7 +251,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
 
         usuario.setActivo(nuevoEstado);
-        usuarioRepository.save(usuario);
+        sessionSecurityService.invalidateAllSessions(usuario);
 
         apoderado.setEstadoModificadoPor(SecurityUtils.getCurrentUserEmail());
         apoderado.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
@@ -275,8 +274,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     @Override
     @Transactional
     public void eliminar(Long id) {
-        Apoderado apoderado = apoderadoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Apoderado no encontrado con ID: " + id));
+        Apoderado apoderado = findAccessibleClient(id);
         if (!mascotaRepository.findByApoderadoId(apoderado.getId()).isEmpty()) {
             throw new IllegalArgumentException("No se puede eliminar un propietario que tiene mascotas registradas");
         }
@@ -319,8 +317,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     @Override
     @Transactional(readOnly = true)
     public ApoderadoRequest findById(Long id) {
-        Apoderado apoderado = apoderadoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Apoderado no encontrado con ID: " + id));
+        Apoderado apoderado = findAccessibleClient(id);
 
         Usuario usuario = apoderado.getUser();
         ApoderadoRequest dto = new ApoderadoRequest();
@@ -381,6 +378,20 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             return assignment;
         }).forEach(usuario.getUsuariosPorRol()::add);
         usuarioRepository.save(usuario);
+    }
+
+    private Apoderado findAccessibleClient(Long clientId) {
+        if (SecurityUtils.isSuperAdmin()) {
+            return apoderadoRepository.findById(clientId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+        }
+
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        if (companyId == null) {
+            throw new ResourceNotFoundException("Cliente no encontrado");
+        }
+        return apoderadoRepository.findByIdAndCompanyId(clientId, companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
     }
 
     private ApoderadoListResponse toListResponse(Apoderado apoderado) {

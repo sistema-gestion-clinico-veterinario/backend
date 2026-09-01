@@ -13,6 +13,7 @@ import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.domain.enums.MenuPresentation;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.domain.enums.ViewAudience;
+import veterinaria.vargasvet.domain.enums.DataScope;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,8 +34,10 @@ public class MenuBuilderService {
         if (permisosPorVista.isEmpty()) return Collections.emptyList();
 
         return permisosPorVista.values().stream()
-                .filter(p -> p.isLeer() && p.getVista() != null && p.getVista().isActivo())
-                .map(p -> toDTO(p.getVista(), p, acceso.configuracionesVista().get(p.getVista().getId())))
+                .filter(p -> p.isLeer() && p.getVista() != null && p.getVista().isActivo()
+                        && p.getVista().isVisibleMenu())
+                .map(p -> toDTO(p.getVista(), p, acceso.configuracionesVista().get(p.getVista().getId()),
+                        acceso.dataScopes().getOrDefault(p.getVista().getId(), DataScope.OWN)))
                 .sorted(Comparator.comparingInt(MenuItemDTO::getOrden))
                 .collect(Collectors.toList());
     }
@@ -51,12 +54,13 @@ public class MenuBuilderService {
 
         for (UsuarioPorRolPermiso permiso : permisosPorVista.values()) {
             Vista vista = permiso.getVista();
-            if (!permiso.isLeer() || vista == null || !vista.isActivo()
+            if (!permiso.isLeer() || vista == null || !vista.isActivo() || !vista.isVisibleMenu()
                     || !isAudienceCompatible(acceso.role().getScope(), vista.getAudience())) {
                 continue;
             }
 
-            MenuItemDTO dto = toDTO(vista, permiso, acceso.configuracionesVista().get(vista.getId()));
+            MenuItemDTO dto = toDTO(vista, permiso, acceso.configuracionesVista().get(vista.getId()),
+                    acceso.dataScopes().getOrDefault(vista.getId(), DataScope.OWN));
             Ventana ventana = vista.getVentana();
             if (ventana != null && ventana.isActivo()) {
                 ventanas.putIfAbsent(ventana.getId(), ventana);
@@ -132,6 +136,7 @@ public class MenuBuilderService {
         }
 
         Map<String, UsuarioPorRolPermiso> permisosPorVista = new HashMap<>();
+        Map<Integer, DataScope> dataScopes = new HashMap<>();
 
         List<RolVistaPermiso> rolPermisos = rolVistaPermisoRepository
                 .findByRolIdWithVistaAndVentana(asignacion.getRol().getId());
@@ -146,6 +151,13 @@ public class MenuBuilderService {
             synthetic.setModificar(rp.isModificar());
             synthetic.setEliminar(rp.isEliminar());
             permisosPorVista.put(rp.getVista().getCodigo(), synthetic);
+            boolean administrativeScope = asignacion.getRol().getPurpose()
+                    == veterinaria.vargasvet.domain.enums.RolePurpose.PLATFORM_ADMIN
+                    || asignacion.getRol().getPurpose()
+                    == veterinaria.vargasvet.domain.enums.RolePurpose.COMPANY_ADMIN;
+            dataScopes.put(rp.getVista().getId(), administrativeScope
+                    ? DataScope.COMPANY
+                    : (rp.getDataScope() != null ? rp.getDataScope() : DataScope.OWN));
         }
 
         Map<Integer, RolVentanaConfiguracion> configuraciones = rolVentanaConfiguracionRepository
@@ -162,13 +174,15 @@ public class MenuBuilderService {
                         config -> config,
                         (existing, replacement) -> existing
                 ));
-        return new EffectiveRoleAccess(asignacion.getRol(), permisosPorVista, configuraciones, configuracionesVista);
+        return new EffectiveRoleAccess(
+                asignacion.getRol(), permisosPorVista, configuraciones, configuracionesVista, dataScopes);
     }
 
     private MenuItemDTO toDTO(
             Vista vista,
             UsuarioPorRolPermiso permiso,
-            RolVistaConfiguracion configuracion) {
+            RolVistaConfiguracion configuracion,
+            DataScope dataScope) {
         return MenuItemDTO.builder()
                 .id(vista.getId())
                 .codigo(vista.getCodigo())
@@ -183,6 +197,7 @@ public class MenuBuilderService {
                 .escribir(permiso != null && permiso.isEscribir())
                 .modificar(permiso != null && permiso.isModificar())
                 .eliminar(permiso != null && permiso.isEliminar())
+                .dataScope(dataScope)
                 .build();
     }
 
@@ -221,13 +236,15 @@ public class MenuBuilderService {
             Role role,
             Map<String, UsuarioPorRolPermiso> permisos,
             Map<Integer, RolVentanaConfiguracion> configuraciones,
-            Map<Integer, RolVistaConfiguracion> configuracionesVista) {
+            Map<Integer, RolVistaConfiguracion> configuracionesVista,
+            Map<Integer, DataScope> dataScopes) {
 
         private static EffectiveRoleAccess empty() {
             Role emptyRole = new Role();
             emptyRole.setScope(RoleScope.STAFF);
             return new EffectiveRoleAccess(
-                    emptyRole, Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
+                    emptyRole, Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(),
+                    Collections.emptyMap());
         }
     }
 }

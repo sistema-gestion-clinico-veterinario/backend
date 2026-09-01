@@ -32,7 +32,6 @@ public class ApoderadoRequest {
     @NotBlank
     @Email(message = "Formato de correo electrónico inválido")
     @Size(max = 100, message = "El correo no debe superar 100 caracteres")
-    @Pattern(regexp = "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$", message = "El correo debe estar en minusculas y tener un formato valido")
     private String email;
     @NotBlank
     @Pattern(regexp = "^[0-9]{9}$", message = "El telefono debe contener 9 digitos numericos")

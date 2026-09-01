@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Confirmar cambio de correo</title></head>
+<body style="margin:0;background:#f4f7fb;font-family:Arial,sans-serif;color:#1e293b">
+<div style="max-width:600px;margin:32px auto;background:#fff;border:1px solid #dbe4ef;border-radius:12px;padding:32px">
+    <h1 style="font-size:22px;margin:0 0 16px;color:#075985">Confirmar cambio de correo</h1>
+    <p>Hola <strong th:text="${nombre}">usuario</strong>,</p>
+    <p>Se solicitó cambiar el correo de acceso a <strong th:text="${newEmail}">nuevo@correo.com</strong>.</p>
+    <p th:if="${confirmationType == 'actual'}">Confirma desde el correo actual que autorizas esta operación.</p>
+    <p th:if="${confirmationType == 'nuevo'}">Confirma que tienes acceso al nuevo correo.</p>
+    <p style="margin:28px 0">
+        <a th:href="${confirmationUrl}" style="background:#0066aa;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:bold">Confirmar correo</a>
+    </p>
+    <p style="font-size:13px;color:#64748b">El enlace es temporal y el cambio solo se aplicará cuando ambos correos hayan sido confirmados. Si no solicitaste esto, no confirmes y contacta al administrador.</p>
+    <p style="font-size:12px;color:#94a3b8" th:text="${companyName}">Sistema</p>
+</div>
+</body>
+</html>

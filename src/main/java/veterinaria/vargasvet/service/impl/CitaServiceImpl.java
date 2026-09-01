@@ -104,6 +104,8 @@ public class CitaServiceImpl implements CitaService {
             throw new IllegalArgumentException("No se puede asignar la cita a un empleado inactivo");
         }
 
+        validarEmpleadoSegunAlcance(veterinario.getId());
+
         if (!SecurityUtils.isSuperAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
             if (mascota.getApoderado().getUser().getCompany() == null || !mascota.getApoderado().getUser().getCompany().getId().equals(currentCompanyId)) {
@@ -226,13 +228,7 @@ public class CitaServiceImpl implements CitaService {
         Cita cita = citaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
 
-        if (!SecurityUtils.isSuperAdmin()) {
-            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-            if (cita.getMascota().getApoderado().getUser().getCompany() == null || 
-                !cita.getMascota().getApoderado().getUser().getCompany().getId().equals(currentCompanyId)) {
-                throw new IllegalArgumentException("No tienes permiso para iniciar esta cita");
-            }
-        }
+        validarPermisoEmpresa(cita);
 
         if (cita.getEstado() == EstadoCita.EN_PROCESO) {
             if (!requiereConsultaClinica(cita)) return null;
@@ -401,12 +397,7 @@ public class CitaServiceImpl implements CitaService {
         LocalDate effectiveHasta = fecha != null ? fecha : fechaHasta;
         LocalDateTime fechaInicio = effectiveDesde != null ? effectiveDesde.atStartOfDay() : null;
         LocalDateTime fechaFin = effectiveHasta != null ? effectiveHasta.plusDays(1).atStartOfDay() : null;
-        Long filteredVeterinarioId = veterinarioId;
-        if (!accesoValidator.can("VISTA_CITAS_AGENDA", "MODIFICAR") && filteredVeterinarioId == null) {
-            filteredVeterinarioId = empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail())
-                    .map(Empleado::getId)
-                    .orElse(-1L);
-        }
+        Long filteredVeterinarioId = resolverFiltroEmpleado(veterinarioId);
         
         Sort sort = fechaDesde != null
                 ? Sort.by(Sort.Direction.ASC, "fechaHoraInicio")
@@ -434,13 +425,7 @@ public class CitaServiceImpl implements CitaService {
         }
 
         Integer resolvedCompanyId = resolverCompanyId(companyId);
-        Long filteredVeterinarioId = veterinarioId;
-        if (!accesoValidator.can("VISTA_CITAS_AGENDA", "MODIFICAR")
-                && filteredVeterinarioId == null) {
-            filteredVeterinarioId = empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail())
-                    .map(Empleado::getId)
-                    .orElse(-1L);
-        }
+        Long filteredVeterinarioId = resolverFiltroEmpleado(veterinarioId);
 
         LocalDateTime fechaInicio = fechaDesde != null ? fechaDesde.atStartOfDay() : null;
         LocalDateTime fechaFin = fechaHasta != null ? fechaHasta.plusDays(1).atStartOfDay() : null;
@@ -593,6 +578,8 @@ public class CitaServiceImpl implements CitaService {
         Empleado veterinario = empleadoRepository.findById(empleadoDestinoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Veterinario no encontrado"));
 
+        validarEmpleadoSegunAlcance(veterinario.getId());
+
         if (veterinario.getUser() == null) {
             throw new IllegalArgumentException("No se puede asignar la cita a un empleado sin usuario asociado");
         }
@@ -744,6 +731,8 @@ public class CitaServiceImpl implements CitaService {
             throw new IllegalArgumentException("No se puede reprogramar la cita a un empleado inactivo");
         }
 
+        validarEmpleadoSegunAlcance(veterinario.getId());
+
         LocalDateTime fechaInicio = request.getFechaHoraInicio();
         validarFechaCitaNoPasada(fechaInicio);
         LocalDateTime fechaFin = fechaInicio.plusMinutes(cita.getDuracionMinutos());
@@ -879,6 +868,33 @@ public class CitaServiceImpl implements CitaService {
                 throw new IllegalArgumentException("No tienes permiso para realizar esta acción en esta cita");
             }
         }
+        if (cita.getEmpleado() != null) {
+            validarEmpleadoSegunAlcance(cita.getEmpleado().getId());
+        }
+    }
+
+    private Long resolverFiltroEmpleado(Long requestedEmpleadoId) {
+        if (accesoValidator.canAccessCompanyData("VISTA_CITAS_AGENDA")) return requestedEmpleadoId;
+        Long ownEmpleadoId = empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail())
+                .map(Empleado::getId)
+                .orElse(-1L);
+        if (requestedEmpleadoId != null && !requestedEmpleadoId.equals(ownEmpleadoId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "El rol activo sólo puede consultar citas propias");
+        }
+        return ownEmpleadoId;
+    }
+
+    private void validarEmpleadoSegunAlcance(Long empleadoId) {
+        if (accesoValidator.canAccessCompanyData("VISTA_CITAS_AGENDA")) return;
+        Long ownEmpleadoId = empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail())
+                .map(Empleado::getId)
+                .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException(
+                        "El usuario no está asociado a un empleado"));
+        if (!ownEmpleadoId.equals(empleadoId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "El rol activo sólo puede operar sobre citas propias");
+        }
     }
 
     private Integer getCitaCompanyId(Cita cita) {
@@ -938,6 +954,7 @@ public class CitaServiceImpl implements CitaService {
     @Override
     @Transactional(readOnly = true)
     public java.util.List<String> getAdminDisponibilidad(Long empleadoId, String fecha, Long servicioId, Boolean esEmergencia, Long excludeCitaId) {
+        validarEmpleadoSegunAlcance(empleadoId);
         LocalDate localDate = LocalDate.parse(fecha);
 
         Empleado empleado = empleadoRepository.findById(empleadoId)
@@ -1063,8 +1080,10 @@ public class CitaServiceImpl implements CitaService {
         LocalDateTime desde = hoy.atStartOfDay();
         LocalDateTime hasta = hoy.plusDays(2).atStartOfDay();
 
-        return citaRepository.findCitasProximasParaRecordatorio(companyId, desde, hasta)
-                .stream()
+        Long empleadoId = resolverFiltroEmpleado(null);
+        return citaRepository.findCitasProximasParaRecordatorio(companyId, desde, hasta).stream()
+                .filter(cita -> empleadoId == null || (cita.getEmpleado() != null
+                        && empleadoId.equals(cita.getEmpleado().getId())))
                 .map(cita -> construirRecordatorioWhatsApp(cita, hoy))
                 .toList();
     }

@@ -17,6 +17,7 @@ public class AuthResponse {
     private List<AssignedRoleResponse> availableRoles;
     private Integer companyId;
     private String companyName;
+    private String companyLogoUrl;
     private String nombreCompleto;
     private String userType;
     private Integer empleadoId;

@@ -64,5 +64,8 @@ public class Usuario {
 
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified = false;
+
+    @Column(name = "credentials_version", nullable = false)
+    private long credentialsVersion = 0L;
 }
 
