@@ -76,6 +76,8 @@ class CitaServiceIntegrationTest {
     void setUp() {
         CitaMapper citaMapper = mock(CitaMapper.class);
         when(citaMapper.toResponse(any(Cita.class))).thenReturn(new CitaResponse());
+        AccesoValidator accesoValidator = mock(AccesoValidator.class);
+        when(accesoValidator.canAccessCompanyData("VISTA_CITAS_AGENDA")).thenReturn(true);
 
         citaService = new CitaServiceImpl(
                 citaRepository,
@@ -90,7 +92,7 @@ class CitaServiceIntegrationTest {
                 horarioEmpleadoRepository,
                 citaMapper,
                 mock(BusinessValidator.class),
-                mock(AccesoValidator.class),
+                accesoValidator,
                 mock(AuditLogService.class),
                 mock(EmailService.class),
                 mock(SimpMessagingTemplate.class)

@@ -31,6 +31,10 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
     Optional<Empleado> findByUserId(Integer userId);
     Optional<Empleado> findByUserEmail(String email);
 
+    @Query("SELECT e FROM Empleado e WHERE e.id = :id AND e.user.company.id = :companyId")
+    Optional<Empleado> findByIdAndCompanyId(@Param("id") Long id,
+                                             @Param("companyId") Integer companyId);
+
     @Query(value = "SELECT e FROM Empleado e JOIN e.user u " +
                    "WHERE u.company.id = :companyId " +
                    "AND (CAST(:nombre AS text) IS NULL OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +

@@ -68,10 +68,16 @@ public class JWTFilter extends GenericFilterBean {
                 }
                 boolean esSuperAdmin = activeAssignment.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN;
 
-                boolean bloqueado = usuarioRepository.findByEmailWithCompany(email).map(usuario -> {
-                    if (!usuario.isActivo()) return true;
-                    return !esSuperAdmin && usuario.getCompany() != null && !usuario.getCompany().isActivo();
-                }).orElse(true);
+                var currentUser = usuarioRepository.findByEmailWithCompany(email)
+                        .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException(
+                                "La cuenta de la sesión ya no existe"));
+                if (currentUser.getCredentialsVersion() != principal.getCredentialsVersion()) {
+                    throw new org.springframework.security.authentication.CredentialsExpiredException(
+                            "La sesión fue invalidada por un evento de seguridad");
+                }
+                boolean bloqueado = !currentUser.isActivo()
+                        || (!esSuperAdmin && currentUser.getCompany() != null
+                        && !currentUser.getCompany().isActivo());
 
                 if (bloqueado) {
                     SecurityContextHolder.clearContext();
@@ -100,6 +106,8 @@ public class JWTFilter extends GenericFilterBean {
                 || path.equals("/auth/logout")
                 || path.equals("/auth/forgot-password")
                 || path.equals("/auth/reset-password")
+                || path.equals("/auth/email-change/confirm-current")
+                || path.equals("/auth/email-change/confirm-new")
                 || path.equals("/auth/validate-reset-token")
                 || path.equals("/auth/setup-account")
                 || path.equals("/auth/resend-verification")

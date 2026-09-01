@@ -11,6 +11,10 @@ import veterinaria.vargasvet.domain.entity.Apoderado;
 @Repository
 public interface ApoderadoRepository extends JpaRepository<Apoderado, Long> {
 
+    @Query("SELECT a FROM Apoderado a WHERE a.id = :id AND a.user.company.id = :companyId")
+    java.util.Optional<Apoderado> findByIdAndCompanyId(@Param("id") Long id,
+                                                        @Param("companyId") Integer companyId);
+
     @Query(value = "SELECT a FROM Apoderado a JOIN a.user u " +
                    "WHERE u.company.id = :companyId " +
                    "AND (:nombre IS NULL OR LOWER(CAST(CONCAT(u.nombre, ' ', u.apellido) AS text)) LIKE LOWER(CAST(CONCAT('%', REPLACE(CAST(:nombre AS text), ' ', '%'), '%') AS text))) " +

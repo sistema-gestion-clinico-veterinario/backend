@@ -60,6 +60,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     @Override
     @Transactional
     public UserProfileDTO registerVeterinario(VeterinarioRegistrationDTO dto) {
+        dto.setEmail(dto.getEmail().trim().toLowerCase(java.util.Locale.ROOT));
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("El correo electrónico ya está en uso");
         }

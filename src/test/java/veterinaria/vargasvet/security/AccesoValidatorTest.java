@@ -16,6 +16,7 @@ import veterinaria.vargasvet.domain.entity.Vista;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.domain.enums.ViewAudience;
+import veterinaria.vargasvet.domain.enums.DataScope;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 
@@ -91,6 +92,21 @@ class AccesoValidatorTest {
         role.setPurpose(RolePurpose.PLATFORM_ADMIN);
 
         assertTrue(validator.can("VISTA_AUDITORIA_ADMIN", "ELIMINAR"));
+        assertTrue(validator.canAccessCompanyData("VISTA_CITAS_AGENDA"));
+    }
+
+    @Test
+    void alcanceDeAgendaEsIndependienteDelPermisoEditar() {
+        RolVistaPermiso permiso = permiso(ViewAudience.STAFF);
+        permiso.getVista().setCodigo("VISTA_CITAS_AGENDA");
+        permiso.setLeer(true);
+        permiso.setModificar(false);
+        permiso.setDataScope(DataScope.COMPANY);
+        when(rolVistaPermisoRepository.findByRolIdAndVistaCodigo(20, "VISTA_CITAS_AGENDA"))
+                .thenReturn(Optional.of(permiso));
+
+        assertFalse(validator.can("VISTA_CITAS_AGENDA", "MODIFICAR"));
+        assertTrue(validator.canAccessCompanyData("VISTA_CITAS_AGENDA"));
     }
 
     private RolVistaPermiso permiso(ViewAudience audience) {

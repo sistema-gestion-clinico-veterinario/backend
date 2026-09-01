@@ -20,6 +20,7 @@ import java.time.LocalTime;
 import java.util.List;
 import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.service.EmpleadoService;
+import veterinaria.vargasvet.service.SessionSecurityService;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.security.SecurityTokenUtils;
 import veterinaria.vargasvet.util.BusinessValidator;
@@ -57,6 +58,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final BusinessValidator businessValidator;
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
     private final UsuarioPorRolRepository usuarioPorRolRepository;
+    private final SessionSecurityService sessionSecurityService;
 
     @Value("${app.frontend.verify-url}")
     private String frontendVerifyUrl;
@@ -76,6 +78,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Override
     @Transactional
     public UserProfileDTO registerEmpleado(EmpleadoRequest dto) {
+        dto.setEmail(dto.getEmail().trim().toLowerCase(java.util.Locale.ROOT));
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("El correo electrÃ³nico ya estÃ¡ en uso");
         }
@@ -182,8 +185,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Transactional
     @Override
     public UserProfileDTO updateEmpleado(Long empleadoId, EmpleadoRequest dto) {
-        Empleado empleado = empleadoRepository.findById(empleadoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado con ID: " + empleadoId));
+        Empleado empleado = findAccessibleEmployee(empleadoId);
 
         if (!Boolean.TRUE.equals(empleado.getEstado())) {
             throw new IllegalStateException("No se puede editar un empleado inactivo. Active al empleado primero.");
@@ -211,11 +213,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
 
         if (dto.getEmail() != null && !dto.getEmail().equals(usuario.getEmail())) {
-            if (usuarioRepository.existsByEmail(dto.getEmail())) {
-                throw new IllegalArgumentException("El correo electrónico ya está en uso");
-            }
-            usuario.setEmail(dto.getEmail());
-            usuario.setEmailVerified(false);
+            throw new IllegalArgumentException(
+                    "El correo de acceso solo puede modificarse mediante el proceso seguro de doble confirmación");
         }
 
         if (dto.getNombre() != null) usuario.setNombre(dto.getNombre());
@@ -300,8 +299,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Transactional
     @Override
     public void cambiarEstado(Long empleadoId, Boolean nuevoEstado) {
-        Empleado empleado = empleadoRepository.findById(empleadoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado con ID: " + empleadoId));
+        Empleado empleado = findAccessibleEmployee(empleadoId);
 
         Usuario usuario = empleado.getUser();
 
@@ -326,7 +324,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         usuario.setActivo(nuevoEstado);
 
         empleadoRepository.save(empleado);
-        usuarioRepository.save(usuario);
+        sessionSecurityService.invalidateAllSessions(usuario);
 
         auditLogService.log(
             Boolean.TRUE.equals(nuevoEstado) ? "ACTIVAR_EMPLEADO" : "DESACTIVAR_EMPLEADO",
@@ -338,8 +336,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Override
     @Transactional
     public void eliminar(Long empleadoId) {
-        Empleado empleado = empleadoRepository.findById(empleadoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado con ID: " + empleadoId));
+        Empleado empleado = findAccessibleEmployee(empleadoId);
 
         if (citaRepository.existsByEmpleadoId(empleadoId)) {
             Usuario usuario = empleado.getUser();
@@ -349,7 +346,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             empleado.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
             if (usuario != null) {
                 usuario.setActivo(false);
-                usuarioRepository.save(usuario);
+                sessionSecurityService.invalidateAllSessions(usuario);
             }
             empleadoRepository.save(empleado);
 
@@ -475,8 +472,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Override
     @Transactional
     public void assignBulkSchedule(Long empleadoId, veterinaria.vargasvet.dto.request.BulkScheduleRequest request) {
-        Empleado empleado = empleadoRepository.findById(empleadoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
+        Empleado empleado = findAccessibleEmployee(empleadoId);
 
         if (!Boolean.TRUE.equals(empleado.getEstado())) {
             throw new IllegalStateException("No se puede asignar horario a un empleado inactivo");
@@ -733,8 +729,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Override
     @Transactional(readOnly = true)
     public EmpleadoRequest findById(Long id) {
-        Empleado empleado = empleadoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado con ID: " + id));
+        Empleado empleado = findAccessibleEmployee(id);
 
         Usuario usuario = empleado.getUser();
         EmpleadoRequest dto = new EmpleadoRequest();
@@ -784,8 +779,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Override
     @Transactional
     public void cloneWeekSchedule(Long empleadoId, LocalDate sourceStart, LocalDate targetStart) {
-        Empleado empleado = empleadoRepository.findById(empleadoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
+        Empleado empleado = findAccessibleEmployee(empleadoId);
 
         if (!Boolean.TRUE.equals(empleado.getEstado())) {
             throw new IllegalStateException("No se puede clonar horario de un empleado inactivo");
@@ -913,8 +907,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Override
     @Transactional
     public void cloneDaySchedule(Long empleadoId, LocalDate sourceDate, LocalDate targetDate) {
-        Empleado empleado = empleadoRepository.findById(empleadoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
+        Empleado empleado = findAccessibleEmployee(empleadoId);
 
         if (!Boolean.TRUE.equals(empleado.getEstado())) {
             throw new IllegalStateException("No se puede clonar horario de un empleado inactivo");
@@ -1020,8 +1013,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Override
     @Transactional
     public void deleteBulkSchedule(Long empleadoId, java.time.LocalDate startDate, java.time.LocalDate endDate, List<String> dias) {
-        Empleado empleado = empleadoRepository.findById(empleadoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
+        Empleado empleado = findAccessibleEmployee(empleadoId);
 
         if (!Boolean.TRUE.equals(empleado.getEstado())) {
             throw new IllegalStateException("No se puede eliminar horario de un empleado inactivo");
@@ -1133,6 +1125,20 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         response.setHoraFin(horario.getHoraFin());
         response.setActivo(horario.getActivo());
         return response;
+    }
+
+    private Empleado findAccessibleEmployee(Long employeeId) {
+        if (SecurityUtils.isSuperAdmin()) {
+            return empleadoRepository.findById(employeeId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
+        }
+
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        if (companyId == null) {
+            throw new ResourceNotFoundException("Empleado no encontrado");
+        }
+        return empleadoRepository.findByIdAndCompanyId(employeeId, companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
     }
 
     private Role resolveStaffRole(Integer roleId, Integer companyId) {

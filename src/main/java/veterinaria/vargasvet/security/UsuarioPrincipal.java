@@ -22,6 +22,7 @@ public class UsuarioPrincipal implements UserDetails {
     private RoleScope activeRoleScope;
     private RolePurpose activeRolePurpose;
     private long permissionVersion;
+    private long credentialsVersion;
 
     public UsuarioPrincipal(Integer id, String email, String password, Collection<? extends GrantedAuthority> authorities, Integer companyId) {
         this(id, email, password, authorities, companyId, null, null, null, 0L);

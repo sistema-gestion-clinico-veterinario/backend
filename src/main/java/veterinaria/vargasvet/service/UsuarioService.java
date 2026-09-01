@@ -14,7 +14,7 @@ public interface UsuarioService {
     void setupAccount(String token, String password);
     void resendVerificationToken(String email);
     void changePassword(String email, veterinaria.vargasvet.dto.request.ChangePasswordDTO dto);
-    void resetPassword(veterinaria.vargasvet.dto.request.AdminChangePasswordRequest dto);
+    void requestPasswordReset(veterinaria.vargasvet.dto.request.AdminPasswordResetRequest dto);
     void forgotPassword(veterinaria.vargasvet.dto.request.ForgotPasswordRequest request);
     void resetPasswordWithToken(veterinaria.vargasvet.dto.request.ResetPasswordRequest request);
     boolean validateResetToken(String token);

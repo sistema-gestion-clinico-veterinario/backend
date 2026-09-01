@@ -2,6 +2,7 @@ package veterinaria.vargasvet.dto.response;
 
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.ViewAudience;
+import veterinaria.vargasvet.domain.enums.DataScope;
 
 @Data
 public class RolVistaPermisoDTO {
@@ -15,8 +16,10 @@ public class RolVistaPermisoDTO {
     private String ventanaNombre;
     private Integer orden;
     private ViewAudience audience;
+    private boolean visibleMenu;
     private boolean leer;
     private boolean escribir;
     private boolean modificar;
     private boolean eliminar;
+    private DataScope dataScope = DataScope.OWN;
 }

@@ -52,7 +52,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        String[] origins = Arrays.stream(allowedOrigins.split(",")).map(String::trim).toArray(String[]::new);
+        String[] origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .map(origin -> origin.endsWith("/") ? origin.substring(0, origin.length() - 1) : origin)
+                .filter(origin -> !origin.isBlank())
+                .toArray(String[]::new);
         registry.addEndpoint("/ws")
                 .setAllowedOrigins(origins);
         registry.addEndpoint("/ws")
@@ -122,6 +126,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 && !rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(),
                         "VISTA_MIS_CITAS", "LEER")) {
             throw new AccessDeniedException("Sin acceso a eventos de citas");
+        }
+        if (destination.startsWith("/topic/citas/")
+                && rolePermissionEvaluator.dataScope(principal.getId(), principal.getActiveRoleId(),
+                        "VISTA_CITAS_AGENDA")
+                        != veterinaria.vargasvet.domain.enums.DataScope.COMPANY) {
+            throw new AccessDeniedException("El canal global de citas requiere alcance de empresa");
         }
     }
 }

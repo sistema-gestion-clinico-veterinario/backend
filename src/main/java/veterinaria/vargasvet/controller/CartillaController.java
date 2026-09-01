@@ -64,19 +64,21 @@ public class CartillaController {
     @GetMapping("/pets")
     @PreAuthorize("@accesoValidator.can('VISTA_CARTILLA', 'LEER')")
     public ResponseEntity<ApiResponse<Page<MascotaCartillaResponse>>> listarMascotasConCartilla(
+            @RequestParam(required = false) Integer companyId,
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) EspecieMascota especie,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        Integer effectiveCompanyId = SecurityUtils.isSuperAdmin()
+                ? companyId
+                : SecurityUtils.getCurrentCompanyId();
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 100);
-        if (companyId == null) {
-            return ResponseEntity.ok(new ApiResponse<>(true, "Mascotas con cartilla",
-                    Page.empty(PageRequest.of(safePage, safeSize))));
+        if (effectiveCompanyId == null) {
+            throw new IllegalArgumentException("Debe seleccionar una empresa");
         }
         return ResponseEntity.ok(new ApiResponse<>(true, "Mascotas con cartilla",
-                cartillaService.listarMascotasConCartilla(companyId, nombre, especie, true,
+                cartillaService.listarMascotasConCartilla(effectiveCompanyId, nombre, especie, true,
                         PageRequest.of(safePage, safeSize, Sort.by("nombreCompleto").ascending()))));
     }
 

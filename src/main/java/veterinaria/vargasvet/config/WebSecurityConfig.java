@@ -61,6 +61,8 @@ public class WebSecurityConfig {
                                 "/auth/resend-verification",
                                 "/auth/forgot-password",
                                 "/auth/reset-password",
+                                "/auth/email-change/confirm-current",
+                                "/auth/email-change/confirm-new",
                                 "/auth/validate-reset-token",
                                 "/health",
                                 "/setup/**",
@@ -124,7 +126,13 @@ public class WebSecurityConfig {
         List<String> origins = Arrays.stream(allowedOriginsRaw.split(","))
                 .map(String::trim)
                 .map(o -> o.endsWith("/") ? o.substring(0, o.length() - 1) : o)
+                .filter(o -> !o.isBlank())
                 .collect(Collectors.toList());
+        if (origins.isEmpty() || origins.contains("*")
+                || origins.stream().anyMatch(o -> !(o.startsWith("https://") || o.startsWith("http://")))) {
+            throw new IllegalStateException(
+                    "CORS_ALLOWED_ORIGINS debe contener orígenes HTTP(S) explícitos y no admite comodines");
+        }
         config.setAllowedOrigins(origins);
 
         config.setAllowedMethods(List.of(
@@ -166,8 +174,12 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public PasswordEncoder passwordEncoder(
+            @org.springframework.beans.factory.annotation.Value("${security.bcrypt-strength:12}") int strength) {
+        if (strength < 10 || strength > 14) {
+            throw new IllegalStateException("security.bcrypt-strength debe estar entre 10 y 14");
+        }
+        return new BCryptPasswordEncoder(strength);
     }
 
     @Bean

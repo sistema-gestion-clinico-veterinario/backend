@@ -6,6 +6,7 @@ import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.domain.enums.ViewAudience;
+import veterinaria.vargasvet.domain.enums.DataScope;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 
@@ -40,6 +41,21 @@ public class RolePermissionEvaluator {
                     default -> false;
                 })
                 .orElse(false);
+    }
+
+    public DataScope dataScope(Integer userId, Integer roleId, String viewCode) {
+        if (userId == null || roleId == null || viewCode == null || viewCode.isBlank()) return DataScope.OWN;
+        UsuarioPorRol assignment = usuarioPorRolRepository
+                .findActiveAssignmentByUsuarioIdAndRoleId(userId, roleId)
+                .orElse(null);
+        if (assignment == null) return DataScope.OWN;
+        if (assignment.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN
+                || assignment.getRol().getPurpose() == RolePurpose.COMPANY_ADMIN) {
+            return DataScope.COMPANY;
+        }
+        return rolVistaPermisoRepository.findByRolIdAndVistaCodigo(roleId, viewCode)
+                .map(permission -> permission.getDataScope() != null ? permission.getDataScope() : DataScope.OWN)
+                .orElse(DataScope.OWN);
     }
 
     private boolean isAudienceCompatible(RoleScope scope, ViewAudience audience) {
