@@ -17,12 +17,12 @@ import veterinaria.vargasvet.dto.request.VistaReorderDTO;
 @RestController
 @RequestMapping("/admin/views")
 @RequiredArgsConstructor
-@PreAuthorize("@accesoValidator.can('VISTA_VENTANAS', 'MODIFICAR')")
 public class VistaController {
 
     private final VistaService vistaService;
 
     @GetMapping
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'LEER')")
     public ResponseEntity<ApiResponse<List<VistaDTO>>> listar(
             @RequestParam(required = false) String grupo) {
         List<VistaDTO> result = grupo != null
@@ -32,12 +32,14 @@ public class VistaController {
     }
 
     @PostMapping
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<VistaDTO>> crear(@Valid @RequestBody VistaRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Vista creada", vistaService.crear(request)));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<VistaDTO>> actualizar(
             @PathVariable Integer id,
             @Valid @RequestBody VistaRequestDTO request) {
@@ -45,12 +47,14 @@ public class VistaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Integer id) {
         vistaService.eliminar(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Vista eliminada", null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Vista desactivada", null));
     }
 
     @PutMapping("/reorder")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> reordenar(@RequestBody List<VistaReorderDTO> reorders) {
         vistaService.reordenar(reorders);
         return ResponseEntity.ok(new ApiResponse<>(true, "Orden actualizado", null));

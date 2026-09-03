@@ -107,7 +107,7 @@ public class RoleController {
     @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> deleteRole(@PathVariable Integer id) {
         roleService.deleteRole(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Rol eliminado", null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Rol desactivado", null));
     }
 
     @GetMapping("/{id}/views")
@@ -118,15 +118,27 @@ public class RoleController {
     }
 
     @PutMapping("/{id}/views")
+    @Deprecated
     @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'MODIFICAR')")
-    public ResponseEntity<ApiResponse<List<RolVistaPermisoDTO>>> saveVistas(
+    public ResponseEntity<ApiResponse<List<RolVistaPermisoDTO>>> saveVistasLegacy(
             @PathVariable Integer id,
             @RequestBody List<RolVistaPermisoDTO> permisos) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Permisos guardados",
-                roleService.saveVistasByRole(id, permisos)));
+                roleService.saveVistasByRole(id, null, permisos)));
+    }
+
+    @PutMapping("/{id}/views/versioned")
+    @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'MODIFICAR')")
+    public ResponseEntity<ApiResponse<List<RolVistaPermisoDTO>>> saveVistasVersioned(
+            @PathVariable Integer id,
+            @RequestHeader("If-Match") Long expectedVersion,
+            @RequestBody List<RolVistaPermisoDTO> permisos) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Permisos guardados",
+                roleService.saveVistasByRole(id, expectedVersion, permisos)));
     }
 
     @GetMapping("/{id}/menu-configuration")
+    @Deprecated
     @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'LEER')")
     public ResponseEntity<ApiResponse<List<RolVentanaConfiguracionDTO>>> getMenuConfiguration(
             @PathVariable Integer id) {
@@ -135,6 +147,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id}/menu-configuration")
+    @Deprecated
     @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<List<RolVentanaConfiguracionDTO>>> saveMenuConfiguration(
             @PathVariable Integer id,
@@ -144,12 +157,14 @@ public class RoleController {
     }
 
     @GetMapping("/{id}/menu-order")
+    @Deprecated
     @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'LEER')")
     public ResponseEntity<ApiResponse<List<RolMenuOrdenItemDTO>>> getMenuOrder(@PathVariable Integer id) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Orden del menú", roleService.getMenuOrder(id)));
     }
 
     @PutMapping("/{id}/menu-order")
+    @Deprecated
     @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<List<RolMenuOrdenItemDTO>>> saveMenuOrder(
             @PathVariable Integer id,

@@ -53,8 +53,8 @@ public class VentanaService {
     public void eliminar(Integer id) {
         Ventana ventana = ventanaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ventana no encontrada"));
-
-        ventanaRepository.delete(ventana);
+        ventana.setActivo(false);
+        ventanaRepository.save(ventana);
     }
     private String normalizarCodigo(String value) {
         return value == null ? null : value.trim().toUpperCase().replaceAll("\\s+", "_");

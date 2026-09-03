@@ -52,7 +52,7 @@ public class Ventana {
     @Column(name = "presentacion_default", nullable = false, length = 16)
     private MenuPresentation presentacionDefault = MenuPresentation.GROUPED;
 
-    @OneToMany(mappedBy = "ventana", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "ventana", fetch = FetchType.LAZY)
     @ToString.Exclude
     private List<Vista> vistas;
 }

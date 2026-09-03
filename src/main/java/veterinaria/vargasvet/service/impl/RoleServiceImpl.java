@@ -20,6 +20,7 @@ import veterinaria.vargasvet.dto.response.RolVistaPermisoDTO;
 import veterinaria.vargasvet.dto.response.RolVentanaConfiguracionDTO;
 import veterinaria.vargasvet.dto.response.RolMenuOrdenItemDTO;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
+import veterinaria.vargasvet.exception.StalePermissionConfigurationException;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
@@ -179,7 +180,8 @@ public class RoleServiceImpl implements RoleService {
             throw new IllegalArgumentException("No se puede eliminar un rol del sistema");
         }
 
-        roleRepository.delete(role);
+        role.setActivo(false);
+        roleRepository.save(role);
     }
 
     @Override
@@ -230,10 +232,18 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    public List<RolVistaPermisoDTO> saveVistasByRole(Integer roleId, List<RolVistaPermisoDTO> permisos) {
-        Role role = roleRepository.findById(roleId)
+    public List<RolVistaPermisoDTO> saveVistasByRole(
+            Integer roleId,
+            Long expectedVersion,
+            List<RolVistaPermisoDTO> permisos) {
+        Role role = roleRepository.findByIdForPermissionUpdate(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
         assertCanManageRole(role);
+
+        // null se admite únicamente desde el endpoint legacy durante la migración.
+        if (expectedVersion != null && role.getPermissionVersion() != expectedVersion) {
+            throw new StalePermissionConfigurationException();
+        }
 
         if (!role.isActivo()) {
             throw new IllegalArgumentException("No se pueden asignar permisos a un rol inactivo");

@@ -74,7 +74,8 @@ public class VistaService {
     public void eliminar(Integer id) {
         Vista vista = vistaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vista no encontrada"));
-        vistaRepository.delete(vista);
+        vista.setActivo(false);
+        vistaRepository.save(vista);
     }
 
     @Transactional
