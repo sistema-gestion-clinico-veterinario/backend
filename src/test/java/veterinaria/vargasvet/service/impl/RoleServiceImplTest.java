@@ -20,13 +20,17 @@ import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.VentanaRepository;
 import veterinaria.vargasvet.repository.VistaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.exception.StalePermissionConfigurationException;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class RoleServiceImplTest {
@@ -161,6 +165,22 @@ class RoleServiceImplTest {
             security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
 
             assertThrows(IllegalArgumentException.class, () -> service.saveMenuOrder(11, List.of()));
+        }
+    }
+
+    @Test
+    void saveVistasByRoleRejectsStalePermissionVersionBeforeChangingGrants() {
+        Role role = role(12, null, RoleScope.PLATFORM, true);
+        role.setPermissionVersion(4L);
+        when(roleRepository.findByIdForPermissionUpdate(12)).thenReturn(Optional.of(role));
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            assertThrows(StalePermissionConfigurationException.class,
+                    () -> service.saveVistasByRole(12, 3L, List.of()));
+
+            verify(rolVistaPermisoRepository, never()).deleteByRolId(12);
         }
     }
 

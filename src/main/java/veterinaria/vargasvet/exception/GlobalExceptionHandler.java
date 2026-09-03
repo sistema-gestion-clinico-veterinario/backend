@@ -74,6 +74,13 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>(false, "La consulta cambió mientras editabas. Tus datos continúan en pantalla; no recargues la página y vuelve a intentar.", null));
     }
 
+    @ExceptionHandler(StalePermissionConfigurationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleStalePermissionConfiguration(
+            StalePermissionConfigurationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiResponse<>(false, ex.getMessage(), null));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
         String mensaje = ex.getBindingResult().getFieldErrors().stream()
