@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -9,9 +10,14 @@ import veterinaria.vargasvet.domain.enums.RolePurpose;
 
 import java.util.List;
 import java.util.Optional;
+import jakarta.persistence.LockModeType;
 
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Integer> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Role r where r.id = :id")
+    Optional<Role> findByIdForPermissionUpdate(@Param("id") Integer id);
 
     Optional<Role> findByName(String name);
     List<Role> findAllByName(String name);

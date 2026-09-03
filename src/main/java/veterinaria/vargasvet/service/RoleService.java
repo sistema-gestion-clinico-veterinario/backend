@@ -19,7 +19,10 @@ public interface RoleService {
     void deleteRole(Integer id);
 
     List<RolVistaPermisoDTO> getVistasByRole(Integer roleId);
-    List<RolVistaPermisoDTO> saveVistasByRole(Integer roleId, List<RolVistaPermisoDTO> permisos);
+    List<RolVistaPermisoDTO> saveVistasByRole(
+            Integer roleId,
+            Long expectedVersion,
+            List<RolVistaPermisoDTO> permisos);
     List<RolVentanaConfiguracionDTO> getMenuConfiguration(Integer roleId);
     List<RolVentanaConfiguracionDTO> saveMenuConfiguration(
             Integer roleId,

@@ -57,9 +57,11 @@ public class Vista {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id", nullable = true)
     @ToString.Exclude
+    @Deprecated
     private Vista parent;
 
-    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
     @ToString.Exclude
+    @Deprecated
     private List<Vista> hijos = new ArrayList<>();
 }

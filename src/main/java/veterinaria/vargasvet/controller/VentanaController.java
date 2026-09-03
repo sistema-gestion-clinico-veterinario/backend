@@ -16,22 +16,24 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/windows")
 @RequiredArgsConstructor
-@PreAuthorize("@accesoValidator.can('VISTA_VENTANAS', 'MODIFICAR')")
 public class VentanaController {
 
     private final VentanaService ventanaService;
 
     @GetMapping
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'LEER')")
     public ResponseEntity<ApiResponse<List<Ventana>>> listar() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Ventanas obtenidas", ventanaService.listarTodas()));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'LEER')")
     public ResponseEntity<ApiResponse<Ventana>> obtener(@PathVariable Integer id) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Ventana obtenida", ventanaService.obtenerPorId(id)));
     }
 
     @PostMapping
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<Ventana>> crear(@Valid @RequestBody Ventana ventana) {
         Ventana creada = ventanaService.crear(ventana);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -39,13 +41,15 @@ public class VentanaController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Ventana>> actualizar(@PathVariable Integer id, @Valid @RequestBody Ventana ventana) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Ventana actualizada", ventanaService.actualizar(id, ventana)));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Integer id) {
         ventanaService.eliminar(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Ventana eliminada", null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Ventana desactivada", null));
     }
 }

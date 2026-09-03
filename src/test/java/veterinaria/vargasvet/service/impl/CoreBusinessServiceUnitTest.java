@@ -131,11 +131,11 @@ class CoreBusinessServiceUnitTest {
         role.setId(4);
         role.setName("ROLE_RECEPCION");
         role.setActivo(false);
-        when(roleRepository.findById(4)).thenReturn(Optional.of(role));
+        when(roleRepository.findByIdForPermissionUpdate(4)).thenReturn(Optional.of(role));
 
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> roleService.saveVistasByRole(4, List.of(new RolVistaPermisoDTO()))
+                () -> roleService.saveVistasByRole(4, 0L, List.of(new RolVistaPermisoDTO()))
         );
 
         assertEquals("No se pueden asignar permisos a un rol inactivo", ex.getMessage());
