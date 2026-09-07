@@ -67,6 +67,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private final SharedRateLimitService sharedRateLimitService;
     private final AuthenticationAuditService authenticationAuditService;
     private final PasswordPolicyService passwordPolicyService;
+    private final veterinaria.vargasvet.service.LegalDocumentService legalDocumentService;
 
     @Value("${app.frontend.verify-url}")
     private String frontendVerifyUrl;
@@ -310,6 +311,8 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setNombreCompleto(resolveNombreCompleto(usuario));
         response.setUserType(resolveUserType(usuario));
         response.setPasswordChanged(usuario.isPasswordChanged());
+        response.setNeedsLegalAcceptance(legalDocumentService.hasPendingConsent(usuario.getId()));
+        response.setLegalAcceptanceOverdue(legalDocumentService.isPastGracePeriod(usuario.getId()));
         response.setEmpleadoId(
                 usuario.getEmpleado() != null
                         ? Math.toIntExact(usuario.getEmpleado().getId())
@@ -376,6 +379,8 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setNombreCompleto(resolveNombreCompleto(usuario));
         response.setUserType(resolveUserType(usuario));
         response.setPasswordChanged(usuario.isPasswordChanged());
+        response.setNeedsLegalAcceptance(legalDocumentService.hasPendingConsent(usuario.getId()));
+        response.setLegalAcceptanceOverdue(legalDocumentService.isPastGracePeriod(usuario.getId()));
         response.setEmpleadoId(
                 usuario.getEmpleado() != null
                         ? Math.toIntExact(usuario.getEmpleado().getId())
@@ -714,6 +719,8 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setNombreCompleto(resolveNombreCompleto(usuario));
         response.setUserType(resolveUserType(usuario));
         response.setPasswordChanged(usuario.isPasswordChanged());
+        response.setNeedsLegalAcceptance(legalDocumentService.hasPendingConsent(usuario.getId()));
+        response.setLegalAcceptanceOverdue(legalDocumentService.isPastGracePeriod(usuario.getId()));
         response.setEmpleadoId(usuario.getEmpleado() != null ? Math.toIntExact(usuario.getEmpleado().getId()) : null);
         response.setMenu(menu);
         response.setPermissions(permissions);

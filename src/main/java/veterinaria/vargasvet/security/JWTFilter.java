@@ -18,6 +18,7 @@ import org.springframework.web.filter.GenericFilterBean;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.service.LegalDocumentService;
 
 import java.io.IOException;
 
@@ -27,6 +28,7 @@ public class JWTFilter extends GenericFilterBean {
     private final TokenProvider tokenProvider;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioPorRolRepository usuarioPorRolRepository;
+    private final LegalDocumentService legalDocumentService;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -88,6 +90,16 @@ public class JWTFilter extends GenericFilterBean {
                     return;
                 }
 
+                if (!isLegalExemptEndpoint(httpRequest) && legalDocumentService.isPastGracePeriod(principal.getId())) {
+                    SecurityContextHolder.clearContext();
+                    HttpServletResponse httpResponse = (HttpServletResponse) response;
+                    httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    httpResponse.setContentType("application/json");
+                    httpResponse.getWriter().write(
+                            "{\"error\":\"Debe aceptar los Términos y Condiciones / Política de Privacidad vigentes.\",\"code\":\"TERMS_NOT_ACCEPTED\"}");
+                    return;
+                }
+
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (Exception e) {
                 SecurityContextHolder.clearContext();
@@ -119,6 +131,13 @@ public class JWTFilter extends GenericFilterBean {
                 || path.startsWith("/ws/")
                 || path.equals("/error")
                 || ("GET".equalsIgnoreCase(method) && path.startsWith("/media/"));
+    }
+
+    private boolean isLegalExemptEndpoint(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.startsWith("/legal/")
+                || path.equals("/auth/logout")
+                || path.equals("/auth/refresh");
     }
 
     private String resolveToken(HttpServletRequest request) {
