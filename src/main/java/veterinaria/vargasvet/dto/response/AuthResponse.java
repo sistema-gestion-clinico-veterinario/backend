@@ -23,6 +23,8 @@ public class AuthResponse {
     private Integer empleadoId;
     private boolean passwordChanged;
     private boolean needsCompanySelection;
+    private boolean needsLegalAcceptance;
+    private boolean legalAcceptanceOverdue;
     private List<Object> menu;
     private List<String> permissions;
     private Integer activeRoleId;

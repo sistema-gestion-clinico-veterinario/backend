@@ -66,6 +66,7 @@ public class WebSecurityConfig {
                                 "/auth/email-change/confirm-current",
                                 "/auth/email-change/confirm-new",
                                 "/auth/validate-reset-token",
+                                "/legal/current",
                                 "/health",
                                 "/setup/**",
                                 "/auth/setup-account",
