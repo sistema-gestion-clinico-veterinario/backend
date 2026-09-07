@@ -97,7 +97,9 @@ public class DataInitializer implements CommandLineRunner {
         ventana.setGrupo(grupo);
         ventana.setOrden(orden);
         ventana.setActivo(true);
-        ventana.setPresentacionDefault(MenuPresentation.GROUPED);
+        ventana.setPresentacionDefault("PORTAL_APODERADO".equals(codigo)
+                ? MenuPresentation.FLAT
+                : MenuPresentation.GROUPED);
         ventanaRepository.save(ventana);
 
         if (esNueva) {
