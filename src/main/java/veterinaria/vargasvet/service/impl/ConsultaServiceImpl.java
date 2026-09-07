@@ -65,10 +65,24 @@ public class ConsultaServiceImpl implements ConsultaService {
             }
         }
 
-        if (consulta.getEstado() == EstadoConsulta.CERRADA && !SecurityUtils.isAdmin() && !SecurityUtils.isSuperAdmin() && !puedeModificarPorPermiso) {
+        if (consulta.getEstado() == EstadoConsulta.CERRADA) {
             throw new IllegalArgumentException("No se puede modificar una consulta cerrada");
         }
 
+        actualizarDatosClinicos(consulta, request);
+
+        Consulta savedConsulta = consultaRepository.saveAndFlush(consulta);
+
+        auditLogService.log(
+            "ACTUALIZAR_CONSULTA",
+            "Consultas",
+            "Se actualizaron los datos clínicos de la consulta de la mascota " + consulta.getHistoriaClinica().getMascota().getNombreCompleto() + " atendida por " + (consulta.getVeterinario().getUser() != null ? (consulta.getVeterinario().getUser().getNombre() + " " + consulta.getVeterinario().getUser().getApellido()) : "sin usuario") + " el " + consulta.getFechaConsulta()
+        );
+
+        return consultaMapper.toResponse(savedConsulta);
+    }
+
+    private void actualizarDatosClinicos(Consulta consulta, ConsultaRequest request) {
         if (request.getTipoConsulta() != null) consulta.setTipoConsulta(request.getTipoConsulta());
         if (request.getPesoEnConsulta() != null) {
             consulta.setPesoEnConsulta(request.getPesoEnConsulta());
@@ -99,16 +113,6 @@ public class ConsultaServiceImpl implements ConsultaService {
         if (request.getAntecedentesFamiliares() != null) hc.setAntecedentesFamiliares(request.getAntecedentesFamiliares());
         if (request.getGrupoSanguineo() != null) hc.setGrupoSanguineo(request.getGrupoSanguineo());
         historiaClinicaRepository.save(hc);
-
-        Consulta savedConsulta = consultaRepository.saveAndFlush(consulta);
-
-        auditLogService.log(
-            "ACTUALIZAR_CONSULTA",
-            "Consultas",
-            "Se actualizaron los datos clínicos de la consulta de la mascota " + consulta.getHistoriaClinica().getMascota().getNombreCompleto() + " atendida por " + (consulta.getVeterinario().getUser() != null ? (consulta.getVeterinario().getUser().getNombre() + " " + consulta.getVeterinario().getUser().getApellido()) : "sin usuario") + " el " + consulta.getFechaConsulta()
-        );
-
-        return consultaMapper.toResponse(savedConsulta);
     }
 
     @Override
@@ -160,6 +164,7 @@ public class ConsultaServiceImpl implements ConsultaService {
             throw new IllegalArgumentException("La consulta ya se encuentra cerrada");
         }
 
+        actualizarDatosClinicos(consulta, request);
         validarCamposObligatorios(consulta);
 
         consulta.setEstado(EstadoConsulta.CERRADA);

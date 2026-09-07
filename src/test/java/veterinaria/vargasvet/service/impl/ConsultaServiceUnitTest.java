@@ -148,6 +148,8 @@ class ConsultaServiceUnitTest {
         Consulta consulta = consultaAbiertaCompleta();
         CerrarConsultaRequest request = new CerrarConsultaRequest();
         request.setVersion(1L);
+        request.setPesoEnConsulta(12.5);
+        request.setAnamnesis("Paciente evaluado y estable");
         ConsultaResponse mapped = new ConsultaResponse();
 
         when(consultaRepository.findById(10L)).thenReturn(Optional.of(consulta));
@@ -159,9 +161,31 @@ class ConsultaServiceUnitTest {
         assertEquals(mapped, response);
         assertEquals(EstadoConsulta.CERRADA, consulta.getEstado());
         assertEquals(EstadoCita.COMPLETADA, consulta.getCita().getEstado());
+        assertEquals(12.5, consulta.getPesoEnConsulta());
+        assertEquals("Paciente evaluado y estable", consulta.getAnamnesis());
         assertEquals("doctor@vargasvet.test", consulta.getCerradoPor());
         assertNotNull(consulta.getFechaCierre());
         verify(citaRepository).save(consulta.getCita());
+    }
+
+    @Test
+    void updateConsulta_rechazaCambiosEnConsultaCerrada() {
+        autenticarSuperAdmin();
+        ConsultaServiceImpl service = service();
+        Consulta consulta = consultaAbiertaCompleta();
+        consulta.setEstado(EstadoConsulta.CERRADA);
+        ConsultaRequest request = new ConsultaRequest();
+        request.setVersion(1L);
+        request.setPesoEnConsulta(18.0);
+        when(consultaRepository.findById(10L)).thenReturn(Optional.of(consulta));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.updateConsulta(10L, request)
+        );
+
+        assertEquals("No se puede modificar una consulta cerrada", ex.getMessage());
+        verify(consultaRepository, never()).saveAndFlush(any(Consulta.class));
     }
 
     private ConsultaServiceImpl service() {
