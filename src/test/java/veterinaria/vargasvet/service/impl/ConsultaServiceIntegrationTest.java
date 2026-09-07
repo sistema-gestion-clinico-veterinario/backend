@@ -133,6 +133,10 @@ class ConsultaServiceIntegrationTest {
         Consulta consulta = crearConsultaAbiertaCompleta();
         CerrarConsultaRequest request = new CerrarConsultaRequest();
         request.setVersion(consulta.getVersion());
+        request.setPesoEnConsulta(14.2);
+        request.setTemperatura(38.7);
+        request.setAnamnesis("Paciente evaluado durante la atención");
+        request.setAntecedentesEnfermedades("Sin enfermedades conocidas");
 
         consultaService.cerrarConsulta(consulta.getId(), request);
 
@@ -142,6 +146,10 @@ class ConsultaServiceIntegrationTest {
         assertThat(cerrada.getEstado()).isEqualTo(EstadoConsulta.CERRADA);
         assertThat(cerrada.getFechaCierre()).isNotNull();
         assertThat(cerrada.getCerradoPor()).isEqualTo("doctor@vargasvet.test");
+        assertThat(cerrada.getPesoEnConsulta()).isEqualTo(14.2);
+        assertThat(cerrada.getTemperatura()).isEqualTo(38.7);
+        assertThat(cerrada.getAnamnesis()).isEqualTo("Paciente evaluado durante la atención");
+        assertThat(cerrada.getHistoriaClinica().getEnfermedades()).isEqualTo("Sin enfermedades conocidas");
         assertThat(cita.getEstado()).isEqualTo(EstadoCita.COMPLETADA);
     }
 

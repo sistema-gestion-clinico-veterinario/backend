@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8ef16273-d33e-4236-ac8a-9607d61e8aac" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/config/DataInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/config/DataInitializer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/config/WebSecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/config/WebSecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
-    </list>
+    <list default="true" id="8ef16273-d33e-4236-ac8a-9607d61e8aac" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -187,7 +182,7 @@
       <workItem from="1788321480543" duration="18000" />
       <workItem from="1788379818671" duration="1787000" />
       <workItem from="1788406735785" duration="1436000" />
-      <workItem from="1788757498039" duration="1219000" />
+      <workItem from="1788757498039" duration="1922000" />
     </task>
     <servers />
   </component>
