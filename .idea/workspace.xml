@@ -6,11 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="8ef16273-d33e-4236-ac8a-9607d61e8aac" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/config/WebSecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/config/WebSecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/AuthResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/AuthResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/JWTFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/JWTFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/UsuarioServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/UsuarioServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/LegalDocumentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/LegalDocumentRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/LegalDocumentServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/LegalDocumentServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/LegalDocumentServiceUnitTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/LegalDocumentServiceUnitTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -190,7 +188,8 @@
       <workItem from="1788379818671" duration="1787000" />
       <workItem from="1788406735785" duration="1436000" />
       <workItem from="1788757498039" duration="1922000" />
-      <workItem from="1788799344496" duration="2922000" />
+      <workItem from="1788799344496" duration="4026000" />
+      <workItem from="1788839597215" duration="1380000" />
     </task>
     <servers />
   </component>
