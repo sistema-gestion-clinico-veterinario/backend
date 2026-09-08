@@ -69,7 +69,7 @@ class LegalDocumentServiceUnitTest {
     @Test
     void getStatus_sinDocumentosPendientes_noRequiereAceptacionNiEstaVencido() {
         LegalDocument documento = buildDocument(1L, LocalDateTime.now());
-        when(legalDocumentRepository.findByActivoTrue()).thenReturn(List.of(documento));
+        when(legalDocumentRepository.findByActivoTrueOrderByIdAsc()).thenReturn(List.of(documento));
 
         UserConsent consent = new UserConsent();
         consent.setLegalDocument(documento);
@@ -85,7 +85,7 @@ class LegalDocumentServiceUnitTest {
     @Test
     void getStatus_documentoPendienteDentroDelPeriodoDeGracia_requiereAceptacionPeroNoEstaVencido() {
         LegalDocument documento = buildDocument(1L, LocalDateTime.now().minusDays(5));
-        when(legalDocumentRepository.findByActivoTrue()).thenReturn(List.of(documento));
+        when(legalDocumentRepository.findByActivoTrueOrderByIdAsc()).thenReturn(List.of(documento));
         when(userConsentRepository.findByUsuarioId(USUARIO_ID)).thenReturn(List.of());
 
         LegalStatusDTO status = service.getStatus(USUARIO_ID);
@@ -98,7 +98,7 @@ class LegalDocumentServiceUnitTest {
     @Test
     void getStatus_documentoPendienteFueraDelPeriodoDeGracia_quedaVencido() {
         LegalDocument documento = buildDocument(1L, LocalDateTime.now().minusDays(GRACE_PERIOD_DAYS + 1));
-        when(legalDocumentRepository.findByActivoTrue()).thenReturn(List.of(documento));
+        when(legalDocumentRepository.findByActivoTrueOrderByIdAsc()).thenReturn(List.of(documento));
         when(userConsentRepository.findByUsuarioId(USUARIO_ID)).thenReturn(List.of());
 
         LegalStatusDTO status = service.getStatus(USUARIO_ID);

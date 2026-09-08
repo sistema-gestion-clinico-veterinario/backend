@@ -33,7 +33,7 @@ public class LegalDocumentServiceImpl implements LegalDocumentService {
     @Override
     @Transactional(readOnly = true)
     public List<LegalDocumentDTO> getActiveDocuments() {
-        return legalDocumentRepository.findByActivoTrue().stream()
+        return legalDocumentRepository.findByActivoTrueOrderByIdAsc().stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -41,7 +41,7 @@ public class LegalDocumentServiceImpl implements LegalDocumentService {
     @Override
     @Transactional(readOnly = true)
     public LegalStatusDTO getStatus(Integer usuarioId) {
-        List<LegalDocument> activos = legalDocumentRepository.findByActivoTrue();
+        List<LegalDocument> activos = legalDocumentRepository.findByActivoTrueOrderByIdAsc();
         Set<Long> aceptados = userConsentRepository.findByUsuarioId(usuarioId).stream()
                 .map(uc -> uc.getLegalDocument().getId())
                 .collect(Collectors.toSet());
@@ -58,7 +58,7 @@ public class LegalDocumentServiceImpl implements LegalDocumentService {
     }
 
     private boolean isOverdue(List<LegalDocument> pendingDocuments) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = veterinaria.vargasvet.util.AppClock.now();
         return pendingDocuments.stream()
                 .anyMatch(doc -> doc.getVigenteDesde().plusDays(gracePeriodDays).isBefore(now));
     }
@@ -80,7 +80,7 @@ public class LegalDocumentServiceImpl implements LegalDocumentService {
             UserConsent consent = new UserConsent();
             consent.setUsuario(usuario);
             consent.setLegalDocument(documento);
-            consent.setFechaAceptacion(LocalDateTime.now());
+            consent.setFechaAceptacion(veterinaria.vargasvet.util.AppClock.now());
             consent.setIpAddress(ipAddress);
             consent.setUserAgent(userAgent);
             userConsentRepository.save(consent);
