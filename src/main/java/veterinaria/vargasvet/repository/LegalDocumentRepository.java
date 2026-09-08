@@ -13,5 +13,5 @@ public interface LegalDocumentRepository extends JpaRepository<LegalDocument, Lo
 
     Optional<LegalDocument> findByTipoAndActivoTrue(LegalDocumentType tipo);
 
-    List<LegalDocument> findByActivoTrue();
+    List<LegalDocument> findByActivoTrueOrderByIdAsc();
 }
