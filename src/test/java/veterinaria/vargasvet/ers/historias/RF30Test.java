@@ -440,7 +440,7 @@ class RF30Test {
     private Usuario usuario(String prefix, Company company) {
         Usuario usuario = new Usuario();
         usuario.setEmail(prefix + "-" + UUID.randomUUID() + "@vargasvet.test");
-        usuario.setPassword("credencial-ficticia-no-utilizable");
+        usuario.setPassword("hash-no-real");
         usuario.setNombre(prefix);
         usuario.setApellido("QA");
         usuario.setDni(uniqueDigits(8));
