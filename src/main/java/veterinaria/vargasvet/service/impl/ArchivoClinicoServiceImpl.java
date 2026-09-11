@@ -19,6 +19,7 @@ import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.StorageService;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -54,11 +55,19 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
 
     @Override
     @Transactional
-    public ArchivoClinicoResponse subirArchivo(Long consultaId, MultipartFile file, TipoArchivo tipo, String descripcion) {
+    public ArchivoClinicoResponse subirArchivo(Long consultaId, MultipartFile file, TipoArchivo tipo, String descripcion,
+                                                LocalDate fechaDocumento) {
         Consulta consulta = consultaRepository.findById(consultaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + consultaId));
 
         assertConsultaAccess(consulta);
+
+        if (fechaDocumento == null) {
+            throw new IllegalArgumentException("La fecha del examen o documento adjunto es obligatoria");
+        }
+        if (fechaDocumento.isAfter(veterinaria.vargasvet.util.AppClock.today())) {
+            throw new IllegalArgumentException("La fecha del examen o documento adjunto no puede ser futura");
+        }
 
         if (consulta.getEstado() == EstadoConsulta.CERRADA && !puedeModificarArchivoCerrado()) {
             throw new IllegalArgumentException("No se pueden cargar archivos en una historia clínica cerrada");
@@ -91,6 +100,9 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
         }
 
         String descripcionNormalizada = normalizarDescripcion(descripcion);
+        if (descripcionNormalizada == null) {
+            throw new IllegalArgumentException("La descripción del archivo clínico es obligatoria");
+        }
         String filename = storageService.storeBytes(fileBytes, extension, file.getContentType(), file.getOriginalFilename());
 
         ArchivoClinico archivo = new ArchivoClinico();
@@ -101,6 +113,7 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
         archivo.setTamanioBytes(file.getSize());
         archivo.setUrl(filename);
         archivo.setDescripcion(descripcionNormalizada);
+        archivo.setFechaDocumento(fechaDocumento);
         archivo.setSubidoPor(SecurityUtils.getCurrentUserEmail());
 
         ArchivoClinico saved = archivoClinicoRepository.save(archivo);
@@ -261,6 +274,7 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
         response.setDescripcion(archivo.getDescripcion());
         response.setSubidoPor(archivo.getSubidoPor());
         response.setFechaCarga(archivo.getCreatedAt());
+        response.setFechaDocumento(archivo.getFechaDocumento());
         return response;
     }
 }

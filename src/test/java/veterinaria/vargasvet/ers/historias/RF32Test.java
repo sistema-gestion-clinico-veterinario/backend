@@ -20,6 +20,7 @@ import veterinaria.vargasvet.security.UsuarioPrincipal;
 import veterinaria.vargasvet.service.StorageService;
 import veterinaria.vargasvet.service.impl.ArchivoClinicoServiceImpl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,22 +60,24 @@ class RF32Test {
     }
 
     @Test
-    @DisplayName("[CP-RF32-01] Adjunta un PDF de laboratorio y permite consultarlo después")
+    @DisplayName("[CP-RF32-01] Adjunta un PDF con tipo, descripción y fecha propia del documento, y permite consultarlo después")
     void adjuntaArchivoPermitidoYLoLista() {
         Consulta consulta = consultaAbierta(10L);
         MockMultipartFile file = new MockMultipartFile(
                 "file", "hemograma.pdf", "application/pdf", "%PDF-prueba".getBytes());
+        LocalDate fechaDocumento = LocalDate.now().minusDays(1);
 
         when(consultaRepository.findById(10L)).thenReturn(Optional.of(consulta));
         when(storageService.storeBytes(any(byte[].class), any(), any(), any()))
                 .thenReturn("clinical/hemograma.pdf");
         when(archivoRepository.save(any(ArchivoClinico.class))).thenAnswer(invocation -> {
             ArchivoClinico archivo = invocation.getArgument(0);
+            org.springframework.test.util.ReflectionTestUtils.invokeMethod(archivo, "onCreate");
             archivo.setId(99L);
             return archivo;
         });
 
-        var response = service.subirArchivo(10L, file, TipoArchivo.LABORATORIO, "Hemograma inicial");
+        var response = service.subirArchivo(10L, file, TipoArchivo.LABORATORIO, "Hemograma inicial", fechaDocumento);
         when(archivoRepository.findByConsultaId(10L)).thenReturn(List.of(archivoDesde(response, consulta)));
 
         var archivos = service.listarPorConsulta(10L);
@@ -82,7 +85,59 @@ class RF32Test {
         assertThat(response.getId()).isEqualTo(99L);
         assertThat(response.getUrl()).isEqualTo("clinical/hemograma.pdf");
         assertThat(response.getDescripcion()).isEqualTo("Hemograma inicial");
+        assertThat(response.getFechaDocumento())
+                .as("RVA-034: debe persistirse y devolverse la fecha propia del examen/documento")
+                .isEqualTo(fechaDocumento);
+        assertThat(response.getFechaCarga())
+                .as("La fecha/hora técnica de carga se conserva como metadato adicional, separado de fechaDocumento")
+                .isNotNull();
         assertThat(archivos).singleElement().extracting("nombre").isEqualTo("hemograma.pdf");
+    }
+
+    @Test
+    @DisplayName("[CP-RF32-01][RVA-034] Rechaza la carga sin la fecha propia del examen o documento")
+    void rechazaArchivoSinFechaDocumento() {
+        when(consultaRepository.findById(10L)).thenReturn(Optional.of(consultaAbierta(10L)));
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "hemograma.pdf", "application/pdf", "%PDF-prueba".getBytes());
+
+        assertThatThrownBy(() -> service.subirArchivo(10L, file, TipoArchivo.LABORATORIO, "Hemograma", null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("fecha");
+
+        verify(storageService, never()).storeBytes(any(), any(), any(), any());
+        verify(archivoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("[CP-RF32-01][RVA-034] Rechaza una fecha de documento futura")
+    void rechazaArchivoConFechaDocumentoFutura() {
+        when(consultaRepository.findById(10L)).thenReturn(Optional.of(consultaAbierta(10L)));
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "hemograma.pdf", "application/pdf", "%PDF-prueba".getBytes());
+
+        assertThatThrownBy(() -> service.subirArchivo(10L, file, TipoArchivo.LABORATORIO, "Hemograma",
+                LocalDate.now().plusDays(1)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("futura");
+
+        verify(storageService, never()).storeBytes(any(), any(), any(), any());
+        verify(archivoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("[CP-RF32-02][RVA-033] Rechaza una carga sin descripción sin almacenar ni persistir")
+    void rechazaArchivoSinDescripcionSinEfectos() {
+        when(consultaRepository.findById(10L)).thenReturn(Optional.of(consultaAbierta(10L)));
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "hemograma.pdf", "application/pdf", "%PDF-prueba".getBytes());
+
+        assertThatThrownBy(() -> service.subirArchivo(10L, file, TipoArchivo.LABORATORIO, null, LocalDate.now()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("descripción");
+
+        verify(storageService, never()).storeBytes(any(), any(), any(), any());
+        verify(archivoRepository, never()).save(any());
     }
 
     @Test
@@ -92,7 +147,7 @@ class RF32Test {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "resultado.exe", "application/octet-stream", new byte[]{1});
 
-        assertThatThrownBy(() -> service.subirArchivo(10L, file, TipoArchivo.LABORATORIO, "Resultado"))
+        assertThatThrownBy(() -> service.subirArchivo(10L, file, TipoArchivo.LABORATORIO, "Resultado", LocalDate.now()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Extensión no permitida");
 
@@ -108,7 +163,7 @@ class RF32Test {
         when(file.isEmpty()).thenReturn(false);
         when(file.getSize()).thenReturn(20L * 1024 * 1024 + 1);
 
-        assertThatThrownBy(() -> service.subirArchivo(10L, file, TipoArchivo.LABORATORIO, "Resultado"))
+        assertThatThrownBy(() -> service.subirArchivo(10L, file, TipoArchivo.LABORATORIO, "Resultado", LocalDate.now()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("20 MB");
 

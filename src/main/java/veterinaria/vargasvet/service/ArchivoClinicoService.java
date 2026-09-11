@@ -5,10 +5,12 @@ import org.springframework.web.multipart.MultipartFile;
 import veterinaria.vargasvet.domain.enums.TipoArchivo;
 import veterinaria.vargasvet.dto.response.ArchivoClinicoResponse;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface ArchivoClinicoService {
-    ArchivoClinicoResponse subirArchivo(Long consultaId, MultipartFile file, TipoArchivo tipo, String descripcion);
+    ArchivoClinicoResponse subirArchivo(Long consultaId, MultipartFile file, TipoArchivo tipo, String descripcion,
+                                         LocalDate fechaDocumento);
     List<ArchivoClinicoResponse> listarPorConsulta(Long consultaId);
     Resource servirContenido(Long id);
     ArchivoClinicoResponse obtenerPorId(Long id);

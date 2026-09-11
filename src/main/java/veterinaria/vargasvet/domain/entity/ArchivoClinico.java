@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.TipoArchivo;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -43,6 +44,9 @@ public class ArchivoClinico {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "fecha_documento")
+    private LocalDate fechaDocumento;
 
     @PrePersist
     protected void onCreate() {
