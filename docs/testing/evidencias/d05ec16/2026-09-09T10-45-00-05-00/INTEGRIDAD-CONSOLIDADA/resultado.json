@@ -1,0 +1,26 @@
+{
+  "executionId": "INTEGRIDAD-CONSOLIDADA-d05ec16-20260909T104500-0500",
+  "executedAt": "2026-09-09T10:45:00-05:00",
+  "baseCommit": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "caseId": "CP-RNF10-01",
+  "status": "NO_CUMPLE",
+  "method": "consolidacion de evidencia funcional, de integracion y produccion E2E ya ejecutada",
+  "counterexamples": [
+    {
+      "source": "docs/testing/evidencias/7818730/2026-09-08T18-35-16-05-00/PRODUCCION-SEGURIDAD-E2E/08-empleado.json",
+      "rule": "duplicados",
+      "observation": "El despliegue acepto con HTTP 201 un segundo empleado con el mismo documento. El correo duplicado si fue rechazado.",
+      "persistentEffect": "Se creo una cuenta duplicada que posteriormente tuvo que localizarse y desactivarse durante la limpieza QA.",
+      "cleanupSources": [
+        "docs/testing/evidencias/7818730/2026-09-08T18-35-16-05-00/PRODUCCION-SEGURIDAD-E2E/11-desactivacion.json",
+        "docs/testing/evidencias/7818730/2026-09-08T18-35-16-05-00/PRODUCCION-SEGURIDAD-E2E/12-limpieza-verificada.json"
+      ]
+    },
+    {
+      "source": "docs/testing/evidencias/d05ec16/2026-09-08T11-44-45-05-00/LOTE1/resultado.json",
+      "rule": "pertenencia a empresa",
+      "observation": "La prueba CP-RNF02-02 demostro que la creacion de una receta no rechazo una consulta perteneciente a otra empresa."
+    }
+  ],
+  "interpretation": "RNF-10 afirma que ninguna operacion invalida debe dejar cambios parciales o inconsistentes. El alta persistente de un empleado con documento duplicado es un contraejemplo suficiente para rechazar ese criterio universal; la falla de pertenencia agrega una segunda brecha independiente."
+}

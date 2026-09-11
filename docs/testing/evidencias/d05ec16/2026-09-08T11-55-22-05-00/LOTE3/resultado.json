@@ -1,0 +1,11 @@
+{
+  "executionId": "LOTE3-d05ec16-20260908T115522-0500",
+  "executedAt": "2026-09-08T11:55:22-05:00",
+  "baseCommit": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "workingTreeDirty": true,
+  "finalEvidenceRequiresCommittedRerun": true,
+  "scope": ["RF-09", "RF-10", "RF-11", "RF-12", "RF-13", "RF-14", "RF-15", "RF-16", "RF-23", "RF-24", "RF-25", "RF-26", "RF-27"],
+  "technicalResult": {"testClasses": 3, "tests": 14, "passed": 14, "failures": 0, "errors": 0, "skipped": 0},
+  "ersInterpretation": {"casesInBatch": 20, "complies": 0, "doesNotComply": 0, "pending": 20, "blocked": 0},
+  "note": "The existing tests are valid partial evidence but do not cover every API, E2E, export, deactivation, rescheduling, scope and notification result required by the ERS."
+}

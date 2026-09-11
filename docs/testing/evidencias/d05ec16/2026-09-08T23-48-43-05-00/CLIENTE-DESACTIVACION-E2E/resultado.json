@@ -1,0 +1,18 @@
+{
+  "idEjecucion": "CLIENTE-DESACTIVACION-E2E-d05ec16-20260908T234843-0500",
+  "fechaHora": "2026-09-08T23:48:43-05:00",
+  "entorno": "produccion-controlada",
+  "datos": "empresa ficticia 3",
+  "caso": "CP-RF19-02",
+  "estado": "No cumple",
+  "comprobacionesAprobadas": [
+    "El cliente activo pasó a estado inactivo.",
+    "La mascota Aisha Cruz permaneció vinculada.",
+    "La historia HC-000030 permaneció consultable.",
+    "El cliente inactivo dejó de aparecer entre los propietarios seleccionables para una nueva cita.",
+    "Al terminar la prueba se restauró el estado activo del cliente."
+  ],
+  "incumplimiento": "La confirmación no solicitó ni registró un motivo de desactivación, aunque el caso y sus criterios lo exigen.",
+  "estadoFinalRestaurado": "Activo",
+  "datosSensiblesConservados": false
+}

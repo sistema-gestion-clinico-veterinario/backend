@@ -1,0 +1,46 @@
+{
+  "idEjecucion": "HORARIO-EXPORTACION-E2E-d05ec16-20260908T233653-0500",
+  "fechaHora": "2026-09-08T23:36:53-05:00",
+  "entorno": "produccion-controlada",
+  "datos": "empresa ficticia 3",
+  "caso": "CP-RF16-01",
+  "estado": "No cumple",
+  "acciones": [
+    "Se abrió Mi Horario con la vista Mes seleccionada en septiembre de 2026.",
+    "Se ejecutó la opción EXCEL y se inspeccionó el archivo XLSX descargado.",
+    "Se ejecutó la opción PDF y se verificó que invoca el diálogo de impresión mediante un iframe temporal; no genera ni descarga directamente un archivo PDF verificable."
+  ],
+  "observaciones": {
+    "pantalla": {
+      "periodo": "Septiembre 2026",
+      "turnosTotales": 50,
+      "usuarioVisible": "Felipe Alva Vargas"
+    },
+    "excel": {
+      "archivo": "Mi_Horario_2026-09-08.xlsx",
+      "hoja": "Mi Horario",
+      "rangoUsado": "A1:H18",
+      "colaboradorExportado": "Empleado",
+      "cargoExportado": "Personal",
+      "totalHorasExportado": "324 hrs",
+      "periodosIncluidos": [
+        "29/6 al 5/7",
+        "6/7 al 12/7",
+        "13/7 al 19/7",
+        "20/7 al 26/7",
+        "27/7 al 2/8",
+        "31/8 al 6/9",
+        "7/9 al 13/9",
+        "14/9 al 20/9",
+        "21/9 al 27/9",
+        "28/9 al 4/10"
+      ],
+      "caracteresDaniadosDetectados": true
+    },
+    "pdf": {
+      "archivoDescargado": false,
+      "mecanismo": "iframe.contentWindow.print()"
+    }
+  },
+  "conclusion": "La exportación no representa fielmente el período ni al colaborador visible. El Excel mezcla semanas ajenas a septiembre, exporta un nombre genérico y contiene caracteres dañados. La opción PDF delega al diálogo de impresión y no produjo un archivo que pudiera validarse."
+}

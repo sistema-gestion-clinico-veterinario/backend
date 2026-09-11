@@ -38,4 +38,9 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
 
     @Query("SELECT p FROM Purchase p WHERE p.user.company.id = :companyId AND p.cita IS NULL ORDER BY p.createdAt DESC")
     Page<Purchase> findByUserCompanyIdNonCita(@Param("companyId") Integer companyId, Pageable pageable);
+
+    @Query("SELECT p FROM Purchase p JOIN FETCH p.cita c LEFT JOIN FETCH c.servicio " +
+           "WHERE p.cita.id IN :citaIds AND p.tipoPurchase = veterinaria.vargasvet.domain.enums.TipoPurchase.SERVICIO_CITA " +
+           "AND p.paymentStatus = veterinaria.vargasvet.domain.enums.PaymentStatus.PAID")
+    List<Purchase> findPagadosByCitaIds(@Param("citaIds") List<Long> citaIds);
 }

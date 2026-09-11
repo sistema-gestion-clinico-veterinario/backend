@@ -1,0 +1,34 @@
+{
+  "fechaEjecucion": "2026-09-09T10:14:53-05:00",
+  "entorno": "integracion local aislada con H2",
+  "comando": "mvn -Dtest=CitaServiceIntegrationTest test",
+  "resultadoSuite": {
+    "pruebas": 14,
+    "fallos": 0,
+    "errores": 0,
+    "omitidas": 0,
+    "duracionSegundos": 22.216
+  },
+  "casos": {
+    "CP-RF24-02": {
+      "resultado": "Cumple",
+      "detalle": "Dos transacciones concurrentes intentaron reservar la misma mascota, profesional y franja. Una finalizo correctamente, la segunda fue rechazada y el conteo final fue exactamente una cita."
+    },
+    "CP-RF24-03": {
+      "resultado": "No cumple",
+      "detalle": "Mascota, propietario y empleado inactivos fueron rechazados sin persistencia; un servicio con activo=false y disponible=false fue aceptado y la cita se persistio."
+    },
+    "CP-RF26-02": {
+      "resultado": "Cumple",
+      "detalle": "Una reprogramacion solicitada a treinta minutos del inicio fue rechazada y fecha y estado permanecieron sin cambios."
+    }
+  },
+  "reporteSurefire": {
+    "ruta": "target/surefire-reports/TEST-veterinaria.vargasvet.service.impl.CitaServiceIntegrationTest.xml",
+    "sha256": "E53AC229BBECDAFE2FBCF45F62806124EF22851848C0AC8B6E4ECC0A2B374F85"
+  },
+  "observaciones": [
+    "La prueba concurrente usa dos hilos, dos transacciones independientes, una barrera de inicio y un bloqueo pesimista sobre el empleado.",
+    "El escenario de servicio inactivo es una prueba de caracterizacion: pasa cuando reproduce de forma controlada el defecto observado; no significa que el requisito cumpla."
+  ]
+}

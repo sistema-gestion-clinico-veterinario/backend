@@ -15,6 +15,7 @@ import veterinaria.vargasvet.repository.ArchivoClinicoRepository;
 import veterinaria.vargasvet.repository.ConsultaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.ArchivoClinicoService;
+import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.StorageService;
 
 import java.io.IOException;
@@ -49,6 +50,7 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
     private final ConsultaRepository consultaRepository;
     private final ArchivoClinicoRepository archivoClinicoRepository;
     private final StorageService storageService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -101,7 +103,13 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
         archivo.setDescripcion(descripcionNormalizada);
         archivo.setSubidoPor(SecurityUtils.getCurrentUserEmail());
 
-        return toResponse(archivoClinicoRepository.save(archivo));
+        ArchivoClinico saved = archivoClinicoRepository.save(archivo);
+
+        auditLogService.log(companyIdDe(consulta), "SUBIR_ARCHIVO_CLINICO", "Historias Clínicas",
+                "Se subió el archivo " + saved.getNombre() + " (" + tipo + ") para la mascota "
+                        + nombreMascotaDe(consulta));
+
+        return toResponse(saved);
     }
 
     @Override
@@ -198,8 +206,32 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
         if (archivo.getConsulta().getEstado() == EstadoConsulta.CERRADA && !puedeModificarArchivoCerrado()) {
             throw new IllegalArgumentException("No se pueden eliminar archivos de una historia clínica cerrada");
         }
+        Integer companyId = companyIdDe(archivo.getConsulta());
+        String nombre = archivo.getNombre();
+        String mascota = nombreMascotaDe(archivo.getConsulta());
+
         storageService.delete(archivo.getUrl());
         archivoClinicoRepository.delete(archivo);
+
+        auditLogService.log(companyId, "ELIMINAR_ARCHIVO_CLINICO", "Historias Clínicas",
+                "Se eliminó el archivo " + nombre + " de la mascota " + mascota);
+    }
+
+    private Integer companyIdDe(Consulta consulta) {
+        if (consulta.getHistoriaClinica() == null || consulta.getHistoriaClinica().getMascota() == null
+                || consulta.getHistoriaClinica().getMascota().getApoderado() == null
+                || consulta.getHistoriaClinica().getMascota().getApoderado().getUser() == null
+                || consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null) {
+            return null;
+        }
+        return consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany().getId();
+    }
+
+    private String nombreMascotaDe(Consulta consulta) {
+        if (consulta.getHistoriaClinica() == null || consulta.getHistoriaClinica().getMascota() == null) {
+            return "desconocida";
+        }
+        return consulta.getHistoriaClinica().getMascota().getNombreCompleto();
     }
 
     private boolean puedeModificarArchivoCerrado() {

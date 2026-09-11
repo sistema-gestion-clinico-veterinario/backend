@@ -1,0 +1,15 @@
+{
+  "executionId": "RECETAS-API-d05ec16-20260908T124915-0500",
+  "executedAt": "2026-09-08T12:49:15-05:00",
+  "baseCommit": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "workingTreeDirty": true,
+  "finalEvidenceRequiresCommittedRerun": true,
+  "scope": ["RF-31"],
+  "technicalResult": {"tests": 3, "passed": 1, "failures": 2, "errors": 0, "skipped": 0},
+  "confirmedResults": [
+    {"case": "CP-RF31-01", "result": "A complete prescription returns HTTP 201.", "status": "pending"},
+    {"case": "CP-RF31-02", "result": "A prescription without duration returns HTTP 201 instead of 400.", "status": "does_not_comply"},
+    {"case": "CP-RF31-02", "result": "A prescription without instructions returns HTTP 201 instead of 400.", "status": "does_not_comply"}
+  ],
+  "surefireSha256": "DEC4BACA57A6C93CDA06FB990836B9C0DDFFCD561A3F0318AAB6E8A8B8245C39"
+}

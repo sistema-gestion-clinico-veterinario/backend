@@ -23,9 +23,11 @@ import java.time.Duration;
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private final SharedRateLimitService sharedRateLimitService;
+    private final ClientIpResolver clientIpResolver;
 
-    public RateLimitFilter(SharedRateLimitService sharedRateLimitService) {
+    public RateLimitFilter(SharedRateLimitService sharedRateLimitService, ClientIpResolver clientIpResolver) {
         this.sharedRateLimitService = sharedRateLimitService;
+        this.clientIpResolver = clientIpResolver;
     }
 
     @Value("${app.rate-limit.login-per-minute:5}")
@@ -66,7 +68,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
 
-        String ip = request.getRemoteAddr();
+        String ip = clientIpResolver.resolve(request);
         String user = request.getUserPrincipal() != null
                 ? request.getUserPrincipal().getName()
                 : null;

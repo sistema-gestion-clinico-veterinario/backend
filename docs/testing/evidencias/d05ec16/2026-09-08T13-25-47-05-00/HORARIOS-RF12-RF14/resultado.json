@@ -1,0 +1,14 @@
+{
+  "id": "HORARIOS-RF12-RF14-d05ec16-20260908T132547-0500",
+  "fechaHora": "2026-09-08T13:25:47-05:00",
+  "commitBase": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "comando": "mvn -Dtest=RF12To14Test test",
+  "pruebas": 5,
+  "aprobadas": 4,
+  "fallidas": 1,
+  "errores": 0,
+  "omitidas": 0,
+  "casosERS": ["CP-RF12-01", "CP-RF13-01", "CP-RF13-02", "CP-RF14-01"],
+  "hallazgo": "La modificación individual de turno no identifica ni bloquea citas relacionadas",
+  "sha256Prueba": "2C4861D6B0D1EFEB9C1D19A69F8D150835A9A9E51319C3689BFF3A4FBD9B24AE"
+}

@@ -1,0 +1,23 @@
+{
+  "executionId": "API2-d05ec16-20260908T123619-0500",
+  "executedAt": "2026-09-08T12:36:19-05:00",
+  "baseCommit": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "workingTreeDirty": true,
+  "finalEvidenceRequiresCommittedRerun": true,
+  "scope": ["RF-01", "RF-02", "RF-03", "RF-04", "RF-06", "RF-08", "RF-30", "RNF-03"],
+  "technicalResult": {"testClasses": 3, "tests": 11, "passed": 9, "failures": 2, "errors": 0, "skipped": 0},
+  "confirmedResults": [
+    {"case": "CP-RF30-02", "result": "The HTTP boundary rejects closure without a version.", "status": "pending"},
+    {"case": "CP-RF30-03", "result": "The HTTP boundary returns 200 for weight 10.123 instead of rejecting it.", "status": "does_not_comply"},
+    {"case": "CP-RF30-04", "result": "The HTTP boundary returns 200 when vaccination and deworming decisions are absent.", "status": "does_not_comply"}
+  ],
+  "partialContractCoverage": [
+    "Authentication tokens are omitted from JSON and emitted as HttpOnly Secure SameSite cookies.",
+    "Password recovery response is neutral.",
+    "Password change uses the authenticated identity.",
+    "Email confirmations remain separate.",
+    "Company context cannot be forced by a company administrator when creating roles.",
+    "Permission version is forwarded through If-Match."
+  ],
+  "note": "The first harness attempt failed at test compilation because a Jakarta Validator was passed where Spring Validator was required. That harness-only issue was corrected before this recorded execution and is not classified as an application defect."
+}

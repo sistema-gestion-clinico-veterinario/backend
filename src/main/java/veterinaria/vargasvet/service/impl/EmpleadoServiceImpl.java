@@ -75,6 +75,9 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Value("${app.company.logo}")
     private String defaultCompanyLogo;
 
+    @Value("${security.verification-token-validity-hours:24}")
+    private long verificationTokenValidityHours;
+
     @Override
     @Transactional
     public UserProfileDTO registerEmpleado(EmpleadoRequest dto) {
@@ -97,7 +100,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         usuario.setEmailVerified(false);
         String verificationToken = SecurityTokenUtils.generate();
         usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
-        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(24));
+        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
 
         Integer companyIdToUse;
         if (SecurityUtils.isSuperAdmin()) {
@@ -698,7 +701,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                     model
             );
 
-            emailService.sendEmail(mail, "email/welcome-template");
+            emailService.sendEmailWithRetry(mail, "email/welcome-template");
         } catch (Exception e) {
             System.err.println("[WARNING] No se pudo enviar el correo de bienvenida a " + usuario.getEmail() + ": " + e.getMessage());
         }

@@ -1,0 +1,9 @@
+{
+  "case": "CRED-ACTIVACION-UN-SOLO-USO",
+  "rawStatus": 404,
+  "originalOracle": "400/401/409",
+  "correctedOracle": "cualquier respuesta 4xx que rechace el token ya consumido",
+  "correctedVerdict": "CUMPLE",
+  "reason": "HTTP 404 rechaza el segundo uso sin confirmar la existencia interna del token. La correccion afecta al criterio de la prueba, no al resultado observado.",
+  "rawEvidencePreserved": "activacion-sanitizada.json"
+}

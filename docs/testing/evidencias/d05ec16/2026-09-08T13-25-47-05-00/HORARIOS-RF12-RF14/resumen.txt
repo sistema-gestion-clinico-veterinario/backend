@@ -1,0 +1,5 @@
+Resultado técnico: 5 pruebas, 4 aprobadas y 1 fallida.
+
+Se aprobaron consulta ordenada, creación válida, rechazo de cruce y modificación
+hacia un período disponible. Falló el escenario de modificación con una cita
+relacionada: el turno se actualiza sin identificarla para revisión.

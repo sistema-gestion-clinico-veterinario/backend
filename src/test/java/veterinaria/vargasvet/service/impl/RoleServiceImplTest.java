@@ -46,7 +46,8 @@ class RoleServiceImplTest {
             rolVistaPermisoRepository,
             mock(VentanaRepository.class),
             rolVentanaConfiguracionRepository,
-            rolVistaConfiguracionRepository
+            rolVistaConfiguracionRepository,
+            mock(veterinaria.vargasvet.service.AuditLogService.class)
     );
 
     @Test

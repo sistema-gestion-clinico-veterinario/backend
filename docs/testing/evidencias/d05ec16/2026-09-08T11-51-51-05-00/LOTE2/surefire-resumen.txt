@@ -1,0 +1,22 @@
+Ejecución: LOTE2-d05ec16-20260908T115151-0500
+Fecha: 2026-09-08 11:51:51 -05:00
+Base: d05ec16df652d10a8f9380bd52b6e0ef815612d7 (árbol de trabajo modificado)
+
+TOTAL: 13 clases, 48 pruebas, 48 aprobadas, 0 fallidas, 0 errores, 0 omitidas.
+
+Cobertura parcial observada:
+- política de contraseñas;
+- doble confirmación para cambio de correo;
+- invalidación de sesiones y refresh tokens;
+- protección y ámbito de roles;
+- permisos por acción y alcance de agenda;
+- filtrado del menú por audiencia;
+- aislamiento unitario de mascotas y gestión de usuarios;
+- atributos de cookies y control JWT;
+- integridad transaccional parcial en consultas, citas y pagos.
+
+Interpretación:
+- Ningún CP se marca Cumple porque faltan flujos API/E2E o matrices negativas completas.
+- CP-RNF02-02 conserva No cumple por el fallo transversal de receta entre empresas encontrado en Lote 1.
+- Los otros 18 CP del lote permanecen Pendiente con evidencia parcial.
+- La aprobación de las 48 pruebas existentes no demuestra por sí sola el 100 % de autorización exigido por RNF-02.

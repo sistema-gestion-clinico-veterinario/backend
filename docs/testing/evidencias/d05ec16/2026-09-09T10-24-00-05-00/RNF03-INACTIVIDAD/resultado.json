@@ -1,0 +1,19 @@
+{
+  "fechaRevision": "2026-09-09T10:24:00-05:00",
+  "caso": "CP-RNF03-01",
+  "resultado": "No cumple",
+  "metodo": "revision de configuracion y flujo de renovacion de sesion",
+  "hallazgos": [
+    "El access token tiene una vigencia fija de 1800 segundos desde su emision.",
+    "El refresh token tiene una vigencia de 604800 segundos y la sesion un limite absoluto de 86400 segundos.",
+    "Al recibir HTTP 401, el interceptor solicita /auth/refresh automaticamente.",
+    "El backend permite rotar el refresh token mientras no venza el limite absoluto, pero no consulta ni conserva una marca de ultima actividad del usuario.",
+    "Por ello, una solicitud realizada tras treinta minutos sin actividad puede renovar la sesion en lugar de exigir autenticacion."
+  ],
+  "fuentes": [
+    "src/main/resources/application.properties:38-40",
+    "src/main/java/veterinaria/vargasvet/service/impl/UsuarioServiceImpl.java:621-705",
+    "frontend/src/app/core/interceptors/api.interceptor.ts:77-112"
+  ],
+  "conclusion": "La expiracion fija del access token no equivale a un timeout por inactividad. Las cookies siguen protegidas y no expuestas a JavaScript, pero el requisito compuesto no se cumple."
+}

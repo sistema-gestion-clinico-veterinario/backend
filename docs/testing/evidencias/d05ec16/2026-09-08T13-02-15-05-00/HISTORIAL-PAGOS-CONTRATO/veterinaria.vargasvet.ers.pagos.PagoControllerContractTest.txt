@@ -1,0 +1,19 @@
+-------------------------------------------------------------------------------
+Test set: veterinaria.vargasvet.ers.pagos.PagoControllerContractTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.218 s <<< FAILURE! -- in veterinaria.vargasvet.ers.pagos.PagoControllerContractTest
+veterinaria.vargasvet.ers.pagos.PagoControllerContractTest.historialExponeTodosLosFiltrosExigidos -- Time elapsed: 0.193 s <<< FAILURE!
+java.lang.AssertionError: 
+[RF-45 exige filtrar el historial por cliente, mascota, período y estado] 
+Expecting HashSet:
+  ["companyId", "size", "page"]
+to contain:
+  ["clienteId", "mascotaId", "fechaDesde", "fechaHasta", "estado"]
+but could not find the following element(s):
+  ["clienteId", "mascotaId", "fechaDesde", "fechaHasta", "estado"]
+
+	at veterinaria.vargasvet.ers.pagos.PagoControllerContractTest.historialExponeTodosLosFiltrosExigidos(PagoControllerContractTest.java:33)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+

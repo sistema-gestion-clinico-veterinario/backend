@@ -1,0 +1,19 @@
+{
+  "idEjecucion": "CLIENTE-ACTUALIZACION-E2E-d05ec16-20260908T234629-0500",
+  "fechaHora": "2026-09-08T23:46:29-05:00",
+  "entorno": "produccion-controlada",
+  "datos": "empresa ficticia 3",
+  "caso": "CP-RF19-01",
+  "estado": "No cumple",
+  "precondicionesVerificadas": {
+    "clienteActivo": true,
+    "mascotaRelacionada": "Aisha Cruz",
+    "historiaRelacionada": "HC-000030"
+  },
+  "cambioIntentado": "Actualización válida del teléfono",
+  "primerIntento": "El formulario cargó al cliente sin un rol de cliente seleccionado y el backend rechazó la actualización.",
+  "segundoIntento": "Se seleccionó el único ROLE_CLIENTE ofrecido por la interfaz; el backend volvió a rechazarlo como rol ajeno o inactivo.",
+  "respuestaVisible": "Solo puede asignar roles de cliente activos de la misma empresa",
+  "verificacionIntegridad": "El teléfono original permaneció sin cambios; no se produjo una actualización parcial.",
+  "datosSensiblesConservados": false
+}

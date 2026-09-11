@@ -1,0 +1,76 @@
+{
+  "executionId": "LOTE1-d05ec16-20260908T114445-0500",
+  "executedAt": "2026-09-08T11:44:45-05:00",
+  "baseCommit": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "workingTreeDirty": true,
+  "finalEvidenceRequiresCommittedRerun": true,
+  "environment": {
+    "framework": "Spring Boot 3.4.2",
+    "javaCompilation": "21",
+    "javaRuntime": "OpenJDK 22.0.2",
+    "maven": "3.9.9",
+    "database": "H2 2.3.232 in-memory"
+  },
+  "command": "mvn -Dtest=RF30Test,RF17To21Test,RF29Test,RF31Test,CitaServiceIntegrationTest,CartillaServiceImplTest,RecordatorioPreventivoServiceImplTest test",
+  "technicalResult": {
+    "tests": 36,
+    "passed": 31,
+    "failures": 5,
+    "errors": 0,
+    "skipped": 0
+  },
+  "ersResult": {
+    "casesInBatch": 22,
+    "casesWithPartialExecution": 22,
+    "complies": 0,
+    "doesNotComplyInBatch": 3,
+    "crossCuttingCasesThatDoNotComply": 1,
+    "pendingInBatch": 19,
+    "blocked": 0
+  },
+  "failedChecks": [
+    {
+      "case": "CP-RF30-03",
+      "test": "cpRf3003_rechazaPesoConMasDeDosDecimales",
+      "finding": "The backend accepts weight 10.123 although the criterion permits at most two decimals."
+    },
+    {
+      "case": "CP-RF30-04",
+      "test": "cpRf3004_rechazaDecisionesPreventivasAusentes",
+      "finding": "A consultation can be closed without explicit vaccination and deworming decisions."
+    },
+    {
+      "case": "CP-RF31-02",
+      "test": "cpRf3102_rechazaRecetaSinDuracion",
+      "finding": "A prescription without duration has no validation violation."
+    },
+    {
+      "case": "CP-RF31-02",
+      "test": "cpRf3102_rechazaRecetaSinIndicaciones",
+      "finding": "A prescription without instructions has no validation violation."
+    },
+    {
+      "case": "CP-RNF02-02",
+      "test": "cpRnf0202_rechazaRecetaEnConsultaDeOtraEmpresa",
+      "finding": "Prescription creation does not reject a consultation identifier belonging to another company."
+    }
+  ],
+  "sourceHashes": {
+    "RF30Test.java": "10E7B0ABC24D4B7779B4ECC6349180B7D13FEC5D6651F0DBCA38A55BAEA07EE6",
+    "RF17To21Test.java": "FF0B7B9516B73CDD7C6CA54DC8D63D3E51228B27CE2F782D3C91C21C9B239A5B",
+    "RF29Test.java": "EB6D5D5F8AA8F7D60D7F4E79750FE2DEEC0928CC5551D92A24C24FEEE8975CA6",
+    "RF31Test.java": "4C60B0C74DFDF858BD38A98A33739377A057C1D809E70C8B1B1E6540975C564C",
+    "CitaServiceIntegrationTest.java": "3E5DA8431EFEB6BDD49C275405F20AE9049D8CEC64D49F2C2EACA53AD4449089",
+    "CartillaServiceImplTest.java": "F8E5EC416F3127F486368BEF28739DA33ABF9CF416E42E2FE9ED1C5D6AA08889",
+    "RecordatorioPreventivoServiceImplTest.java": "1E0A36B454417AE55FE859A1F46ABD6771E1D53CD639BFD0A2838479A0C29ABC"
+  },
+  "surefireReportHashes": {
+    "TEST-veterinaria.vargasvet.ers.clientes.RF17To21Test.xml": "0265DE3236F7F8010B461C836097A440847CA1EFFF646ED89194A6601F9199B3",
+    "TEST-veterinaria.vargasvet.ers.historias.RF29Test.xml": "0D165F8A7F70B5FDAE416CD665606F87E97A43DBB6D8523278CED39D310DA33A",
+    "TEST-veterinaria.vargasvet.ers.historias.RF30Test.xml": "6CBE655019DB06ECC0EFE5F110F962B69BA9D2932527DE481E6F79AE4361AE32",
+    "TEST-veterinaria.vargasvet.ers.historias.RF31Test.xml": "28C701A8D3691A621B2A551B5AE005C04A22C36C8FD562673D02B5A4B5467DB1",
+    "TEST-veterinaria.vargasvet.service.impl.CartillaServiceImplTest.xml": "33164421180C39DA8AB802463300DC453C0925835D2AFD1DC801B1E65109CA76",
+    "TEST-veterinaria.vargasvet.service.impl.CitaServiceIntegrationTest.xml": "327A75D7FA2093D4AFB981505AE5AB7F0932E9E8C827FC2BE2AD0A79BCE575D2",
+    "TEST-veterinaria.vargasvet.service.impl.RecordatorioPreventivoServiceImplTest.xml": "38811CA121A58F08057BA6CF82D0CD321DB20EDF4A68F8E190CC793986A65556"
+  }
+}

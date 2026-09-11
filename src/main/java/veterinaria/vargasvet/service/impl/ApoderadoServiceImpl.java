@@ -80,6 +80,9 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     @Value("${app.company.address}")
     private String companyAddress;
 
+    @Value("${security.verification-token-validity-hours:24}")
+    private long verificationTokenValidityHours;
+
     @Override
     @Transactional
     public UserProfileDTO registerApoderado(ApoderadoRequest dto) {
@@ -117,7 +120,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         usuario.setEmailVerified(false);
         String verificationToken = SecurityTokenUtils.generate();
         usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
-        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(24));
+        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
         businessValidator.checkCompanyActiva(companyIdToUse);
         usuario.setCompany(companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
@@ -176,7 +179,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
                     model
             );
 
-            emailService.sendEmail(mail, "email/welcome-template");
+            emailService.sendEmailWithRetry(mail, "email/welcome-template");
         } catch (Exception e) {
             System.err.println("[WARNING] No se pudo enviar el correo de verificación al apoderado " + usuario.getEmail() + ": " + e.getMessage());
         }

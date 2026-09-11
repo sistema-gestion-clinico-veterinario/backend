@@ -1,0 +1,16 @@
+{
+  "fechaEjecucion": "2026-09-09T10:18:06-05:00",
+  "entorno": "integracion local aislada con H2",
+  "comando": "mvn -Dtest=RF30Test#cpRf3006_rechazaSobrescrituraConcurrente test",
+  "caso": "CP-RF30-06",
+  "resultado": "Cumple",
+  "pruebas": 1,
+  "fallos": 0,
+  "errores": 0,
+  "detalle": "Dos solicitudes partieron de la misma version. La primera guardo peso 11.0; la segunda fue rechazada por version desactualizada y la base conservo 11.0.",
+  "reporteSurefire": {
+    "ruta": "target/surefire-reports/TEST-veterinaria.vargasvet.ers.historias.RF30Test.xml",
+    "sha256": "237267B47B6E354EC94B3F2F56FBD964498813C3105A994090969E8826512ACE"
+  },
+  "nota": "La suite RF30 completa tambien se ejecuto y detecto por separado incumplimientos en precision decimal y decisiones preventivas; el caso CP-RF30-06 se repitio aisladamente para obtener un resultado atribuible."
+}

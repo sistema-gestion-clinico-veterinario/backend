@@ -9,14 +9,14 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import veterinaria.vargasvet.domain.entity.AuditLog;
-import veterinaria.vargasvet.dto.AuditLogDTO;
 import veterinaria.vargasvet.repository.AuditLogRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.domain.entity.Company;
+import veterinaria.vargasvet.security.ClientIpResolver;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.AuditLogService;
+import veterinaria.vargasvet.service.AuditRealtimePublisher;
 import java.time.LocalDateTime;
 
 @Service
@@ -25,8 +25,9 @@ import java.time.LocalDateTime;
 public class AuditLogServiceImpl implements AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final AuditRealtimePublisher auditRealtimePublisher;
     private final CompanyRepository companyRepository;
+    private final ClientIpResolver clientIpResolver;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private jakarta.servlet.http.HttpServletRequest httpServletRequest;
@@ -125,42 +126,7 @@ public class AuditLogServiceImpl implements AuditLogService {
                 .build();
 
         AuditLog saved = auditLogRepository.save(auditLog);
-
-        Runnable publish = () -> {
-            try {
-                AuditLogDTO dto = AuditLogDTO.builder()
-                        .id(saved.getId())
-                        .timestamp(saved.getTimestamp() != null ? saved.getTimestamp().toString() : null)
-                        .userEmail(saved.getUserEmail())
-                        .userRole(saved.getUserRole())
-                        .companyId(saved.getCompanyId())
-                        .companyName(saved.getCompanyName())
-                        .action(saved.getAction())
-                        .module(saved.getModule())
-                        .details(saved.getDetails())
-                        .ipAddress(saved.getIpAddress())
-                        .build();
-
-                // Canal global para Super Administradores
-                messagingTemplate.convertAndSend("/topic/audit-logs", dto);
-                
-                // Canal específico para Administradores de la clínica actual
-                if (companyId != null) {
-                    messagingTemplate.convertAndSend("/topic/audit-logs/" + companyId, dto);
-                }
-            } catch (Exception e) {
-                log.warn("No se pudo publicar el evento de auditoría por WebSocket (auditId={})", saved.getId());
-            }
-        };
-        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
-            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
-                    new org.springframework.transaction.support.TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() { publish.run(); }
-                    });
-        } else {
-            publish.run();
-        }
+        auditRealtimePublisher.publishAfterCommit(saved);
     }
 
     @Override
@@ -180,10 +146,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     private String getClientIp() {
         if (httpServletRequest == null) return null;
         try {
-            // ForwardedHeaderFilter ya normaliza remoteAddr cuando la aplicacion
-            // corre tras el proxy. No confiar directamente en un X-Forwarded-For
-            // enviado por el cliente evita registrar una IP facilmente falsificable.
-            return httpServletRequest.getRemoteAddr();
+            return clientIpResolver.resolve(httpServletRequest);
         } catch (Exception e) {
             return null;
         }

@@ -99,6 +99,9 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Value("${security.password-reset-validity-minutes:60}")
     private long passwordResetValidityMinutes;
 
+    @Value("${security.verification-token-validity-hours:24}")
+    private long verificationTokenValidityHours;
+
     @Value("${app.rate-limit.login-per-account-per-15-minutes:8}")
     private int loginPerAccountPerWindow;
 
@@ -119,7 +122,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         Usuario usuario = userMapper.toEntity(registrationDTO);
         String verificationToken = SecurityTokenUtils.generate();
         usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
-        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(24));
+        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
         usuario.setEmailVerified(false);
         usuario.setActivo(false);
         if (registrationDTO.getCompanyId() != null) {
@@ -151,7 +154,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                     model
             );
 
-            emailService.sendEmail(mail, "email/welcome-template");
+            emailService.sendEmailWithRetry(mail, "email/welcome-template");
         } catch (Exception e) {
             System.err.println("[WARNING] No se pudo enviar el correo de verificación a " + usuario.getEmail() + ": " + e.getMessage());
         }
@@ -231,7 +234,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         String newToken = SecurityTokenUtils.generate();
         usuario.setVerificationToken(SecurityTokenUtils.hash(newToken));
-        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(24));
+        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
         usuarioRepository.save(usuario);
 
         sendVerificationEmail(usuario, newToken);
@@ -552,7 +555,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                     "Restablecer Contraseña - " + companyName,
                     model
             );
-            emailService.sendEmail(mail, "email/forgot-password-template");
+            emailService.sendEmailWithRetry(mail, "email/forgot-password-template");
             
             auditLogService.log(
                 usuario.getEmail(), 
@@ -736,7 +739,16 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             return;
         }
         refreshTokenRepository.findByTokenHashForUpdate(hashToken(refreshToken))
-                .ifPresent(token -> revokeFamily(token.getFamilyId(), veterinaria.vargasvet.util.AppClock.instantNow()));
+                .ifPresent(token -> {
+                    revokeFamily(token.getFamilyId(), veterinaria.vargasvet.util.AppClock.instantNow());
+                    Usuario usuario = token.getUsuario();
+                    auditLogService.log(
+                            usuario.getEmail(), null,
+                            usuario.getCompany() != null ? usuario.getCompany().getId() : null,
+                            usuario.getCompany() != null ? usuario.getCompany().getName() : null,
+                            "LOGOUT", "Seguridad",
+                            "Cierre de sesión del usuario " + usuario.getEmail(), null);
+                });
     }
 
     private String createRefreshToken(Usuario usuario, UsuarioPorRol activeAssignment, Instant sessionStartedAt,

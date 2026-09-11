@@ -1,0 +1,13 @@
+-------------------------------------------------------------------------------
+Test set: veterinaria.vargasvet.ers.personal.RF12To14Test
+-------------------------------------------------------------------------------
+Tests run: 5, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 1.967 s <<< FAILURE! -- in veterinaria.vargasvet.ers.personal.RF12To14Test
+veterinaria.vargasvet.ers.personal.RF12To14Test.modificarHorarioConCitasRelacionadasEsRechazado -- Time elapsed: 0.017 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting code to raise a throwable.
+	at veterinaria.vargasvet.ers.personal.RF12To14Test.modificarHorarioConCitasRelacionadasEsRechazado(RF12To14Test.java:191)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+

@@ -1,0 +1,34 @@
+{
+  "fechaEjecucion": "2026-09-09T10:20:31-05:00",
+  "entorno": "integracion local aislada con H2",
+  "comando": "mvn -Dtest=CartillaServiceImplTest,RecordatorioPreventivoServiceImplTest,PagoServiceIntegrationTest,EndpointAuthorizationContractTest test",
+  "resultadoLote": {
+    "pruebas": 14,
+    "fallos": 0,
+    "errores": 0,
+    "omitidas": 0
+  },
+  "casosCerrados": {
+    "CP-RF44-01": "El pago valido persistio compra e ingreso de caja y actualizo monto y estado de la cita.",
+    "CP-RF44-02": "Importes cero, superiores al saldo y efectivo insuficiente fueron rechazados sin compra, movimiento de caja ni cambio de saldo."
+  },
+  "casosAunParciales": {
+    "CP-RF33-03": "Las pruebas unitarias cubren correo consolidado y mensaje de WhatsApp, pero falta ejecutar el proceso programado con persistencia real.",
+    "CP-RF33-04": "Las pruebas unitarias cubren intervalo y deduplicacion, pero falta integración persistente/concurrente.",
+    "CP-RNF02-01": "Se verifico el cableado estatico de 24 acciones, pero no la matriz negativa completa con Method Security activo."
+  },
+  "reportesSurefire": [
+    {
+      "ruta": "target/surefire-reports/TEST-veterinaria.vargasvet.service.impl.PagoServiceIntegrationTest.xml",
+      "sha256": "CDAA28EDFFCF213386C29CC11149A74F517643DE2AD3D4245EC8D9C826E669FB"
+    },
+    {
+      "ruta": "target/surefire-reports/TEST-veterinaria.vargasvet.service.impl.RecordatorioPreventivoServiceImplTest.xml",
+      "sha256": "F4B557D92D74E258BED780D6AB02C63483F8F720D66379930BE04EAC215B6DDA"
+    },
+    {
+      "ruta": "target/surefire-reports/TEST-veterinaria.vargasvet.ers.rbac.EndpointAuthorizationContractTest.xml",
+      "sha256": "95635AB21E1315338A174B17CA876893698CC7E30474C6FF7D0D2F37357973A2"
+    }
+  ]
+}

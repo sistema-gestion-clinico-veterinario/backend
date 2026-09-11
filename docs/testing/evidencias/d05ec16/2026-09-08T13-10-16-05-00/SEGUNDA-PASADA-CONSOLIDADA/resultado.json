@@ -1,0 +1,20 @@
+{
+  "id": "SEGUNDA-PASADA-CONSOLIDADA-d05ec16-20260908T131016-0500",
+  "fechaHora": "2026-09-08T13:10:16-05:00",
+  "commitBase": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "comando": "mvn -Dtest=AuthControllerContractTest,RoleControllerContractTest,ConsultaControllerApiValidationTest,PrescripcionControllerApiValidationTest,EndpointAuthorizationContractTest,CitaServiceIntegrationTest,PagoServiceIntegrationTest,PagoControllerContractTest,RF32Test test",
+  "pruebas": 35,
+  "aprobadas": 30,
+  "fallidas": 5,
+  "errores": 0,
+  "omitidas": 0,
+  "contabilizarEnAcumulado": false,
+  "motivoNoContabilizar": "Reejecución consolidada de pruebas ya registradas individualmente",
+  "fallasReproducidas": [
+    "CP-RF30-03: peso con más de dos decimales obtiene HTTP 200",
+    "CP-RF30-04: decisiones preventivas ausentes obtienen HTTP 200",
+    "CP-RF31-02: receta sin duración obtiene HTTP 201",
+    "CP-RF31-02: receta sin indicaciones obtiene HTTP 201",
+    "CP-RF45-01: faltan filtros del historial de pagos"
+  ]
+}

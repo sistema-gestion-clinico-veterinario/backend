@@ -1,0 +1,41 @@
+{
+  "fechaHora": "2026-09-09T20:53:45-05:00",
+  "entorno": "produccion controlada",
+  "frontend": "https://systemvetfrontend.vercel.app",
+  "empresaQaId": 3,
+  "consultaId": 149,
+  "paciente": "QA Mascota Trazabilidad",
+  "archivoValido": {
+    "nombre": "qa-rf32-documento.pdf",
+    "tipo": "LABORATORIO",
+    "tamanoBytes": 603,
+    "resultadoCarga": "aceptado",
+    "persistenciaVisible": true,
+    "cantidadAdjuntosTrasRecarga": 1,
+    "visualizacionPosterior": "fallida: el visor embebido mostró contenido bloqueado",
+    "descargaPosterior": "no verificable: los botones de descarga no iniciaron un evento de descarga en dos intentos"
+  },
+  "archivoInvalido": {
+    "nombre": "qa-rf32-invalido.exe",
+    "resultado": "rechazado por el servidor",
+    "mensaje": "Extensión no permitida para hemogramas. Use: .jpg, .jpeg, .png, .pdf",
+    "cantidadAdjuntosDespuesDelRechazo": 1,
+    "registroHuerfanoVisible": false
+  },
+  "casos": [
+    {
+      "caso": "CP-RF32-01",
+      "estado": "No cumple",
+      "fundamento": "El archivo permitido queda vinculado y persiste, pero no pudo consultarse posteriormente mediante visualización ni descarga verificable; el criterio exige ambas capacidades funcionales de conservación y consulta."
+    },
+    {
+      "caso": "CP-RF32-02",
+      "estado": "Cumple",
+      "fundamento": "El servidor rechazó la extensión no permitida y el número de adjuntos permaneció en uno, sin un segundo registro visible."
+    }
+  ],
+  "observaciones": [
+    "El mensaje de rechazo habla de hemogramas aunque la sección es de archivos clínicos.",
+    "La consulta QA 149 permanece en proceso y el PDF válido permanece adjunto para no ejecutar una eliminación o cierre clínico sin una confirmación específica."
+  ]
+}

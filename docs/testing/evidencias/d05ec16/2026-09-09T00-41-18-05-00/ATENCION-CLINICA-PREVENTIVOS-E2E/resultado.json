@@ -1,0 +1,54 @@
+{
+  "ejecucion": "ATENCION-CLINICA-PREVENTIVOS-E2E",
+  "fechaHora": "2026-09-09T00:41:18-05:00",
+  "entorno": "https://systemvetfrontend.vercel.app",
+  "empresaPrueba": 3,
+  "datosSensiblesIncluidos": false,
+  "pacienteQA": "QA Mascota Trazabilidad",
+  "historia": "HC-000109",
+  "consultas": [147, 148],
+  "casos": [
+    {
+      "id": "CP-RF28-02",
+      "resultado": "Cumple",
+      "observacion": "Al iniciar la primera cita de una mascota sin historia, el sistema creó HC-000109 y vinculó la consulta 147. La búsqueda devolvió una sola historia."
+    },
+    {
+      "id": "CP-RF28-01",
+      "resultado": "Cumple",
+      "observacion": "Al iniciar una segunda cita para la misma mascota, la consulta 148 reutilizó HC-000109. La historia mostró dos consultas y no se creó otra historia."
+    },
+    {
+      "id": "CP-RF30-02",
+      "resultado": "Cumple",
+      "observacion": "El cierre sin peso fue rechazado con El peso es requerido. Tras registrar peso pero omitir anamnesis, volvió a rechazarse y mostró La anamnesis es requerida; la consulta permaneció EN PROCESO V0."
+    },
+    {
+      "id": "CP-RF30-01",
+      "resultado": "Cumple",
+      "observacion": "Con tipo, peso, anamnesis y decisiones preventivas registradas, el cierre pasó en una sola operación a CERRADA, SOLO LECTURA, V1; la cita asociada quedó COMPLETADA."
+    },
+    {
+      "id": "CP-RF31-01",
+      "resultado": "No cumple",
+      "observacion": "La receta quedó vinculada y disponible en HC-000109, pero las fechas ingresadas 2026-09-09 a 2026-09-11 se mostraron como 08 set. 2026 a 10 set. 2026, alterando los datos clínicos registrados."
+    },
+    {
+      "id": "CP-RF33-01",
+      "resultado": "No cumple",
+      "observacion": "La consulta permitió marcar que se aplicó vacunación, pero no solicitó vacuna, fecha, intervalo ni dosis y, después del cierre, la cartilla continuó con cero vacunas."
+    },
+    {
+      "id": "CP-RF33-02",
+      "resultado": "No cumple",
+      "observacion": "La consulta permitió marcar que se aplicó desparasitación, pero no solicitó producto, fecha ni intervalo y, después del cierre, la cartilla continuó con cero desparasitaciones."
+    }
+  ],
+  "estadoFinal": {
+    "historiaUnica": true,
+    "cantidadConsultas": 2,
+    "consultasCerradas": true,
+    "citasCompletadas": true,
+    "preventivosRegistrados": 0
+  }
+}

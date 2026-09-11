@@ -13,8 +13,6 @@ public class ReportesClinicosDTO {
     private Resumen resumen;
     private Resumen resumenAnterior;
     private List<ItemCount> consultasPorTipo;
-    private List<ItemCount> diagnosticosPorTipoYEstado;
-    private List<ItemCount> tratamientosPorEstado;
     private List<ItemCount> consultasPorEstado;
     private List<ItemCount> pacientesPorEspecie;
     private List<ItemCount> pacientesPorRangoEdad;
@@ -26,6 +24,10 @@ public class ReportesClinicosDTO {
     private List<ProximaAplicacion> controlesPreventivosProximos;
     private List<ItemCount> serviciosMasSolicitados;
     private List<HeatmapItem> demandaPorHorario;
+    private List<ItemMonto> ingresosPorMetodoPago;
+    private List<ItemMonto> ingresosPorServicio;
+    private List<ItemCount> cumplimientoVacunacion;
+    private List<ItemCount> cumplimientoDesparasitacion;
 
     @Data
     @Builder
@@ -43,6 +45,13 @@ public class ReportesClinicosDTO {
     public static class ItemCount {
         private String label;
         private long count;
+    }
+
+    @Data
+    @Builder
+    public static class ItemMonto {
+        private String label;
+        private BigDecimal monto;
     }
 
     @Data

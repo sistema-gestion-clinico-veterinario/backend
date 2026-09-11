@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "finishedAt": "2026-09-08T23:17:39.497Z",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574",
+    "companyId": 3
+  },
+  "summary": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0
+  },
+  "results": [
+    {
+      "code": "RBAC-DINAMICO-CREAR-ROL",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "code": "RBAC-DINAMICO-ASIGNAR-PERMISOS",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "RBAC-DINAMICO-CONTROL-CONCURRENCIA",
+      "expected": "409/412",
+      "actual": 409,
+      "passed": true
+    },
+    {
+      "code": "RBAC-DINAMICO-ASIGNAR-A-USUARIO",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "RBAC-DINAMICO-RENOVAR-SESION",
+      "expected": "rol 28",
+      "actual": 28,
+      "passed": true
+    },
+    {
+      "code": "RBAC-MENU-MODULO-AGRUPADO",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "code": "RBAC-MENU-VISTA-PLANA",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "code": "RBAC-DINAMICO-PERMITIR-PERFIL-LEER",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "RBAC-DINAMICO-PERMITIR-PERFIL-EDITAR",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "RBAC-DINAMICO-DENEGAR-NO-ASIGNADO",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "code": "RBAC-DINAMICO-RESTAURAR-ROL",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "RBAC-DINAMICO-DESACTIVAR-ROL-QA",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    }
+  ],
+  "privacy": "No contiene nombres de rol, datos personales, correos, contraseñas, tokens ni cookies."
+}

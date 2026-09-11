@@ -39,6 +39,7 @@ public class PrescripcionRequest {
     @MeaningfulText(message = "La frecuencia debe contener texto real, no solo numeros o simbolos")
     private String frecuencia;
 
+    @NotNull(message = "La duracion es obligatoria")
     @Min(value = 1, message = "La duracion debe ser al menos de 1 dia")
     @Max(value = 365, message = "La duracion no debe superar 365 dias")
     private Integer duracionDias;
@@ -49,6 +50,7 @@ public class PrescripcionRequest {
     @MeaningfulText(message = "La via de administracion debe contener texto real")
     private String viaAdministracion;
 
+    @NotBlank(message = "Las instrucciones son obligatorias")
     @Size(max = 500, message = "Las instrucciones no deben superar 500 caracteres")
     @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las instrucciones contienen caracteres no permitidos")
     @MeaningfulText(message = "Las instrucciones deben contener texto real, no solo numeros o simbolos")

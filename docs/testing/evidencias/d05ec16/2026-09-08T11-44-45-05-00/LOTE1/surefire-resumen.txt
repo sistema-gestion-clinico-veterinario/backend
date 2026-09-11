@@ -1,0 +1,28 @@
+Ejecución: LOTE1-d05ec16-20260908T114445-0500
+Fecha: 2026-09-08 11:44:45 -05:00
+Base: d05ec16df652d10a8f9380bd52b6e0ef815612d7 (árbol de trabajo modificado)
+
+Clases ejecutadas:
+- RF30Test: 10 pruebas, 2 fallidas
+- RF17To21Test: 6 pruebas, 0 fallidas
+- RF29Test: 2 pruebas, 0 fallidas
+- RF31Test: 4 pruebas, 3 fallidas
+- CitaServiceIntegrationTest: 8 pruebas, 0 fallidas
+- CartillaServiceImplTest: 3 pruebas, 0 fallidas
+- RecordatorioPreventivoServiceImplTest: 3 pruebas, 0 fallidas
+
+TOTAL: 36 pruebas, 31 aprobadas, 5 fallidas, 0 errores, 0 omitidas.
+
+Pruebas fallidas:
+- CP-RF30-03: cpRf3003_rechazaPesoConMasDeDosDecimales
+- CP-RF30-04: cpRf3004_rechazaDecisionesPreventivasAusentes
+- CP-RF31-02: cpRf3102_rechazaRecetaSinDuracion
+- CP-RF31-02: cpRf3102_rechazaRecetaSinIndicaciones
+- CP-RNF02-02: cpRnf0202_rechazaRecetaEnConsultaDeOtraEmpresa
+
+Interpretación ERS:
+- Los 22 CP del Lote 1 tienen ejecución backend parcial.
+- Dentro del Lote 1, 3 CP quedan en No cumple y 19 permanecen Pendiente.
+- La ejecución reveló además un No cumple transversal en CP-RNF02-02, planificado originalmente para el Lote 2.
+- Las dos fallas de campos obligatorios de receta pertenecen al mismo CP-RF31-02.
+- Esta ejecución no es evidencia final de tesis hasta versionar las pruebas y repetirla sobre un commit limpio.

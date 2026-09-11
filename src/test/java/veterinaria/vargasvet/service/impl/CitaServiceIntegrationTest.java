@@ -7,13 +7,20 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import veterinaria.vargasvet.domain.entity.Apoderado;
 import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.entity.Company;
+import veterinaria.vargasvet.domain.entity.Consulta;
 import veterinaria.vargasvet.domain.entity.Empleado;
+import veterinaria.vargasvet.domain.entity.HistoriaClinica;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.entity.ServiciosVeterinarios;
 import veterinaria.vargasvet.domain.entity.Usuario;
@@ -47,6 +54,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -69,6 +81,7 @@ class CitaServiceIntegrationTest {
     @Autowired private HorarioEmpleadoRepository horarioEmpleadoRepository;
     @Autowired private CompanyRepository companyRepository;
     @Autowired private ApoderadoRepository apoderadoRepository;
+    @Autowired private PlatformTransactionManager transactionManager;
 
     private CitaServiceImpl citaService;
 
@@ -106,7 +119,7 @@ class CitaServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("[BB-009] Iniciar atencion crea consulta e historia clinica")
+    @DisplayName("[CP-RF28-02] Iniciar atención crea una sola historia clínica y vincula la consulta")
     void iniciarAtencionCreaHistoriaClinicaConsultaYActualizaEstadoDeCita() {
         Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().minusMinutes(20));
 
@@ -120,7 +133,27 @@ class CitaServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("[BB-004] Agendar una cita valida persiste la cita programada")
+    @DisplayName("[CP-RF28-01] Iniciar atención reutiliza la historia clínica existente")
+    void iniciarAtencionReutilizaHistoriaClinicaExistente() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().minusMinutes(20));
+        HistoriaClinica existente = new HistoriaClinica();
+        existente.setMascota(cita.getMascota());
+        existente.setNumeroHc("HC-EXISTENTE-" + UUID.randomUUID().toString().substring(0, 5));
+        existente.setActiva(true);
+        existente = historiaClinicaRepository.saveAndFlush(existente);
+        long historiasAntes = historiaClinicaRepository.count();
+
+        Long consultaId = citaService.iniciarAtencion(cita.getId());
+
+        Consulta consulta = consultaRepository.findById(consultaId).orElseThrow();
+        assertThat(consulta.getHistoriaClinica().getId()).isEqualTo(existente.getId());
+        assertThat(historiaClinicaRepository.count()).isEqualTo(historiasAntes);
+        assertThat(citaRepository.findById(cita.getId()).orElseThrow().getEstado())
+                .isEqualTo(EstadoCita.EN_PROCESO);
+    }
+
+    @Test
+    @DisplayName("[CP-RF24-01] Agendar una cita válida persiste una sola cita programada")
     void agendarCitaValidaPersisteCitaProgramada() {
         Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
         CitaRequest request = requestDesde(plantilla, LocalDateTime.now().plusDays(3));
@@ -150,7 +183,7 @@ class CitaServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("[BB-006] Reprogramar una cita valida actualiza fecha y estado")
+    @DisplayName("[CP-RF26-01] Reprogramar una cita válida actualiza fecha y estado")
     void reprogramarCitaValidaActualizaFechaYEstado() {
         Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
         cita.setEsEmergencia(true);
@@ -181,7 +214,7 @@ class CitaServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("[BB-008] Cancelar una cita activa cambia su estado a cancelada")
+    @DisplayName("[CP-RF27-01] Cancelar una cita activa conserva el antecedente cancelado")
     void cancelarCitaActivaCambiaEstadoACancelada() {
         Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
 
@@ -192,6 +225,7 @@ class CitaServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("[CP-RF24-02][PARCIAL] El repositorio detecta un cruce del veterinario")
     void repositorioDetectaCruceDeHorarioDelVeterinario() {
         Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(1).withHour(10).withMinute(0));
 
@@ -202,6 +236,126 @@ class CitaServiceIntegrationTest {
         );
 
         assertThat(hayCruce).isTrue();
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @DisplayName("[CP-RF24-02] Dos altas concurrentes para la misma franja conservan una sola cita")
+    void altasConcurrentesParaLaMismaFranjaConservanUnaSolaCita() throws Exception {
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        CitaRequest request = transaction.execute(status -> {
+            Cita plantilla = crearCita(EstadoCita.PROGRAMADA,
+                    LocalDateTime.now().plusDays(3).withHour(10).withMinute(0).withSecond(0).withNano(0));
+            CitaRequest result = requestDesde(plantilla, plantilla.getFechaHoraInicio().plusDays(1));
+            citaRepository.delete(plantilla);
+            citaRepository.flush();
+            return result;
+        });
+
+        CountDownLatch inicio = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<Throwable> primera = executor.submit(() -> ejecutarAltaConcurrente(transaction, request, inicio));
+            Future<Throwable> segunda = executor.submit(() -> ejecutarAltaConcurrente(transaction, request, inicio));
+            inicio.countDown();
+
+            List<Throwable> resultados = Arrays.asList(primera.get(), segunda.get());
+            assertThat(resultados).filteredOn(resultado -> resultado == null).hasSize(1);
+            assertThat(resultados).filteredOn(resultado -> resultado instanceof IllegalArgumentException).hasSize(1);
+            Long citasPersistidas = transaction.execute(status -> citaRepository.count());
+            assertThat(citasPersistidas).isEqualTo(1L);
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    @DisplayName("[CP-RF24-03] Rechaza crear una cita para una mascota inactiva sin persistirla")
+    void crearCitaRechazaMascotaInactiva() {
+        Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        CitaRequest request = requestDesde(plantilla, LocalDateTime.now().plusDays(3));
+        Mascota mascota = plantilla.getMascota();
+        citaRepository.delete(plantilla);
+        citaRepository.flush();
+        mascota.setActivo(false);
+        mascotaRepository.saveAndFlush(mascota);
+
+        assertThatThrownBy(() -> citaService.createCita(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("mascota");
+        assertThat(citaRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("[CP-RF24-03] Rechaza crear una cita cuando el propietario está inactivo")
+    void crearCitaRechazaPropietarioInactivo() {
+        Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        CitaRequest request = requestDesde(plantilla, LocalDateTime.now().plusDays(3));
+        Usuario propietario = plantilla.getMascota().getApoderado().getUser();
+        citaRepository.delete(plantilla);
+        citaRepository.flush();
+        propietario.setActivo(false);
+        usuarioRepository.saveAndFlush(propietario);
+
+        assertThatThrownBy(() -> citaService.createCita(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("propietario");
+        assertThat(citaRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("[CP-RF24-03] Rechaza crear una cita cuando el empleado está inactivo")
+    void crearCitaRechazaEmpleadoInactivo() {
+        Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        CitaRequest request = requestDesde(plantilla, LocalDateTime.now().plusDays(3));
+        Empleado empleado = plantilla.getEmpleado();
+        citaRepository.delete(plantilla);
+        citaRepository.flush();
+        empleado.setEstado(false);
+        empleadoRepository.saveAndFlush(empleado);
+
+        assertThatThrownBy(() -> citaService.createCita(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("empleado inactivo");
+        assertThat(citaRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("[CP-RF24-03][DEF-RF24-03] Caracteriza que un servicio inactivo todavía permite crear la cita")
+    void crearCitaConServicioInactivoExponeBrecha() {
+        Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        CitaRequest request = requestDesde(plantilla, LocalDateTime.now().plusDays(3));
+        ServiciosVeterinarios servicio = plantilla.getServicio();
+        citaRepository.delete(plantilla);
+        citaRepository.flush();
+        servicio.setActivo(false);
+        servicio.setDisponible(false);
+        serviciosVeterinariosRepository.saveAndFlush(servicio);
+
+        citaService.createCita(request);
+
+        assertThat(citaRepository.findAll()).hasSize(1);
+        assertThat(citaRepository.findAll().getFirst().getServicio().getId()).isEqualTo(servicio.getId());
+    }
+
+    @Test
+    @DisplayName("[CP-RF26-02] Rechaza reprogramar cuando falta una hora o menos")
+    void reprogramarCitaDentroDeUnaHoraEsRechazado() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusMinutes(30));
+        cita.setEsEmergencia(true);
+        citaRepository.saveAndFlush(cita);
+        LocalDateTime fechaOriginal = cita.getFechaHoraInicio();
+
+        assertThatThrownBy(() -> citaService.reprogramarCita(
+                cita.getId(),
+                reprogramacion(cita, LocalDateTime.now().plusDays(2))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("menos de 1 horas");
+
+        Cita sinCambios = citaRepository.findById(cita.getId()).orElseThrow();
+        assertThat(sinCambios.getFechaHoraInicio()).isEqualTo(fechaOriginal);
+        assertThat(sinCambios.getEstado()).isEqualTo(EstadoCita.PROGRAMADA);
     }
 
     private Cita crearCita(EstadoCita estado, LocalDateTime fechaInicio) {
@@ -260,6 +414,21 @@ class CitaServiceIntegrationTest {
         cita.setEliminada(false);
         cita.setEsEmergencia(false);
         return citaRepository.save(cita);
+    }
+
+    private Throwable ejecutarAltaConcurrente(TransactionTemplate transaction,
+                                               CitaRequest request,
+                                               CountDownLatch inicio) {
+        try {
+            autenticarSuperAdmin();
+            inicio.await();
+            transaction.executeWithoutResult(status -> citaService.createCita(request));
+            return null;
+        } catch (Throwable error) {
+            return error;
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
 
     private CitaRequest requestDesde(Cita cita, LocalDateTime fechaInicio) {

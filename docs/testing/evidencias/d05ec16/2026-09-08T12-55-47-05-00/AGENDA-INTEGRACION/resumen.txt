@@ -1,0 +1,7 @@
+Resultado técnico: 10 pruebas aprobadas, sin fallas, errores ni omisiones.
+
+Se comprobaron a nivel de integración del servicio la creación válida de citas,
+la detección de cruce en repositorio, el rechazo de mascota inactiva, la
+reprogramación válida, el rechazo de reprogramación con una hora o menos y la
+cancelación conservando el antecedente. Los casos permanecen Pendiente hasta
+completar los niveles API/E2E y las variantes exigidas por cada criterio.
