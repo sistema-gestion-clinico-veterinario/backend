@@ -10,6 +10,7 @@ import veterinaria.vargasvet.domain.entity.Purchase;
 import veterinaria.vargasvet.domain.enums.PaymentStatus;
 import veterinaria.vargasvet.domain.enums.TipoPurchase;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.List;
 
@@ -32,6 +33,26 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
 
     @Query("SELECT p FROM Purchase p WHERE p.cita.mascota.apoderado.user.company.id = :companyId AND p.tipoPurchase = :tipo ORDER BY p.createdAt DESC")
     Page<Purchase> findByCompanyId(@Param("companyId") Integer companyId, @Param("tipo") TipoPurchase tipo, Pageable pageable);
+
+    @Query("SELECT p FROM Purchase p "
+            + "LEFT JOIN p.cita c LEFT JOIN c.mascota m LEFT JOIN m.apoderado a LEFT JOIN a.user u LEFT JOIN u.company co "
+            + "WHERE (:companyId IS NULL OR co.id = :companyId) "
+            + "AND p.tipoPurchase = :tipo "
+            + "AND (:clienteId IS NULL OR p.cliente.id = :clienteId) "
+            + "AND (:mascotaId IS NULL OR m.id = :mascotaId) "
+            + "AND (:fechaDesde IS NULL OR p.createdAt >= :fechaDesde) "
+            + "AND (:fechaHasta IS NULL OR p.createdAt <= :fechaHasta) "
+            + "AND (:estado IS NULL OR p.paymentStatus = :estado) "
+            + "ORDER BY p.createdAt DESC")
+    Page<Purchase> buscarHistorialPorEmpresa(
+            @Param("companyId") Integer companyId,
+            @Param("tipo") TipoPurchase tipo,
+            @Param("clienteId") Integer clienteId,
+            @Param("mascotaId") Long mascotaId,
+            @Param("fechaDesde") LocalDateTime fechaDesde,
+            @Param("fechaHasta") LocalDateTime fechaHasta,
+            @Param("estado") PaymentStatus estado,
+            Pageable pageable);
 
     @Query("SELECT p FROM Purchase p WHERE p.user.company.id = :companyId ORDER BY p.createdAt DESC")
     Page<Purchase> findByUserCompanyId(@Param("companyId") Integer companyId, Pageable pageable);

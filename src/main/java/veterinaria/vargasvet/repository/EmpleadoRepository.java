@@ -40,6 +40,9 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
                    "AND (CAST(:nombre AS text) IS NULL OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                    "AND (CAST(:apellido AS text) IS NULL OR LOWER(u.apellido) LIKE LOWER(CONCAT('%', CAST(:apellido AS text), '%'))) " +
                    "AND (CAST(:email AS text) IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:email AS text), '%'))) " +
+                   "AND (CAST(:numeroDocumento AS text) IS NULL OR LOWER(u.dni) LIKE LOWER(CONCAT('%', CAST(:numeroDocumento AS text), '%'))) " +
+                   "AND (:roleId IS NULL OR EXISTS (SELECT upr FROM u.usuariosPorRol upr WHERE upr.rol.id = :roleId)) " +
+                   "AND (:activo IS NULL OR e.estado = :activo) " +
                    "AND (:tipoEmpleadoId IS NULL OR EXISTS (SELECT t FROM e.tiposEmpleado t WHERE t.id = :tipoEmpleadoId)) " +
                    "AND (:especialidadId IS NULL OR EXISTS (SELECT es FROM e.especialidades es WHERE es.id = :especialidadId)) " +
                    "ORDER BY u.apellido ASC, u.nombre ASC",
@@ -48,12 +51,18 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
                         "AND (CAST(:nombre AS text) IS NULL OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                         "AND (CAST(:apellido AS text) IS NULL OR LOWER(u.apellido) LIKE LOWER(CONCAT('%', CAST(:apellido AS text), '%'))) " +
                         "AND (CAST(:email AS text) IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:email AS text), '%'))) " +
+                        "AND (CAST(:numeroDocumento AS text) IS NULL OR LOWER(u.dni) LIKE LOWER(CONCAT('%', CAST(:numeroDocumento AS text), '%'))) " +
+                        "AND (:roleId IS NULL OR EXISTS (SELECT upr FROM u.usuariosPorRol upr WHERE upr.rol.id = :roleId)) " +
+                        "AND (:activo IS NULL OR e.estado = :activo) " +
                         "AND (:tipoEmpleadoId IS NULL OR EXISTS (SELECT t FROM e.tiposEmpleado t WHERE t.id = :tipoEmpleadoId)) " +
                         "AND (:especialidadId IS NULL OR EXISTS (SELECT es FROM e.especialidades es WHERE es.id = :especialidadId))")
     Page<Empleado> buscar(@Param("companyId") Integer companyId,
                           @Param("nombre") String nombre,
                           @Param("apellido") String apellido,
                           @Param("email") String email,
+                          @Param("numeroDocumento") String numeroDocumento,
+                          @Param("roleId") Integer roleId,
+                          @Param("activo") Boolean activo,
                           @Param("tipoEmpleadoId") Long tipoEmpleadoId,
                           @Param("especialidadId") Long especialidadId,
                           Pageable pageable);

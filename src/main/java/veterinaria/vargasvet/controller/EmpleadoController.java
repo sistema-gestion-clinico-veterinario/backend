@@ -35,11 +35,15 @@ public class EmpleadoController {
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) String apellido,
             @RequestParam(required = false) String email,
+            @RequestParam(required = false) String numeroDocumento,
+            @RequestParam(required = false) Integer roleId,
+            @RequestParam(required = false) Boolean activo,
             @RequestParam(required = false) Long tipoEmpleadoId,
             @RequestParam(required = false) Long especialidadId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<EmpleadoListResponse> resultado = empleadoService.listar(companyId, nombre, apellido, email, tipoEmpleadoId, especialidadId, page, size);
+        Page<EmpleadoListResponse> resultado = empleadoService.listar(companyId, nombre, apellido, email,
+                numeroDocumento, roleId, activo, tipoEmpleadoId, especialidadId, page, size);
         auditLogService.log(companyId, "CONSULTAR_EMPLEADOS", "Empleados", "Consultó el listado de empleados.");
         String mensaje = resultado.isEmpty() ? "No se encontraron empleados" : "Empleados recuperados con éxito";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, resultado));

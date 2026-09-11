@@ -13,7 +13,9 @@ public interface EmpleadoService {
     UserProfileDTO updateEmpleado(Long empleadoId, EmpleadoRequest dto);
     void cambiarEstado(Long empleadoId, Boolean nuevoEstado);
     void eliminar(Long empleadoId);
-    Page<EmpleadoListResponse> listar(Integer companyId, String nombre, String apellido, String email, Long tipoEmpleadoId, Long especialidadId, int page, int size);
+    Page<EmpleadoListResponse> listar(Integer companyId, String nombre, String apellido, String email,
+                                       String numeroDocumento, Integer roleId, Boolean activo,
+                                       Long tipoEmpleadoId, Long especialidadId, int page, int size);
     EmpleadoRequest findById(Long id);
     List<HorarioEmpleadoResponse> getHorario(Long empleadoId);
     void assignBulkSchedule(Long empleadoId, veterinaria.vargasvet.dto.request.BulkScheduleRequest request);
