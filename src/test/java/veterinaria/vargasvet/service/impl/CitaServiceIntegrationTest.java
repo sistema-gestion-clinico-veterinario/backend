@@ -322,21 +322,39 @@ class CitaServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("[CP-RF24-03][DEF-RF24-03] Caracteriza que un servicio inactivo todavía permite crear la cita")
-    void crearCitaConServicioInactivoExponeBrecha() {
+    @DisplayName("[CP-RF24-01][RVA-012] Rechaza crear una cita con un servicio inactivo sin persistirla")
+    void crearCitaRechazaServicioInactivo() {
         Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
         CitaRequest request = requestDesde(plantilla, LocalDateTime.now().plusDays(3));
         ServiciosVeterinarios servicio = plantilla.getServicio();
         citaRepository.delete(plantilla);
         citaRepository.flush();
         servicio.setActivo(false);
+        servicio.setDisponible(true);
+        serviciosVeterinariosRepository.saveAndFlush(servicio);
+
+        assertThatThrownBy(() -> citaService.createCita(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("servicio inactivo");
+        assertThat(citaRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("[CP-RF24-01][RVA-012] Rechaza crear una cita con un servicio no disponible sin persistirla")
+    void crearCitaRechazaServicioNoDisponible() {
+        Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        CitaRequest request = requestDesde(plantilla, LocalDateTime.now().plusDays(3));
+        ServiciosVeterinarios servicio = plantilla.getServicio();
+        citaRepository.delete(plantilla);
+        citaRepository.flush();
+        servicio.setActivo(true);
         servicio.setDisponible(false);
         serviciosVeterinariosRepository.saveAndFlush(servicio);
 
-        citaService.createCita(request);
-
-        assertThat(citaRepository.findAll()).hasSize(1);
-        assertThat(citaRepository.findAll().getFirst().getServicio().getId()).isEqualTo(servicio.getId());
+        assertThatThrownBy(() -> citaService.createCita(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("servicio no disponible");
+        assertThat(citaRepository.findAll()).isEmpty();
     }
 
     @Test

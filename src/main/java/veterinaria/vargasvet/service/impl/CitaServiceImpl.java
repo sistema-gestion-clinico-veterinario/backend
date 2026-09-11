@@ -120,6 +120,12 @@ public class CitaServiceImpl implements CitaService {
         if (request.getServicioId() != null) {
             servicio = servicioRepository.findById(request.getServicioId())
                     .orElseThrow(() -> new ResourceNotFoundException("Servicio no encontrado con ID: " + request.getServicioId()));
+            if (!Boolean.TRUE.equals(servicio.getActivo())) {
+                throw new IllegalArgumentException("No se puede reservar una cita con un servicio inactivo");
+            }
+            if (!Boolean.TRUE.equals(servicio.getDisponible())) {
+                throw new IllegalArgumentException("No se puede reservar una cita con un servicio no disponible");
+            }
         }
 
         int duracion = (servicio != null && servicio.getDuracionEstimada() != null)
