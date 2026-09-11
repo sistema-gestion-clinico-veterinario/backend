@@ -150,6 +150,8 @@ class ConsultaServiceUnitTest {
         request.setVersion(1L);
         request.setPesoEnConsulta(12.5);
         request.setAnamnesis("Paciente evaluado y estable");
+        request.setVacunacionAplicada(false);
+        request.setDesparasitacionAplicada(false);
         ConsultaResponse mapped = new ConsultaResponse();
 
         when(consultaRepository.findById(10L)).thenReturn(Optional.of(consulta));

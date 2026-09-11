@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.ers.historias;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,9 +12,12 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import veterinaria.vargasvet.controller.ConsultaController;
 import veterinaria.vargasvet.domain.enums.TipoConsulta;
 import veterinaria.vargasvet.dto.request.CerrarConsultaRequest;
+import veterinaria.vargasvet.dto.request.RegistroVacunacionRequest;
 import veterinaria.vargasvet.dto.response.ConsultaResponse;
 import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.ConsultaService;
+
+import java.time.LocalDate;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -26,7 +30,7 @@ class ConsultaControllerApiValidationTest {
 
     private final ConsultaService consultaService = mock(ConsultaService.class);
     private final AccesoValidator accesoValidator = mock(AccesoValidator.class);
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -71,6 +75,39 @@ class ConsultaControllerApiValidationTest {
         CerrarConsultaRequest request = baseRequest();
         request.setVacunacionAplicada(null);
         request.setDesparasitacionAplicada(null);
+
+        mockMvc.perform(patch("/consultations/1/close")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("[CP-RF33-01][RVA-058][RVA-060] La API rechaza el registro de vacunación sin fecha de aplicación")
+    void apiRechazaVacunacionSinFechaAplicacion() throws Exception {
+        CerrarConsultaRequest request = baseRequest();
+        request.setVacunacionAplicada(true);
+        RegistroVacunacionRequest registro = new RegistroVacunacionRequest();
+        registro.setTipoVacunaId(1L);
+        registro.setPeriodicidadMeses(12);
+        request.setRegistroVacunacion(registro);
+
+        mockMvc.perform(patch("/consultations/1/close")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("[CP-RF33-01][RVA-060][RVA-061] La API rechaza una periodicidad fuera de 1-120 meses")
+    void apiRechazaPeriodicidadFueraDeRango() throws Exception {
+        CerrarConsultaRequest request = baseRequest();
+        request.setVacunacionAplicada(true);
+        RegistroVacunacionRequest registro = new RegistroVacunacionRequest();
+        registro.setTipoVacunaId(1L);
+        registro.setFechaAplicacion(LocalDate.now());
+        registro.setPeriodicidadMeses(121);
+        request.setRegistroVacunacion(registro);
 
         mockMvc.perform(patch("/consultations/1/close")
                         .contentType(MediaType.APPLICATION_JSON)
