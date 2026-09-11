@@ -6,13 +6,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+import veterinaria.vargasvet.domain.enums.PaymentStatus;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.PagoRequest;
 import veterinaria.vargasvet.dto.response.PagoListResponse;
 import veterinaria.vargasvet.dto.response.PagoResponse;
 import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.PagoService;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/payments")
@@ -60,8 +64,14 @@ public class PagoController {
     public ResponseEntity<ApiResponse<Page<PagoListResponse>>> listarHistorialPorEmpresa(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Integer companyId) {
+            @RequestParam(required = false) Integer companyId,
+            @RequestParam(required = false) Integer clienteId,
+            @RequestParam(required = false) Long mascotaId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+            @RequestParam(required = false) PaymentStatus estado) {
         accesoValidator.validarLeer("VISTA_PAGOS");
-        return ResponseEntity.ok(new ApiResponse<>(true, "Historial de pagos recuperado con éxito", pagoService.listarHistorialPorEmpresa(page, size, companyId)));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Historial de pagos recuperado con éxito",
+                pagoService.listarHistorialPorEmpresa(page, size, companyId, clienteId, mascotaId, fechaDesde, fechaHasta, estado)));
     }
 }
