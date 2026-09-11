@@ -1,0 +1,4 @@
+Ejecución: LOTE4-d05ec16-20260908T115626-0500
+Resultado técnico: 9 clases, 40 pruebas, 40 aprobadas, 0 fallidas, 0 errores y 0 omitidas.
+Resultado ERS: 20 casos Pendiente; ninguno se declara Cumple por evidencia indirecta.
+Cobertura pendiente destacada: actualización y baja de clientes, archivos clínicos, ciclos completos de catálogos y flujos API/E2E de pagos.

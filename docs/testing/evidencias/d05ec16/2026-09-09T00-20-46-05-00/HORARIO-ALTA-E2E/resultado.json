@@ -1,0 +1,12 @@
+{
+  "ejecucion": "HORARIO-ALTA-E2E",
+  "fechaHora": "2026-09-09T00:20:46-05:00",
+  "entorno": "https://systemvetfrontend.vercel.app",
+  "empresaPrueba": 3,
+  "datosSensiblesIncluidos": false,
+  "caso": "CP-RF13-01",
+  "resultado": "No cumple",
+  "observacion": "Para un empleado activo se configuró un turno futuro 08:00-16:00 sobre el martes 15 de septiembre, que figuraba libre. Se probó tanto un rango de un día como un rango 15-16 de septiembre seleccionando explícitamente el martes. Confirmar Asignación no persistió el turno y tampoco mostró validación o error.",
+  "turnoCreado": false,
+  "restauracionNecesaria": false
+}

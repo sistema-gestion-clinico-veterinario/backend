@@ -1,0 +1,50 @@
+{
+  "executionId": "RNF01-RNF08-d05ec16-20260909T101500-0500",
+  "executedAt": "2026-09-09T10:15:00-05:00",
+  "baseCommit": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "workingTreeDirty": true,
+  "environment": "revision documental local y produccion controlada con datos ficticios",
+  "cases": [
+    {
+      "caseId": "CP-RNF01-01",
+      "status": "NO_CUMPLE",
+      "method": "inspeccion reproducible de artefactos de despliegue",
+      "observations": [
+        "El Dockerfile define compilacion, pruebas, ejecucion sin privilegios, puerto y healthcheck.",
+        "application.properties declara las variables de configuracion requeridas.",
+        "El README del backend conserva la plantilla con TODO para instalacion, dependencias, compilacion y pruebas.",
+        "El README del frontend solo identifica el repositorio y tampoco contiene una guia de instalacion.",
+        "No existe una guia ejecutable que conecte requisitos previos, variables, base de datos, despliegue y verificacion de acceso; por ello no puede repetirse la instalacion sin pasos no documentados."
+      ]
+    },
+    {
+      "caseId": "CP-RNF08-01",
+      "status": "CUMPLE",
+      "method": "homologacion y recalculo independiente de mediciones del servidor desplegado",
+      "sourceDirectory": "C:/Users/Usuario/Downloads/TALLER/frontend.worktrees/feature-t1/instrumento1-results/2026-09-08T06-44-00-100Z",
+      "measurementSessionId": "1b334fd5-c741-4589-9bcf-5fd7c495e0fc",
+      "deployedBackendCommit": "7818730",
+      "environment": "produccion-controlada-datos-ficticios",
+      "companyId": 3,
+      "protocol": {
+        "warmupsPerOperation": 2,
+        "validSamplesPerOperation": 25,
+        "thresholdMs": 2000,
+        "allHttpStatuses": 200,
+        "failedSamples": 0
+      },
+      "independentStatistics": [
+        {"operation": "BUSCAR_HISTORIAS_CLINICAS", "n": 25, "medianMs": 140.654, "p95Ms": 308.701, "maxMs": 385.148, "samplesOverThreshold": 0},
+        {"operation": "RECUPERAR_HISTORIA_CLINICA", "n": 25, "medianMs": 88.380, "p95Ms": 401.031, "maxMs": 611.956, "samplesOverThreshold": 0},
+        {"operation": "INICIAR_ATENCION_CLINICA", "n": 25, "medianMs": 103.574, "p95Ms": 605.616, "maxMs": 606.402, "samplesOverThreshold": 0},
+        {"operation": "GUARDAR_ATENCION_CLINICA", "n": 25, "medianMs": 156.669, "p95Ms": 504.476, "maxMs": 898.974, "samplesOverThreshold": 0}
+      ],
+      "integrity": [
+        {"file": "instrumento-1.xlsx", "sha256": "367d9b0d2fe245bab63933c23a2839722d13009a7fca188cd3033223bb0d72bb", "verified": true},
+        {"file": "mediciones-backend.json", "sha256": "4470951199ee75f72a6c42543c5570981ad190217c0732a086c6b121c4e749e3", "verified": true},
+        {"file": "evidencia-red-sanitizada.json", "sha256": "40dd237662e6e009e2fdc6d2b0f42e0f0d2589b2595ceaf272cdc929eaa36ed1", "verified": true}
+      ],
+      "interpretation": "El criterio exige diez muestras validas como minimo despues de dos calentamientos. Las 25 muestras por operacion superan ese minimo sin cambiar la unidad, el umbral ni las condiciones del protocolo. Todas las muestras validas quedaron por debajo de 2000 ms."
+    }
+  ]
+}

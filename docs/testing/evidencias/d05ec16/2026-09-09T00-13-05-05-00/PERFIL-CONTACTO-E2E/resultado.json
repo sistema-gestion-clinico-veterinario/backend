@@ -1,0 +1,14 @@
+{
+  "ejecucion": "PERFIL-CONTACTO-E2E",
+  "fechaHora": "2026-09-09T00:13:05-05:00",
+  "entorno": "https://systemvetfrontend.vercel.app",
+  "empresaPrueba": 3,
+  "datosSensiblesIncluidos": false,
+  "caso": "CP-RF04-01",
+  "resultado": "Cumple",
+  "observacion": "El usuario autenticado modificó únicamente su teléfono. La vista posterior mostró el nuevo valor y conservó los roles ADMIN y ASISTENTE, el estado Activo y la empresa Veterinaria Vargas Vet.",
+  "restauracion": {
+    "telefonoOriginalRestaurado": true,
+    "estadoFinal": "Activo"
+  }
+}

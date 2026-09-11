@@ -1,0 +1,90 @@
+{
+  "metadata": {
+    "runId": "ec5ae7cb-c853-49b9-877f-072a0fb7cbb9",
+    "startedAt": "2026-09-08T19:16:51.729Z",
+    "finishedAt": "2026-09-08T19:17:07.489Z",
+    "environment": "produccion-controlada",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574",
+    "companyId": 3,
+    "execution": "secuencial; navegador aislado por escenario; sin reintentos"
+  },
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0
+  },
+  "results": [
+    {
+      "code": "AUTH-LOGIN-VALIDO",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "code": "AUTH-TOKEN-NO-EXPUESTO",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "notes": "HttpOnly pierde su protección si el token también aparece en el cuerpo JSON."
+    },
+    {
+      "code": "AUTH-REFRESH-NO-EXPUESTO",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "notes": "El refresh token no debe quedar accesible al JavaScript de la aplicación."
+    },
+    {
+      "code": "AUTH-COOKIES-SEGURAS",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "code": "AUTH-REFRESH-ROTACION",
+      "expected": "HTTP 200 y token diferente",
+      "actual": "HTTP 200; rotado=true",
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "code": "AUTH-LOGOUT-INVALIDA-SESION",
+      "expected": "logout 200 y acceso posterior 401/403",
+      "actual": "logout 200; protegido 401",
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "code": "AUTH-CREDENCIAL-INVALIDA",
+      "expected": "401/403",
+      "actual": 401,
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "code": "AUTH-USUARIO-INEXISTENTE",
+      "expected": "mismo estado que contraseña inválida",
+      "actual": 401,
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "code": "AUTH-RUTA-SIN-SESION",
+      "expected": "401/403",
+      "actual": 401,
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "code": "AUTH-RECUPERACION-ANTI-ENUMERACION",
+      "expected": "mismo estado y estructura",
+      "actual": "existente 200; inexistente 200; mismaEstructura=true",
+      "passed": true,
+      "notes": ""
+    }
+  ],
+  "privacy": "No contiene correos, contraseñas, cookies, tokens, cuerpos de respuesta ni datos clínicos."
+}

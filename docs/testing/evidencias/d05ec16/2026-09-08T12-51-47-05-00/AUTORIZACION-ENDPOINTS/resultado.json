@@ -1,0 +1,17 @@
+{
+  "id": "AUTHZ-ENDPOINTS-d05ec16-20260908T125147-0500",
+  "fechaHora": "2026-09-08T12:51:47-05:00",
+  "commitBase": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "arbolTrabajo": "modificado por pruebas y documentación no versionadas",
+  "comando": "mvn -Dtest=EndpointAuthorizationContractTest test",
+  "ambiente": "Maven 3.9.9, compilación Java 21, ejecución OpenJDK 22.0.2",
+  "pruebas": 1,
+  "asercionesDeAutorizacion": 24,
+  "aprobadas": 1,
+  "fallidas": 0,
+  "errores": 0,
+  "omitidas": 0,
+  "alcance": "Presencia exacta de @PreAuthorize para acciones críticas en cinco controladores",
+  "limitacion": "No ejecuta Method Security ni demuestra rechazos HTTP con identidades reales",
+  "sha256Prueba": "A1AA7E8775044F2A8B0D1C8ABDBEBC02C20A172BC10FF486988AC7829F91392F"
+}

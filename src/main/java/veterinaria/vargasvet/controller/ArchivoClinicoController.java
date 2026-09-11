@@ -15,6 +15,7 @@ import veterinaria.vargasvet.dto.response.ArchivoClinicoResponse;
 import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.ArchivoClinicoService;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -32,10 +33,13 @@ public class ArchivoClinicoController {
             @PathVariable("consultationId") Long consultaId,
             @RequestParam("file") MultipartFile file,
             @RequestParam("tipo") TipoArchivo tipo,
-            @RequestParam(value = "descripcion", required = false) String descripcion) {
+            @RequestParam(value = "descripcion", required = false) String descripcion,
+            @RequestParam(value = "fechaDocumento", required = false)
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+            LocalDate fechaDocumento) {
 
         accesoValidator.validarEscribir("VISTA_HISTORIAS");
-        ArchivoClinicoResponse response = archivoClinicoService.subirArchivo(consultaId, file, tipo, descripcion);
+        ArchivoClinicoResponse response = archivoClinicoService.subirArchivo(consultaId, file, tipo, descripcion, fechaDocumento);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Archivo cargado exitosamente", response));
     }

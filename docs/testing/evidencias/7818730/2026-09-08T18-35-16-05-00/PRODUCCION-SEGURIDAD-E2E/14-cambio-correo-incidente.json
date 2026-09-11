@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "environment": "produccion-controlada",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574",
+    "companyId": 3,
+    "requestRecordedAt": "2026-09-08T23:24:55.019Z"
+  },
+  "case": "CP-RF04-02",
+  "result": "NO_CUMPLE",
+  "observations": [
+    "Una ejecución aceptó la solicitud, pero no entregó ambas confirmaciones dentro de la ventana observada.",
+    "La reanudación controlada posterior respondió HTTP 500 al solicitar el cambio.",
+    "No se modificó el correo y la cuenta QA fue desactivada al cerrar las pruebas."
+  ],
+  "codeReview": "El servicio persiste la solicitud y realiza dos envíos síncronos dentro de la misma transacción; una excepción del proveedor interrumpe la operación completa.",
+  "privacy": "Registro consolidado sin correos, contraseñas, enlaces, tokens, cookies ni cuerpos HTTP."
+}

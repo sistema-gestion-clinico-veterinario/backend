@@ -1,0 +1,23 @@
+{
+  "caseId": "CP-RF22-01",
+  "environment": "production-controlled",
+  "frontend": "https://systemvetfrontend.vercel.app",
+  "establishmentId": 3,
+  "executedAt": "2026-09-09T14:45:50-05:00",
+  "testData": {
+    "pet": "QA Mascota Trazabilidad",
+    "clinicalHistory": "HC-000109",
+    "temporaryField": "color",
+    "originalValue": "Negro QA",
+    "testValue": "Negro Temporal"
+  },
+  "observations": [
+    "La modificacion valida se persistio y la ficha mostro el color Negro Temporal.",
+    "La mascota conservo a Maria Fernanda Cruz Ramirez como propietaria.",
+    "La ruta de historia clinica continuo resolviendo HC-000109 con dos consultas.",
+    "La agenda continuo mostrando tres citas de la mascota: dos completadas y una cancelada.",
+    "El color se restauro y se verifico nuevamente como Negro QA."
+  ],
+  "result": "CUMPLE",
+  "cleanup": "Dato temporal restaurado"
+}

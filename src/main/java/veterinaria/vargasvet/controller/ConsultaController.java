@@ -43,4 +43,11 @@ public class ConsultaController {
         ConsultaResponse response = consultaService.cerrarConsulta(id, request);
         return ResponseEntity.ok(new ApiResponse<>(true, "Historia clínica cerrada exitosamente", response));
     }
+
+    @PatchMapping("/{id}/reopen")
+    @PreAuthorize("@accesoValidator.hasPurpose('COMPANY_ADMIN') or @accesoValidator.hasPurpose('PLATFORM_ADMIN')")
+    public ResponseEntity<ApiResponse<ConsultaResponse>> reabrirConsulta(@PathVariable Long id) {
+        ConsultaResponse response = consultaService.reabrirConsulta(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Historia clínica reabierta para edición", response));
+    }
 }

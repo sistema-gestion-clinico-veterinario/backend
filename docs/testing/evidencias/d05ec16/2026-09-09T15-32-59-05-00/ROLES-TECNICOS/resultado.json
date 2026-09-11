@@ -1,0 +1,13 @@
+{
+  "caseId": "CP-RF06-02",
+  "executedAt": "2026-09-09T15:32:59-05:00",
+  "environment": "local-unit",
+  "tests": 2,
+  "failures": 0,
+  "errors": 0,
+  "observations": [
+    "Un rol protegido rechaza su eliminación y el repositorio no recibe delete.",
+    "El administrador técnico de plataforma conserva nombre, ámbito y propósito aunque se soliciten otros valores."
+  ],
+  "result": "CUMPLE"
+}

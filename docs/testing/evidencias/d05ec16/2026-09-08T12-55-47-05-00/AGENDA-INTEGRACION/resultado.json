@@ -1,0 +1,23 @@
+{
+  "id": "AGENDA-INTEGRACION-d05ec16-20260908T125547-0500",
+  "fechaHora": "2026-09-08T12:55:47-05:00",
+  "commitBase": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "arbolTrabajo": "modificado por pruebas y documentación no versionadas",
+  "comando": "mvn -Dtest=CitaServiceIntegrationTest test",
+  "ambiente": "Spring Boot 3.4.2, Maven 3.9.9, compilación Java 21, ejecución OpenJDK 22.0.2, H2 2.3.232",
+  "pruebas": 10,
+  "aprobadas": 10,
+  "fallidas": 0,
+  "errores": 0,
+  "omitidas": 0,
+  "casosERS": [
+    "CP-RF24-01",
+    "CP-RF24-02 (parcial)",
+    "CP-RF24-03 (parcial)",
+    "CP-RF26-01",
+    "CP-RF26-02",
+    "CP-RF27-01"
+  ],
+  "limitacion": "Nivel de servicio con H2; faltan contratos API, E2E, concurrencia real y variantes restantes de entidades inactivas",
+  "sha256Prueba": "27289F6B0568704BC44718114FE2FF90DCE9F56BAE062EEC5A801033B74D32BD"
+}

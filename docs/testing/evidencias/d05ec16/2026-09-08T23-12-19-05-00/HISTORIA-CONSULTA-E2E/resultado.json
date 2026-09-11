@@ -1,0 +1,25 @@
+{
+  "id": "HISTORIA-CONSULTA-E2E-d05ec16-20260908T231219-0500",
+  "fechaHora": "2026-09-08T23:12:19-05:00",
+  "ambiente": "Producción controlada con datos ficticios autorizados",
+  "casos": [
+    {
+      "caso": "CP-RF29-01",
+      "resultado": "Cumple",
+      "historia": "HC-000001",
+      "comprobaciones": [
+        "El listado abrió el expediente seleccionado",
+        "Las consultas se mostraron en orden descendente: 8 de septiembre de 2026 antes de 27 de enero de 2024",
+        "Preventivos se presenta como sección separada de Consultas y Servicios",
+        "La sección preventiva separa Cartilla de Vacunación y Cartilla de Desparasitación"
+      ]
+    },
+    {
+      "caso": "CP-RF29-02",
+      "resultado": "No cumple",
+      "evidenciaReutilizada": "docs/testing/evidencias/7818730/2026-09-08T18-35-16-05-00/PRODUCCION-SEGURIDAD-E2E/06-scope-own.json",
+      "observacion": "Una cuenta con alcance OWN sin historias asignadas obtuvo HTTP 200 al consultar el detalle de una historia ajena; se esperaba 403 o 404."
+    }
+  ],
+  "secretosIncluidos": false
+}

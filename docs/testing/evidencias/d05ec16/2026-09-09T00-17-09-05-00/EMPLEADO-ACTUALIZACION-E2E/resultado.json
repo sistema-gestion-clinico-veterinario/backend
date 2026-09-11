@@ -1,0 +1,14 @@
+{
+  "ejecucion": "EMPLEADO-ACTUALIZACION-E2E",
+  "fechaHora": "2026-09-09T00:17:09-05:00",
+  "entorno": "https://systemvetfrontend.vercel.app",
+  "empresaPrueba": 3,
+  "datosSensiblesIncluidos": false,
+  "caso": "CP-RF11-01",
+  "resultado": "No cumple",
+  "observacion": "En Modificar Registro de Personal se cambió únicamente el teléfono por un valor válido. El botón Actualizar Registro no cerró el formulario, no mostró validación ni error y el listado mantuvo el teléfono anterior. La operación se repitió tras perder el foco del campo con el mismo resultado.",
+  "cambiosPersistidos": false,
+  "restauracionNecesaria": false,
+  "rolesModificados": false,
+  "horariosModificados": false
+}

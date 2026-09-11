@@ -1,0 +1,38 @@
+{
+  "ejecucion": "CITA-CICLO-E2E",
+  "fechaHora": "2026-09-09T00:27:20-05:00",
+  "entorno": "https://systemvetfrontend.vercel.app",
+  "empresaPrueba": 3,
+  "datosSensiblesIncluidos": false,
+  "datosQA": {
+    "paciente": "QA Mascota Trazabilidad",
+    "servicio": "Consulta General",
+    "fecha": "2026-09-16",
+    "horaInicial": "10:00",
+    "horaReprogramada": "10:20"
+  },
+  "casos": [
+    {
+      "id": "CP-RF24-01",
+      "resultado": "Cumple",
+      "observacion": "La cita válida se registró una sola vez con estado PROGRAMADA y reservó el intervalo de las 10:00."
+    },
+    {
+      "id": "CP-RF25-01",
+      "resultado": "Cumple",
+      "observacion": "El motivo fue actualizado; el valor anterior desapareció y continuó existiendo una sola cita para el paciente QA."
+    },
+    {
+      "id": "CP-RF26-01",
+      "resultado": "Cumple",
+      "observacion": "La cita cambió de 10:00 a 10:20, conservó paciente, propietaria, profesional y motivo, y quedó REPROGRAMADA sin duplicación."
+    },
+    {
+      "id": "CP-RF27-01",
+      "resultado": "No cumple",
+      "observacion": "La cancelación conservó el antecedente CANCELADA y liberó 10:20, comprobado al volver a consultar disponibilidad. Sin embargo, solo pidió confirmación y no permitió registrar el motivo exigido."
+    }
+  ],
+  "estadoFinal": "CANCELADA",
+  "formularioVerificacionDescartado": true
+}

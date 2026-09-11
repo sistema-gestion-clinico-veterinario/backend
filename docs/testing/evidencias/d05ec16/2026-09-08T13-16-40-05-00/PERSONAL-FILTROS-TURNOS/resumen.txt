@@ -1,0 +1,5 @@
+Resultado técnico: 2 pruebas fallidas, sin errores ni omisiones.
+
+CP-RF09-01: el endpoint de empleados carece de filtros de documento, rol y
+estado. CP-RF15-01: deleteHorario no consulta citas relacionadas y elimina el
+turno. No se modificó código funcional.

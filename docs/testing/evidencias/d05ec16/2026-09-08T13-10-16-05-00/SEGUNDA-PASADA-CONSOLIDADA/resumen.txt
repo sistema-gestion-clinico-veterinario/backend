@@ -1,0 +1,5 @@
+Ejecución consolidada: 35 pruebas, 30 aprobadas y 5 fallidas.
+
+Las cinco fallas corresponden a incumplimientos ya identificados y fueron
+reproducidas sin errores de infraestructura. Esta reejecución no se suma al
+acumulado para evitar contar dos veces las mismas pruebas.

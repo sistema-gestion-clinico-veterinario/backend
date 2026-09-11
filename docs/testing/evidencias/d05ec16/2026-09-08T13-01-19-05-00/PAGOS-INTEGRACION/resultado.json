@@ -1,0 +1,15 @@
+{
+  "id": "PAGOS-INTEGRACION-d05ec16-20260908T130119-0500",
+  "fechaHora": "2026-09-08T13:01:19-05:00",
+  "commitBase": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "comando": "mvn -Dtest=PagoServiceIntegrationTest test",
+  "ambiente": "Spring Boot 3.4.2, Maven 3.9.9, compilación Java 21, ejecución OpenJDK 22.0.2, H2 2.3.232",
+  "pruebas": 6,
+  "aprobadas": 6,
+  "fallidas": 0,
+  "errores": 0,
+  "omitidas": 0,
+  "casosERS": ["CP-RF44-01", "CP-RF44-02"],
+  "limitacion": "Nivel de servicio; faltan API, E2E y comprobación persistida del movimiento de caja",
+  "sha256Prueba": "6D017EFE55D259B3A040D4254F86BFA23A725FFEA74D86B33BB807C8C5DBE7F5"
+}

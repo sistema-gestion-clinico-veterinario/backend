@@ -1,0 +1,29 @@
+{
+  "executionId": "ACCESIBILIDAD-E2E-d05ec16-20260909T103200-0500",
+  "executedAt": "2026-09-09T10:32:00-05:00",
+  "baseCommit": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "environment": "https://systemvetfrontend.vercel.app",
+  "testAccount": "cuenta QA autorizada; credenciales omitidas",
+  "companyId": 3,
+  "caseId": "CP-RNF04-01",
+  "status": "NO_CUMPLE",
+  "method": "inspeccion E2E del arbol de accesibilidad expuesto por el navegador",
+  "screens": [
+    {
+      "route": "/citas/agenda",
+      "positiveFindings": ["Titulo principal expuesto como heading nivel 1", "Navegacion lateral expuesta como enlaces y botones"],
+      "failures": ["Boton Limpiar filtros expuesto solo como glifo", "Botones de accion por cita expuestos solo como glifo", "Boton de notificacion expuesto solo como glifo"]
+    },
+    {
+      "route": "/clientes",
+      "positiveFindings": ["Buscadores de nombre y documento tienen nombres accesibles", "Acciones por fila se anuncian como Abrir acciones"],
+      "failures": ["Boton de notificacion expuesto solo como glifo"]
+    },
+    {
+      "route": "/historias-clinicas",
+      "positiveFindings": ["Buscadores por codigo, paciente y propietario tienen nombres accesibles", "Ver Historia conserva texto identificable"],
+      "failures": ["Boton Buscar expuesto solo como glifo", "Boton Limpiar expuesto solo como glifo", "Campos Ultima atencion desde y hasta expuestos como textbox sin nombre accesible", "Boton de notificacion expuesto solo como glifo"]
+    }
+  ],
+  "interpretation": "El criterio exige identificar y operar los controles principales. La ausencia de nombres accesibles suficientes en acciones y fechas de pantallas principales impide que tecnologias de asistencia determinen su proposito; una sola de estas fallas basta para rechazar el criterio compuesto."
+}

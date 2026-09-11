@@ -1,0 +1,31 @@
+{
+  "ejecucion": "MENSAJES-E2E",
+  "fechaHora": "2026-09-09T09:45:37-05:00",
+  "entorno": "https://systemvetfrontend.vercel.app",
+  "empresaPrueba": 3,
+  "caso": "CP-RNF06-01",
+  "resultado": "No cumple",
+  "muestras": [
+    {
+      "operacion": "Cerrar consulta sin peso",
+      "resultado": "Comprensible",
+      "mensaje": "El peso es requerido / Corrige los campos marcados antes de cerrar la consulta."
+    },
+    {
+      "operacion": "Registrar cliente duplicado",
+      "resultado": "Comprensible parcialmente",
+      "mensaje": "El email ya está registrado."
+    },
+    {
+      "operacion": "Actualizar empleado",
+      "resultado": "Sin mensaje",
+      "mensaje": null
+    },
+    {
+      "operacion": "Crear horario válido",
+      "resultado": "Sin mensaje",
+      "mensaje": null
+    }
+  ],
+  "conclusion": "El requisito exige que cada error indique qué ocurrió y cómo continuar. Existen operaciones fallidas que no muestran validación, error ni instrucción correctiva."
+}

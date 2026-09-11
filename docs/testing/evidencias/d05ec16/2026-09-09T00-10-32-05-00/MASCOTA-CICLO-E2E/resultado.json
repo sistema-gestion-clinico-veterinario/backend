@@ -1,0 +1,26 @@
+{
+  "ejecucion": "MASCOTA-CICLO-E2E",
+  "fechaHora": "2026-09-09T00:10:32-05:00",
+  "entorno": "https://systemvetfrontend.vercel.app",
+  "empresaPrueba": 3,
+  "datosSensiblesIncluidos": false,
+  "pacienteControl": "Aisha Cruz",
+  "historiaControl": "HC-000030",
+  "casos": [
+    {
+      "id": "CP-RF22-01",
+      "resultado": "Pendiente",
+      "observacion": "La modificación del color se guardó, el propietario permaneció asociado y la historia HC-000030 siguió disponible. El valor temporal se restauró. La interfaz no permitió acreditar de forma directa que todas las citas históricas permanecieran asociadas, por lo que el criterio integral no se cierra todavía."
+    },
+    {
+      "id": "CP-RF22-02",
+      "resultado": "Cumple",
+      "observacion": "La desactivación exigió una causal y un detalle. La historia HC-000030 permaneció consultable y Aisha dejó de aparecer en el selector de mascotas de una nueva cita para su propietaria. La mascota fue reactivada al terminar y volvió a estado ACTIVO."
+    }
+  ],
+  "restauracion": {
+    "colorOriginal": "No especificado",
+    "estadoFinal": "ACTIVO",
+    "formularioCitaDescartado": true
+  }
+}

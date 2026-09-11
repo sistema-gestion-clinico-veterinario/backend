@@ -1,0 +1,49 @@
+{
+  "id": "CLIENTES-MASCOTAS-E2E-d05ec16-20260908T230313-0500",
+  "fechaHora": "2026-09-08T23:03:13-05:00",
+  "commit": "d05ec16",
+  "ambiente": "Producción controlada con empresa y datos ficticios autorizados",
+  "frontend": "https://systemvetfrontend.vercel.app",
+  "empresaEsperada": { "id": 3, "nombre": "Veterinaria Vargas Vet" },
+  "cuenta": "Cuenta QA autorizada; credencial omitida de la evidencia",
+  "casos": [
+    {
+      "caso": "CP-RF17-01",
+      "resultado": "Cumple",
+      "procedimiento": [
+        "Iniciar sesión con la cuenta QA autorizada",
+        "Abrir /clientes",
+        "Verificar listado paginado con 10 filas visibles y controles de paginación",
+        "Filtrar por el nombre exacto Hugo Aguero",
+        "Verificar una sola fila con nombre, contacto, documento y estado"
+      ],
+      "evidenciaObservada": {
+        "resultadoFiltrado": "Hugo Aguero",
+        "documento": "DNI: 00000042",
+        "estado": "Activo",
+        "paginacionTrasFiltro": "Página 1; anterior y siguiente deshabilitados"
+      }
+    },
+    {
+      "caso": "CP-RF20-01",
+      "resultado": "Cumple",
+      "procedimiento": [
+        "Abrir /mascotas en la misma sesión autenticada",
+        "Verificar listado paginado y sus columnas",
+        "Filtrar por el nombre exacto Aisha Cruz",
+        "Verificar una sola fila autorizada con especie, raza, propietario y estado"
+      ],
+      "evidenciaObservada": {
+        "resultadoFiltrado": "Aisha Cruz",
+        "especie": "PERRO",
+        "raza": "Mastin Napolitano",
+        "propietario": "Maria Fernanda Cruz Ramirez",
+        "estado": "ACTIVO",
+        "paginacionTrasFiltro": "Página 1; anterior y siguiente deshabilitados"
+      }
+    }
+  ],
+  "incidenciasConsola": [],
+  "secretosIncluidos": false,
+  "observacion": "Las pruebas de servicio previas cubrían empresa y paginación; esta ejecución aporta el recorrido E2E desplegado que faltaba."
+}

@@ -1,0 +1,6 @@
+Resultado: 1 prueba aprobada, con 24 aserciones sobre anotaciones de autorización.
+
+La ejecución comprueba el cableado estático de vista, acción y alcance en los
+controladores de apoderados, mascotas, consultas, recetas y roles. El resultado
+no acredita todavía que Spring Method Security rechace en ejecución todas las
+combinaciones no autorizadas; esa matriz negativa continúa pendiente.

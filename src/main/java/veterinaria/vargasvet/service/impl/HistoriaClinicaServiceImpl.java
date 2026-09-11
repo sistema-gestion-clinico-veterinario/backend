@@ -17,9 +17,12 @@ import veterinaria.vargasvet.dto.response.HistoriaClinicaDetalleResponse;
 import veterinaria.vargasvet.dto.response.HistoriaClinicaListResponse;
 import veterinaria.vargasvet.dto.response.PrescripcionResumenResponse;
 import veterinaria.vargasvet.dto.response.TratamientoResumenResponse;
+import veterinaria.vargasvet.domain.entity.Empleado;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.ConsultaRepository;
+import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.HistoriaClinicaRepository;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.HistoriaClinicaService;
 import veterinaria.vargasvet.service.impl.ArchivoClinicoServiceImpl;
@@ -41,6 +44,10 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
     private final ArchivoClinicoServiceImpl archivoClinicoService;
     @org.springframework.beans.factory.annotation.Autowired
     private veterinaria.vargasvet.service.ControlPreventivoService controlPreventivoService;
+    @org.springframework.beans.factory.annotation.Autowired
+    private AccesoValidator accesoValidator;
+    @org.springframework.beans.factory.annotation.Autowired
+    private EmpleadoRepository empleadoRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -110,13 +117,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         HistoriaClinica hc = historiaClinicaRepository.findByMascotaId(mascotaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada para la mascota con ID: " + mascotaId));
 
-        if (!SecurityUtils.isSuperAdmin()) {
-            Integer companyId = SecurityUtils.getCurrentCompanyId();
-            if (hc.getMascota().getApoderado().getUser().getCompany() == null ||
-                !hc.getMascota().getApoderado().getUser().getCompany().getId().equals(companyId)) {
-                throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");
-            }
-        }
+        verificarAccesoHistoria(hc);
 
         return toDetalleResponse(hc);
     }
@@ -127,13 +128,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         HistoriaClinica hc = historiaClinicaRepository.findByNumeroHc(numeroHc)
                 .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada: " + numeroHc));
 
-        if (!SecurityUtils.isSuperAdmin()) {
-            Integer companyId = SecurityUtils.getCurrentCompanyId();
-            if (hc.getMascota().getApoderado().getUser().getCompany() == null ||
-                !hc.getMascota().getApoderado().getUser().getCompany().getId().equals(companyId)) {
-                throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");
-            }
-        }
+        verificarAccesoHistoria(hc);
 
         return toDetalleResponse(hc);
     }
@@ -144,15 +139,44 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         HistoriaClinica hc = historiaClinicaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada con ID: " + id));
 
-        if (!SecurityUtils.isSuperAdmin()) {
-            Integer companyId = SecurityUtils.getCurrentCompanyId();
-            if (hc.getMascota().getApoderado().getUser().getCompany() == null ||
-                !hc.getMascota().getApoderado().getUser().getCompany().getId().equals(companyId)) {
-                throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");
-            }
-        }
+        verificarAccesoHistoria(hc);
 
         return toDetalleResponse(hc);
+    }
+
+    private void verificarAccesoHistoria(HistoriaClinica hc) {
+        if (SecurityUtils.isSuperAdmin()) {
+            return;
+        }
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        if (hc.getMascota().getApoderado().getUser().getCompany() == null ||
+            !hc.getMascota().getApoderado().getUser().getCompany().getId().equals(companyId)) {
+            throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");
+        }
+        if (SecurityUtils.getCurrentRoleScope() == veterinaria.vargasvet.domain.enums.RoleScope.CLIENT) {
+            // El portal de apoderados ya valida la pertenencia mascota-apoderado antes de llegar aquí
+            // (ApoderadoPortalServiceImpl.getHistoriaMascota); el alcance OWN/COMPANY es un control de
+            // personal (STAFF), no aplica a una cuenta CLIENT consultando su propia mascota.
+            return;
+        }
+        if (accesoValidator == null || !accesoValidator.canAccessCompanyData("VISTA_HISTORIAS")) {
+            verificarAlcancePropio(hc);
+        }
+    }
+
+    private void verificarAlcancePropio(HistoriaClinica hc) {
+        Empleado propio = empleadoRepository != null
+                ? empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail()).orElse(null)
+                : null;
+        if (propio == null) {
+            throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");
+        }
+        boolean asignada = hc.getConsultas() != null && hc.getConsultas().stream()
+                .anyMatch(consulta -> consulta.getVeterinario() != null
+                        && propio.getId().equals(consulta.getVeterinario().getId()));
+        if (!asignada) {
+            throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");
+        }
     }
 
     private HistoriaClinicaListResponse toListResponse(HistoriaClinica hc, LocalDateTime fechaUltimaConsulta) {

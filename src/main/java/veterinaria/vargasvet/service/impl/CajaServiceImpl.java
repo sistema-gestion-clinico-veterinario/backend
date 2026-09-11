@@ -28,6 +28,7 @@ import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.MovimientoCajaRepository;
 import veterinaria.vargasvet.repository.PurchaseRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CajaService;
 
 import java.math.BigDecimal;
@@ -43,6 +44,7 @@ public class CajaServiceImpl implements CajaService {
     private final CitaRepository citaRepository;
     private final PurchaseRepository purchaseRepository;
     private final SesionCajaRepository sesionCajaRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -61,6 +63,10 @@ public class CajaServiceImpl implements CajaService {
         m.setRegistradoPor(SecurityUtils.getCurrentUserEmail());
         m.setCompanyId(companyId);
         movimientoRepo.save(m);
+
+        auditLogService.log(companyId, "REGISTRAR_INGRESO_CAJA", "Caja",
+            "Se registró un ingreso de S/ " + monto + " (" + metodoPago + ") por la cita "
+                + cita.getNumeroCita() + " de la mascota " + cita.getMascota().getNombreCompleto());
     }
 
     @Override
@@ -107,6 +113,10 @@ public class CajaServiceImpl implements CajaService {
                         citaId, TipoPurchase.SERVICIO_CITA, PaymentStatus.REFUNDED)
                 .forEach(p -> p.setPaymentStatus(PaymentStatus.REFUNDED));
 
+        auditLogService.log(companyId, "REGISTRAR_DEVOLUCION_CAJA", "Caja",
+            "Se registró una devolución de S/ " + montoDevuelto + " por la cita "
+                + cita.getNumeroCita() + " de la mascota " + cita.getMascota().getNombreCompleto());
+
         return toResponse(saved);
     }
 
@@ -123,7 +133,13 @@ public class CajaServiceImpl implements CajaService {
         m.setDescripcion(request.getDescripcion());
         m.setRegistradoPor(SecurityUtils.getCurrentUserEmail());
         m.setCompanyId(request.getCompanyId());
-        return toResponse(movimientoRepo.save(m));
+        MovimientoCajaResponse response = toResponse(movimientoRepo.save(m));
+
+        auditLogService.log(request.getCompanyId(), "REGISTRAR_EGRESO_CAJA", "Caja",
+            "Se registró un egreso de S/ " + request.getMonto() + " (" + m.getConcepto() + "): "
+                + request.getDescripcion());
+
+        return response;
     }
 
     @Override
@@ -187,7 +203,12 @@ public class CajaServiceImpl implements CajaService {
         sesion.setEfectivoEsperado(request.getMontoApertura());
         sesion.setAbiertaAt(veterinaria.vargasvet.util.AppClock.now());
         sesion.setAbiertaPor(SecurityUtils.getCurrentUserEmail());
-        return toSesionResponse(sesionCajaRepository.save(sesion));
+        SesionCajaResponse response = toSesionResponse(sesionCajaRepository.save(sesion));
+
+        auditLogService.log(request.getCompanyId(), "ABRIR_CAJA", "Caja",
+            "Se abrió la caja con un monto de apertura de S/ " + request.getMontoApertura());
+
+        return response;
     }
 
     @Override
@@ -214,7 +235,14 @@ public class CajaServiceImpl implements CajaService {
         sesion.setEstado(EstadoSesionCaja.CERRADA);
         sesion.setCerradaAt(veterinaria.vargasvet.util.AppClock.now());
         sesion.setCerradaPor(SecurityUtils.getCurrentUserEmail());
-        return toSesionResponse(sesionCajaRepository.save(sesion));
+        SesionCajaResponse response = toSesionResponse(sesionCajaRepository.save(sesion));
+
+        auditLogService.log(request.getCompanyId(), "CERRAR_CAJA", "Caja",
+            "Se cerró la caja. Efectivo esperado: S/ " + sesion.getEfectivoEsperado()
+                + ", efectivo contado: S/ " + sesion.getEfectivoContado()
+                + ", diferencia: S/ " + sesion.getDiferencia());
+
+        return response;
     }
 
     private SesionCaja requireSesionAbierta(Integer companyId) {

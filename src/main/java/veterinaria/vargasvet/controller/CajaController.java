@@ -13,6 +13,7 @@ import veterinaria.vargasvet.dto.response.MovimientoCajaResponse;
 import veterinaria.vargasvet.dto.response.ResumenCajaResponse;
 import veterinaria.vargasvet.dto.request.DetalleCuentaRequest;
 import veterinaria.vargasvet.dto.response.CuentaCitaResponse;
+import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CajaService;
 import veterinaria.vargasvet.service.CuentaCitaService;
 import veterinaria.vargasvet.dto.request.AperturaCajaRequest;
@@ -28,12 +29,14 @@ public class CajaController {
 
     private final CajaService cajaService;
     private final CuentaCitaService cuentaCitaService;
+    private final AuditLogService auditLogService;
 
     @GetMapping("/sesion")
     @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'LEER')")
     public ResponseEntity<ApiResponse<SesionCajaResponse>> obtenerSesion(@RequestParam Integer companyId) {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Estado de caja recuperado",
-                cajaService.obtenerSesionActual(companyId)));
+        SesionCajaResponse sesion = cajaService.obtenerSesionActual(companyId);
+        auditLogService.log(companyId, "CONSULTAR_CAJA", "Facturación", "Consultó el estado de la sesión de caja.");
+        return ResponseEntity.ok(new ApiResponse<>(true, "Estado de caja recuperado", sesion));
     }
 
     @PostMapping("/sesion/abrir")
@@ -60,14 +63,17 @@ public class CajaController {
             @RequestParam(required = false) Integer companyId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Cuentas pendientes recuperadas",
-                cuentaCitaService.listarPendientes(companyId, page, size)));
+        Page<CuentaCitaResponse> pendientes = cuentaCitaService.listarPendientes(companyId, page, size);
+        auditLogService.log(companyId, "CONSULTAR_CAJA", "Facturación", "Consultó el listado de cuentas pendientes de caja.");
+        return ResponseEntity.ok(new ApiResponse<>(true, "Cuentas pendientes recuperadas", pendientes));
     }
 
     @GetMapping("/cuentas/{citaId}")
     @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'LEER')")
     public ResponseEntity<ApiResponse<CuentaCitaResponse>> obtenerCuenta(@PathVariable Long citaId) {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Cuenta recuperada", cuentaCitaService.obtener(citaId)));
+        CuentaCitaResponse cuenta = cuentaCitaService.obtener(citaId);
+        auditLogService.log("CONSULTAR_CAJA", "Facturación", "Consultó la cuenta de la cita con ID: " + citaId + ".");
+        return ResponseEntity.ok(new ApiResponse<>(true, "Cuenta recuperada", cuenta));
     }
 
     @PostMapping("/cuentas/{citaId}/detalles")
@@ -101,8 +107,9 @@ public class CajaController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Movimientos obtenidos",
-                cajaService.listar(companyId, desde, hasta, page, size)));
+        Page<MovimientoCajaResponse> movimientos = cajaService.listar(companyId, desde, hasta, page, size);
+        auditLogService.log(companyId, "CONSULTAR_CAJA", "Facturación", "Consultó los movimientos de caja.");
+        return ResponseEntity.ok(new ApiResponse<>(true, "Movimientos obtenidos", movimientos));
     }
 
     @GetMapping("/resumen")
@@ -111,8 +118,9 @@ public class CajaController {
             @RequestParam Integer companyId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Resumen obtenido",
-                cajaService.getResumen(companyId, desde, hasta)));
+        ResumenCajaResponse resumen = cajaService.getResumen(companyId, desde, hasta);
+        auditLogService.log(companyId, "CONSULTAR_CAJA", "Facturación", "Consultó el resumen de caja.");
+        return ResponseEntity.ok(new ApiResponse<>(true, "Resumen obtenido", resumen));
     }
 
     @PostMapping("/egreso")

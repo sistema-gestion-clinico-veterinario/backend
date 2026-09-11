@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "finishedAt": "2026-09-08T23:12:43.731Z",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574",
+    "companyId": 3
+  },
+  "summary": {
+    "total": 6,
+    "passed": 5,
+    "failed": 1
+  },
+  "results": [
+    {
+      "code": "USUARIOS-DETALLE-EMPLEADO",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "USUARIOS-ACTUALIZAR-EMPLEADO",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "USUARIOS-ACTUALIZACION-PERSISTE",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "code": "USUARIOS-RECHAZAR-CORREO-DUPLICADO",
+      "expected": "cualquier 4xx",
+      "actual": 400,
+      "passed": true
+    },
+    {
+      "code": "USUARIOS-RECHAZAR-DOCUMENTO-DUPLICADO",
+      "expected": "cualquier 4xx",
+      "actual": 201,
+      "passed": false
+    },
+    {
+      "code": "CRED-CORREO-BLOQUEAR-BYPASS-EMPLEADO",
+      "expected": "cualquier 4xx",
+      "actual": 400,
+      "passed": true
+    }
+  ],
+  "privacy": "No contiene datos del empleado, correos, documentos, contraseñas, tokens ni cookies."
+}

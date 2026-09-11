@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "finishedAt": "2026-09-08T23:06:06.516Z",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574",
+    "companyId": 3,
+    "expectedScope": "OWN",
+    "employeeIdPresent": true
+  },
+  "summary": {
+    "total": 5,
+    "passed": 1,
+    "failed": 4
+  },
+  "results": [
+    {
+      "code": "SCOPE-OWN-CLIENTES-LISTA",
+      "expected": "HTTP 200 y 0 registros para empleado nuevo",
+      "actual": "HTTP 200; registros=10",
+      "passed": false,
+      "notes": "La cuenta QA no tiene pacientes, historias ni citas asignadas."
+    },
+    {
+      "code": "SCOPE-OWN-HISTORIAS-LISTA",
+      "expected": "HTTP 200 y 0 registros para empleado nuevo",
+      "actual": "HTTP 200; registros=10",
+      "passed": false,
+      "notes": "La cuenta QA no tiene pacientes, historias ni citas asignadas."
+    },
+    {
+      "code": "SCOPE-OWN-CITAS-LISTA",
+      "expected": "HTTP 200 y 0 registros para empleado nuevo",
+      "actual": "HTTP 200; registros=0",
+      "passed": true,
+      "notes": "La cuenta QA no tiene pacientes, historias ni citas asignadas."
+    },
+    {
+      "code": "SCOPE-OWN-CLIENTE-DETALLE-AJENO",
+      "expected": "403/404",
+      "actual": 200,
+      "passed": false,
+      "notes": ""
+    },
+    {
+      "code": "SCOPE-OWN-HISTORIA-DETALLE-AJENA",
+      "expected": "403/404",
+      "actual": 200,
+      "passed": false,
+      "notes": ""
+    }
+  ],
+  "privacy": "Solo conserva conteos y estados HTTP; no contiene identificadores, nombres, correos, datos clínicos, tokens ni cookies."
+}

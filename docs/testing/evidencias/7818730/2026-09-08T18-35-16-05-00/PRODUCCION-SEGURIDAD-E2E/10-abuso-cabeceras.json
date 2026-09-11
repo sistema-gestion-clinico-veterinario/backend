@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "finishedAt": "2026-09-08T23:24:05.278Z",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574",
+    "companyId": 3
+  },
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0
+  },
+  "results": [
+    {
+      "code": "CAB-HSTS",
+      "expected": "max-age >= 31536000",
+      "actual": "max-age=31536000; includeSubDomains",
+      "passed": true
+    },
+    {
+      "code": "CAB-CSP",
+      "expected": "default-src 'self' y frame-ancestors 'none'",
+      "actual": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' https://backend-cwx3.onrender.com wss://backend-cwx3.onrender.com https://modelos-production-ade8.up.railway.app; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests",
+      "passed": true
+    },
+    {
+      "code": "CAB-NOSNIFF",
+      "expected": "nosniff",
+      "actual": "nosniff",
+      "passed": true
+    },
+    {
+      "code": "CAB-REFERRER",
+      "expected": "strict-origin-when-cross-origin",
+      "actual": "strict-origin-when-cross-origin",
+      "passed": true
+    },
+    {
+      "code": "CAB-PERMISSIONS",
+      "expected": "camera, microphone y geolocation deshabilitados",
+      "actual": "camera=(), microphone=(), geolocation=()",
+      "passed": true
+    },
+    {
+      "code": "CAB-API-NO-CACHE",
+      "expected": "no-store",
+      "actual": "no-cache, no-store, max-age=0, must-revalidate",
+      "passed": true
+    },
+    {
+      "code": "AUTH-RUTA-SIN-SESION",
+      "expected": 401,
+      "actual": 401,
+      "passed": true
+    },
+    {
+      "code": "ABUSO-LOGIN-IP",
+      "expected": "429 entre intentos 2 y 21",
+      "actual": 21,
+      "passed": true
+    },
+    {
+      "code": "ABUSO-LOGIN-RETRY-AFTER",
+      "expected": "cabecera presente y positiva",
+      "actual": "60",
+      "passed": true
+    },
+    {
+      "code": "ABUSO-LOGIN-PREVIO-UNIFORME",
+      "expected": "solo 401 antes del límite",
+      "actual": [
+        401
+      ],
+      "passed": true
+    }
+  ],
+  "observations": {
+    "loginAttemptsExecuted": 21
+  },
+  "privacy": "No contiene credenciales, cookies, tokens, correos reales ni cuerpos HTTP."
+}

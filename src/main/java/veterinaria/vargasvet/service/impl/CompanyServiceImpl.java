@@ -22,6 +22,7 @@ import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CompanyOperatingHourRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CompanyService;
 import veterinaria.vargasvet.service.CompanyRoleProvisioningService;
 import veterinaria.vargasvet.util.BusinessValidator;
@@ -35,6 +36,7 @@ public class CompanyServiceImpl implements CompanyService {
     private final CompanyOperatingHourRepository companyOperatingHourRepository;
     private final BusinessValidator businessValidator;
     private final CompanyRoleProvisioningService companyRoleProvisioningService;
+    private final AuditLogService auditLogService;
 
     @Override
     public CompanyDTO getCompanyInfo() {
@@ -112,6 +114,10 @@ public class CompanyServiceImpl implements CompanyService {
         Company savedCompany = companyRepository.save(company);
         companyRoleProvisioningService.ensureRequiredRoles(savedCompany);
         saveOperatingHours(savedCompany, dto.getOperatingHours());
+
+        auditLogService.log(savedCompany.getId(), "CREAR_EMPRESA", "Empresa",
+                "Se creó la empresa " + savedCompany.getName());
+
         return mapToDTO(savedCompany);
     }
 
@@ -129,6 +135,10 @@ public class CompanyServiceImpl implements CompanyService {
         company.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
         Company savedCompany = companyRepository.save(company);
         saveOperatingHours(savedCompany, dto.getOperatingHours());
+
+        auditLogService.log(savedCompany.getId(), "ACTUALIZAR_EMPRESA", "Empresa",
+                "Se actualizó la configuración de la empresa " + savedCompany.getName());
+
         return mapToDTO(savedCompany);
     }
 
@@ -140,7 +150,13 @@ public class CompanyServiceImpl implements CompanyService {
         company.setActivo(!company.isActivo());
         company.setUpdatedAt(LocalDateTime.now());
         company.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
-        return toListResponse(companyRepository.save(company));
+        Company savedCompany = companyRepository.save(company);
+
+        auditLogService.log(savedCompany.getId(),
+                savedCompany.isActivo() ? "ACTIVAR_EMPRESA" : "DESACTIVAR_EMPRESA", "Empresa",
+                (savedCompany.isActivo() ? "Se activó" : "Se desactivó") + " la empresa " + savedCompany.getName());
+
+        return toListResponse(savedCompany);
     }
 
     private void validarAccesoEmpresa(Integer companyId) {

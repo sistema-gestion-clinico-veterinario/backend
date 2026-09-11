@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "startedAt": "2026-09-08T19:25:29.248Z",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574",
+    "companyId": 3
+  },
+  "summary": {
+    "total": 4,
+    "passed": 3,
+    "failed": 1
+  },
+  "results": [
+    {
+      "code": "CRED-ACTIVACION-ENLACE-HTTPS",
+      "expected": "HTTPS y dominio del frontend",
+      "actual": "https://systemvetfrontend.vercel.app/auth/verify",
+      "passed": true
+    },
+    {
+      "code": "CRED-ACTIVACION-PRIMER-USO",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "CRED-ACTIVACION-UN-SOLO-USO",
+      "expected": "400/401/409",
+      "actual": 404,
+      "passed": false
+    },
+    {
+      "code": "CRED-LOGIN-TRAS-ACTIVACION",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    }
+  ],
+  "privacy": "No contiene correo, contraseña, enlace de seguimiento, token de activación, cookies ni cuerpos HTTP."
+}

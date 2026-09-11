@@ -1,0 +1,6 @@
+Ejecución: RECETAS-API-d05ec16-20260908T124915-0500
+Resultado: 3 pruebas, 1 aprobada y 2 fallidas.
+- CP-RF31-01: receta completa aceptada con HTTP 201.
+- CP-RF31-02: receta sin duración aceptada con HTTP 201; se esperaba 400.
+- CP-RF31-02: receta sin indicaciones aceptada con HTTP 201; se esperaba 400.
+Las dos fallas pertenecen al mismo caso ERS y confirman en la frontera HTTP el defecto ya observado mediante Bean Validation.

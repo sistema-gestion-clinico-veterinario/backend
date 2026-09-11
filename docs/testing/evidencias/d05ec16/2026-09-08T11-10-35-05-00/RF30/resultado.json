@@ -1,0 +1,68 @@
+{
+  "executionId": "RF30-d05ec16-20260908T111035-0500",
+  "executedAt": "2026-09-08T11:10:35-05:00",
+  "baseCommit": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "workingTreeDirty": true,
+  "testSource": "src/test/java/veterinaria/vargasvet/ers/historias/RF30Test.java",
+  "testSourceSha256": "10E7B0ABC24D4B7779B4ECC6349180B7D13FEC5D6651F0DBCA38A55BAEA07EE6",
+  "command": "mvn -Dtest=RF30Test test",
+  "environment": {
+    "javaRuntime": "OpenJDK 22.0.2",
+    "compilerRelease": "21",
+    "maven": "3.9.9",
+    "database": "H2 2.3.232 in-memory",
+    "springBoot": "3.4.2"
+  },
+  "technicalTests": {
+    "total": 10,
+    "passed": 8,
+    "failed": 2,
+    "errors": 0,
+    "skipped": 0,
+    "elapsedSeconds": 13.58
+  },
+  "cases": [
+    {
+      "case": "CP-RF30-01",
+      "technicalTests": 1,
+      "result": "Backend integration passed; E2E remains pending",
+      "state": "Pendiente"
+    },
+    {
+      "case": "CP-RF30-02",
+      "technicalTests": 2,
+      "result": "Backend integration passed for missing weight and missing anamnesis; API/E2E remains pending",
+      "state": "Pendiente"
+    },
+    {
+      "case": "CP-RF30-03",
+      "technicalTests": 3,
+      "result": "Range boundaries passed, but weight 10.123 was accepted without a validation violation",
+      "state": "No cumple"
+    },
+    {
+      "case": "CP-RF30-04",
+      "technicalTests": 2,
+      "result": "Explicit decisions persisted, but closing without both decisions was accepted",
+      "state": "No cumple"
+    },
+    {
+      "case": "CP-RF30-05",
+      "technicalTests": 1,
+      "result": "Backend integration passed; interface verification remains pending",
+      "state": "Pendiente"
+    },
+    {
+      "case": "CP-RF30-06",
+      "technicalTests": 1,
+      "result": "Stale version was rejected in backend integration; API/session concurrency remains pending",
+      "state": "Pendiente"
+    }
+  ],
+  "overallState": "No cumple",
+  "notes": [
+    "This execution did not use production data or credentials.",
+    "The Maven wrapper failed before compilation, so the installed Maven 3.9.9 was used.",
+    "Because the test source was not committed at execution time, its SHA-256 is recorded and a committed rerun is required for final thesis evidence."
+  ]
+}

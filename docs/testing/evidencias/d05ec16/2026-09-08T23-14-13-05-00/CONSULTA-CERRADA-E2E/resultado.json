@@ -1,0 +1,17 @@
+{
+  "id": "CONSULTA-CERRADA-E2E-d05ec16-20260908T231413-0500",
+  "fechaHora": "2026-09-08T23:14:13-05:00",
+  "ambiente": "Producción controlada con datos clínicos ficticios autorizados",
+  "caso": "CP-RF30-05",
+  "resultado": "Cumple",
+  "consultaEvaluada": 120,
+  "comprobaciones": [
+    "La consulta se identificó como CERRADA",
+    "La interfaz mostró SOLO LECTURA V1",
+    "Tipo de consulta, motivo, signos vitales y decisiones preventivas estaban deshabilitados",
+    "No se presentó una acción de guardado o cierre que permitiera modificar el registro"
+  ],
+  "evidenciaBackendPrevia": "docs/testing/evidencias/d05ec16/2026-09-08T11-10-35-05-00/RF30/",
+  "mutacionesRealizadas": false,
+  "secretosIncluidos": false
+}

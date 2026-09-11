@@ -115,7 +115,26 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
             model.put("companyAddress", company.getAddress());
         }
         Mail mail = emailService.createMail(usuario.getEmail(), "Controles preventivos de sus mascotas - " + companyName, model);
-        emailService.sendEmail(mail, "email/recordatorio-preventivo-template");
+
+        // Se espera el resultado real del envío (el job ya corre en un hilo de fondo, no bloquea
+        // ninguna petición web) para no marcar como "enviado" un recordatorio que en realidad falló.
+        // Si falla, deliberadamente NO se guarda ningún registro: así, mañana el control vuelve a
+        // aparecer como candidato y se reintenta con normalidad — sin necesidad de un estado FALLIDO
+        // que requeriría además ajustar la lógica de deduplicación (findExistingKeys /
+        // findApoderadoIdsWithRecentReminder) para no bloquear el reintento.
+        boolean enviado;
+        try {
+            enviado = emailService.sendEmail(mail, "email/recordatorio-preventivo-template").join();
+        } catch (Exception e) {
+            log.error("Error inesperado al enviar recordatorio preventivo a {}: {}", usuario.getEmail(), e.getMessage());
+            enviado = false;
+        }
+
+        if (!enviado) {
+            log.warn("No se pudo enviar el recordatorio preventivo a {}; se reintentará en la próxima ejecución programada.",
+                    usuario.getEmail());
+            return;
+        }
 
         LocalDateTime enviadoAt = AppClock.now();
         for (AvisoPendiente aviso : avisos) {

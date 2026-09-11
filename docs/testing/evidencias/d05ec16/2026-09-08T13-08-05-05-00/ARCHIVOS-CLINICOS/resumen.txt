@@ -1,0 +1,5 @@
+Resultado técnico: 3 pruebas aprobadas, sin fallas, errores ni omisiones.
+
+Se comprobó la carga y consulta posterior de un PDF de laboratorio permitido.
+También se verificó que una extensión no permitida y un archivo mayor a 20 MB
+se rechazan antes de invocar Storage o persistir ArchivoClinico.

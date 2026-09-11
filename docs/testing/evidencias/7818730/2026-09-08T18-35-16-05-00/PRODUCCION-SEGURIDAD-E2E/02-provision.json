@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "runId": "57269d09-a15f-434a-8927-ba15bcae15dd",
+    "startedAt": "2026-09-08T19:19:58.652Z",
+    "finishedAt": "2026-09-08T19:20:09.039Z",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574",
+    "companyId": 3,
+    "prefix": "QA-ERS-",
+    "cleanupPolicy": "desactivar; no eliminar automáticamente"
+  },
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "results": [
+    {
+      "code": "RBAC-LISTAR-ROLES",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "notes": "Se contrasta el permiso anunciado por la sesión con el control del endpoint."
+    },
+    {
+      "code": "RBAC-CREAR-ROL",
+      "expected": 201,
+      "actual": 201,
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "code": "RBAC-MODIFICAR-ROL",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "code": "RBAC-DESACTIVAR-ROL",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "code": "USUARIOS-LISTAR-EMPLEADOS",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "code": "USUARIOS-ROLES-ASIGNABLES",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "notes": ""
+    },
+    {
+      "code": "USUARIOS-CREAR-EMPLEADO-PENDIENTE",
+      "expected": 201,
+      "actual": 201,
+      "passed": true,
+      "notes": "La cuenta debe quedar inactiva hasta completar el enlace de activación."
+    },
+    {
+      "code": "USUARIOS-RECUPERAR-CREADO",
+      "expected": 200,
+      "actual": 200,
+      "passed": true,
+      "notes": ""
+    }
+  ],
+  "privacy": "El correo temporal está únicamente en estado-privado.json, excluido de Git; no se guardan contraseñas, tokens ni cookies."
+}

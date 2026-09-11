@@ -1,0 +1,4 @@
+Ejecución: LOTE5-d05ec16-20260908T115701-0500
+Resultado técnico: 1 clase, 3 pruebas, 3 aprobadas, 0 fallidas, 0 errores y 0 omitidas.
+Resultado ERS: 4 casos Pendiente y 6 Bloqueado por falta de evidencia externa real.
+La prueba aprobada valida el mecanismo de registro de rendimiento; no demuestra por sí sola que producción responda en menos de 2 segundos.

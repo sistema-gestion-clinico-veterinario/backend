@@ -1,0 +1,133 @@
+{
+  "metadata": {
+    "finishedAt": "2026-09-08T23:00:33.049Z",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574",
+    "companyId": 3,
+    "activeRoleId": 13,
+    "activeRolePurpose": "CUSTOM",
+    "activeRoleScope": "STAFF",
+    "permissions": [
+      {
+        "code": "VISTA_EMPLEADO_DASHBOARD",
+        "read": true,
+        "create": false,
+        "update": false,
+        "delete": false,
+        "scope": "OWN"
+      },
+      {
+        "code": "VISTA_MI_HORARIO",
+        "read": true,
+        "create": false,
+        "update": false,
+        "delete": false,
+        "scope": "OWN"
+      },
+      {
+        "code": "VISTA_CLIENTES",
+        "read": true,
+        "create": false,
+        "update": false,
+        "delete": false,
+        "scope": "OWN"
+      },
+      {
+        "code": "VISTA_HISTORIAS",
+        "read": true,
+        "create": false,
+        "update": false,
+        "delete": false,
+        "scope": "OWN"
+      },
+      {
+        "code": "VISTA_CITAS_AGENDA",
+        "read": true,
+        "create": false,
+        "update": false,
+        "delete": false,
+        "scope": "OWN"
+      }
+    ]
+  },
+  "summary": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0
+  },
+  "results": [
+    {
+      "code": "RBAC-QA-LOGIN",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "RBAC-QA-VISTA_ROLES-LEER",
+      "expected": "401/403",
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "code": "RBAC-QA-VISTA_EMPLEADOS-LEER",
+      "expected": "401/403",
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "code": "RBAC-QA-VISTA_CLIENTES-LEER",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "RBAC-QA-VISTA_MASCOTAS-LEER",
+      "expected": "401/403",
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "code": "RBAC-QA-VISTA_CITAS_AGENDA-LEER",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "RBAC-QA-CLIENTES-CREAR",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "code": "RBAC-QA-CLIENTES-EDITAR",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "code": "RBAC-QA-CLIENTES-ELIMINAR",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "code": "RBAC-QA-CITAS-CREAR",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "code": "RBAC-QA-CITAS-EDITAR",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "code": "RBAC-QA-CITAS-ELIMINAR",
+      "expected": 403,
+      "actual": 403,
+      "passed": true
+    }
+  ],
+  "privacy": "No contiene correo, contraseña, tokens, cookies ni datos de las respuestas de negocio."
+}

@@ -1,0 +1,31 @@
+{
+  "id": "AGENDA-CONSULTA-E2E-d05ec16-20260908T230748-0500",
+  "fechaHora": "2026-09-08T23:07:48-05:00",
+  "commitLocalReferencia": "d05ec16",
+  "ambiente": "Producción controlada con datos ficticios autorizados",
+  "casos": [
+    {
+      "caso": "CP-RF23-01",
+      "resultado": "No cumple",
+      "comprobaciones": {
+        "vistaDia": "Disponible y seleccionable",
+        "vistaSemana": "Disponible; mostró la semana 7-13 de septiembre y citas por día y hora",
+        "vistaMes": "Disponible; mostró septiembre de 2026 y citas distribuidas por fecha",
+        "filtroEstado": "Disponible en vista Agenda",
+        "filtroVeterinario": "Disponible en vista Agenda",
+        "filtroServicio": "No disponible en la interfaz"
+      },
+      "causa": "El criterio exige filtrar por período, estado, empleado y servicio; la interfaz desplegada no ofrece filtro por servicio."
+    },
+    {
+      "caso": "CP-RF23-02",
+      "resultado": "Cumple",
+      "evidenciaReutilizada": "docs/testing/evidencias/7818730/2026-09-08T18-35-16-05-00/PRODUCCION-SEGURIDAD-E2E/15-rbac-alcance-menu.json",
+      "comprobaciones": {
+        "alcanceOWN": "0 citas para cuenta QA sin citas asignadas",
+        "alcanceCOMPANY": "10 citas en el mismo contexto de empresa"
+      }
+    }
+  ],
+  "secretosIncluidos": false
+}

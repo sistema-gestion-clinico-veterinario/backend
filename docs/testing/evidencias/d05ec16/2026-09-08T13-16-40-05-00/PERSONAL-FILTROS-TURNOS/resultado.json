@@ -1,0 +1,23 @@
+{
+  "id": "PERSONAL-FILTROS-TURNOS-d05ec16-20260908T131640-0500",
+  "fechaHora": "2026-09-08T13:16:40-05:00",
+  "commitBase": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "comando": "mvn -Dtest=RF09AndRF15Test test",
+  "pruebas": 2,
+  "aprobadas": 0,
+  "fallidas": 2,
+  "errores": 0,
+  "omitidas": 0,
+  "hallazgos": [
+    {
+      "caso": "CP-RF09-01",
+      "resultado": "El listado no expone filtros por documento, rol ni estado",
+      "parametrosDisponibles": ["companyId", "nombre", "apellido", "email", "tipoEmpleadoId", "especialidadId", "page", "size"]
+    },
+    {
+      "caso": "CP-RF15-01",
+      "resultado": "deleteHorario elimina el turno aunque exista una cita activa relacionada"
+    }
+  ],
+  "sha256Prueba": "295EAB7D50014120BBA87A5D5D8443ACD9B5ADFD5F742E52BB755E10037171EF"
+}

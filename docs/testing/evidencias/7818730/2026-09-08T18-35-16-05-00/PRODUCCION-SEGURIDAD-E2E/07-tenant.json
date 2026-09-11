@@ -1,0 +1,59 @@
+{
+  "metadata": {
+    "finishedAt": "2026-09-08T23:08:56.951Z",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574",
+    "ownCompanyId": 3,
+    "foreignCompanyId": 1
+  },
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0
+  },
+  "results": [
+    {
+      "code": "TENANT-EMPRESA-PROPIA",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "TENANT-EMPRESA-AJENA-DETALLE",
+      "expected": "403/404",
+      "actual": 403,
+      "passed": true
+    },
+    {
+      "code": "TENANT-CLIENTES-PARAMETRO",
+      "expected": "parámetro ajeno ignorado o denegado",
+      "actual": "propia 200; ajena 200; mismoConjunto=true",
+      "passed": true
+    },
+    {
+      "code": "TENANT-HISTORIAS-PARAMETRO",
+      "expected": "parámetro ajeno ignorado o denegado",
+      "actual": "propia 200; ajena 200; mismoConjunto=true",
+      "passed": true
+    },
+    {
+      "code": "TENANT-CITAS-PARAMETRO",
+      "expected": "parámetro ajeno ignorado o denegado",
+      "actual": "propia 200; ajena 200; mismoConjunto=true",
+      "passed": true
+    },
+    {
+      "code": "TENANT-EMPLEADOS-PARAMETRO",
+      "expected": "parámetro ajeno ignorado o denegado",
+      "actual": "propia 200; ajena 200; mismoConjunto=true",
+      "passed": true
+    },
+    {
+      "code": "TENANT-ROLES-PARAMETRO",
+      "expected": "parámetro ajeno ignorado o denegado",
+      "actual": "propia 200; ajena 200; mismoConjunto=true",
+      "passed": true
+    }
+  ],
+  "privacy": "Las identidades se compararon mediante SHA-256 en memoria; no se guardan IDs, registros, correos, tokens ni cookies."
+}

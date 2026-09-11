@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import veterinaria.vargasvet.service.MercadoPagoYapeGateway;
 import veterinaria.vargasvet.security.RateLimitFilter;
+import veterinaria.vargasvet.security.ClientIpResolver;
 
 import java.io.IOException;
 
@@ -19,7 +20,10 @@ public class E2eTestConfiguration {
 
     @Bean
     RateLimitFilter rateLimitFilter() {
-        return new RateLimitFilter(org.mockito.Mockito.mock(veterinaria.vargasvet.security.SharedRateLimitService.class)) {
+        return new RateLimitFilter(
+                org.mockito.Mockito.mock(veterinaria.vargasvet.security.SharedRateLimitService.class),
+                new ClientIpResolver(1)
+        ) {
             @Override
             protected void doFilterInternal(
                     HttpServletRequest request,
