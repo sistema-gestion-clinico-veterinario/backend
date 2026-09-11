@@ -81,7 +81,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .recentLogs(recentLogs)
                 .employees(canRead("VISTA_EMPLEADOS")
                         ? empleadoService.listar(targetCompanyId, null, null, null,
-                                null, null, 0, 5).getContent() : List.of())
+                                null, null, null, null, null, 0, 5).getContent() : List.of())
                 .todayAppointments(canRead("VISTA_CITAS_AGENDA")
                         ? citaService.listar(targetCompanyId, today, null, null,
                                 null, null, 0, 30).getContent() : List.of())
@@ -95,7 +95,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .schedules(canRead("VISTA_HORARIOS")
                         ? empleadoService.getSchedulesReportForDate(targetCompanyId, today) : List.of())
                 .payments(canRead("VISTA_PAGOS")
-                        ? pagoService.listarHistorialPorEmpresa(0, 5, targetCompanyId).getContent() : List.of())
+                        ? pagoService.listarHistorialPorEmpresa(0, 5, targetCompanyId, null, null, null, null, null).getContent() : List.of())
                 .companies(companies)
                 .build();
     }

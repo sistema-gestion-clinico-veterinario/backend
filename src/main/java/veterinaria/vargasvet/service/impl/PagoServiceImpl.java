@@ -145,18 +145,21 @@ public class PagoServiceImpl implements PagoService {
 
     @Override
     @Transactional
-    public Page<PagoListResponse> listarHistorialPorEmpresa(int page, int size, Integer companyId) {
+    public Page<PagoListResponse> listarHistorialPorEmpresa(int page, int size, Integer companyId,
+                                                              Integer clienteId, Long mascotaId,
+                                                              java.time.LocalDate fechaDesde, java.time.LocalDate fechaHasta,
+                                                              PaymentStatus estado) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Integer resolvedCompanyId = SecurityUtils.isSuperAdmin()
                 ? companyId
                 : SecurityUtils.getCurrentCompanyId();
 
-        if (resolvedCompanyId != null) {
-            return purchaseRepository.findByCompanyId(resolvedCompanyId, TipoPurchase.SERVICIO_CITA, pageable)
-                    .map(this::toListResponse);
-        }
+        java.time.LocalDateTime desde = fechaDesde != null ? fechaDesde.atStartOfDay() : null;
+        java.time.LocalDateTime hasta = fechaHasta != null ? fechaHasta.atTime(23, 59, 59) : null;
 
-        return purchaseRepository.findAllByTipoPurchaseOrderByCreatedAtDesc(TipoPurchase.SERVICIO_CITA, pageable)
+        return purchaseRepository.buscarHistorialPorEmpresa(
+                        resolvedCompanyId, TipoPurchase.SERVICIO_CITA,
+                        clienteId, mascotaId, desde, hasta, estado, pageable)
                 .map(this::toListResponse);
     }
 

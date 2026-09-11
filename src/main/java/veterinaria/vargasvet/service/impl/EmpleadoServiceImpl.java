@@ -603,7 +603,11 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             throw new IllegalStateException("No se puede modificar el horario de un empleado inactivo");
         }
         LocalDate fecha = request.getFecha() != null ? request.getFecha() : horario.getFecha();
-        
+
+        if (!citaRepository.findActiveByEmpleadoIdAndFecha(empleado.getId(), horario.getFecha()).isEmpty()) {
+            throw new IllegalStateException("No se puede modificar un turno con citas activas relacionadas; identifíquelas y revíselas antes de continuar");
+        }
+
         validarHorarioContraEmpresa(empleado.getUser().getCompany().getId(), fecha, request.getHoraInicio(), request.getHoraFin());
 
         // Verificar traslape excluyendo el propio registro
@@ -631,6 +635,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         if (!Boolean.TRUE.equals(horario.getEmpleado().getEstado())) {
             throw new IllegalStateException("No se puede eliminar el horario de un empleado inactivo");
+        }
+
+        if (!citaRepository.findActiveByEmpleadoIdAndFecha(horario.getEmpleado().getId(), horario.getFecha()).isEmpty()) {
+            throw new IllegalStateException("No se puede eliminar un turno con citas activas relacionadas");
         }
 
         horarioEmpleadoRepository.deleteById(horarioId);
@@ -709,12 +717,16 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<EmpleadoListResponse> listar(Integer companyId, String nombre, String apellido, String email, Long tipoEmpleadoId, Long especialidadId, int page, int size) {
+    public Page<EmpleadoListResponse> listar(Integer companyId, String nombre, String apellido, String email,
+                                              String numeroDocumento, Integer roleId, Boolean activo,
+                                              Long tipoEmpleadoId, Long especialidadId, int page, int size) {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
         String nombreFiltro = (nombre != null && !nombre.isBlank()) ? nombre.trim() : null;
         String apellidoFiltro = (apellido != null && !apellido.isBlank()) ? apellido.trim() : null;
         String emailFiltro = (email != null && !email.isBlank()) ? email.trim() : null;
-        return empleadoRepository.buscar(resolvedCompanyId, nombreFiltro, apellidoFiltro, emailFiltro, tipoEmpleadoId, especialidadId,
+        String numeroDocumentoFiltro = (numeroDocumento != null && !numeroDocumento.isBlank()) ? numeroDocumento.trim() : null;
+        return empleadoRepository.buscar(resolvedCompanyId, nombreFiltro, apellidoFiltro, emailFiltro,
+                numeroDocumentoFiltro, roleId, activo, tipoEmpleadoId, especialidadId,
                 PageRequest.of(page, size, Sort.unsorted()))
                 .map(this::toListResponse);
     }
