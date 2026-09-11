@@ -250,6 +250,12 @@ class RF30Test {
         request.setObservacionVacunacion("Vacuna aplicada durante la consulta");
         request.setDesparasitacionAplicada(false);
         request.setObservacionDesparasitacion("No corresponde en esta atención");
+        veterinaria.vargasvet.dto.request.RegistroVacunacionRequest registro =
+                new veterinaria.vargasvet.dto.request.RegistroVacunacionRequest();
+        registro.setTipoVacunaId(1L);
+        registro.setFechaAplicacion(java.time.LocalDate.now());
+        registro.setPeriodicidadMeses(12);
+        request.setRegistroVacunacion(registro);
 
         consultaService.cerrarConsulta(consulta.getId(), request);
 
