@@ -1,0 +1,29 @@
+{
+  "fecha": "2026-09-09T15:45:00-05:00",
+  "entorno": "Integracion local reproducible con Spring Data JPA y H2",
+  "comando": "mvn.cmd -Dtest=RecordatorioPreventivoPersistenceIntegrationTest,RecordatorioPreventivoServiceImplTest test",
+  "resultado": "BUILD SUCCESS",
+  "pruebas": 6,
+  "fallos": 0,
+  "errores": 0,
+  "casos": {
+    "CP-RF33-03": {
+      "resultado": "Cumple",
+      "evidencia": [
+        "El proceso consulta candidatos persistidos con usuario activo y correo verificado",
+        "El envío exitoso persiste el recordatorio y la segunda ejecución no vuelve a enviarlo",
+        "procesarRecordatorios conserva la configuración @Scheduled parametrizable",
+        "La prueba existente prepara el mensaje de WhatsApp para envío manual"
+      ]
+    },
+    "CP-RF33-04": {
+      "resultado": "Cumple",
+      "evidencia": [
+        "La lógica omite claves ya procesadas y respeta el intervalo de siete días",
+        "La restricción única de base de datos rechaza control, tipo de aviso y fecha duplicados",
+        "La segunda ejecución mantiene un registro y un único envío"
+      ]
+    }
+  },
+  "nota": "El correo se sustituye por un doble controlado; se valida la decisión, la persistencia y la deduplicación, no la entrega de un proveedor SMTP externo."
+}

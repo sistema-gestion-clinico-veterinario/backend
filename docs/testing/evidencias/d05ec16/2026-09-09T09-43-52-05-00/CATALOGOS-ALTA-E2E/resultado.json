@@ -1,0 +1,28 @@
+{
+  "ejecucion": "CATALOGOS-ALTA-E2E",
+  "fechaHora": "2026-09-09T09:43:52-05:00",
+  "entorno": "https://systemvetfrontend.vercel.app",
+  "empresaPrueba": 3,
+  "datosSensiblesIncluidos": false,
+  "casos": [
+    {
+      "id": "CP-RF35-01",
+      "resultado": "No cumple",
+      "observacion": "La especialidad QA se creó y actualizó en el catálogo, pero al seleccionar Veterinario en el registro de empleado no apareció el selector de Especialidades Médicas; por tanto no quedó disponible para asignación. La especialidad temporal fue eliminada."
+    },
+    {
+      "id": "CP-RF38-01",
+      "resultado": "Cumple",
+      "observacion": "Se creó Tipo Laboral Pruebas Ers con descripción y Permite Especialidades habilitado. El tipo apareció tanto en Cargos / Tipos de Empleado como en Cargo / Tipo de Empleado Requerido del servicio."
+    },
+    {
+      "id": "CP-RF41-01",
+      "resultado": "Cumple",
+      "observacion": "Se creó Servicio Pruebas Ers con descripción, precio S/ 35.00, duración de 30 minutos, disponibilidad activa y cargo general. El servicio apareció en Nueva Cita como Servicio Pruebas Ers — S/ 35.00."
+    }
+  ],
+  "datosTemporalesPendientesDeLimpieza": [
+    "Tipo Laboral Pruebas Ers",
+    "Servicio Pruebas Ers"
+  ]
+}

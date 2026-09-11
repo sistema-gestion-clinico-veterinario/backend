@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "finishedAt": "2026-09-08T23:28:57.694Z",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574",
+    "companyId": 3
+  },
+  "summary": {
+    "total": 7,
+    "passed": 6,
+    "failed": 1
+  },
+  "results": [
+    {
+      "code": "USUARIOS-QA-ACTIVO-ANTES",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "USUARIOS-DESACTIVAR",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "USUARIOS-SESION-ACTIVA-DENEGADA",
+      "expected": "401/403",
+      "actual": 401,
+      "passed": true
+    },
+    {
+      "code": "USUARIOS-LOGIN-DESACTIVADO-DENEGADO",
+      "expected": "401/403",
+      "actual": 401,
+      "passed": true
+    },
+    {
+      "code": "USUARIOS-REGISTRO-CONSERVADO",
+      "expected": "HTTP 200 y estado=false",
+      "actual": "HTTP 200; estado=null",
+      "passed": false
+    },
+    {
+      "code": "LIMPIEZA-QA-DUPLICADO-LOCALIZADO",
+      "expected": "al menos 1",
+      "actual": 1,
+      "passed": true
+    },
+    {
+      "code": "LIMPIEZA-QA-DUPLICADOS-DESACTIVADOS",
+      "expected": "todos HTTP 200",
+      "actual": [
+        200
+      ],
+      "passed": true
+    }
+  ],
+  "cleanup": {
+    "policy": "Las cuentas QA fueron desactivadas y sus registros se conservaron para trazabilidad.",
+    "duplicateAccountsDeactivated": 1
+  },
+  "privacy": "No contiene identificadores, correos, documentos, contraseñas, tokens ni cookies."
+}

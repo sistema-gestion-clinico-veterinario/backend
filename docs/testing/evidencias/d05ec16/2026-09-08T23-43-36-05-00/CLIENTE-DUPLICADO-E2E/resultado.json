@@ -1,0 +1,12 @@
+{
+  "idEjecucion": "CLIENTE-DUPLICADO-E2E-d05ec16-20260908T234336-0500",
+  "fechaHora": "2026-09-08T23:43:36-05:00",
+  "entorno": "produccion-controlada",
+  "datos": "empresa ficticia 3",
+  "caso": "CP-RF18-02",
+  "estado": "Cumple",
+  "datoDuplicado": "correo de una cuenta QA existente",
+  "respuestaVisible": "El email ya está registrado",
+  "verificacionPosterior": "La búsqueda no mostró un segundo cliente ni un registro parcial con el nombre utilizado en el intento.",
+  "datosSensiblesConservados": false
+}

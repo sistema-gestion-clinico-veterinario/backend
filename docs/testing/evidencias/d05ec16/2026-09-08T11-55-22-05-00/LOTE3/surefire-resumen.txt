@@ -1,0 +1,4 @@
+Ejecución: LOTE3-d05ec16-20260908T115522-0500
+Resultado técnico: 3 clases, 14 pruebas, 14 aprobadas, 0 fallidas, 0 errores y 0 omitidas.
+Resultado ERS: 20 casos Pendiente; ninguno se declara Cumple sin completar API/E2E y los escenarios específicos faltantes.
+Cobertura pendiente destacada: exportación de horarios, desactivación, reprogramación tardía, alcance OWN/COMPANY y flujos visibles completos.

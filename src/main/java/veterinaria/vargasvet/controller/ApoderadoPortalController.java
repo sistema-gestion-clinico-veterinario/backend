@@ -42,6 +42,14 @@ public class ApoderadoPortalController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Mascotas recuperadas con éxito", apoderadoPortalService.getMascotasPaginated(nombre, especie, activo, pageable)));
     }
 
+    @PutMapping("/pets/{petId}")
+    @PreAuthorize("@accesoValidator.can('VISTA_MIS_MASCOTAS', 'MODIFICAR')")
+    public ResponseEntity<ApiResponse<MascotaResponse>> updateMascota(
+            @PathVariable("petId") Long mascotaId,
+            @jakarta.validation.Valid @RequestBody veterinaria.vargasvet.dto.request.MascotaApoderadoUpdateRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Mascota actualizada con éxito", apoderadoPortalService.updateMascota(mascotaId, request)));
+    }
+
     @GetMapping("/pets/{petId}/medical-record")
     @PreAuthorize("@accesoValidator.can('VISTA_MI_HISTORIAL', 'LEER')")
     public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> getHistoriaMascota(@PathVariable("petId") Long mascotaId) {

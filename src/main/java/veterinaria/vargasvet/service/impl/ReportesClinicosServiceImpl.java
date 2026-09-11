@@ -4,14 +4,21 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
 import veterinaria.vargasvet.domain.entity.Cita;
+import veterinaria.vargasvet.domain.entity.ControlPreventivo;
 import veterinaria.vargasvet.domain.entity.Mascota;
+import veterinaria.vargasvet.domain.entity.Purchase;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
+import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
+import veterinaria.vargasvet.domain.enums.TipoControlPreventivo;
 import veterinaria.vargasvet.dto.response.ReportesClinicosDTO;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.ControlPreventivoRepository;
+import veterinaria.vargasvet.repository.EmpleadoRepository;
+import veterinaria.vargasvet.repository.PurchaseRepository;
 import veterinaria.vargasvet.repository.RegistroDesparasitacionRepository;
 import veterinaria.vargasvet.repository.RegistroVacunaRepository;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.ReportesClinicosService;
 import veterinaria.vargasvet.util.AppClock;
@@ -25,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -32,7 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-//este es el proyecto
+
 @Service
 @RequiredArgsConstructor
 public class ReportesClinicosServiceImpl implements ReportesClinicosService {
@@ -41,11 +49,15 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
     private final RegistroVacunaRepository registroVacunaRepository;
     private final RegistroDesparasitacionRepository registroDesparasitacionRepository;
     private final ControlPreventivoRepository controlPreventivoRepository;
+    private final EmpleadoRepository empleadoRepository;
+    private final PurchaseRepository purchaseRepository;
+    private final AccesoValidator accesoValidator;
 
     @Override
     public ReportesClinicosDTO obtenerReportes(Integer companyId, LocalDate fechaDesde, LocalDate fechaHasta,
                                                Long veterinarioId, EspecieMascota especie) {
         Integer targetCompanyId = resolveCompanyId(companyId);
+        Long targetVeterinarioId = resolveVeterinarioId(veterinarioId);
         LocalDate hoy = AppClock.today();
         LocalDate desde = fechaDesde != null ? fechaDesde : hoy.withDayOfMonth(1);
         LocalDate hasta = fechaHasta != null ? fechaHasta : hoy;
@@ -67,9 +79,9 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
         LocalDate anteriorDesde = anteriorHasta.minusDays(dias - 1);
 
         List<Cita> actuales = citaRepository.findForClinicalReport(
-                targetCompanyId, inicio, finExclusivo, veterinarioId, especie);
+                targetCompanyId, inicio, finExclusivo, targetVeterinarioId, especie);
         List<Cita> anteriores = citaRepository.findForClinicalReport(
-                targetCompanyId, anteriorDesde.atStartOfDay(), desde.atStartOfDay(), veterinarioId, especie);
+                targetCompanyId, anteriorDesde.atStartOfDay(), desde.atStartOfDay(), targetVeterinarioId, especie);
 
         List<Mascota> pacientes = new ArrayList<>(actuales.stream()
                 .map(Cita::getMascota)
@@ -80,26 +92,39 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                         LinkedHashMap::new))
                 .values());
 
+        boolean puedeCitas = tienePermiso("VISTA_CITAS");
+        boolean puedePagos = tienePermiso("VISTA_PAGOS");
+        boolean puedeMascotas = tienePermiso("VISTA_MASCOTAS");
+        boolean puedeControlPreventivo = tienePermiso("VISTA_CONTROL_PREVENTIVO");
+
         return ReportesClinicosDTO.builder()
                 .fechaDesde(desde.toString())
                 .fechaHasta(hasta.toString())
-                .resumen(calcularResumen(actuales, desde, hasta))
-                .resumenAnterior(calcularResumen(anteriores, anteriorDesde, anteriorHasta))
-                .consultasPorTipo(group(actuales, this::tipoConsultaLabel))
-                .diagnosticosPorTipoYEstado(List.of())
-                .tratamientosPorEstado(List.of())
-                .consultasPorEstado(group(actuales, c -> humanize(c.getEstado().name())))
-                .pacientesPorEspecie(groupMascotas(pacientes, m -> humanize(m.getEspecie().name())))
-                .pacientesPorRangoEdad(calcularRangosEdad(pacientes, hasta))
-                .consultasPorMes(calcularSerie(actuales, desde, hasta))
-                .consultasPorVeterinario(group(actuales, this::nombreVeterinario))
-                .frecuenciaConsultasPorPaciente(calcularFrecuencia(actuales))
-                .serviciosMasSolicitados(group(actuales, this::servicioLabel))
-                .demandaPorHorario(calcularDemanda(actuales))
-                .proximasVacunas(findProximasVacunas(targetCompanyId))
-                .proximasDesparasitaciones(findProximasDesparasitaciones(targetCompanyId))
-                .controlesPreventivosProximos(findControlesPreventivosProximos(targetCompanyId))
+                .resumen(calcularResumen(actuales, desde, hasta, puedePagos))
+                .resumenAnterior(calcularResumen(anteriores, anteriorDesde, anteriorHasta, puedePagos))
+                .consultasPorTipo(puedeCitas ? group(actuales, this::tipoConsultaLabel) : null)
+                .consultasPorEstado(puedeCitas ? group(actuales, c -> humanize(c.getEstado().name())) : null)
+                .pacientesPorEspecie(puedeMascotas ? groupMascotas(pacientes, m -> humanize(m.getEspecie().name())) : null)
+                .pacientesPorRangoEdad(puedeMascotas ? calcularRangosEdad(pacientes, hasta) : null)
+                .consultasPorMes(puedeCitas ? calcularSerie(actuales, desde, hasta) : null)
+                .consultasPorVeterinario(puedeCitas ? group(actuales, this::nombreVeterinario) : null)
+                .frecuenciaConsultasPorPaciente(puedeCitas ? calcularFrecuencia(actuales) : null)
+                .serviciosMasSolicitados(puedeCitas ? group(actuales, this::servicioLabel) : null)
+                .demandaPorHorario(puedeCitas ? calcularDemanda(actuales) : null)
+                .proximasVacunas(puedeControlPreventivo ? findProximasVacunas(targetCompanyId) : null)
+                .proximasDesparasitaciones(puedeControlPreventivo ? findProximasDesparasitaciones(targetCompanyId) : null)
+                .controlesPreventivosProximos(puedeControlPreventivo ? findControlesPreventivosProximos(targetCompanyId) : null)
+                .ingresosPorMetodoPago(puedePagos ? calcularIngresosPorMetodoPago(actuales) : null)
+                .ingresosPorServicio(puedePagos ? calcularIngresosPorServicio(actuales) : null)
+                .cumplimientoVacunacion(puedeControlPreventivo
+                        ? calcularCumplimiento(targetCompanyId, TipoControlPreventivo.VACUNACION) : null)
+                .cumplimientoDesparasitacion(puedeControlPreventivo
+                        ? calcularCumplimiento(targetCompanyId, TipoControlPreventivo.DESPARASITACION) : null)
                 .build();
+    }
+
+    private boolean tienePermiso(String vista) {
+        return SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin() || accesoValidator.can(vista, "LEER");
     }
 
     private Integer resolveCompanyId(Integer requestedCompanyId) {
@@ -109,7 +134,19 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
         return SecurityUtils.getCurrentCompanyId();
     }
 
-    private ReportesClinicosDTO.Resumen calcularResumen(List<Cita> citas, LocalDate desde, LocalDate hasta) {
+    private Long resolveVeterinarioId(Long requestedVeterinarioId) {
+        if (SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin()) {
+            return requestedVeterinarioId;
+        }
+        if (accesoValidator.canAccessCompanyData("VISTA_REPORTES")) {
+            return requestedVeterinarioId;
+        }
+        return empleadoRepository.findByUserId(SecurityUtils.getCurrentUserId())
+                .map(veterinaria.vargasvet.domain.entity.Empleado::getId)
+                .orElse(-1L);
+    }
+
+    private ReportesClinicosDTO.Resumen calcularResumen(List<Cita> citas, LocalDate desde, LocalDate hasta, boolean puedePagos) {
         Set<Long> pacientesAtendidos = citas.stream()
                 .filter(c -> c.getEstado() == EstadoCita.COMPLETADA || c.getEstado() == EstadoCita.EN_PROCESO)
                 .map(c -> c.getMascota().getId())
@@ -151,7 +188,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
         return ReportesClinicosDTO.Resumen.builder()
                 .consultas(citas.size())
                 .pacientesAtendidos(pacientesAtendidos.size())
-                .ingresos(ingresos.setScale(2, RoundingMode.HALF_UP))
+                .ingresos(puedePagos ? ingresos.setScale(2, RoundingMode.HALF_UP) : null)
                 .nuevosPacientes(nuevosPacientes)
                 .tiempoPromedioAtencionMinutos(promedio)
                 .porcentajeCitasCompletadas(Math.round(porcentaje * 10.0) / 10.0)
@@ -162,6 +199,76 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
         BigDecimal pagado = cita.getMontoPagado() != null ? cita.getMontoPagado() : BigDecimal.ZERO;
         BigDecimal total = cita.getTotalServicio() != null ? cita.getTotalServicio() : BigDecimal.ZERO;
         return pagado.min(total).max(BigDecimal.ZERO);
+    }
+
+    private List<ReportesClinicosDTO.ItemMonto> calcularIngresosPorMetodoPago(List<Cita> citas) {
+        List<Purchase> pagos = purchasesPagados(citas);
+        Map<String, BigDecimal> montos = new LinkedHashMap<>();
+        for (Purchase pago : pagos) {
+            String metodo = pago.getMetodoPago() != null ? humanize(pago.getMetodoPago().name()) : "Sin especificar";
+            montos.merge(metodo, montoPagoReal(pago), BigDecimal::add);
+        }
+        return montos.entrySet().stream()
+                .map(e -> itemMonto(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparing(ReportesClinicosDTO.ItemMonto::getMonto).reversed())
+                .toList();
+    }
+
+    private List<ReportesClinicosDTO.ItemMonto> calcularIngresosPorServicio(List<Cita> citas) {
+        List<Purchase> pagos = purchasesPagados(citas);
+        Map<String, BigDecimal> montos = new LinkedHashMap<>();
+        for (Purchase pago : pagos) {
+            String servicio = pago.getCita() != null ? servicioLabel(pago.getCita()) : "Sin servicio";
+            montos.merge(servicio, montoPagoReal(pago), BigDecimal::add);
+        }
+        return montos.entrySet().stream()
+                .map(e -> itemMonto(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparing(ReportesClinicosDTO.ItemMonto::getMonto).reversed())
+                .toList();
+    }
+
+    private List<Purchase> purchasesPagados(List<Cita> citas) {
+        List<Long> citaIds = citas.stream().map(Cita::getId).toList();
+        if (citaIds.isEmpty()) return List.of();
+        return purchaseRepository.findPagadosByCitaIds(citaIds);
+    }
+
+    private BigDecimal montoPagoReal(Purchase pago) {
+        return pago.getTotal() != null ? pago.getTotal() : BigDecimal.ZERO;
+    }
+
+    private ReportesClinicosDTO.ItemMonto itemMonto(String label, BigDecimal monto) {
+        return ReportesClinicosDTO.ItemMonto.builder()
+                .label(label)
+                .monto(monto.setScale(2, RoundingMode.HALF_UP))
+                .build();
+    }
+
+    private List<ReportesClinicosDTO.ItemCount> calcularCumplimiento(Integer companyId, TipoControlPreventivo tipo) {
+        List<EstadoControlPreventivo> estadosRelevantes = List.of(
+                EstadoControlPreventivo.PROGRAMADO, EstadoControlPreventivo.PROXIMO,
+                EstadoControlPreventivo.PENDIENTE, EstadoControlPreventivo.ATRASADO);
+
+        List<ControlPreventivo> controles = controlPreventivoRepository
+                .findPendientesByCompany(companyId, estadosRelevantes).stream()
+                .filter(cp -> cp.getTipo() == tipo)
+                .toList();
+
+        Set<Long> mascotasAtrasadas = controles.stream()
+                .filter(cp -> cp.getEstado() == EstadoControlPreventivo.ATRASADO)
+                .map(cp -> cp.getMascota().getId())
+                .collect(Collectors.toSet());
+        Set<Long> mascotasConControl = controles.stream()
+                .map(cp -> cp.getMascota().getId())
+                .collect(Collectors.toCollection(HashSet::new));
+
+        long alDia = mascotasConControl.size() - mascotasAtrasadas.size();
+        long atrasados = mascotasAtrasadas.size();
+
+        List<ReportesClinicosDTO.ItemCount> result = new ArrayList<>();
+        if (alDia > 0) result.add(item("Al día", alDia));
+        if (atrasados > 0) result.add(item("Atrasado", atrasados));
+        return result;
     }
 
     private List<ReportesClinicosDTO.ItemCount> calcularSerie(
@@ -350,13 +457,14 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
         return ReportesClinicosDTO.builder()
                 .fechaDesde(desde.toString()).fechaHasta(hasta.toString())
                 .resumen(cero).resumenAnterior(cero)
-                .consultasPorTipo(List.of()).diagnosticosPorTipoYEstado(List.of())
-                .tratamientosPorEstado(List.of()).consultasPorEstado(List.of())
+                .consultasPorTipo(List.of()).consultasPorEstado(List.of())
                 .pacientesPorEspecie(List.of()).pacientesPorRangoEdad(List.of())
                 .proximasVacunas(List.of()).proximasDesparasitaciones(List.of())
                 .consultasPorMes(List.of()).consultasPorVeterinario(List.of())
                 .frecuenciaConsultasPorPaciente(List.of()).controlesPreventivosProximos(List.of())
                 .serviciosMasSolicitados(List.of()).demandaPorHorario(List.of())
+                .ingresosPorMetodoPago(List.of()).ingresosPorServicio(List.of())
+                .cumplimientoVacunacion(List.of()).cumplimientoDesparasitacion(List.of())
                 .build();
     }
 }

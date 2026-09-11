@@ -145,6 +145,24 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     }
 
     @Override
+    @Transactional
+    public MascotaResponse updateMascota(Long mascotaId, veterinaria.vargasvet.dto.request.MascotaApoderadoUpdateRequest request) {
+        Apoderado apoderado = getAuthenticatedApoderado();
+        Mascota mascota = mascotaRepository.findById(mascotaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada"));
+
+        if (!mascota.getApoderado().getId().equals(apoderado.getId())) {
+            throw new AccessDeniedException("No tienes permiso para editar esta mascota");
+        }
+
+        if (request.getFotoUrl() != null) {
+            mascota.setFotoUrl(request.getFotoUrl().isBlank() ? null : request.getFotoUrl());
+        }
+
+        return mascotaMapper.toResponse(mascotaRepository.save(mascota));
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public HistoriaClinicaDetalleResponse getHistoriaMascota(Long mascotaId) {
         Apoderado apoderado = getAuthenticatedApoderado();
@@ -336,8 +354,10 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
 
         // Fetch existing appointments for the employee on this date
         List<Cita> existingAppointments = citaRepository.findActiveByEmpleadoIdAndFecha(empleadoId, localDate);
-
-        int slotStepMinutes = Math.max(duracion, 1);
+        List<LocalTime[]> busyIntervals = existingAppointments.stream()
+                .map(appt -> new LocalTime[]{appt.getFechaHoraInicio().toLocalTime(), appt.getFechaHoraFin().toLocalTime()})
+                .sorted(java.util.Comparator.comparing(interval -> interval[0]))
+                .toList();
 
         // Minimum 2 hours lead time for same-day booking
         LocalTime minAllowedTime = LocalTime.MIN;
@@ -348,43 +368,52 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         for (HorarioEmpleado shift : shifts) {
             if (Boolean.FALSE.equals(shift.getActivo())) continue;
 
-            LocalTime current = shift.getHoraInicio();
-            LocalTime shiftEnd = shift.getHoraFin();
+            LocalTime windowStart = shift.getHoraInicio().isAfter(clinicOpen) ? shift.getHoraInicio() : clinicOpen;
+            LocalTime windowEnd = shift.getHoraFin().isBefore(clinicClose) ? shift.getHoraFin() : clinicClose;
+            if (!windowStart.isBefore(windowEnd)) continue;
 
-            while (current.plusMinutes(duracion).isBefore(shiftEnd) || current.plusMinutes(duracion).equals(shiftEnd)) {
-                LocalTime slotStart = current;
-                LocalTime slotEnd = current.plusMinutes(duracion);
+            for (LocalTime[] freeInterval : freeIntervals(windowStart, windowEnd, busyIntervals)) {
+                LocalTime current = freeInterval[0];
+                LocalTime freeEnd = freeInterval[1];
 
-                // Ensure slot is within clinic hours
-                if ((slotStart.isAfter(clinicOpen) || slotStart.equals(clinicOpen)) &&
-                    (slotEnd.isBefore(clinicClose) || slotEnd.equals(clinicClose))) {
+                while (current.plusMinutes(duracion).isBefore(freeEnd) || current.plusMinutes(duracion).equals(freeEnd)) {
+                    LocalTime slotStart = current;
 
-                    // Check lead time constraint
                     if (!localDate.equals(veterinaria.vargasvet.util.AppClock.today()) || slotStart.isAfter(minAllowedTime)) {
-
-                        // Check overlap with existing appointments
-                        boolean overlap = false;
-                        for (Cita appt : existingAppointments) {
-                            LocalTime apptStart = appt.getFechaHoraInicio().toLocalTime();
-                            LocalTime apptEnd = appt.getFechaHoraFin().toLocalTime();
-
-                            if (slotStart.isBefore(apptEnd) && slotEnd.isAfter(apptStart)) {
-                                overlap = true;
-                                break;
-                            }
-                        }
-
-                        if (!overlap) {
-                            availableSlots.add(slotStart.toString());
-                        }
+                        availableSlots.add(slotStart.toString());
                     }
-                }
 
-                current = current.plusMinutes(slotStepMinutes);
+                    current = current.plusMinutes(duracion);
+                }
             }
         }
 
         return availableSlots;
+    }
+
+    private List<LocalTime[]> freeIntervals(LocalTime windowStart, LocalTime windowEnd, List<LocalTime[]> busyIntervals) {
+        List<LocalTime[]> free = new java.util.ArrayList<>();
+        LocalTime cursor = windowStart;
+
+        for (LocalTime[] busy : busyIntervals) {
+            LocalTime busyStart = busy[0];
+            LocalTime busyEnd = busy[1];
+
+            if (busyEnd.isBefore(windowStart) || !busyStart.isBefore(windowEnd)) continue;
+
+            if (busyStart.isAfter(cursor)) {
+                free.add(new LocalTime[]{cursor, busyStart.isBefore(windowEnd) ? busyStart : windowEnd});
+            }
+            if (busyEnd.isAfter(cursor)) {
+                cursor = busyEnd;
+            }
+        }
+
+        if (cursor.isBefore(windowEnd)) {
+            free.add(new LocalTime[]{cursor, windowEnd});
+        }
+
+        return free;
     }
 
     @Override

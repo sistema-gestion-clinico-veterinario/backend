@@ -1,0 +1,21 @@
+{
+  "executedAt": "2026-09-09T15:13:59-05:00",
+  "environment": ["production-controlled", "local-unit"],
+  "establishmentId": 3,
+  "automatedSuite": {
+    "class": "CatalogoProteccionServiceTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "build": "SUCCESS"
+  },
+  "cases": {
+    "CP-RF36-01": {"result": "CUMPLE", "evidence": "Actualización E2E persistida y restaurada; la prueba de servicio conservó la colección de empleados asignados."},
+    "CP-RF37-01": {"result": "CUMPLE", "evidence": "La integración H2 confirmó que una especialidad referenciada no puede eliminarse y la transacción falla; falta convertir la excepción técnica en un mensaje de dominio."},
+    "CP-RF39-01": {"result": "CUMPLE", "evidence": "Descripción actualizada; al desactivar el tipo dejó de aparecer en el alta de empleado; estado y descripción restaurados."},
+    "CP-RF40-01": {"result": "CUMPLE", "evidence": "El servicio detectó dos empleados asignados, rechazó la eliminación y no invocó delete."},
+    "CP-RF42-01": {"result": "NO_CUMPLE", "evidence": "La UI excluye el servicio inactivo, pero CitaServiceIntegrationTest demostró que la capa de negocio permite crear una cita con servicio inactivo/no disponible."},
+    "CP-RF43-01": {"result": "CUMPLE", "evidence": "La existencia de una cita provoca rechazo antes de guardar o desactivar el servicio."}
+  },
+  "cleanup": "Especialidad, tipo laboral y servicio restaurados a sus valores y estados previos."
+}

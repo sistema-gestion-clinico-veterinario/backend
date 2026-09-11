@@ -1,0 +1,31 @@
+-------------------------------------------------------------------------------
+Test set: veterinaria.vargasvet.ers.personal.RF09AndRF15Test
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 2.498 s <<< FAILURE! -- in veterinaria.vargasvet.ers.personal.RF09AndRF15Test
+veterinaria.vargasvet.ers.personal.RF09AndRF15Test.listadoExponeFiltrosExigidosPorElErs -- Time elapsed: 2.416 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting any elements of:
+  ["companyid",
+    "size",
+    "tipoempleadoid",
+    "apellido",
+    "especialidadid",
+    "page",
+    "nombre",
+    "email"]
+to match given predicate but none did.
+	at veterinaria.vargasvet.ers.personal.RF09AndRF15Test.listadoExponeFiltrosExigidosPorElErs(RF09AndRF15Test.java:88)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+
+veterinaria.vargasvet.ers.personal.RF09AndRF15Test.eliminarHorarioConCitaRelacionadaEsRechazado -- Time elapsed: 0.050 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting code to raise a throwable.
+	at veterinaria.vargasvet.ers.personal.RF09AndRF15Test.eliminarHorarioConCitaRelacionadaEsRechazado(RF09AndRF15Test.java:112)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+

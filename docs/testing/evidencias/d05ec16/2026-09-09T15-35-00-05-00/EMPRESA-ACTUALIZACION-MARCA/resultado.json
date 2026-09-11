@@ -1,0 +1,13 @@
+{
+  "caseId": "CP-RF05-01",
+  "executedAt": "2026-09-09T15:35:00-05:00",
+  "environment": "production-controlled-plus-code-review",
+  "establishmentId": 3,
+  "observations": [
+    "La descripción institucional válida se actualizó y persistió tras recargar.",
+    "El formulario aplica validaciones de formato antes de confirmar.",
+    "El logo del sidebar proviene del companyLogoUrl entregado por la sesión autenticada, no del endpoint administrativo /admin/company."
+  ],
+  "result": "CUMPLE",
+  "cleanup": "La descripción vacía original no pudo restablecerse desde la vista de superadministración; permanece identificada con texto QA para limpieza posterior."
+}

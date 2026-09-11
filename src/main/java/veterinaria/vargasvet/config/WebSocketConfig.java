@@ -5,9 +5,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
+import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -21,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import veterinaria.vargasvet.security.UsuarioPrincipal;
 import veterinaria.vargasvet.service.RealtimeTicketService;
 import veterinaria.vargasvet.security.RolePermissionEvaluator;
+import veterinaria.vargasvet.security.RealtimeSubscriptionGuard;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 
 import java.util.Arrays;
@@ -32,6 +38,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final RealtimeTicketService ticketService;
     private final RolePermissionEvaluator rolePermissionEvaluator;
+    private final RealtimeSubscriptionGuard subscriptionGuard;
 
     @Value("${cors.allowed-origins:https://systemvetfrontend.vercel.app}")
     private String allowedOrigins;
@@ -65,6 +72,23 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     @Override
+    public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
+        registration.addDecoratorFactory(handler -> new WebSocketHandlerDecorator(handler) {
+            @Override
+            public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+                subscriptionGuard.trackSession(session);
+                super.afterConnectionEstablished(session);
+            }
+
+            @Override
+            public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
+                subscriptionGuard.untrackSession(session.getId());
+                super.afterConnectionClosed(session, closeStatus);
+            }
+        });
+    }
+
+    @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(new ChannelInterceptor() {
             @Override
@@ -81,7 +105,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                             || !authentication.isAuthenticated()) {
                         throw new AccessDeniedException("WebSocket no autenticado");
                     }
-                    authorizeDestination(accessor.getDestination(), authentication);
+                    authorizeDestination(accessor.getDestination(), authentication, accessor.getSessionId());
                 } else if (StompCommand.SEND.equals(accessor.getCommand())) {
                     throw new AccessDeniedException("El envío de mensajes WebSocket no está habilitado");
                 }
@@ -91,7 +115,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     private void authorizeDestination(String destination,
-                                      org.springframework.security.core.Authentication authentication) {
+                                      org.springframework.security.core.Authentication authentication,
+                                      String sessionId) {
         if (destination == null || !destination.startsWith("/topic/")) {
             throw new AccessDeniedException("Destino WebSocket no permitido");
         }
@@ -110,10 +135,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         if (destination.equals("/topic/audit-logs") && !platformAdmin) {
             throw new AccessDeniedException("Solo la administración de plataforma puede ver eventos globales");
         }
-        if (destination.startsWith("/topic/audit-logs")
-                && !rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(),
-                        "VISTA_AUDITORIA_ADMIN", "LEER")) {
-            throw new AccessDeniedException("Sin acceso a eventos de auditoría");
+        if (destination.startsWith("/topic/audit-logs")) {
+            if (!rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(),
+                    "VISTA_AUDITORIA_ADMIN", "LEER")) {
+                throw new AccessDeniedException("Sin acceso a eventos de auditoría");
+            }
+            subscriptionGuard.guard(sessionId, principal.getId(), principal.getActiveRoleId(),
+                    "VISTA_AUDITORIA_ADMIN", "LEER");
         }
         if (destination.startsWith("/topic/caja/")
                 && !rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(),

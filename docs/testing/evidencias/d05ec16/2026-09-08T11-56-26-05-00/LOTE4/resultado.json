@@ -1,0 +1,11 @@
+{
+  "executionId": "LOTE4-d05ec16-20260908T115626-0500",
+  "executedAt": "2026-09-08T11:56:26-05:00",
+  "baseCommit": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "workingTreeDirty": true,
+  "finalEvidenceRequiresCommittedRerun": true,
+  "scope": ["RF-05", "RF-19", "RF-22", "RF-32", "RF-34", "RF-35", "RF-36", "RF-37", "RF-38", "RF-39", "RF-40", "RF-41", "RF-42", "RF-43", "RF-44", "RF-45"],
+  "technicalResult": {"testClasses": 9, "tests": 40, "passed": 40, "failures": 0, "errors": 0, "skipped": 0},
+  "ersInterpretation": {"casesInBatch": 20, "complies": 0, "doesNotComply": 0, "pending": 20, "blocked": 0},
+  "note": "Several candidates test shared components only. Specific client update/deactivation, clinical file and full catalogue/API/E2E cases remain to be implemented."
+}

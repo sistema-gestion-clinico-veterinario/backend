@@ -1,0 +1,14 @@
+{
+  "id": "EMPLEADOS-CICLO-d05ec16-20260908T132111-0500",
+  "fechaHora": "2026-09-08T13:21:11-05:00",
+  "commitBase": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "comando": "mvn -Dtest=RF10AndRF11Test test",
+  "pruebas": 4,
+  "aprobadas": 4,
+  "fallidas": 0,
+  "errores": 0,
+  "omitidas": 0,
+  "casosERS": ["CP-RF10-01", "CP-RF10-02", "CP-RF11-01", "CP-RF11-02"],
+  "limitacion": "Nivel unitario de servicio con colaboraciones simuladas; API, correo real y E2E pendientes",
+  "sha256Prueba": "F489D1E9E6015E378361ED5A5F6E15BFF0B4D37FA4B4E07BDBDFF6EB1028CF60"
+}

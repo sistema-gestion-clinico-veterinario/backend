@@ -1,0 +1,20 @@
+-------------------------------------------------------------------------------
+Test set: veterinaria.vargasvet.ers.historias.RF30Test
+-------------------------------------------------------------------------------
+Tests run: 10, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 13.58 s
+
+FAILURE: cpRf3004_rechazaDecisionesPreventivasAusentes
+Expecting code to raise a throwable.
+Source: RF30Test.java:238
+
+FAILURE: cpRf3003_rechazaPesoConMasDeDosDecimales
+CA-RF30-03 exige como máximo dos decimales.
+Expecting actual not to be empty.
+Source: RF30Test.java:207
+
+Maven result: BUILD FAILURE caused exclusively by the two assertion failures above.
+Original generated report SHA-256:
+F17A719ECE170D068366375227760529E3BE3CDFC722DCD09D1F0396E55B3769
+
+Original Surefire XML SHA-256:
+0A9DD016BB0DA8F3C619EC3171F28D8676418E25835A746FDD74EE74D9DD7493

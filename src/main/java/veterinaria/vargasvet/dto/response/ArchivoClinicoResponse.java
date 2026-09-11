@@ -3,6 +3,7 @@ package veterinaria.vargasvet.dto.response;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.TipoArchivo;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -16,4 +17,5 @@ public class ArchivoClinicoResponse {
     private String descripcion;
     private String subidoPor;
     private LocalDateTime fechaCarga;
+    private LocalDate fechaDocumento;
 }

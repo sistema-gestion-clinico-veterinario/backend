@@ -1,0 +1,12 @@
+{
+  "executionId": "LOTE5-d05ec16-20260908T115701-0500",
+  "executedAt": "2026-09-08T11:57:01-05:00",
+  "baseCommit": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "workingTreeDirty": true,
+  "finalEvidenceRequiresCommittedRerun": true,
+  "scope": ["RNF-01", "RNF-04", "RNF-05", "RNF-06", "RNF-07", "RNF-08", "RNF-09", "RNF-11", "RNF-12", "RNF-13"],
+  "technicalResult": {"testClasses": 1, "tests": 3, "passed": 3, "failures": 0, "errors": 0, "skipped": 0},
+  "ersInterpretation": {"casesInBatch": 10, "complies": 0, "doesNotComply": 0, "pending": 4, "blocked": 6},
+  "blockedByExternalEvidence": ["CP-RNF05-01", "CP-RNF07-01", "CP-RNF09-01", "CP-RNF11-01", "CP-RNF12-01", "CP-RNF13-01"],
+  "note": "The three passing tests validate the performance measurement filter, not the deployed response-time threshold. Real participants, browsers, monitoring period, backups, invoices and clinic hardware cannot be simulated as thesis evidence."
+}

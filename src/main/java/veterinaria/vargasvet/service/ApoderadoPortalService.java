@@ -8,6 +8,7 @@ public interface ApoderadoPortalService {
     ApoderadoPerfilResponse getPerfil();
     List<MascotaResponse> getMascotas();
     org.springframework.data.domain.Page<MascotaResponse> getMascotasPaginated(String nombre, veterinaria.vargasvet.domain.enums.EspecieMascota especie, Boolean activo, org.springframework.data.domain.Pageable pageable);
+    MascotaResponse updateMascota(Long mascotaId, veterinaria.vargasvet.dto.request.MascotaApoderadoUpdateRequest request);
     HistoriaClinicaDetalleResponse getHistoriaMascota(Long mascotaId);
     org.springframework.data.domain.Page<CitaResponse> getCitas(Long mascotaId, org.springframework.data.domain.Pageable pageable);
     List<PrescripcionResumenResponse> getRecetas();

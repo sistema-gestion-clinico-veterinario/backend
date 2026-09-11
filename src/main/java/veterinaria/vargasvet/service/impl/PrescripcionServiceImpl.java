@@ -17,6 +17,7 @@ import veterinaria.vargasvet.repository.ConsultaRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.PrescripcionRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.PrescripcionService;
 
 import java.time.LocalDate;
@@ -32,12 +33,15 @@ public class PrescripcionServiceImpl implements PrescripcionService {
     private final ConsultaRepository consultaRepository;
     private final EmpleadoRepository empleadoRepository;
     private final ConsultaMapper consultaMapper;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
     public PrescripcionResumenResponse crear(Long consultaId, PrescripcionRequest request) {
         Consulta consulta = consultaRepository.findById(consultaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + consultaId));
+
+        verificarPertenenciaEmpresa(consulta);
 
         if (consulta.getEstado() == EstadoConsulta.CERRADA && !puedeModificarRecetaCerrada()) {
             throw new IllegalArgumentException("No se puede agregar recetas a una consulta cerrada");
@@ -60,15 +64,21 @@ public class PrescripcionServiceImpl implements PrescripcionService {
             prescripcion.setVeterinario(veterinario);
         }
 
-        return consultaMapper.toPrescripcionResponse(prescripcionRepository.save(prescripcion));
+        Prescripcion saved = prescripcionRepository.save(prescripcion);
+
+        auditLogService.log(companyIdDe(consulta), "CREAR_RECETA", "Recetas",
+                "Se creó la receta de " + saved.getMedicamento() + " para la mascota "
+                        + nombreMascotaDe(consulta));
+
+        return consultaMapper.toPrescripcionResponse(saved);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PrescripcionResumenResponse> listarPorConsulta(Long consultaId) {
-        if (!consultaRepository.existsById(consultaId)) {
-            throw new ResourceNotFoundException("Consulta no encontrada con ID: " + consultaId);
-        }
+        Consulta consulta = consultaRepository.findById(consultaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + consultaId));
+        verificarPertenenciaEmpresa(consulta);
         return prescripcionRepository.findByConsultaIdOrderByCreatedAtAsc(consultaId)
                 .stream()
                 .map(consultaMapper::toPrescripcionResponse)
@@ -81,12 +91,20 @@ public class PrescripcionServiceImpl implements PrescripcionService {
         Prescripcion prescripcion = prescripcionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Receta no encontrada con ID: " + id));
 
+        verificarPertenenciaEmpresa(prescripcion.getConsulta());
+
         if (prescripcion.getConsulta().getEstado() == EstadoConsulta.CERRADA && !puedeModificarRecetaCerrada()) {
             throw new IllegalArgumentException("No se puede modificar recetas de una consulta cerrada");
         }
 
         mapRequestToEntity(request, prescripcion);
-        return consultaMapper.toPrescripcionResponse(prescripcionRepository.save(prescripcion));
+        Prescripcion saved = prescripcionRepository.save(prescripcion);
+
+        auditLogService.log(companyIdDe(saved.getConsulta()), "ACTUALIZAR_RECETA", "Recetas",
+                "Se actualizó la receta de " + saved.getMedicamento() + " para la mascota "
+                        + nombreMascotaDe(saved.getConsulta()));
+
+        return consultaMapper.toPrescripcionResponse(saved);
     }
 
     @Override
@@ -95,11 +113,37 @@ public class PrescripcionServiceImpl implements PrescripcionService {
         Prescripcion prescripcion = prescripcionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Receta no encontrada con ID: " + id));
 
+        verificarPertenenciaEmpresa(prescripcion.getConsulta());
+
         if (prescripcion.getConsulta().getEstado() == EstadoConsulta.CERRADA && !puedeModificarRecetaCerrada()) {
             throw new IllegalArgumentException("No se puede eliminar recetas de una consulta cerrada");
         }
 
+        Integer companyId = companyIdDe(prescripcion.getConsulta());
+        String medicamento = prescripcion.getMedicamento();
+        String mascota = nombreMascotaDe(prescripcion.getConsulta());
+
         prescripcionRepository.delete(prescripcion);
+
+        auditLogService.log(companyId, "ELIMINAR_RECETA", "Recetas",
+                "Se eliminó la receta de " + medicamento + " de la mascota " + mascota);
+    }
+
+    private Integer companyIdDe(Consulta consulta) {
+        if (consulta.getHistoriaClinica() == null || consulta.getHistoriaClinica().getMascota() == null
+                || consulta.getHistoriaClinica().getMascota().getApoderado() == null
+                || consulta.getHistoriaClinica().getMascota().getApoderado().getUser() == null
+                || consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null) {
+            return null;
+        }
+        return consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany().getId();
+    }
+
+    private String nombreMascotaDe(Consulta consulta) {
+        if (consulta.getHistoriaClinica() == null || consulta.getHistoriaClinica().getMascota() == null) {
+            return "desconocida";
+        }
+        return consulta.getHistoriaClinica().getMascota().getNombreCompleto();
     }
 
     @Override
@@ -162,5 +206,16 @@ public class PrescripcionServiceImpl implements PrescripcionService {
 
     private boolean puedeModificarRecetaCerrada() {
         return SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin();
+    }
+
+    private void verificarPertenenciaEmpresa(Consulta consulta) {
+        if (SecurityUtils.isSuperAdmin()) {
+            return;
+        }
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        Integer consultaCompanyId = companyIdDe(consulta);
+        if (consultaCompanyId == null || !consultaCompanyId.equals(companyId)) {
+            throw new IllegalArgumentException("No tienes permiso para operar sobre una consulta de otra empresa");
+        }
     }
 }

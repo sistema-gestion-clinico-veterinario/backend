@@ -1,0 +1,5 @@
+Karma/Chrome Headless ejecutó 3 pruebas y las 3 aprobaron.
+
+Las pruebas existentes solo contienen "should create". ScheduleManagement y
+MySchedule sustituyen además la plantilla por una cadena vacía. Esta ejecución
+demuestra que las clases se instancian, pero no demuestra RF-12 ni RF-16.

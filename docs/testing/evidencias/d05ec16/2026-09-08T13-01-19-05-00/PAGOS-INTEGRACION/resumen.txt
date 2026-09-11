@@ -1,0 +1,6 @@
+Resultado técnico: 6 pruebas aprobadas, sin fallas, errores ni omisiones.
+
+Se comprobó el registro de efectivo y Yape, así como el rechazo de una cita
+cancelada, importe cero, importe superior al saldo y efectivo insuficiente.
+En los escenarios inválidos no se persistió compra, no cambió el saldo de la
+cita y no se invocó el servicio de Caja.

@@ -111,6 +111,27 @@ class CoreBusinessServiceUnitTest {
     }
 
     @Test
+    void updateRole_noPermiteAlterarIdentidadTecnicaDelAdministradorDePlataforma() {
+        RoleServiceImpl roleService = roleService();
+        Role role = new Role();
+        role.setId(1);
+        role.setName("ROLE_SUPER_ADMIN");
+        role.setScope(RoleScope.PLATFORM);
+        role.setPurpose(RolePurpose.PLATFORM_ADMIN);
+        role.setSystemManaged(true);
+        role.setProtectedRole(true);
+        role.setActivo(true);
+        when(roleRepository.findById(1)).thenReturn(Optional.of(role));
+        when(roleRepository.save(any(Role.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        roleService.updateRole(1, "ROL_CUSTOM", "Descripción permitida", RoleScope.STAFF);
+
+        assertEquals("ROLE_SUPER_ADMIN", role.getName());
+        assertEquals(RoleScope.PLATFORM, role.getScope());
+        assertEquals(RolePurpose.PLATFORM_ADMIN, role.getPurpose());
+    }
+
+    @Test
     void createRole_normalizaNombreYRechazaDuplicadoEnEmpresa() {
         RoleServiceImpl roleService = roleService();
         when(roleRepository.existsByNameAndCompanyId("ROLE_VETERINARIO_JEFE", 3)).thenReturn(true);
@@ -158,7 +179,8 @@ class CoreBusinessServiceUnitTest {
                 rolVistaPermisoRepository,
                 ventanaRepository,
                 rolVentanaConfiguracionRepository,
-                rolVistaConfiguracionRepository
+                rolVistaConfiguracionRepository,
+                org.mockito.Mockito.mock(veterinaria.vargasvet.service.AuditLogService.class)
         );
     }
 }

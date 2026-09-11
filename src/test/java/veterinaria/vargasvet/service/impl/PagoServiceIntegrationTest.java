@@ -47,6 +47,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @DataJpaTest
 class PagoServiceIntegrationTest {
@@ -98,6 +99,7 @@ class PagoServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("[CP-RF44-01] Un pago en efectivo actualiza la cita y persiste la compra")
     void registrarPagoEfectivoCompletoPersistePurchaseYActualizaCita() {
         Cita cita = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
 
@@ -116,7 +118,7 @@ class PagoServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("Yape se registra como método manual sin pasarela externa")
+    @DisplayName("[CP-RF44-01] Yape se registra como método manual sin pasarela externa")
     void registrarPagoYapeManualPersistePago() {
         Cita cita = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
 
@@ -134,6 +136,7 @@ class PagoServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("[CP-RF44-02][PARCIAL] Una cita cancelada no admite pagos")
     void registrarPagoRechazaCitaCanceladaSinPersistirPurchase() {
         Cita cita = crearCita(EstadoCita.CANCELADA, BigDecimal.ZERO);
 
@@ -145,6 +148,60 @@ class PagoServiceIntegrationTest {
                 cita.getId(),
                 TipoPurchase.SERVICIO_CITA
         )).isEmpty();
+    }
+
+    @Test
+    @DisplayName("[CP-RF44-02] Rechaza un importe cero sin persistir ni registrar caja")
+    void registrarPagoRechazaImporteCeroSinEfectos() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
+        PagoRequest request = pagoEfectivo(cita.getId(), new BigDecimal("100.00"));
+        request.setMonto(BigDecimal.ZERO);
+
+        assertThatThrownBy(() -> pagoService.registrar(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("mayor a cero");
+
+        assertThat(purchaseRepository.findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(
+                cita.getId(), TipoPurchase.SERVICIO_CITA)).isEmpty();
+        assertThat(citaRepository.findById(cita.getId()).orElseThrow().getMontoPagado())
+                .isEqualByComparingTo(BigDecimal.ZERO);
+        verifyNoInteractions(cajaService);
+    }
+
+    @Test
+    @DisplayName("[CP-RF44-02] Rechaza un importe superior al saldo sin efectos")
+    void registrarPagoRechazaImporteSuperiorAlSaldoSinEfectos() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
+        PagoRequest request = pagoEfectivo(cita.getId(), new BigDecimal("150.00"));
+        request.setMonto(new BigDecimal("120.00"));
+
+        assertThatThrownBy(() -> pagoService.registrar(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no superar el saldo pendiente");
+
+        assertThat(purchaseRepository.findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(
+                cita.getId(), TipoPurchase.SERVICIO_CITA)).isEmpty();
+        assertThat(citaRepository.findById(cita.getId()).orElseThrow().getMontoPagado())
+                .isEqualByComparingTo(BigDecimal.ZERO);
+        verifyNoInteractions(cajaService);
+    }
+
+    @Test
+    @DisplayName("[CP-RF44-02] Rechaza efectivo insuficiente sin efectos")
+    void registrarPagoRechazaEfectivoInsuficienteSinEfectos() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
+        PagoRequest request = pagoEfectivo(cita.getId(), new BigDecimal("80.00"));
+        request.setMonto(new BigDecimal("100.00"));
+
+        assertThatThrownBy(() -> pagoService.registrar(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no cubre el importe");
+
+        assertThat(purchaseRepository.findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(
+                cita.getId(), TipoPurchase.SERVICIO_CITA)).isEmpty();
+        assertThat(citaRepository.findById(cita.getId()).orElseThrow().getMontoPagado())
+                .isEqualByComparingTo(BigDecimal.ZERO);
+        verifyNoInteractions(cajaService);
     }
 
     private PagoRequest pagoEfectivo(Long citaId, BigDecimal montoRecibido) {

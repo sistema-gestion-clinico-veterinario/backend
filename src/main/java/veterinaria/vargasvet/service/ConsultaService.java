@@ -8,4 +8,5 @@ public interface ConsultaService {
     ConsultaResponse updateConsulta(Long id, ConsultaRequest request);
     ConsultaResponse getConsultaById(Long id);
     ConsultaResponse cerrarConsulta(Long id, CerrarConsultaRequest request);
+    ConsultaResponse reabrirConsulta(Long id);
 }

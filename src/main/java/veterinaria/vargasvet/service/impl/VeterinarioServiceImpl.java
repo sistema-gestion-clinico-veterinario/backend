@@ -153,7 +153,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
                     model
             );
 
-            emailService.sendEmail(mail, "email/welcome-template");
+            emailService.sendEmailWithRetry(mail, "email/welcome-template");
         } catch (Exception e) {
             System.err.println("[WARNING] No se pudo enviar el correo de bienvenida a " + usuario.getEmail() + ": " + e.getMessage());
         }

@@ -1,0 +1,21 @@
+{
+  "idEjecucion": "MASCOTA-ALTA-E2E-d05ec16-20260908T235109-0500",
+  "fechaHora": "2026-09-08T23:51:09-05:00",
+  "entorno": "produccion-controlada",
+  "datos": "empresa ficticia 3",
+  "casos": [
+    {
+      "caso": "CP-RF21-02",
+      "estado": "Cumple",
+      "resultado": "El backend rechazó la mascota asociada a un cliente inactivo y explicó que debía activarse primero; no se creó el registro."
+    },
+    {
+      "caso": "CP-RF21-01",
+      "estado": "Cumple",
+      "resultado": "La misma mascota se registró con una propietaria activa y apareció en la búsqueda como Perro, Mestizo, Macho, activa y correctamente vinculada."
+    }
+  ],
+  "camposOpcionalesOmitidos": ["peso", "fotografía"],
+  "observacionNoBloqueante": "La interfaz incluye clientes inactivos en el selector de propietarios, aunque el servidor impide guardar la relación.",
+  "datosSensiblesConservados": false
+}

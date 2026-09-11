@@ -10,6 +10,7 @@ import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.AcceptLegalRequest;
 import veterinaria.vargasvet.dto.response.LegalDocumentDTO;
 import veterinaria.vargasvet.dto.response.LegalStatusDTO;
+import veterinaria.vargasvet.security.ClientIpResolver;
 import veterinaria.vargasvet.security.UsuarioPrincipal;
 import veterinaria.vargasvet.service.LegalDocumentService;
 
@@ -21,6 +22,7 @@ import java.util.List;
 public class LegalController {
 
     private final LegalDocumentService legalDocumentService;
+    private final ClientIpResolver clientIpResolver;
 
     @GetMapping("/current")
     public ResponseEntity<ApiResponse<List<LegalDocumentDTO>>> getCurrentDocuments() {
@@ -40,7 +42,7 @@ public class LegalController {
                                                       HttpServletRequest httpRequest) {
         Integer usuarioId = currentUserId();
         legalDocumentService.accept(usuarioId, request.getLegalDocumentIds(),
-                httpRequest.getRemoteAddr(), httpRequest.getHeader("User-Agent"));
+                clientIpResolver.resolve(httpRequest), httpRequest.getHeader("User-Agent"));
         return ResponseEntity.ok(new ApiResponse<>(true, "Documentos aceptados exitosamente", null));
     }
 

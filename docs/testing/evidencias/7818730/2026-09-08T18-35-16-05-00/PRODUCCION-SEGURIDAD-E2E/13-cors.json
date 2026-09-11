@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "finishedAt": "2026-09-08T23:35:16.215Z",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574"
+  },
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0
+  },
+  "results": [
+    {
+      "code": "CORS-ORIGEN-PERMITIDO",
+      "expected": "https://systemvetfrontend.vercel.app",
+      "actual": "https://systemvetfrontend.vercel.app",
+      "passed": true
+    },
+    {
+      "code": "CORS-CREDENCIALES-PERMITIDAS",
+      "expected": "true",
+      "actual": "true",
+      "passed": true
+    },
+    {
+      "code": "CORS-ORIGEN-NO-PERMITIDO",
+      "expected": "sin Access-Control-Allow-Origin",
+      "actual": "ausente",
+      "passed": true
+    }
+  ],
+  "privacy": "No contiene credenciales, cookies, tokens, direcciones de correo ni cuerpos HTTP."
+}

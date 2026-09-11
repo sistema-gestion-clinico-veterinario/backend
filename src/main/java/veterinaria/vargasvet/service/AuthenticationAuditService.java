@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.AuditLog;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.repository.AuditLogRepository;
+import veterinaria.vargasvet.security.ClientIpResolver;
 import veterinaria.vargasvet.security.SecurityTokenUtils;
 import veterinaria.vargasvet.util.AppClock;
 
@@ -23,7 +24,9 @@ import java.util.Locale;
 public class AuthenticationAuditService {
 
     private final AuditLogRepository auditLogRepository;
+    private final AuditRealtimePublisher auditRealtimePublisher;
     private final ObjectProvider<HttpServletRequest> requestProvider;
+    private final ClientIpResolver clientIpResolver;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordLoginFailure(Usuario knownUser, String attemptedIdentifier, String reason) {
@@ -39,7 +42,7 @@ public class AuthenticationAuditService {
 
     private void save(Usuario usuario, String action, String details) {
         HttpServletRequest request = requestProvider.getIfAvailable();
-        auditLogRepository.save(AuditLog.builder()
+        AuditLog saved = auditLogRepository.save(AuditLog.builder()
                 .timestamp(AppClock.now())
                 .userEmail(usuario != null ? usuario.getEmail() : null)
                 .userRole(null)
@@ -48,8 +51,9 @@ public class AuthenticationAuditService {
                 .action(action)
                 .module("Seguridad")
                 .details(details)
-                .ipAddress(request != null ? request.getRemoteAddr() : null)
+                .ipAddress(clientIpResolver.resolve(request))
                 .build());
+        auditRealtimePublisher.publishAfterCommit(saved);
     }
 
     private String normalize(String value) {

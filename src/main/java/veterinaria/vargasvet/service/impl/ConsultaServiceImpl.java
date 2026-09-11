@@ -36,6 +36,8 @@ public class ConsultaServiceImpl implements ConsultaService {
     private final AccesoValidator accesoValidator;
     @org.springframework.beans.factory.annotation.Autowired
     private veterinaria.vargasvet.repository.ControlPreventivoRepository controlPreventivoRepository;
+    @org.springframework.beans.factory.annotation.Autowired
+    private veterinaria.vargasvet.service.ControlPreventivoService controlPreventivoService;
 
     @Override
     @Transactional
@@ -166,6 +168,7 @@ public class ConsultaServiceImpl implements ConsultaService {
 
         actualizarDatosClinicos(consulta, request);
         validarCamposObligatorios(consulta);
+        registrarAplicacionesPreventivas(id, consulta, request);
 
         consulta.setEstado(EstadoConsulta.CERRADA);
         consulta.setFechaCierre(veterinaria.vargasvet.util.AppClock.now());
@@ -189,6 +192,34 @@ public class ConsultaServiceImpl implements ConsultaService {
         return consultaMapper.toResponse(savedConsulta);
     }
 
+    @Override
+    @Transactional
+    public ConsultaResponse reabrirConsulta(Long id) {
+        Consulta consulta = consultaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + id));
+
+        if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
+            throw new IllegalArgumentException("Solo un administrador puede reabrir una historia clínica cerrada");
+        }
+
+        if (consulta.getEstado() != EstadoConsulta.CERRADA) {
+            throw new IllegalArgumentException("La consulta no se encuentra cerrada");
+        }
+
+        consulta.setEstado(EstadoConsulta.ABIERTA);
+
+        Consulta savedConsulta = consultaRepository.saveAndFlush(consulta);
+
+        auditLogService.log(
+            "REABRIR_CONSULTA",
+            "Consultas",
+            "Se reabrió para edición la consulta de la mascota " + consulta.getHistoriaClinica().getMascota().getNombreCompleto()
+                + " (cerrada previamente por " + consulta.getCerradoPor() + ") — reabierta por " + SecurityUtils.getCurrentUserEmail()
+        );
+
+        return consultaMapper.toResponse(savedConsulta);
+    }
+
     private void validarCamposObligatorios(Consulta consulta) {
         if (consulta.getMotivoConsulta() == null || consulta.getMotivoConsulta().isBlank()) {
             throw new IllegalArgumentException("El motivo de consulta es obligatorio para cerrar la consulta");
@@ -201,6 +232,28 @@ public class ConsultaServiceImpl implements ConsultaService {
         }
         if (consulta.getAnamnesis() == null || consulta.getAnamnesis().isBlank()) {
             throw new IllegalArgumentException("La anamnesis es obligatoria para cerrar la consulta");
+        }
+        if (consulta.getVacunacionAplicada() == null || consulta.getDesparasitacionAplicada() == null) {
+            throw new IllegalArgumentException("Las decisiones preventivas de vacunación y desparasitación son obligatorias para cerrar la consulta");
+        }
+    }
+
+    private void registrarAplicacionesPreventivas(Long consultaId, Consulta consulta, CerrarConsultaRequest request) {
+        if (Boolean.TRUE.equals(consulta.getVacunacionAplicada())) {
+            if (request.getRegistroVacunacion() == null) {
+                throw new IllegalArgumentException("Debe registrar los datos de la vacuna aplicada (tipo, fecha e intervalo) para cerrar la consulta");
+            }
+            if (controlPreventivoService != null) {
+                controlPreventivoService.registrarVacunacion(consultaId, request.getRegistroVacunacion());
+            }
+        }
+        if (Boolean.TRUE.equals(consulta.getDesparasitacionAplicada())) {
+            if (request.getRegistroDesparasitacion() == null) {
+                throw new IllegalArgumentException("Debe registrar los datos de la desparasitación aplicada (producto, fecha e intervalo) para cerrar la consulta");
+            }
+            if (controlPreventivoService != null) {
+                controlPreventivoService.registrarDesparasitacion(consultaId, request.getRegistroDesparasitacion());
+            }
         }
     }
 

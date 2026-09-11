@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "finishedAt": "2026-09-08T23:54:07.306Z",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574",
+    "companyId": 3
+  },
+  "summary": {
+    "total": 9,
+    "passed": 8,
+    "failed": 1
+  },
+  "results": [
+    {
+      "code": "RBAC-RESTANTE-CREAR-ROL",
+      "expected": 201,
+      "actual": 201,
+      "passed": true
+    },
+    {
+      "code": "RBAC-RESTANTE-PERMISOS-OWN",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "RBAC-MENU-PRESENTACION-PERSISTE",
+      "expected": "HTTP 200 y FLAT",
+      "actual": "HTTP 200",
+      "passed": true
+    },
+    {
+      "code": "RBAC-MENU-ORDEN-PERSISTE",
+      "expected": "HTTP 200 y orden solicitado",
+      "actual": "HTTP 200",
+      "passed": true
+    },
+    {
+      "code": "RBAC-RESTANTE-ASIGNAR-ACTIVAR",
+      "expected": "ambos HTTP 200",
+      "actual": [
+        200,
+        200
+      ],
+      "passed": true
+    },
+    {
+      "code": "RBAC-AGENDA-OWN",
+      "expected": 0,
+      "actual": 0,
+      "passed": true
+    },
+    {
+      "code": "RBAC-MENU-FLAT-EN-SESION",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "code": "RBAC-RESTANTE-PERMISOS-COMPANY",
+      "expected": 200,
+      "actual": 200,
+      "passed": true
+    },
+    {
+      "code": "RBAC-AGENDA-COMPANY",
+      "expected": "> 0 y mayor que OWN",
+      "actual": 10,
+      "passed": true
+    }
+  ],
+  "privacy": "No contiene IDs de roles o usuarios, correos, contraseñas, datos de citas, tokens ni cookies."
+}

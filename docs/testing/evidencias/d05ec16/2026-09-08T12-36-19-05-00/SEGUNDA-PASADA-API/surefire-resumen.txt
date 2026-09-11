@@ -1,0 +1,11 @@
+Ejecución: API2-d05ec16-20260908T123619-0500
+Resultado: 3 clases, 11 pruebas, 9 aprobadas, 2 fallidas, 0 errores y 0 omitidas.
+
+Fallos funcionales confirmados en HTTP:
+- CP-RF30-03: peso 10.123 devuelve 200; se esperaba 400.
+- CP-RF30-04: decisiones preventivas ausentes devuelven 200; se esperaba 400.
+
+Control aprobado del cierre:
+- CP-RF30-02: la ausencia de versión devuelve 400.
+
+Los ocho contratos de autenticación y roles aprobaron, pero permanecen como evidencia parcial porque no sustituyen autenticación real, persistencia, Method Security ni E2E.

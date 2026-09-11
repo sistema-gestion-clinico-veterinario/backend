@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: veterinaria.vargasvet.service.impl.CitaServiceIntegrationTest
+-------------------------------------------------------------------------------
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.83 s -- in veterinaria.vargasvet.service.impl.CitaServiceIntegrationTest

@@ -1,0 +1,16 @@
+{
+  "id": "CATALOGOS-CONSULTA-E2E-d05ec16-20260908T231016-0500",
+  "fechaHora": "2026-09-08T23:10:16-05:00",
+  "ambiente": "Producción controlada con empresa ficticia autorizada",
+  "caso": "CP-RF34-01",
+  "resultado": "No cumple",
+  "observaciones": [
+    { "catalogo": "Especialidades", "carga": true, "registrosVisibles": 1, "estadoVisible": false, "filtrosVisibles": false },
+    { "catalogo": "Tipos de Empleado", "carga": true, "registrosVisibles": 1, "estadoVisible": true, "filtrosVisibles": false },
+    { "catalogo": "Servicios", "carga": true, "registrosVisibles": 2, "estadoVisible": true, "filtrosVisibles": false },
+    { "catalogo": "Vacunas", "carga": true, "registrosVisibles": 0, "estadoVisible": false, "filtrosVisibles": false },
+    { "catalogo": "Desparasitantes", "carga": true, "registrosVisibles": 0, "estadoVisible": false, "filtrosVisibles": false }
+  ],
+  "causa": "CA-RF34-01 exige que cada catálogo muestre estado y filtros disponibles; la interfaz no ofrece filtros y no muestra estado en todos los catálogos.",
+  "secretosIncluidos": false
+}

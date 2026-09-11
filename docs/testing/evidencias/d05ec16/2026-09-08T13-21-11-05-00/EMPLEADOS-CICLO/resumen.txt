@@ -1,0 +1,6 @@
+Resultado técnico: 4 pruebas aprobadas.
+
+Se comprobaron alta con activación segura, rechazo de correo duplicado sin
+cambios parciales, actualización conservando horarios y desactivación con
+invalidación de sesiones. Persisten pendientes los niveles API, integración de
+correo real y E2E.

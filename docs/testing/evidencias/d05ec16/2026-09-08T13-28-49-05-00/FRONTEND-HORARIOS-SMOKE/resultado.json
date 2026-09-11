@@ -1,0 +1,19 @@
+{
+  "id": "FRONTEND-HORARIOS-SMOKE-d05ec16-20260908T132849-0500",
+  "fechaHora": "2026-09-08T13:28:49-05:00",
+  "repositorio": "frontend",
+  "rama": "security/autenticacion-credenciales-frontend",
+  "comando": "npm run test:ci -- --include=schedule-management.component.spec.ts --include=roster.component.spec.ts --include=my-schedule.component.spec.ts",
+  "navegador": "Chrome Headless 152.0.0.0 (Windows 10)",
+  "pruebas": 3,
+  "aprobadas": 3,
+  "fallidas": 0,
+  "errores": 0,
+  "alcance": "Creación básica de los tres componentes",
+  "limitacion": "No prueba plantillas, vistas día/semana/mes, modal de detalle ni contenido exportado",
+  "archivos": [
+    {"nombre": "schedule-management.component.spec.ts", "sha256": "903D96F67D880ED39F157E98BA9862B3F28D12F6DAD640F358052F92DD3040D9"},
+    {"nombre": "roster.component.spec.ts", "sha256": "C7767A0AABF760438588C9DC541711E03DB414F0B71A316FD01471F2DB899863"},
+    {"nombre": "my-schedule.component.spec.ts", "sha256": "97EF54313B3CA9F172FEB11E049271D3C20E8CC6109DCA6501BBC544DAD47376"}
+  ]
+}

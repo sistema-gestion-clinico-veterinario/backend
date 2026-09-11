@@ -1,0 +1,23 @@
+{
+  "id": "CLIENTE-ALTA-E2E-d05ec16-20260908T232836-0500",
+  "fechaHora": "2026-09-08T23:28:36-05:00",
+  "ambiente": "Producción controlada con empresa y datos ficticios autorizados",
+  "caso": "CP-RF18-01",
+  "resultado": "Cumple",
+  "registroQA": {
+    "nombre": "QA Trazabilidad Cliente Prueba",
+    "documento": "DNI terminado en 0931",
+    "correo": "Buzón temporal QA; dirección completa omitida de esta evidencia",
+    "rol": "ROLE_CLIENTE",
+    "estadoInicial": "Inactivo"
+  },
+  "comprobaciones": [
+    "La interfaz confirmó Propietario registrado",
+    "La búsqueda posterior devolvió un único registro con nombre, documento, contacto y estado",
+    "El registro quedó inicialmente inactivo, coherente con el flujo de activación",
+    "El correo de activación llegó al buzón temporal a las 23:26",
+    "El correo contiene una acción temporal para activar la cuenta; el enlace y token se omiten de la evidencia"
+  ],
+  "incidenciaNoBloqueante": "La plantilla del correo identifica al destinatario como NUEVO EMPLEADO y parte del equipo, aunque el alta corresponde a un cliente.",
+  "secretosIncluidos": false
+}

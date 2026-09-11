@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.service.impl;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -104,6 +105,7 @@ class CartillaServiceImplTest {
     }
 
     @Test
+    @DisplayName("[CP-RF33-01] Registra vacunación separada y genera el próximo control")
     void registrarVacunacionCierraControlCreaSiguienteYCalculaPrecioEnServidor() {
         when(mascotaRepository.findByIdForUpdate(20L)).thenReturn(Optional.of(mascota));
         when(empleadoRepository.findByUserId(11)).thenReturn(Optional.of(veterinario));
@@ -170,6 +172,110 @@ class CartillaServiceImplTest {
             assertThat(control.getId()).isNull();
             assertThat(control.getFechaRecomendada()).isEqualTo(AppClock.today().plusDays(21));
             assertThat(control.getEstado()).isEqualTo(EstadoControlPreventivo.PROGRAMADO);
+        });
+    }
+
+    @Test
+    @DisplayName("[CP-RF33-02] Registra desparasitación separada y genera el próximo control")
+    void registrarDesparasitacionCierraControlYCreaSiguiente() {
+        servicio.setNombre("Desparasitación");
+        servicio.setTipoControlPreventivo(TipoControlServicio.DESPARASITACION);
+        servicio.setPrecio(new BigDecimal("45.00"));
+
+        TipoDesparasitante producto = new TipoDesparasitante();
+        producto.setId(51L);
+        producto.setCompany(company);
+        producto.setEspecie(EspecieMascota.PERRO);
+        producto.setActivo(true);
+        producto.setNombre("Drontal Plus");
+        producto.setPrecio(new BigDecimal("45.00"));
+
+        pendiente.setTipo(TipoControlPreventivo.DESPARASITACION);
+        pendiente.setTipoVacuna(null);
+        pendiente.setNombreControl(producto.getNombre());
+
+        when(mascotaRepository.findByIdForUpdate(20L)).thenReturn(Optional.of(mascota));
+        when(empleadoRepository.findByUserId(11)).thenReturn(Optional.of(veterinario));
+        when(serviciosRepository.findById(40L)).thenReturn(Optional.of(servicio));
+        when(tipoDesparasitanteRepository.findById(51L)).thenReturn(Optional.of(producto));
+        when(historiaClinicaRepository.findByMascotaId(20L)).thenReturn(Optional.of(historia));
+        when(controlRepository.findById(70L)).thenReturn(Optional.of(pendiente));
+        when(controlRepository.existsByMascotaIdAndTipoAndNombreControlIgnoreCaseAndFechaRecomendadaAndEstadoIn(
+                eq(20L), eq(TipoControlPreventivo.DESPARASITACION), eq("Drontal Plus"), any(), any()))
+                .thenReturn(false);
+        when(controlRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(citaRepository.save(any())).thenAnswer(invocation -> {
+            Cita cita = invocation.getArgument(0);
+            cita.setId(81L);
+            cita.setNumeroCita("CIT-DESP-TEST");
+            return cita;
+        });
+        when(desparasitacionRepository.save(any())).thenAnswer(invocation -> {
+            RegistroDesparasitacion registro = invocation.getArgument(0);
+            registro.setId(91L);
+            return registro;
+        });
+
+        CartillaAplicacionRequest request = new CartillaAplicacionRequest();
+        request.setMascotaId(20L);
+        request.setControlPreventivoId(70L);
+        request.setServicioId(40L);
+        request.setTipoDesparasitanteId(51L);
+        request.setFechaAplicacion(AppClock.today());
+        request.setIntervaloCantidad(3);
+        request.setIntervaloUnidad(IntervaloUnidad.MESES);
+
+        CartillaAplicacionResponse response;
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+            security.when(SecurityUtils::getCurrentUserId).thenReturn(11);
+            security.when(SecurityUtils::getCurrentUserEmail).thenReturn("vet@example.com");
+            response = service.registrarDesparasitacion(request);
+        }
+
+        assertThat(pendiente.getEstado()).isEqualTo(EstadoControlPreventivo.APLICADO);
+        assertThat(response.getTipo()).isEqualTo(TipoControlPreventivo.DESPARASITACION);
+        assertThat(response.getNombre()).isEqualTo("Drontal Plus");
+        assertThat(response.getFechaProxima()).isEqualTo(AppClock.today().plusMonths(3));
+        assertThat(response.getTotal()).isEqualByComparingTo("45.00");
+
+        ArgumentCaptor<RegistroDesparasitacion> registroCaptor =
+                ArgumentCaptor.forClass(RegistroDesparasitacion.class);
+        verify(desparasitacionRepository).save(registroCaptor.capture());
+        assertThat(registroCaptor.getValue().getControlPreventivo()).isSameAs(pendiente);
+        assertThat(registroCaptor.getValue().getProducto()).isEqualTo("Drontal Plus");
+
+        ArgumentCaptor<ControlPreventivo> controlCaptor = ArgumentCaptor.forClass(ControlPreventivo.class);
+        verify(controlRepository, times(2)).save(controlCaptor.capture());
+        assertThat(controlCaptor.getAllValues()).anySatisfy(control -> {
+            assertThat(control.getId()).isNull();
+            assertThat(control.getTipo()).isEqualTo(TipoControlPreventivo.DESPARASITACION);
+            assertThat(control.getNombreControl()).isEqualTo("Drontal Plus");
+            assertThat(control.getFechaRecomendada()).isEqualTo(AppClock.today().plusMonths(3));
+        });
+    }
+
+    @Test
+    @DisplayName("[CP-RF33-03] Prepara un mensaje de WhatsApp preventivo para envío manual")
+    void preparaMensajePreventivoWhatsAppSinEnviarloAutomaticamente() {
+        Usuario propietario = mascota.getApoderado().getUser();
+        propietario.setNombre("Ana Maria");
+        propietario.setApellido("Perez");
+        propietario.setTelefono("999888777");
+        company.setName("Patitas Felices");
+        propietario.setCompany(company);
+        pendiente.setFechaRecomendada(AppClock.today().plusDays(3));
+        when(controlRepository.findPendientesByCompany(eq(7), any())).thenReturn(List.of(pendiente));
+
+        var resultados = service.listarRecordatoriosPreventivosWhatsApp(7);
+
+        assertThat(resultados).singleElement().satisfies(recordatorio -> {
+            assertThat(recordatorio.getControlId()).isEqualTo(70L);
+            assertThat(recordatorio.getApoderadoTelefono()).isEqualTo("999888777");
+            assertThat(recordatorio.getTipoControl()).isEqualTo("Vacunación");
+            assertThat(recordatorio.getEstado()).isEqualTo("PROXIMO");
+            assertThat(recordatorio.getMensajeWhatsApp())
+                    .contains("Hola, Ana", "Patitas Felices", "Tobby", "Nobivac Parvo-C", "responde a este mensaje");
         });
     }
 

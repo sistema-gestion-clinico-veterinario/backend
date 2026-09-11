@@ -1,0 +1,5 @@
+Resultado técnico: 1 prueba fallida.
+
+El endpoint de historial solo expone page, size y companyId. No expone los
+filtros clienteId, mascotaId, fechaDesde, fechaHasta y estado exigidos por
+RF-45. La falla se conserva como evidencia y no se corrigió código funcional.

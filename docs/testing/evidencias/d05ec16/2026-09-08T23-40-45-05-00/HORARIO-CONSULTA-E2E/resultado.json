@@ -1,0 +1,18 @@
+{
+  "idEjecucion": "HORARIO-CONSULTA-E2E-d05ec16-20260908T234045-0500",
+  "fechaHora": "2026-09-08T23:40:45-05:00",
+  "entorno": "produccion-controlada",
+  "datos": "empresa ficticia 3",
+  "caso": "CP-RF12-01",
+  "estado": "Cumple",
+  "mutaciones": false,
+  "comprobaciones": [
+    "Se seleccionó un empleado con turnos registrados.",
+    "La vista Mes mostró fechas, horas y el total mensual de 176 horas.",
+    "La vista Día abrió el 8 de septiembre de 2026 e informó correctamente que no tenía turnos.",
+    "La vista Semana del 6 al 12 de septiembre mostró 40 horas y los turnos de 08:00 a 16:00.",
+    "El detalle del turno del 7 de septiembre mostró fecha, hora inicial, hora final, duración, empleado y cargo.",
+    "El detalle habilitó Editar turno para el rol ADMIN con permiso de modificación."
+  ],
+  "conclusion": "Las tres vistas y el detalle condicionado por permisos funcionan en el entorno desplegado."
+}

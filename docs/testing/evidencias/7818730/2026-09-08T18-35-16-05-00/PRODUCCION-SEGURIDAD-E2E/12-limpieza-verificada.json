@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "finishedAt": "2026-09-09T00:01:00.903Z",
+    "frontendSha": "a95c1306f22b61dd1294096a41a80be1d621957a",
+    "backendSha": "7818730744926d9cccfb07221eb8a03ce336a574",
+    "companyId": 3
+  },
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0
+  },
+  "results": [
+    {
+      "code": "LIMPIEZA-QA-PRINCIPAL-CONSERVADA",
+      "expected": "registro presente",
+      "actual": true,
+      "passed": true
+    },
+    {
+      "code": "LIMPIEZA-QA-PRINCIPAL-INACTIVA",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "code": "LIMPIEZA-QA-DUPLICADAS-INACTIVAS",
+      "expected": "todas false",
+      "actual": [
+        false
+      ],
+      "passed": true
+    }
+  ],
+  "note": "La verificación usa activo del listado; el detalle de empleado no serializa estado.",
+  "privacy": "No contiene identificadores, correos, documentos, contraseñas, tokens ni cookies."
+}

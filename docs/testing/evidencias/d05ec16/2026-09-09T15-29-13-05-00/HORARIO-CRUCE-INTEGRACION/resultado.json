@@ -1,0 +1,15 @@
+{
+  "caseId": "CP-RF13-02",
+  "executedAt": "2026-09-09T15:29:13-05:00",
+  "environment": "local-h2",
+  "command": "mvn -Dtest=HorarioOverlapRepositoryIntegrationTest,RF12To14Test#rechazaHorarioCruzado test",
+  "tests": 2,
+  "failures": 0,
+  "errors": 0,
+  "observations": [
+    "El repositorio detectó como cruce 12:00-14:00 frente a 09:00-13:00 para el mismo empleado y fecha.",
+    "La base conservó exactamente un horario.",
+    "La prueba de servicio rechazó el cruce y no persistió el segundo turno."
+  ],
+  "result": "CUMPLE"
+}

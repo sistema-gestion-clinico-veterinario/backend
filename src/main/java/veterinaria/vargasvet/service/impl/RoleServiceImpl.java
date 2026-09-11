@@ -28,6 +28,7 @@ import veterinaria.vargasvet.repository.VistaRepository;
 import veterinaria.vargasvet.repository.VentanaRepository;
 import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
 import veterinaria.vargasvet.repository.RolVistaConfiguracionRepository;
+import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.RoleService;
 
 import java.util.*;
@@ -46,6 +47,7 @@ public class RoleServiceImpl implements RoleService {
     private final VentanaRepository ventanaRepository;
     private final RolVentanaConfiguracionRepository rolVentanaConfiguracionRepository;
     private final RolVistaConfiguracionRepository rolVistaConfiguracionRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -272,6 +274,11 @@ public class RoleServiceImpl implements RoleService {
         }
 
         incrementarVersionPermisos(role);
+
+        auditLogService.log(
+                role.getCompany() != null ? role.getCompany().getId() : null,
+                "MODIFICAR_PERMISOS_ROL", "Roles",
+                "Se modificaron los permisos del rol " + role.getName() + " (" + permisos.size() + " vistas configuradas)");
 
         return getVistasByRole(roleId);
     }

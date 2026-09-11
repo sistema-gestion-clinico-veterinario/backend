@@ -137,6 +137,8 @@ class ConsultaServiceIntegrationTest {
         request.setTemperatura(38.7);
         request.setAnamnesis("Paciente evaluado durante la atención");
         request.setAntecedentesEnfermedades("Sin enfermedades conocidas");
+        request.setVacunacionAplicada(false);
+        request.setDesparasitacionAplicada(false);
 
         consultaService.cerrarConsulta(consulta.getId(), request);
 

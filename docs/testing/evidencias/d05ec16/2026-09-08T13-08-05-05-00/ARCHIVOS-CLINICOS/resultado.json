@@ -1,0 +1,14 @@
+{
+  "id": "ARCHIVOS-CLINICOS-d05ec16-20260908T130805-0500",
+  "fechaHora": "2026-09-08T13:08:05-05:00",
+  "commitBase": "d05ec16df652d10a8f9380bd52b6e0ef815612d7",
+  "comando": "mvn -Dtest=RF32Test test",
+  "pruebas": 3,
+  "aprobadas": 3,
+  "fallidas": 0,
+  "errores": 0,
+  "omitidas": 0,
+  "casosERS": ["CP-RF32-01", "CP-RF32-02"],
+  "limitacion": "Storage simulado y nivel de servicio; API multipart, almacenamiento real y E2E pendientes",
+  "sha256Prueba": "1AEE8CB232A8960FB367FAABE17EF10A14785B90C2A9F5C2F6E40179A7FE01B6"
+}
