@@ -22,6 +22,7 @@ import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.ConsultaRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.HistoriaClinicaRepository;
+import veterinaria.vargasvet.repository.PrescripcionRepository;
 import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.HistoriaClinicaService;
@@ -48,6 +49,8 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
     private AccesoValidator accesoValidator;
     @org.springframework.beans.factory.annotation.Autowired
     private EmpleadoRepository empleadoRepository;
+    @org.springframework.beans.factory.annotation.Autowired
+    private PrescripcionRepository prescripcionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -244,9 +247,15 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
             }
         }
 
-        List<ConsultaResumenResponse> consultas = hc.getConsultas().stream()
+        List<Consulta> consultasOrdenadas = hc.getConsultas().stream()
                 .sorted(Comparator.comparing(Consulta::getFechaConsulta).reversed())
-                .map(this::toConsultaResumen)
+                .toList();
+
+        List<Long> consultaIds = consultasOrdenadas.stream().map(Consulta::getId).toList();
+        Map<Long, List<PrescripcionResumenResponse>> prescripcionesPorConsulta = cargarPrescripcionesPorConsulta(consultaIds);
+
+        List<ConsultaResumenResponse> consultas = consultasOrdenadas.stream()
+                .map(consulta -> toConsultaResumen(consulta, prescripcionesPorConsulta))
                 .toList();
 
         response.setConsultas(consultas);
@@ -257,7 +266,31 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         return response;
     }
 
-    private ConsultaResumenResponse toConsultaResumen(Consulta consulta) {
+    private Map<Long, List<PrescripcionResumenResponse>> cargarPrescripcionesPorConsulta(List<Long> consultaIds) {
+        if (consultaIds.isEmpty()) {
+            return Map.of();
+        }
+        return prescripcionRepository.findResumenPorConsultaIds(consultaIds).stream()
+                .collect(Collectors.groupingBy(
+                        fila -> (Long) fila[0],
+                        Collectors.mapping(fila -> {
+                            PrescripcionResumenResponse pr = new PrescripcionResumenResponse();
+                            pr.setId((Long) fila[1]);
+                            pr.setMedicamento((String) fila[2]);
+                            pr.setPrincipioActivo((String) fila[3]);
+                            pr.setDosis((String) fila[4]);
+                            pr.setFrecuencia((String) fila[5]);
+                            pr.setDuracionDias((Integer) fila[6]);
+                            pr.setViaAdministracion((String) fila[7]);
+                            pr.setInstrucciones((String) fila[8]);
+                            pr.setFechaInicio((LocalDate) fila[9]);
+                            pr.setFechaFin((LocalDate) fila[10]);
+                            return pr;
+                        }, Collectors.toList())
+                ));
+    }
+
+    private ConsultaResumenResponse toConsultaResumen(Consulta consulta, Map<Long, List<PrescripcionResumenResponse>> prescripcionesPorConsulta) {
         ConsultaResumenResponse response = new ConsultaResumenResponse();
         response.setId(consulta.getId());
         response.setFechaConsulta(consulta.getFechaConsulta());
@@ -306,20 +339,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
             return tr;
         }).toList());
 
-        response.setPrescripciones(consulta.getPrescripciones().stream().map(p -> {
-            PrescripcionResumenResponse pr = new PrescripcionResumenResponse();
-            pr.setId(p.getId());
-            pr.setMedicamento(p.getMedicamento());
-            pr.setPrincipioActivo(p.getPrincipioActivo());
-            pr.setDosis(p.getDosis());
-            pr.setFrecuencia(p.getFrecuencia());
-            pr.setDuracionDias(p.getDuracionDias());
-            pr.setViaAdministracion(p.getViaAdministracion());
-            pr.setInstrucciones(p.getInstrucciones());
-            pr.setFechaInicio(p.getFechaInicio());
-            pr.setFechaFin(p.getFechaFin());
-            return pr;
-        }).toList());
+        response.setPrescripciones(prescripcionesPorConsulta.getOrDefault(consulta.getId(), List.of()));
 
         response.setArchivos(consulta.getArchivos().stream()
                 .map(archivoClinicoService::toResponse)
