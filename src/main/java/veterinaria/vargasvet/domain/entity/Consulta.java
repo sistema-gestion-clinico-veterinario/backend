@@ -2,6 +2,7 @@ package veterinaria.vargasvet.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.DynamicUpdate;
 import veterinaria.vargasvet.domain.enums.EstadoConsulta;
 import veterinaria.vargasvet.domain.enums.TipoConsulta;
@@ -92,15 +93,19 @@ public class Consulta {
     private TipoConsulta tipoConsulta;
 
     @OneToMany(mappedBy = "consulta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @BatchSize(size = 32)
     private List<Diagnostico> diagnosticos = new ArrayList<>();
 
     @OneToMany(mappedBy = "consulta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @BatchSize(size = 32)
     private List<Tratamiento> tratamientos = new ArrayList<>();
 
     @OneToMany(mappedBy = "consulta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @BatchSize(size = 32)
     private List<Prescripcion> prescripciones = new ArrayList<>();
 
     @OneToMany(mappedBy = "consulta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @BatchSize(size = 32)
     private List<ArchivoClinico> archivos = new ArrayList<>();
 
     @Column(name = "fecha_cierre")
