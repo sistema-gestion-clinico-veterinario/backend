@@ -22,6 +22,7 @@ import veterinaria.vargasvet.dto.response.HistoriaClinicaDetalleResponse;
 import veterinaria.vargasvet.repository.ConsultaRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.HistoriaClinicaRepository;
+import veterinaria.vargasvet.repository.PrescripcionRepository;
 import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.security.UsuarioPrincipal;
 import veterinaria.vargasvet.service.ControlPreventivoService;
@@ -46,6 +47,7 @@ class RF29Test {
     private final ControlPreventivoService preventivoService = mock(ControlPreventivoService.class);
     private final AccesoValidator accesoValidator = mock(AccesoValidator.class);
     private final EmpleadoRepository empleadoRepository = mock(EmpleadoRepository.class);
+    private final PrescripcionRepository prescripcionRepository = mock(PrescripcionRepository.class);
 
     @AfterEach
     void clearSecurityContext() {
@@ -153,6 +155,7 @@ class RF29Test {
         );
         ReflectionTestUtils.setField(service, "controlPreventivoService", preventivoService);
         ReflectionTestUtils.setField(service, "accesoValidator", accesoValidator);
+        ReflectionTestUtils.setField(service, "prescripcionRepository", prescripcionRepository);
         ReflectionTestUtils.setField(service, "empleadoRepository", empleadoRepository);
         return service;
     }

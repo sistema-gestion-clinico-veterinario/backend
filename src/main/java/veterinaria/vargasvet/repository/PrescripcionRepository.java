@@ -16,6 +16,16 @@ public interface PrescripcionRepository extends JpaRepository<Prescripcion, Long
 
     List<Prescripcion> findByConsultaIdOrderByCreatedAtAsc(Long consultaId);
 
+    // Proyeccion en lote para el resumen de historia clinica: evita materializar entidades
+    // Prescripcion (y con ello el SELECT adicional que Hibernate dispara por cada fila para
+    // el @OneToOne(mappedBy) "dispensacion", que no puede ser realmente perezoso sin bytecode
+    // enhancement). Fila: [consultaId, id, medicamento, principioActivo, dosis, frecuencia,
+    // duracionDias, viaAdministracion, instrucciones, fechaInicio, fechaFin].
+    @Query("SELECT p.consulta.id, p.id, p.medicamento, p.principioActivo, p.dosis, p.frecuencia, " +
+           "p.duracionDias, p.viaAdministracion, p.instrucciones, p.fechaInicio, p.fechaFin " +
+           "FROM Prescripcion p WHERE p.consulta.id IN :consultaIds")
+    List<Object[]> findResumenPorConsultaIds(@Param("consultaIds") List<Long> consultaIds);
+
     @Query(value = "SELECT p.* FROM prescripciones p " +
                    "JOIN consulta c ON c.id = p.consulta_id " +
                    "JOIN historia_clinica hc ON hc.id = c.historia_clinica_id " +
