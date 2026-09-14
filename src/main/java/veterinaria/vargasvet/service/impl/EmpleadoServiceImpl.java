@@ -75,6 +75,9 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Value("${app.company.logo}")
     private String defaultCompanyLogo;
 
+    @Value("${app.company.name}")
+    private String defaultCompanyName;
+
     @Value("${security.verification-token-validity-hours:24}")
     private long verificationTokenValidityHours;
 
@@ -693,14 +696,18 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private void sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken) {
         try {
             Map<String, Object> model = new HashMap<>();
-            String resolvedCompanyName = usuario.getCompany() != null ? usuario.getCompany().getName() : "VargasVet";
-            String resolvedLogo = (usuario.getCompany() != null && usuario.getCompany().getLogoUrl() != null) ? usuario.getCompany().getLogoUrl() : defaultCompanyLogo;
+            Company company = usuario.getCompany();
+            String resolvedCompanyName = company != null && company.getName() != null ? company.getName() : defaultCompanyName;
+            String resolvedLogo = company != null && company.getLogoUrl() != null ? company.getLogoUrl() : defaultCompanyLogo;
+            String resolvedEmail = company != null && company.getEmail() != null ? company.getEmail() : companyEmail;
+            String resolvedPhone = company != null && company.getPhone() != null ? company.getPhone() : companyPhone;
+            String resolvedAddress = company != null && company.getAddress() != null ? company.getAddress() : companyAddress;
             model.put("nombre", nombre);
             model.put("companyName", resolvedCompanyName);
             model.put("companyLogo", resolvedLogo);
-            model.put("companyEmail", companyEmail);
-            model.put("companyPhone", companyPhone);
-            model.put("companyAddress", companyAddress);
+            model.put("companyEmail", resolvedEmail);
+            model.put("companyPhone", resolvedPhone);
+            model.put("companyAddress", resolvedAddress);
             model.put("verificationLink", frontendVerifyUrl + verificationToken);
 
             Mail mail = emailService.createMail(

@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Apoderado;
+import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
@@ -161,16 +162,20 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
     private void sendVerificationEmail(Usuario usuario, String nombre, String verificationToken) {
         try {
-            String resolvedCompanyName = usuario.getCompany() != null ? usuario.getCompany().getName() : defaultCompanyName;
-            String resolvedLogo = (usuario.getCompany() != null && usuario.getCompany().getLogoUrl() != null) ? usuario.getCompany().getLogoUrl() : defaultCompanyLogo;
+            Company company = usuario.getCompany();
+            String resolvedCompanyName = company != null && company.getName() != null ? company.getName() : defaultCompanyName;
+            String resolvedLogo = company != null && company.getLogoUrl() != null ? company.getLogoUrl() : defaultCompanyLogo;
+            String resolvedEmail = company != null && company.getEmail() != null ? company.getEmail() : companyEmail;
+            String resolvedPhone = company != null && company.getPhone() != null ? company.getPhone() : companyPhone;
+            String resolvedAddress = company != null && company.getAddress() != null ? company.getAddress() : companyAddress;
             java.util.Map<String, Object> model = new java.util.HashMap<>();
             model.put("nombre", nombre);
             model.put("email", usuario.getEmail());
             model.put("companyName", resolvedCompanyName);
             model.put("companyLogo", resolvedLogo);
-            model.put("companyEmail", companyEmail);
-            model.put("companyPhone", companyPhone);
-            model.put("companyAddress", companyAddress);
+            model.put("companyEmail", resolvedEmail);
+            model.put("companyPhone", resolvedPhone);
+            model.put("companyAddress", resolvedAddress);
             model.put("verificationLink", frontendVerifyUrl + verificationToken);
 
             veterinaria.vargasvet.dto.Mail mail = emailService.createMail(

@@ -138,18 +138,24 @@ public class VeterinarioServiceImpl implements VeterinarioService {
 
     private void sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken) {
         try {
+            Company company = usuario.getCompany();
+            String resolvedCompanyName = company != null && company.getName() != null ? company.getName() : companyName;
+            String resolvedLogo = company != null && company.getLogoUrl() != null ? company.getLogoUrl() : companyLogo;
+            String resolvedEmail = company != null && company.getEmail() != null ? company.getEmail() : companyEmail;
+            String resolvedPhone = company != null && company.getPhone() != null ? company.getPhone() : companyPhone;
+            String resolvedAddress = company != null && company.getAddress() != null ? company.getAddress() : companyAddress;
             Map<String, Object> model = new HashMap<>();
             model.put("nombre", nombre);
-            model.put("companyName", companyName);
-            model.put("companyLogo", companyLogo);
-            model.put("companyEmail", companyEmail);
-            model.put("companyPhone", companyPhone);
-            model.put("companyAddress", companyAddress);
+            model.put("companyName", resolvedCompanyName);
+            model.put("companyLogo", resolvedLogo);
+            model.put("companyEmail", resolvedEmail);
+            model.put("companyPhone", resolvedPhone);
+            model.put("companyAddress", resolvedAddress);
             model.put("verificationLink", frontendVerifyUrl + verificationToken);
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),
-                    "Bienvenido al equipo de " + companyName,
+                    "Bienvenido al equipo de " + resolvedCompanyName,
                     model
             );
 

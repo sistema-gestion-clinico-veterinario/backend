@@ -6,6 +6,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.dto.request.LoginDTO;
@@ -137,20 +138,31 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         return userMapper.toProfileDTO(saved);
     }
 
+    /**
+     * Resuelve los datos de marca (nombre, logo, contacto) de la empresa del usuario para
+     * personalizar los correos. Si el usuario no tiene empresa asignada, o la empresa no tiene
+     * un dato en particular, se usa el valor por defecto de la plataforma como respaldo.
+     */
+    private Map<String, Object> resolveCompanyBranding(Usuario usuario) {
+        Company company = usuario.getCompany();
+        Map<String, Object> branding = new HashMap<>();
+        branding.put("companyName", company != null && company.getName() != null ? company.getName() : companyName);
+        branding.put("companyLogo", company != null && company.getLogoUrl() != null ? company.getLogoUrl() : companyLogo);
+        branding.put("companyEmail", company != null && company.getEmail() != null ? company.getEmail() : companyEmail);
+        branding.put("companyPhone", company != null && company.getPhone() != null ? company.getPhone() : companyPhone);
+        branding.put("companyAddress", company != null && company.getAddress() != null ? company.getAddress() : companyAddress);
+        return branding;
+    }
+
     private void sendVerificationEmail(Usuario usuario, String verificationToken) {
         try {
-            Map<String, Object> model = new HashMap<>();
+            Map<String, Object> model = new HashMap<>(resolveCompanyBranding(usuario));
             model.put("nombre", usuario.getEmail());
-            model.put("companyName", companyName);
-            model.put("companyLogo", companyLogo);
-            model.put("companyEmail", companyEmail);
-            model.put("companyPhone", companyPhone);
-            model.put("companyAddress", companyAddress);
             model.put("verificationLink", frontendVerifyUrl + verificationToken);
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),
-                    "Bienvenido a " + companyName + " - Activa tu cuenta",
+                    "Bienvenido a " + model.get("companyName") + " - Activa tu cuenta",
                     model
             );
 
@@ -490,19 +502,14 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
     private void sendPasswordChangeNotification(Usuario usuario) {
         try {
-            Map<String, Object> model = new HashMap<>();
+            Map<String, Object> model = new HashMap<>(resolveCompanyBranding(usuario));
             model.put("nombre", resolveNombreCompleto(usuario));
             model.put("email", usuario.getEmail());
-            model.put("companyName", companyName);
-            model.put("companyLogo", companyLogo);
-            model.put("companyEmail", companyEmail);
-            model.put("companyPhone", companyPhone);
-            model.put("companyAddress", companyAddress);
             model.put("appUrl", appUrl);
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),
-                    "Notificación de Cambio de Contraseña - " + companyName,
+                    "Notificación de Cambio de Contraseña - " + model.get("companyName"),
                     model
             );
 
@@ -540,19 +547,15 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         passwordResetTokenRepository.save(resetToken);
 
         try {
-            Map<String, Object> model = new HashMap<>();
+            Map<String, Object> model = new HashMap<>(resolveCompanyBranding(usuario));
             model.put("usuario", resolveNombreCompleto(usuario));
-            model.put("companyName", companyName);
-            model.put("companyEmail", companyEmail);
-            model.put("companyPhone", companyPhone);
-            model.put("companyLogo", companyLogo);
-            
+
             String resetUrl = appUrl + "/reset-password#token=" + token;
             model.put("resetUrl", resetUrl);
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),
-                    "Restablecer Contraseña - " + companyName,
+                    "Restablecer Contraseña - " + model.get("companyName"),
                     model
             );
             emailService.sendEmailWithRetry(mail, "email/forgot-password-template");
