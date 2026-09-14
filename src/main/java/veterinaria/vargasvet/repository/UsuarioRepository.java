@@ -33,6 +33,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
     boolean existsByEmail(String email);
     boolean existsByDni(String dni);
+    /** El DNI tambien identifica a la misma persona real, igual que el correo
+     * - si alguien ya tiene cuenta (con OTRO correo) y su DNI coincide, es la
+     * misma identidad y debe reutilizarse, no bloquear el registro. */
+    Optional<Usuario> findByDni(String dni);
     boolean existsByTelefono(String telefono);
 
     /** Identificador de login (unico globalmente). El correo (arriba) sigue usandose

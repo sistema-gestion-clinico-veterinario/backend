@@ -106,19 +106,19 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         Company companyToUse = companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
 
-        java.util.Optional<Usuario> existingUsuario = usuarioRepository.findByEmail(dto.getEmail());
+        // Misma persona real si coincide el correo O el DNI - alguien puede
+        // haberse registrado antes en otra empresa con un correo distinto
+        // (ej. de trabajo) al que usa aqui; bloquearlo solo porque el DNI ya
+        // existe seria un callejon sin salida (no se puede crear una
+        // identidad nueva, pero tampoco se reconoce la existente). Se
+        // reutiliza la identidad encontrada por cualquiera de los dos.
+        java.util.Optional<Usuario> existingUsuario = usuarioRepository.findByEmail(dto.getEmail())
+                .or(() -> usuarioRepository.findByDni(dto.getNumeroDocumento()));
         boolean esUsuarioNuevo = existingUsuario.isEmpty();
         Usuario savedUser;
         String verificationToken = null;
 
         if (esUsuarioNuevo) {
-            // El DNI es un dato de identidad (Usuario), no de membresia: sigue siendo
-            // unico globalmente solo para identidades NUEVAS. Si el email ya existe,
-            // es la misma persona y su propio DNI ya esta registrado - no se re-chequea.
-            if (usuarioRepository.existsByDni(dto.getNumeroDocumento())) {
-                throw new IllegalArgumentException("El DNI ya está registrado en el sistema");
-            }
-
             String username = dto.getUsername() == null ? null : dto.getUsername().trim().toLowerCase(java.util.Locale.ROOT);
             if (username == null || username.isBlank()) {
                 throw new IllegalArgumentException("El usuario es obligatorio para una persona nueva");
@@ -171,6 +171,11 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         if (apoderado.getId() != null && Boolean.TRUE.equals(apoderado.getEstado())) {
             throw new IllegalArgumentException("Este cliente ya está registrado y activo en esta empresa");
         }
+        // Si ya existia como identidad pero esta es su primera relacion con
+        // ESTA empresa en particular, se le avisa por correo - de otro modo
+        // no tiene forma de saber que ahora tambien tiene acceso aqui (con el
+        // mismo usuario y contraseña que ya usa en sus otras empresas).
+        boolean esNuevaEmpresaParaEsteUsuario = apoderado.getId() == null;
         apoderado.setUser(savedUser);
         apoderado.setCompany(companyToUse);
         apoderado.setTipoDocumentoIdentidad(dto.getTipoDocumento());
@@ -189,6 +194,8 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
         if (esUsuarioNuevo) {
             sendVerificationEmail(savedUser, dto.getNombre() + " " + dto.getApellido(), verificationToken);
+        } else if (esNuevaEmpresaParaEsteUsuario) {
+            sendNewCompanyAccessEmail(savedUser, companyToUse);
         }
 
         auditLogService.log(
@@ -230,6 +237,37 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             emailService.sendEmailWithRetry(mail, "email/welcome-template");
         } catch (Exception e) {
             System.err.println("[WARNING] No se pudo enviar el correo de verificación al apoderado " + usuario.getEmail() + ": " + e.getMessage());
+        }
+    }
+
+    /** Aviso para cuando una identidad YA existente (encontrada por correo o
+     * DNI) se une a una empresa nueva - la persona no tiene forma de saber
+     * que ahora tiene acceso aqui tambien si no se le avisa, ya que no pasa
+     * por el flujo de activacion de cuenta nueva. */
+    private void sendNewCompanyAccessEmail(Usuario usuario, Company company) {
+        try {
+            String resolvedCompanyName = company.getName() != null ? company.getName() : defaultCompanyName;
+            String resolvedLogo = company.getLogoUrl() != null ? company.getLogoUrl() : defaultCompanyLogo;
+            String resolvedEmail = company.getEmail() != null ? company.getEmail() : companyEmail;
+            String resolvedPhone = company.getPhone() != null ? company.getPhone() : companyPhone;
+            java.util.Map<String, Object> model = new java.util.HashMap<>();
+            model.put("nombre", (usuario.getNombre() == null ? "" : usuario.getNombre()));
+            model.put("username", usuario.getUsername());
+            model.put("companyName", resolvedCompanyName);
+            model.put("companyLogo", resolvedLogo);
+            model.put("companyEmail", resolvedEmail);
+            model.put("companyPhone", resolvedPhone);
+            model.put("loginUrl", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug("/login", company.getSlug()));
+
+            veterinaria.vargasvet.dto.Mail mail = emailService.createMail(
+                    usuario.getEmail(),
+                    "Nuevo acceso en " + resolvedCompanyName,
+                    model
+            );
+
+            emailService.sendEmailWithRetry(mail, "email/new-company-access-template");
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo enviar el aviso de nueva empresa a " + usuario.getEmail() + ": " + e.getMessage());
         }
     }
 
