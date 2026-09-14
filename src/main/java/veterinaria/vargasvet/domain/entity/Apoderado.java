@@ -6,6 +6,7 @@ import lombok.Data;
 import veterinaria.vargasvet.domain.enums.Genero;
 import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,9 +18,28 @@ public class Apoderado {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private Usuario user;
+
+    /** Empresa de ESTA relacion cliente especifica. A diferencia de Empleado, un mismo
+     * Usuario puede tener varias filas Apoderado ACTIVAS simultaneamente (cliente de
+     * varias empresas a la vez) - por eso no hay un indice "a lo sumo una activa" aqui. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
+    @Column(name = "fecha_ingreso")
+    private LocalDate fechaIngreso;
+
+    @Column(name = "fecha_salida")
+    private LocalDate fechaSalida;
+
+    /** numero_documento se mantiene reservado dentro de la misma empresa incluso inactivo
+     * (indice uq_apoderado_documento_empresa, sin filtro de estado) - por eso el reingreso
+     * a la MISMA empresa reactiva esta fila (estado=true) en vez de crear una nueva. */
+    @Column(name = "estado", nullable = false)
+    private Boolean estado = true;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_documento_identidad", nullable = false)

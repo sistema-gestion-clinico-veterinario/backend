@@ -53,6 +53,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private static final String DUMMY_BCRYPT_HASH = "$2a$10$7EqJtq98hPqEX7fNZaFWoO5LwR8mH3eQfPJfQZpD1fM9L0f.R8j6u";
 
     private final UsuarioRepository usuarioRepository;
+    private final veterinaria.vargasvet.repository.EmpleadoRepository empleadoRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
@@ -328,11 +329,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setPasswordChanged(usuario.isPasswordChanged());
         response.setNeedsLegalAcceptance(legalDocumentService.hasPendingConsent(usuario.getId()));
         response.setLegalAcceptanceOverdue(legalDocumentService.isPastGracePeriod(usuario.getId()));
-        response.setEmpleadoId(
-                usuario.getEmpleado() != null
-                        ? Math.toIntExact(usuario.getEmpleado().getId())
-                        : null
-        );
+        response.setEmpleadoId(resolveActiveEmpleadoId(usuario));
         response.setMenu(menu);
         response.setPermissions(permissions);
         populateActiveRole(response, activeAssignment);
@@ -396,11 +393,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setPasswordChanged(usuario.isPasswordChanged());
         response.setNeedsLegalAcceptance(legalDocumentService.hasPendingConsent(usuario.getId()));
         response.setLegalAcceptanceOverdue(legalDocumentService.isPastGracePeriod(usuario.getId()));
-        response.setEmpleadoId(
-                usuario.getEmpleado() != null
-                        ? Math.toIntExact(usuario.getEmpleado().getId())
-                        : null
-        );
+        response.setEmpleadoId(resolveActiveEmpleadoId(usuario));
 
         response.setMenu(menu);
         response.setPermissions(permissions);
@@ -727,7 +720,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setPasswordChanged(usuario.isPasswordChanged());
         response.setNeedsLegalAcceptance(legalDocumentService.hasPendingConsent(usuario.getId()));
         response.setLegalAcceptanceOverdue(legalDocumentService.isPastGracePeriod(usuario.getId()));
-        response.setEmpleadoId(usuario.getEmpleado() != null ? Math.toIntExact(usuario.getEmpleado().getId()) : null);
+        response.setEmpleadoId(resolveActiveEmpleadoId(usuario));
         response.setMenu(menu);
         response.setPermissions(permissions);
         populateActiveRole(response, activeAssignment);
@@ -903,7 +896,16 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         boolean isSuperAdmin = usuario.getUsuariosPorRol().stream()
                 .anyMatch(upr -> upr.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN);
         if (isSuperAdmin) return "SUPER_ADMIN";
-        if (usuario.getEmpleado() != null) return "EMPLEADO";
+        if (empleadoRepository.existsByUserIdAndEstadoTrue(usuario.getId())) return "EMPLEADO";
         return "USUARIO";
+    }
+
+    /** Como mucho hay una relacion laboral activa por usuario (indice
+     * uq_empleado_activo_por_usuario), asi que esto es seguro sin importar cuantas
+     * filas historicas de Empleado tenga el usuario. */
+    private Integer resolveActiveEmpleadoId(Usuario usuario) {
+        return empleadoRepository.findActiveByUserId(usuario.getId())
+                .map(empleado -> Math.toIntExact(empleado.getId()))
+                .orElse(null);
     }
 }

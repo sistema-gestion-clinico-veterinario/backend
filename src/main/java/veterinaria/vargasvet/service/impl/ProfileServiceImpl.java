@@ -36,7 +36,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Transactional(readOnly = true)
     public ProfileResponse getMyProfile() {
         Usuario usuario = getCurrentUser();
-        Optional<Empleado> empleadoOpt = empleadoRepository.findByUserId(usuario.getId());
+        Optional<Empleado> empleadoOpt = empleadoRepository.findActiveByUserId(usuario.getId());
         Optional<Apoderado> apoderadoOpt = Optional.empty();
 
         if (empleadoOpt.isEmpty() && (SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin())) {
@@ -55,7 +55,7 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         if (empleadoOpt.isEmpty()) {
-            apoderadoOpt = apoderadoRepository.findByUserId(usuario.getId());
+            apoderadoOpt = apoderadoRepository.findByUserIdAndCompanyId(usuario.getId(), SecurityUtils.getCurrentCompanyId());
         }
 
         return buildResponse(usuario, empleadoOpt.orElse(null), apoderadoOpt.orElse(null));
@@ -72,7 +72,7 @@ public class ProfileServiceImpl implements ProfileService {
         if (dto.getDireccion() != null) usuario.setDireccion(dto.getDireccion());
         usuarioRepository.save(usuario);
 
-        Optional<Empleado> empleadoOpt = empleadoRepository.findByUserId(usuario.getId());
+        Optional<Empleado> empleadoOpt = empleadoRepository.findActiveByUserId(usuario.getId());
         Optional<Apoderado> apoderadoOpt = Optional.empty();
         empleadoOpt.ifPresent(empleado -> {
             if (dto.getObservaciones() != null) empleado.setObservaciones(dto.getObservaciones());
@@ -82,7 +82,7 @@ public class ProfileServiceImpl implements ProfileService {
         });
 
         if (empleadoOpt.isEmpty()) {
-            apoderadoOpt = apoderadoRepository.findByUserId(usuario.getId());
+            apoderadoOpt = apoderadoRepository.findByUserIdAndCompanyId(usuario.getId(), SecurityUtils.getCurrentCompanyId());
         }
 
         return buildResponse(usuario, empleadoOpt.orElse(null), apoderadoOpt.orElse(null));

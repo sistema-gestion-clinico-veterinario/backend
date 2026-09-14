@@ -31,12 +31,12 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
     @Query("SELECT p FROM Purchase p WHERE p.cita.mascota.apoderado.user.id = :userId AND p.tipoPurchase = :tipo ORDER BY p.createdAt DESC")
     Page<Purchase> findByApoderadoUserId(@Param("userId") Integer userId, @Param("tipo") TipoPurchase tipo, Pageable pageable);
 
-    @Query("SELECT p FROM Purchase p WHERE p.cita.mascota.apoderado.user.company.id = :companyId AND p.tipoPurchase = :tipo ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM Purchase p WHERE p.cita.mascota.apoderado.company.id = :companyId AND p.tipoPurchase = :tipo ORDER BY p.createdAt DESC")
     Page<Purchase> findByCompanyId(@Param("companyId") Integer companyId, @Param("tipo") TipoPurchase tipo, Pageable pageable);
 
     @Query("SELECT p FROM Purchase p "
-            + "LEFT JOIN p.cita c LEFT JOIN c.mascota m LEFT JOIN m.apoderado a LEFT JOIN a.user u LEFT JOIN u.company co "
-            + "WHERE (:companyId IS NULL OR co.id = :companyId) "
+            + "LEFT JOIN p.cita c LEFT JOIN c.mascota m LEFT JOIN m.apoderado a "
+            + "WHERE (:companyId IS NULL OR a.company.id = :companyId) "
             + "AND p.tipoPurchase = :tipo "
             + "AND (:clienteId IS NULL OR p.cliente.id = :clienteId) "
             + "AND (:mascotaId IS NULL OR m.id = :mascotaId) "

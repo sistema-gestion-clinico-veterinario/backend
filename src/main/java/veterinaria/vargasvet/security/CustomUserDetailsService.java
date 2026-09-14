@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
+import veterinaria.vargasvet.repository.ApoderadoRepository;
+import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 
@@ -23,13 +25,15 @@ import java.util.Set;
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UsuarioRepository usuarioRepository;
+    private final EmpleadoRepository empleadoRepository;
+    private final ApoderadoRepository apoderadoRepository;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
 
-        if (usuario.getApoderado() != null && usuario.getEmpleado() == null
+        if (apoderadoRepository.existsByUserId(usuario.getId()) && !empleadoRepository.existsByUserId(usuario.getId())
                 && usuario.getUsuariosPorRol().isEmpty()) {
             throw new UsernameNotFoundException("Los apoderados sin rol no tienen acceso al sistema");
         }

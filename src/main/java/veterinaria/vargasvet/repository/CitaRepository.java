@@ -20,13 +20,13 @@ import java.util.List;
 public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     @Query("SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
-            "WHERE c.id = :id AND u.company.id = :companyId")
+            "WHERE c.id = :id AND a.company.id = :companyId")
     java.util.Optional<Cita> findByIdAndCompanyId(@Param("id") Long id,
                                                   @Param("companyId") Integer companyId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
-            "WHERE c.id = :id AND u.company.id = :companyId")
+            "WHERE c.id = :id AND a.company.id = :companyId")
     java.util.Optional<Cita> findByIdAndCompanyIdForUpdate(@Param("id") Long id,
                                                            @Param("companyId") Integer companyId);
 
@@ -46,7 +46,7 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
             "LEFT JOIN FETCH e.user eu " +
             "LEFT JOIN FETCH c.servicio s " +
             "LEFT JOIN FETCH c.consulta co " +
-            "WHERE u.company.id = :companyId " +
+            "WHERE a.company.id = :companyId " +
             "AND c.eliminada = false " +
             "AND c.fechaHoraInicio >= :fechaInicio " +
             "AND c.fechaHoraInicio < :fechaFin " +
@@ -70,7 +70,7 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     }
 
     @Query("SELECT CAST(c.fechaHoraInicio AS date) AS fecha, COUNT(c) AS total FROM Cita c " +
-            "WHERE c.mascota.apoderado.user.company.id = :companyId " +
+            "WHERE c.mascota.apoderado.company.id = :companyId " +
             "AND " + ESTADOS_NO_ACTIVOS + " " +
             "AND c.fechaHoraInicio >= :start AND c.fechaHoraInicio < :end " +
             "GROUP BY CAST(c.fechaHoraInicio AS date)")
@@ -86,8 +86,8 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
                                                   @Param("end") LocalDateTime end);
 
     @Query("SELECT c.estado AS estado, COUNT(c) AS total FROM Cita c " +
-            "JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
-            "WHERE u.company.id = :companyId AND c.eliminada = false " +
+            "JOIN c.mascota m JOIN m.apoderado a " +
+            "WHERE a.company.id = :companyId AND c.eliminada = false " +
             "AND (CAST(:fechaInicio AS string) IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
             "AND (CAST(:fechaFin AS string) IS NULL OR c.fechaHoraInicio < :fechaFin) " +
             "AND (CAST(:veterinarioId AS string) IS NULL OR c.empleado.id = :veterinarioId) " +
@@ -104,8 +104,8 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     @Query("SELECT s.nombre AS nombre, COUNT(c) AS total FROM Cita c " +
             "JOIN c.servicio s " +
-            "JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
-            "WHERE u.company.id = :companyId AND " + ESTADOS_NO_ACTIVOS + " " +
+            "JOIN c.mascota m JOIN m.apoderado a " +
+            "WHERE a.company.id = :companyId AND " + ESTADOS_NO_ACTIVOS + " " +
             "GROUP BY s.nombre")
     List<ServicioCount> countByServicio(@Param("companyId") Integer companyId);
 
@@ -157,13 +157,13 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     @Query(value = "SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
             "LEFT JOIN FETCH c.consulta " +
-            "WHERE u.company.id = :companyId AND c.eliminada = false " +
+            "WHERE a.company.id = :companyId AND c.eliminada = false " +
             "AND (CAST(:fechaInicio AS string) IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
             "AND (CAST(:fechaFin AS string) IS NULL OR c.fechaHoraInicio < :fechaFin) " +
             "AND (CAST(:estado AS string) IS NULL OR c.estado = :estado) " +
             "AND (CAST(:veterinarioId AS string) IS NULL OR c.empleado.id = :veterinarioId)",
-            countQuery = "SELECT COUNT(c) FROM Cita c JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
-                    "WHERE u.company.id = :companyId AND c.eliminada = false " +
+            countQuery = "SELECT COUNT(c) FROM Cita c JOIN c.mascota m JOIN m.apoderado a " +
+                    "WHERE a.company.id = :companyId AND c.eliminada = false " +
                     "AND (CAST(:fechaInicio AS string) IS NULL OR c.fechaHoraInicio >= :fechaInicio) " +
                     "AND (CAST(:fechaFin AS string) IS NULL OR c.fechaHoraInicio < :fechaFin) " +
                     "AND (CAST(:estado AS string) IS NULL OR c.estado = :estado) " +
@@ -174,14 +174,14 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
                       @Param("estado") EstadoCita estado,
                       @Param("veterinarioId") Long veterinarioId,
                       Pageable pageable);
-    @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.user.company.id = :companyId AND c.eliminada = false")
+    @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.company.id = :companyId AND c.eliminada = false")
     long countByCompanyId(@Param("companyId") Integer companyId);
 
-    @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.user.company.id = :companyId " +
+    @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.company.id = :companyId " +
             "AND c.eliminada = false AND CAST(c.fechaHoraInicio AS date) = CURRENT_DATE")
     long countTodayByCompanyId(@Param("companyId") Integer companyId);
 
-    @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.user.company.id = :companyId " +
+    @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.company.id = :companyId " +
             "AND " + ESTADOS_NO_ACTIVOS + " " +
             "AND c.fechaHoraInicio BETWEEN :start AND :end")
     long countByCompanyAndDateRange(@Param("companyId") Integer companyId,
@@ -193,17 +193,17 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     long countGlobalByDateRange(@Param("start") LocalDateTime start,
                                 @Param("end") LocalDateTime end);
 
-    Page<Cita> findByMascota_Apoderado_User_Company_IdAndEliminadaFalseOrderByFechaHoraInicioDesc(
+    Page<Cita> findByMascota_Apoderado_Company_IdAndEliminadaFalseOrderByFechaHoraInicioDesc(
             Integer companyId, Pageable pageable);
 
     @Query(value = "SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a " +
             "JOIN FETCH a.user u LEFT JOIN FETCH c.servicio s " +
-            "WHERE u.company.id = :companyId AND c.eliminada = false " +
+            "WHERE a.company.id = :companyId AND c.eliminada = false " +
             "AND c.estado NOT IN ('CANCELADA', 'ELIMINADA', 'NO_ASISTIO') " +
             "AND COALESCE(c.totalServicio, 0) > COALESCE(c.montoPagado, 0) " +
             "ORDER BY c.fechaHoraInicio DESC",
-            countQuery = "SELECT COUNT(c) FROM Cita c JOIN c.mascota m JOIN m.apoderado a JOIN a.user u " +
-                    "WHERE u.company.id = :companyId AND c.eliminada = false " +
+            countQuery = "SELECT COUNT(c) FROM Cita c JOIN c.mascota m JOIN m.apoderado a " +
+                    "WHERE a.company.id = :companyId AND c.eliminada = false " +
                     "AND c.estado NOT IN ('CANCELADA', 'ELIMINADA', 'NO_ASISTIO') " +
                     "AND COALESCE(c.totalServicio, 0) > COALESCE(c.montoPagado, 0)")
     Page<Cita> findCuentasPendientes(@Param("companyId") Integer companyId, Pageable pageable);
@@ -280,8 +280,7 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     @Query("SELECT c FROM Cita c " +
            "JOIN c.mascota m " +
            "JOIN m.apoderado apo " +
-           "JOIN apo.user u " +
-           "WHERE u.company.id = :companyId " +
+           "WHERE apo.company.id = :companyId " +
            "AND c.eliminada = false " +
            "AND c.estado IN ('PROGRAMADA', 'PENDIENTE', 'CONFIRMADA', 'REPROGRAMADA') " +
            "AND c.fechaHoraInicio >= :desde " +

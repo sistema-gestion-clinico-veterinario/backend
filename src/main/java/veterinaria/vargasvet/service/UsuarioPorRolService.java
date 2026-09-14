@@ -19,6 +19,8 @@ public class UsuarioPorRolService {
     private final UsuarioPorRolRepository usuarioPorRolRepository;
     private final UsuarioRepository usuarioRepository;
     private final RoleRepository roleRepository;
+    private final EmpleadoRepository empleadoRepository;
+    private final ApoderadoRepository apoderadoRepository;
 
     @Transactional(readOnly = true)
     public List<UsuarioPorRol> listarPorUsuario(Integer usuarioId) {
@@ -79,12 +81,12 @@ public class UsuarioPorRolService {
             throw new AccessDeniedException("No puede asignar un rol de otra empresa");
         }
         if (role.getScope() == veterinaria.vargasvet.domain.enums.RoleScope.CLIENT
-                && usuario.getApoderado() == null) {
-            throw new AccessDeniedException("Un rol de cliente solo puede asignarse a un apoderado");
+                && !apoderadoRepository.existsByUserIdAndEstadoTrue(usuario.getId())) {
+            throw new AccessDeniedException("Un rol de cliente solo puede asignarse a un apoderado activo");
         }
         if (role.getScope() == veterinaria.vargasvet.domain.enums.RoleScope.STAFF
-                && usuario.getEmpleado() == null) {
-            throw new AccessDeniedException("Un rol de personal solo puede asignarse a un empleado");
+                && !empleadoRepository.existsByUserIdAndEstadoTrue(usuario.getId())) {
+            throw new AccessDeniedException("Un rol de personal solo puede asignarse a un empleado activo");
         }
     }
 }

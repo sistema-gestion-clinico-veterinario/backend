@@ -28,15 +28,24 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
 
     Optional<Empleado> findByNumeroColegiatura(String numeroColegiatura);
     boolean existsByNumeroColegiatura(String numeroColegiatura);
-    Optional<Empleado> findByUserId(Integer userId);
     Optional<Empleado> findByUserEmail(String email);
 
-    @Query("SELECT e FROM Empleado e WHERE e.id = :id AND e.user.company.id = :companyId")
+    /** El unico "empleado" con sentido de un usuario en un momento dado: como mucho hay
+     * una fila activa por usuario (indice uq_empleado_activo_por_usuario), asi que este
+     * metodo es seguro para cualquier usuario, sin importar cuantas filas historicas tenga. */
+    @Query("SELECT e FROM Empleado e WHERE e.user.id = :userId AND e.estado = true")
+    Optional<Empleado> findActiveByUserId(@Param("userId") Integer userId);
+
+    boolean existsByUserIdAndEstadoTrue(Integer userId);
+    boolean existsByUserId(Integer userId);
+    boolean existsByUserIdAndCompanyIdAndEstadoTrue(Integer userId, Integer companyId);
+
+    @Query("SELECT e FROM Empleado e WHERE e.id = :id AND e.company.id = :companyId")
     Optional<Empleado> findByIdAndCompanyId(@Param("id") Long id,
                                              @Param("companyId") Integer companyId);
 
     @Query(value = "SELECT e FROM Empleado e JOIN e.user u " +
-                   "WHERE u.company.id = :companyId " +
+                   "WHERE e.company.id = :companyId " +
                    "AND (CAST(:nombre AS text) IS NULL OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                    "AND (CAST(:apellido AS text) IS NULL OR LOWER(u.apellido) LIKE LOWER(CONCAT('%', CAST(:apellido AS text), '%'))) " +
                    "AND (CAST(:email AS text) IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:email AS text), '%'))) " +
@@ -47,7 +56,7 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
                    "AND (:especialidadId IS NULL OR EXISTS (SELECT es FROM e.especialidades es WHERE es.id = :especialidadId)) " +
                    "ORDER BY u.apellido ASC, u.nombre ASC",
            countQuery = "SELECT COUNT(e) FROM Empleado e JOIN e.user u " +
-                        "WHERE u.company.id = :companyId " +
+                        "WHERE e.company.id = :companyId " +
                         "AND (CAST(:nombre AS text) IS NULL OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                         "AND (CAST(:apellido AS text) IS NULL OR LOWER(u.apellido) LIKE LOWER(CONCAT('%', CAST(:apellido AS text), '%'))) " +
                         "AND (CAST(:email AS text) IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', CAST(:email AS text), '%'))) " +
@@ -67,24 +76,24 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
                           @Param("especialidadId") Long especialidadId,
                           Pageable pageable);
 
-    @Query("SELECT COUNT(e) FROM Empleado e WHERE e.user.company.id = :companyId")
+    @Query("SELECT COUNT(e) FROM Empleado e WHERE e.company.id = :companyId")
     long countByCompanyId(@Param("companyId") Integer companyId);
 
-    @Query("SELECT e FROM Empleado e WHERE e.user.company.id = :companyId")
+    @Query("SELECT e FROM Empleado e WHERE e.company.id = :companyId")
     java.util.List<Empleado> findAllByCompanyId(@Param("companyId") Integer companyId);
 
     @Query("SELECT e.id AS empleadoId, " +
            "CONCAT(u.nombre, ' ', u.apellido) AS nombreCompleto, " +
            "COALESCE(MIN(t.nombre), 'Personal') AS cargo " +
            "FROM Empleado e JOIN e.user u LEFT JOIN e.tiposEmpleado t " +
-           "WHERE u.company.id = :companyId AND e.estado = true " +
+           "WHERE e.company.id = :companyId AND e.estado = true " +
            "GROUP BY e.id, u.nombre, u.apellido " +
            "ORDER BY u.apellido ASC, u.nombre ASC")
     java.util.List<DashboardEmployeeProjection> findDashboardEmployeesByCompanyId(
             @Param("companyId") Integer companyId);
 
     @Query("SELECT e FROM Empleado e JOIN e.user u " +
-           "WHERE u.company.id = :companyId AND e.estado = true " +
+           "WHERE e.company.id = :companyId AND e.estado = true " +
            "AND (:tipoEmpleadoId IS NULL OR EXISTS (SELECT t FROM e.tiposEmpleado t WHERE t.id = :tipoEmpleadoId)) " +
            "ORDER BY u.apellido ASC, u.nombre ASC")
     java.util.List<Empleado> findActiveByCompanyIdAndTipoEmpleadoId(@Param("companyId") Integer companyId, @Param("tipoEmpleadoId") Long tipoEmpleadoId);

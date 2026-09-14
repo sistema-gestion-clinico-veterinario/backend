@@ -229,6 +229,7 @@ class PagoServiceIntegrationTest {
         Usuario apoderadoUser = usuario("cliente", company);
         Apoderado apoderado = new Apoderado();
         apoderado.setUser(apoderadoUser);
+        apoderado.setCompany(company);
         apoderado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
         apoderado.setNumeroDocumento(uniqueDigits(8));
         apoderado.setGenero(Genero.FEMENINO);
@@ -244,6 +245,7 @@ class PagoServiceIntegrationTest {
         Usuario empleadoUser = usuario("vet", company);
         Empleado empleado = new Empleado();
         empleado.setUser(empleadoUser);
+        empleado.setCompany(company);
         empleado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
         empleado.setNumeroDocumentoIdentidad(uniqueDigits(8));
         empleado.setGenero(Genero.MASCULINO);

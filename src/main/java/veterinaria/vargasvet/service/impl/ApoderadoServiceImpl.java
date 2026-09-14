@@ -289,7 +289,6 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         Usuario usuario = apoderado.getUser();
         String clientNombre = usuario.getNombre() + " " + usuario.getApellido();
         String clientEmail = usuario.getEmail();
-        usuario.setApoderado(null);
         refreshTokenRepository.deleteByUsuario(usuario);
         apoderadoRepository.delete(apoderado);
         usuarioRepository.delete(usuario);

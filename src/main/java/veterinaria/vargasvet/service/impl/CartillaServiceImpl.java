@@ -241,7 +241,7 @@ public class CartillaServiceImpl implements CartillaService {
 
     private Empleado resolverEmpleado(Mascota mascota) {
         Integer userId = SecurityUtils.getCurrentUserId();
-        Empleado empleado = userId == null ? null : empleadoRepository.findByUserId(userId).orElse(null);
+        Empleado empleado = userId == null ? null : empleadoRepository.findActiveByUserId(userId).orElse(null);
         if (empleado == null) {
             throw new IllegalArgumentException("El usuario autenticado no esta asociado a un profesional activo");
         }

@@ -52,7 +52,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         Usuario user = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         
-        java.util.Optional<Apoderado> apoderadoOpt = apoderadoRepository.findByUserId(user.getId());
+        java.util.Optional<Apoderado> apoderadoOpt = apoderadoRepository.findByUserIdAndCompanyId(user.getId(), SecurityUtils.getCurrentCompanyId());
         if (apoderadoOpt.isPresent()) {
             return apoderadoOpt.get();
         }
