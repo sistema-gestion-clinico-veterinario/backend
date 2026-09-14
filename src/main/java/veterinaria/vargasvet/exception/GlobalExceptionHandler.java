@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadCredentials(BadCredentialsException ex,
                                                                   HttpServletRequest request) {
-        String message = request.getRequestURI().endsWith("/auth/login")
+        String message = isLoginEndpoint(request)
                 ? "Credenciales inválidas"
                 : "La sesión no es válida o ha expirado";
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -30,11 +30,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ApiResponse<Void>> handleDisabled(DisabledException ex,
                                                             HttpServletRequest request) {
-        String message = request.getRequestURI().endsWith("/auth/login")
+        String message = isLoginEndpoint(request)
                 ? "Credenciales inválidas"
                 : "La sesión no está habilitada";
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiResponse<>(false, message, null));
+    }
+
+    /** /auth/login y /auth/admin-login comparten el mismo mensaje generico de
+     * credenciales invalidas (por seguridad, no revelan detalle del motivo). */
+    private boolean isLoginEndpoint(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return uri.endsWith("/auth/login") || uri.endsWith("/auth/admin-login");
     }
 
     @ExceptionHandler(AccessDeniedException.class)
