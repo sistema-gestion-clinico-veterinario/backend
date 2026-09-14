@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -46,6 +47,7 @@ public class Company {
     private boolean activo = true;
 
     @JsonIgnore
+    @ToString.Exclude
     @OneToMany(mappedBy = "company")
     private List<Usuario> usuarios;
 

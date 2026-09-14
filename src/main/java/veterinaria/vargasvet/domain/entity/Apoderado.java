@@ -45,7 +45,10 @@ public class Apoderado {
     @Column(name = "tipo_documento_identidad", nullable = false)
     private TipoDocumentoIdentidad tipoDocumentoIdentidad;
 
-    @Column(name = "numero_documento", nullable = false, unique = true)
+    // Unicidad real: uq_apoderado_documento_empresa (numero_documento, company_id),
+    // sin filtro de estado - no es un unique=true global (permite que la misma
+    // persona sea cliente activo de varias empresas a la vez, ver clase de arriba).
+    @Column(name = "numero_documento", nullable = false)
     private String numeroDocumento;
 
     @Enumerated(EnumType.STRING)

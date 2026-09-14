@@ -59,6 +59,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
     private final CompanyRoleProvisioningService companyRoleProvisioningService;
     private final SessionSecurityService sessionSecurityService;
+    private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
 
     @Value("${app.frontend.login-url}")
     private String loginUrl;
@@ -88,12 +89,6 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     @Transactional
     public UserProfileDTO registerApoderado(ApoderadoRequest dto) {
         dto.setEmail(dto.getEmail().trim().toLowerCase(java.util.Locale.ROOT));
-        if (usuarioRepository.existsByEmail(dto.getEmail())) {
-            throw new IllegalArgumentException("El email ya está registrado");
-        }
-        if (usuarioRepository.existsByDni(dto.getNumeroDocumento())) {
-            throw new IllegalArgumentException("El DNI ya está registrado en el sistema");
-        }
 
         Integer companyIdToUse;
         if (SecurityUtils.isSuperAdmin()) {
@@ -107,47 +102,85 @@ public class ApoderadoServiceImpl implements ApoderadoService {
                 throw new IllegalArgumentException("No se pudo determinar la empresa del registrador");
             }
         }
-
-        Usuario usuario = new Usuario();
-        usuario.setNombre(dto.getNombre());
-        usuario.setApellido(dto.getApellido());
-        usuario.setEmail(dto.getEmail());
-        usuario.setDni(dto.getNumeroDocumento());
-        usuario.setTelefono(dto.getTelefono());
-        usuario.setDireccion(dto.getDireccion());
-        String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-        usuario.setPassword(passwordEncoder.encode(tempPassword));
-        usuario.setActivo(false);
-        usuario.setEmailVerified(false);
-        String verificationToken = SecurityTokenUtils.generate();
-        usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
-        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
         businessValidator.checkCompanyActiva(companyIdToUse);
-        usuario.setCompany(companyRepository.findById(companyIdToUse)
-                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada")));
+        Company companyToUse = companyRepository.findById(companyIdToUse)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
 
-        Usuario savedUser = usuarioRepository.save(usuario);
+        java.util.Optional<Usuario> existingUsuario = usuarioRepository.findByEmail(dto.getEmail());
+        boolean esUsuarioNuevo = existingUsuario.isEmpty();
+        Usuario savedUser;
+        String verificationToken = null;
+
+        if (esUsuarioNuevo) {
+            // El DNI es un dato de identidad (Usuario), no de membresia: sigue siendo
+            // unico globalmente solo para identidades NUEVAS. Si el email ya existe,
+            // es la misma persona y su propio DNI ya esta registrado - no se re-chequea.
+            if (usuarioRepository.existsByDni(dto.getNumeroDocumento())) {
+                throw new IllegalArgumentException("El DNI ya está registrado en el sistema");
+            }
+
+            Usuario usuario = new Usuario();
+            usuario.setNombre(dto.getNombre());
+            usuario.setApellido(dto.getApellido());
+            usuario.setEmail(dto.getEmail());
+            usuario.setDni(dto.getNumeroDocumento());
+            usuario.setTelefono(dto.getTelefono());
+            usuario.setDireccion(dto.getDireccion());
+            String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+            usuario.setPassword(passwordEncoder.encode(tempPassword));
+            usuario.setActivo(false);
+            usuario.setEmailVerified(false);
+            verificationToken = SecurityTokenUtils.generate();
+            usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
+            usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
+
+            savedUser = usuarioRepository.save(usuario);
+        } else {
+            // Email ya existente: la misma persona se registra como cliente de OTRA
+            // empresa (o de la misma, ver reactivacion abajo) - permitido a proposito,
+            // a diferencia de Empleado un Apoderado si puede estar activo en varias
+            // empresas a la vez. Sin chequeo de conflicto.
+            savedUser = existingUsuario.get();
+        }
 
         Set<Integer> requestedRoleIds = dto.getRoleIds();
         if (requestedRoleIds == null || requestedRoleIds.isEmpty()) {
             Role defaultClientRole = companyRoleProvisioningService
-                    .ensureRequiredRoles(savedUser.getCompany())
+                    .ensureRequiredRoles(companyToUse)
                     .clientPortal();
             requestedRoleIds = Set.of(defaultClientRole.getId());
         }
-        replaceClientRoles(savedUser, requestedRoleIds);
+        replaceClientRoles(savedUser, companyIdToUse, requestedRoleIds);
 
-        Apoderado apoderado = new Apoderado();
+        // Reingreso a la MISMA empresa: reactiva la fila existente en vez de crear una
+        // nueva (numero_documento se mantiene reservado por empresa incluso inactivo -
+        // ver uq_apoderado_documento_empresa - asi que insertar una segunda fila
+        // chocaria con el indice). Esto ademas preserva mascotas/historial ya asociados
+        // a esa fila, que se perderian de vista si se creara una fila nueva.
+        Apoderado apoderado = apoderadoRepository.findByUserIdAndCompanyId(savedUser.getId(), companyIdToUse)
+                .orElseGet(Apoderado::new);
+        if (apoderado.getId() != null && Boolean.TRUE.equals(apoderado.getEstado())) {
+            throw new IllegalArgumentException("Este cliente ya está registrado y activo en esta empresa");
+        }
+        apoderado.setUser(savedUser);
+        apoderado.setCompany(companyToUse);
         apoderado.setTipoDocumentoIdentidad(dto.getTipoDocumento());
         apoderado.setNumeroDocumento(dto.getNumeroDocumento());
         apoderado.setGenero(dto.getGenero());
         apoderado.setReferencias(dto.getReferencias());
         apoderado.setObservaciones(dto.getObservaciones());
-        apoderado.setUser(savedUser);
+        apoderado.setEstado(true);
+        apoderado.setFechaSalida(null);
+        if (apoderado.getFechaIngreso() == null) {
+            apoderado.setFechaIngreso(veterinaria.vargasvet.util.AppClock.today());
+        }
 
         Apoderado savedApoderado = apoderadoRepository.save(apoderado);
+        companyMembershipService.syncLegacyCompanyField(savedUser);
 
-        sendVerificationEmail(savedUser, dto.getNombre() + " " + dto.getApellido(), verificationToken);
+        if (esUsuarioNuevo) {
+            sendVerificationEmail(savedUser, dto.getNombre() + " " + dto.getApellido(), verificationToken);
+        }
 
         auditLogService.log(
             "CREAR_APODERADO",
@@ -200,11 +233,12 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         if (!usuario.isActivo()) {
             throw new IllegalStateException("No se puede editar un cliente inactivo. Active al cliente primero.");
         }
-        businessValidator.checkCompanyActiva(usuario.getCompany() != null ? usuario.getCompany().getId() : null);
+        Integer apoderadoCompanyId = apoderado.getCompany() != null ? apoderado.getCompany().getId() : null;
+        businessValidator.checkCompanyActiva(apoderadoCompanyId);
 
         Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
         if (!SecurityUtils.isSuperAdmin()) {
-            if (usuario.getCompany() == null || !usuario.getCompany().getId().equals(currentCompanyId)) {
+            if (apoderadoCompanyId == null || !apoderadoCompanyId.equals(currentCompanyId)) {
                 throw new IllegalArgumentException("No tienes permiso para editar un apoderado de otra empresa");
             }
         }
@@ -222,7 +256,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         usuarioRepository.save(usuario);
 
         if (dto.getRoleIds() != null) {
-            replaceClientRoles(usuario, dto.getRoleIds());
+            replaceClientRoles(usuario, apoderadoCompanyId, dto.getRoleIds());
         }
 
         if (dto.getGenero() != null) apoderado.setGenero(dto.getGenero());
@@ -252,18 +286,26 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
         Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
         if (!SecurityUtils.isSuperAdmin()) {
-            if (usuario.getCompany() == null || !usuario.getCompany().getId().equals(currentCompanyId)) {
+            if (apoderado.getCompany() == null || !apoderado.getCompany().getId().equals(currentCompanyId)) {
                 throw new IllegalArgumentException("No tienes permiso para cambiar el estado de un apoderado de otra empresa");
             }
         }
 
-
-        usuario.setActivo(nuevoEstado);
+        // Solo afecta la relacion con ESTA empresa (apoderado.estado), nunca
+        // usuario.activo (login global) - un apoderado puede ser cliente activo de
+        // otra empresa a la vez, y desactivarlo aqui no debe bloquearle el acceso ahi.
+        apoderado.setEstado(nuevoEstado);
+        if (Boolean.FALSE.equals(nuevoEstado)) {
+            apoderado.setFechaSalida(veterinaria.vargasvet.util.AppClock.today());
+        } else {
+            apoderado.setFechaSalida(null);
+        }
         sessionSecurityService.invalidateAllSessions(usuario);
 
         apoderado.setEstadoModificadoPor(SecurityUtils.getCurrentUserEmail());
         apoderado.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
         apoderadoRepository.save(apoderado);
+        companyMembershipService.syncLegacyCompanyField(usuario);
 
 
         List<Mascota> mascotas = mascotaRepository.findByApoderadoId(apoderado.getId());
@@ -335,12 +377,15 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         dto.setNumeroDocumento(usuario.getDni());
         dto.setTelefono(usuario.getTelefono());
         dto.setDireccion(usuario.getDireccion());
-        dto.setCompanyId(usuario.getCompany() != null ? usuario.getCompany().getId() : null);
+        Integer apoderadoCompanyIdForDto = apoderado.getCompany() != null ? apoderado.getCompany().getId() : null;
+        dto.setCompanyId(apoderadoCompanyIdForDto);
         dto.setRoleIds(usuario.getUsuariosPorRol() == null
                 ? Set.of()
                 : usuario.getUsuariosPorRol().stream()
                     .filter(assignment -> assignment.getRol() != null
-                            && assignment.getRol().getScope() == RoleScope.CLIENT)
+                            && assignment.getRol().getScope() == RoleScope.CLIENT
+                            && assignment.getCompany() != null
+                            && assignment.getCompany().getId().equals(apoderadoCompanyIdForDto))
                     .map(assignment -> assignment.getRol().getId())
                     .collect(java.util.stream.Collectors.toSet()));
 
@@ -352,12 +397,14 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         return dto;
     }
 
-    private void replaceClientRoles(Usuario usuario, Set<Integer> requestedRoleIds) {
+    /** companyId se recibe explicito (no se deriva de usuario.getCompany()) porque un
+     * Apoderado puede estar activo en varias empresas a la vez - Usuario.company es
+     * solo una cache que queda en null apenas hay ambiguedad. Solo se tocan las
+     * asignaciones CLIENT de ESTA empresa; nunca las de otras empresas del mismo
+     * usuario. */
+    private void replaceClientRoles(Usuario usuario, Integer companyId, Set<Integer> requestedRoleIds) {
         if (requestedRoleIds == null || requestedRoleIds.isEmpty()) {
             throw new IllegalArgumentException("Debe asignar al menos un rol de cliente");
-        }
-        if (usuario.getCompany() == null) {
-            throw new IllegalArgumentException("El cliente debe pertenecer a una empresa");
         }
 
         Set<Integer> uniqueRoleIds = new HashSet<>(requestedRoleIds);
@@ -366,7 +413,6 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             throw new IllegalArgumentException("Uno o más roles seleccionados no existen");
         }
 
-        Integer companyId = usuario.getCompany().getId();
         boolean invalidRole = roles.stream().anyMatch(role -> !role.isActivo()
                 || role.getScope() != RoleScope.CLIENT
                 || role.getCompany() == null
@@ -376,12 +422,15 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         }
 
         usuario.getUsuariosPorRol().removeIf(assignment -> assignment.getRol() != null
-                && assignment.getRol().getScope() == RoleScope.CLIENT);
+                && assignment.getRol().getScope() == RoleScope.CLIENT
+                && assignment.getCompany() != null
+                && companyId.equals(assignment.getCompany().getId()));
 
         roles.stream().map(role -> {
             UsuarioPorRol assignment = new UsuarioPorRol();
             assignment.setUsuario(usuario);
             assignment.setRol(role);
+            assignment.setCompany(role.getCompany());
             return assignment;
         }).forEach(usuario.getUsuariosPorRol()::add);
         usuarioRepository.save(usuario);

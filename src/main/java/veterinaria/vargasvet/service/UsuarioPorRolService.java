@@ -21,6 +21,7 @@ public class UsuarioPorRolService {
     private final RoleRepository roleRepository;
     private final EmpleadoRepository empleadoRepository;
     private final ApoderadoRepository apoderadoRepository;
+    private final CompanyMembershipService companyMembershipService;
 
     @Transactional(readOnly = true)
     public List<UsuarioPorRol> listarPorUsuario(Integer usuarioId) {
@@ -43,9 +44,20 @@ public class UsuarioPorRolService {
         assertSameTenant(usuario);
         assertAssignableRole(usuario, rol);
 
+        // Regla de consistencia: no puede existir UsuarioPorRol.company = X sin una
+        // relacion empresarial activa con X (Empleado/Apoderado/UsuarioMembresia) -
+        // la membresia activa es lo que habilita pertenecer a una empresa, el rol
+        // define que puede hacer ahi, nunca al reves.
+        if (rol.getCompany() != null
+                && !companyMembershipService.hasActiveMembership(usuarioId, rol.getCompany().getId())) {
+            throw new IllegalArgumentException(
+                    "El usuario no tiene una relación activa con la empresa de este rol");
+        }
+
         UsuarioPorRol upr = new UsuarioPorRol();
         upr.setUsuario(usuario);
         upr.setRol(rol);
+        upr.setCompany(rol.getCompany());
         return usuarioPorRolRepository.save(upr);
     }
 

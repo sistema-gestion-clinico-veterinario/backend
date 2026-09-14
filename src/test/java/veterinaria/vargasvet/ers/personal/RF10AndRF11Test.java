@@ -79,6 +79,7 @@ class RF10AndRF11Test {
     @Mock private AuditLogService auditLogService;
     @Mock private UsuarioPorRolRepository usuarioPorRolRepository;
     @Mock private SessionSecurityService sessionSecurityService;
+    @Mock private veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
 
     @InjectMocks private EmpleadoServiceImpl service;
 
@@ -115,7 +116,7 @@ class RF10AndRF11Test {
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, Object>> modelCaptor = ArgumentCaptor.forClass(Map.class);
 
-        when(usuarioRepository.existsByEmail("nuevo@empresa.test")).thenReturn(false);
+        when(usuarioRepository.findByEmail("nuevo@empresa.test")).thenReturn(Optional.empty());
         when(companyRepository.findById(3)).thenReturn(Optional.of(company));
         when(passwordEncoder.encode(any())).thenReturn("HASH_NO_REVERSIBLE");
         when(usuarioRepository.save(userCaptor.capture())).thenAnswer(invocation -> {
@@ -148,17 +149,52 @@ class RF10AndRF11Test {
     }
 
     @Test
-    @DisplayName("[CP-RF10-02] Rechaza correo duplicado antes de persistir")
-    void rechazaCorreoDuplicadoSinCambiosParciales() {
+    @DisplayName("[CP-RF10-02] Rechaza registrar con un correo que ya tiene empleo activo en otra empresa")
+    void rechazaCorreoConEmpleoActivoEnOtraEmpresa() {
         EmpleadoRequest request = requestValido();
-        when(usuarioRepository.existsByEmail("nuevo@empresa.test")).thenReturn(true);
+        Usuario existente = new Usuario();
+        existente.setId(99);
+        existente.setEmail("nuevo@empresa.test");
+        when(companyRepository.findById(3)).thenReturn(Optional.of(company));
+        when(usuarioRepository.findByEmail("nuevo@empresa.test")).thenReturn(Optional.of(existente));
+        org.mockito.Mockito.doThrow(new IllegalArgumentException(
+                        "Esta persona ya tiene una relación laboral activa registrada en el sistema."))
+                .when(companyMembershipService).assertNoActiveEmploymentElsewhere(existente);
 
         assertThatThrownBy(() -> service.registerEmpleado(request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("correo");
+                .hasMessageContaining("relación laboral activa");
 
         verify(usuarioRepository, never()).save(any());
         verify(empleadoRepository, never()).save(any());
+        verifyNoInteractions(emailService);
+    }
+
+    @Test
+    @DisplayName("[CP-RF10-03] Correo existente sin empleo activo se une como empleado de la nueva empresa")
+    void empleadoConCorreoExistenteSinConflictoSeUneANuevaEmpresa() {
+        EmpleadoRequest request = requestValido();
+        Usuario existente = new Usuario();
+        existente.setId(99);
+        existente.setEmail("nuevo@empresa.test");
+        Role role = roleStaff(8);
+
+        when(usuarioRepository.findByEmail("nuevo@empresa.test")).thenReturn(Optional.of(existente));
+        when(companyRepository.findById(3)).thenReturn(Optional.of(company));
+        when(roleRepository.findById(8)).thenReturn(Optional.of(role));
+        when(empleadoRepository.save(any(Empleado.class))).thenAnswer(invocation -> {
+            Empleado empleado = invocation.getArgument(0);
+            empleado.setId(31L);
+            return empleado;
+        });
+        when(userMapper.toProfileDTO(any())).thenReturn(new UserProfileDTO());
+
+        UserProfileDTO response = service.registerEmpleado(request);
+
+        assertThat(response).isNotNull();
+        verify(companyMembershipService).assertNoActiveEmploymentElsewhere(existente);
+        verify(usuarioRepository, never()).save(any());
+        verify(companyMembershipService).syncLegacyCompanyField(existente);
         verifyNoInteractions(emailService);
     }
 

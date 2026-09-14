@@ -34,4 +34,15 @@ public interface CompanyMembershipService {
      * null si hay cero o varias - nunca elige una arbitrariamente entre varias.
      */
     void syncLegacyCompanyField(Usuario usuario);
+
+    /**
+     * Lanza IllegalArgumentException si el usuario ya tiene una relacion laboral
+     * (Empleado) activa en CUALQUIER empresa. Un empleado no puede tener dos
+     * relaciones laborales activas simultaneas en el sistema - si la empresa
+     * anterior no lo dio de baja, este metodo bloquea con un mensaje claro; no
+     * hace ninguna accion automatica (ni Super Admin ni autoconfirmacion). Usar
+     * antes de registrar un Empleado/Veterinario para un usuario con email ya
+     * existente. No aplica a Apoderado (si puede estar activo en varias empresas).
+     */
+    void assertNoActiveEmploymentElsewhere(Usuario usuario);
 }

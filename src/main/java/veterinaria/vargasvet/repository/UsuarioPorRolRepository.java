@@ -35,6 +35,10 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
 
     boolean existsByUsuarioIdAndRolId(Integer usuarioId, Integer rolId);
 
+    /** r.company vs. upr.company deben coincidir por construccion (se valida al crear
+     * la asignacion), asi que upr.company.id es la fuente de verdad aqui - ya no
+     * depende de u.company.id (ambiguo desde que un Usuario puede tener mas de una
+     * empresa activa). */
     @Query("""
             SELECT COUNT(upr) > 0
             FROM UsuarioPorRol upr
@@ -43,7 +47,7 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
             WHERE u.email = :email
               AND r.name = :roleName
               AND r.activo = true
-              AND (r.company IS NULL OR r.company.id = u.company.id)
+              AND (r.company IS NULL OR r.company.id = upr.company.id)
             """)
     boolean hasActiveAssignedRole(@Param("email") String email, @Param("roleName") String roleName);
 

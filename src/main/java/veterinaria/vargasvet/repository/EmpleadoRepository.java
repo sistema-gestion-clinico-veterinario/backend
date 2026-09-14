@@ -27,8 +27,11 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
     Optional<Empleado> findByIdForAppointmentWrite(@Param("id") Long id);
 
     Optional<Empleado> findByNumeroColegiatura(String numeroColegiatura);
-    boolean existsByNumeroColegiatura(String numeroColegiatura);
     Optional<Empleado> findByUserEmail(String email);
+
+    /** Reemplaza a existsByNumeroColegiatura (global) - la unicidad real ahora es
+     * por empresa y solo entre relaciones activas (uq_empleado_colegiatura_activo). */
+    boolean existsByNumeroColegiaturaAndCompanyIdAndEstadoTrue(String numeroColegiatura, Integer companyId);
 
     /** El unico "empleado" con sentido de un usuario en un momento dado: como mucho hay
      * una fila activa por usuario (indice uq_empleado_activo_por_usuario), asi que este
