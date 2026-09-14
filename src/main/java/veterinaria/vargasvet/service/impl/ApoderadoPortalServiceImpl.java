@@ -48,11 +48,12 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     private final ConsultaMapper consultaMapper;
 
     private Apoderado getAuthenticatedApoderado() {
-        String email = SecurityUtils.getCurrentUserEmail();
-        Usuario user = usuarioRepository.findByEmail(email)
+        // Por id, no por email: el correo ya no identifica de forma unica a la
+        // sesion actual (puede repetirse entre usuarios distintos).
+        Usuario user = usuarioRepository.findById(SecurityUtils.getCurrentUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         
-        java.util.Optional<Apoderado> apoderadoOpt = apoderadoRepository.findByUserId(user.getId());
+        java.util.Optional<Apoderado> apoderadoOpt = apoderadoRepository.findByUserIdAndCompanyId(user.getId(), SecurityUtils.getCurrentCompanyId());
         if (apoderadoOpt.isPresent()) {
             return apoderadoOpt.get();
         }

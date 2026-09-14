@@ -33,7 +33,7 @@ public interface ControlPreventivoRepository extends JpaRepository<ControlPreven
 
     @Query("SELECT cp FROM ControlPreventivo cp " +
            "JOIN FETCH cp.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
-           "WHERE u.company.id = :companyId " +
+           "WHERE a.company.id = :companyId " +
            "AND cp.fechaRecomendada BETWEEN :desde AND :hasta " +
            "AND cp.estado IN :estados " +
            "AND m.activo = true AND u.activo = true AND u.emailVerified = true")
@@ -44,7 +44,7 @@ public interface ControlPreventivoRepository extends JpaRepository<ControlPreven
 
     @Query("SELECT cp FROM ControlPreventivo cp " +
            "JOIN FETCH cp.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
-           "WHERE u.company.id = :companyId " +
+           "WHERE a.company.id = :companyId " +
            "AND cp.estado IN :estados " +
            "AND m.activo = true AND u.activo = true " +
            "ORDER BY cp.fechaRecomendada ASC")
@@ -66,7 +66,7 @@ public interface ControlPreventivoRepository extends JpaRepository<ControlPreven
 
     @Query("SELECT cp FROM ControlPreventivo cp " +
            "JOIN FETCH cp.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
-           "WHERE u.company.id = :companyId AND cp.fechaRecomendada BETWEEN :desde AND :hasta " +
+           "WHERE a.company.id = :companyId AND cp.fechaRecomendada BETWEEN :desde AND :hasta " +
            "AND cp.estado IN :estados AND m.activo = true AND u.activo = true AND u.emailVerified = true " +
            "ORDER BY cp.fechaRecomendada ASC")
     List<ControlPreventivo> findProximosByCompany(@Param("companyId") Integer companyId,

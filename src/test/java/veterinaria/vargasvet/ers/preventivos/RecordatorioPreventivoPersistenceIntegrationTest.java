@@ -57,12 +57,14 @@ class RecordatorioPreventivoPersistenceIntegrationTest {
     void cpRf3304_laBaseDeDatosImpideDuplicarLaClaveDelRecordatorio() {
         Company company = new Company();
         company.setName("Empresa QA recordatorios");
+        company.setSlug("empresa-qa-recordatorios");
         company.setRuc("20999999992");
         company.setActivo(true);
         company = companyRepository.saveAndFlush(company);
 
         Usuario usuario = new Usuario();
         usuario.setEmail("qa-recordatorio-" + UUID.randomUUID() + "@example.test");
+        usuario.setUsername("qa-recordatorio-" + UUID.randomUUID());
         usuario.setPassword("hash-no-real");
         usuario.setNombre("QA");
         usuario.setApellido("Recordatorio");
@@ -134,12 +136,14 @@ class RecordatorioPreventivoPersistenceIntegrationTest {
     private ControlPreventivo persistirControlCandidato() {
         Company company = new Company();
         company.setName("Empresa QA proceso recordatorios");
+        company.setSlug("empresa-qa-proceso-recordatorios-" + UUID.randomUUID());
         company.setRuc("20" + System.nanoTime());
         company.setActivo(true);
         company = companyRepository.saveAndFlush(company);
 
         Usuario usuario = new Usuario();
         usuario.setEmail("qa-proceso-" + UUID.randomUUID() + "@example.test");
+        usuario.setUsername("qa-proceso-" + UUID.randomUUID());
         usuario.setPassword("hash-no-real");
         usuario.setNombre("QA");
         usuario.setApellido("Proceso");

@@ -68,6 +68,15 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Login exitoso", response));
     }
 
+    @PostMapping("/admin-login")
+    public ResponseEntity<ApiResponse<AuthResponse>> adminLogin(
+            @Valid @RequestBody veterinaria.vargasvet.dto.request.AdminLoginDTO adminLoginDTO,
+            HttpServletResponse httpResponse) {
+        AuthResponse response = usuarioService.adminLogin(adminLoginDTO);
+        setAuthCookies(httpResponse, response.getToken(), response.getRefreshToken());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Login exitoso", response));
+    }
+
     @PostMapping("/setup-account")
     public ResponseEntity<ApiResponse<Void>> setupAccount(@Valid @RequestBody veterinaria.vargasvet.dto.request.SetupAccountRequest request) {
         usuarioService.setupAccount(request.getToken(), request.getPassword());
@@ -97,17 +106,17 @@ public class AuthController {
 
     @PostMapping("/change-password")
     public ResponseEntity<ApiResponse<Void>> changePassword(@Valid @RequestBody veterinaria.vargasvet.dto.request.ChangePasswordDTO dto) {
-        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-        usuarioService.changePassword(email, dto);
+        // Por id, no por email: el correo ya no identifica de forma unica a la sesion.
+        Integer usuarioId = veterinaria.vargasvet.security.SecurityUtils.getCurrentUserId();
+        usuarioService.changePassword(usuarioId, dto);
         return ResponseEntity.ok(new ApiResponse<>(true, "Contraseña actualizada exitosamente", null));
     }
 
     @PostMapping("/email-change/request")
     public ResponseEntity<ApiResponse<Void>> requestEmailChange(
             @Valid @RequestBody veterinaria.vargasvet.dto.request.RequestEmailChangeDTO request) {
-        String email = org.springframework.security.core.context.SecurityContextHolder
-                .getContext().getAuthentication().getName();
-        emailChangeService.requestChange(email, request);
+        Integer usuarioId = veterinaria.vargasvet.security.SecurityUtils.getCurrentUserId();
+        emailChangeService.requestChange(usuarioId, request);
         return ResponseEntity.ok(new ApiResponse<>(true,
                 "Revisa el correo actual y el nuevo para confirmar el cambio", null));
     }
@@ -150,8 +159,8 @@ public class AuthController {
     @PostMapping("/switch-role")
     public ResponseEntity<ApiResponse<AuthResponse>> switchRole(@Valid @RequestBody SwitchRoleRequest request,
                                                                 HttpServletResponse httpResponse) {
-        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-        AuthResponse response = usuarioService.switchRole(email, request.getRoleId());
+        Integer usuarioId = veterinaria.vargasvet.security.SecurityUtils.getCurrentUserId();
+        AuthResponse response = usuarioService.switchRole(usuarioId, request.getRoleId());
         setAuthCookies(httpResponse, response.getToken(), response.getRefreshToken());
         return ResponseEntity.ok(new ApiResponse<>(true, "Rol cambiado exitosamente", response));
     }

@@ -108,7 +108,7 @@ class CartillaServiceImplTest {
     @DisplayName("[CP-RF33-01] Registra vacunación separada y genera el próximo control")
     void registrarVacunacionCierraControlCreaSiguienteYCalculaPrecioEnServidor() {
         when(mascotaRepository.findByIdForUpdate(20L)).thenReturn(Optional.of(mascota));
-        when(empleadoRepository.findByUserId(11)).thenReturn(Optional.of(veterinario));
+        when(empleadoRepository.findActiveByUserId(11)).thenReturn(Optional.of(veterinario));
         when(serviciosRepository.findById(40L)).thenReturn(Optional.of(servicio));
         when(tipoVacunaRepository.findById(50L)).thenReturn(Optional.of(vacuna));
         when(historiaClinicaRepository.findByMascotaId(20L)).thenReturn(Optional.of(historia));
@@ -195,7 +195,7 @@ class CartillaServiceImplTest {
         pendiente.setNombreControl(producto.getNombre());
 
         when(mascotaRepository.findByIdForUpdate(20L)).thenReturn(Optional.of(mascota));
-        when(empleadoRepository.findByUserId(11)).thenReturn(Optional.of(veterinario));
+        when(empleadoRepository.findActiveByUserId(11)).thenReturn(Optional.of(veterinario));
         when(serviciosRepository.findById(40L)).thenReturn(Optional.of(servicio));
         when(tipoDesparasitanteRepository.findById(51L)).thenReturn(Optional.of(producto));
         when(historiaClinicaRepository.findByMascotaId(20L)).thenReturn(Optional.of(historia));

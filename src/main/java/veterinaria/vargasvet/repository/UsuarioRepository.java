@@ -17,6 +17,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.company WHERE u.email = :email")
     Optional<Usuario> findByEmailWithCompany(@Param("email") String email);
 
+    /** Preferir sobre findByEmailWithCompany para revalidar la sesion actual - el
+     * id es la unica llave que sigue siendo confiable ahora que el correo puede
+     * repetirse entre usuarios. */
+    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.company WHERE u.id = :id")
+    Optional<Usuario> findByIdWithCompany(@Param("id") Integer id);
+
     @Query("SELECT u FROM Usuario u WHERE u.id = :id AND u.company.id = :companyId")
     Optional<Usuario> findByIdAndCompanyId(@Param("id") Integer id,
                                             @Param("companyId") Integer companyId);
@@ -28,6 +34,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     boolean existsByEmail(String email);
     boolean existsByDni(String dni);
     boolean existsByTelefono(String telefono);
+
+    /** Identificador de login (unico globalmente). El correo (arriba) sigue usandose
+     * como ancla de identidad en el registro ("misma persona"), pero ya no para
+     * autenticar - eso ahora es via username. */
+    Optional<Usuario> findByUsername(String username);
+    boolean existsByUsername(String username);
     Optional<Usuario> findByVerificationToken(String token);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

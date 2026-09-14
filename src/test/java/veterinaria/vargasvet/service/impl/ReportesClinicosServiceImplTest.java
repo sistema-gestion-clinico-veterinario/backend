@@ -111,7 +111,7 @@ class ReportesClinicosServiceImplTest {
                 new veterinaria.vargasvet.domain.entity.Empleado();
         propioEmpleado.setId(55L);
 
-        when(empleadoRepository.findByUserId(7)).thenReturn(java.util.Optional.of(propioEmpleado));
+        when(empleadoRepository.findActiveByUserId(7)).thenReturn(java.util.Optional.of(propioEmpleado));
         org.mockito.Mockito.lenient().when(accesoValidator.can(anyString(), anyString())).thenReturn(true);
         when(citaRepository.findForClinicalReport(
                 eq(1), any(LocalDateTime.class), any(LocalDateTime.class), eq(55L), isNull()))

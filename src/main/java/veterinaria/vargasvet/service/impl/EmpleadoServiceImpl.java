@@ -59,9 +59,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
     private final UsuarioPorRolRepository usuarioPorRolRepository;
     private final SessionSecurityService sessionSecurityService;
+    private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
 
-    @Value("${app.frontend.verify-url}")
-    private String frontendVerifyUrl;
+    @Value("${app.url}")
+    private String appUrl;
 
     @Value("${app.company.email}")
     private String companyEmail;
@@ -75,6 +76,9 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Value("${app.company.logo}")
     private String defaultCompanyLogo;
 
+    @Value("${app.company.name}")
+    private String defaultCompanyName;
+
     @Value("${security.verification-token-validity-hours:24}")
     private long verificationTokenValidityHours;
 
@@ -82,25 +86,6 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Transactional
     public UserProfileDTO registerEmpleado(EmpleadoRequest dto) {
         dto.setEmail(dto.getEmail().trim().toLowerCase(java.util.Locale.ROOT));
-        if (usuarioRepository.existsByEmail(dto.getEmail())) {
-            throw new IllegalArgumentException("El correo electrÃ³nico ya estÃ¡ en uso");
-        }
-
-        Usuario usuario = new Usuario();
-        usuario.setEmail(dto.getEmail());
-        usuario.setNombre(dto.getNombre());
-        usuario.setApellido(dto.getApellido());
-        usuario.setDni(dto.getNumeroDocumento());
-        usuario.setTelefono(dto.getTelefono());
-        usuario.setDireccion(dto.getDireccion());
-        
-        String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-        usuario.setPassword(passwordEncoder.encode(tempPassword));
-        usuario.setActivo(false);
-        usuario.setEmailVerified(false);
-        String verificationToken = SecurityTokenUtils.generate();
-        usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
-        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
 
         Integer companyIdToUse;
         if (SecurityUtils.isSuperAdmin()) {
@@ -118,9 +103,46 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         Company companyToUse = companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
         businessValidator.checkCompanyActiva(companyIdToUse);
-        usuario.setCompany(companyToUse);
 
-        Usuario savedUser = usuarioRepository.save(usuario);
+        java.util.Optional<Usuario> existingUsuario = usuarioRepository.findByEmail(dto.getEmail());
+        boolean esUsuarioNuevo = existingUsuario.isEmpty();
+        Usuario savedUser;
+        String verificationToken = null;
+
+        if (esUsuarioNuevo) {
+            String username = dto.getUsername() == null ? null : dto.getUsername().trim().toLowerCase(java.util.Locale.ROOT);
+            if (username == null || username.isBlank()) {
+                throw new IllegalArgumentException("El usuario es obligatorio para una persona nueva");
+            }
+            if (usuarioRepository.existsByUsername(username)) {
+                throw new IllegalArgumentException("El usuario ya está en uso");
+            }
+
+            Usuario usuario = new Usuario();
+            usuario.setEmail(dto.getEmail());
+            usuario.setUsername(username);
+            usuario.setNombre(dto.getNombre());
+            usuario.setApellido(dto.getApellido());
+            usuario.setDni(dto.getNumeroDocumento());
+            usuario.setTelefono(dto.getTelefono());
+            usuario.setDireccion(dto.getDireccion());
+
+            String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+            usuario.setPassword(passwordEncoder.encode(tempPassword));
+            usuario.setActivo(false);
+            usuario.setEmailVerified(false);
+            verificationToken = SecurityTokenUtils.generate();
+            usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
+            usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
+
+            savedUser = usuarioRepository.save(usuario);
+        } else {
+            // Email ya existente: es la misma persona uniendose a una nueva empresa
+            // (ej. cambio de empleador). Se bloquea si todavia tiene una relacion
+            // laboral activa en otra parte - ver CompanyMembershipService.
+            savedUser = existingUsuario.get();
+            companyMembershipService.assertNoActiveEmploymentElsewhere(savedUser);
+        }
 
         if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
             usuarioPorRolRepository.deleteByUsuarioId(savedUser.getId());
@@ -129,6 +151,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 UsuarioPorRol upr = new UsuarioPorRol();
                 upr.setUsuario(savedUser);
                 upr.setRol(role);
+                upr.setCompany(role.getCompany() != null ? role.getCompany() : companyToUse);
                 usuarioPorRolRepository.save(upr);
             }
         }
@@ -136,6 +159,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         Empleado empleado = new Empleado();
         empleado.setUser(savedUser);
+        empleado.setCompany(companyToUse);
+        empleado.setFechaIngreso(veterinaria.vargasvet.util.AppClock.today());
         empleado.setEstado(true);
         empleado.setTipoDocumentoIdentidad(dto.getTipoDocumento());
         empleado.setNumeroDocumentoIdentidad(dto.getNumeroDocumento());
@@ -169,12 +194,15 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
 
         Empleado savedEmpleado = empleadoRepository.save(empleado);
+        companyMembershipService.syncLegacyCompanyField(savedUser);
 
         if (dto.getHorarios() != null && !dto.getHorarios().isEmpty()) {
             guardarHorarios(savedEmpleado, dto.getHorarios());
         }
 
-        sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
+        if (esUsuarioNuevo) {
+            sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
+        }
 
         auditLogService.log(
             "CREAR_EMPLEADO",
@@ -240,6 +268,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 UsuarioPorRol upr = new UsuarioPorRol();
                 upr.setUsuario(usuario);
                 upr.setRol(role);
+                upr.setCompany(role.getCompany() != null ? role.getCompany() : usuario.getCompany());
                 usuarioPorRolRepository.save(upr);
             }
         }
@@ -693,15 +722,20 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private void sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken) {
         try {
             Map<String, Object> model = new HashMap<>();
-            String resolvedCompanyName = usuario.getCompany() != null ? usuario.getCompany().getName() : "VargasVet";
-            String resolvedLogo = (usuario.getCompany() != null && usuario.getCompany().getLogoUrl() != null) ? usuario.getCompany().getLogoUrl() : defaultCompanyLogo;
+            Company company = usuario.getCompany();
+            String resolvedCompanyName = company != null && company.getName() != null ? company.getName() : defaultCompanyName;
+            String resolvedLogo = company != null && company.getLogoUrl() != null ? company.getLogoUrl() : defaultCompanyLogo;
+            String resolvedEmail = company != null && company.getEmail() != null ? company.getEmail() : companyEmail;
+            String resolvedPhone = company != null && company.getPhone() != null ? company.getPhone() : companyPhone;
+            String resolvedAddress = company != null && company.getAddress() != null ? company.getAddress() : companyAddress;
             model.put("nombre", nombre);
             model.put("companyName", resolvedCompanyName);
             model.put("companyLogo", resolvedLogo);
-            model.put("companyEmail", companyEmail);
-            model.put("companyPhone", companyPhone);
-            model.put("companyAddress", companyAddress);
-            model.put("verificationLink", frontendVerifyUrl + verificationToken);
+            model.put("companyEmail", resolvedEmail);
+            model.put("companyPhone", resolvedPhone);
+            model.put("companyAddress", resolvedAddress);
+            model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
+                    "/auth/verify#token=" + verificationToken, company != null ? company.getSlug() : null));
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),

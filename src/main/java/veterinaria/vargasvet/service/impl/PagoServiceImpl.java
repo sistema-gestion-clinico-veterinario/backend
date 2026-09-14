@@ -230,9 +230,9 @@ public class PagoServiceImpl implements PagoService {
     @Override
     @Transactional
     public Page<PagoListResponse> listarMisPagos(int page, int size) {
-        String email = SecurityUtils.getCurrentUserEmail();
-        veterinaria.vargasvet.domain.entity.Usuario user = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + email));
+        Integer usuarioId = SecurityUtils.getCurrentUserId();
+        veterinaria.vargasvet.domain.entity.Usuario user = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return purchaseRepository.findByApoderadoUserId(user.getId(), TipoPurchase.SERVICIO_CITA, pageable)
                 .map(this::toListResponse);

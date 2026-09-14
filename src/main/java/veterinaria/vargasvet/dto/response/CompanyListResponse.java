@@ -13,4 +13,6 @@ public class CompanyListResponse {
     private Boolean activo;
     private String businessHours;
     private String logoUrl;
+    private String slug;
+    private String colorPrimario;
 }

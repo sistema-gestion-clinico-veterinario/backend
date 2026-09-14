@@ -47,10 +47,12 @@ public class EmailChangeService {
     private int recoveryPerAccountPerHour;
 
     @Transactional
-    public void requestChange(String authenticatedEmail, RequestEmailChangeDTO dto) {
-        sharedRateLimitService.enforce("email-change-account", normalizeEmail(authenticatedEmail),
+    public void requestChange(Integer usuarioId, RequestEmailChangeDTO dto) {
+        // Por id, no por email: el correo ya no identifica de forma unica a la
+        // sesion actual (puede repetirse entre usuarios distintos).
+        sharedRateLimitService.enforce("email-change-account", String.valueOf(usuarioId),
                 recoveryPerAccountPerHour, java.time.Duration.ofHours(1));
-        Usuario usuario = usuarioRepository.findByEmail(authenticatedEmail)
+        Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         if (!usuario.isActivo() || !usuario.isEmailVerified()) {
             throw new IllegalStateException("La cuenta no está habilitada para cambiar el correo");
@@ -145,8 +147,9 @@ public class EmailChangeService {
         Map<String, Object> model = baseModel(usuario);
         model.put("newEmail", newEmail);
         model.put("confirmationType", confirmationType);
-        model.put("confirmationUrl", frontendUrl + "/confirm-email-change#type="
-                + confirmationType + "&token=" + token);
+        String slug = usuario.getCompany() != null ? usuario.getCompany().getSlug() : null;
+        model.put("confirmationUrl", frontendUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
+                "/confirm-email-change#type=" + confirmationType + "&token=" + token, slug));
         Mail mail = emailService.createMail(destination,
                 "Confirmación de cambio de correo", model);
         emailService.sendEmail(mail, "email/email-change-confirmation-template");

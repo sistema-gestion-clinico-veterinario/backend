@@ -96,7 +96,7 @@ class RF29Test {
         when(accesoValidator.canAccessCompanyData("VISTA_HISTORIAS")).thenReturn(false);
         Empleado propio = new Empleado();
         propio.setId(77L);
-        when(empleadoRepository.findByUserEmail("qa@empresa.test")).thenReturn(Optional.of(propio));
+        when(empleadoRepository.findActiveByUserId(15)).thenReturn(Optional.of(propio));
 
         HistoriaClinica historia = historia(7);
         Consulta consultaPropia = consulta(10L, historia, LocalDateTime.of(2026, 5, 1, 10, 0));

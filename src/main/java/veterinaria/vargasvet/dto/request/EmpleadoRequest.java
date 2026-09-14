@@ -39,6 +39,10 @@ public class EmpleadoRequest {
     @Size(max = 100, message = "El correo no debe superar 100 caracteres")
     private String email;
 
+    @Size(max = 50, message = "El usuario no debe superar 50 caracteres")
+    @Pattern(regexp = "^$|^[a-zA-Z0-9._-]+$", message = "El usuario solo debe contener letras, números, puntos, guiones y guiones bajos")
+    private String username;
+
     @NotBlank(message = "El teléfono es obligatorio")
     @Pattern(regexp = "^[0-9]{9}$", message = "El telefono debe contener 9 digitos numericos")
     private String telefono;

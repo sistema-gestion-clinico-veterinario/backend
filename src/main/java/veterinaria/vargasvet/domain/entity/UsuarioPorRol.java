@@ -29,6 +29,15 @@ public class UsuarioPorRol {
     @JsonIgnoreProperties({"company"})
     private Role rol;
 
+    /** Empresa para la que aplica esta asignacion (null solo para roles globales,
+     * ej. PLATFORM_ADMIN). Poblado con la misma empresa de la relacion (Empleado/
+     * Apoderado/UsuarioMembresia) activa al momento de crear la asignacion - ver
+     * CompanyMembershipService. Fuente de verdad para autorizacion por empresa;
+     * ya no depende de Usuario.company ni de cruzar con Role.company. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
     @OneToMany(mappedBy = "usuarioPorRol", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<UsuarioPorRolPermiso> permisos;
 }

@@ -4,15 +4,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+/**
+ * Login del SuperAdmin (PLATFORM_ADMIN) - ruta reservada aparte del login por
+ * slug de empresa, ya que un SuperAdmin no pertenece a una empresa en
+ * particular (supervisa todas). Ver AuthController /auth/admin-login.
+ */
 @Data
-public class LoginDTO {
-    /** Slug de la empresa resuelto por la URL (systemvet.com/<slug>/login) -
-     * decide contra cual empresa se valida la membresia, antes de cualquier
-     * pantalla de seleccion. */
-    @NotBlank(message = "La empresa es obligatoria")
-    @Size(max = 100, message = "El slug no debe superar 100 caracteres")
-    private String slug;
-
+public class AdminLoginDTO {
     @NotBlank(message = "El usuario es obligatorio")
     @Size(max = 50, message = "El usuario no debe superar 50 caracteres")
     private String username;
