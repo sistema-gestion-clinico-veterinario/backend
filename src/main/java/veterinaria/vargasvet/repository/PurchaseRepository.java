@@ -40,8 +40,8 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
             + "AND p.tipoPurchase = :tipo "
             + "AND (:clienteId IS NULL OR p.cliente.id = :clienteId) "
             + "AND (:mascotaId IS NULL OR m.id = :mascotaId) "
-            + "AND (:fechaDesde IS NULL OR p.createdAt >= :fechaDesde) "
-            + "AND (:fechaHasta IS NULL OR p.createdAt <= :fechaHasta) "
+            + "AND (CAST(:fechaDesde AS timestamp) IS NULL OR p.createdAt >= :fechaDesde) "
+            + "AND (CAST(:fechaHasta AS timestamp) IS NULL OR p.createdAt <= :fechaHasta) "
             + "AND (:estado IS NULL OR p.paymentStatus = :estado) "
             + "ORDER BY p.createdAt DESC")
     Page<Purchase> buscarHistorialPorEmpresa(
