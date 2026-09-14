@@ -58,6 +58,7 @@ public class WebSecurityConfig {
                         // Endpoints públicos
                         .requestMatchers(
                                 "/auth/login",
+                                "/auth/admin-login",
                                 "/auth/refresh",
                                 "/auth/logout",
                                 "/auth/resend-verification",
@@ -79,6 +80,10 @@ public class WebSecurityConfig {
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
+
+                        // Marca de empresa por slug: se consulta ANTES de iniciar sesion
+                        // (pinta el login), nunca expone datos sensibles - ver PublicCompanyController.
+                        .requestMatchers(HttpMethod.GET, "/company/branding/**").permitAll()
 
                         .requestMatchers("/actuator/**").denyAll()
 

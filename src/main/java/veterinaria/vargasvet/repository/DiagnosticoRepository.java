@@ -13,7 +13,7 @@ public interface DiagnosticoRepository extends JpaRepository<Diagnostico, Long> 
 
     @Query("SELECT d.tipo, d.estado, COUNT(d) FROM Diagnostico d " +
            "JOIN d.consulta c JOIN c.historiaClinica h JOIN h.mascota m JOIN m.apoderado a JOIN a.user u " +
-           "WHERE u.company.id = :companyId " +
+           "WHERE a.company.id = :companyId " +
            "GROUP BY d.tipo, d.estado")
     List<Object[]> countByTipoYEstado(@Param("companyId") Integer companyId);
 }

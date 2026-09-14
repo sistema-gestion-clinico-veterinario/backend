@@ -38,9 +38,10 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final EmailService emailService;
+    private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
 
-    @Value("${app.frontend.verify-url}")
-    private String frontendVerifyUrl;
+    @Value("${app.url}")
+    private String appUrl;
 
     @Value("${app.company.name}")
     private String companyName;
@@ -61,34 +62,53 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     @Transactional
     public UserProfileDTO registerVeterinario(VeterinarioRegistrationDTO dto) {
         dto.setEmail(dto.getEmail().trim().toLowerCase(java.util.Locale.ROOT));
-        if (usuarioRepository.existsByEmail(dto.getEmail())) {
-            throw new IllegalArgumentException("El correo electrónico ya está en uso");
-        }
-        if (empleadoRepository.existsByNumeroColegiatura(dto.getNumeroColegiatura())) {
-            throw new IllegalArgumentException("El número de colegiatura ya está registrado");
-        }
 
-        Usuario usuario = new Usuario();
-        usuario.setEmail(dto.getEmail());
-        usuario.setNombre(dto.getNombre());
-        usuario.setApellido(dto.getApellido());
-        usuario.setDni(dto.getNumeroDocumento());
-        usuario.setTelefono(dto.getTelefono());
-        usuario.setDireccion(dto.getDireccion());
-        String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-        usuario.setPassword(passwordEncoder.encode(tempPassword));
-        usuario.setActivo(false);
-        usuario.setEmailVerified(false);
-        String verificationToken = SecurityTokenUtils.generate();
-        usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
-        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(24));
         Integer companyId = SecurityUtils.isSuperAdmin() ? dto.getCompanyId() : SecurityUtils.getCurrentCompanyId();
         if (companyId == null) throw new IllegalArgumentException("Debe seleccionar una empresa");
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
-        usuario.setCompany(company);
 
-        Usuario savedUser = usuarioRepository.save(usuario);
+        if (empleadoRepository.existsByNumeroColegiaturaAndCompanyIdAndEstadoTrue(dto.getNumeroColegiatura(), companyId)) {
+            throw new IllegalArgumentException("El número de colegiatura ya está registrado en esta empresa");
+        }
+
+        java.util.Optional<Usuario> existingUsuario = usuarioRepository.findByEmail(dto.getEmail());
+        boolean esUsuarioNuevo = existingUsuario.isEmpty();
+        Usuario savedUser;
+        String verificationToken = null;
+
+        if (esUsuarioNuevo) {
+            String username = dto.getUsername() == null ? null : dto.getUsername().trim().toLowerCase(java.util.Locale.ROOT);
+            if (username == null || username.isBlank()) {
+                throw new IllegalArgumentException("El usuario es obligatorio para una persona nueva");
+            }
+            if (usuarioRepository.existsByUsername(username)) {
+                throw new IllegalArgumentException("El usuario ya está en uso");
+            }
+
+            Usuario usuario = new Usuario();
+            usuario.setUsername(username);
+            usuario.setEmail(dto.getEmail());
+            usuario.setNombre(dto.getNombre());
+            usuario.setApellido(dto.getApellido());
+            usuario.setDni(dto.getNumeroDocumento());
+            usuario.setTelefono(dto.getTelefono());
+            usuario.setDireccion(dto.getDireccion());
+            String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+            usuario.setPassword(passwordEncoder.encode(tempPassword));
+            usuario.setActivo(false);
+            usuario.setEmailVerified(false);
+            verificationToken = SecurityTokenUtils.generate();
+            usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
+            usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(24));
+
+            savedUser = usuarioRepository.save(usuario);
+        } else {
+            // Email ya existente: misma regla que EmpleadoServiceImpl.registerEmpleado -
+            // bloquear si ya tiene una relacion laboral activa en otra empresa.
+            savedUser = existingUsuario.get();
+            companyMembershipService.assertNoActiveEmploymentElsewhere(savedUser);
+        }
 
         for (Integer roleId : new java.util.LinkedHashSet<>(dto.getRoleIds())) {
             Role role = roleRepository.findById(roleId)
@@ -105,6 +125,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
             UsuarioPorRol upr = new UsuarioPorRol();
             upr.setUsuario(savedUser);
             upr.setRol(role);
+            upr.setCompany(role.getCompany() != null ? role.getCompany() : company);
             usuarioPorRolRepository.save(upr);
         }
 
@@ -113,6 +134,8 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         empleado.setObservaciones(dto.getObservaciones());
         empleado.setFotoUrl(dto.getFotoUrl());
         empleado.setEstado(true);
+        empleado.setCompany(company);
+        empleado.setFechaIngreso(veterinaria.vargasvet.util.AppClock.today());
         empleado.setTipoDocumentoIdentidad(dto.getTipoDocumento());
         empleado.setNumeroDocumentoIdentidad(dto.getNumeroDocumento());
         empleado.setGenero(dto.getGenero());
@@ -130,26 +153,36 @@ public class VeterinarioServiceImpl implements VeterinarioService {
                 .ifPresent(tipo -> empleado.getTiposEmpleado().add(tipo));
 
         empleadoRepository.save(empleado);
+        companyMembershipService.syncLegacyCompanyField(savedUser);
 
-        sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
+        if (esUsuarioNuevo) {
+            sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
+        }
 
         return userMapper.toProfileDTO(savedUser);
     }
 
     private void sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken) {
         try {
+            Company company = usuario.getCompany();
+            String resolvedCompanyName = company != null && company.getName() != null ? company.getName() : companyName;
+            String resolvedLogo = company != null && company.getLogoUrl() != null ? company.getLogoUrl() : companyLogo;
+            String resolvedEmail = company != null && company.getEmail() != null ? company.getEmail() : companyEmail;
+            String resolvedPhone = company != null && company.getPhone() != null ? company.getPhone() : companyPhone;
+            String resolvedAddress = company != null && company.getAddress() != null ? company.getAddress() : companyAddress;
             Map<String, Object> model = new HashMap<>();
             model.put("nombre", nombre);
-            model.put("companyName", companyName);
-            model.put("companyLogo", companyLogo);
-            model.put("companyEmail", companyEmail);
-            model.put("companyPhone", companyPhone);
-            model.put("companyAddress", companyAddress);
-            model.put("verificationLink", frontendVerifyUrl + verificationToken);
+            model.put("companyName", resolvedCompanyName);
+            model.put("companyLogo", resolvedLogo);
+            model.put("companyEmail", resolvedEmail);
+            model.put("companyPhone", resolvedPhone);
+            model.put("companyAddress", resolvedAddress);
+            model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
+                    "/auth/verify#token=" + verificationToken, company != null ? company.getSlug() : null));
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),
-                    "Bienvenido al equipo de " + companyName,
+                    "Bienvenido al equipo de " + resolvedCompanyName,
                     model
             );
 

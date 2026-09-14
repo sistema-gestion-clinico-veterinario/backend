@@ -35,14 +35,14 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
                                        Pageable pageable);
 
     @Query(value = "SELECT m FROM Mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
-                   "WHERE u.company.id = :companyId " +
+                   "WHERE a.company.id = :companyId " +
                    "AND (CAST(:nombre AS text) IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                    "AND (:especie IS NULL OR m.especie = :especie) " +
                    "AND (:activo IS NULL OR m.activo = :activo) " +
                    "AND (CAST(:nombrePropietario AS text) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', CAST(:nombrePropietario AS text), '%'))) " +
                    "ORDER BY m.nombreCompleto ASC",
            countQuery = "SELECT COUNT(m) FROM Mascota m JOIN m.apoderado a JOIN a.user u " +
-                        "WHERE u.company.id = :companyId " +
+                        "WHERE a.company.id = :companyId " +
                         "AND (CAST(:nombre AS text) IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                         "AND (:especie IS NULL OR m.especie = :especie) " +
                         "AND (:activo IS NULL OR m.activo = :activo) " +
@@ -54,18 +54,18 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
                          @Param("activo") Boolean activo,
                          Pageable pageable);
 
-    @Query("SELECT COUNT(m) FROM Mascota m WHERE m.apoderado.user.company.id = :companyId")
+    @Query("SELECT COUNT(m) FROM Mascota m WHERE m.apoderado.company.id = :companyId")
     long countByCompanyId(@Param("companyId") Integer companyId);
 
     Optional<Mascota> findByUuid(String uuid);
 
     @Query("SELECT m FROM Mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
-           "WHERE m.id = :id AND u.company.id = :companyId")
+           "WHERE m.id = :id AND a.company.id = :companyId")
     Optional<Mascota> findByIdAndCompanyId(@Param("id") Long id,
                                            @Param("companyId") Integer companyId);
 
     @Query("SELECT m FROM Mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
-           "WHERE m.uuid = :uuid AND u.company.id = :companyId")
+           "WHERE m.uuid = :uuid AND a.company.id = :companyId")
     Optional<Mascota> findByUuidAndCompanyId(@Param("uuid") String uuid,
                                              @Param("companyId") Integer companyId);
 
@@ -74,13 +74,13 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
     Optional<Mascota> findByIdForUpdate(@Param("id") Long id);
 
     @Query("SELECT m.especie, COUNT(m) FROM Mascota m " +
-           "JOIN m.apoderado a JOIN a.user u " +
-           "WHERE u.company.id = :companyId AND m.activo = true " +
+           "JOIN m.apoderado a " +
+           "WHERE a.company.id = :companyId AND m.activo = true " +
            "GROUP BY m.especie")
     List<Object[]> countByEspecie(@Param("companyId") Integer companyId);
 
     @Query("SELECT m.fechaNacimiento FROM Mascota m " +
-           "JOIN m.apoderado a JOIN a.user u " +
-           "WHERE u.company.id = :companyId AND m.activo = true AND m.fechaNacimiento IS NOT NULL")
+           "JOIN m.apoderado a " +
+           "WHERE a.company.id = :companyId AND m.activo = true AND m.fechaNacimiento IS NOT NULL")
     List<java.time.LocalDate> findFechasNacimientoByCompany(@Param("companyId") Integer companyId);
 }

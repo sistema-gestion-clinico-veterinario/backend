@@ -3,13 +3,10 @@ package veterinaria.vargasvet.mapper;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
-import veterinaria.vargasvet.domain.entity.Empleado;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.dto.request.UserRegistrationDTO;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
-import veterinaria.vargasvet.domain.enums.Genero;
-import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
 
 import java.util.stream.Collectors;
 
@@ -22,6 +19,7 @@ public class UserMapper {
     public Usuario toEntity(UserRegistrationDTO dto) {
         Usuario usuario = new Usuario();
         usuario.setEmail(dto.getEmail());
+        usuario.setUsername(dto.getUsername());
         usuario.setPassword(dto.getPassword());
         usuario.setNombre(dto.getNombre());
         usuario.setApellido(dto.getApellido());
@@ -29,20 +27,6 @@ public class UserMapper {
         usuario.setTelefono(dto.getTelefono());
         usuario.setDireccion(dto.getDireccion());
         usuario.setActivo(true);
-        return usuario;
-    }
-
-    public Usuario toEmpleadoEntity(UserRegistrationDTO dto) {
-        Usuario usuario = toEntity(dto);
-
-        Empleado empleado = new Empleado();
-        empleado.setNumeroDocumentoIdentidad(dto.getDni());
-        empleado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
-        empleado.setGenero(Genero.MASCULINO);
-        empleado.setEstado(true);
-        empleado.setUser(usuario);
-
-        usuario.setEmpleado(empleado);
         return usuario;
     }
 

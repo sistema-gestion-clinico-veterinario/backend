@@ -52,6 +52,7 @@ class EspecialidadDeletionIntegrationTest {
     void cpRf3701_laRestriccionReferencialBloqueaEliminarEspecialidadEnUso() {
         Company company = new Company();
         company.setName("Empresa QA");
+        company.setSlug("empresa-qa-especialidades");
         company.setRuc("20999999991");
         company.setActivo(true);
         company = companyRepository.saveAndFlush(company);

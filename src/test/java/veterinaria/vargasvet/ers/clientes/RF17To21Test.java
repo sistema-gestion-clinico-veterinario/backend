@@ -143,26 +143,72 @@ class RF17To21Test {
         assertThat(created.isEmailVerified()).isFalse();
         assertThat(created.getVerificationToken()).isNotBlank();
         assertThat(created.getVerificationTokenExpiresAt()).isAfter(java.time.LocalDateTime.now());
-        assertThat(created.getCompany().getId()).isEqualTo(7);
         assertThat(created.getUsuariosPorRol()).extracting(assignment -> assignment.getRol().getId())
                 .containsExactly(20);
+
+        ArgumentCaptor<Apoderado> apoderadoCaptor = ArgumentCaptor.forClass(Apoderado.class);
+        verify(apoderadoRepository).save(apoderadoCaptor.capture());
+        assertThat(apoderadoCaptor.getValue().getCompany().getId()).isEqualTo(7);
+
         assertThat(response.getApoderadoId()).isEqualTo(40);
         verify(emailService).sendEmailWithRetry(any(Mail.class), eq("email/welcome-template"));
     }
 
     @Test
-    @DisplayName("[CP-RF18-02] Rechaza correo duplicado antes de crear usuario o apoderado")
-    void cpRf1802_rechazaClienteDuplicadoSinRegistrosParciales() {
+    @DisplayName("[CP-RF18-02] Correo existente sin registro activo en esta empresa se une como cliente (multiempresa permitido)")
+    void cpRf1802_correoExistenteSeUneComoClienteDeNuevaEmpresa() {
+        Company company = company(7);
+        Role role = roleCliente(20, company);
+        ApoderadoRequest request = apoderadoRequest(7, role.getId());
+        Usuario existente = new Usuario();
+        existente.setId(99);
+        existente.setEmail("ana.qa@example.test");
+
+        when(usuarioRepository.findByEmail("ana.qa@example.test")).thenReturn(Optional.of(existente));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
+        when(roleRepository.findAllById(Set.of(20))).thenReturn(List.of(role));
+        when(apoderadoRepository.save(any(Apoderado.class))).thenAnswer(invocation -> {
+            Apoderado value = invocation.getArgument(0);
+            value.setId(41L);
+            return value;
+        });
+        when(userMapper.toProfileDTO(any(Usuario.class))).thenReturn(new UserProfileDTO());
+
+        UserProfileDTO response = apoderadoService().registerApoderado(request);
+
+        assertThat(response.getApoderadoId()).isEqualTo(41);
+        // No se crea una identidad nueva (no hay contraseña temporal ni token de
+        // verificacion nuevos) ni se vuelve a chequear el DNI: es la misma persona.
+        // usuarioRepository.save SI se llama (replaceClientRoles actualiza sus roles).
+        assertThat(existente.getVerificationToken()).isNull();
+        verify(usuarioRepository, never()).existsByDni(anyString());
+        verify(emailService, never()).sendEmailWithRetry(any(), anyString());
+    }
+
+    @Test
+    @DisplayName("[CP-RF18-03] Rechaza registrar de nuevo a un cliente ya activo en la MISMA empresa")
+    void cpRf1803_rechazaClienteYaActivoEnLaMismaEmpresa() {
+        Company company = company(7);
         ApoderadoRequest request = apoderadoRequest(7, 20);
-        when(usuarioRepository.existsByEmail("ana.qa@example.test")).thenReturn(true);
+        Usuario existente = new Usuario();
+        existente.setId(99);
+        existente.setEmail("ana.qa@example.test");
+        Apoderado activo = new Apoderado();
+        activo.setId(41L);
+        activo.setUser(existente);
+        activo.setCompany(company);
+        activo.setEstado(true);
+
+        when(usuarioRepository.findByEmail("ana.qa@example.test")).thenReturn(Optional.of(existente));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
+        when(apoderadoRepository.findByUserIdAndCompanyId(99, 7)).thenReturn(Optional.of(activo));
+        when(roleRepository.findAllById(Set.of(20))).thenReturn(List.of(roleCliente(20, company)));
 
         assertThatThrownBy(() -> apoderadoService().registerApoderado(request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("email ya está registrado");
+                .hasMessageContaining("ya está registrado y activo en esta empresa");
 
-        verify(usuarioRepository, never()).save(any());
         verify(apoderadoRepository, never()).save(any());
-        verify(emailService, never()).sendEmail(any(), anyString());
     }
 
     @Test
@@ -243,9 +289,10 @@ class RF17To21Test {
                 emailService,
                 mock(AuditLogService.class),
                 mock(CompanyRoleProvisioningService.class),
-                mock(SessionSecurityService.class)
+                mock(SessionSecurityService.class),
+                mock(veterinaria.vargasvet.service.CompanyMembershipService.class)
         );
-        ReflectionTestUtils.setField(service, "frontendVerifyUrl", "https://frontend.test/activar?token=");
+        ReflectionTestUtils.setField(service, "appUrl", "https://frontend.test");
         ReflectionTestUtils.setField(service, "defaultCompanyName", "Veterinaria QA");
         ReflectionTestUtils.setField(service, "defaultCompanyLogo", "");
         ReflectionTestUtils.setField(service, "companyEmail", "qa@example.test");
@@ -275,6 +322,7 @@ class RF17To21Test {
         request.setTipoDocumento(TipoDocumentoIdentidad.DNI);
         request.setNumeroDocumento("12345678");
         request.setEmail("ana.qa@example.test");
+        request.setUsername("ana.qa");
         request.setTelefono("999999999");
         request.setDireccion("Avenida Prueba 123");
         request.setGenero(Genero.FEMENINO);

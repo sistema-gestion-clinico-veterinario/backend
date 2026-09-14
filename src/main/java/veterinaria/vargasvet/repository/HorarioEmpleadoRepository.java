@@ -16,8 +16,8 @@ public interface HorarioEmpleadoRepository extends JpaRepository<HorarioEmpleado
     
     List<HorarioEmpleado> findByEmpleadoIdAndFechaBetween(Long empleadoId, LocalDate start, LocalDate end);
 
-    @Query("SELECT h FROM HorarioEmpleado h JOIN h.empleado e JOIN e.user u " +
-           "WHERE u.company.id = :companyId AND e.estado = true AND h.fecha = :fecha " +
+    @Query("SELECT h FROM HorarioEmpleado h JOIN h.empleado e " +
+           "WHERE e.company.id = :companyId AND e.estado = true AND h.fecha = :fecha " +
            "ORDER BY e.id, h.horaInicio")
     List<HorarioEmpleado> findDashboardSchedulesByCompanyAndDate(
             @Param("companyId") Integer companyId,

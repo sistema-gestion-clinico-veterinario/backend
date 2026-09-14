@@ -13,7 +13,7 @@ public interface TratamientoRepository extends JpaRepository<Tratamiento, Long> 
 
     @Query("SELECT t.estado, COUNT(t) FROM Tratamiento t " +
            "JOIN t.consulta c JOIN c.historiaClinica h JOIN h.mascota m JOIN m.apoderado a JOIN a.user u " +
-           "WHERE u.company.id = :companyId " +
+           "WHERE a.company.id = :companyId " +
            "GROUP BY t.estado")
     List<Object[]> countPorEstado(@Param("companyId") Integer companyId);
 }

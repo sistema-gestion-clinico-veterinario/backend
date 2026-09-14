@@ -50,7 +50,8 @@ class AuthControllerContractTest {
     @DisplayName("[CP-RF01-01][CP-RNF03-01] El login entrega tokens solo mediante cookies protegidas")
     void loginNoExponeTokensEnJson() throws Exception {
         LoginDTO request = new LoginDTO();
-        request.setEmail("persona@example.com");
+        request.setSlug("clinica-vargasvet");
+        request.setUsername("persona");
         request.setPassword("Frase extensa de prueba 2026");
 
         AuthResponse auth = new AuthResponse();
@@ -88,13 +89,15 @@ class AuthControllerContractTest {
     @Test
     @DisplayName("[CP-RF03-01] El cambio de contraseña se aplica a la identidad autenticada")
     void cambioDePasswordUsaIdentidadAutenticada() {
+        veterinaria.vargasvet.security.UsuarioPrincipal principal = new veterinaria.vargasvet.security.UsuarioPrincipal(
+                7, "actual@example.com", "hash", List.of(), null);
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken("actual@example.com", "token"));
+                new UsernamePasswordAuthenticationToken(principal, "token"));
         ChangePasswordDTO request = new ChangePasswordDTO();
 
         controller.changePassword(request);
 
-        verify(usuarioService).changePassword("actual@example.com", request);
+        verify(usuarioService).changePassword(7, request);
     }
 
     @Test

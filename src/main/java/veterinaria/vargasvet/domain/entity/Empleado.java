@@ -53,7 +53,10 @@ public class Empleado {
     @Column(name = "estado", nullable = false)
     private Boolean estado = true;
 
-    @Column(name = "numero_colegiatura", unique = true) // Nullable para no-veterinarios
+    // Nullable para no-veterinarios. Unicidad real: uq_empleado_colegiatura_activo
+    // (numero_colegiatura, company_id) WHERE estado=true - se libera tras una baja,
+    // no es un unique=true simple (ver V65__Company_Membership_Constraints.sql).
+    @Column(name = "numero_colegiatura")
     private String numeroColegiatura;
 
     @Column(name = "observaciones", columnDefinition = "TEXT")
@@ -70,9 +73,23 @@ public class Empleado {
     )
     private Set<TipoEmpleado> tiposEmpleado = new HashSet<>();
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private Usuario user;
+
+    /** Empresa de ESTA relacion laboral especifica. Un Usuario puede tener varias filas
+     * Empleado a lo largo del tiempo (una por empresa/periodo), pero como mucho una activa
+     * a la vez (ver indice unico parcial uq_empleado_activo_por_usuario). Fuente de verdad
+     * de "empresa del empleado": esta columna, no Usuario.company. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
+    @Column(name = "fecha_ingreso")
+    private LocalDate fechaIngreso;
+
+    @Column(name = "fecha_salida")
+    private LocalDate fechaSalida;
 
     @OneToMany(mappedBy = "empleado", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("diaSemana ASC")

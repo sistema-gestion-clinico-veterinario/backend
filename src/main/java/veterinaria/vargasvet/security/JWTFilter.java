@@ -52,7 +52,6 @@ public class JWTFilter extends GenericFilterBean {
             try {
                 Authentication authentication = tokenProvider.getAuthentication(token);
 
-                String email = authentication.getName();
                 UsuarioPrincipal principal = authentication.getPrincipal() instanceof UsuarioPrincipal value
                         ? value : null;
                 if (principal == null || principal.getActiveRoleId() == null) {
@@ -70,7 +69,9 @@ public class JWTFilter extends GenericFilterBean {
                 }
                 boolean esSuperAdmin = activeAssignment.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN;
 
-                var currentUser = usuarioRepository.findByEmailWithCompany(email)
+                // Por id, no por email: el correo ya no identifica de forma unica una
+                // cuenta (puede repetirse entre usuarios distintos desde esta migracion).
+                var currentUser = usuarioRepository.findByIdWithCompany(principal.getId())
                         .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException(
                                 "La cuenta de la sesión ya no existe"));
                 if (currentUser.getCredentialsVersion() != principal.getCredentialsVersion()) {
@@ -114,6 +115,7 @@ public class JWTFilter extends GenericFilterBean {
         String method = request.getMethod();
 
         return path.equals("/auth/login")
+                || path.equals("/auth/admin-login")
                 || path.equals("/auth/refresh")
                 || path.equals("/auth/logout")
                 || path.equals("/auth/forgot-password")
@@ -130,7 +132,8 @@ public class JWTFilter extends GenericFilterBean {
                 || path.equals("/swagger-ui.html")
                 || path.startsWith("/ws/")
                 || path.equals("/error")
-                || ("GET".equalsIgnoreCase(method) && path.startsWith("/media/"));
+                || ("GET".equalsIgnoreCase(method) && path.startsWith("/media/"))
+                || ("GET".equalsIgnoreCase(method) && path.startsWith("/company/branding/"));
     }
 
     private boolean isLegalExemptEndpoint(HttpServletRequest request) {

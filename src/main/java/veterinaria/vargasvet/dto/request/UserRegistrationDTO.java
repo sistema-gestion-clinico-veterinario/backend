@@ -14,6 +14,11 @@ public class UserRegistrationDTO {
     @Size(max = 255, message = "El correo no debe superar 255 caracteres")
     private String email;
 
+    @NotBlank(message = "El usuario es obligatorio")
+    @Size(min = 3, max = 50, message = "El usuario debe tener entre 3 y 50 caracteres")
+    @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "El usuario solo debe contener letras, números, puntos, guiones y guiones bajos")
+    private String username;
+
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(min = 12, max = 72, message = "La contraseña debe tener al menos 12 caracteres")
     private String password;

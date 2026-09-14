@@ -3,6 +3,7 @@ package veterinaria.vargasvet.domain.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -16,8 +17,13 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, unique = true)
+    /** Dato de contacto - ya no es unico ni se usa para autenticar (ver username). */
+    @Column(nullable = false)
     private String email;
+
+    /** Identificador de login, unico globalmente. La persona lo elige al registrarse. */
+    @Column(nullable = false, unique = true)
+    private String username;
 
     @Column(nullable = false)
     private String password;
@@ -37,12 +43,24 @@ public class Usuario {
     @Column
     private String direccion;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Empleado empleado;
+    /** Un Usuario puede tener varias filas Empleado a lo largo del tiempo (una por
+     * empresa/periodo), pero como mucho una activa a la vez. Sin cascade/orphanRemoval
+     * a proposito: la baja es logica (estado=false), nunca se borra via esta relacion.
+     * Para "el empleado activo" usar EmpleadoRepository.findActiveByUserId(usuario.getId()),
+     * no navegar esta lista asumiendo una sola fila. */
+    @ToString.Exclude
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<Empleado> empleados = new java.util.ArrayList<>();
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
-    private Apoderado apoderado;
+    /** A diferencia de Empleado, puede haber varias filas Apoderado ACTIVAS a la vez
+     * (cliente de varias empresas simultaneamente). Usar ApoderadoRepository segun el
+     * caso: findByUserIdAndCompanyId para una empresa puntual, o findAllActiveByUserId
+     * para la lista completa de empresas donde es cliente activo. */
+    @ToString.Exclude
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<Apoderado> apoderados = new java.util.ArrayList<>();
 
+    @ToString.Exclude
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private java.util.List<UsuarioPorRol> usuariosPorRol = new java.util.ArrayList<>();
 
