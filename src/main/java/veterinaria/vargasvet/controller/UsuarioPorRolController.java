@@ -50,9 +50,7 @@ public class UsuarioPorRolController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<MenuItemDTO>>> miMenu() {
 
-        String email = SecurityUtils.getCurrentUserEmail();
-        Integer usuarioId = usuarioRepository.findByEmail(email)
-                .orElseThrow().getId();
+        Integer usuarioId = SecurityUtils.getCurrentUserId();
 
         List<MenuItemDTO> menu = menuBuilderService.construirMenu(usuarioId, SecurityUtils.getCurrentRoleId());
         return ResponseEntity.ok(new ApiResponse<>(true, "Menú del usuario", menu));

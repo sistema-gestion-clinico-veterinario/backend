@@ -107,7 +107,7 @@ class JWTFilterLegalEnforcementTest {
         when(tokenProvider.getAuthentication(ACCESS_TOKEN)).thenReturn(authentication);
         when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleId(USUARIO_ID, 1))
                 .thenReturn(Optional.of(asignacion));
-        when(usuarioRepository.findByEmailWithCompany(EMAIL)).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.findByIdWithCompany(USUARIO_ID)).thenReturn(Optional.of(usuario));
     }
 
     @Test

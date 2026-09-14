@@ -50,11 +50,11 @@ class EmailChangeServiceTest {
         dto.setCurrentPassword("CurrentPassword-123");
         dto.setNewEmail(" Nuevo@Example.com ");
 
-        when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
         when(passwordEncoder.matches(dto.getCurrentPassword(), usuario.getPassword())).thenReturn(true);
         when(usuarioRepository.existsByEmail("nuevo@example.com")).thenReturn(false);
 
-        service.requestChange(usuario.getEmail(), dto);
+        service.requestChange(usuario.getId(), dto);
 
         ArgumentCaptor<EmailChangeRequest> captor = ArgumentCaptor.forClass(EmailChangeRequest.class);
         verify(emailChangeRequestRepository).save(captor.capture());

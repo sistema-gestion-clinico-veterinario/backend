@@ -61,6 +61,15 @@ public class CompanyDTO {
     
     private List<@Valid CompanyOperatingHourDTO> operatingHours;
 
+    /** Identificador en la URL (systemvet.com/<slug>/login). Si se omite al
+     * crear, se genera automaticamente a partir del nombre. */
+    @Size(max = 100, message = "El slug no debe superar 100 caracteres")
+    @Pattern(regexp = "^$|^[a-z0-9]+(-[a-z0-9]+)*$", message = "El slug solo debe contener minusculas, numeros y guiones")
+    private String slug;
+
+    @Pattern(regexp = "^$|^#[0-9a-fA-F]{6}$", message = "El color primario debe ser un color hexadecimal, ej. #006BA8")
+    private String colorPrimario;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String createdBy;

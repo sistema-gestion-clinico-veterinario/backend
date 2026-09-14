@@ -64,8 +64,8 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     @Value("${app.frontend.login-url}")
     private String loginUrl;
 
-    @Value("${app.frontend.verify-url}")
-    private String frontendVerifyUrl;
+    @Value("${app.url}")
+    private String appUrl;
 
     @Value("${app.company.name}")
     private String defaultCompanyName;
@@ -119,7 +119,16 @@ public class ApoderadoServiceImpl implements ApoderadoService {
                 throw new IllegalArgumentException("El DNI ya está registrado en el sistema");
             }
 
+            String username = dto.getUsername() == null ? null : dto.getUsername().trim().toLowerCase(java.util.Locale.ROOT);
+            if (username == null || username.isBlank()) {
+                throw new IllegalArgumentException("El usuario es obligatorio para una persona nueva");
+            }
+            if (usuarioRepository.existsByUsername(username)) {
+                throw new IllegalArgumentException("El usuario ya está en uso");
+            }
+
             Usuario usuario = new Usuario();
+            usuario.setUsername(username);
             usuario.setNombre(dto.getNombre());
             usuario.setApellido(dto.getApellido());
             usuario.setEmail(dto.getEmail());
@@ -209,7 +218,8 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             model.put("companyEmail", resolvedEmail);
             model.put("companyPhone", resolvedPhone);
             model.put("companyAddress", resolvedAddress);
-            model.put("verificationLink", frontendVerifyUrl + verificationToken);
+            model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
+                    "/auth/verify#token=" + verificationToken, company != null ? company.getSlug() : null));
 
             veterinaria.vargasvet.dto.Mail mail = emailService.createMail(
                     usuario.getEmail(),

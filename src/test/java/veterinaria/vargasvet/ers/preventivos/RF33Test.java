@@ -252,6 +252,7 @@ class RF33Test {
     private Cita crearCita() {
         Company company = new Company();
         company.setName("Empresa QA " + UUID.randomUUID());
+        company.setSlug("empresa-qa-" + UUID.randomUUID());
         company.setRuc(uniqueDigits(11));
         company.setActivo(true);
         company = companyRepository.save(company);
@@ -311,6 +312,7 @@ class RF33Test {
     private Usuario usuario(String prefix, Company company) {
         Usuario usuario = new Usuario();
         usuario.setEmail(prefix + "-" + UUID.randomUUID() + "@vargasvet.test");
+        usuario.setUsername(prefix + "-" + UUID.randomUUID());
         usuario.setPassword("hash-no-real");
         usuario.setNombre(prefix);
         usuario.setApellido("QA");

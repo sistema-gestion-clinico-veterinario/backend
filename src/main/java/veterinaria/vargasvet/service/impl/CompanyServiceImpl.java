@@ -106,6 +106,7 @@ public class CompanyServiceImpl implements CompanyService {
     public CompanyDTO save(CompanyDTO dto) {
         Company company = new Company();
         updateEntityFromDTO(company, dto);
+        company.setSlug(resolveSlugForCreate(dto));
         company.setActivo(true);
         company.setCreatedAt(LocalDateTime.now());
         company.setCreatedBy(SecurityUtils.getCurrentUserEmail());
@@ -131,6 +132,9 @@ public class CompanyServiceImpl implements CompanyService {
             throw new IllegalStateException("La empresa está inactiva. Solo un super administrador puede modificarla.");
         }
         updateEntityFromDTO(company, dto);
+        if (dto.getSlug() != null && !dto.getSlug().isBlank()) {
+            company.setSlug(resolveSlugForUpdate(company.getId(), dto.getSlug()));
+        }
         company.setUpdatedAt(LocalDateTime.now());
         company.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
         Company savedCompany = companyRepository.save(company);
@@ -159,6 +163,15 @@ public class CompanyServiceImpl implements CompanyService {
         return toListResponse(savedCompany);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public veterinaria.vargasvet.dto.response.CompanyBrandingResponse findBrandingBySlug(String slug) {
+        Company company = companyRepository.findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
+        return new veterinaria.vargasvet.dto.response.CompanyBrandingResponse(
+                company.getName(), company.getLogoUrl(), company.getColorPrimario());
+    }
+
     private void validarAccesoEmpresa(Integer companyId) {
         if (SecurityUtils.isSuperAdmin()) return;
 
@@ -178,6 +191,47 @@ public class CompanyServiceImpl implements CompanyService {
         company.setWebsite(dto.getWebsite());
         company.setDescription(dto.getDescription());
         company.setBusinessHours(dto.getBusinessHours());
+        if (dto.getColorPrimario() != null && !dto.getColorPrimario().isBlank()) {
+            company.setColorPrimario(dto.getColorPrimario());
+        }
+    }
+
+    /** Genera el slug desde el nombre si no se proporciono uno explicito;
+     * en cualquier caso, garantiza que sea unico antes de persistir. Mismo
+     * algoritmo de saneo que usó el backfill de V66. */
+    private String resolveSlugForCreate(CompanyDTO dto) {
+        String requested = dto.getSlug();
+        String base = (requested != null && !requested.isBlank()) ? slugify(requested) : slugify(dto.getName());
+        return generateUniqueSlug(base, null);
+    }
+
+    private String resolveSlugForUpdate(Integer companyId, String requestedSlug) {
+        String base = slugify(requestedSlug);
+        if (companyRepository.existsBySlugAndIdNot(base, companyId)) {
+            throw new IllegalArgumentException("El slug ya está en uso por otra empresa");
+        }
+        return base;
+    }
+
+    private String generateUniqueSlug(String base, Integer excludeId) {
+        String normalized = base.isBlank() ? "empresa" : base;
+        String candidate = normalized;
+        int suffix = 2;
+        while (excludeId == null ? companyRepository.existsBySlug(candidate)
+                : companyRepository.existsBySlugAndIdNot(candidate, excludeId)) {
+            candidate = normalized + "-" + suffix;
+            suffix++;
+        }
+        return candidate;
+    }
+
+    private String slugify(String value) {
+        String base = value.toLowerCase(java.util.Locale.ROOT)
+                .replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u")
+                .replace("ñ", "n");
+        base = base.replaceAll("[^a-z0-9]+", "-");
+        base = base.replaceAll("^-+|-+$", "");
+        return base;
     }
 
     private void saveOperatingHours(Company company, List<CompanyOperatingHourDTO> hoursDTO) {
@@ -209,6 +263,8 @@ public class CompanyServiceImpl implements CompanyService {
         response.setActivo(company.isActivo());
         response.setBusinessHours(company.getBusinessHours());
         response.setLogoUrl(company.getLogoUrl());
+        response.setSlug(company.getSlug());
+        response.setColorPrimario(company.getColorPrimario());
         return response;
     }
 
@@ -224,6 +280,8 @@ public class CompanyServiceImpl implements CompanyService {
         dto.setWebsite(company.getWebsite());
         dto.setDescription(company.getDescription());
         dto.setBusinessHours(company.getBusinessHours());
+        dto.setSlug(company.getSlug());
+        dto.setColorPrimario(company.getColorPrimario());
         dto.setCreatedAt(company.getCreatedAt());
         dto.setUpdatedAt(company.getUpdatedAt());
         dto.setCreatedBy(company.getCreatedBy());

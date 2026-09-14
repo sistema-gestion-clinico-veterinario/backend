@@ -40,8 +40,8 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     private final EmailService emailService;
     private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
 
-    @Value("${app.frontend.verify-url}")
-    private String frontendVerifyUrl;
+    @Value("${app.url}")
+    private String appUrl;
 
     @Value("${app.company.name}")
     private String companyName;
@@ -78,7 +78,16 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         String verificationToken = null;
 
         if (esUsuarioNuevo) {
+            String username = dto.getUsername() == null ? null : dto.getUsername().trim().toLowerCase(java.util.Locale.ROOT);
+            if (username == null || username.isBlank()) {
+                throw new IllegalArgumentException("El usuario es obligatorio para una persona nueva");
+            }
+            if (usuarioRepository.existsByUsername(username)) {
+                throw new IllegalArgumentException("El usuario ya está en uso");
+            }
+
             Usuario usuario = new Usuario();
+            usuario.setUsername(username);
             usuario.setEmail(dto.getEmail());
             usuario.setNombre(dto.getNombre());
             usuario.setApellido(dto.getApellido());
@@ -168,7 +177,8 @@ public class VeterinarioServiceImpl implements VeterinarioService {
             model.put("companyEmail", resolvedEmail);
             model.put("companyPhone", resolvedPhone);
             model.put("companyAddress", resolvedAddress);
-            model.put("verificationLink", frontendVerifyUrl + verificationToken);
+            model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
+                    "/auth/verify#token=" + verificationToken, company != null ? company.getSlug() : null));
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),

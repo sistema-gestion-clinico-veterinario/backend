@@ -208,8 +208,7 @@ public class CitaServiceImpl implements CitaService {
             cita.setTotalServicio(servicio.getPrecio());
         }
 
-        String currentUserEmail = SecurityUtils.getCurrentUserEmail();
-        usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setCreadoPor);
+        usuarioRepository.findById(SecurityUtils.getCurrentUserId()).ifPresent(cita::setCreadoPor);
 
         Cita savedCita = citaRepository.save(cita);
         vincularControlesPreventivos(savedCita, servicio, request.getControlPreventivoIds());
@@ -552,8 +551,7 @@ public class CitaServiceImpl implements CitaService {
         cita.setEstado(EstadoCita.ELIMINADA);
         cita.setEliminadoAt(veterinaria.vargasvet.util.AppClock.now());
         
-        String currentUserEmail = SecurityUtils.getCurrentUserEmail();
-        usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setEliminadoPor);
+        usuarioRepository.findById(SecurityUtils.getCurrentUserId()).ifPresent(cita::setEliminadoPor);
         
         citaRepository.save(cita);
         broadcastCitaEvent("ELIMINAR_CITA", cita, citaMapper.toResponse(cita));
@@ -754,8 +752,7 @@ public class CitaServiceImpl implements CitaService {
         
         // Auditoría
         cita.setReprogramadoAt(veterinaria.vargasvet.util.AppClock.now());
-        String currentUserEmail = SecurityUtils.getCurrentUserEmail();
-        usuarioRepository.findByEmail(currentUserEmail).ifPresent(cita::setReprogramadoPor);
+        usuarioRepository.findById(SecurityUtils.getCurrentUserId()).ifPresent(cita::setReprogramadoPor);
 
         Cita savedCita = citaRepository.save(cita);
         CitaResponse reprogramadaResponse = citaMapper.toResponse(savedCita);
@@ -881,7 +878,7 @@ public class CitaServiceImpl implements CitaService {
 
     private Long resolverFiltroEmpleado(Long requestedEmpleadoId) {
         if (accesoValidator.canAccessCompanyData("VISTA_CITAS_AGENDA")) return requestedEmpleadoId;
-        Long ownEmpleadoId = empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail())
+        Long ownEmpleadoId = empleadoRepository.findActiveByUserId(SecurityUtils.getCurrentUserId())
                 .map(Empleado::getId)
                 .orElse(-1L);
         if (requestedEmpleadoId != null && !requestedEmpleadoId.equals(ownEmpleadoId)) {
@@ -893,7 +890,7 @@ public class CitaServiceImpl implements CitaService {
 
     private void validarEmpleadoSegunAlcance(Long empleadoId) {
         if (accesoValidator.canAccessCompanyData("VISTA_CITAS_AGENDA")) return;
-        Long ownEmpleadoId = empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail())
+        Long ownEmpleadoId = empleadoRepository.findActiveByUserId(SecurityUtils.getCurrentUserId())
                 .map(Empleado::getId)
                 .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException(
                         "El usuario no está asociado a un empleado"));

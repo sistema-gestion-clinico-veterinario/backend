@@ -98,7 +98,7 @@ class RF10AndRF11Test {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
 
-        ReflectionTestUtils.setField(service, "frontendVerifyUrl", "https://frontend.test/verify?token=");
+        ReflectionTestUtils.setField(service, "appUrl", "https://frontend.test");
         ReflectionTestUtils.setField(service, "defaultCompanyLogo", "https://frontend.test/logo.png");
     }
 
@@ -240,6 +240,7 @@ class RF10AndRF11Test {
         request.setApellido("Pérez");
         request.setNumeroDocumento("12345678");
         request.setEmail("nuevo@empresa.test");
+        request.setUsername("maria.perez");
         request.setTelefono("999888777");
         request.setDireccion("Av. Central 123");
         request.setGenero(Genero.FEMENINO);

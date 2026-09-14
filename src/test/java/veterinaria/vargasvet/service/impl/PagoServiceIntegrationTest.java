@@ -222,6 +222,7 @@ class PagoServiceIntegrationTest {
     private Cita crearCita(EstadoCita estado, BigDecimal montoPagado) {
         Company company = new Company();
         company.setName("VargasVet Test");
+        company.setSlug("vargasvet-test-" + UUID.randomUUID());
         company.setRuc(uniqueDigits(11));
         company.setActivo(true);
         company = companyRepository.save(company);
@@ -287,6 +288,7 @@ class PagoServiceIntegrationTest {
     private Usuario usuario(String prefix, Company company) {
         Usuario usuario = new Usuario();
         usuario.setEmail(prefix + "-" + UUID.randomUUID() + "@vargasvet.test");
+        usuario.setUsername(prefix + "-" + UUID.randomUUID());
         usuario.setPassword("password");
         usuario.setNombre(prefix);
         usuario.setApellido("Test");

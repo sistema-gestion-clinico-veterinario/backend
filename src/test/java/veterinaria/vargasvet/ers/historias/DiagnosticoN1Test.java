@@ -61,6 +61,7 @@ class DiagnosticoN1Test {
     void cuentaConsultasSqlParaGetPorMascotaConTresConsultas() {
         Company company = new Company();
         company.setName("Empresa QA N+1");
+        company.setSlug("empresa-qa-n1-" + UUID.randomUUID());
         company.setRuc(uniqueDigits(11));
         company.setActivo(true);
         company = companyRepository.save(company);
@@ -211,6 +212,7 @@ class DiagnosticoN1Test {
     private Usuario usuario(String prefix, Company company) {
         Usuario usuario = new Usuario();
         usuario.setEmail(prefix + "-" + UUID.randomUUID() + "@vargasvet.test");
+        usuario.setUsername(prefix + "-" + UUID.randomUUID());
         usuario.setPassword("hash-no-real");
         usuario.setNombre(prefix);
         usuario.setApellido("QA");

@@ -379,6 +379,7 @@ class CitaServiceIntegrationTest {
     private Cita crearCita(EstadoCita estado, LocalDateTime fechaInicio) {
         Company company = new Company();
         company.setName("VargasVet Citas");
+        company.setSlug("vargasvet-citas-" + UUID.randomUUID());
         company.setRuc(uniqueDigits(11));
         company.setActivo(true);
         company = companyRepository.save(company);
@@ -471,6 +472,7 @@ class CitaServiceIntegrationTest {
     private Usuario usuario(String prefix, Company company) {
         Usuario usuario = new Usuario();
         usuario.setEmail(prefix + "-" + UUID.randomUUID() + "@vargasvet.test");
+        usuario.setUsername(prefix + "-" + UUID.randomUUID());
         usuario.setPassword("password");
         usuario.setNombre(prefix);
         usuario.setApellido("Test");

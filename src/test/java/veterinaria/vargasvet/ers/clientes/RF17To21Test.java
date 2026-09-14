@@ -292,7 +292,7 @@ class RF17To21Test {
                 mock(SessionSecurityService.class),
                 mock(veterinaria.vargasvet.service.CompanyMembershipService.class)
         );
-        ReflectionTestUtils.setField(service, "frontendVerifyUrl", "https://frontend.test/activar?token=");
+        ReflectionTestUtils.setField(service, "appUrl", "https://frontend.test");
         ReflectionTestUtils.setField(service, "defaultCompanyName", "Veterinaria QA");
         ReflectionTestUtils.setField(service, "defaultCompanyLogo", "");
         ReflectionTestUtils.setField(service, "companyEmail", "qa@example.test");
@@ -322,6 +322,7 @@ class RF17To21Test {
         request.setTipoDocumento(TipoDocumentoIdentidad.DNI);
         request.setNumeroDocumento("12345678");
         request.setEmail("ana.qa@example.test");
+        request.setUsername("ana.qa");
         request.setTelefono("999999999");
         request.setDireccion("Avenida Prueba 123");
         request.setGenero(Genero.FEMENINO);

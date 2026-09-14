@@ -169,7 +169,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
 
     private void verificarAlcancePropio(HistoriaClinica hc) {
         Empleado propio = empleadoRepository != null
-                ? empleadoRepository.findByUserEmail(SecurityUtils.getCurrentUserEmail()).orElse(null)
+                ? empleadoRepository.findActiveByUserId(SecurityUtils.getCurrentUserId()).orElse(null)
                 : null;
         if (propio == null) {
             throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");

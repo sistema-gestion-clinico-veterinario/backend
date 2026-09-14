@@ -89,8 +89,8 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     private Usuario getCurrentUser() {
-        String email = SecurityUtils.getCurrentUserEmail();
-        return usuarioRepository.findByEmail(email)
+        // Por id, no por email: el correo ya no identifica de forma unica al usuario.
+        return usuarioRepository.findById(SecurityUtils.getCurrentUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
     }
 

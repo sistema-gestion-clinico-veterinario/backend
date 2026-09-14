@@ -17,8 +17,13 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, unique = true)
+    /** Dato de contacto - ya no es unico ni se usa para autenticar (ver username). */
+    @Column(nullable = false)
     private String email;
+
+    /** Identificador de login, unico globalmente. La persona lo elige al registrarse. */
+    @Column(nullable = false, unique = true)
+    private String username;
 
     @Column(nullable = false)
     private String password;
