@@ -668,6 +668,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
     private void issuePasswordResetToken(Usuario usuario, String action, String detail) {
         passwordResetTokenRepository.deleteByUsuario(usuario);
+        // Flush the delete now: otherwise Hibernate flushes insertions before deletions,
+        // so the new token's INSERT below would run before this DELETE and violate
+        // uk_password_reset_tokens_usuario when the user already has a token.
+        passwordResetTokenRepository.flush();
 
         String token = SecurityTokenUtils.generate();
         PasswordResetToken resetToken = PasswordResetToken.builder()
