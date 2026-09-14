@@ -81,9 +81,7 @@ public class CompanyMembershipServiceImpl implements CompanyMembershipService {
     @Transactional(readOnly = true)
     public void assertNoActiveEmploymentElsewhere(Usuario usuario) {
         if (empleadoRepository.existsByUserIdAndEstadoTrue(usuario.getId())) {
-            throw new IllegalArgumentException(
-                    "Esta persona ya tiene una relación laboral activa registrada en el sistema. "
-                            + "Para transferirla, la empresa donde trabaja actualmente debe darla de baja primero.");
+            throw new IllegalArgumentException("El correo electrónico ya está en uso");
         }
     }
 }
