@@ -14,8 +14,11 @@ public class LoginDTO {
     @Size(max = 100, message = "El slug no debe superar 100 caracteres")
     private String slug;
 
+    /** Acepta tanto el username como el correo de contacto de la persona
+     * (mismo campo, mas rapido de escribir) - de ahi el limite de 255, igual
+     * al de un correo, en vez del de 50 del username solo. */
     @NotBlank(message = "El usuario es obligatorio")
-    @Size(max = 50, message = "El usuario no debe superar 50 caracteres")
+    @Size(max = 255, message = "El usuario no debe superar 255 caracteres")
     private String username;
 
     @NotBlank(message = "La contraseña es obligatoria")

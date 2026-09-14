@@ -182,7 +182,10 @@ class RF17To21Test {
         // usuarioRepository.save SI se llama (replaceClientRoles actualiza sus roles).
         assertThat(existente.getVerificationToken()).isNull();
         verify(usuarioRepository, never()).existsByDni(anyString());
-        verify(emailService, never()).sendEmailWithRetry(any(), anyString());
+        // Identidad ya existente uniendose a una empresa nueva: se le avisa por
+        // correo (no pasa por el flujo de activacion de cuenta nueva, asi que
+        // no tiene otra forma de saber que ahora tiene acceso aqui tambien).
+        verify(emailService).sendEmailWithRetry(any(), eq("email/new-company-access-template"));
     }
 
     @Test

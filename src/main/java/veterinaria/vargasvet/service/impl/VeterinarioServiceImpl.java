@@ -72,7 +72,11 @@ public class VeterinarioServiceImpl implements VeterinarioService {
             throw new IllegalArgumentException("El número de colegiatura ya está registrado en esta empresa");
         }
 
-        java.util.Optional<Usuario> existingUsuario = usuarioRepository.findByEmail(dto.getEmail());
+        // Misma persona real si coincide el correo O el numero de documento -
+        // alguien puede ya tener identidad con OTRO correo (ej. como cliente
+        // en otra empresa); se reutiliza esa identidad en vez de bloquear.
+        java.util.Optional<Usuario> existingUsuario = usuarioRepository.findByEmail(dto.getEmail())
+                .or(() -> usuarioRepository.findByDni(dto.getNumeroDocumento()));
         boolean esUsuarioNuevo = existingUsuario.isEmpty();
         Usuario savedUser;
         String verificationToken = null;
@@ -157,9 +161,42 @@ public class VeterinarioServiceImpl implements VeterinarioService {
 
         if (esUsuarioNuevo) {
             sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
+        } else {
+            sendNewCompanyAccessEmail(savedUser, company);
         }
 
         return userMapper.toProfileDTO(savedUser);
+    }
+
+    /** Aviso para cuando una identidad YA existente (encontrada por correo o
+     * DNI) se une a una empresa nueva como veterinario - la persona no tiene
+     * forma de saber que ahora tiene acceso aqui tambien si no se le avisa,
+     * ya que no pasa por el flujo de activacion de cuenta nueva. */
+    private void sendNewCompanyAccessEmail(Usuario usuario, Company company) {
+        try {
+            String resolvedCompanyName = company.getName() != null ? company.getName() : companyName;
+            String resolvedLogo = company.getLogoUrl() != null ? company.getLogoUrl() : companyLogo;
+            String resolvedEmail = company.getEmail() != null ? company.getEmail() : companyEmail;
+            String resolvedPhone = company.getPhone() != null ? company.getPhone() : companyPhone;
+            Map<String, Object> model = new HashMap<>();
+            model.put("nombre", usuario.getNombre() == null ? "" : usuario.getNombre());
+            model.put("username", usuario.getUsername());
+            model.put("companyName", resolvedCompanyName);
+            model.put("companyLogo", resolvedLogo);
+            model.put("companyEmail", resolvedEmail);
+            model.put("companyPhone", resolvedPhone);
+            model.put("loginUrl", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug("/login", company.getSlug()));
+
+            Mail mail = emailService.createMail(
+                    usuario.getEmail(),
+                    "Nuevo acceso en " + resolvedCompanyName,
+                    model
+            );
+
+            emailService.sendEmailWithRetry(mail, "email/new-company-access-template");
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo enviar el aviso de nueva empresa a " + usuario.getEmail() + ": " + e.getMessage());
+        }
     }
 
     private void sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken) {

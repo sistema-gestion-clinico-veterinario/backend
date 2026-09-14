@@ -44,4 +44,11 @@ public class RefreshToken {
     @ManyToOne
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
     private Usuario usuario;
+
+    /** Empresa con la que se establecio esta sesion (nulo para SuperAdmin) -
+     * fuente de verdad al refrescar el token, no usuario.company (ambiguo si
+     * la persona tiene mas de una empresa activa). */
+    @ManyToOne
+    @JoinColumn(name = "company_id", referencedColumnName = "id")
+    private Company company;
 }
