@@ -23,9 +23,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * Cubre la generacion automatica del slug al crear una empresa - antes de
- * este fix, save() nunca asignaba slug y la columna es NOT NULL UNIQUE
- * desde V66, por lo que crear una empresa nueva fallaba en la base de datos.
+ * Cubre la asignacion del slug al crear una empresa - antes de este fix,
+ * save() nunca asignaba slug y la columna es NOT NULL UNIQUE desde V66, por
+ * lo que crear una empresa nueva fallaba en la base de datos. El slug lo
+ * decide explicitamente quien crea la empresa - nunca se deriva del nombre
+ * ni se le agrega un sufijo si ya esta en uso (se rechaza en su lugar), para
+ * que los flujos de login de dos empresas nunca queden ambiguos o fusionados.
  */
 @ExtendWith(MockitoExtension.class)
 class CompanyServiceImplTest {
@@ -49,42 +52,50 @@ class CompanyServiceImplTest {
     }
 
     @Test
-    void generaSlugAutomaticamenteDesdeElNombreAlCrear() {
-        when(companyRepository.existsBySlug(anyString())).thenReturn(false);
-        when(companyRepository.save(any(Company.class))).thenAnswer(inv -> {
-            Company c = inv.getArgument(0);
-            c.setId(1);
-            return c;
-        });
-
+    void rechazaCrearUnaEmpresaSinSlug() {
         try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
-            security.when(SecurityUtils::getCurrentUserEmail).thenReturn("admin@vargasvet.pe");
-            service.save(dtoValido());
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                    () -> service.save(dtoValido()));
         }
 
-        ArgumentCaptor<Company> captor = ArgumentCaptor.forClass(Company.class);
-        verify(companyRepository).save(captor.capture());
-        assertThat(captor.getValue().getSlug()).isEqualTo("clinica-veterinaria-vargas-vet");
+        verify(companyRepository, never()).save(any());
     }
 
     @Test
-    void agregaSufijoNumericoCuandoElSlugGeneradoYaExiste() {
-        when(companyRepository.existsBySlug("clinica-veterinaria-vargas-vet")).thenReturn(true);
-        when(companyRepository.existsBySlug("clinica-veterinaria-vargas-vet-2")).thenReturn(false);
+    void respetaElSlugElegidoExplicitamenteEnVezDeDerivarloDelNombre() {
+        when(companyRepository.existsBySlug("mi-veterinaria")).thenReturn(false);
         when(companyRepository.save(any(Company.class))).thenAnswer(inv -> {
             Company c = inv.getArgument(0);
-            c.setId(2);
+            c.setId(3);
             return c;
         });
 
+        CompanyDTO dto = dtoValido();
+        dto.setSlug("mi-veterinaria");
+
         try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
             security.when(SecurityUtils::getCurrentUserEmail).thenReturn("admin@vargasvet.pe");
-            service.save(dtoValido());
+            service.save(dto);
         }
 
         ArgumentCaptor<Company> captor = ArgumentCaptor.forClass(Company.class);
         verify(companyRepository).save(captor.capture());
-        assertThat(captor.getValue().getSlug()).isEqualTo("clinica-veterinaria-vargas-vet-2");
+        assertThat(captor.getValue().getSlug()).isEqualTo("mi-veterinaria");
+    }
+
+    @Test
+    void rechazaCrearConUnSlugExplicitoYaUsadoEnVezDeAgregarleUnSufijo() {
+        when(companyRepository.existsBySlug("mi-veterinaria")).thenReturn(true);
+
+        CompanyDTO dto = dtoValido();
+        dto.setSlug("mi-veterinaria");
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                    () -> service.save(dto));
+        }
+
+        verify(companyRepository, never()).save(any());
     }
 
     @Test

@@ -267,16 +267,6 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         sharedRateLimitService.enforce("login-account", username,
                 loginPerAccountPerWindow, java.time.Duration.ofMinutes(15));
 
-        // La empresa la resuelve la URL (slug), no una pantalla de seleccion despues
-        // del login - si el slug no existe, mismo error generico (no revelar si el
-        // slug existe o no). Ver CompanyMembershipService y el plan de login-por-slug.
-        Company company = slug == null ? null : companyRepository.findBySlug(slug).orElse(null);
-        if (company == null) {
-            passwordEncoder.matches(loginDTO.getPassword(), DUMMY_BCRYPT_HASH);
-            authenticationAuditService.recordLoginFailure(null, username, "credenciales inválidas");
-            throw new BadCredentialsException("Credenciales inválidas");
-        }
-
         Usuario usuario = usuarioRepository.findByUsername(username).orElse(null);
         if (usuario == null) {
             passwordEncoder.matches(loginDTO.getPassword(), DUMMY_BCRYPT_HASH);
@@ -289,13 +279,28 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
-        // Credenciales correctas pero sin relacion activa con ESTA empresa (la del
-        // slug): mismo mensaje generico que credenciales invalidas, a proposito - no
-        // revela en cuales otras empresas si tiene cuenta (decision de seguridad ya
-        // tomada, ver plan).
-        if (!companyMembershipService.hasActiveMembership(usuario.getId(), company.getId())) {
-            authenticationAuditService.recordLoginFailure(usuario, username, "credenciales inválidas");
-            throw new BadCredentialsException("Credenciales inválidas");
+        // La empresa la resuelve la URL (slug) cuando esta presente - nunca una
+        // pantalla de seleccion despues del login. Sin slug (login "global", la
+        // pantalla sin marca de ninguna empresa en particular) solo se permite
+        // si el username tiene EXACTAMENTE una empresa activa; con cero o varias
+        // se rechaza igual - nunca revela en cuantas o cuales empresas tiene
+        // cuenta (decision de seguridad ya tomada, ver plan).
+        Company company;
+        if (slug != null) {
+            company = companyRepository.findBySlug(slug).orElse(null);
+            if (company == null || !companyMembershipService.hasActiveMembership(usuario.getId(), company.getId())) {
+                authenticationAuditService.recordLoginFailure(usuario, username, "credenciales inválidas");
+                throw new BadCredentialsException("Credenciales inválidas");
+            }
+        } else {
+            Set<Integer> activeCompanyIds = companyMembershipService.getActiveCompanyIds(usuario);
+            company = activeCompanyIds.size() == 1
+                    ? companyRepository.findById(activeCompanyIds.iterator().next()).orElse(null)
+                    : null;
+            if (company == null) {
+                authenticationAuditService.recordLoginFailure(usuario, username, "credenciales inválidas");
+                throw new BadCredentialsException("Credenciales inválidas");
+            }
         }
 
         if (passwordEncoder.upgradeEncoding(usuario.getPassword())) {
@@ -347,6 +352,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setCompanyId(companyId);
         response.setCompanyName(company.getName());
         response.setCompanyLogoUrl(company.getLogoUrl());
+        response.setCompanySlug(company.getSlug());
         response.setNombreCompleto(resolveNombreCompleto(usuario));
         response.setUserType(resolveUserType(usuario));
         response.setPasswordChanged(usuario.isPasswordChanged());
@@ -502,6 +508,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setCompanyId(companyId);
         response.setCompanyName(usuario.getCompany() != null ? usuario.getCompany().getName() : null);
         response.setCompanyLogoUrl(usuario.getCompany() != null ? usuario.getCompany().getLogoUrl() : null);
+        response.setCompanySlug(usuario.getCompany() != null ? usuario.getCompany().getSlug() : null);
         response.setNombreCompleto(resolveNombreCompleto(usuario));
         response.setUserType(resolveUserType(usuario));
         response.setPasswordChanged(usuario.isPasswordChanged());
@@ -831,6 +838,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setCompanyId(companyId);
         response.setCompanyName(usuario.getCompany() != null ? usuario.getCompany().getName() : null);
         response.setCompanyLogoUrl(usuario.getCompany() != null ? usuario.getCompany().getLogoUrl() : null);
+        response.setCompanySlug(usuario.getCompany() != null ? usuario.getCompany().getSlug() : null);
         response.setNombreCompleto(resolveNombreCompleto(usuario));
         response.setUserType(resolveUserType(usuario));
         response.setPasswordChanged(usuario.isPasswordChanged());
