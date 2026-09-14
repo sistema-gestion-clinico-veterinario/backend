@@ -196,13 +196,20 @@ public class CompanyServiceImpl implements CompanyService {
         }
     }
 
-    /** Genera el slug desde el nombre si no se proporciono uno explicito;
-     * en cualquier caso, garantiza que sea unico antes de persistir. Mismo
-     * algoritmo de saneo que usó el backfill de V66. */
+    /** El slug lo decide explicitamente quien crea la empresa - nunca se
+     * deriva del nombre ni se le agrega un sufijo en silencio (dos empresas
+     * podrian compartir nombre o el mismo slug "base"; sus flujos de login
+     * deben quedar inequivocamente separados, nunca fusionados/adivinados).
+     * Si el slug pedido ya esta en uso, se rechaza. */
     private String resolveSlugForCreate(CompanyDTO dto) {
-        String requested = dto.getSlug();
-        String base = (requested != null && !requested.isBlank()) ? slugify(requested) : slugify(dto.getName());
-        return generateUniqueSlug(base, null);
+        if (dto.getSlug() == null || dto.getSlug().isBlank()) {
+            throw new IllegalArgumentException("El slug es obligatorio");
+        }
+        String requested = slugify(dto.getSlug());
+        if (companyRepository.existsBySlug(requested)) {
+            throw new IllegalArgumentException("El slug ya está en uso por otra empresa");
+        }
+        return requested;
     }
 
     private String resolveSlugForUpdate(Integer companyId, String requestedSlug) {
@@ -211,18 +218,6 @@ public class CompanyServiceImpl implements CompanyService {
             throw new IllegalArgumentException("El slug ya está en uso por otra empresa");
         }
         return base;
-    }
-
-    private String generateUniqueSlug(String base, Integer excludeId) {
-        String normalized = base.isBlank() ? "empresa" : base;
-        String candidate = normalized;
-        int suffix = 2;
-        while (excludeId == null ? companyRepository.existsBySlug(candidate)
-                : companyRepository.existsBySlugAndIdNot(candidate, excludeId)) {
-            candidate = normalized + "-" + suffix;
-            suffix++;
-        }
-        return candidate;
     }
 
     private String slugify(String value) {
