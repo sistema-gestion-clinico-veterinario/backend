@@ -516,6 +516,11 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             throw new IllegalStateException("No se puede asignar horario a un empleado inactivo");
         }
 
+        if (empleado.getCompany() == null) {
+            throw new IllegalStateException("El empleado no tiene una empresa asignada");
+        }
+        Integer companyId = empleado.getCompany().getId();
+
         String adminEmail = SecurityUtils.getCurrentUserEmail();
         LocalDate start = request.getStartDate();
         LocalDate end = request.getEndDate();
@@ -540,7 +545,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             DiaSemana dia = toDiaSemana(currentDay.getDayOfWeek());
 
             // Verificar si la empresa abre ese dÃ­a
-            if (!isEmpresaAbiertaEnDia(empleado.getCompany().getId(), currentDay, dia)) {
+            if (!isEmpresaAbiertaEnDia(companyId, currentDay, dia)) {
                 continue;
             }
 
@@ -572,7 +577,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             }
 
             for (HorarioEmpleadoRequest shiftReq : shiftsParaHoy) {
-                validarHorarioContraEmpresa(empleado.getCompany().getId(), currentDay, shiftReq.getHoraInicio(), shiftReq.getHoraFin());
+                validarHorarioContraEmpresa(companyId, currentDay, shiftReq.getHoraInicio(), shiftReq.getHoraFin());
 
                 // Solo verificar traslape si NO estamos sobrescribiendo (porque ya borramos arriba)
                 if (!Boolean.TRUE.equals(request.getOverwrite())) {
