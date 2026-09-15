@@ -420,7 +420,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
     private void guardarHorarios(Empleado empleado, List<HorarioEmpleadoRequest> horariosRequest) {
         String adminEmail = SecurityUtils.getCurrentUserEmail();
-        Integer companyId = empleado.getUser().getCompany().getId();
+        Integer companyId = empleado.getCompany().getId();
 
         for (HorarioEmpleadoRequest h : horariosRequest) {
             if (h.getHoraInicio() == null || h.getHoraFin() == null) continue;
@@ -540,7 +540,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             DiaSemana dia = toDiaSemana(currentDay.getDayOfWeek());
 
             // Verificar si la empresa abre ese dÃ­a
-            if (!isEmpresaAbiertaEnDia(empleado.getUser().getCompany().getId(), currentDay, dia)) {
+            if (!isEmpresaAbiertaEnDia(empleado.getCompany().getId(), currentDay, dia)) {
                 continue;
             }
 
@@ -572,7 +572,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             }
 
             for (HorarioEmpleadoRequest shiftReq : shiftsParaHoy) {
-                validarHorarioContraEmpresa(empleado.getUser().getCompany().getId(), currentDay, shiftReq.getHoraInicio(), shiftReq.getHoraFin());
+                validarHorarioContraEmpresa(empleado.getCompany().getId(), currentDay, shiftReq.getHoraInicio(), shiftReq.getHoraFin());
 
                 // Solo verificar traslape si NO estamos sobrescribiendo (porque ya borramos arriba)
                 if (!Boolean.TRUE.equals(request.getOverwrite())) {
@@ -643,7 +643,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             throw new IllegalStateException("No se puede modificar un turno con citas activas relacionadas; identifíquelas y revíselas antes de continuar");
         }
 
-        validarHorarioContraEmpresa(empleado.getUser().getCompany().getId(), fecha, request.getHoraInicio(), request.getHoraFin());
+        validarHorarioContraEmpresa(empleado.getCompany().getId(), fecha, request.getHoraInicio(), request.getHoraFin());
 
         // Verificar traslape excluyendo el propio registro
         if (horarioEmpleadoRepository.existsOverlapExcluding(empleado.getId(), fecha, request.getHoraInicio(), request.getHoraFin(), horarioId)) {
@@ -871,7 +871,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             throw new IllegalStateException("No se puede clonar horario de un empleado inactivo");
         }
 
-        Integer companyId = empleado.getUser().getCompany().getId();
+        Integer companyId = empleado.getCompany().getId();
         LocalDate sourceEnd = sourceStart.plusDays(6);
         LocalDate targetEnd = targetStart.plusDays(6);
         String adminEmail  = SecurityUtils.getCurrentUserEmail();
@@ -999,7 +999,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             throw new IllegalStateException("No se puede clonar horario de un empleado inactivo");
         }
 
-        Integer companyId = empleado.getUser().getCompany().getId();
+        Integer companyId = empleado.getCompany().getId();
         String adminEmail  = SecurityUtils.getCurrentUserEmail();
 
         // 1. La fecha destino no puede ser igual a la de origen
