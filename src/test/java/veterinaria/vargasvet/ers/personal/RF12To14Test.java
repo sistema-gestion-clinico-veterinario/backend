@@ -94,6 +94,7 @@ class RF12To14Test {
         empleado = new Empleado();
         empleado.setId(7L);
         empleado.setUser(user);
+        empleado.setCompany(company);
         empleado.setEstado(true);
 
         UsuarioPrincipal principal = new UsuarioPrincipal(
