@@ -966,10 +966,10 @@ public class CitaServiceImpl implements CitaService {
         ServiciosVeterinarios servicio = servicioRepository.findById(servicioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Servicio no encontrado"));
 
-        if (empleado.getUser() == null || empleado.getUser().getCompany() == null) {
+        if (empleado.getCompany() == null) {
             throw new IllegalStateException("El empleado no tiene una empresa asignada");
         }
-        Integer companyId = empleado.getUser().getCompany().getId();
+        Integer companyId = empleado.getCompany().getId();
         int duracion = servicio.getDuracionEstimada() != null ? servicio.getDuracionEstimada() : 20;
 
         java.util.List<String> availableSlots = new java.util.ArrayList<>();
