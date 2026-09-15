@@ -420,7 +420,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
     private void guardarHorarios(Empleado empleado, List<HorarioEmpleadoRequest> horariosRequest) {
         String adminEmail = SecurityUtils.getCurrentUserEmail();
-        Integer companyId = empleado.getUser().getCompany().getId();
+        Integer companyId = empleado.getCompany().getId();
 
         for (HorarioEmpleadoRequest h : horariosRequest) {
             if (h.getHoraInicio() == null || h.getHoraFin() == null) continue;
@@ -648,7 +648,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             throw new IllegalStateException("No se puede modificar un turno con citas activas relacionadas; identifíquelas y revíselas antes de continuar");
         }
 
-        validarHorarioContraEmpresa(empleado.getUser().getCompany().getId(), fecha, request.getHoraInicio(), request.getHoraFin());
+        validarHorarioContraEmpresa(empleado.getCompany().getId(), fecha, request.getHoraInicio(), request.getHoraFin());
 
         // Verificar traslape excluyendo el propio registro
         if (horarioEmpleadoRepository.existsOverlapExcluding(empleado.getId(), fecha, request.getHoraInicio(), request.getHoraFin(), horarioId)) {
@@ -876,7 +876,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             throw new IllegalStateException("No se puede clonar horario de un empleado inactivo");
         }
 
-        Integer companyId = empleado.getUser().getCompany().getId();
+        Integer companyId = empleado.getCompany().getId();
         LocalDate sourceEnd = sourceStart.plusDays(6);
         LocalDate targetEnd = targetStart.plusDays(6);
         String adminEmail  = SecurityUtils.getCurrentUserEmail();
@@ -1004,7 +1004,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             throw new IllegalStateException("No se puede clonar horario de un empleado inactivo");
         }
 
-        Integer companyId = empleado.getUser().getCompany().getId();
+        Integer companyId = empleado.getCompany().getId();
         String adminEmail  = SecurityUtils.getCurrentUserEmail();
 
         // 1. La fecha destino no puede ser igual a la de origen
