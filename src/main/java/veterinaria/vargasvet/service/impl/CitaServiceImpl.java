@@ -889,6 +889,9 @@ public class CitaServiceImpl implements CitaService {
     }
 
     private void validarEmpleadoSegunAlcance(Long empleadoId) {
+        // Restringe solo a personal (STAFF); un cliente agendando desde el portal
+        // no es empleado y elige libremente al veterinario, no aplica esta regla.
+        if (SecurityUtils.getCurrentRoleScope() == veterinaria.vargasvet.domain.enums.RoleScope.CLIENT) return;
         if (accesoValidator.canAccessCompanyData("VISTA_CITAS_AGENDA")) return;
         Long ownEmpleadoId = empleadoRepository.findActiveByUserId(SecurityUtils.getCurrentUserId())
                 .map(Empleado::getId)
