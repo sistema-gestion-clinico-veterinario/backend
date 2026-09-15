@@ -358,6 +358,7 @@ class RF17To21Test {
         Apoderado apoderado = new Apoderado();
         apoderado.setId(id);
         apoderado.setUser(user);
+        apoderado.setCompany(company(companyId));
         apoderado.setNumeroDocumento(documento);
         apoderado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
         apoderado.setGenero(Genero.FEMENINO);

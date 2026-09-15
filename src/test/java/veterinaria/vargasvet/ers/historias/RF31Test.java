@@ -150,6 +150,7 @@ class RF31Test {
         propietario.setCompany(company);
         Apoderado apoderado = new Apoderado();
         apoderado.setUser(propietario);
+        apoderado.setCompany(company);
         Mascota mascota = new Mascota();
         mascota.setApoderado(apoderado);
         HistoriaClinica historia = new HistoriaClinica();

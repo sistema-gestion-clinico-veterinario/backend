@@ -186,7 +186,7 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
     }
 
     private Integer getCompanyId(Cita cita) {
-        return cita.getMascota().getApoderado().getUser().getCompany().getId();
+        return cita.getMascota().getApoderado().getCompany().getId();
     }
 
     private CuentaCitaResponse map(Cita cita, List<DetalleCuentaCita> detalles) {

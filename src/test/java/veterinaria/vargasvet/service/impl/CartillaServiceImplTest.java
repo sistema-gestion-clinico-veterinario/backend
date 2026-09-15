@@ -61,6 +61,7 @@ class CartillaServiceImplTest {
         Usuario propietario = usuario(10, "Ana", "Perez");
         Apoderado apoderado = new Apoderado();
         apoderado.setUser(propietario);
+        apoderado.setCompany(company);
         mascota = new Mascota();
         mascota.setId(20L);
         mascota.setNombreCompleto("Tobby");
@@ -73,6 +74,7 @@ class CartillaServiceImplTest {
         veterinario.setEstado(true);
         veterinario.setNumeroColegiatura("CMVP-1234");
         veterinario.setUser(usuario(11, "Luis", "Saavedra"));
+        veterinario.setCompany(company);
 
         servicio = new ServiciosVeterinarios();
         servicio.setId(40L);

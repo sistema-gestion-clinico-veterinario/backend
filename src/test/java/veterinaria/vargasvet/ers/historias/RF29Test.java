@@ -171,6 +171,7 @@ class RF29Test {
         Apoderado apoderado = new Apoderado();
         apoderado.setId(40L);
         apoderado.setUser(propietario);
+        apoderado.setCompany(company);
         Mascota mascota = new Mascota();
         mascota.setId(50L);
         mascota.setNombreCompleto("Paciente QA");

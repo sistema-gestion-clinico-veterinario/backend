@@ -87,8 +87,8 @@ public class CitaServiceImpl implements CitaService {
 
         businessValidator.checkCompanyActiva(
             mascota.getApoderado() != null && mascota.getApoderado().getUser() != null
-                && mascota.getApoderado().getUser().getCompany() != null
-                ? mascota.getApoderado().getUser().getCompany().getId() : null);
+                && mascota.getApoderado().getCompany() != null
+                ? mascota.getApoderado().getCompany().getId() : null);
 
         // Serializa las altas de citas del mismo profesional. Sin este bloqueo, dos
         // solicitudes concurrentes pueden superar juntas la consulta de solapamiento
@@ -108,10 +108,10 @@ public class CitaServiceImpl implements CitaService {
 
         if (!SecurityUtils.isSuperAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-            if (mascota.getApoderado().getUser().getCompany() == null || !mascota.getApoderado().getUser().getCompany().getId().equals(currentCompanyId)) {
+            if (mascota.getApoderado().getCompany() == null || !mascota.getApoderado().getCompany().getId().equals(currentCompanyId)) {
                 throw new IllegalArgumentException("No tienes permiso para crear citas para mascotas de otra clínica");
             }
-            if (veterinario.getUser().getCompany() == null || !veterinario.getUser().getCompany().getId().equals(currentCompanyId)) {
+            if (veterinario.getCompany() == null || !veterinario.getCompany().getId().equals(currentCompanyId)) {
                 throw new IllegalArgumentException("No tienes permiso para asignar citas a veterinarios de otra clínica");
             }
         }
@@ -142,7 +142,7 @@ public class CitaServiceImpl implements CitaService {
 
         // Validación contra el horario de la clínica (solo si NO es emergencia)
         boolean esEmergencia = Boolean.TRUE.equals(request.getEsEmergencia());
-        Company company = veterinario.getUser().getCompany();
+        Company company = veterinario.getCompany();
         
         if (!esEmergencia && company != null) {
             LocalDate fechaCita = fechaInicio.toLocalDate();
@@ -502,9 +502,9 @@ public class CitaServiceImpl implements CitaService {
             if (cita.getMascota().getApoderado() != null && cita.getMascota().getApoderado().getUser() != null) {
                 String emailDestinatario = cita.getMascota().getApoderado().getUser().getEmail();
                 if (emailDestinatario != null && !emailDestinatario.isBlank()) {
-                    Company company = cita.getMascota().getApoderado().getUser().getCompany();
+                    Company company = cita.getMascota().getApoderado().getCompany();
                     if (company == null && cita.getEmpleado() != null && cita.getEmpleado().getUser() != null) {
-                        company = cita.getEmpleado().getUser().getCompany();
+                        company = cita.getEmpleado().getCompany();
                     }
 
                     String companyName = company != null ? company.getName() : "VargasVet";
@@ -594,7 +594,7 @@ public class CitaServiceImpl implements CitaService {
 
         if (!SecurityUtils.isSuperAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-            if (veterinario.getUser().getCompany() == null || !veterinario.getUser().getCompany().getId().equals(currentCompanyId)) {
+            if (veterinario.getCompany() == null || !veterinario.getCompany().getId().equals(currentCompanyId)) {
                 throw new IllegalArgumentException("No tienes permiso para asignar citas a empleados de otra clínica");
             }
         }
@@ -770,9 +770,9 @@ public class CitaServiceImpl implements CitaService {
             if (cita.getMascota().getApoderado() != null && cita.getMascota().getApoderado().getUser() != null) {
                 String emailDestinatario = cita.getMascota().getApoderado().getUser().getEmail();
                 if (emailDestinatario != null && !emailDestinatario.isBlank()) {
-                    Company company = cita.getMascota().getApoderado().getUser().getCompany();
+                    Company company = cita.getMascota().getApoderado().getCompany();
                     if (company == null && cita.getEmpleado() != null && cita.getEmpleado().getUser() != null) {
-                        company = cita.getEmpleado().getUser().getCompany();
+                        company = cita.getEmpleado().getCompany();
                     }
 
                     String companyName = company != null ? company.getName() : "VargasVet";
@@ -814,7 +814,7 @@ public class CitaServiceImpl implements CitaService {
         LocalDate fechaCita = fechaInicio.toLocalDate();
         LocalTime horaInicio = fechaInicio.toLocalTime();
         LocalTime horaFinCita = fechaFin.toLocalTime();
-        Company company = empleado.getUser() != null ? empleado.getUser().getCompany() : null;
+        Company company = empleado.getCompany();
 
         if (!esEmergencia && company != null) {
             companyExceptionRepository.findByCompanyIdAndDate(company.getId(), fechaCita)
@@ -866,8 +866,8 @@ public class CitaServiceImpl implements CitaService {
     private void validarPermisoEmpresa(Cita cita) {
         if (!SecurityUtils.isSuperAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-            if (cita.getMascota().getApoderado().getUser().getCompany() == null ||
-                !cita.getMascota().getApoderado().getUser().getCompany().getId().equals(currentCompanyId)) {
+            if (cita.getMascota().getApoderado().getCompany() == null ||
+                !cita.getMascota().getApoderado().getCompany().getId().equals(currentCompanyId)) {
                 throw new IllegalArgumentException("No tienes permiso para realizar esta acción en esta cita");
             }
         }
@@ -906,8 +906,8 @@ public class CitaServiceImpl implements CitaService {
     private Integer getCitaCompanyId(Cita cita) {
         if (cita.getMascota() != null && cita.getMascota().getApoderado() != null
             && cita.getMascota().getApoderado().getUser() != null
-            && cita.getMascota().getApoderado().getUser().getCompany() != null) {
-            return cita.getMascota().getApoderado().getUser().getCompany().getId();
+            && cita.getMascota().getApoderado().getCompany() != null) {
+            return cita.getMascota().getApoderado().getCompany().getId();
         }
         return null;
     }
@@ -927,8 +927,8 @@ public class CitaServiceImpl implements CitaService {
     private void broadcastCitaEvent(String tipo, Cita cita, CitaResponse response) {
         Integer companyId = null;
         if (cita.getEmpleado() != null && cita.getEmpleado().getUser() != null
-                && cita.getEmpleado().getUser().getCompany() != null) {
-            companyId = cita.getEmpleado().getUser().getCompany().getId();
+                && cita.getEmpleado().getCompany() != null) {
+            companyId = cita.getEmpleado().getCompany().getId();
         }
         final Integer finalCompanyId = companyId;
         final CitaWsEvent event = CitaWsEvent.builder()

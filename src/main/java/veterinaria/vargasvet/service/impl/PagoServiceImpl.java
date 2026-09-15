@@ -293,8 +293,8 @@ public class PagoServiceImpl implements PagoService {
         try {
             if (cita.getMascota() != null && cita.getMascota().getApoderado() != null
                     && cita.getMascota().getApoderado().getUser() != null
-                    && cita.getMascota().getApoderado().getUser().getCompany() != null) {
-                return cita.getMascota().getApoderado().getUser().getCompany().getId();
+                    && cita.getMascota().getApoderado().getCompany() != null) {
+                return cita.getMascota().getApoderado().getCompany().getId();
             }
         } catch (Exception ignored) {}
         return null;
