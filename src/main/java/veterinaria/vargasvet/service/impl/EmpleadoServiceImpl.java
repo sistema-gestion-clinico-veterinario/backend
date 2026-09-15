@@ -516,10 +516,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             throw new IllegalStateException("No se puede asignar horario a un empleado inactivo");
         }
 
-        if (empleado.getUser() == null || empleado.getUser().getCompany() == null) {
+        if (empleado.getCompany() == null) {
             throw new IllegalStateException("El empleado no tiene una empresa asignada");
         }
-        Integer companyId = empleado.getUser().getCompany().getId();
+        Integer companyId = empleado.getCompany().getId();
 
         String adminEmail = SecurityUtils.getCurrentUserEmail();
         LocalDate start = request.getStartDate();
