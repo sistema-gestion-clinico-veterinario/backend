@@ -152,8 +152,8 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
             return;
         }
         Integer companyId = SecurityUtils.getCurrentCompanyId();
-        if (hc.getMascota().getApoderado().getUser().getCompany() == null ||
-            !hc.getMascota().getApoderado().getUser().getCompany().getId().equals(companyId)) {
+        if (hc.getMascota().getApoderado().getCompany() == null ||
+            !hc.getMascota().getApoderado().getCompany().getId().equals(companyId)) {
             throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");
         }
         if (SecurityUtils.getCurrentRoleScope() == veterinaria.vargasvet.domain.enums.RoleScope.CLIENT) {

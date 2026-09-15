@@ -95,8 +95,8 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         response.setGenero(apoderado.getGenero());
         response.setReferencias(apoderado.getReferencias());
         response.setObservaciones(apoderado.getObservaciones());
-        if (apoderado.getUser().getCompany() != null) {
-            veterinaria.vargasvet.domain.entity.Company company = apoderado.getUser().getCompany();
+        if (apoderado.getCompany() != null) {
+            veterinaria.vargasvet.domain.entity.Company company = apoderado.getCompany();
             response.setCompanyId(company.getId());
             response.setCompanyName(company.getName());
             response.setCompanyPhone(company.getPhone());
@@ -203,7 +203,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     @Transactional(readOnly = true)
     public List<ServicioResponse> getServicios() {
         Apoderado apoderado = getAuthenticatedApoderado();
-        Integer companyId = apoderado.getUser().getCompany().getId();
+        Integer companyId = apoderado.getCompany().getId();
         List<ServiciosVeterinarios> list = serviciosVeterinariosRepository.findByCompanyIdAndDisponibleTrueAndActivoTrue(companyId);
 
         return list.stream()
@@ -232,7 +232,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     @Transactional(readOnly = true)
     public List<EmpleadoListResponse> getEmpleados(Long servicioId) {
         Apoderado apoderado = getAuthenticatedApoderado();
-        Integer companyId = apoderado.getUser().getCompany().getId();
+        Integer companyId = apoderado.getCompany().getId();
 
         Long requiredTipoEmpleadoId = null;
         if (servicioId != null) {
@@ -276,13 +276,12 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     @Transactional(readOnly = true)
     public List<HorarioEmpleadoResponse> getHorarioEmpleado(Long empleadoId) {
         Apoderado apoderado = getAuthenticatedApoderado();
-        Integer companyId = apoderado.getUser().getCompany().getId();
+        Integer companyId = apoderado.getCompany().getId();
 
         Empleado empleado = empleadoRepository.findById(empleadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
 
-        if (empleado.getUser() == null || empleado.getUser().getCompany() == null ||
-                !empleado.getUser().getCompany().getId().equals(companyId)) {
+        if (empleado.getCompany() == null || !empleado.getCompany().getId().equals(companyId)) {
             throw new AccessDeniedException("No tienes permiso para consultar el horario de este profesional");
         }
 
@@ -308,7 +307,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     public List<String> getDisponibilidad(Long empleadoId, String fecha, Long servicioId) {
         LocalDate localDate = LocalDate.parse(fecha);
         Apoderado apoderado = getAuthenticatedApoderado();
-        Integer companyId = apoderado.getUser().getCompany().getId();
+        Integer companyId = apoderado.getCompany().getId();
 
         Empleado empleado = empleadoRepository.findById(empleadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
@@ -511,7 +510,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         LocalDate localDate = dateTime.toLocalDate();
         LocalTime time = dateTime.toLocalTime();
         Apoderado apoderado = getAuthenticatedApoderado();
-        Integer companyId = apoderado.getUser().getCompany().getId();
+        Integer companyId = apoderado.getCompany().getId();
 
         Empleado empleado = empleadoRepository.findById(empleadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado con el ID: " + empleadoId));

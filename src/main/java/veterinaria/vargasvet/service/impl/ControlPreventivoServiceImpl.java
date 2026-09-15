@@ -53,7 +53,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     }
 
     private List<TipoVacunaResponse> listarTiposVacuna(Mascota mascota) {
-        Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
+        Integer companyId = mascota.getApoderado().getCompany().getId();
         return tipoVacunaRepository.findByCompanyIdAndEspecieAndActivoTrueOrderByNombre(companyId, mascota.getEspecie())
                 .stream().map(this::toTipoResponse).toList();
     }
@@ -92,7 +92,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     }
 
     private List<TipoDesparasitanteResponse> listarTiposDesparasitante(Mascota mascota) {
-        Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
+        Integer companyId = mascota.getApoderado().getCompany().getId();
         return tipoDesparasitanteRepository.findByCompanyIdAndEspecieAndActivoTrueOrderByNombre(companyId, mascota.getEspecie())
                 .stream().map(this::toDesparasitanteResponse).toList();
     }
@@ -387,7 +387,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     private void validarCompany(Mascota mascota) {
         if (SecurityUtils.isSuperAdmin()) return;
         Integer actual = SecurityUtils.getCurrentCompanyId();
-        Integer mascotaCompany = mascota.getApoderado().getUser().getCompany().getId();
+        Integer mascotaCompany = mascota.getApoderado().getCompany().getId();
         if (actual == null || !actual.equals(mascotaCompany)) throw new IllegalArgumentException("No tiene acceso a esta mascota");
     }
 
@@ -399,7 +399,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
         if (id == null) throw new IllegalArgumentException("Debe seleccionar la vacuna");
         TipoVacuna vacuna = tipoVacunaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de vacuna no encontrado"));
-        Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
+        Integer companyId = mascota.getApoderado().getCompany().getId();
         if (!vacuna.getCompany().getId().equals(companyId) || vacuna.getEspecie() != mascota.getEspecie() || !vacuna.getActivo()) {
             throw new IllegalArgumentException("La vacuna no corresponde a la especie o veterinaria de la mascota");
         }

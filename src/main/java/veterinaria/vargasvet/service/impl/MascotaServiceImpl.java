@@ -53,13 +53,13 @@ public class MascotaServiceImpl implements MascotaService {
 
         if (!SecurityUtils.isSuperAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-            if (apoderado.getUser().getCompany() == null || !apoderado.getUser().getCompany().getId().equals(currentCompanyId)) {
+            if (apoderado.getCompany() == null || !apoderado.getCompany().getId().equals(currentCompanyId)) {
                 throw new IllegalArgumentException("No tienes permiso para registrar mascotas a clientes de otra clínica");
             }
         }
         businessValidator.checkCompanyActiva(
-            apoderado.getUser() != null && apoderado.getUser().getCompany() != null
-                ? apoderado.getUser().getCompany().getId() : null);
+            apoderado.getUser() != null && apoderado.getCompany() != null
+                ? apoderado.getCompany().getId() : null);
 
 
         if (request.getEspecie() == EspecieMascota.OTRO) {
@@ -138,8 +138,8 @@ public class MascotaServiceImpl implements MascotaService {
         }
         businessValidator.checkCompanyActiva(
             mascota.getApoderado() != null && mascota.getApoderado().getUser() != null
-                && mascota.getApoderado().getUser().getCompany() != null
-                ? mascota.getApoderado().getUser().getCompany().getId() : null);
+                && mascota.getApoderado().getCompany() != null
+                ? mascota.getApoderado().getCompany().getId() : null);
 
         if (request.getApoderadoId() != null && !request.getApoderadoId().equals(mascota.getApoderado().getId())) {
             Apoderado nuevoApoderado = apoderadoRepository.findById(request.getApoderadoId())
@@ -151,7 +151,7 @@ public class MascotaServiceImpl implements MascotaService {
 
             if (!SecurityUtils.isSuperAdmin()) {
                 Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-                if (nuevoApoderado.getUser().getCompany() == null || !nuevoApoderado.getUser().getCompany().getId().equals(currentCompanyId)) {
+                if (nuevoApoderado.getCompany() == null || !nuevoApoderado.getCompany().getId().equals(currentCompanyId)) {
                     throw new IllegalArgumentException("No tienes permiso para transferir la mascota a un cliente de otra clínica");
                 }
             }

@@ -234,10 +234,10 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
         if (consulta.getHistoriaClinica() == null || consulta.getHistoriaClinica().getMascota() == null
                 || consulta.getHistoriaClinica().getMascota().getApoderado() == null
                 || consulta.getHistoriaClinica().getMascota().getApoderado().getUser() == null
-                || consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null) {
+                || consulta.getHistoriaClinica().getMascota().getApoderado().getCompany() == null) {
             return null;
         }
-        return consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany().getId();
+        return consulta.getHistoriaClinica().getMascota().getApoderado().getCompany().getId();
     }
 
     private String nombreMascotaDe(Consulta consulta) {
@@ -255,8 +255,8 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
         if (SecurityUtils.isSuperAdmin()) return;
         Integer companyId = SecurityUtils.getCurrentCompanyId();
         Integer ownerCompanyId = consulta.getHistoriaClinica().getMascota().getApoderado()
-                .getUser().getCompany() != null
-                ? consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany().getId()
+                .getCompany() != null
+                ? consulta.getHistoriaClinica().getMascota().getApoderado().getCompany().getId()
                 : null;
         if (companyId == null || !companyId.equals(ownerCompanyId)) {
             throw new AccessDeniedException("No tiene acceso a archivos clínicos de otra empresa");
