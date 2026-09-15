@@ -295,8 +295,8 @@ public class CajaServiceImpl implements CajaService {
     private Integer getCitaCompanyId(Cita cita) {
         if (cita.getMascota() != null && cita.getMascota().getApoderado() != null
                 && cita.getMascota().getApoderado().getUser() != null
-                && cita.getMascota().getApoderado().getUser().getCompany() != null) {
-            return cita.getMascota().getApoderado().getUser().getCompany().getId();
+                && cita.getMascota().getApoderado().getCompany() != null) {
+            return cita.getMascota().getApoderado().getCompany().getId();
         }
         return null;
     }

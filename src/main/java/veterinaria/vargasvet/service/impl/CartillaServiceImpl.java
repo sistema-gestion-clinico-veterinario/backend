@@ -245,9 +245,9 @@ public class CartillaServiceImpl implements CartillaService {
         if (empleado == null) {
             throw new IllegalArgumentException("El usuario autenticado no esta asociado a un profesional activo");
         }
-        Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
-        if (empleado.getUser() == null || empleado.getUser().getCompany() == null
-                || !companyId.equals(empleado.getUser().getCompany().getId())
+        Integer companyId = mascota.getApoderado().getCompany().getId();
+        if (empleado.getCompany() == null
+                || !companyId.equals(empleado.getCompany().getId())
                 || !Boolean.TRUE.equals(empleado.getEstado())) {
             throw new IllegalArgumentException("El profesional no pertenece a la veterinaria o se encuentra inactivo");
         }
@@ -256,7 +256,7 @@ public class CartillaServiceImpl implements CartillaService {
 
     private ServiciosVeterinarios resolverServicioPreventivo(Long servicioId, TipoControlPreventivo tipo, Mascota mascota) {
         if (servicioId == null) {
-            Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
+            Integer companyId = mascota.getApoderado().getCompany().getId();
             TipoControlServicio esperado = tipo == TipoControlPreventivo.VACUNACION
                     ? TipoControlServicio.VACUNACION : TipoControlServicio.DESPARASITACION;
             return serviciosRepository.findByCompanyIdAndDisponibleTrueAndActivoTrue(companyId).stream()
@@ -267,7 +267,7 @@ public class CartillaServiceImpl implements CartillaService {
         }
         ServiciosVeterinarios servicio = serviciosRepository.findById(servicioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Servicio preventivo no encontrado"));
-        Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
+        Integer companyId = mascota.getApoderado().getCompany().getId();
         if (!servicio.getCompany().getId().equals(companyId)) {
             throw new IllegalArgumentException("El servicio no pertenece a la veterinaria de la mascota");
         }
@@ -283,7 +283,7 @@ public class CartillaServiceImpl implements CartillaService {
     private TipoVacuna validarTipoVacuna(Long id, Mascota mascota) {
         TipoVacuna vacuna = tipoVacunaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de vacuna no encontrado"));
-        Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
+        Integer companyId = mascota.getApoderado().getCompany().getId();
         if (!vacuna.getCompany().getId().equals(companyId)
                 || vacuna.getEspecie() != mascota.getEspecie() || !vacuna.getActivo()) {
             throw new IllegalArgumentException("La vacuna no corresponde a la especie o veterinaria de la mascota");
@@ -294,7 +294,7 @@ public class CartillaServiceImpl implements CartillaService {
     private TipoDesparasitante validarTipoDesparasitante(Long id, Mascota mascota) {
         TipoDesparasitante desparasitante = tipoDesparasitanteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Desparasitante no encontrado"));
-        Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
+        Integer companyId = mascota.getApoderado().getCompany().getId();
         if (!desparasitante.getCompany().getId().equals(companyId)
                 || desparasitante.getEspecie() != mascota.getEspecie() || !desparasitante.getActivo()) {
             throw new IllegalArgumentException("El desparasitante no corresponde a la especie o veterinaria de la mascota");
@@ -346,7 +346,7 @@ public class CartillaServiceImpl implements CartillaService {
     private void validarCompany(Mascota mascota) {
         if (SecurityUtils.isSuperAdmin()) return;
         Integer actual = SecurityUtils.getCurrentCompanyId();
-        Integer mascotaCompany = mascota.getApoderado().getUser().getCompany().getId();
+        Integer mascotaCompany = mascota.getApoderado().getCompany().getId();
         if (actual == null || !actual.equals(mascotaCompany)) {
             throw new IllegalArgumentException("No tiene acceso a esta mascota");
         }
@@ -453,7 +453,7 @@ public class CartillaServiceImpl implements CartillaService {
     }
 
     private void notificarCaja(Cita cobro, Mascota mascota, TipoControlPreventivo tipo, BigDecimal total) {
-        Integer companyId = mascota.getApoderado().getUser().getCompany().getId();
+        Integer companyId = mascota.getApoderado().getCompany().getId();
         Map<String, Object> event = new HashMap<>();
         event.put("tipo", "CUENTA_PREVENTIVA_CREADA");
         event.put("citaId", cobro.getId());

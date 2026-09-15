@@ -218,7 +218,7 @@ class RF33Test {
 
     private TipoVacuna crearTipoVacuna(Consulta consulta) {
         TipoVacuna vacuna = new TipoVacuna();
-        vacuna.setCompany(consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany());
+        vacuna.setCompany(consulta.getHistoriaClinica().getMascota().getApoderado().getCompany());
         vacuna.setNombre("Antirrabica QA " + UUID.randomUUID());
         vacuna.setEspecie(consulta.getHistoriaClinica().getMascota().getEspecie());
         vacuna.setPrecio(new BigDecimal("50.00"));
@@ -260,6 +260,7 @@ class RF33Test {
         Usuario apoderadoUser = usuario("cliente", company);
         Apoderado apoderado = new Apoderado();
         apoderado.setUser(apoderadoUser);
+        apoderado.setCompany(company);
         apoderado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
         apoderado.setNumeroDocumento(uniqueDigits(8));
         apoderado.setGenero(Genero.FEMENINO);
@@ -276,6 +277,7 @@ class RF33Test {
         Usuario veterinarioUser = usuario("veterinario", company);
         Empleado veterinario = new Empleado();
         veterinario.setUser(veterinarioUser);
+        veterinario.setCompany(company);
         veterinario.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
         veterinario.setNumeroDocumentoIdentidad(uniqueDigits(8));
         veterinario.setGenero(Genero.MASCULINO);

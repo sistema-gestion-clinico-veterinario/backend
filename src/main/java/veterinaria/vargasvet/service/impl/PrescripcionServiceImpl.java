@@ -133,10 +133,10 @@ public class PrescripcionServiceImpl implements PrescripcionService {
         if (consulta.getHistoriaClinica() == null || consulta.getHistoriaClinica().getMascota() == null
                 || consulta.getHistoriaClinica().getMascota().getApoderado() == null
                 || consulta.getHistoriaClinica().getMascota().getApoderado().getUser() == null
-                || consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null) {
+                || consulta.getHistoriaClinica().getMascota().getApoderado().getCompany() == null) {
             return null;
         }
-        return consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany().getId();
+        return consulta.getHistoriaClinica().getMascota().getApoderado().getCompany().getId();
     }
 
     private String nombreMascotaDe(Consulta consulta) {

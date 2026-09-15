@@ -63,8 +63,8 @@ public class CitaMapper {
                 : cita.getControlesPreventivos().stream().map(c -> c.getId()).toList());
 
         if (cita.getEmpleado() != null && cita.getEmpleado().getUser() != null
-                && cita.getEmpleado().getUser().getCompany() != null) {
-            response.setCompanyId(cita.getEmpleado().getUser().getCompany().getId());
+                && cita.getEmpleado().getCompany() != null) {
+            response.setCompanyId(cita.getEmpleado().getCompany().getId());
         }
 
         return response;

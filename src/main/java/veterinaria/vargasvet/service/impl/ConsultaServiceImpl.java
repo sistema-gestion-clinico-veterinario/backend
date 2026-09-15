@@ -52,8 +52,8 @@ public class ConsultaServiceImpl implements ConsultaService {
         boolean puedeModificarPorPermiso = accesoValidator.can("VISTA_HISTORIAS", "MODIFICAR");
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-            if (consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null ||
-                !consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany().getId().equals(currentCompanyId)) {
+            if (consulta.getHistoriaClinica().getMascota().getApoderado().getCompany() == null ||
+                !consulta.getHistoriaClinica().getMascota().getApoderado().getCompany().getId().equals(currentCompanyId)) {
                 throw new IllegalArgumentException("No tienes permiso para modificar esta consulta");
             }
 
@@ -125,8 +125,8 @@ public class ConsultaServiceImpl implements ConsultaService {
 
         if (!SecurityUtils.isSuperAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-            if (consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null ||
-                !consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany().getId().equals(currentCompanyId)) {
+            if (consulta.getHistoriaClinica().getMascota().getApoderado().getCompany() == null ||
+                !consulta.getHistoriaClinica().getMascota().getApoderado().getCompany().getId().equals(currentCompanyId)) {
                 throw new IllegalArgumentException("No tienes permiso para ver esta consulta");
             }
         }
@@ -147,8 +147,8 @@ public class ConsultaServiceImpl implements ConsultaService {
         boolean puedeCerrarPorPermiso = accesoValidator.can("VISTA_HISTORIAS", "MODIFICAR");
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-            if (consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany() == null ||
-                !consulta.getHistoriaClinica().getMascota().getApoderado().getUser().getCompany().getId().equals(currentCompanyId)) {
+            if (consulta.getHistoriaClinica().getMascota().getApoderado().getCompany() == null ||
+                !consulta.getHistoriaClinica().getMascota().getApoderado().getCompany().getId().equals(currentCompanyId)) {
                 throw new IllegalArgumentException("No tienes permiso para cerrar esta consulta");
             }
 
