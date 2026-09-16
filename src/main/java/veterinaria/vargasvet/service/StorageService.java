@@ -12,5 +12,11 @@ public interface StorageService {
     Path load(String filename);
     Resource loadAsResource(String filename);
     void delete(String filename);
-    byte[] fetch(String url);
+
+    /**
+     * Genera una URL firmada de corta duracion para acceder a un archivo del bucket
+     * privado directamente desde Supabase (sin proxear los bytes por el backend).
+     * downloadFilename != null fuerza Content-Disposition: attachment con ese nombre.
+     */
+    String createSignedUrl(String url, int expiresInSeconds, String downloadFilename);
 }

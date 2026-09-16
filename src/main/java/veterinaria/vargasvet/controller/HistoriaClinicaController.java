@@ -1,5 +1,6 @@
 package veterinaria.vargasvet.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -7,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
+import veterinaria.vargasvet.dto.request.AntecedentesRequest;
 import veterinaria.vargasvet.dto.response.HistoriaClinicaDetalleResponse;
 import veterinaria.vargasvet.dto.response.HistoriaClinicaListResponse;
 import veterinaria.vargasvet.security.AccesoValidator;
@@ -70,5 +72,15 @@ public class HistoriaClinicaController {
         HistoriaClinicaDetalleResponse detalle = historiaClinicaService.getPorNumeroHc(numeroHc);
         auditLogService.log("CONSULTAR_HISTORIA_CLINICA_NUMERO", "Historias Clínicas", "Consultó la historia clínica: " + numeroHc + ".");
         return ResponseEntity.ok(new ApiResponse<>(true, "Historia clínica recuperada con éxito", detalle));
+    }
+
+    @PutMapping("/{id}/antecedentes")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'MODIFICAR')")
+    public ResponseEntity<ApiResponse<HistoriaClinicaDetalleResponse>> actualizarAntecedentes(
+            @PathVariable Long id, @Valid @RequestBody AntecedentesRequest request) {
+        HistoriaClinicaDetalleResponse detalle = historiaClinicaService.actualizarAntecedentes(id, request);
+        auditLogService.log("ACTUALIZAR_ANTECEDENTES_HISTORIA_CLINICA", "Historias Clínicas",
+                "Actualizó los antecedentes y ficha médica de la historia clínica con ID: " + id + ".");
+        return ResponseEntity.ok(new ApiResponse<>(true, "Antecedentes actualizados con éxito", detalle));
     }
 }

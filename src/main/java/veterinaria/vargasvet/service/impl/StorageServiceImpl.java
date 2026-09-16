@@ -131,7 +131,33 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public byte[] fetch(String url) {
+    public String createSignedUrl(String url, int expiresInSeconds, String downloadFilename) {
+        assertOwnStorageUrl(url);
+        String fileName = extractFileName(url);
+        String signUrl = supabaseUrl + "/storage/v1/object/sign/" + bucketName + "/" + fileName;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + serviceRoleKey);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(Map.of("expiresIn", expiresInSeconds), headers);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> response = restTemplate.postForObject(signUrl, entity, Map.class);
+        Object signedPath = response != null ? response.get("signedURL") : null;
+        if (!(signedPath instanceof String) || ((String) signedPath).isBlank()) {
+            throw new IllegalStateException("Supabase no devolvio una URL firmada valida");
+        }
+
+        String fullUrl = supabaseUrl + "/storage/v1" + signedPath;
+        if (downloadFilename != null && !downloadFilename.isBlank()) {
+            fullUrl += (fullUrl.contains("?") ? "&" : "?") + "download="
+                    + java.net.URLEncoder.encode(downloadFilename, java.nio.charset.StandardCharsets.UTF_8);
+        }
+        return fullUrl;
+    }
+
+    /** Evita que una URL manipulada apunte a otro host/bucket al firmar. */
+    private void assertOwnStorageUrl(String url) {
         java.net.URI requested = java.net.URI.create(url);
         java.net.URI storageBase = java.net.URI.create(supabaseUrl);
         String expectedPrefix = "/storage/v1/object/public/" + bucketName + "/";
@@ -147,7 +173,6 @@ public class StorageServiceImpl implements StorageService {
                 || !requested.normalize().getPath().startsWith(expectedPrefix)) {
             throw new IllegalArgumentException("URL de almacenamiento no permitida");
         }
-        return restTemplate.getForObject(url, byte[].class);
     }
 
     @Override
