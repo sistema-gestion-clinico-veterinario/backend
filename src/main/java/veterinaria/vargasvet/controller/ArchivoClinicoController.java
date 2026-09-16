@@ -66,11 +66,16 @@ public class ArchivoClinicoController {
                 : "inline; filename=\"" + meta.getNombre() + "\"";
 
         if (meta.getUrl() != null && meta.getUrl().startsWith("http")) {
-            byte[] contenido = storageService.fetch(meta.getUrl());
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, disposition)
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .body(contenido);
+            // Redirigir a una URL firmada de corta duracion en vez de descargar el
+            // archivo entero al backend y reenviarlo: evita el doble salto de red
+            // (backend<->Supabase, backend<->navegador) que hacia lenta la apertura
+            // de archivos, sin dejar el bucket publicamente accesible sin permiso
+            // (el permiso ya se valido arriba, antes de emitir el enlace firmado).
+            String signedUrl = storageService.createSignedUrl(meta.getUrl(), 60,
+                    descargar ? meta.getNombre() : null);
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(java.net.URI.create(signedUrl))
+                    .build();
         }
 
         Resource resource = archivoClinicoService.servirContenido(id);

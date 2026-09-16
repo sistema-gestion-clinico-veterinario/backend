@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.service;
 
 import org.springframework.data.domain.Page;
+import veterinaria.vargasvet.dto.request.AntecedentesRequest;
 import veterinaria.vargasvet.dto.response.HistoriaClinicaDetalleResponse;
 import veterinaria.vargasvet.dto.response.HistoriaClinicaListResponse;
 
@@ -16,4 +17,6 @@ public interface HistoriaClinicaService {
     HistoriaClinicaDetalleResponse getPorMascota(Long mascotaId);
 
     HistoriaClinicaDetalleResponse getPorNumeroHc(String numeroHc);
+
+    HistoriaClinicaDetalleResponse actualizarAntecedentes(Long id, AntecedentesRequest request);
 }

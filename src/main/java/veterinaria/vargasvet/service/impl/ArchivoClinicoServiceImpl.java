@@ -34,6 +34,9 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
     private static final Set<String> EXTENSIONES_RADIOGRAFIA = Set.of(".dcm", ".jpg", ".jpeg");
     private static final Set<String> EXTENSIONES_LABORATORIO = Set.of(".jpg", ".jpeg", ".png", ".pdf");
     private static final Set<String> EXTENSIONES_DOCUMENTO   = Set.of(".docx", ".doc");
+    private static final Set<String> EXTENSIONES_IMAGEN      = Set.of(".jpg", ".jpeg", ".png");
+    private static final Set<String> EXTENSIONES_ECOGRAFIA   = Set.of(".jpg", ".jpeg", ".png", ".pdf");
+    private static final Set<String> EXTENSIONES_OTRO        = Set.of(".dcm", ".pdf", ".jpg", ".jpeg", ".png", ".docx", ".doc");
 
     private static final Set<String> MIMES_RADIOGRAFIA = Set.of(
             "application/dicom", "application/octet-stream", "image/jpeg");
@@ -43,6 +46,7 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/msword",
             "application/octet-stream");
+    private static final Set<String> MIMES_IMAGEN = Set.of("image/jpeg", "image/png");
     private static final Pattern HAS_LETTER_OR_NUMBER = Pattern.compile(".*[\\p{L}\\p{N}].*");
     private static final Pattern HAS_LETTER = Pattern.compile(".*\\p{L}.*");
     private static final Pattern UNSAFE_TEXT = Pattern.compile(".*[{}\\[\\]<>*|\\\\^~`=@].*");
@@ -160,6 +164,27 @@ public class ArchivoClinicoServiceImpl implements ArchivoClinicoService {
             }
             if (mimeType != null && !MIMES_DOCUMENTO.contains(mimeType)) {
                 throw new IllegalArgumentException("Tipo de archivo no válido para documentos Word");
+            }
+        } else if (tipo == TipoArchivo.IMAGEN) {
+            if (!EXTENSIONES_IMAGEN.contains(extension)) {
+                throw new IllegalArgumentException(
+                        "Extensión no permitida para imágenes. Use: .jpg, .jpeg, .png");
+            }
+            if (mimeType != null && !MIMES_IMAGEN.contains(mimeType)) {
+                throw new IllegalArgumentException("Tipo de archivo no válido para imágenes");
+            }
+        } else if (tipo == TipoArchivo.ECOGRAFIA) {
+            if (!EXTENSIONES_ECOGRAFIA.contains(extension)) {
+                throw new IllegalArgumentException(
+                        "Extensión no permitida para ecografías. Use: .jpg, .jpeg, .png, .pdf");
+            }
+            if (mimeType != null && !MIMES_LABORATORIO.contains(mimeType)) {
+                throw new IllegalArgumentException("Tipo de archivo no válido para ecografías");
+            }
+        } else if (tipo == TipoArchivo.OTRO || tipo == TipoArchivo.PDF) {
+            if (!EXTENSIONES_OTRO.contains(extension)) {
+                throw new IllegalArgumentException(
+                        "Extensión no permitida. Use: .dcm, .pdf, .jpg, .jpeg, .png, .docx, .doc");
             }
         } else {
             throw new IllegalArgumentException("Tipo de archivo no válido.");
