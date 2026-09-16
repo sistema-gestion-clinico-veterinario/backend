@@ -10,6 +10,7 @@ import veterinaria.vargasvet.domain.entity.Consulta;
 import veterinaria.vargasvet.domain.entity.HistoriaClinica;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.entity.Usuario;
+import veterinaria.vargasvet.dto.request.AntecedentesRequest;
 import veterinaria.vargasvet.dto.response.ArchivoClinicoResponse;
 import veterinaria.vargasvet.dto.response.ConsultaResumenResponse;
 import veterinaria.vargasvet.dto.response.DiagnosticoResumenResponse;
@@ -144,6 +145,25 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
 
         verificarAccesoHistoria(hc);
 
+        return toDetalleResponse(hc);
+    }
+
+    @Override
+    @Transactional
+    public HistoriaClinicaDetalleResponse actualizarAntecedentes(Long id, AntecedentesRequest request) {
+        HistoriaClinica hc = historiaClinicaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada con ID: " + id));
+
+        verificarAccesoHistoria(hc);
+        accesoValidator.validarModificar("VISTA_HISTORIAS");
+
+        if (request.getEnfermedades() != null) hc.setEnfermedades(request.getEnfermedades());
+        if (request.getProcedimientos() != null) hc.setProcedimientos(request.getProcedimientos());
+        if (request.getAntecedentesPersonales() != null) hc.setAntecedentesPersonales(request.getAntecedentesPersonales());
+        if (request.getAntecedentesFamiliares() != null) hc.setAntecedentesFamiliares(request.getAntecedentesFamiliares());
+        if (request.getGrupoSanguineo() != null) hc.setGrupoSanguineo(request.getGrupoSanguineo());
+
+        historiaClinicaRepository.save(hc);
         return toDetalleResponse(hc);
     }
 
