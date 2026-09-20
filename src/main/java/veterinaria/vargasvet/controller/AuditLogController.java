@@ -83,4 +83,39 @@ public class AuditLogController {
 
         return ResponseEntity.ok(new ApiResponse<>(true, "Logs de auditoría obtenidos correctamente", logs));
     }
+
+    private static final int EXPORT_MAX_RECORDS = 20000;
+
+    @GetMapping("/export")
+    public ResponseEntity<ApiResponse<java.util.List<AuditLog>>> exportLogs(
+            @RequestParam(required = false) Integer companyId,
+            @RequestParam(required = false) String userEmail,
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String module,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+
+        if (!SecurityUtils.isSuperAdmin()) {
+            companyId = SecurityUtils.getCurrentCompanyId();
+            if (companyId == null) {
+                return ResponseEntity.status(403).body(new ApiResponse<>(false, "Acceso denegado: No tienes un ID de empresa asignado", null));
+            }
+        }
+
+        Pageable pageable = PageRequest.of(0, EXPORT_MAX_RECORDS, Sort.by("timestamp").descending());
+        Page<AuditLog> logs = auditLogService.getLogs(companyId, userEmail, action, module, startDate, endDate, pageable);
+
+        boolean filtrosAplicados = userEmail != null || action != null || module != null
+                || startDate != null || endDate != null || (SecurityUtils.isSuperAdmin() && companyId != null);
+        String currentUserEmail = SecurityUtils.getCurrentUserEmail();
+        auditLogService.log(
+                "EXPORTAR_AUDITORIA",
+                "Seguridad",
+                "El usuario " + currentUserEmail + " exportó el historial de auditoría ("
+                        + (filtrosAplicados ? "con filtros aplicados, " : "completo, ")
+                        + logs.getContent().size() + " registros)."
+        );
+
+        return ResponseEntity.ok(new ApiResponse<>(true, "Logs de auditoría exportados correctamente", logs.getContent()));
+    }
 }
