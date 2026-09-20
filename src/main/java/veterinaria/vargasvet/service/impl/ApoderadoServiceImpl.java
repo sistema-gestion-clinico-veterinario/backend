@@ -508,7 +508,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             response.setApellido(apoderado.getUser().getApellido());
             response.setEmail(apoderado.getUser().getEmail());
             response.setTelefono(apoderado.getUser().getTelefono());
-            response.setActivo(apoderado.getUser().isActivo());
+            response.setActivo(apoderado.getEstado());
         }
         return response;
     }
