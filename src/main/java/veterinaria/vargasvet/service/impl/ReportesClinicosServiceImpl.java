@@ -99,10 +99,14 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                         LinkedHashMap::new))
                 .values());
 
-        boolean puedeCitas = tienePermiso("VISTA_CITAS");
+        // VISTA_CITAS y VISTA_CONTROL_PREVENTIVO eran códigos que ya no existen en el catálogo de
+        // vistas (el primero fue reemplazado por VISTA_CITAS_AGENDA, el segundo nunca llegó a
+        // sembrarse) — como el editor de roles no deja conceder un código inactivo/inexistente,
+        // estas secciones quedaban ocultas para todos los roles salvo Admin/SuperAdmin.
+        boolean puedeCitas = tienePermiso("VISTA_CITAS_AGENDA");
         boolean puedePagos = tienePermiso("VISTA_PAGOS");
         boolean puedeMascotas = tienePermiso("VISTA_MASCOTAS");
-        boolean puedeControlPreventivo = tienePermiso("VISTA_CONTROL_PREVENTIVO");
+        boolean puedeControlPreventivo = tienePermiso("VISTA_CARTILLA");
 
         return ReportesClinicosDTO.builder()
                 .fechaDesde(desde.toString())
