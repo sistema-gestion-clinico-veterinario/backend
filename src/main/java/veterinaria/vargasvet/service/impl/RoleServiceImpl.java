@@ -28,6 +28,7 @@ import veterinaria.vargasvet.repository.VistaRepository;
 import veterinaria.vargasvet.repository.VentanaRepository;
 import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
 import veterinaria.vargasvet.repository.RolVistaConfiguracionRepository;
+import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.RoleService;
 
@@ -47,6 +48,7 @@ public class RoleServiceImpl implements RoleService {
     private final VentanaRepository ventanaRepository;
     private final RolVentanaConfiguracionRepository rolVentanaConfiguracionRepository;
     private final RolVistaConfiguracionRepository rolVistaConfiguracionRepository;
+    private final UsuarioPorRolRepository usuarioPorRolRepository;
     private final AuditLogService auditLogService;
 
     @Override
@@ -573,7 +575,17 @@ public class RoleServiceImpl implements RoleService {
         dto.setSystemManaged(role.isSystemManaged());
         dto.setProtectedRole(role.isProtectedRole());
         dto.setPermissionVersion(role.getPermissionVersion());
+        dto.setAmbitoEditable(!role.isSystemManaged() && !role.isProtectedRole()
+                && !tienePermisosConcedidos(role.getId())
+                && !usuarioPorRolRepository.existsByRolId(role.getId()));
         return dto;
+    }
+
+    /** Un permiso "concedido" es una fila con al menos un flag en true; una fila toda en
+     * false no representa una configuración real todavía. */
+    private boolean tienePermisosConcedidos(Integer roleId) {
+        return rolVistaPermisoRepository.findByRolId(roleId).stream()
+                .anyMatch(p -> p.isLeer() || p.isEscribir() || p.isModificar() || p.isEliminar());
     }
 
     private Role requireReadableRole(Integer roleId) {
@@ -685,14 +697,19 @@ public class RoleServiceImpl implements RoleService {
         return roleCompanyId != null && Objects.equals(roleCompanyId, SecurityUtils.getCurrentCompanyId());
     }
 
+    /** El ámbito solo se puede cambiar mientras el rol está "vacío": sin ningún permiso
+     * concedido y sin ningún usuario asignado todavía. Reforzado también en el backend
+     * (no solo ocultando el control en el frontend) porque este endpoint se puede llamar
+     * directamente. */
     private void validateScopeChange(Role role, RoleScope newScope) {
         if (role.getScope() == newScope) return;
-        boolean incompatibleGrant = rolVistaPermisoRepository.findByRolId(role.getId()).stream()
-                .map(RolVistaPermiso::getVista)
-                .anyMatch(vista -> !isAudienceCompatible(newScope, vista.getAudience()));
-        if (incompatibleGrant) {
+        if (tienePermisosConcedidos(role.getId())) {
             throw new IllegalArgumentException(
-                    "Retire primero los permisos incompatibles antes de cambiar el alcance del rol");
+                    "No se puede cambiar el ámbito: el rol ya tiene permisos concedidos. Retírelos primero.");
+        }
+        if (usuarioPorRolRepository.existsByRolId(role.getId())) {
+            throw new IllegalArgumentException(
+                    "No se puede cambiar el ámbito: el rol ya tiene usuarios asignados. Reasígnelos primero.");
         }
     }
 
