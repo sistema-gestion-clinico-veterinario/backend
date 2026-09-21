@@ -28,6 +28,10 @@ public class ReportesClinicosDTO {
     private List<ItemMonto> ingresosPorServicio;
     private List<ItemCount> cumplimientoVacunacion;
     private List<ItemCount> cumplimientoDesparasitacion;
+    private List<ItemCount> pacientesFrecuentes;
+    private List<ItemCount> vacunasMasAplicadas;
+    private List<ItemCount> desparasitantesMasAplicados;
+    private List<PacienteInactivo> pacientesInactivos;
 
     @Data
     @Builder
@@ -38,6 +42,7 @@ public class ReportesClinicosDTO {
         private long nuevosPacientes;
         private long tiempoPromedioAtencionMinutos;
         private double porcentajeCitasCompletadas;
+        private long noAsistieron;
     }
 
     @Data
@@ -69,5 +74,14 @@ public class ReportesClinicosDTO {
         private int diaSemana;
         private int hora;
         private long count;
+    }
+
+    @Data
+    @Builder
+    public static class PacienteInactivo {
+        private String mascota;
+        private String apoderado;
+        private String ultimaVisita;
+        private long diasSinVisitar;
     }
 }

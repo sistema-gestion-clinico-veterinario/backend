@@ -18,6 +18,7 @@ public class EspecialidadServiceImpl implements EspecialidadService {
 
     private final EspecialidadRepository especialidadRepository;
     private final veterinaria.vargasvet.repository.CompanyRepository companyRepository;
+    private final veterinaria.vargasvet.repository.EmpleadoRepository empleadoRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -80,7 +81,11 @@ public class EspecialidadServiceImpl implements EspecialidadService {
     @Override
     @Transactional
     public void delete(Long id) {
-        especialidadRepository.delete(findById(id));
+        Especialidad especialidad = findById(id);
+        if (empleadoRepository.countByEspecialidadesId(id) > 0) {
+            throw new IllegalArgumentException("No se puede eliminar la especialidad porque tiene empleados asignados");
+        }
+        especialidadRepository.delete(especialidad);
     }
 
     private Integer resolveCompanyId(Integer requestedCompanyId) {

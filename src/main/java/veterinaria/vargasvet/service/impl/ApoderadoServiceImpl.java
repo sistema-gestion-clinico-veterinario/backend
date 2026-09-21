@@ -60,6 +60,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     private final CompanyRoleProvisioningService companyRoleProvisioningService;
     private final SessionSecurityService sessionSecurityService;
     private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
+    private final veterinaria.vargasvet.repository.CitaRepository citaRepository;
 
     @Value("${app.frontend.login-url}")
     private String loginUrl;
@@ -339,6 +340,11 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             }
         }
 
+        if (Boolean.FALSE.equals(nuevoEstado)
+                && citaRepository.existsCitaVigenteByApoderadoId(apoderado.getId(), veterinaria.vargasvet.util.AppClock.now())) {
+            throw new IllegalArgumentException("No se puede desactivar un cliente con citas programadas vigentes");
+        }
+
         // Solo afecta la relacion con ESTA empresa (apoderado.estado), nunca
         // usuario.activo (login global) - un apoderado puede ser cliente activo de
         // otra empresa a la vez, y desactivarlo aqui no debe bloquearle el acceso ahi.
@@ -348,7 +354,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         } else {
             apoderado.setFechaSalida(null);
         }
-        sessionSecurityService.invalidateAllSessions(usuario);
+        sessionSecurityService.invalidateSessionsForCompany(usuario, apoderado.getCompany());
 
         apoderado.setEstadoModificadoPor(SecurityUtils.getCurrentUserEmail());
         apoderado.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
@@ -356,10 +362,22 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         companyMembershipService.syncLegacyCompanyField(usuario);
 
 
-        List<Mascota> mascotas = mascotaRepository.findByApoderadoId(apoderado.getId());
-        for (Mascota mascota : mascotas) {
-            mascota.setActivo(nuevoEstado);
-            mascotaRepository.save(mascota);
+        // Al desactivar, se da de baja en cascada a las mascotas del apoderado (con motivo
+        // y auditoria propios, igual que el flujo individual de MascotaServiceImpl). Al
+        // reactivar, en cambio, NO se reactivan las mascotas automaticamente: una mascota
+        // pudo quedar inactiva por una causa propia y no relacionada (fallecimiento, cambio
+        // de propietario), y reactivar al apoderado no debe revertir eso silenciosamente.
+        if (Boolean.FALSE.equals(nuevoEstado)) {
+            List<Mascota> mascotas = mascotaRepository.findByApoderadoId(apoderado.getId());
+            for (Mascota mascota : mascotas) {
+                if (!Boolean.TRUE.equals(mascota.getActivo())) continue;
+                mascota.setActivo(false);
+                mascota.setMotivoBaja(veterinaria.vargasvet.domain.enums.MotivoBajaMascota.DEJA_ASISTIR);
+                mascota.setOtroMotivoBaja(null);
+                mascota.setEstadoModificadoPor(SecurityUtils.getCurrentUserEmail());
+                mascota.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
+                mascotaRepository.save(mascota);
+            }
         }
 
         auditLogService.log(

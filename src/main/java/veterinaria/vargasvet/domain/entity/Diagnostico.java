@@ -5,6 +5,8 @@ import lombok.Data;
 import veterinaria.vargasvet.domain.enums.EstadoDiagnostico;
 import veterinaria.vargasvet.domain.enums.TipoDiagnostico;
 
+import java.time.LocalDate;
+
 @Data
 @Entity
 @Table(name = "diagnosticos")
@@ -34,4 +36,7 @@ public class Diagnostico {
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false)
     private EstadoDiagnostico estado;
+
+    @Column(name = "fecha_proximo_control")
+    private LocalDate fechaProximoControl;
 }

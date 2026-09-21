@@ -13,7 +13,9 @@ import veterinaria.vargasvet.dto.request.HorarioEmpleadoRequest;
 import veterinaria.vargasvet.dto.response.EmpleadoListResponse;
 import veterinaria.vargasvet.dto.response.HorarioEmpleadoResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
+import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.service.EmpleadoService;
+import veterinaria.vargasvet.service.CitaService;
 import veterinaria.vargasvet.dto.request.BulkScheduleRequest;
 
 import veterinaria.vargasvet.service.AuditLogService;
@@ -26,6 +28,7 @@ import java.util.List;
 public class EmpleadoController {
 
     private final EmpleadoService empleadoService;
+    private final CitaService citaService;
     private final AuditLogService auditLogService;
 
     @GetMapping
@@ -115,6 +118,13 @@ public class EmpleadoController {
         empleadoService.cambiarEstado(id, active);
         String mensaje = active ? "Empleado activado exitosamente" : "Empleado desactivado exitosamente";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, null));
+    }
+
+    @GetMapping("/{id}/conflicting-appointments")
+    @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'LEER')")
+    public ResponseEntity<ApiResponse<List<CitaResponse>>> citasConflictivas(@PathVariable Long id) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Citas vigentes recuperadas",
+                citaService.listarCitasVigentesPorEmpleado(id)));
     }
 
     @DeleteMapping("/schedule/{scheduleId}")

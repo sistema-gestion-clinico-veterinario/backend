@@ -96,6 +96,7 @@ class CitaServiceIntegrationTest {
                 citaRepository,
                 mascotaRepository,
                 empleadoRepository,
+                apoderadoRepository,
                 serviciosVeterinariosRepository,
                 usuarioRepository,
                 historiaClinicaRepository,

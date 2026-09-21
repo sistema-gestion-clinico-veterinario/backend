@@ -32,6 +32,12 @@ public interface RegistroDesparasitacionRepository extends JpaRepository<Registr
            "ORDER BY r.fechaProximaAplicacion ASC")
     List<RegistroDesparasitacion> findProximasDesparasitaciones(@Param("companyId") Integer companyId, @Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
 
+    @Query("SELECT r FROM RegistroDesparasitacion r JOIN r.historiaClinica h JOIN h.mascota m JOIN m.apoderado a " +
+           "WHERE a.company.id = :companyId AND r.activo = true AND r.fechaAplicacion BETWEEN :desde AND :hasta")
+    List<RegistroDesparasitacion> findAplicadasByCompanyAndFecha(@Param("companyId") Integer companyId,
+                                                                   @Param("desde") LocalDate desde,
+                                                                   @Param("hasta") LocalDate hasta);
+
     @Query("SELECT r FROM RegistroDesparasitacion r " +
            "JOIN FETCH r.historiaClinica h JOIN FETCH h.mascota m JOIN m.apoderado a JOIN a.user u " +
            "WHERE a.company.id = :companyId AND r.activo = true AND r.fechaProximaAplicacion IS NOT NULL " +

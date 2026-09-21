@@ -107,6 +107,9 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
     @Query("SELECT COUNT(e) FROM Empleado e WHERE EXISTS (SELECT t FROM e.tiposEmpleado t WHERE t.id = :tipoEmpleadoId)")
     long countByTipoEmpleadoId(@Param("tipoEmpleadoId") Long tipoEmpleadoId);
 
+    @Query("SELECT COUNT(e) FROM Empleado e WHERE EXISTS (SELECT es FROM e.especialidades es WHERE es.id = :especialidadId)")
+    long countByEspecialidadesId(@Param("especialidadId") Long especialidadId);
+
     @Modifying
     @Query(value = "DELETE FROM empleado_especialidad WHERE empleado_id = :empleadoId", nativeQuery = true)
     void removeEspecialidades(@Param("empleadoId") Long empleadoId);
