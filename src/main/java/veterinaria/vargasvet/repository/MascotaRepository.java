@@ -24,6 +24,35 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
            "WHERE a.company.id = :companyId AND m.activo = true")
     List<Mascota> findActiveByCompanyId(@Param("companyId") Integer companyId);
 
+    /**
+     * Mascotas activas sin visita reciente (o que nunca visitaron), paginadas y ordenadas por
+     * antigüedad directamente en SQL — evita cargar todas las mascotas activas de la empresa en
+     * memoria solo para calcular este panel del reporte, algo que no escala con clínicas grandes.
+     * "Sin visita reciente" usa la fecha de la última cita COMPLETADA, o la fecha de alta si nunca
+     * tuvo una.
+     */
+    @Query(
+        value = "SELECT m FROM Mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user " +
+            "WHERE a.company.id = :companyId AND m.activo = true " +
+            "AND COALESCE(" +
+            "  (SELECT MAX(c.fechaHoraInicio) FROM Cita c WHERE c.mascota = m AND c.estado = 'COMPLETADA' AND c.eliminada = false), " +
+            "  m.createdAt" +
+            ") < :umbral " +
+            "ORDER BY COALESCE(" +
+            "  (SELECT MAX(c.fechaHoraInicio) FROM Cita c WHERE c.mascota = m AND c.estado = 'COMPLETADA' AND c.eliminada = false), " +
+            "  m.createdAt" +
+            ") ASC",
+        countQuery = "SELECT COUNT(m) FROM Mascota m " +
+            "WHERE m.apoderado.company.id = :companyId AND m.activo = true " +
+            "AND COALESCE(" +
+            "  (SELECT MAX(c.fechaHoraInicio) FROM Cita c WHERE c.mascota = m AND c.estado = 'COMPLETADA' AND c.eliminada = false), " +
+            "  m.createdAt" +
+            ") < :umbral"
+    )
+    Page<Mascota> findInactivasByCompanyId(@Param("companyId") Integer companyId,
+                                           @Param("umbral") java.time.LocalDateTime umbral,
+                                           Pageable pageable);
+
     @Query("SELECT m FROM Mascota m WHERE m.apoderado.id = :apoderadoId AND m.activo = true ORDER BY m.nombreCompleto ASC")
     Page<Mascota> findActiveByApoderadoId(@Param("apoderadoId") Long apoderadoId, Pageable pageable);
 

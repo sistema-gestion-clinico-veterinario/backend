@@ -6,13 +6,17 @@ import org.springframework.data.domain.PageRequest;
 import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.entity.ControlPreventivo;
 import veterinaria.vargasvet.domain.entity.Mascota;
+import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Purchase;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
 import veterinaria.vargasvet.domain.enums.TipoControlPreventivo;
+import veterinaria.vargasvet.dto.response.PacientesInactivosPageDTO;
 import veterinaria.vargasvet.dto.response.ReportesClinicosDTO;
+import veterinaria.vargasvet.dto.response.ReportesComparativoEmpresasDTO;
 import veterinaria.vargasvet.repository.CitaRepository;
+import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.ControlPreventivoRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.MascotaRepository;
@@ -54,6 +58,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
     private final EmpleadoRepository empleadoRepository;
     private final PurchaseRepository purchaseRepository;
     private final AccesoValidator accesoValidator;
+    private final CompanyRepository companyRepository;
 
     @Override
     public ReportesClinicosDTO obtenerReportes(Integer companyId, LocalDate fechaDesde, LocalDate fechaHasta,
@@ -129,6 +134,103 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                         ? calcularDesparasitantesMasAplicados(targetCompanyId, desde, hasta) : null)
                 .pacientesInactivos(puedeMascotas && puedeCitas
                         ? calcularPacientesInactivos(targetCompanyId, hoy) : null)
+                .build();
+    }
+
+    @Override
+    public ReportesComparativoEmpresasDTO obtenerComparativoEmpresas(LocalDate fechaDesde, LocalDate fechaHasta,
+                                                                      EspecieMascota especie) {
+        if (!SecurityUtils.isSuperAdmin()) {
+            throw new IllegalArgumentException("Solo la administración de plataforma puede comparar empresas");
+        }
+        LocalDate hoy = AppClock.today();
+        LocalDate desde = fechaDesde != null ? fechaDesde : hoy.withDayOfMonth(1);
+        LocalDate hasta = fechaHasta != null ? fechaHasta : hoy;
+        if (hasta.isBefore(desde)) {
+            throw new IllegalArgumentException("La fecha hasta no puede ser anterior a la fecha desde");
+        }
+        if (ChronoUnit.DAYS.between(desde, hasta) > 1110) {
+            throw new IllegalArgumentException("El rango máximo permitido para reportes es de 36 meses");
+        }
+
+        LocalDateTime inicio = desde.atStartOfDay();
+        LocalDateTime finExclusivo = hasta.plusDays(1).atStartOfDay();
+
+        List<ReportesComparativoEmpresasDTO.EmpresaResumen> empresas = companyRepository.findAll().stream()
+                .filter(Company::isActivo)
+                .map(company -> {
+                    List<Cita> citas = citaRepository.findForClinicalReport(
+                            company.getId(), inicio, finExclusivo, null, especie);
+                    ReportesClinicosDTO.Resumen resumen = calcularResumen(citas, desde, hasta, true);
+                    return ReportesComparativoEmpresasDTO.EmpresaResumen.builder()
+                            .companyId(company.getId())
+                            .companyName(company.getName())
+                            .consultas(resumen.getConsultas())
+                            .pacientesAtendidos(resumen.getPacientesAtendidos())
+                            .ingresos(resumen.getIngresos())
+                            .nuevosPacientes(resumen.getNuevosPacientes())
+                            .porcentajeCitasCompletadas(resumen.getPorcentajeCitasCompletadas())
+                            .noAsistieron(resumen.getNoAsistieron())
+                            .build();
+                })
+                .sorted(Comparator.comparingLong(ReportesComparativoEmpresasDTO.EmpresaResumen::getConsultas).reversed())
+                .toList();
+
+        return ReportesComparativoEmpresasDTO.builder()
+                .fechaDesde(desde.toString())
+                .fechaHasta(hasta.toString())
+                .empresas(empresas)
+                .build();
+    }
+
+    @Override
+    public PacientesInactivosPageDTO obtenerPacientesInactivos(Integer companyId, int page, int size) {
+        Integer targetCompanyId = resolveCompanyId(companyId);
+        if (targetCompanyId == null) {
+            return PacientesInactivosPageDTO.builder()
+                    .content(List.of()).page(page).size(size).totalElements(0).totalPages(0).build();
+        }
+        int pageSize = Math.max(1, Math.min(size, 100));
+        LocalDate hoy = AppClock.today();
+        LocalDateTime umbral = hoy.minusMonths(3).atStartOfDay();
+
+        org.springframework.data.domain.Page<veterinaria.vargasvet.domain.entity.Mascota> paginaMascotas =
+                mascotaRepository.findInactivasByCompanyId(
+                        targetCompanyId, umbral, org.springframework.data.domain.PageRequest.of(Math.max(0, page), pageSize));
+
+        List<Long> mascotaIds = paginaMascotas.getContent().stream()
+                .map(veterinaria.vargasvet.domain.entity.Mascota::getId)
+                .toList();
+        Map<Long, LocalDateTime> ultimaVisitaPorMascota = mascotaIds.isEmpty() ? Map.of()
+                : citaRepository.findUltimaVisitaCompletadaByMascotaIds(mascotaIds).stream()
+                        .collect(Collectors.toMap(
+                                CitaRepository.UltimaVisitaPorMascota::getMascotaId,
+                                CitaRepository.UltimaVisitaPorMascota::getFecha));
+
+        List<ReportesClinicosDTO.PacienteInactivo> content = paginaMascotas.getContent().stream()
+                .map(m -> {
+                    LocalDateTime ultima = ultimaVisitaPorMascota.get(m.getId());
+                    LocalDate ultimaFecha = ultima != null ? ultima.toLocalDate() : null;
+                    LocalDate referencia = ultimaFecha != null ? ultimaFecha
+                            : (m.getCreatedAt() != null ? m.getCreatedAt().toLocalDate() : hoy);
+                    long dias = ChronoUnit.DAYS.between(referencia, hoy);
+                    return ReportesClinicosDTO.PacienteInactivo.builder()
+                            .mascota(m.getNombreCompleto())
+                            .apoderado(m.getApoderado() != null && m.getApoderado().getUser() != null
+                                    ? m.getApoderado().getUser().getNombre() + " " + m.getApoderado().getUser().getApellido()
+                                    : "Sin propietario")
+                            .ultimaVisita(ultimaFecha != null ? ultimaFecha.toString() : "Nunca visitó")
+                            .diasSinVisitar(dias)
+                            .build();
+                })
+                .toList();
+
+        return PacientesInactivosPageDTO.builder()
+                .content(content)
+                .page(paginaMascotas.getNumber())
+                .size(paginaMascotas.getSize())
+                .totalElements(paginaMascotas.getTotalElements())
+                .totalPages(paginaMascotas.getTotalPages())
                 .build();
     }
 
