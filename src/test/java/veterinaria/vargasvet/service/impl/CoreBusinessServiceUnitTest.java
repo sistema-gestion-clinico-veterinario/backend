@@ -180,6 +180,7 @@ class CoreBusinessServiceUnitTest {
                 ventanaRepository,
                 rolVentanaConfiguracionRepository,
                 rolVistaConfiguracionRepository,
+                org.mockito.Mockito.mock(veterinaria.vargasvet.repository.UsuarioPorRolRepository.class),
                 org.mockito.Mockito.mock(veterinaria.vargasvet.service.AuditLogService.class)
         );
     }

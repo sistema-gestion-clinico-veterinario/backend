@@ -16,4 +16,8 @@ public class RolDTO {
     private boolean systemManaged;
     private boolean protectedRole;
     private long permissionVersion;
+    /** true solo si el rol no tiene ningún permiso concedido ni ningún usuario asignado
+     * todavía — cambiar el ámbito (STAFF/CLIENT) después de eso puede dejar huérfanos
+     * permisos ya guardados o romper el menú de un usuario activo. */
+    private boolean ambitoEditable;
 }
