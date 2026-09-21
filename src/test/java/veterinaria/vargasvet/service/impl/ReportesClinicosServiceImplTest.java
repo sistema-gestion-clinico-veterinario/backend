@@ -45,6 +45,7 @@ class ReportesClinicosServiceImplTest {
     @Mock EmpleadoRepository empleadoRepository;
     @Mock PurchaseRepository purchaseRepository;
     @Mock AccesoValidator accesoValidator;
+    @Mock veterinaria.vargasvet.repository.CompanyRepository companyRepository;
 
     private ReportesClinicosServiceImpl service;
 
@@ -58,7 +59,8 @@ class ReportesClinicosServiceImplTest {
                 controlPreventivoRepository,
                 empleadoRepository,
                 purchaseRepository,
-                accesoValidator);
+                accesoValidator,
+                companyRepository);
     }
 
     @Test
@@ -311,6 +313,105 @@ class ReportesClinicosServiceImplTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> service.obtenerReportes(1, desde, hasta, null, null));
+    }
+
+    @Test
+    void elComparativoDeEmpresasRechazaAQuienNoEsAdministradorDePlataforma() {
+        LocalDate desde = LocalDate.of(2026, 7, 1);
+        LocalDate hasta = LocalDate.of(2026, 7, 31);
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(false);
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.obtenerComparativoEmpresas(desde, hasta, null));
+        }
+    }
+
+    @Test
+    void elComparativoDeEmpresasDevuelveUnaFilaPorEmpresaActivaSinMezclarSusCifras() {
+        LocalDate desde = LocalDate.of(2026, 7, 1);
+        LocalDate hasta = LocalDate.of(2026, 7, 31);
+
+        veterinaria.vargasvet.domain.entity.Company empresaUno = new veterinaria.vargasvet.domain.entity.Company();
+        empresaUno.setId(1);
+        empresaUno.setName("Clínica Uno");
+        empresaUno.setActivo(true);
+
+        veterinaria.vargasvet.domain.entity.Company empresaDos = new veterinaria.vargasvet.domain.entity.Company();
+        empresaDos.setId(2);
+        empresaDos.setName("Clínica Dos");
+        empresaDos.setActivo(true);
+
+        veterinaria.vargasvet.domain.entity.Company empresaInactiva = new veterinaria.vargasvet.domain.entity.Company();
+        empresaInactiva.setId(3);
+        empresaInactiva.setName("Clínica Inactiva");
+        empresaInactiva.setActivo(false);
+
+        when(companyRepository.findAll()).thenReturn(List.of(empresaUno, empresaDos, empresaInactiva));
+
+        Mascota mascota = new Mascota();
+        mascota.setId(1L);
+        mascota.setEspecie(EspecieMascota.PERRO);
+
+        Cita citaEmpresaUno = cita(1L, mascota, LocalDateTime.of(2026, 7, 10, 9, 0));
+        citaEmpresaUno.setEstado(EstadoCita.COMPLETADA);
+
+        when(citaRepository.findForClinicalReport(eq(1), any(LocalDateTime.class), any(LocalDateTime.class), isNull(), isNull()))
+                .thenReturn(List.of(citaEmpresaUno));
+        when(citaRepository.findForClinicalReport(eq(2), any(LocalDateTime.class), any(LocalDateTime.class), isNull(), isNull()))
+                .thenReturn(List.of());
+
+        veterinaria.vargasvet.dto.response.ReportesComparativoEmpresasDTO comparativo;
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+            comparativo = service.obtenerComparativoEmpresas(desde, hasta, null);
+        }
+
+        // Solo las dos empresas activas aparecen; la inactiva queda fuera y las cifras no se suman entre sí.
+        assertThat(comparativo.getEmpresas()).hasSize(2);
+        assertThat(comparativo.getEmpresas())
+                .filteredOn(e -> e.getCompanyId().equals(1))
+                .singleElement()
+                .satisfies(e -> {
+                    assertThat(e.getCompanyName()).isEqualTo("Clínica Uno");
+                    assertThat(e.getConsultas()).isEqualTo(1);
+                });
+        assertThat(comparativo.getEmpresas())
+                .filteredOn(e -> e.getCompanyId().equals(2))
+                .singleElement()
+                .satisfies(e -> assertThat(e.getConsultas()).isEqualTo(0));
+    }
+
+    @Test
+    void obtenerPacientesInactivosDelegaEnLaPaginaDeLaConsultaYCompletaLaFechaExacta() {
+        Mascota mascota = new Mascota();
+        mascota.setId(9L);
+        mascota.setNombreCompleto("Firulais");
+        mascota.setCreatedAt(LocalDateTime.of(2026, 1, 1, 8, 0));
+
+        org.springframework.data.domain.Page<Mascota> pagina =
+                new org.springframework.data.domain.PageImpl<>(
+                        List.of(mascota),
+                        org.springframework.data.domain.PageRequest.of(0, 10),
+                        1);
+
+        when(mascotaRepository.findInactivasByCompanyId(
+                eq(1), any(LocalDateTime.class), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(pagina);
+        when(citaRepository.findUltimaVisitaCompletadaByMascotaIds(List.of(9L))).thenReturn(List.of());
+
+        veterinaria.vargasvet.dto.response.PacientesInactivosPageDTO resultado;
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+            resultado = service.obtenerPacientesInactivos(1, 0, 10);
+        }
+
+        assertThat(resultado.getContent()).singleElement().satisfies(p -> {
+            assertThat(p.getMascota()).isEqualTo("Firulais");
+            assertThat(p.getUltimaVisita()).isEqualTo("Nunca visitó");
+        });
+        assertThat(resultado.getTotalElements()).isEqualTo(1);
+        assertThat(resultado.getTotalPages()).isEqualTo(1);
     }
 
     private Cita cita(Long id, Mascota mascota, LocalDateTime fecha) {
