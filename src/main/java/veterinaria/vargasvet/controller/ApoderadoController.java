@@ -11,8 +11,12 @@ import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.ApoderadoRequest;
 import veterinaria.vargasvet.dto.response.ApoderadoListResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
+import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.service.ApoderadoService;
+import veterinaria.vargasvet.service.CitaService;
 import veterinaria.vargasvet.service.AuditLogService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/clients/guardians")
@@ -20,6 +24,7 @@ import veterinaria.vargasvet.service.AuditLogService;
 public class ApoderadoController {
 
     private final ApoderadoService apoderadoService;
+    private final CitaService citaService;
     private final AuditLogService auditLogService;
 
     @GetMapping
@@ -72,5 +77,12 @@ public class ApoderadoController {
         apoderadoService.cambiarEstado(id, active);
         String mensaje = active ? "Dueño activado exitosamente" : "Dueño desactivado exitosamente";
         return ResponseEntity.ok(new ApiResponse<>(true, mensaje, null));
+    }
+
+    @GetMapping("/{id}/conflicting-appointments")
+    @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'LEER')")
+    public ResponseEntity<ApiResponse<List<CitaResponse>>> citasConflictivas(@PathVariable Long id) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Citas vigentes recuperadas",
+                citaService.listarCitasVigentesPorApoderado(id)));
     }
 }

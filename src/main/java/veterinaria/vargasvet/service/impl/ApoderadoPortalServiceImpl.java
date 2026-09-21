@@ -586,7 +586,16 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     @Override
     @Transactional
     public void cancelPortalCita(Long id, String motivo) {
-        throw new IllegalArgumentException("Un apoderado no tiene permiso para cancelar citas");
+        Apoderado apoderado = getAuthenticatedApoderado();
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con el ID: " + id));
+
+        if (!cita.getMascota().getApoderado().getId().equals(apoderado.getId())) {
+            throw new AccessDeniedException("No tienes permiso para cancelar esta cita");
+        }
+
+        String finalMotivo = (motivo == null || motivo.isBlank()) ? "Cancelada por el cliente desde el portal" : motivo;
+        citaService.cancelarCita(id, finalMotivo);
     }
 
     @Override

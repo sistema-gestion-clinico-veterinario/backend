@@ -15,6 +15,7 @@ import veterinaria.vargasvet.dto.response.ReportesClinicosDTO;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.ControlPreventivoRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
+import veterinaria.vargasvet.repository.MascotaRepository;
 import veterinaria.vargasvet.repository.PurchaseRepository;
 import veterinaria.vargasvet.repository.RegistroDesparasitacionRepository;
 import veterinaria.vargasvet.repository.RegistroVacunaRepository;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
 public class ReportesClinicosServiceImpl implements ReportesClinicosService {
 
     private final CitaRepository citaRepository;
+    private final MascotaRepository mascotaRepository;
     private final RegistroVacunaRepository registroVacunaRepository;
     private final RegistroDesparasitacionRepository registroDesparasitacionRepository;
     private final ControlPreventivoRepository controlPreventivoRepository;
@@ -120,6 +122,13 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                         ? calcularCumplimiento(targetCompanyId, TipoControlPreventivo.VACUNACION) : null)
                 .cumplimientoDesparasitacion(puedeControlPreventivo
                         ? calcularCumplimiento(targetCompanyId, TipoControlPreventivo.DESPARASITACION) : null)
+                .pacientesFrecuentes(puedeCitas ? calcularPacientesFrecuentes(actuales) : null)
+                .vacunasMasAplicadas(puedeControlPreventivo
+                        ? calcularVacunasMasAplicadas(targetCompanyId, desde, hasta) : null)
+                .desparasitantesMasAplicados(puedeControlPreventivo
+                        ? calcularDesparasitantesMasAplicados(targetCompanyId, desde, hasta) : null)
+                .pacientesInactivos(puedeMascotas && puedeCitas
+                        ? calcularPacientesInactivos(targetCompanyId, hoy) : null)
                 .build();
     }
 
@@ -184,6 +193,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                 .count();
         long completadas = citas.stream().filter(c -> c.getEstado() == EstadoCita.COMPLETADA).count();
         double porcentaje = cerradas == 0 ? 0 : (completadas * 100.0 / cerradas);
+        long noAsistieron = citas.stream().filter(c -> c.getEstado() == EstadoCita.NO_ASISTIO).count();
 
         return ReportesClinicosDTO.Resumen.builder()
                 .consultas(citas.size())
@@ -192,6 +202,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                 .nuevosPacientes(nuevosPacientes)
                 .tiempoPromedioAtencionMinutos(promedio)
                 .porcentajeCitasCompletadas(Math.round(porcentaje * 10.0) / 10.0)
+                .noAsistieron(noAsistieron)
                 .build();
     }
 
@@ -399,6 +410,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
     }
 
     private String humanize(String value) {
+        if ("NO_ASISTIO".equals(value)) return "No asistió";
         String normalized = value.replace("_", " ").toLowerCase(new Locale("es", "PE"));
         return Character.toUpperCase(normalized.charAt(0)) + normalized.substring(1);
     }
@@ -449,11 +461,86 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                 .toList();
     }
 
+    private static final int TOP_N_DEFAULT = 10;
+
+    private List<ReportesClinicosDTO.ItemCount> calcularPacientesFrecuentes(List<Cita> citas) {
+        return citas.stream()
+                .filter(c -> c.getEstado() == EstadoCita.COMPLETADA)
+                .collect(Collectors.groupingBy(c -> c.getMascota().getNombreCompleto(), Collectors.counting()))
+                .entrySet().stream()
+                .map(e -> item(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparingLong(ReportesClinicosDTO.ItemCount::getCount).reversed())
+                .limit(TOP_N_DEFAULT)
+                .toList();
+    }
+
+    private List<ReportesClinicosDTO.ItemCount> calcularVacunasMasAplicadas(
+            Integer companyId, LocalDate desde, LocalDate hasta) {
+        return registroVacunaRepository.findAplicadasByCompanyAndFecha(companyId, desde, hasta).stream()
+                .collect(Collectors.groupingBy(
+                        r -> r.getNombreVacuna() != null ? r.getNombreVacuna() : "Sin especificar",
+                        Collectors.counting()))
+                .entrySet().stream()
+                .map(e -> item(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparingLong(ReportesClinicosDTO.ItemCount::getCount).reversed())
+                .toList();
+    }
+
+    private List<ReportesClinicosDTO.ItemCount> calcularDesparasitantesMasAplicados(
+            Integer companyId, LocalDate desde, LocalDate hasta) {
+        return registroDesparasitacionRepository.findAplicadasByCompanyAndFecha(companyId, desde, hasta).stream()
+                .collect(Collectors.groupingBy(
+                        r -> r.getProducto() != null ? r.getProducto() : "Sin especificar",
+                        Collectors.counting()))
+                .entrySet().stream()
+                .map(e -> item(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparingLong(ReportesClinicosDTO.ItemCount::getCount).reversed())
+                .toList();
+    }
+
+    /** Independiente del rango de fechas del panel de reportes: siempre mira el
+     * historial completo de cada mascota activa para encontrar su ultima cita
+     * COMPLETADA, sin importar que rango este seleccionado. Una mascota que nunca
+     * tuvo una cita completada tambien cuenta como inactiva. */
+    private List<ReportesClinicosDTO.PacienteInactivo> calcularPacientesInactivos(Integer companyId, LocalDate hoy) {
+        LocalDate umbral = hoy.minusMonths(3);
+        Map<Long, LocalDateTime> ultimaVisitaPorMascota = citaRepository.findUltimaVisitaCompletadaPorCompany(companyId)
+                .stream()
+                .collect(Collectors.toMap(
+                        CitaRepository.UltimaVisitaPorMascota::getMascotaId,
+                        CitaRepository.UltimaVisitaPorMascota::getFecha));
+
+        return mascotaRepository.findActiveByCompanyId(companyId).stream()
+                .map(m -> {
+                    LocalDateTime ultima = ultimaVisitaPorMascota.get(m.getId());
+                    LocalDate ultimaFecha = ultima != null ? ultima.toLocalDate() : null;
+                    boolean inactiva = ultimaFecha == null || ultimaFecha.isBefore(umbral);
+                    if (!inactiva) return null;
+                    // Si nunca visitó, se cuentan los días desde que se registró la mascota
+                    // (referencia más significativa que un valor arbitrario), y ese mismo
+                    // número ordena la lista de más a menos urgente.
+                    LocalDate referencia = ultimaFecha != null ? ultimaFecha
+                            : (m.getCreatedAt() != null ? m.getCreatedAt().toLocalDate() : hoy);
+                    long dias = ChronoUnit.DAYS.between(referencia, hoy);
+                    return ReportesClinicosDTO.PacienteInactivo.builder()
+                            .mascota(m.getNombreCompleto())
+                            .apoderado(m.getApoderado() != null && m.getApoderado().getUser() != null
+                                    ? m.getApoderado().getUser().getNombre() + " " + m.getApoderado().getUser().getApellido()
+                                    : "Sin propietario")
+                            .ultimaVisita(ultimaFecha != null ? ultimaFecha.toString() : "Nunca visitó")
+                            .diasSinVisitar(dias)
+                            .build();
+                })
+                .filter(java.util.Objects::nonNull)
+                .sorted(Comparator.comparingLong(ReportesClinicosDTO.PacienteInactivo::getDiasSinVisitar).reversed())
+                .toList();
+    }
+
     private ReportesClinicosDTO emptyReport(LocalDate desde, LocalDate hasta) {
         ReportesClinicosDTO.Resumen cero = ReportesClinicosDTO.Resumen.builder()
                 .consultas(0).pacientesAtendidos(0).ingresos(BigDecimal.ZERO)
                 .nuevosPacientes(0).tiempoPromedioAtencionMinutos(0)
-                .porcentajeCitasCompletadas(0).build();
+                .porcentajeCitasCompletadas(0).noAsistieron(0).build();
         return ReportesClinicosDTO.builder()
                 .fechaDesde(desde.toString()).fechaHasta(hasta.toString())
                 .resumen(cero).resumenAnterior(cero)
@@ -465,6 +552,8 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                 .serviciosMasSolicitados(List.of()).demandaPorHorario(List.of())
                 .ingresosPorMetodoPago(List.of()).ingresosPorServicio(List.of())
                 .cumplimientoVacunacion(List.of()).cumplimientoDesparasitacion(List.of())
+                .pacientesFrecuentes(List.of()).vacunasMasAplicadas(List.of())
+                .desparasitantesMasAplicados(List.of()).pacientesInactivos(List.of())
                 .build();
     }
 }

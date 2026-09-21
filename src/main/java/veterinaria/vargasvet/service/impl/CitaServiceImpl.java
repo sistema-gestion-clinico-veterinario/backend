@@ -14,6 +14,7 @@ import veterinaria.vargasvet.domain.enums.TipoControlServicio;
 import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
 import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.request.CitaReprogramacionRequest;
+import veterinaria.vargasvet.dto.request.CitaReasignacionVeterinarioRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.dto.response.AgendaCountersResponse;
 import veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse;
@@ -51,6 +52,7 @@ public class CitaServiceImpl implements CitaService {
     private final CitaRepository citaRepository;
     private final MascotaRepository mascotaRepository;
     private final EmpleadoRepository empleadoRepository;
+    private final ApoderadoRepository apoderadoRepository;
     private final ServiciosVeterinariosRepository servicioRepository;
     private final UsuarioRepository usuarioRepository;
     private final HistoriaClinicaRepository historiaClinicaRepository;
@@ -465,10 +467,6 @@ public class CitaServiceImpl implements CitaService {
 
         validarPermisoEmpresa(cita);
 
-        if (SecurityUtils.getCurrentRolePurpose() == veterinaria.vargasvet.domain.enums.RolePurpose.CLIENT_PORTAL) {
-            throw new IllegalArgumentException("Un apoderado no tiene permiso para cancelar citas");
-        }
-
         if (cita.getEstado() == EstadoCita.COMPLETADA || cita.getEstado() == EstadoCita.CANCELADA) {
             throw new IllegalArgumentException("No se puede cancelar una cita que ya está " + cita.getEstado());
         }
@@ -534,6 +532,44 @@ public class CitaServiceImpl implements CitaService {
         } catch (Exception e) {
             System.err.println("[WARNING] No se pudo enviar el correo de cancelación a " + cita.getMascota().getApoderado().getUser().getEmail() + ": " + e.getMessage());
         }
+    }
+
+    @Override
+    @Transactional
+    public CitaResponse marcarNoAsistio(Long id) {
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
+
+        validarPermisoEmpresa(cita);
+
+        boolean estadoValido = cita.getEstado() == EstadoCita.PROGRAMADA || cita.getEstado() == EstadoCita.PENDIENTE
+                || cita.getEstado() == EstadoCita.CONFIRMADA || cita.getEstado() == EstadoCita.REPROGRAMADA;
+        if (!estadoValido) {
+            if (cita.getEstado() == EstadoCita.SALA_DE_ESPERA) {
+                throw new IllegalArgumentException("No se puede marcar inasistencia: el paciente ya registró su llegada");
+            }
+            throw new IllegalArgumentException("No se puede marcar como inasistencia una cita que ya está " + cita.getEstado());
+        }
+
+        if (veterinaria.vargasvet.util.AppClock.now().isBefore(cita.getFechaHoraInicio())) {
+            throw new IllegalArgumentException("No se puede marcar inasistencia antes de la hora programada de la cita");
+        }
+
+        cita.setEstado(EstadoCita.NO_ASISTIO);
+        liberarControlesPreventivos(cita);
+        Cita savedCita = citaRepository.save(cita);
+        CitaResponse response = citaMapper.toResponse(savedCita);
+        broadcastCitaEvent("NO_ASISTIO_CITA", savedCita, response);
+
+        auditLogService.log(
+            getCitaCompanyId(savedCita),
+            "NO_ASISTIO_CITA",
+            "Citas",
+            "Se marcó como inasistencia la cita de la mascota " + cita.getMascota().getNombreCompleto()
+                + " programada para el " + cita.getFechaHoraInicio()
+        );
+
+        return response;
     }
 
     @Override
@@ -806,6 +842,153 @@ public class CitaServiceImpl implements CitaService {
         }
 
         return reprogramadaResponse;
+    }
+
+    @Override
+    @Transactional
+    public CitaResponse reasignarVeterinario(Long id, CitaReasignacionVeterinarioRequest request) {
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
+
+        validarPermisoEmpresa(cita);
+
+        if (cita.getEstado() == EstadoCita.COMPLETADA || cita.getEstado() == EstadoCita.CANCELADA) {
+            throw new IllegalArgumentException("No se puede modificar una cita que ya está " + cita.getEstado());
+        }
+
+        Empleado veterinarioAnterior = cita.getEmpleado();
+        Empleado veterinario = empleadoRepository.findById(request.getVeterinarioId())
+                .orElseThrow(() -> new ResourceNotFoundException("Veterinario no encontrado"));
+
+        if (!Boolean.TRUE.equals(veterinario.getEstado())) {
+            throw new IllegalArgumentException("No se puede asignar la cita a un empleado inactivo");
+        }
+
+        validarEmpleadoSegunAlcance(veterinario.getId());
+
+        // Mantiene la misma fecha/hora - solo cambia quien atiende, no es una
+        // reprogramacion. Reusa la validacion de disponibilidad para evitar choques
+        // de horario del nuevo veterinario en ese mismo bloque.
+        validarDisponibilidadCita(cita.getMascota(), veterinario, cita.getFechaHoraInicio(),
+                cita.getFechaHoraFin(), Boolean.TRUE.equals(cita.getEsEmergencia()), id);
+
+        cita.setEmpleado(veterinario);
+
+        Cita savedCita = citaRepository.save(cita);
+        CitaResponse response = citaMapper.toResponse(savedCita);
+        broadcastCitaEvent("REASIGNAR_VETERINARIO_CITA", savedCita, response);
+
+        auditLogService.log(
+            getCitaCompanyId(savedCita),
+            "REASIGNAR_VETERINARIO_CITA",
+            "Citas",
+            "Se reasignó la cita de la mascota " + cita.getMascota().getNombreCompleto() +
+                " del veterinario " + (veterinarioAnterior != null ? nombreEmpleado(veterinarioAnterior) : "(sin asignar)") +
+                " a " + nombreEmpleado(veterinario)
+        );
+
+        try {
+            if (cita.getMascota().getApoderado() != null && cita.getMascota().getApoderado().getUser() != null) {
+                String emailDestinatario = cita.getMascota().getApoderado().getUser().getEmail();
+                if (emailDestinatario != null && !emailDestinatario.isBlank()) {
+                    Company company = cita.getMascota().getApoderado().getCompany();
+                    if (company == null && veterinario.getCompany() != null) {
+                        company = veterinario.getCompany();
+                    }
+
+                    String companyName = company != null ? company.getName() : "VargasVet";
+                    String companyLogo = (company != null && company.getLogoUrl() != null) ? company.getLogoUrl() : "";
+                    String companyEmail = company != null ? company.getEmail() : "";
+                    String companyPhone = company != null ? company.getPhone() : "";
+                    String companyAddress = company != null ? company.getAddress() : "";
+
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+                    Map<String, Object> model = new HashMap<>();
+                    model.put("nombreApoderado", cita.getMascota().getApoderado().getUser().getNombre());
+                    model.put("nombreMascota", cita.getMascota().getNombreCompleto());
+                    model.put("fechaCita", formatter.format(cita.getFechaHoraInicio()));
+                    model.put("veterinarioNuevo", nombreEmpleado(veterinario));
+                    model.put("companyName", companyName);
+                    model.put("companyLogo", companyLogo);
+                    model.put("companyEmail", companyEmail);
+                    model.put("companyPhone", companyPhone);
+                    model.put("companyAddress", companyAddress);
+
+                    Mail mail = emailService.createMail(emailDestinatario, "Cambio de profesional asignado - " + companyName, model);
+                    emailService.sendEmail(mail, "email/cita-reasignar-veterinario-template");
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo enviar el correo de reasignación de veterinario a " + cita.getMascota().getApoderado().getUser().getEmail() + ": " + e.getMessage());
+        }
+
+        return response;
+    }
+
+    /** Marca que el paciente ya llegó a la clínica y está esperando su turno. No abre
+     * la consulta (eso lo sigue haciendo iniciarAtencion) - solo registra la llegada
+     * para diferenciarla de una cita que simplemente todavía no empezó su horario. */
+    @Override
+    @Transactional
+    public CitaResponse marcarLlegada(Long id) {
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
+
+        validarPermisoEmpresa(cita);
+
+        boolean estadoValido = cita.getEstado() == EstadoCita.PROGRAMADA || cita.getEstado() == EstadoCita.PENDIENTE
+                || cita.getEstado() == EstadoCita.CONFIRMADA || cita.getEstado() == EstadoCita.REPROGRAMADA;
+        if (!estadoValido) {
+            throw new IllegalArgumentException("No se puede marcar la llegada de una cita con estado: " + cita.getEstado());
+        }
+
+        cita.setEstado(EstadoCita.SALA_DE_ESPERA);
+        Cita savedCita = citaRepository.save(cita);
+        CitaResponse response = citaMapper.toResponse(savedCita);
+        broadcastCitaEvent("LLEGADA_CITA", savedCita, response);
+
+        auditLogService.log(
+            getCitaCompanyId(savedCita),
+            "LLEGADA_CITA",
+            "Citas",
+            "Se registró la llegada de la mascota " + cita.getMascota().getNombreCompleto()
+                + " para la cita programada el " + cita.getFechaHoraInicio()
+        );
+
+        return response;
+    }
+
+    private String nombreEmpleado(Empleado empleado) {
+        if (empleado.getUser() == null) {
+            return "ID " + empleado.getId();
+        }
+        return empleado.getUser().getNombre() + " " + empleado.getUser().getApellido();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<CitaResponse> listarCitasVigentesPorEmpleado(Long empleadoId) {
+        Empleado empleado = empleadoRepository.findById(empleadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
+        validarEmpleadoSegunAlcance(empleado.getId());
+        return citaRepository.findCitasVigentesByEmpleadoId(empleadoId, veterinaria.vargasvet.util.AppClock.now())
+                .stream().map(citaMapper::toResponse).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<CitaResponse> listarCitasVigentesPorApoderado(Long apoderadoId) {
+        Apoderado apoderado = apoderadoRepository.findById(apoderadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Apoderado no encontrado"));
+        if (!SecurityUtils.isSuperAdmin()) {
+            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
+            if (apoderado.getCompany() == null || !apoderado.getCompany().getId().equals(currentCompanyId)) {
+                throw new IllegalArgumentException("No tienes permiso para consultar citas de un cliente de otra empresa");
+            }
+        }
+        return citaRepository.findCitasVigentesByApoderadoId(apoderadoId, veterinaria.vargasvet.util.AppClock.now())
+                .stream().map(citaMapper::toResponse).toList();
     }
 
     private void validarDisponibilidadCita(Mascota mascota, Empleado empleado, LocalDateTime fechaInicio,

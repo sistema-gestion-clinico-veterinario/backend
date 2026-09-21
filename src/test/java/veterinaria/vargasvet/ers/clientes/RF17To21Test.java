@@ -293,7 +293,8 @@ class RF17To21Test {
                 mock(AuditLogService.class),
                 mock(CompanyRoleProvisioningService.class),
                 mock(SessionSecurityService.class),
-                mock(veterinaria.vargasvet.service.CompanyMembershipService.class)
+                mock(veterinaria.vargasvet.service.CompanyMembershipService.class),
+                mock(CitaRepository.class)
         );
         ReflectionTestUtils.setField(service, "appUrl", "https://frontend.test");
         ReflectionTestUtils.setField(service, "defaultCompanyName", "Veterinaria QA");

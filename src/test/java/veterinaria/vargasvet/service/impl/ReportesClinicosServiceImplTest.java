@@ -15,6 +15,7 @@ import veterinaria.vargasvet.dto.response.ReportesClinicosDTO;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.ControlPreventivoRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
+import veterinaria.vargasvet.repository.MascotaRepository;
 import veterinaria.vargasvet.repository.PurchaseRepository;
 import veterinaria.vargasvet.repository.RegistroDesparasitacionRepository;
 import veterinaria.vargasvet.repository.RegistroVacunaRepository;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.mockStatic;
 class ReportesClinicosServiceImplTest {
 
     @Mock CitaRepository citaRepository;
+    @Mock MascotaRepository mascotaRepository;
     @Mock RegistroVacunaRepository registroVacunaRepository;
     @Mock RegistroDesparasitacionRepository registroDesparasitacionRepository;
     @Mock ControlPreventivoRepository controlPreventivoRepository;
@@ -50,6 +52,7 @@ class ReportesClinicosServiceImplTest {
     void setUp() {
         service = new ReportesClinicosServiceImpl(
                 citaRepository,
+                mascotaRepository,
                 registroVacunaRepository,
                 registroDesparasitacionRepository,
                 controlPreventivoRepository,
