@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.RefreshToken;
 import veterinaria.vargasvet.domain.entity.Usuario;
 
@@ -23,6 +24,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
 
     List<RefreshToken> findAllByFamilyIdAndRevokedAtIsNull(String familyId);
     List<RefreshToken> findAllByUsuarioAndRevokedAtIsNull(Usuario usuario);
+    List<RefreshToken> findAllByUsuarioAndCompanyAndRevokedAtIsNull(Usuario usuario, Company company);
     Optional<RefreshToken> findFirstByUsuarioOrderByExpiryDateDesc(Usuario usuario);
     
     @Modifying

@@ -87,17 +87,22 @@ class CatalogoProteccionServiceTest {
     }
 
     @Test
-    void cpRf3701_documentaDefectoEspecialidadEnUsoSeIntentaEliminarFisicamente() {
+    void cpRf3701_bloqueaEliminarEspecialidadConEmpleadosAsignados() {
         Especialidad enUso = new Especialidad();
         enUso.setId(10L);
         Empleado asignado = new Empleado();
         asignado.setId(20L);
         enUso.setEmpleados(new ArrayList<>(List.of(asignado)));
         when(especialidadRepository.findById(10L)).thenReturn(Optional.of(enUso));
+        when(empleadoRepository.countByEspecialidadesId(10L)).thenReturn(1L);
 
-        especialidadService().delete(10L);
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> especialidadService().delete(10L)
+        );
 
-        verify(especialidadRepository).delete(enUso);
+        assertEquals("No se puede eliminar la especialidad porque tiene empleados asignados", error.getMessage());
+        verify(especialidadRepository, never()).delete(any(Especialidad.class));
     }
 
     @Test
@@ -134,7 +139,7 @@ class CatalogoProteccionServiceTest {
     }
 
     private EspecialidadServiceImpl especialidadService() {
-        return new EspecialidadServiceImpl(especialidadRepository, companyRepository);
+        return new EspecialidadServiceImpl(especialidadRepository, companyRepository, empleadoRepository);
     }
 
     private ServicioServiceImpl servicioService() {

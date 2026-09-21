@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.dao.DataAccessException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -49,7 +48,7 @@ class EspecialidadDeletionIntegrationTest {
     }
 
     @Test
-    void cpRf3701_laRestriccionReferencialBloqueaEliminarEspecialidadEnUso() {
+    void cpRf3701_elServicioBloqueaEliminarEspecialidadEnUsoAntesDeTocarLaBaseDeDatos() {
         Company company = new Company();
         company.setName("Empresa QA");
         company.setSlug("empresa-qa-especialidades");
@@ -72,12 +71,11 @@ class EspecialidadDeletionIntegrationTest {
         empleado.getEspecialidades().add(especialidad);
         empleadoRepository.saveAndFlush(empleado);
 
-        EspecialidadServiceImpl service = new EspecialidadServiceImpl(especialidadRepository, companyRepository);
+        EspecialidadServiceImpl service = new EspecialidadServiceImpl(especialidadRepository, companyRepository, empleadoRepository);
         Long especialidadId = especialidad.getId();
 
-        assertThatThrownBy(() -> {
-            service.delete(especialidadId);
-            especialidadRepository.flush();
-        }).isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> service.delete(especialidadId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("No se puede eliminar la especialidad porque tiene empleados asignados");
     }
 }

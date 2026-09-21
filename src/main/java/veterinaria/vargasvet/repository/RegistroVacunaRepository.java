@@ -32,6 +32,12 @@ public interface RegistroVacunaRepository extends JpaRepository<RegistroVacuna, 
            "ORDER BY r.fechaProximaDosis ASC")
     List<RegistroVacuna> findProximasVacunas(@Param("companyId") Integer companyId, @Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
 
+    @Query("SELECT r FROM RegistroVacuna r JOIN r.historiaClinica h JOIN h.mascota m JOIN m.apoderado a " +
+           "WHERE a.company.id = :companyId AND r.activo = true AND r.fechaAplicacion BETWEEN :desde AND :hasta")
+    List<RegistroVacuna> findAplicadasByCompanyAndFecha(@Param("companyId") Integer companyId,
+                                                          @Param("desde") LocalDate desde,
+                                                          @Param("hasta") LocalDate hasta);
+
     @Query("SELECT r FROM RegistroVacuna r " +
            "JOIN FETCH r.historiaClinica h JOIN FETCH h.mascota m JOIN m.apoderado a JOIN a.user u " +
            "WHERE a.company.id = :companyId AND r.activo = true AND r.fechaProximaDosis IS NOT NULL " +

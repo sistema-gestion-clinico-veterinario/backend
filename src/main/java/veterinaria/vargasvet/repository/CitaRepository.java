@@ -19,6 +19,16 @@ import java.util.List;
 @Repository
 public interface CitaRepository extends JpaRepository<Cita, Long> {
 
+    interface UltimaVisitaPorMascota {
+        Long getMascotaId();
+        LocalDateTime getFecha();
+    }
+
+    @Query("SELECT c.mascota.id AS mascotaId, MAX(c.fechaHoraInicio) AS fecha FROM Cita c " +
+            "WHERE c.mascota.apoderado.company.id = :companyId AND c.estado = 'COMPLETADA' AND c.eliminada = false " +
+            "GROUP BY c.mascota.id")
+    List<UltimaVisitaPorMascota> findUltimaVisitaCompletadaPorCompany(@Param("companyId") Integer companyId);
+
     @Query("SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
             "WHERE c.id = :id AND a.company.id = :companyId")
     java.util.Optional<Cita> findByIdAndCompanyId(@Param("id") Long id,
@@ -270,6 +280,23 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
             "AND c.eliminada = false AND c.fechaHoraInicio >= :ahora AND " + ESTADOS_VIGENTES)
     boolean existsCitaVigenteByMascotaId(@Param("mascotaId") Long mascotaId,
                                          @Param("ahora") LocalDateTime ahora);
+
+    @Query("SELECT COUNT(c) > 0 FROM Cita c WHERE c.mascota.apoderado.id = :apoderadoId " +
+            "AND c.eliminada = false AND c.fechaHoraInicio >= :ahora AND " + ESTADOS_VIGENTES)
+    boolean existsCitaVigenteByApoderadoId(@Param("apoderadoId") Long apoderadoId,
+                                           @Param("ahora") LocalDateTime ahora);
+
+    @Query("SELECT c FROM Cita c WHERE c.empleado.id = :empleadoId " +
+            "AND c.eliminada = false AND c.fechaHoraInicio >= :ahora AND " + ESTADOS_VIGENTES +
+            " ORDER BY c.fechaHoraInicio ASC")
+    List<Cita> findCitasVigentesByEmpleadoId(@Param("empleadoId") Long empleadoId,
+                                             @Param("ahora") LocalDateTime ahora);
+
+    @Query("SELECT c FROM Cita c WHERE c.mascota.apoderado.id = :apoderadoId " +
+            "AND c.eliminada = false AND c.fechaHoraInicio >= :ahora AND " + ESTADOS_VIGENTES +
+            " ORDER BY c.fechaHoraInicio ASC")
+    List<Cita> findCitasVigentesByApoderadoId(@Param("apoderadoId") Long apoderadoId,
+                                              @Param("ahora") LocalDateTime ahora);
 
     @Query("SELECT DISTINCT c FROM Cita c JOIN c.servicio s JOIN s.tipoEmpleado t " +
            "WHERE c.mascota.id = :mascotaId AND c.eliminada = false " +

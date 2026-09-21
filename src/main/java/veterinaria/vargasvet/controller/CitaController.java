@@ -11,6 +11,7 @@ import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.CitaRequest;
 import veterinaria.vargasvet.dto.request.CitaReprogramacionRequest;
+import veterinaria.vargasvet.dto.request.CitaReasignacionVeterinarioRequest;
 import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.dto.response.AgendaCountersResponse;
 import veterinaria.vargasvet.dto.response.RecordatorioWhatsAppResponse;
@@ -109,6 +110,13 @@ public class CitaController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita reprogramada exitosamente", response));
     }
 
+    @PatchMapping("/{id}/reassign-veterinarian")
+    public ResponseEntity<ApiResponse<CitaResponse>> reasignarVeterinario(@PathVariable Long id, @Valid @RequestBody CitaReasignacionVeterinarioRequest request) {
+        accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
+        CitaResponse response = citaService.reasignarVeterinario(id, request);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Veterinario reasignado exitosamente", response));
+    }
+
     @PatchMapping("/{id}/start")
     public ResponseEntity<ApiResponse<Long>> iniciarAtencion(@PathVariable Long id) {
         accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
@@ -142,6 +150,20 @@ public class CitaController {
         String finalMotivo = (motivo == null || motivo.isBlank()) ? "Cancelado por el usuario" : motivo;
         citaService.cancelarCita(id, finalMotivo);
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita cancelada con éxito", null));
+    }
+
+    @PatchMapping("/{id}/no-show")
+    public ResponseEntity<ApiResponse<CitaResponse>> marcarNoAsistio(@PathVariable Long id) {
+        accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
+        CitaResponse response = citaService.marcarNoAsistio(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Cita marcada como inasistencia", response));
+    }
+
+    @PatchMapping("/{id}/check-in")
+    public ResponseEntity<ApiResponse<CitaResponse>> marcarLlegada(@PathVariable Long id) {
+        accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
+        CitaResponse response = citaService.marcarLlegada(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Llegada registrada con éxito", response));
     }
 
     @GetMapping("/mascota/{mascotaId}/servicios")
