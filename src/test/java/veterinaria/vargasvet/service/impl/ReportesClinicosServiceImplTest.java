@@ -173,15 +173,15 @@ class ReportesClinicosServiceImplTest {
             security.when(SecurityUtils::isAdmin).thenReturn(false);
             security.when(SecurityUtils::getCurrentCompanyId).thenReturn(1);
             when(accesoValidator.canAccessCompanyData("VISTA_REPORTES")).thenReturn(true);
-            when(accesoValidator.can("VISTA_CITAS", "LEER")).thenReturn(true);
+            when(accesoValidator.can("VISTA_CITAS_AGENDA", "LEER")).thenReturn(true);
             when(accesoValidator.can("VISTA_PAGOS", "LEER")).thenReturn(false);
             when(accesoValidator.can("VISTA_MASCOTAS", "LEER")).thenReturn(false);
-            when(accesoValidator.can("VISTA_CONTROL_PREVENTIVO", "LEER")).thenReturn(false);
+            when(accesoValidator.can("VISTA_CARTILLA", "LEER")).thenReturn(false);
 
             reporte = assertDoesNotThrow(() -> service.obtenerReportes(1, desde, hasta, null, null));
         }
 
-        // Tiene VISTA_CITAS: las secciones basadas en citas sí se calculan (no son null).
+        // Tiene VISTA_CITAS_AGENDA: las secciones basadas en citas sí se calculan (no son null).
         assertThat(reporte.getConsultasPorEstado()).isNotNull();
         assertThat(reporte.getConsultasPorMes()).isNotNull();
         assertThat(reporte.getConsultasPorVeterinario()).isNotNull();
@@ -189,7 +189,7 @@ class ReportesClinicosServiceImplTest {
         assertThat(reporte.getFrecuenciaConsultasPorPaciente()).isNotNull();
         assertThat(reporte.getDemandaPorHorario()).isNotNull();
 
-        // No tiene VISTA_CONTROL_PREVENTIVO: nada de vacunación/desparasitación/controles.
+        // No tiene VISTA_CARTILLA: nada de vacunación/desparasitación/controles.
         assertThat(reporte.getProximasVacunas()).isNull();
         assertThat(reporte.getProximasDesparasitaciones()).isNull();
         assertThat(reporte.getControlesPreventivosProximos()).isNull();
