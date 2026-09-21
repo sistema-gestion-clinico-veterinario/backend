@@ -17,6 +17,7 @@ import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
 import veterinaria.vargasvet.repository.RolVistaConfiguracionRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
+import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.VentanaRepository;
 import veterinaria.vargasvet.repository.VistaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
@@ -39,6 +40,7 @@ class RoleServiceImplTest {
     private final RolVistaPermisoRepository rolVistaPermisoRepository = mock(RolVistaPermisoRepository.class);
     private final RolVentanaConfiguracionRepository rolVentanaConfiguracionRepository = mock(RolVentanaConfiguracionRepository.class);
     private final RolVistaConfiguracionRepository rolVistaConfiguracionRepository = mock(RolVistaConfiguracionRepository.class);
+    private final UsuarioPorRolRepository usuarioPorRolRepository = mock(UsuarioPorRolRepository.class);
     private final RoleServiceImpl service = new RoleServiceImpl(
             roleRepository,
             mock(CompanyRepository.class),
@@ -47,6 +49,7 @@ class RoleServiceImplTest {
             mock(VentanaRepository.class),
             rolVentanaConfiguracionRepository,
             rolVistaConfiguracionRepository,
+            usuarioPorRolRepository,
             mock(veterinaria.vargasvet.service.AuditLogService.class)
     );
 
@@ -182,6 +185,57 @@ class RoleServiceImplTest {
                     () -> service.saveVistasByRole(12, 3L, List.of()));
 
             verify(rolVistaPermisoRepository, never()).deleteByRolId(12);
+        }
+    }
+
+    @Test
+    void updateRoleAllowsScopeChangeOnAnEmptyRole() {
+        Company company = company(7);
+        Role role = role(9, company, RoleScope.STAFF, true);
+        when(roleRepository.findById(9)).thenReturn(java.util.Optional.of(role));
+        when(rolVistaPermisoRepository.findByRolId(9)).thenReturn(List.of());
+        when(usuarioPorRolRepository.existsByRolId(9)).thenReturn(false);
+        when(roleRepository.save(org.mockito.ArgumentMatchers.any())).thenAnswer(inv -> inv.getArgument(0));
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            var result = service.updateRole(9, "Asistente Veterinario", null, RoleScope.CLIENT);
+
+            assertEquals(RoleScope.CLIENT, result.getScope());
+        }
+    }
+
+    @Test
+    void updateRoleRejectsScopeChangeWhenRoleHasGrantedPermissions() {
+        Company company = company(7);
+        Role role = role(9, company, RoleScope.STAFF, true);
+        RolVistaPermiso permiso = new RolVistaPermiso();
+        permiso.setLeer(true);
+        when(roleRepository.findById(9)).thenReturn(java.util.Optional.of(role));
+        when(rolVistaPermisoRepository.findByRolId(9)).thenReturn(List.of(permiso));
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.updateRole(9, "Asistente Veterinario", null, RoleScope.CLIENT));
+        }
+    }
+
+    @Test
+    void updateRoleRejectsScopeChangeWhenRoleHasAssignedUsers() {
+        Company company = company(7);
+        Role role = role(9, company, RoleScope.STAFF, true);
+        when(roleRepository.findById(9)).thenReturn(java.util.Optional.of(role));
+        when(rolVistaPermisoRepository.findByRolId(9)).thenReturn(List.of());
+        when(usuarioPorRolRepository.existsByRolId(9)).thenReturn(true);
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.updateRole(9, "Asistente Veterinario", null, RoleScope.CLIENT));
         }
     }
 

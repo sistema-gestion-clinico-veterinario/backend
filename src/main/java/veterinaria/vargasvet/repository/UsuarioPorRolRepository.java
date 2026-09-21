@@ -35,6 +35,10 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
 
     boolean existsByUsuarioIdAndRolId(Integer usuarioId, Integer rolId);
 
+    /** Usado para decidir si el "ámbito" (STAFF/CLIENT) de un rol se puede seguir editando:
+     * solo mientras nadie lo tenga asignado. */
+    boolean existsByRolId(Integer rolId);
+
     /** r.company vs. upr.company deben coincidir por construccion (se valida al crear
      * la asignacion), asi que upr.company.id es la fuente de verdad aqui - ya no
      * depende de u.company.id (ambiguo desde que un Usuario puede tener mas de una
