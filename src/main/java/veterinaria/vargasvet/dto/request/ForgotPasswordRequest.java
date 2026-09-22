@@ -13,4 +13,8 @@ public class ForgotPasswordRequest {
     @Size(max = 255, message = "El email no debe superar 255 caracteres")
     @Pattern(regexp = "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$", message = "El email debe estar en minusculas y tener un formato valido")
     private String email;
+
+    /** Slug de la empresa desde la que se pide el reset (misma pantalla de login que ya
+     * lo resuelve). Null = pantalla global/SuperAdmin, apunta a la credencial sin empresa. */
+    private String slug;
 }

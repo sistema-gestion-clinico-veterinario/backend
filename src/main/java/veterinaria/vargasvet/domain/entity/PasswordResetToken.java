@@ -29,4 +29,11 @@ public class PasswordResetToken {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
+
+    /** Empresa cuya credencial se va a restablecer (null = credencial global del
+     * SuperAdmin). Necesario porque cada empresa tiene su propia contraseña - un
+     * reset pendiente para la Empresa A no debe tocar ni invalidar el de la B. */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "company_id")
+    private Company company;
 }

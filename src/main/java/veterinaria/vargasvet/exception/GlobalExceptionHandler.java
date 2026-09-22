@@ -20,9 +20,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadCredentials(BadCredentialsException ex,
                                                                   HttpServletRequest request) {
+        // Mismo motivo que handleDisabled: solo en login hay que ocultar el porqué (evita
+        // enumerar cuentas). Fuera de login (refresh, cambio de correo, etc.) ya hay una
+        // sesión existente - no hay riesgo de adivinar credenciales, así que se muestra el
+        // motivo real en vez de un genérico que hoy obliga a adivinar por qué falló.
         String message = isLoginEndpoint(request)
                 ? "Credenciales inválidas"
-                : "La sesión no es válida o ha expirado";
+                : ex.getMessage();
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiResponse<>(false, message, null));
     }
@@ -30,9 +34,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ApiResponse<Void>> handleDisabled(DisabledException ex,
                                                             HttpServletRequest request) {
+        // En login, un desconocido no debe distinguir "cuenta inactiva" de "credenciales
+        // incorrectas" (evita enumerar cuentas). Fuera de login (ej. /auth/refresh, que se
+        // dispara solo mientras la sesion ya estaba abierta) ese riesgo no aplica - ahí sí
+        // se muestra el motivo real que ya trae la excepcion, en vez de un genérico que
+        // obliga al usuario a adivinar por qué se quedó fuera.
         String message = isLoginEndpoint(request)
                 ? "Credenciales inválidas"
-                : "La sesión no está habilitada";
+                : ex.getMessage();
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiResponse<>(false, message, null));
     }
@@ -41,7 +50,8 @@ public class GlobalExceptionHandler {
      * credenciales invalidas (por seguridad, no revelan detalle del motivo). */
     private boolean isLoginEndpoint(HttpServletRequest request) {
         String uri = request.getRequestURI();
-        return uri.endsWith("/auth/login") || uri.endsWith("/auth/admin-login");
+        return uri.endsWith("/auth/login") || uri.endsWith("/auth/admin-login")
+                || uri.endsWith("/auth/google/exchange");
     }
 
     @ExceptionHandler(AccessDeniedException.class)

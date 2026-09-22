@@ -274,7 +274,6 @@ class ConsultaServiceIntegrationTest {
         Usuario usuario = new Usuario();
         usuario.setEmail(prefix + "-" + UUID.randomUUID() + "@vargasvet.test");
         usuario.setUsername(prefix + "-" + UUID.randomUUID());
-        usuario.setPassword("password");
         usuario.setNombre(prefix);
         usuario.setApellido("Test");
         usuario.setDni(uniqueDigits(8));

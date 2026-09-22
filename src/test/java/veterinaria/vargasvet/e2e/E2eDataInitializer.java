@@ -76,6 +76,18 @@ public class E2eDataInitializer implements CommandLineRunner {
     private final CitaRepository citaRepository;
     private final PasswordEncoder passwordEncoder;
     private final E2eFixtureRegistry fixtureRegistry;
+    private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
+
+    private void createCredencial(Usuario savedUser, Company company, String rawPassword) {
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                new veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial();
+        credencial.setUsuario(savedUser);
+        credencial.setCompany(company);
+        credencial.setPassword(passwordEncoder.encode(rawPassword));
+        credencial.setPasswordChanged(true);
+        credencial.setCreatedAt(java.time.LocalDateTime.now());
+        credencialRepository.save(credencial);
+    }
 
     @Override
     @Transactional
@@ -115,10 +127,12 @@ public class E2eDataInitializer implements CommandLineRunner {
         assignService(toggleEmployee, servicio);
         Empleado activationEmployee = seedActivationEmployee(company, vetRole);
         Usuario restrictedUser = usuarioRepository.save(user("e2e.restricted@vargasvet.test", "Rol", "Restringido", company));
+        createCredencial(restrictedUser, company, USER_PASSWORD);
         assignRole(restrictedUser, restrictedRole);
 
         Company toggleCompany = seedCompany("Clínica Desactivable E2E", "20999999992", "e2e.toggle.company@vargasvet.test");
         Usuario toggleCompanyAdmin = usuarioRepository.save(user("e2e.company.admin@vargasvet.test", "Admin", "Empresa", toggleCompany));
+        createCredencial(toggleCompanyAdmin, toggleCompany, USER_PASSWORD);
         assignRole(toggleCompanyAdmin, adminRole);
         seedOperatingHours(company, veterinario);
         seedEmployeeSchedules(toggleEmployee);
@@ -244,8 +258,8 @@ public class E2eDataInitializer implements CommandLineRunner {
 
     private Usuario seedAdmin(Company company, Role role) {
         Usuario admin = user(ADMIN_EMAIL, "Administrador", "E2E", company);
-        admin.setPassword(passwordEncoder.encode(ADMIN_PASSWORD));
         admin = usuarioRepository.save(admin);
+        createCredencial(admin, company, ADMIN_PASSWORD);
 
         UsuarioPorRol assignment = new UsuarioPorRol();
         assignment.setUsuario(admin);
@@ -285,6 +299,7 @@ public class E2eDataInitializer implements CommandLineRunner {
 
     private Apoderado seedApoderado(Company company, String email, String name, String lastName, String document) {
         Usuario owner = usuarioRepository.save(user(email, name, lastName, company));
+        createCredencial(owner, company, USER_PASSWORD);
         Apoderado apoderado = new Apoderado();
         apoderado.setUser(owner);
         apoderado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
@@ -328,6 +343,7 @@ public class E2eDataInitializer implements CommandLineRunner {
 
     private Empleado seedVeterinario(Company company, String email, String name, String lastName, String document, String license) {
         Usuario user = usuarioRepository.save(user(email, name, lastName, company));
+        createCredencial(user, company, USER_PASSWORD);
         Empleado empleado = new Empleado();
         empleado.setUser(user);
         empleado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
@@ -344,9 +360,12 @@ public class E2eDataInitializer implements CommandLineRunner {
         Usuario user = employee.getUser();
         user.setActivo(false);
         user.setEmailVerified(false);
-        user.setPasswordChanged(false);
         user.setVerificationToken("selenium-e2e-activation-token");
         usuarioRepository.save(user);
+        credencialRepository.findByUsuarioIdAndCompanyId(user.getId(), company.getId()).ifPresent(credencial -> {
+            credencial.setPasswordChanged(false);
+            credencialRepository.save(credencial);
+        });
         assignRole(user, role);
         return employee;
     }
@@ -427,13 +446,11 @@ public class E2eDataInitializer implements CommandLineRunner {
     private Usuario user(String email, String nombre, String apellido, Company company) {
         Usuario user = new Usuario();
         user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(USER_PASSWORD));
         user.setNombre(nombre);
         user.setApellido(apellido);
         user.setDni(String.valueOf(71000000 + usuarioRepository.count()));
         user.setActivo(true);
         user.setEmailVerified(true);
-        user.setPasswordChanged(true);
         user.setCompany(company);
         return user;
     }

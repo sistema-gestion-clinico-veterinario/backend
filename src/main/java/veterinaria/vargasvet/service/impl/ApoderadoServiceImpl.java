@@ -61,6 +61,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     private final SessionSecurityService sessionSecurityService;
     private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
     private final veterinaria.vargasvet.repository.CitaRepository citaRepository;
+    private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
 
     @Value("${app.frontend.login-url}")
     private String loginUrl;
@@ -136,8 +137,6 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             usuario.setDni(dto.getNumeroDocumento());
             usuario.setTelefono(dto.getTelefono());
             usuario.setDireccion(dto.getDireccion());
-            String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-            usuario.setPassword(passwordEncoder.encode(tempPassword));
             usuario.setActivo(false);
             usuario.setEmailVerified(false);
             verificationToken = SecurityTokenUtils.generate();
@@ -177,6 +176,21 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         // no tiene forma de saber que ahora tambien tiene acceso aqui (con el
         // mismo usuario y contraseña que ya usa en sus otras empresas).
         boolean esNuevaEmpresaParaEsteUsuario = apoderado.getId() == null;
+        if (esNuevaEmpresaParaEsteUsuario
+                && !credencialRepository.existsByUsuarioIdAndCompanyId(savedUser.getId(), companyIdToUse)) {
+            // Cada empresa tiene su propia credencial - aunque savedUser ya exista, su
+            // primera relación con ESTA empresa recibe una contraseña temporal propia,
+            // nunca la que ya usa en otra empresa.
+            String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+            veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                    new veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial();
+            credencial.setUsuario(savedUser);
+            credencial.setCompany(companyToUse);
+            credencial.setPassword(passwordEncoder.encode(tempPassword));
+            credencial.setPasswordChanged(false);
+            credencial.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
+            credencialRepository.save(credencial);
+        }
         apoderado.setUser(savedUser);
         apoderado.setCompany(companyToUse);
         apoderado.setTipoDocumentoIdentidad(dto.getTipoDocumento());

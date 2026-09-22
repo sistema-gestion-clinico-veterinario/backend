@@ -12,8 +12,10 @@ import veterinaria.vargasvet.dto.Mail;
 import veterinaria.vargasvet.dto.request.RequestEmailChangeDTO;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.EmailChangeRequestRepository;
+import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.SecurityTokenUtils;
+import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.security.SharedRateLimitService;
 import veterinaria.vargasvet.util.AppClock;
 
@@ -33,6 +35,7 @@ public class EmailChangeService {
     private final SessionSecurityService sessionSecurityService;
     private final AuditLogService auditLogService;
     private final SharedRateLimitService sharedRateLimitService;
+    private final UsuarioEmpresaCredencialRepository credencialRepository;
 
     @Value("${security.email-change-validity-minutes:30}")
     private long validityMinutes;
@@ -57,7 +60,15 @@ public class EmailChangeService {
         if (!usuario.isActivo() || !usuario.isEmailVerified()) {
             throw new IllegalStateException("La cuenta no está habilitada para cambiar el correo");
         }
-        if (!passwordEncoder.matches(dto.getCurrentPassword(), usuario.getPassword())) {
+        // Verifica la credencial de la empresa activa de la sesión - un cambio de correo
+        // (dato global) igual se confirma con la contraseña de la empresa desde la que se
+        // está operando, no una "contraseña única" que ya no existe.
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        var credencial = (companyId == null
+                ? credencialRepository.findByUsuarioIdAndCompanyIsNull(usuarioId)
+                : credencialRepository.findByUsuarioIdAndCompanyId(usuarioId, companyId))
+                .orElseThrow(() -> new IllegalStateException("No se encontró la credencial de esta empresa"));
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), credencial.getPassword())) {
             throw new BadCredentialsException("La contraseña actual es incorrecta");
         }
 

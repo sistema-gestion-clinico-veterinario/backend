@@ -90,7 +90,15 @@ public class EspecialidadServiceImpl implements EspecialidadService {
 
     private Integer resolveCompanyId(Integer requestedCompanyId) {
         if (veterinaria.vargasvet.security.SecurityUtils.isSuperAdmin()) return requestedCompanyId;
-        return veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+        Integer currentCompanyId = veterinaria.vargasvet.security.SecurityUtils.getCurrentCompanyId();
+        // Sin este chequeo, un companyId de sesion null (cuenta mal configurada o pendiente)
+        // hacia que findAll() cayera en una consulta sin filtro de empresa - ver
+        // ControlPreventivoServiceImpl.resolveCatalogCompanyId, que ya lo hacia bien.
+        if (currentCompanyId == null) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "No se pudo determinar la empresa activa de la sesión");
+        }
+        return currentCompanyId;
     }
 
     private void validateCompany(Especialidad especialidad) {

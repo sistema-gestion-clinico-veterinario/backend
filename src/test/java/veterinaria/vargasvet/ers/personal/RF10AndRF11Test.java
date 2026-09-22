@@ -80,6 +80,7 @@ class RF10AndRF11Test {
     @Mock private UsuarioPorRolRepository usuarioPorRolRepository;
     @Mock private SessionSecurityService sessionSecurityService;
     @Mock private veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
+    @Mock private veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
 
     @InjectMocks private EmpleadoServiceImpl service;
 
@@ -113,6 +114,8 @@ class RF10AndRF11Test {
         EmpleadoRequest request = requestValido();
         Role role = roleStaff(8);
         ArgumentCaptor<Usuario> userCaptor = ArgumentCaptor.forClass(Usuario.class);
+        ArgumentCaptor<veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial> credencialCaptor =
+                ArgumentCaptor.forClass(veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial.class);
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, Object>> modelCaptor = ArgumentCaptor.forClass(Map.class);
 
@@ -137,12 +140,15 @@ class RF10AndRF11Test {
         UserProfileDTO response = service.registerEmpleado(request);
 
         Usuario saved = userCaptor.getValue();
+        verify(credencialRepository).save(credencialCaptor.capture());
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial = credencialCaptor.getValue();
         String verificationLink = String.valueOf(modelCaptor.getValue().get("verificationLink"));
         String rawToken = verificationLink.substring(verificationLink.indexOf("token=") + 6);
         assertThat(response).isNotNull();
         assertThat(saved.isActivo()).isFalse();
         assertThat(saved.isEmailVerified()).isFalse();
-        assertThat(saved.getPassword()).isEqualTo("HASH_NO_REVERSIBLE");
+        assertThat(credencial.getPassword()).isEqualTo("HASH_NO_REVERSIBLE");
+        assertThat(credencial.getCompany()).isEqualTo(company);
         assertThat(saved.getVerificationToken()).isEqualTo(SecurityTokenUtils.hash(rawToken));
         assertThat(modelCaptor.getValue()).doesNotContainKeys("password", "tempPassword", "contraseña");
         verify(emailService).sendEmailWithRetry(any(Mail.class), eq("email/welcome-template"));
@@ -234,7 +240,7 @@ class RF10AndRF11Test {
         assertThat(empleado.getEstado()).isFalse();
         assertThat(empleado.getUser().isActivo()).isFalse();
         assertThat(empleado.getEstadoModificadoPor()).isEqualTo("admin@empresa.test");
-        verify(sessionSecurityService).invalidateAllSessions(empleado.getUser());
+        verify(sessionSecurityService).invalidateSessionsForCompany(empleado.getUser(), empleado.getCompany());
     }
 
     private EmpleadoRequest requestValido() {
