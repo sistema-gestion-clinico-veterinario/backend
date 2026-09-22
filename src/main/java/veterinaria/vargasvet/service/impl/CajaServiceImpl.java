@@ -89,6 +89,9 @@ public class CajaServiceImpl implements CajaService {
         if (companyId == null) {
             throw new IllegalArgumentException("No se pudo determinar la empresa de la cita");
         }
+        // La cita se busca por ID global sin filtro de empresa (arriba) - sin esto, cualquier
+        // usuario podria pasar el citaId de OTRA empresa y mutar su caja/pagos.
+        validarCompanyId(companyId);
         requireSesionAbierta(companyId);
 
         BigDecimal montoDevuelto = cita.getMontoPagado();

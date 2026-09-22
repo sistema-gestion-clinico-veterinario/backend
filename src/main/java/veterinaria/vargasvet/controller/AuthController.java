@@ -18,6 +18,8 @@ import veterinaria.vargasvet.dto.request.SwitchRoleRequest;
 import veterinaria.vargasvet.dto.response.AuthResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.service.UsuarioService;
+import veterinaria.vargasvet.service.impl.GoogleOAuthService;
+import veterinaria.vargasvet.service.impl.GoogleLoginExchangeStore;
 
 @RestController
 @RequestMapping("/auth")
@@ -29,6 +31,8 @@ public class AuthController {
 
     private final UsuarioService usuarioService;
     private final veterinaria.vargasvet.service.EmailChangeService emailChangeService;
+    private final GoogleOAuthService googleOAuthService;
+    private final GoogleLoginExchangeStore googleLoginExchangeStore;
 
     @Value("${app.cookie.secure:false}")
     private boolean cookieSecure;
@@ -41,6 +45,9 @@ public class AuthController {
 
     @Value("${jwt.refresh-validity-in-seconds:604800}")
     private long refreshTokenMaxAge;
+
+    @Value("${app.url}")
+    private String frontendUrl;
 
     @PostConstruct
     void validateCookieConfiguration() {
@@ -75,6 +82,61 @@ public class AuthController {
         AuthResponse response = usuarioService.adminLogin(adminLoginDTO);
         setAuthCookies(httpResponse, response.getToken(), response.getRefreshToken());
         return ResponseEntity.ok(new ApiResponse<>(true, "Login exitoso", response));
+    }
+
+    /** Adonde Google redirige al navegador tras el consentimiento. No es una llamada del
+     * frontend (fetch/XHR) sino una navegación real del navegador, así que nunca devuelve
+     * JSON - siempre redirige (éxito o error) de vuelta al frontend. */
+    @GetMapping("/google/callback")
+    public ResponseEntity<Void> googleCallback(
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String error) {
+        String redirectTarget;
+        if (error != null || code == null || code.isBlank()) {
+            redirectTarget = frontendLoginUrl(state, "google_cancelado");
+        } else {
+            try {
+                GoogleOAuthService.GoogleIdentity identity = googleOAuthService.resolveIdentity(code);
+                if (!identity.emailVerified()) {
+                    redirectTarget = frontendLoginUrl(state, "google_email_no_verificado");
+                } else {
+                    AuthResponse response = usuarioService.loginWithGoogle(identity.email(), state);
+                    String exchangeCode = googleLoginExchangeStore.store(response);
+                    redirectTarget = frontendUrl + "/auth/google/callback?code="
+                            + java.net.URLEncoder.encode(exchangeCode, java.nio.charset.StandardCharsets.UTF_8);
+                }
+            } catch (Exception ex) {
+                redirectTarget = frontendLoginUrl(state, "google_fallo");
+            }
+        }
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(java.net.URI.create(redirectTarget))
+                .build();
+    }
+
+    /** El frontend canjea aquí el código de un solo uso que recibió en la redirección de
+     * /google/callback - esta sí es una llamada normal (fetch, vía el proxy de Vercel), así
+     * que aquí sí se pueden fijar las cookies httpOnly igual que en /login. */
+    @PostMapping("/google/exchange")
+    public ResponseEntity<ApiResponse<AuthResponse>> googleExchange(
+            @Valid @RequestBody veterinaria.vargasvet.dto.request.GoogleExchangeRequest request,
+            HttpServletResponse httpResponse) {
+        AuthResponse response = googleLoginExchangeStore.consume(request.getCode());
+        if (response == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>(false, "El enlace de Google expiró o ya fue usado. Intenta de nuevo.", null));
+        }
+        setAuthCookies(httpResponse, response.getToken(), response.getRefreshToken());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Login exitoso", response));
+    }
+
+    /** slug puede venir vacío/null (login global) - en ese caso no hay prefijo de empresa
+     * en la URL. */
+    private String frontendLoginUrl(String slug, String errorCode) {
+        String path = (slug != null && !slug.isBlank()) ? "/" + slug + "/login" : "/login";
+        return frontendUrl + path + "?authError="
+                + java.net.URLEncoder.encode(errorCode, java.nio.charset.StandardCharsets.UTF_8);
     }
 
     @PostMapping("/setup-account")

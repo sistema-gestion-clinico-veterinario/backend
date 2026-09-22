@@ -1,12 +1,14 @@
 package veterinaria.vargasvet.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.PasswordResetToken;
 import veterinaria.vargasvet.domain.entity.Usuario;
 
 import java.util.Optional;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -16,4 +18,8 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
     @Query("SELECT token FROM PasswordResetToken token JOIN FETCH token.usuario WHERE token.token = :tokenHash")
     Optional<PasswordResetToken> findByTokenForUpdate(@Param("tokenHash") String tokenHash);
     void deleteByUsuario(Usuario usuario);
+    void deleteByUsuarioAndCompany(Usuario usuario, Company company);
+    @Modifying
+    @Query("DELETE FROM PasswordResetToken token WHERE token.usuario = :usuario AND token.company IS NULL")
+    void deleteByUsuarioAndCompanyIsNull(@Param("usuario") Usuario usuario);
 }

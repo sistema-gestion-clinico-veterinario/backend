@@ -5,16 +5,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.MockedStatic;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 import veterinaria.vargasvet.domain.entity.EmailChangeRequest;
 import veterinaria.vargasvet.domain.entity.Usuario;
+import veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial;
 import veterinaria.vargasvet.dto.request.RequestEmailChangeDTO;
 import veterinaria.vargasvet.repository.EmailChangeRequestRepository;
+import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.SecurityTokenUtils;
+import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.security.SharedRateLimitService;
 import veterinaria.vargasvet.util.AppClock;
 
@@ -33,6 +37,7 @@ class EmailChangeServiceTest {
     @Mock SessionSecurityService sessionSecurityService;
     @Mock AuditLogService auditLogService;
     @Mock SharedRateLimitService sharedRateLimitService;
+    @Mock UsuarioEmpresaCredencialRepository credencialRepository;
 
     @InjectMocks EmailChangeService service;
 
@@ -50,11 +55,18 @@ class EmailChangeServiceTest {
         dto.setCurrentPassword("CurrentPassword-123");
         dto.setNewEmail(" Nuevo@Example.com ");
 
+        UsuarioEmpresaCredencial credencial = new UsuarioEmpresaCredencial();
+        credencial.setPassword("bcrypt-hash");
+
         when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
-        when(passwordEncoder.matches(dto.getCurrentPassword(), usuario.getPassword())).thenReturn(true);
+        when(credencialRepository.findByUsuarioIdAndCompanyId(usuario.getId(), 3)).thenReturn(Optional.of(credencial));
+        when(passwordEncoder.matches(dto.getCurrentPassword(), credencial.getPassword())).thenReturn(true);
         when(usuarioRepository.existsByEmail("nuevo@example.com")).thenReturn(false);
 
-        service.requestChange(usuario.getId(), dto);
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::getCurrentCompanyId).thenReturn(3);
+            service.requestChange(usuario.getId(), dto);
+        }
 
         ArgumentCaptor<EmailChangeRequest> captor = ArgumentCaptor.forClass(EmailChangeRequest.class);
         verify(emailChangeRequestRepository).save(captor.capture());
@@ -98,7 +110,6 @@ class EmailChangeServiceTest {
         Usuario usuario = new Usuario();
         usuario.setId(10);
         usuario.setEmail("actual@example.com");
-        usuario.setPassword("bcrypt-hash");
         usuario.setNombre("Usuario");
         usuario.setActivo(true);
         usuario.setEmailVerified(true);

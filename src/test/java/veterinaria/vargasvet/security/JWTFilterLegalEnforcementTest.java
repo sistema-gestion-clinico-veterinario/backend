@@ -16,6 +16,7 @@ import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.RoleScope;
+import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.service.LegalDocumentService;
@@ -59,13 +60,16 @@ class JWTFilterLegalEnforcementTest {
     private LegalDocumentService legalDocumentService;
 
     @Mock
+    private UsuarioEmpresaCredencialRepository credencialRepository;
+
+    @Mock
     private FilterChain filterChain;
 
     private JWTFilter filter;
 
     @BeforeEach
     void setUp() {
-        filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, legalDocumentService);
+        filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, credencialRepository, legalDocumentService);
         SecurityContextHolder.clearContext();
     }
 
@@ -99,15 +103,20 @@ class JWTFilterLegalEnforcementTest {
         usuario.setId(USUARIO_ID);
         usuario.setEmail(EMAIL);
         usuario.setActivo(true);
-        usuario.setCredentialsVersion(0L);
         Company company = new Company();
         company.setActivo(true);
         usuario.setCompany(company);
+
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                new veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial();
+        credencial.setCredentialsVersion(0L);
 
         when(tokenProvider.getAuthentication(ACCESS_TOKEN)).thenReturn(authentication);
         when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleId(USUARIO_ID, 1))
                 .thenReturn(Optional.of(asignacion));
         when(usuarioRepository.findByIdWithCompany(USUARIO_ID)).thenReturn(Optional.of(usuario));
+        // principal.getCompanyId() es null en este test (rol CLIENT_PORTAL sin empresa).
+        when(credencialRepository.findByUsuarioIdAndCompanyIsNull(USUARIO_ID)).thenReturn(Optional.of(credencial));
     }
 
     @Test
