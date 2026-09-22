@@ -109,9 +109,14 @@ class RF09AndRF15Test {
         lenient().when(citaRepository.findActiveByEmpleadoIdAndFecha(7L, horario.getFecha()))
                 .thenReturn(List.of(new Cita()));
 
-        assertThatThrownBy(() -> service.deleteHorario(50L))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("citas");
+        try (org.mockito.MockedStatic<veterinaria.vargasvet.security.SecurityUtils> security =
+                org.mockito.Mockito.mockStatic(veterinaria.vargasvet.security.SecurityUtils.class)) {
+            security.when(veterinaria.vargasvet.security.SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            assertThatThrownBy(() -> service.deleteHorario(50L))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("citas");
+        }
 
         verify(horarioEmpleadoRepository, never()).deleteById(50L);
     }

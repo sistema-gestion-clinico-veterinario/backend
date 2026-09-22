@@ -442,7 +442,6 @@ class RF30Test {
         Usuario usuario = new Usuario();
         usuario.setEmail(prefix + "-" + UUID.randomUUID() + "@vargasvet.test");
         usuario.setUsername(prefix + "-" + UUID.randomUUID());
-        usuario.setPassword("hash-no-real");
         usuario.setNombre(prefix);
         usuario.setApellido("QA");
         usuario.setDni(uniqueDigits(8));

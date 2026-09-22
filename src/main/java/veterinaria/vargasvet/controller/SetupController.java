@@ -36,6 +36,7 @@ public class SetupController {
     private final UserMapper userMapper;
     private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     private final veterinaria.vargasvet.security.PasswordPolicyService passwordPolicyService;
+    private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
 
     @Value("${app.setup.token:}")
     private String setupToken;
@@ -57,13 +58,22 @@ public class SetupController {
         }
         passwordPolicyService.validate(registrationDTO.getPassword(), registrationDTO.getEmail(),
                 registrationDTO.getNombre(), registrationDTO.getApellido());
+        String encodedPassword = passwordEncoder.encode(registrationDTO.getPassword());
         Usuario admin = userMapper.toEntity(registrationDTO);
-        admin.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
         admin.setActivo(true);
         admin.setEmailVerified(true);
-        admin.setPasswordChanged(true);
 
         Usuario saved = usuarioRepository.save(admin);
+
+        // SuperAdmin no pertenece a ninguna empresa: credencial con company = null.
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                new veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial();
+        credencial.setUsuario(saved);
+        credencial.setCompany(null);
+        credencial.setPassword(encodedPassword);
+        credencial.setPasswordChanged(true);
+        credencial.setCreatedAt(java.time.LocalDateTime.now());
+        credencialRepository.save(credencial);
 
         roleRepository.findFirstByCompanyIsNullAndPurpose(RolePurpose.PLATFORM_ADMIN).ifPresent(role -> {
             UsuarioPorRol upr = new UsuarioPorRol();

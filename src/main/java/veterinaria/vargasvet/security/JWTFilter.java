@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
+import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
@@ -28,6 +29,7 @@ public class JWTFilter extends GenericFilterBean {
     private final TokenProvider tokenProvider;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioPorRolRepository usuarioPorRolRepository;
+    private final UsuarioEmpresaCredencialRepository credencialRepository;
     private final LegalDocumentService legalDocumentService;
 
     @Override
@@ -74,7 +76,13 @@ public class JWTFilter extends GenericFilterBean {
                 var currentUser = usuarioRepository.findByIdWithCompany(principal.getId())
                         .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException(
                                 "La cuenta de la sesión ya no existe"));
-                if (currentUser.getCredentialsVersion() != principal.getCredentialsVersion()) {
+                // La credencial de la empresa de ESTA sesion, no un campo global - cada
+                // empresa tiene su propia credentials_version.
+                var credencial = (principal.getCompanyId() == null
+                        ? credencialRepository.findByUsuarioIdAndCompanyIsNull(principal.getId())
+                        : credencialRepository.findByUsuarioIdAndCompanyId(principal.getId(), principal.getCompanyId()))
+                        .orElse(null);
+                if (credencial == null || credencial.getCredentialsVersion() != principal.getCredentialsVersion()) {
                     throw new org.springframework.security.authentication.CredentialsExpiredException(
                             "La sesión fue invalidada por un evento de seguridad");
                 }

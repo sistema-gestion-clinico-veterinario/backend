@@ -18,6 +18,8 @@ import veterinaria.vargasvet.dto.request.LoginDTO;
 import veterinaria.vargasvet.dto.response.AuthResponse;
 import veterinaria.vargasvet.service.EmailChangeService;
 import veterinaria.vargasvet.service.UsuarioService;
+import veterinaria.vargasvet.service.impl.GoogleLoginExchangeStore;
+import veterinaria.vargasvet.service.impl.GoogleOAuthService;
 
 import java.util.List;
 
@@ -30,7 +32,10 @@ class AuthControllerContractTest {
 
     private final UsuarioService usuarioService = mock(UsuarioService.class);
     private final EmailChangeService emailChangeService = mock(EmailChangeService.class);
-    private final AuthController controller = new AuthController(usuarioService, emailChangeService);
+    private final GoogleOAuthService googleOAuthService = mock(GoogleOAuthService.class);
+    private final GoogleLoginExchangeStore googleLoginExchangeStore = mock(GoogleLoginExchangeStore.class);
+    private final AuthController controller = new AuthController(
+            usuarioService, emailChangeService, googleOAuthService, googleLoginExchangeStore);
 
     @BeforeEach
     void configureCookies() {

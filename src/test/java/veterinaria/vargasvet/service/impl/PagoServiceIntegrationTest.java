@@ -279,7 +279,7 @@ class PagoServiceIntegrationTest {
         cita.setEsEmergencia(false);
         Cita saved = citaRepository.save(cita);
         UsuarioPrincipal principal = new UsuarioPrincipal(
-                apoderadoUser.getId(), apoderadoUser.getEmail(), apoderadoUser.getPassword(), List.of(), company.getId());
+                apoderadoUser.getId(), apoderadoUser.getEmail(), "n/a", List.of(), company.getId());
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
         return saved;
@@ -289,7 +289,6 @@ class PagoServiceIntegrationTest {
         Usuario usuario = new Usuario();
         usuario.setEmail(prefix + "-" + UUID.randomUUID() + "@vargasvet.test");
         usuario.setUsername(prefix + "-" + UUID.randomUUID());
-        usuario.setPassword("password");
         usuario.setNombre(prefix);
         usuario.setApellido("Test");
         usuario.setDni(uniqueDigits(8));

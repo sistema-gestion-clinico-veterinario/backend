@@ -59,6 +59,8 @@ public class WebSecurityConfig {
                         .requestMatchers(
                                 "/auth/login",
                                 "/auth/admin-login",
+                                "/auth/google/callback",
+                                "/auth/google/exchange",
                                 "/auth/refresh",
                                 "/auth/logout",
                                 "/auth/resend-verification",

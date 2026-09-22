@@ -12,6 +12,11 @@ public interface UsuarioService {
     /** Ruta reservada para SuperAdmin (PLATFORM_ADMIN) - no pasa por slug de
      * empresa ni chequeo de membresia, ya que supervisa todas las empresas. */
     AuthResponse adminLogin(veterinaria.vargasvet.dto.request.AdminLoginDTO adminLoginDTO);
+
+    /** Login vía "Continuar con Google": el correo ya viene verificado por Google (no
+     * requiere contraseña), pero solo funciona para una cuenta YA EXISTENTE con
+     * credencial creada en esa empresa - no crea cuentas nuevas. */
+    AuthResponse loginWithGoogle(String email, String slug);
     UserProfileDTO getProfile(Integer id);
     void suspendAccount(Integer id);
     void verifyEmail(String token);

@@ -12,6 +12,7 @@ import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.dto.request.LoginDTO;
 import veterinaria.vargasvet.dto.response.AuthResponse;
+import veterinaria.vargasvet.repository.ApoderadoRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.RefreshTokenRepository;
@@ -56,6 +57,8 @@ class UsuarioServiceImplLoginTest {
     @Mock LegalDocumentService legalDocumentService;
     @Mock AuditLogService auditLogService;
     @Mock EmpleadoRepository empleadoRepository;
+    @Mock ApoderadoRepository apoderadoRepository;
+    @Mock veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
 
     @InjectMocks UsuarioServiceImpl service;
 
@@ -64,10 +67,18 @@ class UsuarioServiceImplLoginTest {
         usuario.setId(10);
         usuario.setUsername("ana.qa");
         usuario.setEmail("ana@example.test");
-        usuario.setPassword("hash-almacenado");
         usuario.setActivo(true);
         usuario.setEmailVerified(true);
         return usuario;
+    }
+
+    private veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencialValida() {
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                new veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial();
+        credencial.setPassword("hash-almacenado");
+        credencial.setPasswordChanged(true);
+        credencial.setCredentialsVersion(0L);
+        return credencial;
     }
 
     private LoginDTO loginSinSlug() {
@@ -81,7 +92,6 @@ class UsuarioServiceImplLoginTest {
     void rechazaLoginGlobalCuandoElUsuarioNoTieneNingunaEmpresaActiva() {
         Usuario usuario = usuarioValido();
         when(usuarioRepository.findByUsername("ana.qa")).thenReturn(Optional.of(usuario));
-        when(passwordEncoder.matches("Password-123", "hash-almacenado")).thenReturn(true);
         when(companyMembershipService.getActiveCompanyIds(usuario)).thenReturn(Set.of());
 
         assertThatThrownBy(() -> service.login(loginSinSlug()))
@@ -95,7 +105,6 @@ class UsuarioServiceImplLoginTest {
     void rechazaLoginGlobalCuandoElUsuarioTieneVariasEmpresasActivas() {
         Usuario usuario = usuarioValido();
         when(usuarioRepository.findByUsername("ana.qa")).thenReturn(Optional.of(usuario));
-        when(passwordEncoder.matches("Password-123", "hash-almacenado")).thenReturn(true);
         when(companyMembershipService.getActiveCompanyIds(usuario)).thenReturn(Set.of(1, 2));
 
         assertThatThrownBy(() -> service.login(loginSinSlug()))
@@ -113,11 +122,13 @@ class UsuarioServiceImplLoginTest {
         company.setName("Vargas Vet");
         company.setSlug("vargas-vet");
         company.setActivo(true);
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial = credencialValida();
 
         when(usuarioRepository.findByUsername("ana.qa")).thenReturn(Optional.of(usuario));
-        when(passwordEncoder.matches("Password-123", "hash-almacenado")).thenReturn(true);
         when(companyMembershipService.getActiveCompanyIds(usuario)).thenReturn(Set.of(7));
         when(companyRepository.findById(7)).thenReturn(Optional.of(company));
+        when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencial));
+        when(passwordEncoder.matches("Password-123", "hash-almacenado")).thenReturn(true);
         when(tokenProvider.createToken(any(), any(), any(), any(), any(), any(), any(), any(), anyLong(), anyLong()))
                 .thenReturn("access-token");
         when(tokenProvider.createRefreshToken(anyString(), any(), any(), anyString(), anyLong()))

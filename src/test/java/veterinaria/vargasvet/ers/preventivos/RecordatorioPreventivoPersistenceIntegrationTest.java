@@ -65,7 +65,6 @@ class RecordatorioPreventivoPersistenceIntegrationTest {
         Usuario usuario = new Usuario();
         usuario.setEmail("qa-recordatorio-" + UUID.randomUUID() + "@example.test");
         usuario.setUsername("qa-recordatorio-" + UUID.randomUUID());
-        usuario.setPassword("hash-no-real");
         usuario.setNombre("QA");
         usuario.setApellido("Recordatorio");
         usuario.setCompany(company);
@@ -144,7 +143,6 @@ class RecordatorioPreventivoPersistenceIntegrationTest {
         Usuario usuario = new Usuario();
         usuario.setEmail("qa-proceso-" + UUID.randomUUID() + "@example.test");
         usuario.setUsername("qa-proceso-" + UUID.randomUUID());
-        usuario.setPassword("hash-no-real");
         usuario.setNombre("QA");
         usuario.setApellido("Proceso");
         usuario.setCompany(company);

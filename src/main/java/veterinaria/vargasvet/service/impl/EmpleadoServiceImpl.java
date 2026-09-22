@@ -60,6 +60,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final UsuarioPorRolRepository usuarioPorRolRepository;
     private final SessionSecurityService sessionSecurityService;
     private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
+    private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
 
     @Value("${app.url}")
     private String appUrl;
@@ -131,8 +132,6 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             usuario.setTelefono(dto.getTelefono());
             usuario.setDireccion(dto.getDireccion());
 
-            String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-            usuario.setPassword(passwordEncoder.encode(tempPassword));
             usuario.setActivo(false);
             usuario.setEmailVerified(false);
             verificationToken = SecurityTokenUtils.generate();
@@ -146,6 +145,22 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             // laboral activa en otra parte - ver CompanyMembershipService.
             savedUser = existingUsuario.get();
             companyMembershipService.assertNoActiveEmploymentElsewhere(savedUser);
+        }
+
+        // Solo se crea credencial si esta persona nunca antes tuvo relacion con ESTA
+        // empresa (ni de empleado ni de apoderado) - un reingreso a una empresa donde ya
+        // trabajo antes conserva su contraseña anterior de esa empresa en vez de pisarla,
+        // e insertar una segunda fila violaria la unicidad (usuario, empresa).
+        if (!credencialRepository.existsByUsuarioIdAndCompanyId(savedUser.getId(), companyIdToUse)) {
+            String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+            veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                    new veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial();
+            credencial.setUsuario(savedUser);
+            credencial.setCompany(companyToUse);
+            credencial.setPassword(passwordEncoder.encode(tempPassword));
+            credencial.setPasswordChanged(false);
+            credencial.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
+            credencialRepository.save(credencial);
         }
 
         if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
@@ -362,7 +377,9 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         usuario.setActivo(nuevoEstado);
 
         empleadoRepository.save(empleado);
-        sessionSecurityService.invalidateAllSessions(usuario);
+        // Solo revoca las sesiones de ESTA empresa - desactivar a alguien en Vargas Vet
+        // nunca debe desloguearlo de El Duke de Can si tiene sesión abierta ahí.
+        sessionSecurityService.invalidateSessionsForCompany(usuario, empleado.getCompany());
 
         auditLogService.log(
             Boolean.TRUE.equals(nuevoEstado) ? "ACTIVAR_EMPLEADO" : "DESACTIVAR_EMPLEADO",
@@ -384,7 +401,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             empleado.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
             if (usuario != null) {
                 usuario.setActivo(false);
-                sessionSecurityService.invalidateAllSessions(usuario);
+                sessionSecurityService.invalidateSessionsForCompany(usuario, empleado.getCompany());
             }
             empleadoRepository.save(empleado);
 
@@ -636,8 +653,17 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     public void updateHorario(Long horarioId, HorarioEmpleadoRequest request) {
         HorarioEmpleado horario = horarioEmpleadoRepository.findById(horarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Horario no encontrado"));
-        
+
         Empleado empleado = horario.getEmpleado();
+
+        // El horario se busca por ID global sin filtro de empresa (arriba) - sin esto, cualquier
+        // usuario podria pasar el horarioId de un empleado de OTRA empresa y modificar su turno.
+        if (!SecurityUtils.isSuperAdmin()) {
+            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
+            if (empleado.getCompany() == null || !empleado.getCompany().getId().equals(currentCompanyId)) {
+                throw new IllegalArgumentException("No tienes permiso para modificar el horario de un empleado de otra empresa");
+            }
+        }
 
         if (!Boolean.TRUE.equals(empleado.getEstado())) {
             throw new IllegalStateException("No se puede modificar el horario de un empleado inactivo");
@@ -672,6 +698,16 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     public void deleteHorario(Long horarioId) {
         HorarioEmpleado horario = horarioEmpleadoRepository.findById(horarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Horario no encontrado"));
+
+        // Mismo motivo que en updateHorario: sin este chequeo, cualquier usuario podria borrar
+        // el horario de un empleado de OTRA empresa solo adivinando el horarioId.
+        if (!SecurityUtils.isSuperAdmin()) {
+            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
+            Company horarioCompany = horario.getEmpleado().getCompany();
+            if (horarioCompany == null || !horarioCompany.getId().equals(currentCompanyId)) {
+                throw new IllegalArgumentException("No tienes permiso para eliminar el horario de un empleado de otra empresa");
+            }
+        }
 
         if (!Boolean.TRUE.equals(horario.getEmpleado().getEstado())) {
             throw new IllegalStateException("No se puede eliminar el horario de un empleado inactivo");

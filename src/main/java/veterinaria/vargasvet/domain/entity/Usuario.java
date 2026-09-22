@@ -25,9 +25,6 @@ public class Usuario {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false)
-    private String password;
-
     @Column
     private String nombre;
 
@@ -64,9 +61,6 @@ public class Usuario {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private java.util.List<UsuarioPorRol> usuariosPorRol = new java.util.ArrayList<>();
 
-    @Column(nullable = false)
-    private boolean passwordChanged = false;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
     private Company company;
@@ -82,8 +76,5 @@ public class Usuario {
 
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified = false;
-
-    @Column(name = "credentials_version", nullable = false)
-    private long credentialsVersion = 0L;
 }
 

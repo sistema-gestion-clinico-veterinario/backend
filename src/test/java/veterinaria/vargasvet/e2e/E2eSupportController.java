@@ -19,6 +19,7 @@ import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.CompanyOperatingHourRepository;
 import veterinaria.vargasvet.repository.ConsultaRepository;
+import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 
 import java.util.List;
@@ -35,6 +36,7 @@ public class E2eSupportController {
     private final UsuarioRepository usuarioRepository;
     private final CitaRepository citaRepository;
     private final ConsultaRepository consultaRepository;
+    private final UsuarioEmpresaCredencialRepository credencialRepository;
     private final Map<String, byte[]> storedFiles = new ConcurrentHashMap<>();
 
     public E2eSupportController(
@@ -42,13 +44,15 @@ public class E2eSupportController {
             CompanyOperatingHourRepository operatingHourRepository,
             UsuarioRepository usuarioRepository,
             CitaRepository citaRepository,
-            ConsultaRepository consultaRepository
+            ConsultaRepository consultaRepository,
+            UsuarioEmpresaCredencialRepository credencialRepository
     ) {
         this.fixtureRegistry = fixtureRegistry;
         this.operatingHourRepository = operatingHourRepository;
         this.usuarioRepository = usuarioRepository;
         this.citaRepository = citaRepository;
         this.consultaRepository = consultaRepository;
+        this.credencialRepository = credencialRepository;
     }
 
     @GetMapping("/health")
@@ -86,9 +90,13 @@ public class E2eSupportController {
         var user = usuarioRepository.findByEmail(email).orElseThrow();
         user.setActivo(false);
         user.setEmailVerified(false);
-        user.setPasswordChanged(false);
         user.setVerificationToken(token);
         usuarioRepository.save(user);
+        Integer companyId = user.getCompany() != null ? user.getCompany().getId() : null;
+        credencialRepository.findByUsuarioIdAndCompanyId(user.getId(), companyId).ifPresent(credencial -> {
+            credencial.setPasswordChanged(false);
+            credencialRepository.save(credencial);
+        });
         fixtureRegistry.put("activationToken", token);
         return Map.of("email", email, "token", token);
     }

@@ -43,6 +43,8 @@ public class UsuarioPrincipal implements UserDetails {
         this.permissionVersion = permissionVersion;
     }
 
+    /** Sin llamadores en el código (verificado) - la contraseña ya no vive en Usuario
+     * (ver UsuarioEmpresaCredencial), así que no hay un único valor que asignar aquí. */
     public static UsuarioPrincipal create(Usuario usuario) {
         java.util.List<GrantedAuthority> authorities = new java.util.ArrayList<>();
         if (usuario.getUsuariosPorRol() != null) {
@@ -56,7 +58,7 @@ public class UsuarioPrincipal implements UserDetails {
         return new UsuarioPrincipal(
                 usuario.getId(),
                 usuario.getEmail(),
-                usuario.getPassword(),
+                null,
                 authorities,
                 companyId
         );

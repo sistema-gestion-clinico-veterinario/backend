@@ -39,6 +39,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     private final UserMapper userMapper;
     private final EmailService emailService;
     private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
+    private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
 
     @Value("${app.url}")
     private String appUrl;
@@ -98,8 +99,6 @@ public class VeterinarioServiceImpl implements VeterinarioService {
             usuario.setDni(dto.getNumeroDocumento());
             usuario.setTelefono(dto.getTelefono());
             usuario.setDireccion(dto.getDireccion());
-            String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-            usuario.setPassword(passwordEncoder.encode(tempPassword));
             usuario.setActivo(false);
             usuario.setEmailVerified(false);
             verificationToken = SecurityTokenUtils.generate();
@@ -112,6 +111,20 @@ public class VeterinarioServiceImpl implements VeterinarioService {
             // bloquear si ya tiene una relacion laboral activa en otra empresa.
             savedUser = existingUsuario.get();
             companyMembershipService.assertNoActiveEmploymentElsewhere(savedUser);
+        }
+
+        // Como mucho hay una relacion de Empleado activa por usuario en todo el sistema,
+        // asi que esta siempre es su primera relacion de empleado con ESTA empresa.
+        if (!credencialRepository.existsByUsuarioIdAndCompanyId(savedUser.getId(), companyId)) {
+            String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+            veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                    new veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial();
+            credencial.setUsuario(savedUser);
+            credencial.setCompany(company);
+            credencial.setPassword(passwordEncoder.encode(tempPassword));
+            credencial.setPasswordChanged(false);
+            credencial.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
+            credencialRepository.save(credencial);
         }
 
         for (Integer roleId : new java.util.LinkedHashSet<>(dto.getRoleIds())) {

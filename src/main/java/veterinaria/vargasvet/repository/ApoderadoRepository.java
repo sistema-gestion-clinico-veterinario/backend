@@ -45,5 +45,6 @@ public interface ApoderadoRepository extends JpaRepository<Apoderado, Long> {
 
     boolean existsByUserId(Integer userId);
     boolean existsByUserIdAndEstadoTrue(Integer userId);
+    boolean existsByUserIdAndCompanyId(Integer userId, Integer companyId);
     boolean existsByUserIdAndCompanyIdAndEstadoTrue(Integer userId, Integer companyId);
 }
