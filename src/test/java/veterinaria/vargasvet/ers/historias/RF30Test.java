@@ -88,7 +88,7 @@ class RF30Test {
                 historiaClinicaRepository,
                 mascotaRepository,
                 citaRepository,
-                new ConsultaMapper(),
+                new ConsultaMapper(mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class)),
                 mock(AuditLogService.class),
                 mock(AccesoValidator.class)
         );

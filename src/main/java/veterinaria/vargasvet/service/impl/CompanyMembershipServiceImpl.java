@@ -76,12 +76,4 @@ public class CompanyMembershipServiceImpl implements CompanyMembershipService {
         usuario.setCompany(resolvedCompanyId == null ? null : companyRepository.getReferenceById(resolvedCompanyId));
         usuarioRepository.save(usuario);
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public void assertNoActiveEmploymentElsewhere(Usuario usuario) {
-        if (empleadoRepository.existsByUserIdAndEstadoTrue(usuario.getId())) {
-            throw new IllegalArgumentException("El correo electrónico ya está en uso");
-        }
-    }
 }

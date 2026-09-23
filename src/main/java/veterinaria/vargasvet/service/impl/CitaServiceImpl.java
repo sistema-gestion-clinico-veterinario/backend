@@ -66,6 +66,7 @@ public class CitaServiceImpl implements CitaService {
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
     private final EmailService emailService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UsuarioContactoService contactoService;
     @org.springframework.beans.factory.annotation.Autowired
     private ControlPreventivoRepository controlPreventivoRepository;
 
@@ -1309,7 +1310,8 @@ public class CitaServiceImpl implements CitaService {
                 .mascotaNombre(mascota.getNombreCompleto())
                 .apoderadoId(apoderado.getId())
                 .apoderadoNombre((usuario.getNombre() + " " + usuario.getApellido()).trim())
-                .apoderadoTelefono(usuario.getTelefono())
+                .apoderadoTelefono(contactoService.telefono(usuario.getId(),
+                        apoderado.getCompany() != null ? apoderado.getCompany().getId() : null))
                 .tipoControl(servicioNombre)
                 .nombreControl(servicioNombre)
                 .fechaRecomendada(fechaCita)

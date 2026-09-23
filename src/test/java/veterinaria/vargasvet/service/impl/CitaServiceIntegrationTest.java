@@ -109,7 +109,8 @@ class CitaServiceIntegrationTest {
                 accesoValidator,
                 mock(AuditLogService.class),
                 mock(EmailService.class),
-                mock(SimpMessagingTemplate.class)
+                mock(SimpMessagingTemplate.class),
+                mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class)
         );
         autenticarSuperAdmin();
     }

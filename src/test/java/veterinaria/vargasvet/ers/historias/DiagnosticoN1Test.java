@@ -166,7 +166,8 @@ class DiagnosticoN1Test {
                 consultaRepository, mock(ArchivoClinicoRepository.class), mock(veterinaria.vargasvet.service.StorageService.class),
                 mock(veterinaria.vargasvet.service.AuditLogService.class));
         HistoriaClinicaServiceImpl service = new HistoriaClinicaServiceImpl(
-                historiaClinicaRepository, consultaRepository, archivoService);
+                historiaClinicaRepository, consultaRepository, archivoService,
+                mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class));
         ReflectionTestUtils.setField(service, "accesoValidator", mock(AccesoValidator.class));
         ReflectionTestUtils.setField(service, "empleadoRepository", empleadoRepository);
         ReflectionTestUtils.setField(service, "prescripcionRepository", prescripcionRepository);

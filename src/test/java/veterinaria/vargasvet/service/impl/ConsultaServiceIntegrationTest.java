@@ -74,7 +74,7 @@ class ConsultaServiceIntegrationTest {
                 historiaClinicaRepository,
                 mascotaRepository,
                 citaRepository,
-                new ConsultaMapper(),
+                new ConsultaMapper(mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class)),
                 auditLogService,
                 mock(veterinaria.vargasvet.security.AccesoValidator.class)
         );

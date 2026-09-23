@@ -151,7 +151,8 @@ class RF29Test {
         HistoriaClinicaServiceImpl service = new HistoriaClinicaServiceImpl(
                 historiaRepository,
                 consultaRepository,
-                archivoService
+                archivoService,
+                mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class)
         );
         ReflectionTestUtils.setField(service, "controlPreventivoService", preventivoService);
         ReflectionTestUtils.setField(service, "accesoValidator", accesoValidator);

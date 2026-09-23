@@ -46,6 +46,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     private final MascotaMapper mascotaMapper;
     private final CitaMapper citaMapper;
     private final ConsultaMapper consultaMapper;
+    private final UsuarioContactoService contactoService;
 
     private Apoderado getAuthenticatedApoderado() {
         // Por id, no por email: el correo ya no identifica de forma unica a la
@@ -88,8 +89,9 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         response.setNombre(apoderado.getUser().getNombre());
         response.setApellido(apoderado.getUser().getApellido());
         response.setEmail(apoderado.getUser().getEmail());
-        response.setTelefono(apoderado.getUser().getTelefono());
-        response.setDireccion(apoderado.getUser().getDireccion());
+        Integer apoderadoCompanyId = apoderado.getCompany() != null ? apoderado.getCompany().getId() : null;
+        response.setTelefono(contactoService.telefono(apoderado.getUser().getId(), apoderadoCompanyId));
+        response.setDireccion(contactoService.direccion(apoderado.getUser().getId(), apoderadoCompanyId));
         response.setNumeroDocumento(apoderado.getNumeroDocumento());
         response.setTipoDocumento(apoderado.getTipoDocumentoIdentidad());
         response.setGenero(apoderado.getGenero());
@@ -251,7 +253,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
                     r.setNombre(e.getUser().getNombre());
                     r.setApellido(e.getUser().getApellido());
                     r.setEmail(e.getUser().getEmail());
-                    r.setTelefono(e.getUser().getTelefono());
+                    r.setTelefono(contactoService.telefono(e.getUser().getId(), companyId));
                     r.setFotoUrl(e.getFotoUrl());
                     r.setActivo(e.getEstado());
                     if (e.getUser() != null) {

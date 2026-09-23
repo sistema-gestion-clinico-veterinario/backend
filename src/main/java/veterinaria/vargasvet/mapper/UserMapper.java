@@ -23,8 +23,6 @@ public class UserMapper {
         usuario.setNombre(dto.getNombre());
         usuario.setApellido(dto.getApellido());
         usuario.setDni(dto.getDni());
-        usuario.setTelefono(dto.getTelefono());
-        usuario.setDireccion(dto.getDireccion());
         usuario.setActivo(true);
         return usuario;
     }
@@ -36,8 +34,9 @@ public class UserMapper {
         dto.setNombre(usuario.getNombre());
         dto.setApellido(usuario.getApellido());
         dto.setDni(usuario.getDni());
-        dto.setTelefono(usuario.getTelefono());
-        dto.setDireccion(usuario.getDireccion());
+        // telefono/direccion NO se llenan aqui - son por empresa (ver
+        // UsuarioContactoService); cada llamador los completa segun la empresa que
+        // corresponda al contexto (no siempre es usuario.getCompany(), el campo legacy).
 
         if (usuario.getUsuariosPorRol() != null && !usuario.getUsuariosPorRol().isEmpty()) {
             dto.setSystemRole(usuario.getUsuariosPorRol().stream()
