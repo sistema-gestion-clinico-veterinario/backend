@@ -61,6 +61,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final SessionSecurityService sessionSecurityService;
     private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
     private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
+    private final UsuarioContactoService contactoService;
 
     @Value("${app.url}")
     private String appUrl;
@@ -105,63 +106,49 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
         businessValidator.checkCompanyActiva(companyIdToUse);
 
-        // Misma persona real si coincide el correo O el numero de documento -
-        // alguien puede ya tener identidad con OTRO correo (ej. como cliente
-        // en otra empresa); se reutiliza esa identidad en vez de bloquear.
-        java.util.Optional<Usuario> existingUsuario = usuarioRepository.findByEmail(dto.getEmail())
-                .or(() -> usuarioRepository.findByDni(dto.getNumeroDocumento()));
-        boolean esUsuarioNuevo = existingUsuario.isEmpty();
-        Usuario savedUser;
-        String verificationToken = null;
-
-        if (esUsuarioNuevo) {
-            String username = dto.getUsername() == null ? null : dto.getUsername().trim().toLowerCase(java.util.Locale.ROOT);
-            if (username == null || username.isBlank()) {
-                throw new IllegalArgumentException("El usuario es obligatorio para una persona nueva");
-            }
-            if (usuarioRepository.existsByUsername(username)) {
-                throw new IllegalArgumentException("El usuario ya está en uso");
-            }
-
-            Usuario usuario = new Usuario();
-            usuario.setEmail(dto.getEmail());
-            usuario.setUsername(username);
-            usuario.setNombre(dto.getNombre());
-            usuario.setApellido(dto.getApellido());
-            usuario.setDni(dto.getNumeroDocumento());
-            usuario.setTelefono(dto.getTelefono());
-            usuario.setDireccion(dto.getDireccion());
-
-            usuario.setActivo(false);
-            usuario.setEmailVerified(false);
-            verificationToken = SecurityTokenUtils.generate();
-            usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
-            usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
-
-            savedUser = usuarioRepository.save(usuario);
-        } else {
-            // Email ya existente: es la misma persona uniendose a una nueva empresa
-            // (ej. cambio de empleador). Se bloquea si todavia tiene una relacion
-            // laboral activa en otra parte - ver CompanyMembershipService.
-            savedUser = existingUsuario.get();
-            companyMembershipService.assertNoActiveEmploymentElsewhere(savedUser);
+        // Aislamiento total entre empresas: nunca se busca ni se reutiliza una identidad
+        // de OTRA empresa, aunque coincida el DNI o el correo - cada empresa es una isla,
+        // sin cruzar datos con las demas. El registro siempre crea una cuenta propia de
+        // ESTA empresa; los duplicados (DNI, correo, username) solo se validan aqui
+        // adentro, nunca contra el resto del sistema.
+        String username = dto.getUsername() == null ? null : dto.getUsername().trim().toLowerCase(java.util.Locale.ROOT);
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("El usuario es obligatorio");
+        }
+        if (usuarioRepository.existsByUsernameIgnoreCaseAndCompanyId(username, companyIdToUse)) {
+            throw new IllegalArgumentException("El usuario ya está en uso en esta empresa");
+        }
+        if (usuarioRepository.existsByEmailIgnoreCaseAndCompanyId(dto.getEmail(), companyIdToUse)) {
+            throw new IllegalArgumentException("El correo ya está registrado en esta empresa");
+        }
+        if (usuarioRepository.existsByDniAndCompanyId(dto.getNumeroDocumento(), companyIdToUse)) {
+            throw new IllegalArgumentException("El DNI/Documento ya está registrado en esta empresa");
         }
 
-        // Solo se crea credencial si esta persona nunca antes tuvo relacion con ESTA
-        // empresa (ni de empleado ni de apoderado) - un reingreso a una empresa donde ya
-        // trabajo antes conserva su contraseña anterior de esa empresa en vez de pisarla,
-        // e insertar una segunda fila violaria la unicidad (usuario, empresa).
-        if (!credencialRepository.existsByUsuarioIdAndCompanyId(savedUser.getId(), companyIdToUse)) {
-            String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-            veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
-                    new veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial();
-            credencial.setUsuario(savedUser);
-            credencial.setCompany(companyToUse);
-            credencial.setPassword(passwordEncoder.encode(tempPassword));
-            credencial.setPasswordChanged(false);
-            credencial.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
-            credencialRepository.save(credencial);
-        }
+        Usuario usuario = new Usuario();
+        usuario.setEmail(dto.getEmail());
+        usuario.setUsername(username);
+        usuario.setNombre(dto.getNombre());
+        usuario.setApellido(dto.getApellido());
+        usuario.setDni(dto.getNumeroDocumento());
+        usuario.setCompany(companyToUse);
+        usuario.setActivo(false);
+        usuario.setEmailVerified(false);
+        String verificationToken = SecurityTokenUtils.generate();
+        usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
+        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
+
+        Usuario savedUser = usuarioRepository.save(usuario);
+
+        String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                new veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial();
+        credencial.setUsuario(savedUser);
+        credencial.setCompany(companyToUse);
+        credencial.setPassword(passwordEncoder.encode(tempPassword));
+        credencial.setPasswordChanged(false);
+        credencial.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
+        credencialRepository.save(credencial);
 
         if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
             usuarioPorRolRepository.deleteByUsuarioId(savedUser.getId());
@@ -214,16 +201,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         Empleado savedEmpleado = empleadoRepository.save(empleado);
         companyMembershipService.syncLegacyCompanyField(savedUser);
+        contactoService.crear(savedUser, companyToUse, dto.getTelefono(), dto.getDireccion());
 
         if (dto.getHorarios() != null && !dto.getHorarios().isEmpty()) {
             guardarHorarios(savedEmpleado, dto.getHorarios());
         }
 
-        if (esUsuarioNuevo) {
-            sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
-        } else {
-            sendNewCompanyAccessEmail(savedUser, companyToUse);
-        }
+        sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
 
         auditLogService.log(
             "CREAR_EMPLEADO",
@@ -231,7 +215,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             "Se registrÃ³ al empleado " + dto.getNombre() + " " + dto.getApellido() + " con email " + dto.getEmail()
         );
 
-        return userMapper.toProfileDTO(savedUser);
+        UserProfileDTO profile = userMapper.toProfileDTO(savedUser);
+        profile.setTelefono(contactoService.telefono(savedUser.getId(), companyIdToUse));
+        profile.setDireccion(contactoService.direccion(savedUser.getId(), companyIdToUse));
+        return profile;
     }
 
     @Transactional
@@ -257,8 +244,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
 
         if (dto.getNumeroDocumento() != null && !dto.getNumeroDocumento().equals(usuario.getDni())) {
-            if (usuarioRepository.existsByDni(dto.getNumeroDocumento())) {
-                throw new IllegalArgumentException("El DNI/Documento ya está registrado por otro usuario");
+            if (usuarioRepository.existsByDniAndCompanyId(dto.getNumeroDocumento(), companyIdToUse)) {
+                throw new IllegalArgumentException("El DNI/Documento ya está registrado por otro usuario de esta empresa");
             }
             usuario.setDni(dto.getNumeroDocumento());
         }
@@ -271,8 +258,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         if (dto.getNombre() != null) usuario.setNombre(dto.getNombre());
         if (dto.getApellido() != null) usuario.setApellido(dto.getApellido());
-        if (dto.getTelefono() != null) usuario.setTelefono(dto.getTelefono());
-        if (dto.getDireccion() != null) usuario.setDireccion(dto.getDireccion());
+        contactoService.actualizar(usuario, usuario.getCompany(), dto.getTelefono(), dto.getDireccion());
 
 
         if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
@@ -346,7 +332,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             "Se actualizaron los datos del empleado " + usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ")"
         );
 
-        return userMapper.toProfileDTO(usuario);
+        UserProfileDTO updatedProfile = userMapper.toProfileDTO(usuario);
+        updatedProfile.setTelefono(contactoService.telefono(usuario.getId(), companyIdToUse));
+        updatedProfile.setDireccion(contactoService.direccion(usuario.getId(), companyIdToUse));
+        return updatedProfile;
     }
 
     @Transactional
@@ -796,37 +785,6 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
     }
 
-    /** Aviso para cuando una identidad YA existente (encontrada por correo o
-     * DNI) se une a una empresa nueva como empleado - la persona no tiene
-     * forma de saber que ahora tiene acceso aqui tambien si no se le avisa,
-     * ya que no pasa por el flujo de activacion de cuenta nueva. */
-    private void sendNewCompanyAccessEmail(Usuario usuario, Company company) {
-        try {
-            String resolvedCompanyName = company.getName() != null ? company.getName() : defaultCompanyName;
-            String resolvedLogo = company.getLogoUrl() != null ? company.getLogoUrl() : defaultCompanyLogo;
-            String resolvedEmail = company.getEmail() != null ? company.getEmail() : companyEmail;
-            String resolvedPhone = company.getPhone() != null ? company.getPhone() : companyPhone;
-            Map<String, Object> model = new HashMap<>();
-            model.put("nombre", usuario.getNombre() == null ? "" : usuario.getNombre());
-            model.put("username", usuario.getUsername());
-            model.put("companyName", resolvedCompanyName);
-            model.put("companyLogo", resolvedLogo);
-            model.put("companyEmail", resolvedEmail);
-            model.put("companyPhone", resolvedPhone);
-            model.put("loginUrl", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug("/login", company.getSlug()));
-
-            Mail mail = emailService.createMail(
-                    usuario.getEmail(),
-                    "Nuevo acceso en " + resolvedCompanyName,
-                    model
-            );
-
-            emailService.sendEmailWithRetry(mail, "email/new-company-access-template");
-        } catch (Exception e) {
-            System.err.println("[WARNING] No se pudo enviar el aviso de nueva empresa a " + usuario.getEmail() + ": " + e.getMessage());
-        }
-    }
-
     @Override
     @Transactional(readOnly = true)
     public Page<EmpleadoListResponse> listar(Integer companyId, String nombre, String apellido, String email,
@@ -865,10 +823,11 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         dto.setApellido(usuario.getApellido());
         dto.setEmail(usuario.getEmail());
         dto.setNumeroDocumento(usuario.getDni());
-        dto.setTelefono(usuario.getTelefono());
-        dto.setDireccion(usuario.getDireccion());
+        Integer empleadoCompanyIdForDto = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
+        dto.setTelefono(contactoService.telefono(usuario.getId(), empleadoCompanyIdForDto));
+        dto.setDireccion(contactoService.direccion(usuario.getId(), empleadoCompanyIdForDto));
         dto.setRoleIds(usuario.getUsuariosPorRol().stream().map(upr -> upr.getRol().getId()).collect(Collectors.toSet()));
-        dto.setCompanyId(usuario.getCompany() != null ? usuario.getCompany().getId() : null);
+        dto.setCompanyId(empleadoCompanyIdForDto);
 
         dto.setGenero(empleado.getGenero());
         dto.setTipoDocumento(empleado.getTipoDocumentoIdentidad());
@@ -891,7 +850,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             response.setNombre(empleado.getUser().getNombre());
             response.setApellido(empleado.getUser().getApellido());
             response.setEmail(empleado.getUser().getEmail());
-            response.setTelefono(empleado.getUser().getTelefono());
+            Integer listCompanyId = empleado.getCompany() != null ? empleado.getCompany().getId() : null;
+            response.setTelefono(contactoService.telefono(empleado.getUser().getId(), listCompanyId));
             response.setUserId(empleado.getUser().getId());
         }
         response.setTiposEmpleado(empleado.getTiposEmpleado().stream()

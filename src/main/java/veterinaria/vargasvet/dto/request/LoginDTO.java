@@ -6,11 +6,11 @@ import lombok.Data;
 
 @Data
 public class LoginDTO {
-    /** Slug de la empresa resuelto por la URL (systemvet.com/<slug>/login) -
-     * decide contra cual empresa se valida la membresia, antes de cualquier
-     * pantalla de seleccion. Opcional: ausente en el login "global" (la
-     * pantalla sin marca de ninguna empresa en particular), donde solo se
-     * permite si el username tiene exactamente una empresa activa. */
+    /** Slug de la empresa resuelto por la URL (systemvet.com/<slug>/login) - decide
+     * contra cual empresa se valida la membresia. Obligatorio: aislamiento total entre
+     * empresas, no existe login "global" sin marca de empresa (el username ya no es
+     * unico en toda la plataforma). */
+    @NotBlank(message = "El slug de la empresa es obligatorio")
     @Size(max = 100, message = "El slug no debe superar 100 caracteres")
     private String slug;
 

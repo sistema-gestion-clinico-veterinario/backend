@@ -107,6 +107,7 @@ class MultiEmpresaIsolationTest {
     @Autowired private RoleRepository roleRepository;
     @Autowired private UsuarioPorRolRepository usuarioPorRolRepository;
     @Autowired private UsuarioEmpresaCredencialRepository credencialRepository;
+    @Autowired private veterinaria.vargasvet.repository.UsuarioEmpresaContactoRepository contactoRepository;
     @Autowired private RefreshTokenRepository refreshTokenRepository;
     @Autowired private PasswordResetTokenRepository passwordResetTokenRepository;
     @Autowired private UsuarioMembresiaRepository usuarioMembresiaRepository;
@@ -147,27 +148,30 @@ class MultiEmpresaIsolationTest {
         when(menuBuilderService.construirMenuJerarquico(any(), any())).thenReturn(List.of());
         when(menuBuilderService.construirPermissions(any(), any())).thenReturn(List.of());
 
+        veterinaria.vargasvet.service.impl.UsuarioContactoService contactoService =
+                new veterinaria.vargasvet.service.impl.UsuarioContactoService(contactoRepository, companyRepository);
+
         usuarioService = new UsuarioServiceImpl(
                 usuarioRepository, empleadoRepository, apoderadoRepository, credencialRepository,
                 roleRepository, passwordEncoder, userMapper, tokenProvider, mock(EmailService.class),
                 menuBuilderService, refreshTokenRepository, usuarioPorRolRepository, passwordResetTokenRepository,
                 mock(AuditLogService.class), companyRepository, companyMembershipService, sessionSecurityService,
                 mock(SharedRateLimitService.class), mock(AuthenticationAuditService.class),
-                new PasswordPolicyService(), mock(LegalDocumentService.class));
+                new PasswordPolicyService(), mock(LegalDocumentService.class), contactoService);
 
         empleadoService = new EmpleadoServiceImpl(
                 usuarioRepository, roleRepository, empleadoRepository, especialidadRepository, tipoEmpleadoRepository,
                 companyRepository, horarioEmpleadoRepository, companyOperatingHourRepository, companyExceptionRepository,
                 citaRepository, passwordEncoder, userMapper, mock(EmailService.class), mock(BusinessValidator.class),
                 mock(AuditLogService.class), usuarioPorRolRepository, sessionSecurityService, companyMembershipService,
-                credencialRepository);
+                credencialRepository, contactoService);
 
         apoderadoService = new ApoderadoServiceImpl(
                 usuarioRepository, apoderadoRepository, mascotaRepository,
                 refreshTokenRepository, usuarioPorRolRepository, roleRepository, companyRepository, passwordEncoder,
                 userMapper, mock(BusinessValidator.class), mock(EmailService.class), mock(AuditLogService.class),
                 mock(veterinaria.vargasvet.service.CompanyRoleProvisioningService.class), sessionSecurityService,
-                companyMembershipService, citaRepository, credencialRepository);
+                companyMembershipService, citaRepository, credencialRepository, contactoService);
 
         cajaService = new CajaServiceImpl(
                 movimientoCajaRepository, citaRepository, purchaseRepository, sesionCajaRepository,

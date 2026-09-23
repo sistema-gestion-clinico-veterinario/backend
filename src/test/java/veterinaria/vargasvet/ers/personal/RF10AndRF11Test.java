@@ -81,6 +81,7 @@ class RF10AndRF11Test {
     @Mock private SessionSecurityService sessionSecurityService;
     @Mock private veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
     @Mock private veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
+    @Mock private veterinaria.vargasvet.service.impl.UsuarioContactoService contactoService;
 
     @InjectMocks private EmpleadoServiceImpl service;
 
@@ -119,7 +120,6 @@ class RF10AndRF11Test {
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, Object>> modelCaptor = ArgumentCaptor.forClass(Map.class);
 
-        when(usuarioRepository.findByEmail("nuevo@empresa.test")).thenReturn(Optional.empty());
         when(companyRepository.findById(3)).thenReturn(Optional.of(company));
         when(passwordEncoder.encode(any())).thenReturn("HASH_NO_REVERSIBLE");
         when(usuarioRepository.save(userCaptor.capture())).thenAnswer(invocation -> {
@@ -155,56 +155,20 @@ class RF10AndRF11Test {
     }
 
     @Test
-    @DisplayName("[CP-RF10-02] Rechaza registrar con un correo que ya tiene empleo activo en otra empresa")
-    void rechazaCorreoConEmpleoActivoEnOtraEmpresa() {
+    @DisplayName("[CP-RF10-02] Rechaza registrar con un correo ya usado EN ESTA MISMA empresa (aislamiento total entre empresas)")
+    void rechazaCorreoYaUsadoEnEstaEmpresa() {
         EmpleadoRequest request = requestValido();
-        Usuario existente = new Usuario();
-        existente.setId(99);
-        existente.setEmail("nuevo@empresa.test");
         when(companyRepository.findById(3)).thenReturn(Optional.of(company));
-        when(usuarioRepository.findByEmail("nuevo@empresa.test")).thenReturn(Optional.of(existente));
-        org.mockito.Mockito.doThrow(new IllegalArgumentException(
-                        "Esta persona ya tiene una relación laboral activa registrada en el sistema."))
-                .when(companyMembershipService).assertNoActiveEmploymentElsewhere(existente);
+        when(usuarioRepository.existsByUsernameIgnoreCaseAndCompanyId(request.getUsername(), 3)).thenReturn(false);
+        when(usuarioRepository.existsByEmailIgnoreCaseAndCompanyId("nuevo@empresa.test", 3)).thenReturn(true);
 
         assertThatThrownBy(() -> service.registerEmpleado(request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("relación laboral activa");
+                .hasMessageContaining("correo ya está registrado en esta empresa");
 
         verify(usuarioRepository, never()).save(any());
         verify(empleadoRepository, never()).save(any());
         verifyNoInteractions(emailService);
-    }
-
-    @Test
-    @DisplayName("[CP-RF10-03] Correo existente sin empleo activo se une como empleado de la nueva empresa")
-    void empleadoConCorreoExistenteSinConflictoSeUneANuevaEmpresa() {
-        EmpleadoRequest request = requestValido();
-        Usuario existente = new Usuario();
-        existente.setId(99);
-        existente.setEmail("nuevo@empresa.test");
-        Role role = roleStaff(8);
-
-        when(usuarioRepository.findByEmail("nuevo@empresa.test")).thenReturn(Optional.of(existente));
-        when(companyRepository.findById(3)).thenReturn(Optional.of(company));
-        when(roleRepository.findById(8)).thenReturn(Optional.of(role));
-        when(empleadoRepository.save(any(Empleado.class))).thenAnswer(invocation -> {
-            Empleado empleado = invocation.getArgument(0);
-            empleado.setId(31L);
-            return empleado;
-        });
-        when(userMapper.toProfileDTO(any())).thenReturn(new UserProfileDTO());
-
-        UserProfileDTO response = service.registerEmpleado(request);
-
-        assertThat(response).isNotNull();
-        verify(companyMembershipService).assertNoActiveEmploymentElsewhere(existente);
-        verify(usuarioRepository, never()).save(any());
-        verify(companyMembershipService).syncLegacyCompanyField(existente);
-        // Identidad ya existente uniendose a una empresa nueva: se le avisa por
-        // correo (no pasa por el flujo de activacion de cuenta nueva, asi que
-        // no tiene otra forma de saber que ahora tiene acceso aqui tambien).
-        verify(emailService).sendEmailWithRetry(any(), eq("email/new-company-access-template"));
     }
 
     @Test
@@ -223,7 +187,8 @@ class RF10AndRF11Test {
 
         service.updateEmpleado(30L, request);
 
-        assertThat(empleado.getUser().getTelefono()).isEqualTo("987654321");
+        verify(contactoService).actualizar(empleado.getUser(), empleado.getUser().getCompany(),
+                "987654321", request.getDireccion());
         assertThat(empleado.getHorarios()).containsExactly(horario);
         verify(horarioEmpleadoRepository, never()).deleteByEmpleadoId(any());
     }
@@ -276,8 +241,6 @@ class RF10AndRF11Test {
         user.setNombre("Ana");
         user.setApellido("Torres");
         user.setDni("87654321");
-        user.setTelefono("999999999");
-        user.setDireccion("Av. Antigua 100");
         user.setActivo(true);
         user.setCompany(company);
 

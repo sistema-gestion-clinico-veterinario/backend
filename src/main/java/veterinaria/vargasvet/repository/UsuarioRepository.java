@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.Usuario;
 
+import java.util.List;
 import java.util.Optional;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Lock;
@@ -31,19 +32,28 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     Optional<Usuario> findByEmailAndCompanyId(@Param("email") String email,
                                                @Param("companyId") Integer companyId);
 
-    boolean existsByEmail(String email);
-    boolean existsByDni(String dni);
-    /** El DNI tambien identifica a la misma persona real, igual que el correo
-     * - si alguien ya tiene cuenta (con OTRO correo) y su DNI coincide, es la
-     * misma identidad y debe reutilizarse, no bloquear el registro. */
-    Optional<Usuario> findByDni(String dni);
-    boolean existsByTelefono(String telefono);
+    /** DNI, correo y username se validan SOLO dentro de la misma empresa (o, con
+     * companyId null, solo entre cuentas sin empresa - SuperAdmin) - dos empresas nunca
+     * deben poder detectar ni cruzar datos entre si, aunque sea la misma persona real
+     * registrada en ambas con el mismo DNI. Por eso no existe una version global de
+     * estos metodos: cada busqueda/validacion exige resolver primero la empresa. */
+    boolean existsByEmailIgnoreCaseAndCompanyId(String email, Integer companyId);
+    boolean existsByEmailIgnoreCaseAndCompanyIsNull(String email);
+    boolean existsByDniAndCompanyId(String dni, Integer companyId);
+    boolean existsByDniAndCompanyIsNull(String dni);
+    Optional<Usuario> findByDniAndCompanyId(String dni, Integer companyId);
+    boolean existsByUsernameIgnoreCaseAndCompanyId(String username, Integer companyId);
+    boolean existsByUsernameIgnoreCaseAndCompanyIsNull(String username);
 
-    /** Identificador de login (unico globalmente). El correo (arriba) sigue usandose
-     * como ancla de identidad en el registro ("misma persona"), pero ya no para
-     * autenticar - eso ahora es via username. */
-    Optional<Usuario> findByUsername(String username);
-    boolean existsByUsername(String username);
+    Optional<Usuario> findByUsernameAndCompanyId(String username, Integer companyId);
+    Optional<Usuario> findByUsernameAndCompanyIsNull(String username);
+
+    /** SOLO para el login: con username ya no unico globalmente, puede haber mas de un
+     * candidato (uno por empresa) - el login desambigua filtrando por membresia activa
+     * en la empresa del slug (ver UsuarioServiceImpl.login). No usar para nada mas. */
+    List<Usuario> findAllByUsernameIgnoreCase(String username);
+    List<Usuario> findAllByEmailIgnoreCase(String email);
+
     Optional<Usuario> findByVerificationToken(String token);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

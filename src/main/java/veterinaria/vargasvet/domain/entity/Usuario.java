@@ -17,12 +17,16 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    /** Dato de contacto - ya no es unico ni se usa para autenticar (ver username). */
+    /** Dato de contacto. Unico dentro de la misma empresa (o entre cuentas sin empresa,
+     * SuperAdmin) - nunca globalmente, para que dos empresas nunca puedan cruzar datos
+     * entre si por coincidencia de correo. Ver los indices unicos parciales en V74. */
     @Column(nullable = false)
     private String email;
 
-    /** Identificador de login, unico globalmente. La persona lo elige al registrarse. */
-    @Column(nullable = false, unique = true)
+    /** Identificador de login. Unico dentro de la misma empresa (o entre cuentas sin
+     * empresa, SuperAdmin) - nunca globalmente, mismo motivo que el correo. La persona
+     * lo elige al registrarse. Ver los indices unicos parciales en V74. */
+    @Column(nullable = false)
     private String username;
 
     @Column
@@ -33,12 +37,6 @@ public class Usuario {
 
     @Column
     private String dni;
-
-    @Column
-    private String telefono;
-
-    @Column
-    private String direccion;
 
     /** Un Usuario puede tener varias filas Empleado a lo largo del tiempo (una por
      * empresa/periodo), pero como mucho una activa a la vez. Sin cascade/orphanRemoval

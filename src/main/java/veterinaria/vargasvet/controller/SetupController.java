@@ -37,6 +37,7 @@ public class SetupController {
     private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     private final veterinaria.vargasvet.security.PasswordPolicyService passwordPolicyService;
     private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
+    private final veterinaria.vargasvet.service.impl.UsuarioContactoService contactoService;
 
     @Value("${app.setup.token:}")
     private String setupToken;
@@ -74,6 +75,7 @@ public class SetupController {
         credencial.setPasswordChanged(true);
         credencial.setCreatedAt(java.time.LocalDateTime.now());
         credencialRepository.save(credencial);
+        contactoService.crear(saved, null, registrationDTO.getTelefono(), registrationDTO.getDireccion());
 
         roleRepository.findFirstByCompanyIsNullAndPurpose(RolePurpose.PLATFORM_ADMIN).ifPresent(role -> {
             UsuarioPorRol upr = new UsuarioPorRol();
@@ -82,6 +84,8 @@ public class SetupController {
             usuarioPorRolRepository.save(upr);
         });
         UserProfileDTO response = userMapper.toProfileDTO(saved);
+        response.setTelefono(registrationDTO.getTelefono());
+        response.setDireccion(registrationDTO.getDireccion());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

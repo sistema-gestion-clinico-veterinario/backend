@@ -54,6 +54,7 @@ public class CartillaServiceImpl implements CartillaService {
     private final RegistroDesparasitacionRepository desparasitacionRepository;
     private final ControlPreventivoRepository controlRepository;
     private final CitaRepository citaRepository;
+    private final UsuarioContactoService contactoService;
     private final AuditLogService auditLogService;
     private final SimpMessagingTemplate messagingTemplate;
     private final MascotaCartillaMapper mascotaCartillaMapper;
@@ -690,7 +691,7 @@ public class CartillaServiceImpl implements CartillaService {
 
             String tipoDisplay = cp.getTipo() == TipoControlPreventivo.VACUNACION ? "Vacunación" : "Desparasitación";
             String nombreControl = cp.getNombreControl();
-            String telefono = user.getTelefono();
+            String telefono = contactoService.telefono(user.getId(), companyId);
 
             String nombreMascota = m.getNombreCompleto();
             String nombreVet = user.getCompany() != null && user.getCompany().getName() != null

@@ -1,15 +1,20 @@
 package veterinaria.vargasvet.mapper;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import veterinaria.vargasvet.domain.entity.ControlPreventivo;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.dto.response.MascotaCartillaResponse;
+import veterinaria.vargasvet.service.impl.UsuarioContactoService;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 @Component
+@RequiredArgsConstructor
 public class MascotaCartillaMapper {
+
+    private final UsuarioContactoService contactoService;
 
     public MascotaCartillaResponse toResponse(Mascota mascota, LocalDate fechaUltimaAplicacion, ControlPreventivo controlPendiente) {
         if (mascota == null) {
@@ -31,7 +36,9 @@ public class MascotaCartillaMapper {
             String apoderadoNombre = mascota.getApoderado().getUser().getNombre() + " " +
                                      mascota.getApoderado().getUser().getApellido();
             response.setApoderadoNombreCompleto(apoderadoNombre);
-            response.setApoderadoTelefono(mascota.getApoderado().getUser().getTelefono());
+            Integer apoderadoCompanyId = mascota.getApoderado().getCompany() != null
+                    ? mascota.getApoderado().getCompany().getId() : null;
+            response.setApoderadoTelefono(contactoService.telefono(mascota.getApoderado().getUser().getId(), apoderadoCompanyId));
             response.setApoderadoId(mascota.getApoderado().getId());
         }
 

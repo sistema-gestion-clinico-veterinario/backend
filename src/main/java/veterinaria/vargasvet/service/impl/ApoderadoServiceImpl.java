@@ -62,6 +62,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
     private final veterinaria.vargasvet.repository.CitaRepository citaRepository;
     private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
+    private final UsuarioContactoService contactoService;
 
     @Value("${app.frontend.login-url}")
     private String loginUrl;
@@ -108,14 +109,12 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         Company companyToUse = companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
 
-        // Misma persona real si coincide el correo O el DNI - alguien puede
-        // haberse registrado antes en otra empresa con un correo distinto
-        // (ej. de trabajo) al que usa aqui; bloquearlo solo porque el DNI ya
-        // existe seria un callejon sin salida (no se puede crear una
-        // identidad nueva, pero tampoco se reconoce la existente). Se
-        // reutiliza la identidad encontrada por cualquiera de los dos.
-        java.util.Optional<Usuario> existingUsuario = usuarioRepository.findByEmail(dto.getEmail())
-                .or(() -> usuarioRepository.findByDni(dto.getNumeroDocumento()));
+        // Aislamiento total entre empresas: la busqueda de "ya existe" es SOLO dentro de
+        // esta misma empresa (ej. la persona ya es empleado aqui y ahora tambien se
+        // registra como cliente, o es un reingreso de un cliente inactivo) - nunca se
+        // cruza contra otras empresas, aunque coincida el DNI o el correo.
+        java.util.Optional<Usuario> existingUsuario = usuarioRepository.findByEmailAndCompanyId(dto.getEmail(), companyIdToUse)
+                .or(() -> usuarioRepository.findByDniAndCompanyId(dto.getNumeroDocumento(), companyIdToUse));
         boolean esUsuarioNuevo = existingUsuario.isEmpty();
         Usuario savedUser;
         String verificationToken = null;
@@ -125,8 +124,8 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             if (username == null || username.isBlank()) {
                 throw new IllegalArgumentException("El usuario es obligatorio para una persona nueva");
             }
-            if (usuarioRepository.existsByUsername(username)) {
-                throw new IllegalArgumentException("El usuario ya está en uso");
+            if (usuarioRepository.existsByUsernameIgnoreCaseAndCompanyId(username, companyIdToUse)) {
+                throw new IllegalArgumentException("El usuario ya está en uso en esta empresa");
             }
 
             Usuario usuario = new Usuario();
@@ -135,8 +134,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             usuario.setApellido(dto.getApellido());
             usuario.setEmail(dto.getEmail());
             usuario.setDni(dto.getNumeroDocumento());
-            usuario.setTelefono(dto.getTelefono());
-            usuario.setDireccion(dto.getDireccion());
+            usuario.setCompany(companyToUse);
             usuario.setActivo(false);
             usuario.setEmailVerified(false);
             verificationToken = SecurityTokenUtils.generate();
@@ -145,10 +143,9 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
             savedUser = usuarioRepository.save(usuario);
         } else {
-            // Email ya existente: la misma persona se registra como cliente de OTRA
-            // empresa (o de la misma, ver reactivacion abajo) - permitido a proposito,
-            // a diferencia de Empleado un Apoderado si puede estar activo en varias
-            // empresas a la vez. Sin chequeo de conflicto.
+            // Ya existe una identidad EN ESTA MISMA EMPRESA (ej. ya es empleado aqui, o
+            // es un cliente inactivo que vuelve) - se reutiliza, nunca se cruza con otra
+            // empresa.
             savedUser = existingUsuario.get();
         }
 
@@ -171,12 +168,12 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         if (apoderado.getId() != null && Boolean.TRUE.equals(apoderado.getEstado())) {
             throw new IllegalArgumentException("Este cliente ya está registrado y activo en esta empresa");
         }
-        // Si ya existia como identidad pero esta es su primera relacion con
-        // ESTA empresa en particular, se le avisa por correo - de otro modo
-        // no tiene forma de saber que ahora tambien tiene acceso aqui (con el
-        // mismo usuario y contraseña que ya usa en sus otras empresas).
-        boolean esNuevaEmpresaParaEsteUsuario = apoderado.getId() == null;
-        if (esNuevaEmpresaParaEsteUsuario
+        // Si ya existia como identidad EN ESTA EMPRESA (ej. ya es empleado aqui) pero
+        // esta es su primera vez como cliente aqui, se le avisa por correo - de otro
+        // modo no tiene forma de saber que ahora tambien tiene acceso como cliente, con
+        // el mismo usuario y contraseña que ya usa en esta empresa.
+        boolean esNuevaRelacionParaEsteUsuario = apoderado.getId() == null;
+        if (esNuevaRelacionParaEsteUsuario
                 && !credencialRepository.existsByUsuarioIdAndCompanyId(savedUser.getId(), companyIdToUse)) {
             // Cada empresa tiene su propia credencial - aunque savedUser ya exista, su
             // primera relación con ESTA empresa recibe una contraseña temporal propia,
@@ -206,10 +203,11 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
         Apoderado savedApoderado = apoderadoRepository.save(apoderado);
         companyMembershipService.syncLegacyCompanyField(savedUser);
+        contactoService.actualizar(savedUser, companyToUse, dto.getTelefono(), dto.getDireccion());
 
         if (esUsuarioNuevo) {
             sendVerificationEmail(savedUser, dto.getNombre() + " " + dto.getApellido(), verificationToken);
-        } else if (esNuevaEmpresaParaEsteUsuario) {
+        } else if (esNuevaRelacionParaEsteUsuario) {
             sendNewCompanyAccessEmail(savedUser, companyToUse);
         }
 
@@ -221,6 +219,8 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
         UserProfileDTO profileDTO = userMapper.toProfileDTO(savedUser);
         profileDTO.setApoderadoId(savedApoderado.getId().intValue());
+        profileDTO.setTelefono(contactoService.telefono(savedUser.getId(), companyIdToUse));
+        profileDTO.setDireccion(contactoService.direccion(savedUser.getId(), companyIdToUse));
         return profileDTO;
     }
 
@@ -308,8 +308,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
         if (dto.getNombre() != null) usuario.setNombre(dto.getNombre());
         if (dto.getApellido() != null) usuario.setApellido(dto.getApellido());
-        if (dto.getTelefono() != null) usuario.setTelefono(dto.getTelefono());
-        if (dto.getDireccion() != null) usuario.setDireccion(dto.getDireccion());
+        contactoService.actualizar(usuario, apoderado.getCompany(), dto.getTelefono(), dto.getDireccion());
 
         if (dto.getEmail() != null && !dto.getEmail().equals(usuario.getEmail())) {
             throw new IllegalArgumentException(
@@ -336,7 +335,10 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             "Se actualizaron los datos del cliente/apoderado " + usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ")"
         );
 
-        return userMapper.toProfileDTO(usuario);
+        UserProfileDTO updatedProfile = userMapper.toProfileDTO(usuario);
+        updatedProfile.setTelefono(contactoService.telefono(usuario.getId(), apoderadoCompanyId));
+        updatedProfile.setDireccion(contactoService.direccion(usuario.getId(), apoderadoCompanyId));
+        return updatedProfile;
     }
 
     @Override
@@ -455,9 +457,9 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         dto.setApellido(usuario.getApellido());
         dto.setEmail(usuario.getEmail());
         dto.setNumeroDocumento(usuario.getDni());
-        dto.setTelefono(usuario.getTelefono());
-        dto.setDireccion(usuario.getDireccion());
         Integer apoderadoCompanyIdForDto = apoderado.getCompany() != null ? apoderado.getCompany().getId() : null;
+        dto.setTelefono(contactoService.telefono(usuario.getId(), apoderadoCompanyIdForDto));
+        dto.setDireccion(contactoService.direccion(usuario.getId(), apoderadoCompanyIdForDto));
         dto.setCompanyId(apoderadoCompanyIdForDto);
         dto.setRoleIds(usuario.getUsuariosPorRol() == null
                 ? Set.of()
@@ -539,7 +541,8 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             response.setNombre(apoderado.getUser().getNombre());
             response.setApellido(apoderado.getUser().getApellido());
             response.setEmail(apoderado.getUser().getEmail());
-            response.setTelefono(apoderado.getUser().getTelefono());
+            Integer listCompanyId = apoderado.getCompany() != null ? apoderado.getCompany().getId() : null;
+            response.setTelefono(contactoService.telefono(apoderado.getUser().getId(), listCompanyId));
             response.setActivo(apoderado.getEstado());
         }
         return response;

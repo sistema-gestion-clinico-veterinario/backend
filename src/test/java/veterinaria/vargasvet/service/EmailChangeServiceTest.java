@@ -61,7 +61,7 @@ class EmailChangeServiceTest {
         when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
         when(credencialRepository.findByUsuarioIdAndCompanyId(usuario.getId(), 3)).thenReturn(Optional.of(credencial));
         when(passwordEncoder.matches(dto.getCurrentPassword(), credencial.getPassword())).thenReturn(true);
-        when(usuarioRepository.existsByEmail("nuevo@example.com")).thenReturn(false);
+        when(usuarioRepository.existsByEmailIgnoreCaseAndCompanyIsNull("nuevo@example.com")).thenReturn(false);
 
         try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
             security.when(SecurityUtils::getCurrentCompanyId).thenReturn(3);
@@ -94,7 +94,7 @@ class EmailChangeServiceTest {
                 .thenReturn(Optional.of(request));
         when(emailChangeRequestRepository.findByNewTokenForUpdate(SecurityTokenUtils.hash("new-token")))
                 .thenReturn(Optional.of(request));
-        when(usuarioRepository.existsByEmail("nuevo@example.com")).thenReturn(false);
+        when(usuarioRepository.existsByEmailIgnoreCaseAndCompanyIsNull("nuevo@example.com")).thenReturn(false);
 
         assertFalse(service.confirmCurrentEmail("old-token"));
         assertEquals("actual@example.com", usuario.getEmail());

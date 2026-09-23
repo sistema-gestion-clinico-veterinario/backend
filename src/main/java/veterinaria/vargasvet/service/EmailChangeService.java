@@ -76,7 +76,7 @@ public class EmailChangeService {
         if (usuario.getEmail().equalsIgnoreCase(newEmail)) {
             throw new IllegalArgumentException("El nuevo correo debe ser diferente del correo actual");
         }
-        if (usuarioRepository.existsByEmail(newEmail)) {
+        if (emailEnUsoEnLaMismaEmpresa(usuario, newEmail)) {
             throw new IllegalArgumentException("El nuevo correo no está disponible");
         }
 
@@ -126,11 +126,11 @@ public class EmailChangeService {
             return false;
         }
 
-        if (usuarioRepository.existsByEmail(request.getNewEmail())) {
+        Usuario usuario = request.getUsuario();
+        if (emailEnUsoEnLaMismaEmpresa(usuario, request.getNewEmail())) {
             throw new IllegalStateException("El correo nuevo dejó de estar disponible");
         }
 
-        Usuario usuario = request.getUsuario();
         String oldEmail = usuario.getEmail();
         usuario.setEmail(request.getNewEmail());
         usuario.setEmailVerified(true);
@@ -144,6 +144,15 @@ public class EmailChangeService {
                 "Se completó un cambio de correo y se invalidaron todas las sesiones", null);
         sendCompletedNotice(oldEmail, usuario);
         return true;
+    }
+
+    /** El correo se valida como duplicado SOLO dentro de la misma empresa del usuario -
+     * aislamiento total entre empresas, nunca se cruza contra las demas. */
+    private boolean emailEnUsoEnLaMismaEmpresa(Usuario usuario, String email) {
+        Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
+        return companyId == null
+                ? usuarioRepository.existsByEmailIgnoreCaseAndCompanyIsNull(email)
+                : usuarioRepository.existsByEmailIgnoreCaseAndCompanyId(email, companyId);
     }
 
     private void validateNotExpired(EmailChangeRequest request) {

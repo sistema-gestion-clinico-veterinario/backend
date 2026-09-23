@@ -97,7 +97,8 @@ class RF33Test {
 
         consultaService = new ConsultaServiceImpl(
                 consultaRepository, historiaClinicaRepository, mascotaRepository, citaRepository,
-                new ConsultaMapper(), mock(AuditLogService.class), mock(AccesoValidator.class));
+                new ConsultaMapper(mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class)),
+                mock(AuditLogService.class), mock(AccesoValidator.class));
         ReflectionTestUtils.setField(consultaService, "controlPreventivoService", controlPreventivoService);
 
         autenticarSuperAdmin();
