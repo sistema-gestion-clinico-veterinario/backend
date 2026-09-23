@@ -42,6 +42,7 @@ class CartillaServiceImplTest {
     @Mock CitaRepository citaRepository;
     @Mock AuditLogService auditLogService;
     @Mock SimpMessagingTemplate messagingTemplate;
+    @Mock veterinaria.vargasvet.service.impl.UsuarioContactoService contactoService;
 
     @InjectMocks CartillaServiceImpl service;
 
@@ -263,11 +264,11 @@ class CartillaServiceImplTest {
         Usuario propietario = mascota.getApoderado().getUser();
         propietario.setNombre("Ana Maria");
         propietario.setApellido("Perez");
-        propietario.setTelefono("999888777");
         company.setName("Patitas Felices");
         propietario.setCompany(company);
         pendiente.setFechaRecomendada(AppClock.today().plusDays(3));
         when(controlRepository.findPendientesByCompany(eq(7), any())).thenReturn(List.of(pendiente));
+        when(contactoService.telefono(propietario.getId(), 7)).thenReturn("999888777");
 
         var resultados = service.listarRecordatoriosPreventivosWhatsApp(7);
 

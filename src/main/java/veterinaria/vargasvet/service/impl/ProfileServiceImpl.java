@@ -31,6 +31,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final EmpleadoRepository empleadoRepository;
     private final HorarioEmpleadoRepository horarioEmpleadoRepository;
     private final ApoderadoRepository apoderadoRepository;
+    private final UsuarioContactoService contactoService;
 
     @Override
     @Transactional(readOnly = true)
@@ -68,9 +69,8 @@ public class ProfileServiceImpl implements ProfileService {
 
         if (dto.getNombre() != null && !dto.getNombre().isBlank()) usuario.setNombre(dto.getNombre());
         if (dto.getApellido() != null && !dto.getApellido().isBlank()) usuario.setApellido(dto.getApellido());
-        if (dto.getTelefono() != null) usuario.setTelefono(dto.getTelefono());
-        if (dto.getDireccion() != null) usuario.setDireccion(dto.getDireccion());
         usuarioRepository.save(usuario);
+        contactoService.actualizar(usuario, SecurityUtils.getCurrentCompanyId(), dto.getTelefono(), dto.getDireccion());
 
         Optional<Empleado> empleadoOpt = empleadoRepository.findActiveByUserId(usuario.getId());
         Optional<Apoderado> apoderadoOpt = Optional.empty();
@@ -101,8 +101,9 @@ public class ProfileServiceImpl implements ProfileService {
         res.setNombre(usuario.getNombre());
         res.setApellido(usuario.getApellido());
         res.setDni(usuario.getDni());
-        res.setTelefono(usuario.getTelefono());
-        res.setDireccion(usuario.getDireccion());
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        res.setTelefono(contactoService.telefono(usuario.getId(), companyId));
+        res.setDireccion(contactoService.direccion(usuario.getId(), companyId));
         res.setActivo(usuario.isActivo());
         res.setRoles(usuario.getUsuariosPorRol().stream().map(upr -> upr.getRol().getName()).collect(Collectors.toSet()));
         res.setCompanyName(usuario.getCompany() != null ? usuario.getCompany().getName() : null);

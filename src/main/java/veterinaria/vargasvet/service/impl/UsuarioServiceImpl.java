@@ -73,6 +73,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private final AuthenticationAuditService authenticationAuditService;
     private final PasswordPolicyService passwordPolicyService;
     private final veterinaria.vargasvet.service.LegalDocumentService legalDocumentService;
+    private final UsuarioContactoService contactoService;
 
     @Value("${app.url}")
     private String appUrl;
@@ -114,12 +115,27 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Transactional
     public UserProfileDTO register(UserRegistrationDTO registrationDTO) {
         registrationDTO.setEmail(normalizeSecurityIdentifier(registrationDTO.getEmail()));
-        if (usuarioRepository.existsByEmail(registrationDTO.getEmail())) {
+        registrationDTO.setUsername(normalizeSecurityIdentifier(registrationDTO.getUsername()));
+
+        Company company = null;
+        if (registrationDTO.getCompanyId() != null) {
+            company = companyRepository.findById(registrationDTO.getCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
+        }
+        Integer companyIdToUse = company != null ? company.getId() : null;
+
+        // Aislamiento total entre empresas: los duplicados (correo, username) solo se
+        // validan dentro de la misma empresa (o entre cuentas sin empresa).
+        boolean emailEnUso = companyIdToUse == null
+                ? usuarioRepository.existsByEmailIgnoreCaseAndCompanyIsNull(registrationDTO.getEmail())
+                : usuarioRepository.existsByEmailIgnoreCaseAndCompanyId(registrationDTO.getEmail(), companyIdToUse);
+        if (emailEnUso) {
             throw new IllegalArgumentException("El email ya está en uso");
         }
-
-        registrationDTO.setUsername(normalizeSecurityIdentifier(registrationDTO.getUsername()));
-        if (usuarioRepository.existsByUsername(registrationDTO.getUsername())) {
+        boolean usernameEnUso = companyIdToUse == null
+                ? usuarioRepository.existsByUsernameIgnoreCaseAndCompanyIsNull(registrationDTO.getUsername())
+                : usuarioRepository.existsByUsernameIgnoreCaseAndCompanyId(registrationDTO.getUsername(), companyIdToUse);
+        if (usernameEnUso) {
             throw new IllegalArgumentException("El usuario ya está en uso");
         }
 
@@ -132,12 +148,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
         usuario.setEmailVerified(false);
         usuario.setActivo(false);
-        Company company = null;
-        if (registrationDTO.getCompanyId() != null) {
-            company = companyRepository.findById(registrationDTO.getCompanyId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
-            usuario.setCompany(company);
-        }
+        usuario.setCompany(company);
 
         Usuario saved = usuarioRepository.save(usuario);
 
@@ -149,10 +160,14 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         credencial.setPasswordChanged(false);
         credencial.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
         credencialRepository.save(credencial);
+        contactoService.crear(saved, company, registrationDTO.getTelefono(), registrationDTO.getDireccion());
 
         sendVerificationEmail(saved, verificationToken);
 
-        return userMapper.toProfileDTO(saved);
+        UserProfileDTO profile = userMapper.toProfileDTO(saved);
+        profile.setTelefono(registrationDTO.getTelefono());
+        profile.setDireccion(registrationDTO.getDireccion());
+        return profile;
     }
 
     /**
@@ -288,43 +303,37 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         sharedRateLimitService.enforce("login-account", username,
                 loginPerAccountPerWindow, java.time.Duration.ofMinutes(15));
 
-        // Acepta tanto el username como el correo de contacto en el mismo
-        // campo (mas rapido para la persona) - el correo sigue identificando
-        // como mucho a un unico Usuario (se valida al registrar), asi que
-        // resolver por cualquiera de los dos es inequivoco.
-        Usuario usuario = usuarioRepository.findByUsername(username)
-                .or(() -> usuarioRepository.findByEmail(username))
+        // Aislamiento total entre empresas: no existe login "global" sin marca de
+        // empresa - siempre hace falta el slug de la URL para saber contra cual empresa
+        // se valida, porque el username ya no es unico en toda la plataforma (puede
+        // repetirse entre empresas distintas sin relacion entre si).
+        if (slug == null) {
+            authenticationAuditService.recordLoginFailure(null, username, "credenciales inválidas");
+            throw new BadCredentialsException("Credenciales inválidas");
+        }
+        Company company = companyRepository.findBySlug(slug).orElse(null);
+        if (company == null) {
+            authenticationAuditService.recordLoginFailure(null, username, "credenciales inválidas");
+            throw new BadCredentialsException("Credenciales inválidas");
+        }
+
+        // Acepta tanto el username como el correo de contacto en el mismo campo (mas
+        // rapido para la persona). Ninguno de los dos es unico en TODA la plataforma
+        // (puede repetirse entre empresas sin relacion), asi que se desambigua
+        // quedandose con el candidato que tenga membresia activa en ESTA empresa - la
+        // misma verificacion que antes, solo que ahora tambien filtra duplicados de
+        // otras empresas en vez de asumir un unico candidato global.
+        Usuario usuario = usuarioRepository.findAllByUsernameIgnoreCase(username).stream()
+                .filter(u -> companyMembershipService.hasActiveMembership(u.getId(), company.getId()))
+                .findFirst()
+                .or(() -> usuarioRepository.findAllByEmailIgnoreCase(username).stream()
+                        .filter(u -> companyMembershipService.hasActiveMembership(u.getId(), company.getId()))
+                        .findFirst())
                 .orElse(null);
         if (usuario == null) {
             passwordEncoder.matches(loginDTO.getPassword(), DUMMY_BCRYPT_HASH);
             authenticationAuditService.recordLoginFailure(null, username, "credenciales inválidas");
             throw new BadCredentialsException("Credenciales inválidas");
-        }
-
-        // La empresa la resuelve la URL (slug) cuando esta presente - nunca una
-        // pantalla de seleccion despues del login. Sin slug (login "global", la
-        // pantalla sin marca de ninguna empresa en particular) solo se permite
-        // si el username tiene EXACTAMENTE una empresa activa; con cero o varias
-        // se rechaza igual - nunca revela en cuantas o cuales empresas tiene
-        // cuenta (decision de seguridad ya tomada, ver plan). La empresa se resuelve
-        // ANTES de validar la contraseña porque cada empresa tiene su propia
-        // credencial: no hay "la" contraseña de la persona hasta saber cuál empresa.
-        Company company;
-        if (slug != null) {
-            company = companyRepository.findBySlug(slug).orElse(null);
-            if (company == null || !companyMembershipService.hasActiveMembership(usuario.getId(), company.getId())) {
-                authenticationAuditService.recordLoginFailure(usuario, username, "credenciales inválidas");
-                throw new BadCredentialsException("Credenciales inválidas");
-            }
-        } else {
-            Set<Integer> activeCompanyIds = companyMembershipService.getActiveCompanyIds(usuario);
-            company = activeCompanyIds.size() == 1
-                    ? companyRepository.findById(activeCompanyIds.iterator().next()).orElse(null)
-                    : null;
-            if (company == null) {
-                authenticationAuditService.recordLoginFailure(usuario, username, "credenciales inválidas");
-                throw new BadCredentialsException("Credenciales inválidas");
-            }
         }
 
         veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
@@ -446,7 +455,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setRefreshToken(refreshToken);
         response.setRoles(activeRolesList);
         response.setAssignedRoles(assignedRoles);
-        response.setAvailableRoles(toAvailableRoles(usuario));
+        response.setAvailableRoles(toAvailableRoles(usuario, companyId));
         response.setCompanyId(companyId);
         response.setCompanyName(company.getName());
         response.setCompanyLogoUrl(company.getLogoUrl());
@@ -483,7 +492,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         sharedRateLimitService.enforce("login-account", username,
                 loginPerAccountPerWindow, java.time.Duration.ofMinutes(15));
 
-        Usuario usuario = usuarioRepository.findByUsername(username).orElse(null);
+        // SuperAdmin siempre tiene company = null - el namespace de username "sin
+        // empresa" no se toca con el aislamiento entre empresas (esas cuentas nunca
+        // pertenecieron a una empresa en particular).
+        Usuario usuario = usuarioRepository.findByUsernameAndCompanyIsNull(username).orElse(null);
         if (usuario == null) {
             passwordEncoder.matches(adminLoginDTO.getPassword(), DUMMY_BCRYPT_HASH);
             authenticationAuditService.recordLoginFailure(null, username, "credenciales inválidas");
@@ -548,7 +560,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setRefreshToken(refreshToken);
         response.setRoles(activeRolesList);
         response.setAssignedRoles(assignedRoles);
-        response.setAvailableRoles(toAvailableRoles(usuario));
+        response.setAvailableRoles(toAvailableRoles(usuario, null));
         response.setCompanyId(null);
         response.setNombreCompleto(resolveNombreCompleto(usuario));
         response.setUserType(resolveUserType(usuario));
@@ -624,7 +636,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setRefreshToken(refreshToken);
         response.setRoles(activeRolesList);
         response.setAssignedRoles(assignedRoles);
-        response.setAvailableRoles(toAvailableRoles(usuario));
+        response.setAvailableRoles(toAvailableRoles(usuario, companyId));
         response.setCompanyId(companyId);
         response.setCompanyName(company != null ? company.getName() : null);
         response.setCompanyLogoUrl(company != null ? company.getLogoUrl() : null);
@@ -658,7 +670,11 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Override
     public UserProfileDTO getProfile(Integer id) {
         Usuario usuario = findManageableUser(id);
-        return userMapper.toProfileDTO(usuario);
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        UserProfileDTO profile = userMapper.toProfileDTO(usuario);
+        profile.setTelefono(contactoService.telefono(usuario.getId(), companyId));
+        profile.setDireccion(contactoService.direccion(usuario.getId(), companyId));
+        return profile;
     }
 
     @Override
@@ -1013,7 +1029,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setRefreshToken(newRefreshToken);
         response.setRoles(activeRolesList);
         response.setAssignedRoles(userRoles);
-        response.setAvailableRoles(toAvailableRoles(usuario));
+        response.setAvailableRoles(toAvailableRoles(usuario, companyId));
         response.setCompanyId(companyId);
         response.setCompanyName(sessionCompany != null ? sessionCompany.getName() : null);
         response.setCompanyLogoUrl(sessionCompany != null ? sessionCompany.getLogoUrl() : null);
@@ -1233,8 +1249,17 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setPermissionVersion(role.getPermissionVersion());
     }
 
-    private List<AssignedRoleResponse> toAvailableRoles(Usuario usuario) {
+    /** Los roles disponibles para cambiar (dropdown del navbar) son SOLO los de la
+     * empresa de la sesion actual (o solo los sin empresa, para SuperAdmin) - nunca los
+     * de otra empresa. Sin este filtro, una persona con roles en dos empresas (dato de
+     * antes del aislamiento total entre empresas, ver V74) veia en el selector un rol
+     * de la OTRA empresa mientras estaba en esta - el cambio de rol lo rechazaba
+     * igual, pero ya mostrar la opcion filtraba que esa persona tiene cuenta ahi. */
+    private List<AssignedRoleResponse> toAvailableRoles(Usuario usuario, Integer companyId) {
         return usuario.getUsuariosPorRol().stream()
+                .filter(upr -> companyId == null
+                        ? upr.getCompany() == null
+                        : upr.getCompany() != null && companyId.equals(upr.getCompany().getId()))
                 .map(UsuarioPorRol::getRol)
                 .filter(veterinaria.vargasvet.domain.entity.Role::isActivo)
                 .sorted(Comparator.comparing(veterinaria.vargasvet.domain.entity.Role::getName))

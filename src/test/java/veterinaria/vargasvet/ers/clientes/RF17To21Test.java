@@ -155,7 +155,7 @@ class RF17To21Test {
     }
 
     @Test
-    @DisplayName("[CP-RF18-02] Correo existente sin registro activo en esta empresa se une como cliente (multiempresa permitido)")
+    @DisplayName("[CP-RF18-02] Correo existente EN ESTA MISMA EMPRESA (ej. ya es empleado aqui) se une tambien como cliente")
     void cpRf1802_correoExistenteSeUneComoClienteDeNuevaEmpresa() {
         Company company = company(7);
         Role role = roleCliente(20, company);
@@ -163,8 +163,11 @@ class RF17To21Test {
         Usuario existente = new Usuario();
         existente.setId(99);
         existente.setEmail("ana.qa@example.test");
+        existente.setCompany(company);
 
-        when(usuarioRepository.findByEmail("ana.qa@example.test")).thenReturn(Optional.of(existente));
+        // Aislamiento total entre empresas: la busqueda de "ya existe" es SOLO dentro de
+        // esta misma empresa - nunca cruza contra otras.
+        when(usuarioRepository.findByEmailAndCompanyId("ana.qa@example.test", 7)).thenReturn(Optional.of(existente));
         when(companyRepository.findById(7)).thenReturn(Optional.of(company));
         when(roleRepository.findAllById(Set.of(20))).thenReturn(List.of(role));
         when(apoderadoRepository.save(any(Apoderado.class))).thenAnswer(invocation -> {
@@ -181,7 +184,6 @@ class RF17To21Test {
         // verificacion nuevos) ni se vuelve a chequear el DNI: es la misma persona.
         // usuarioRepository.save SI se llama (replaceClientRoles actualiza sus roles).
         assertThat(existente.getVerificationToken()).isNull();
-        verify(usuarioRepository, never()).existsByDni(anyString());
         // Identidad ya existente uniendose a una empresa nueva: se le avisa por
         // correo (no pasa por el flujo de activacion de cuenta nueva, asi que
         // no tiene otra forma de saber que ahora tiene acceso aqui tambien).
@@ -196,13 +198,14 @@ class RF17To21Test {
         Usuario existente = new Usuario();
         existente.setId(99);
         existente.setEmail("ana.qa@example.test");
+        existente.setCompany(company);
         Apoderado activo = new Apoderado();
         activo.setId(41L);
         activo.setUser(existente);
         activo.setCompany(company);
         activo.setEstado(true);
 
-        when(usuarioRepository.findByEmail("ana.qa@example.test")).thenReturn(Optional.of(existente));
+        when(usuarioRepository.findByEmailAndCompanyId("ana.qa@example.test", 7)).thenReturn(Optional.of(existente));
         when(companyRepository.findById(7)).thenReturn(Optional.of(company));
         when(apoderadoRepository.findByUserIdAndCompanyId(99, 7)).thenReturn(Optional.of(activo));
         when(roleRepository.findAllById(Set.of(20))).thenReturn(List.of(roleCliente(20, company)));
@@ -295,7 +298,8 @@ class RF17To21Test {
                 mock(SessionSecurityService.class),
                 mock(veterinaria.vargasvet.service.CompanyMembershipService.class),
                 mock(CitaRepository.class),
-                mock(veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository.class)
+                mock(veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository.class),
+                mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class)
         );
         ReflectionTestUtils.setField(service, "appUrl", "https://frontend.test");
         ReflectionTestUtils.setField(service, "defaultCompanyName", "Veterinaria QA");

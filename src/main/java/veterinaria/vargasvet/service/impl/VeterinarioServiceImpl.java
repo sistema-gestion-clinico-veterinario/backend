@@ -40,6 +40,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     private final EmailService emailService;
     private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
     private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
+    private final UsuarioContactoService contactoService;
 
     @Value("${app.url}")
     private String appUrl;
@@ -73,59 +74,47 @@ public class VeterinarioServiceImpl implements VeterinarioService {
             throw new IllegalArgumentException("El número de colegiatura ya está registrado en esta empresa");
         }
 
-        // Misma persona real si coincide el correo O el numero de documento -
-        // alguien puede ya tener identidad con OTRO correo (ej. como cliente
-        // en otra empresa); se reutiliza esa identidad en vez de bloquear.
-        java.util.Optional<Usuario> existingUsuario = usuarioRepository.findByEmail(dto.getEmail())
-                .or(() -> usuarioRepository.findByDni(dto.getNumeroDocumento()));
-        boolean esUsuarioNuevo = existingUsuario.isEmpty();
-        Usuario savedUser;
-        String verificationToken = null;
-
-        if (esUsuarioNuevo) {
-            String username = dto.getUsername() == null ? null : dto.getUsername().trim().toLowerCase(java.util.Locale.ROOT);
-            if (username == null || username.isBlank()) {
-                throw new IllegalArgumentException("El usuario es obligatorio para una persona nueva");
-            }
-            if (usuarioRepository.existsByUsername(username)) {
-                throw new IllegalArgumentException("El usuario ya está en uso");
-            }
-
-            Usuario usuario = new Usuario();
-            usuario.setUsername(username);
-            usuario.setEmail(dto.getEmail());
-            usuario.setNombre(dto.getNombre());
-            usuario.setApellido(dto.getApellido());
-            usuario.setDni(dto.getNumeroDocumento());
-            usuario.setTelefono(dto.getTelefono());
-            usuario.setDireccion(dto.getDireccion());
-            usuario.setActivo(false);
-            usuario.setEmailVerified(false);
-            verificationToken = SecurityTokenUtils.generate();
-            usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
-            usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(24));
-
-            savedUser = usuarioRepository.save(usuario);
-        } else {
-            // Email ya existente: misma regla que EmpleadoServiceImpl.registerEmpleado -
-            // bloquear si ya tiene una relacion laboral activa en otra empresa.
-            savedUser = existingUsuario.get();
-            companyMembershipService.assertNoActiveEmploymentElsewhere(savedUser);
+        // Aislamiento total entre empresas: nunca se busca ni se reutiliza una identidad
+        // de OTRA empresa - cada registro crea siempre una cuenta propia de ESTA
+        // empresa; los duplicados (DNI, correo, username) solo se validan aqui adentro.
+        String username = dto.getUsername() == null ? null : dto.getUsername().trim().toLowerCase(java.util.Locale.ROOT);
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("El usuario es obligatorio");
+        }
+        if (usuarioRepository.existsByUsernameIgnoreCaseAndCompanyId(username, companyId)) {
+            throw new IllegalArgumentException("El usuario ya está en uso en esta empresa");
+        }
+        if (usuarioRepository.existsByEmailIgnoreCaseAndCompanyId(dto.getEmail(), companyId)) {
+            throw new IllegalArgumentException("El correo ya está registrado en esta empresa");
+        }
+        if (usuarioRepository.existsByDniAndCompanyId(dto.getNumeroDocumento(), companyId)) {
+            throw new IllegalArgumentException("El DNI/Documento ya está registrado en esta empresa");
         }
 
-        // Como mucho hay una relacion de Empleado activa por usuario en todo el sistema,
-        // asi que esta siempre es su primera relacion de empleado con ESTA empresa.
-        if (!credencialRepository.existsByUsuarioIdAndCompanyId(savedUser.getId(), companyId)) {
-            String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-            veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
-                    new veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial();
-            credencial.setUsuario(savedUser);
-            credencial.setCompany(company);
-            credencial.setPassword(passwordEncoder.encode(tempPassword));
-            credencial.setPasswordChanged(false);
-            credencial.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
-            credencialRepository.save(credencial);
-        }
+        Usuario usuario = new Usuario();
+        usuario.setUsername(username);
+        usuario.setEmail(dto.getEmail());
+        usuario.setNombre(dto.getNombre());
+        usuario.setApellido(dto.getApellido());
+        usuario.setDni(dto.getNumeroDocumento());
+        usuario.setCompany(company);
+        usuario.setActivo(false);
+        usuario.setEmailVerified(false);
+        String verificationToken = SecurityTokenUtils.generate();
+        usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
+        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(24));
+
+        Usuario savedUser = usuarioRepository.save(usuario);
+
+        String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                new veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial();
+        credencial.setUsuario(savedUser);
+        credencial.setCompany(company);
+        credencial.setPassword(passwordEncoder.encode(tempPassword));
+        credencial.setPasswordChanged(false);
+        credencial.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
+        credencialRepository.save(credencial);
 
         for (Integer roleId : new java.util.LinkedHashSet<>(dto.getRoleIds())) {
             Role role = roleRepository.findById(roleId)
@@ -171,45 +160,14 @@ public class VeterinarioServiceImpl implements VeterinarioService {
 
         empleadoRepository.save(empleado);
         companyMembershipService.syncLegacyCompanyField(savedUser);
+        contactoService.crear(savedUser, company, dto.getTelefono(), dto.getDireccion());
 
-        if (esUsuarioNuevo) {
-            sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
-        } else {
-            sendNewCompanyAccessEmail(savedUser, company);
-        }
+        sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
 
-        return userMapper.toProfileDTO(savedUser);
-    }
-
-    /** Aviso para cuando una identidad YA existente (encontrada por correo o
-     * DNI) se une a una empresa nueva como veterinario - la persona no tiene
-     * forma de saber que ahora tiene acceso aqui tambien si no se le avisa,
-     * ya que no pasa por el flujo de activacion de cuenta nueva. */
-    private void sendNewCompanyAccessEmail(Usuario usuario, Company company) {
-        try {
-            String resolvedCompanyName = company.getName() != null ? company.getName() : companyName;
-            String resolvedLogo = company.getLogoUrl() != null ? company.getLogoUrl() : companyLogo;
-            String resolvedEmail = company.getEmail() != null ? company.getEmail() : companyEmail;
-            String resolvedPhone = company.getPhone() != null ? company.getPhone() : companyPhone;
-            Map<String, Object> model = new HashMap<>();
-            model.put("nombre", usuario.getNombre() == null ? "" : usuario.getNombre());
-            model.put("username", usuario.getUsername());
-            model.put("companyName", resolvedCompanyName);
-            model.put("companyLogo", resolvedLogo);
-            model.put("companyEmail", resolvedEmail);
-            model.put("companyPhone", resolvedPhone);
-            model.put("loginUrl", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug("/login", company.getSlug()));
-
-            Mail mail = emailService.createMail(
-                    usuario.getEmail(),
-                    "Nuevo acceso en " + resolvedCompanyName,
-                    model
-            );
-
-            emailService.sendEmailWithRetry(mail, "email/new-company-access-template");
-        } catch (Exception e) {
-            System.err.println("[WARNING] No se pudo enviar el aviso de nueva empresa a " + usuario.getEmail() + ": " + e.getMessage());
-        }
+        UserProfileDTO profile = userMapper.toProfileDTO(savedUser);
+        profile.setTelefono(contactoService.telefono(savedUser.getId(), companyId));
+        profile.setDireccion(contactoService.direccion(savedUser.getId(), companyId));
+        return profile;
     }
 
     private void sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken) {

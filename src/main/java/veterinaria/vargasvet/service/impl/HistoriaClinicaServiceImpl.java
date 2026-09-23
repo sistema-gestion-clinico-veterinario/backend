@@ -44,6 +44,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
     private final HistoriaClinicaRepository historiaClinicaRepository;
     private final ConsultaRepository consultaRepository;
     private final ArchivoClinicoServiceImpl archivoClinicoService;
+    private final UsuarioContactoService contactoService;
     @org.springframework.beans.factory.annotation.Autowired
     private veterinaria.vargasvet.service.ControlPreventivoService controlPreventivoService;
     @org.springframework.beans.factory.annotation.Autowired
@@ -261,8 +262,10 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
                 Usuario user = mascota.getApoderado().getUser();
                 if (user != null) {
                     response.setPropietarioNombre(user.getNombre() + " " + user.getApellido());
-                    response.setPropietarioTelefono(user.getTelefono());
-                    response.setPropietarioDireccion(user.getDireccion());
+                    Integer propietarioCompanyId = mascota.getApoderado().getCompany() != null
+                            ? mascota.getApoderado().getCompany().getId() : null;
+                    response.setPropietarioTelefono(contactoService.telefono(user.getId(), propietarioCompanyId));
+                    response.setPropietarioDireccion(contactoService.direccion(user.getId(), propietarioCompanyId));
                 }
             }
         }

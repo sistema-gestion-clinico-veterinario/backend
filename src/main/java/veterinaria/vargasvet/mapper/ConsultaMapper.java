@@ -1,5 +1,6 @@
 package veterinaria.vargasvet.mapper;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import veterinaria.vargasvet.domain.entity.Consulta;
 import veterinaria.vargasvet.domain.entity.Mascota;
@@ -7,6 +8,7 @@ import veterinaria.vargasvet.domain.entity.Prescripcion;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.dto.response.ConsultaResponse;
 import veterinaria.vargasvet.dto.response.PrescripcionResumenResponse;
+import veterinaria.vargasvet.service.impl.UsuarioContactoService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,7 +17,10 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 @Component
+@RequiredArgsConstructor
 public class ConsultaMapper {
+
+    private final UsuarioContactoService contactoService;
 
     public ConsultaResponse toResponse(Consulta consulta) {
         if (consulta == null) {
@@ -86,8 +91,10 @@ public class ConsultaMapper {
                     Usuario apoderadoUser = mascota.getApoderado().getUser();
                     if (apoderadoUser != null) {
                         response.setApoderadoNombre(apoderadoUser.getNombre() + " " + apoderadoUser.getApellido());
-                        response.setApoderadoTelefono(apoderadoUser.getTelefono());
-                        response.setApoderadoDireccion(apoderadoUser.getDireccion());
+                        Integer apoderadoCompanyId = mascota.getApoderado().getCompany() != null
+                                ? mascota.getApoderado().getCompany().getId() : null;
+                        response.setApoderadoTelefono(contactoService.telefono(apoderadoUser.getId(), apoderadoCompanyId));
+                        response.setApoderadoDireccion(contactoService.direccion(apoderadoUser.getId(), apoderadoCompanyId));
                     }
                 }
             }
