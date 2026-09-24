@@ -92,6 +92,10 @@ public class EmailService {
 
             Context context = new Context();
             context.setVariables(mail.getModel());
+            // Centralizado aqui (no en cada plantilla ni en cada llamada) para que el "©
+            // {año}" del pie de los 10 correos se actualice solo, en vez de quedar fijo
+            // al año en que se escribio cada plantilla.
+            context.setVariable("currentYear", veterinaria.vargasvet.util.AppClock.now().getYear());
 
             String html = templateEngine.process(templateName, context);
             helper.setTo(mail.getTo());

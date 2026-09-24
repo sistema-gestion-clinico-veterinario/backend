@@ -765,6 +765,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             String resolvedPhone = company != null && company.getPhone() != null ? company.getPhone() : companyPhone;
             String resolvedAddress = company != null && company.getAddress() != null ? company.getAddress() : companyAddress;
             model.put("nombre", nombre);
+            model.put("validityHours", verificationTokenValidityHours);
             model.put("companyName", resolvedCompanyName);
             model.put("companyLogo", resolvedLogo);
             model.put("companyEmail", resolvedEmail);

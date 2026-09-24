@@ -194,6 +194,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         try {
             Map<String, Object> model = new HashMap<>(resolveCompanyBranding(usuario));
             model.put("nombre", usuario.getEmail());
+            model.put("validityHours", verificationTokenValidityHours);
             String slug = usuario.getCompany() != null ? usuario.getCompany().getSlug() : null;
             model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
                     "/auth/verify#token=" + verificationToken, slug));
@@ -265,6 +266,48 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         usuarioRepository.save(usuario);
         authenticationAuditService.record(usuario, "CONFIGURAR_CREDENCIALES",
                 "El usuario estableció su contraseña inicial y activó la cuenta.");
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse activateAccountWithGoogle(String token, String googleEmail) {
+        Usuario usuario = usuarioRepository.findByVerificationTokenForUpdate(SecurityTokenUtils.hash(token))
+                .orElseThrow(() -> new ResourceNotFoundException("Token de verificacion invalido o expirado"));
+        assertVerificationTokenNotExpired(usuario);
+
+        if (usuario.isEmailVerified() || anyCredencialPasswordChanged(usuario.getId())) {
+            usuario.setVerificationToken(null);
+            usuario.setVerificationTokenExpiresAt(null);
+            usuarioRepository.save(usuario);
+            throw new IllegalArgumentException("La cuenta ya fue activada. Inicia sesion o recupera tu contrasena.");
+        }
+
+        // El correo de Google debe ser EXACTAMENTE el de la invitacion - sin esto, cualquiera
+        // con el enlace (que no revela el correo) podria activar la cuenta de otra persona
+        // con su propia cuenta de Google.
+        String normalizedGoogleEmail = normalizeSecurityIdentifier(googleEmail);
+        if (!normalizedGoogleEmail.equalsIgnoreCase(usuario.getEmail())) {
+            throw new veterinaria.vargasvet.exception.GoogleEmailMismatchException();
+        }
+
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial = resolveSingleCredencial(usuario.getId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "No se pudo determinar la credencial a configurar para este usuario"));
+
+        // Sin contraseña: Google ya verifico la identidad, igual que en cualquier alta por
+        // SSO - la persona puede crear una contraseña mas adelante (perfil, o "olvide mi
+        // contraseña") si alguna vez la necesita.
+        usuario.setEmailVerified(true);
+        usuario.setActivo(true);
+        usuario.setVerificationToken(null);
+        usuario.setVerificationTokenExpiresAt(null);
+        usuarioRepository.save(usuario);
+        credencial.setUltimoAcceso(veterinaria.vargasvet.util.AppClock.now());
+        credencialRepository.save(credencial);
+        authenticationAuditService.record(usuario, "ACTIVAR_CUENTA_GOOGLE",
+                "El usuario activó su cuenta con Google, sin crear contraseña.");
+
+        return buildLoginResponse(usuario, credencial.getCompany(), credencial, normalizedGoogleEmail);
     }
 
     @Override
