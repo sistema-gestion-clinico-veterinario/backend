@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.AuditLog;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.repository.AuditLogRepository;
+import veterinaria.vargasvet.security.AccountLockoutService;
 import veterinaria.vargasvet.security.ClientIpResolver;
 import veterinaria.vargasvet.security.SecurityTokenUtils;
 import veterinaria.vargasvet.util.AppClock;
@@ -27,12 +28,17 @@ public class AuthenticationAuditService {
     private final AuditRealtimePublisher auditRealtimePublisher;
     private final ObjectProvider<HttpServletRequest> requestProvider;
     private final ClientIpResolver clientIpResolver;
+    private final AccountLockoutService accountLockoutService;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordLoginFailure(Usuario knownUser, String attemptedIdentifier, String reason) {
         String subjectHash = SecurityTokenUtils.hash(normalize(attemptedIdentifier)).substring(0, 12);
         save(knownUser, "LOGIN_FALLIDO",
                 "Intento de inicio de sesión rechazado (" + reason + ", referencia " + subjectHash + ").");
+
+        if ("credenciales inválidas".equals(reason)) {
+            accountLockoutService.registerFailedAttempt(attemptedIdentifier);
+        }
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

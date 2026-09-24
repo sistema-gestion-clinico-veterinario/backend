@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import veterinaria.vargasvet.validation.MeaningfulText;
+import veterinaria.vargasvet.validation.StrongPassword;
 
 @Data
 public class UserRegistrationDTO {
@@ -21,6 +22,7 @@ public class UserRegistrationDTO {
 
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(min = 12, max = 72, message = "La contraseña debe tener al menos 12 caracteres")
+    @StrongPassword
     private String password;
 
     @NotBlank(message = "El nombre es obligatorio")

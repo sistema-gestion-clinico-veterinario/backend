@@ -16,6 +16,7 @@ import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.RefreshTokenRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
+import veterinaria.vargasvet.security.AccountLockoutService;
 import veterinaria.vargasvet.security.SharedRateLimitService;
 import veterinaria.vargasvet.security.TokenProvider;
 import veterinaria.vargasvet.service.AuditLogService;
@@ -49,6 +50,7 @@ class UsuarioServiceImplLoginTest {
     @Mock CompanyMembershipService companyMembershipService;
     @Mock TokenProvider tokenProvider;
     @Mock SharedRateLimitService sharedRateLimitService;
+    @Mock AccountLockoutService accountLockoutService;
     @Mock AuthenticationAuditService authenticationAuditService;
     @Mock RefreshTokenRepository refreshTokenRepository;
     @Mock MenuBuilderService menuBuilderService;

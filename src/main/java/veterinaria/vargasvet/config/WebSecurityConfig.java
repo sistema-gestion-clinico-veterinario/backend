@@ -87,6 +87,9 @@ public class WebSecurityConfig {
                         // (pinta el login), nunca expone datos sensibles - ver PublicCompanyController.
                         .requestMatchers(HttpMethod.GET, "/company/branding/**").permitAll()
 
+                        // Buscador de clinica para el login sin slug - mismo motivo que branding.
+                        .requestMatchers(HttpMethod.GET, "/company/search").permitAll()
+
                         .requestMatchers("/actuator/**").denyAll()
 
                         // Todo lo demás requiere auth
@@ -106,6 +109,16 @@ public class WebSecurityConfig {
                         .referrerPolicy(referrer -> referrer.policy(
                                 org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
                         .permissionsPolicyHeader(policy -> policy.policy("camera=(), microphone=(), geolocation=()"))
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .preload(true)
+                                .maxAgeInSeconds(31536000))
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'self'; "
+                                        + "frame-ancestors 'none'; "
+                                        + "object-src 'none'; "
+                                        + "base-uri 'self'; "
+                                        + "form-action 'self'"))
                 );
 
         // Registrar primero JWT contra un filtro estándar con orden conocido.

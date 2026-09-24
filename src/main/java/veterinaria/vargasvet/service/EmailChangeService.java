@@ -6,11 +6,13 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.EmailChangeRequest;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.dto.Mail;
 import veterinaria.vargasvet.dto.request.RequestEmailChangeDTO;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
+import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.EmailChangeRequestRepository;
 import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
@@ -36,6 +38,7 @@ public class EmailChangeService {
     private final AuditLogService auditLogService;
     private final SharedRateLimitService sharedRateLimitService;
     private final UsuarioEmpresaCredencialRepository credencialRepository;
+    private final CompanyRepository companyRepository;
 
     @Value("${security.email-change-validity-minutes:30}")
     private long validityMinutes;
@@ -80,6 +83,11 @@ public class EmailChangeService {
             throw new IllegalArgumentException("El nuevo correo no está disponible");
         }
 
+        // La empresa de LA SESION ACTIVA (no Usuario.company, esa cache legacy puede
+        // estar vacia/desactualizada) - es la que se guarda en la solicitud para armar
+        // el enlace de confirmacion con el slug correcto.
+        Company company = companyId == null ? null : companyRepository.findById(companyId).orElse(null);
+
         emailChangeRequestRepository.deleteByUsuario(usuario);
         String oldToken = SecurityTokenUtils.generate();
         String newToken = SecurityTokenUtils.generate();
@@ -87,6 +95,7 @@ public class EmailChangeService {
 
         EmailChangeRequest request = new EmailChangeRequest();
         request.setUsuario(usuario);
+        request.setCompany(company);
         request.setNewEmail(newEmail);
         request.setOldEmailTokenHash(SecurityTokenUtils.hash(oldToken));
         request.setNewEmailTokenHash(SecurityTokenUtils.hash(newToken));
@@ -94,8 +103,8 @@ public class EmailChangeService {
         request.setExpiresAt(now.plusMinutes(validityMinutes));
         emailChangeRequestRepository.save(request);
 
-        sendConfirmation(usuario.getEmail(), oldToken, "actual", usuario, newEmail);
-        sendConfirmation(newEmail, newToken, "nuevo", usuario, newEmail);
+        sendConfirmation(usuario.getEmail(), oldToken, "actual", usuario, company, newEmail);
+        sendConfirmation(newEmail, newToken, "nuevo", usuario, company, newEmail);
         auditLogService.log("SOLICITAR_CAMBIO_CORREO", "Seguridad",
                 "El usuario inició un cambio de correo con doble confirmación");
     }
@@ -132,17 +141,28 @@ public class EmailChangeService {
         }
 
         String oldEmail = usuario.getEmail();
+        // El login acepta username O correo en el mismo campo. Si la persona escribió su
+        // correo como username al registrarse (muy comun), cambiar solo Usuario.email
+        // dejaba el correo VIEJO funcionando para siempre como credencial de acceso, via
+        // el campo username que este flujo nunca tocaba - justo el escenario de riesgo
+        // que se quiere evitar al cambiar de correo (perdida de acceso al correo viejo).
+        // Se sincroniza SOLO si coincidian, y solo si el nuevo correo no choca con el
+        // username de otra cuenta de esta misma empresa.
+        if (usuario.getUsername().equalsIgnoreCase(oldEmail) && !usernameEnUsoEnLaMismaEmpresa(usuario, request.getNewEmail())) {
+            usuario.setUsername(request.getNewEmail());
+        }
         usuario.setEmail(request.getNewEmail());
         usuario.setEmailVerified(true);
         sessionSecurityService.invalidateAllSessions(usuario);
         emailChangeRequestRepository.delete(request);
 
+        Company company = request.getCompany();
         auditLogService.log(usuario.getEmail(), "USER",
-                usuario.getCompany() != null ? usuario.getCompany().getId() : null,
-                usuario.getCompany() != null ? usuario.getCompany().getName() : null,
+                company != null ? company.getId() : null,
+                company != null ? company.getName() : null,
                 "CONFIRMAR_CAMBIO_CORREO", "Seguridad",
                 "Se completó un cambio de correo y se invalidaron todas las sesiones", null);
-        sendCompletedNotice(oldEmail, usuario);
+        sendCompletedNotice(oldEmail, usuario, company);
         return true;
     }
 
@@ -155,6 +175,13 @@ public class EmailChangeService {
                 : usuarioRepository.existsByEmailIgnoreCaseAndCompanyId(email, companyId);
     }
 
+    private boolean usernameEnUsoEnLaMismaEmpresa(Usuario usuario, String username) {
+        Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
+        return companyId == null
+                ? usuarioRepository.existsByUsernameIgnoreCaseAndCompanyIsNull(username)
+                : usuarioRepository.existsByUsernameIgnoreCaseAndCompanyId(username, companyId);
+    }
+
     private void validateNotExpired(EmailChangeRequest request) {
         if (request.getExpiresAt().isBefore(AppClock.now())) {
             emailChangeRequestRepository.delete(request);
@@ -163,11 +190,11 @@ public class EmailChangeService {
     }
 
     private void sendConfirmation(String destination, String token, String confirmationType,
-                                  Usuario usuario, String newEmail) {
-        Map<String, Object> model = baseModel(usuario);
+                                  Usuario usuario, Company company, String newEmail) {
+        Map<String, Object> model = baseModel(usuario, company);
         model.put("newEmail", newEmail);
         model.put("confirmationType", confirmationType);
-        String slug = usuario.getCompany() != null ? usuario.getCompany().getSlug() : null;
+        String slug = company != null ? company.getSlug() : null;
         model.put("confirmationUrl", frontendUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
                 "/confirm-email-change#type=" + confirmationType + "&token=" + token, slug));
         Mail mail = emailService.createMail(destination,
@@ -175,20 +202,19 @@ public class EmailChangeService {
         emailService.sendEmail(mail, "email/email-change-confirmation-template");
     }
 
-    private void sendCompletedNotice(String oldEmail, Usuario usuario) {
-        Map<String, Object> model = baseModel(usuario);
+    private void sendCompletedNotice(String oldEmail, Usuario usuario, Company company) {
+        Map<String, Object> model = baseModel(usuario, company);
         model.put("newEmail", usuario.getEmail());
         Mail mail = emailService.createMail(oldEmail,
                 "Tu correo de acceso fue actualizado", model);
         emailService.sendEmail(mail, "email/email-change-completed-template");
     }
 
-    private Map<String, Object> baseModel(Usuario usuario) {
+    private Map<String, Object> baseModel(Usuario usuario, Company company) {
         Map<String, Object> model = new HashMap<>();
         model.put("nombre", ((usuario.getNombre() == null ? "" : usuario.getNombre()) + " "
                 + (usuario.getApellido() == null ? "" : usuario.getApellido())).trim());
-        model.put("companyName", usuario.getCompany() != null
-                ? usuario.getCompany().getName() : defaultCompanyName);
+        model.put("companyName", company != null ? company.getName() : defaultCompanyName);
         return model;
     }
 

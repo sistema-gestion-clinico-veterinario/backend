@@ -172,6 +172,18 @@ public class CompanyServiceImpl implements CompanyService {
                 company.getName(), company.getLogoUrl(), company.getColorPrimario());
     }
 
+    @Override
+    public java.util.List<veterinaria.vargasvet.dto.response.CompanySearchResultResponse> searchByName(String query) {
+        String trimmed = query == null ? "" : query.trim();
+        if (trimmed.length() < 2) {
+            return java.util.List.of();
+        }
+        return companyRepository.findTop10ByNameContainingIgnoreCaseAndActivoTrueOrderByNameAsc(trimmed).stream()
+                .map(c -> new veterinaria.vargasvet.dto.response.CompanySearchResultResponse(
+                        c.getName(), c.getSlug(), c.getLogoUrl()))
+                .toList();
+    }
+
     private void validarAccesoEmpresa(Integer companyId) {
         if (SecurityUtils.isSuperAdmin()) return;
 
