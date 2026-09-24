@@ -839,18 +839,35 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         request.setEmail(normalizeSecurityIdentifier(request.getEmail()));
         sharedRateLimitService.enforce("password-reset-account", request.getEmail(),
                 recoveryPerAccountPerHour, java.time.Duration.ofHours(1));
-        Usuario usuario = usuarioRepository.findByEmail(request.getEmail()).orElse(null);
+
+        // La empresa la resuelve el slug de la pantalla desde la que se pide el reset
+        // (igual que en login) - el correo ya no es unico en toda la plataforma (puede
+        // repetirse entre empresas sin relacion), asi que sin slug es imposible saber a
+        // cual cuenta restablecer: se desambigua igual que el login, quedandose con el
+        // candidato que tenga membresia activa en la empresa del slug.
+        String slug = request.getSlug() == null ? null : request.getSlug().trim().toLowerCase(Locale.ROOT);
+        Company company = null;
+        Usuario usuario;
+        if (slug != null) {
+            company = companyRepository.findBySlug(slug).orElse(null);
+            if (company == null) {
+                return;
+            }
+            final Integer companyId = company.getId();
+            usuario = usuarioRepository.findAllByEmailIgnoreCase(request.getEmail()).stream()
+                    .filter(u -> companyMembershipService.hasActiveMembership(u.getId(), companyId))
+                    .findFirst()
+                    .orElse(null);
+        } else {
+            // Sin slug (pantalla global/SuperAdmin): solo apunta a la credencial sin
+            // empresa, unica por correo dentro de ese grupo (indice unico parcial).
+            usuario = usuarioRepository.findByEmailAndCompanyIsNull(request.getEmail()).orElse(null);
+        }
+
         if (usuario == null || !usuario.isActivo() || !usuario.isEmailVerified()) {
             return;
         }
 
-        // La empresa la resuelve el slug de la pantalla desde la que se pide el reset
-        // (igual que en login) - determina cuál credencial se va a restablecer.
-        String slug = request.getSlug() == null ? null : request.getSlug().trim().toLowerCase(Locale.ROOT);
-        Company company = slug != null ? companyRepository.findBySlug(slug).orElse(null) : null;
-        if (slug != null && (company == null || !companyMembershipService.hasActiveMembership(usuario.getId(), company.getId()))) {
-            return;
-        }
         veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
                 resolveCredencial(usuario.getId(), company != null ? company.getId() : null).orElse(null);
         if (credencial == null) {
