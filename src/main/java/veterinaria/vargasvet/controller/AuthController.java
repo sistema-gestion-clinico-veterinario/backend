@@ -166,6 +166,17 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Cuenta suspendida", null));
     }
 
+    /** Cambio de correo forzado por un admin de la empresa - sin doble confirmación,
+     * pensado para cuando la persona perdió el acceso a su correo anterior. */
+    @PutMapping("/admin-email-change/{id}")
+    @PreAuthorize("@accesoValidator.can('VISTA_GESTION_CREDENCIALES', 'MODIFICAR')")
+    public ResponseEntity<ApiResponse<Void>> adminChangeEmail(
+            @PathVariable Integer id,
+            @Valid @RequestBody veterinaria.vargasvet.dto.request.AdminChangeEmailRequest request) {
+        usuarioService.adminChangeEmail(id, request.getNewEmail());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Correo actualizado exitosamente", null));
+    }
+
     @PostMapping("/change-password")
     public ResponseEntity<ApiResponse<Void>> changePassword(@Valid @RequestBody veterinaria.vargasvet.dto.request.ChangePasswordDTO dto) {
         // Por id, no por email: el correo ya no identifica de forma unica a la sesion.

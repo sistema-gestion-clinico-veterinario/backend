@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import veterinaria.vargasvet.validation.StrongPassword;
 
 @Data
 public class AdminChangePasswordRequest {
@@ -14,7 +15,7 @@ public class AdminChangePasswordRequest {
     private String email;
 
     @NotBlank(message = "La nueva contraseña es obligatoria")
-    @Size(min = 8, max = 72, message = "La nueva contrasena debe tener entre 8 y 72 caracteres")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s])\\S+$", message = "La nueva contrasena debe incluir mayuscula, minuscula, numero y simbolo, sin espacios")
+    @Size(min = 12, max = 72, message = "La nueva contrasena debe tener al menos 12 caracteres")
+    @StrongPassword
     private String newPassword;
 }

@@ -156,7 +156,8 @@ class MultiEmpresaIsolationTest {
                 roleRepository, passwordEncoder, userMapper, tokenProvider, mock(EmailService.class),
                 menuBuilderService, refreshTokenRepository, usuarioPorRolRepository, passwordResetTokenRepository,
                 mock(AuditLogService.class), companyRepository, companyMembershipService, sessionSecurityService,
-                mock(SharedRateLimitService.class), mock(AuthenticationAuditService.class),
+                mock(SharedRateLimitService.class), mock(veterinaria.vargasvet.security.AccountLockoutService.class),
+                mock(AuthenticationAuditService.class),
                 new PasswordPolicyService(), mock(LegalDocumentService.class), contactoService);
 
         empleadoService = new EmpleadoServiceImpl(

@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import veterinaria.vargasvet.validation.StrongPassword;
 
 @Data
 public class ChangePasswordDTO {
@@ -13,5 +14,6 @@ public class ChangePasswordDTO {
 
     @NotBlank(message = "La nueva contraseña es obligatoria")
     @Size(min = 12, max = 72, message = "La nueva contraseña debe tener al menos 12 caracteres")
+    @StrongPassword
     private String newPassword;
 }

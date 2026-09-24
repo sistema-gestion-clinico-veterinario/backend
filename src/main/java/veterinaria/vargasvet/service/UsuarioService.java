@@ -19,6 +19,13 @@ public interface UsuarioService {
     AuthResponse loginWithGoogle(String email, String slug);
     UserProfileDTO getProfile(Integer id);
     void suspendAccount(Integer id);
+
+    /** Un admin de la empresa fuerza el cambio de correo de otra cuenta, sin pasar por
+     * la doble confirmación (correo actual + nuevo) del autoservicio - pensado para
+     * cuando la persona perdió el acceso a su correo anterior (que es justo el motivo
+     * más común para querer cambiarlo) y por eso nunca podría confirmarlo. Requiere que
+     * quien ejecuta la acción ya esté autenticado como admin de esa empresa. */
+    void adminChangeEmail(Integer targetUserId, String newEmail);
     void verifyEmail(String token);
     void setupAccount(String token, String password);
     void resendVerificationToken(String email);

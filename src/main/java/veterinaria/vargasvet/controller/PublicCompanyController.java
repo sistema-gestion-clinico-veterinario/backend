@@ -28,4 +28,13 @@ public class PublicCompanyController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Marca de la empresa obtenida",
                 companyService.findBrandingBySlug(slug)));
     }
+
+    /** Buscador de clinica para el login sin slug - nombre, slug y logo unicamente,
+     * nunca datos sensibles. */
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<java.util.List<veterinaria.vargasvet.dto.response.CompanySearchResultResponse>>> search(
+            @org.springframework.web.bind.annotation.RequestParam(name = "q", required = false) String q) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Resultados de búsqueda",
+                companyService.searchByName(q)));
+    }
 }
