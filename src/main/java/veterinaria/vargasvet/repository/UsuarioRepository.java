@@ -47,6 +47,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
     Optional<Usuario> findByUsernameAndCompanyId(String username, Integer companyId);
     Optional<Usuario> findByUsernameAndCompanyIsNull(String username);
+    Optional<Usuario> findByEmailAndCompanyIsNull(String email);
 
     /** SOLO para el login: con username ya no unico globalmente, puede haber mas de un
      * candidato (uno por empresa) - el login desambigua filtrando por membresia activa
