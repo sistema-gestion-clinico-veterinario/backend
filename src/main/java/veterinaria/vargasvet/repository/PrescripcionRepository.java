@@ -31,9 +31,8 @@ public interface PrescripcionRepository extends JpaRepository<Prescripcion, Long
                    "JOIN historia_clinica hc ON hc.id = c.historia_clinica_id " +
                    "JOIN mascota m ON m.id = hc.mascota_id " +
                    "JOIN apoderado a ON a.id = m.apoderado_id " +
-                   "JOIN usuario u ON u.id = a.user_id " +
                    "LEFT JOIN empleado e ON e.id = p.veterinario_id " +
-                   "WHERE (:isSuperAdmin = true OR u.company_id = :companyId) " +
+                   "WHERE (:isSuperAdmin = true OR a.company_id = :companyId) " +
                    "AND (CAST(:query AS varchar) IS NULL " +
                    "     OR LOWER(p.medicamento) LIKE CAST(:query AS varchar) " +
                    "     OR LOWER(p.principio_activo) LIKE CAST(:query AS varchar) " +
@@ -52,9 +51,8 @@ public interface PrescripcionRepository extends JpaRepository<Prescripcion, Long
                         "JOIN historia_clinica hc ON hc.id = c.historia_clinica_id " +
                         "JOIN mascota m ON m.id = hc.mascota_id " +
                         "JOIN apoderado a ON a.id = m.apoderado_id " +
-                        "JOIN usuario u ON u.id = a.user_id " +
                         "LEFT JOIN empleado e ON e.id = p.veterinario_id " +
-                        "WHERE (:isSuperAdmin = true OR u.company_id = :companyId) " +
+                        "WHERE (:isSuperAdmin = true OR a.company_id = :companyId) " +
                         "AND (CAST(:query AS varchar) IS NULL " +
                         "     OR LOWER(p.medicamento) LIKE CAST(:query AS varchar) " +
                         "     OR LOWER(p.principio_activo) LIKE CAST(:query AS varchar) " +

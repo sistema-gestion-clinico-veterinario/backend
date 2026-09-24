@@ -84,6 +84,11 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Login exitoso", response));
     }
 
+    /** Prefijo del "state" cuando el redirect a Google viene de la pantalla de activacion
+     * de cuenta (no de login) - el unico canal que Google devuelve intacto es "state", asi
+     * que se usa para distinguir los dos casos y cargar el token de verificacion. */
+    private static final String GOOGLE_ACTIVATION_STATE_PREFIX = "activate:";
+
     /** Adonde Google redirige al navegador tras el consentimiento. No es una llamada del
      * frontend (fetch/XHR) sino una navegación real del navegador, así que nunca devuelve
      * JSON - siempre redirige (éxito o error) de vuelta al frontend. */
@@ -92,22 +97,37 @@ public class AuthController {
             @RequestParam(required = false) String code,
             @RequestParam(required = false) String state,
             @RequestParam(required = false) String error) {
+        boolean isActivation = state != null && state.startsWith(GOOGLE_ACTIVATION_STATE_PREFIX);
+        String activationToken = isActivation ? state.substring(GOOGLE_ACTIVATION_STATE_PREFIX.length()) : null;
+
         String redirectTarget;
         if (error != null || code == null || code.isBlank()) {
-            redirectTarget = frontendLoginUrl(state, "google_cancelado");
+            redirectTarget = isActivation
+                    ? frontendVerifyUrl(activationToken, "google_cancelado")
+                    : frontendLoginUrl(state, "google_cancelado");
         } else {
             try {
                 GoogleOAuthService.GoogleIdentity identity = googleOAuthService.resolveIdentity(code);
                 if (!identity.emailVerified()) {
-                    redirectTarget = frontendLoginUrl(state, "google_email_no_verificado");
+                    redirectTarget = isActivation
+                            ? frontendVerifyUrl(activationToken, "google_email_no_verificado")
+                            : frontendLoginUrl(state, "google_email_no_verificado");
                 } else {
-                    AuthResponse response = usuarioService.loginWithGoogle(identity.email(), state);
+                    AuthResponse response = isActivation
+                            ? usuarioService.activateAccountWithGoogle(activationToken, identity.email())
+                            : usuarioService.loginWithGoogle(identity.email(), state);
                     String exchangeCode = googleLoginExchangeStore.store(response);
                     redirectTarget = frontendUrl + "/auth/google/callback?code="
                             + java.net.URLEncoder.encode(exchangeCode, java.nio.charset.StandardCharsets.UTF_8);
                 }
+            } catch (veterinaria.vargasvet.exception.GoogleEmailMismatchException ex) {
+                redirectTarget = isActivation
+                        ? frontendVerifyUrl(activationToken, "google_correo_no_coincide")
+                        : frontendLoginUrl(state, "google_fallo");
             } catch (Exception ex) {
-                redirectTarget = frontendLoginUrl(state, "google_fallo");
+                redirectTarget = isActivation
+                        ? frontendVerifyUrl(activationToken, "google_fallo")
+                        : frontendLoginUrl(state, "google_fallo");
             }
         }
         return ResponseEntity.status(HttpStatus.FOUND)
@@ -137,6 +157,14 @@ public class AuthController {
         String path = (slug != null && !slug.isBlank()) ? "/" + slug + "/login" : "/login";
         return frontendUrl + path + "?authError="
                 + java.net.URLEncoder.encode(errorCode, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    /** El token va en el fragmento (#) igual que en el enlace original del correo - nunca
+     * en la query, para no dejarlo en logs de servidor ni en el Referer. */
+    private String frontendVerifyUrl(String token, String errorCode) {
+        return frontendUrl + "/auth/verify?authError="
+                + java.net.URLEncoder.encode(errorCode, java.nio.charset.StandardCharsets.UTF_8)
+                + "#token=" + java.net.URLEncoder.encode(token == null ? "" : token, java.nio.charset.StandardCharsets.UTF_8);
     }
 
     @PostMapping("/setup-account")

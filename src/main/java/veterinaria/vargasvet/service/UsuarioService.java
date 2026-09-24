@@ -28,6 +28,12 @@ public interface UsuarioService {
     void adminChangeEmail(Integer targetUserId, String newEmail);
     void verifyEmail(String token);
     void setupAccount(String token, String password);
+
+    /** Activa la cuenta invitada sin contraseña: el correo que Google verificó debe
+     * coincidir con el correo del usuario dueño del token (si no, GoogleEmailMismatchException) -
+     * no crea contraseña, la persona puede crear una despues desde su perfil o con
+     * "olvide mi contraseña" si algun dia necesita login con usuario/contraseña. */
+    AuthResponse activateAccountWithGoogle(String token, String googleEmail);
     void resendVerificationToken(String email);
     void changePassword(Integer usuarioId, veterinaria.vargasvet.dto.request.ChangePasswordDTO dto);
     void requestPasswordReset(veterinaria.vargasvet.dto.request.AdminPasswordResetRequest dto);
