@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class DatabaseSslModeConfigurationTest {
 
@@ -28,8 +29,9 @@ class DatabaseSslModeConfigurationTest {
     @Test
     void perfilLocalPermiteConexionSinTls() throws Exception {
         Path propsFile = Path.of("src/main/resources/application-local.properties");
-        String content = Files.readString(propsFile);
+        assumeTrue(Files.exists(propsFile), "application-local.properties no existe en este entorno (gitignored) - se omite");
 
+        String content = Files.readString(propsFile);
         assertThat(content).contains("sslmode=prefer");
     }
 }
