@@ -70,6 +70,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
     private final SessionSecurityService sessionSecurityService;
     private final SharedRateLimitService sharedRateLimitService;
+    private final veterinaria.vargasvet.security.AccountLockoutService accountLockoutService;
     private final AuthenticationAuditService authenticationAuditService;
     private final PasswordPolicyService passwordPolicyService;
     private final veterinaria.vargasvet.service.LegalDocumentService legalDocumentService;
@@ -302,6 +303,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         String slug = loginDTO.getSlug() == null ? null : loginDTO.getSlug().trim().toLowerCase(Locale.ROOT);
         sharedRateLimitService.enforce("login-account", username,
                 loginPerAccountPerWindow, java.time.Duration.ofMinutes(15));
+        accountLockoutService.assertNotLocked(username);
 
         // Aislamiento total entre empresas: no existe login "global" sin marca de
         // empresa - siempre hace falta el slug de la URL para saber contra cual empresa
@@ -348,6 +350,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         }
         credencial.setUltimoAcceso(veterinaria.vargasvet.util.AppClock.now());
         credencialRepository.save(credencial);
+        accountLockoutService.registerSuccessfulLogin(username);
 
         return buildLoginResponse(usuario, company, credencial, username);
     }
@@ -365,6 +368,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         String normalizedSlug = slug == null ? null : slug.trim().toLowerCase(Locale.ROOT);
         sharedRateLimitService.enforce("login-account", normalizedEmail,
                 loginPerAccountPerWindow, java.time.Duration.ofMinutes(15));
+        accountLockoutService.assertNotLocked(normalizedEmail);
 
         Usuario usuario = usuarioRepository.findByEmail(normalizedEmail).orElse(null);
         if (usuario == null) {
@@ -399,6 +403,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         credencial.setUltimoAcceso(veterinaria.vargasvet.util.AppClock.now());
         credencialRepository.save(credencial);
+        accountLockoutService.registerSuccessfulLogin(normalizedEmail);
 
         return buildLoginResponse(usuario, company, credencial, normalizedEmail);
     }
@@ -491,6 +496,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         String username = normalizeSecurityIdentifier(adminLoginDTO.getUsername());
         sharedRateLimitService.enforce("login-account", username,
                 loginPerAccountPerWindow, java.time.Duration.ofMinutes(15));
+        accountLockoutService.assertNotLocked(username);
 
         // SuperAdmin siempre tiene company = null - el namespace de username "sin
         // empresa" no se toca con el aislamiento entre empresas (esas cuentas nunca
@@ -523,6 +529,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         }
         credencial.setUltimoAcceso(veterinaria.vargasvet.util.AppClock.now());
         credencialRepository.save(credencial);
+        accountLockoutService.registerSuccessfulLogin(username);
 
         if (!usuario.isEmailVerified()) {
             authenticationAuditService.recordLoginFailure(usuario, username, "cuenta no habilitada");
@@ -692,6 +699,47 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             "SUSPENSION_CUENTA",
             "Seguridad",
             "Se suspendió administrativamente la cuenta del usuario: " + usuario.getEmail()
+        );
+    }
+
+    @Override
+    @Transactional
+    public void adminChangeEmail(Integer targetUserId, String newEmail) {
+        Usuario usuario = findManageableUser(targetUserId);
+        String normalizedNewEmail = normalizeSecurityIdentifier(newEmail);
+        Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
+
+        if (usuario.getEmail().equalsIgnoreCase(normalizedNewEmail)) {
+            throw new IllegalArgumentException("El nuevo correo debe ser diferente del correo actual");
+        }
+        boolean emailEnUso = companyId == null
+                ? usuarioRepository.existsByEmailIgnoreCaseAndCompanyIsNull(normalizedNewEmail)
+                : usuarioRepository.existsByEmailIgnoreCaseAndCompanyId(normalizedNewEmail, companyId);
+        if (emailEnUso) {
+            throw new IllegalArgumentException("El nuevo correo no está disponible en esta empresa");
+        }
+
+        String oldEmail = usuario.getEmail();
+        // Mismo resguardo que EmailChangeService: si el username coincidia con el correo
+        // viejo, se sincroniza - de lo contrario el correo viejo seguiria funcionando
+        // como credencial de acceso via el campo username, que este cambio no tocaria.
+        if (usuario.getUsername().equalsIgnoreCase(oldEmail)) {
+            boolean usernameEnUso = companyId == null
+                    ? usuarioRepository.existsByUsernameIgnoreCaseAndCompanyIsNull(normalizedNewEmail)
+                    : usuarioRepository.existsByUsernameIgnoreCaseAndCompanyId(normalizedNewEmail, companyId);
+            if (!usernameEnUso) {
+                usuario.setUsername(normalizedNewEmail);
+            }
+        }
+        usuario.setEmail(normalizedNewEmail);
+        sessionSecurityService.invalidateAllSessions(usuario);
+
+        auditLogService.log(
+            "CAMBIO_CORREO_ADMINISTRATIVO",
+            "Seguridad",
+            "Un administrador cambió el correo del usuario " + usuario.getUsername()
+                + " de " + oldEmail + " a " + normalizedNewEmail
+                + " (forzado, sin doble confirmación - ej. pérdida de acceso al correo anterior)"
         );
     }
 
