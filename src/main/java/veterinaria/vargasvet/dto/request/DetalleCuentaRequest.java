@@ -26,4 +26,6 @@ public class DetalleCuentaRequest {
 
     @NotNull(message = "El precio unitario es obligatorio")
     private BigDecimal precioUnitario;
+
+    private Long productoId;
 }

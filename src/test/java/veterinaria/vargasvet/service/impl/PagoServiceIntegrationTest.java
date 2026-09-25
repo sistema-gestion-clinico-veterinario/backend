@@ -22,10 +22,13 @@ import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.domain.enums.Genero;
 import veterinaria.vargasvet.domain.enums.MetodoPago;
 import veterinaria.vargasvet.domain.enums.PaymentStatus;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
 import veterinaria.vargasvet.domain.enums.TipoPurchase;
 import veterinaria.vargasvet.dto.request.PagoRequest;
+import veterinaria.vargasvet.dto.response.PagoListResponse;
 import veterinaria.vargasvet.dto.response.PagoResponse;
+import org.springframework.data.domain.Page;
 import veterinaria.vargasvet.repository.ApoderadoRepository;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
@@ -202,6 +205,66 @@ class PagoServiceIntegrationTest {
         assertThat(citaRepository.findById(cita.getId()).orElseThrow().getMontoPagado())
                 .isEqualByComparingTo(BigDecimal.ZERO);
         verifyNoInteractions(cajaService);
+    }
+
+    @Test
+    @DisplayName("[BUG] SuperAdmin sin empresa seleccionada no recibe pagos de todas las empresas mezclados")
+    void listarTodosRechazaSuperAdminSinCompanySeleccionadaEnLugarDeMezclarEmpresas() {
+        Cita citaEmpresaA = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
+        Integer companyAId = citaEmpresaA.getMascota().getApoderado().getCompany().getId();
+        pagoService.registrar(pagoEfectivo(citaEmpresaA.getId(), new BigDecimal("120.00")));
+
+        Cita citaEmpresaB = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
+        Integer companyBId = citaEmpresaB.getMascota().getApoderado().getCompany().getId();
+        pagoService.registrar(pagoEfectivo(citaEmpresaB.getId(), new BigDecimal("150.00")));
+
+        setSuperAdminContext();
+
+        assertThatThrownBy(() -> pagoService.listarTodos(0, 10, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("companyId");
+
+        Page<PagoListResponse> pagosEmpresaA = pagoService.listarTodos(0, 10, companyAId);
+        assertThat(pagosEmpresaA.getContent())
+                .extracting(PagoListResponse::getCitaId)
+                .containsExactly(citaEmpresaA.getId());
+
+        Page<PagoListResponse> pagosEmpresaB = pagoService.listarTodos(0, 10, companyBId);
+        assertThat(pagosEmpresaB.getContent())
+                .extracting(PagoListResponse::getCitaId)
+                .containsExactly(citaEmpresaB.getId());
+    }
+
+    @Test
+    @DisplayName("[BUG] SuperAdmin sin empresa seleccionada no recibe el historial de todas las empresas mezclado")
+    void listarHistorialPorEmpresaRechazaSuperAdminSinCompanySeleccionadaEnLugarDeMezclarEmpresas() {
+        Cita citaEmpresaA = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
+        Integer companyAId = citaEmpresaA.getMascota().getApoderado().getCompany().getId();
+        pagoService.registrar(pagoEfectivo(citaEmpresaA.getId(), new BigDecimal("120.00")));
+
+        Cita citaEmpresaB = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
+        pagoService.registrar(pagoEfectivo(citaEmpresaB.getId(), new BigDecimal("150.00")));
+
+        setSuperAdminContext();
+
+        assertThatThrownBy(() -> pagoService.listarHistorialPorEmpresa(
+                0, 10, null, null, null, null, null, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("companyId");
+
+        Page<PagoListResponse> pagosEmpresaA = pagoService.listarHistorialPorEmpresa(
+                0, 10, companyAId, null, null, null, null, null);
+        assertThat(pagosEmpresaA.getContent())
+                .extracting(PagoListResponse::getCitaId)
+                .containsExactly(citaEmpresaA.getId());
+    }
+
+    private void setSuperAdminContext() {
+        UsuarioPrincipal superAdmin = new UsuarioPrincipal(
+                999, "superadmin@vargasvet.test", "n/a", List.of(), null,
+                null, null, RolePurpose.PLATFORM_ADMIN, 0L);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(superAdmin, null, superAdmin.getAuthorities()));
     }
 
     private PagoRequest pagoEfectivo(Long citaId, BigDecimal montoRecibido) {

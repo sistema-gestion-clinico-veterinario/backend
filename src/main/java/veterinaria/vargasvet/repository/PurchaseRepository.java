@@ -26,8 +26,6 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
 
     boolean existsByCitaIdAndTipoPurchaseAndPaymentStatusNot(Long citaId, TipoPurchase tipoPurchase, PaymentStatus paymentStatus);
 
-    Page<Purchase> findAllByTipoPurchaseOrderByCreatedAtDesc(TipoPurchase tipoPurchase, Pageable pageable);
-
     @Query("SELECT p FROM Purchase p WHERE p.cita.mascota.apoderado.user.id = :userId AND p.tipoPurchase = :tipo ORDER BY p.createdAt DESC")
     Page<Purchase> findByApoderadoUserId(@Param("userId") Integer userId, @Param("tipo") TipoPurchase tipo, Pageable pageable);
 

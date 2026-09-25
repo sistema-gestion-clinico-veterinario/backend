@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.entity.DetalleCuentaCita;
+import veterinaria.vargasvet.domain.entity.Producto;
 import veterinaria.vargasvet.domain.enums.TipoDetalleCuenta;
 import veterinaria.vargasvet.dto.request.DetalleCuentaRequest;
 import veterinaria.vargasvet.dto.response.CuentaCitaResponse;
@@ -14,6 +15,7 @@ import veterinaria.vargasvet.dto.response.DetalleCuentaResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.DetalleCuentaCitaRepository;
+import veterinaria.vargasvet.repository.ProductoRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.CuentaCitaService;
 
@@ -27,6 +29,7 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
 
     private final CitaRepository citaRepository;
     private final DetalleCuentaCitaRepository detalleRepository;
+    private final ProductoRepository productoRepository;
 
     @Override
     @Transactional
@@ -74,10 +77,33 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
         detalle.setSubtotal(precio.multiply(BigDecimal.valueOf(request.getCantidad())).setScale(2, RoundingMode.HALF_UP));
         detalle.setEsServicioBase(false);
         detalle.setRegistradoPor(SecurityUtils.getCurrentUserEmail());
+
+        if (request.getProductoId() != null) {
+            Producto producto = obtenerProductoDeLaEmpresa(request.getProductoId(), getCompanyId(cita));
+            descontarStockOFallar(producto, request.getCantidad());
+            detalle.setProducto(producto);
+        }
+
         detalleRepository.save(detalle);
 
         recalcularTotal(cita);
         return map(cita, detalleRepository.findByCitaIdOrderByCreatedAtAscIdAsc(citaId));
+    }
+
+    private Producto obtenerProductoDeLaEmpresa(Long productoId, Integer companyId) {
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + productoId));
+        if (producto.getCompany() == null || !producto.getCompany().getId().equals(companyId)) {
+            throw new IllegalArgumentException("El producto no pertenece a esta empresa");
+        }
+        return producto;
+    }
+
+    private void descontarStockOFallar(Producto producto, Integer cantidad) {
+        int filasActualizadas = productoRepository.descontarStock(producto.getId(), cantidad);
+        if (filasActualizadas == 0) {
+            throw new IllegalArgumentException("Stock insuficiente para «" + producto.getNombre() + "»");
+        }
     }
 
     @Override
@@ -90,6 +116,9 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Concepto de cuenta no encontrado"));
         if (Boolean.TRUE.equals(detalle.getEsServicioBase())) {
             throw new IllegalArgumentException("El servicio principal de la cita no se puede eliminar");
+        }
+        if (detalle.getProducto() != null) {
+            productoRepository.restaurarStock(detalle.getProducto().getId(), detalle.getCantidad());
         }
         detalleRepository.delete(detalle);
         detalleRepository.flush();
@@ -115,6 +144,16 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
         } else if (precio.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Solo los descuentos pueden tener importe negativo");
         }
+
+        if (detalle.getProducto() != null) {
+            int delta = request.getCantidad() - detalle.getCantidad();
+            if (delta > 0) {
+                descontarStockOFallar(detalle.getProducto(), delta);
+            } else if (delta < 0) {
+                productoRepository.restaurarStock(detalle.getProducto().getId(), -delta);
+            }
+        }
+
         detalle.setTipo(request.getTipo());
         detalle.setDescripcion(request.getDescripcion().trim());
         detalle.setCantidad(request.getCantidad());
@@ -229,6 +268,7 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
         response.setPrecioUnitario(detalle.getPrecioUnitario());
         response.setSubtotal(detalle.getSubtotal());
         response.setEsServicioBase(detalle.getEsServicioBase());
+        response.setProductoId(detalle.getProducto() != null ? detalle.getProducto().getId() : null);
         return response;
     }
 }
