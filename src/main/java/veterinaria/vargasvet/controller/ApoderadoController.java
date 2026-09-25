@@ -28,7 +28,7 @@ public class ApoderadoController {
     private final AuditLogService auditLogService;
 
     @GetMapping
-    @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'LEER')")
+    @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'LEER') or @accesoValidator.can('VISTA_CAJA', 'LEER')")
     public ResponseEntity<ApiResponse<Page<ApoderadoListResponse>>> listar(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(required = false) String nombre,

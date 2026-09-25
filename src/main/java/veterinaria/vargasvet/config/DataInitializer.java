@@ -82,6 +82,7 @@ public class DataInitializer implements CommandLineRunner {
         createVentanaIfNotExists("CLINICA",           "Clínica",          "clinica",         4);
         createVentanaIfNotExists("PORTAL_APODERADO",  "Portal Apoderado", "apoderado",       5);
         createVentanaIfNotExists("FACTURACION",       "Facturación",      "facturacion",      6);
+        createVentanaIfNotExists("INVENTARIO",        "Inventario",       "inventario",       7);
     }
 
     private void createVentanaIfNotExists(String codigo, String nombre, String grupo, Integer orden) {
@@ -113,6 +114,7 @@ public class DataInitializer implements CommandLineRunner {
         Ventana clinica         = ventanaRepository.findByCodigo("CLINICA");
         Ventana portalApoderado = ventanaRepository.findByCodigo("PORTAL_APODERADO");
         Ventana facturacion     = ventanaRepository.findByCodigo("FACTURACION");
+        Ventana inventario      = ventanaRepository.findByCodigo("INVENTARIO");
 
         seed("VISTA_DASHBOARD",          "Dashboard",          "/dashboard",          "GENERAL", 1,  null, null);
         seed("VISTA_EMPLEADO_DASHBOARD", "Dashboard Empleado", "/empleado/dashboard", "GENERAL", 2,  null, null);
@@ -139,6 +141,9 @@ public class DataInitializer implements CommandLineRunner {
 
         seed("VISTA_CAJA",  "Caja",              "/caja",  "FACTURACION", 1, facturacion, null);
         seed("VISTA_PAGOS", "Historial de Pagos", "/pagos", "FACTURACION", 2, facturacion, null);
+
+        seed("VISTA_PRODUCTOS",             "Catálogo de Productos", "/admin/productos",          "INVENTARIO", 1, inventario, null);
+        seed("VISTA_CATEGORIAS_PRODUCTO",   "Categorías",            "/admin/categorias-producto", "INVENTARIO", 2, inventario, null);
 
         seed("VISTA_APODERADO_DASHBOARD", "Mi Portal",    "/apoderado/dashboard",    "APODERADO", 1, portalApoderado, null);
         seed("VISTA_MIS_MASCOTAS",        "Mis Mascotas", "/apoderado/mis-mascotas", "APODERADO", 2, portalApoderado, null);

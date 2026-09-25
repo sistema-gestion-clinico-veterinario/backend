@@ -14,4 +14,5 @@ public class DetalleCuentaResponse {
     private BigDecimal precioUnitario;
     private BigDecimal subtotal;
     private Boolean esServicioBase;
+    private Long productoId;
 }

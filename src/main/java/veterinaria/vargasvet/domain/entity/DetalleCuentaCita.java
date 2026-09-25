@@ -39,6 +39,10 @@ public class DetalleCuentaCita {
     @Column(name = "es_servicio_base", nullable = false)
     private Boolean esServicioBase = false;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "producto_id")
+    private Producto producto;
+
     @Column(name = "registrado_por", length = 150)
     private String registradoPor;
 

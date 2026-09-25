@@ -72,6 +72,13 @@ public class Purchase {
     @Column(name = "cliente_doc_walkin")
     private String clienteDocWalkin;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
+    @Column(name = "numero_venta")
+    private String numeroVenta;
+
     /** ID del pago generado en MercadoPago (para trazabilidad y refunds) */
     @Column(name = "mercadopago_id")
     private String mercadoPagoId;
