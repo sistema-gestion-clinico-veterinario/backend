@@ -33,6 +33,9 @@ public class ProductoRequest {
     @Min(value = 0, message = "El stock no puede ser negativo")
     private Integer stock = 0;
 
+    @Min(value = 0, message = "El stock mínimo no puede ser negativo")
+    private Integer stockMinimo = 0;
+
     @Size(max = 300, message = "La descripción no debe superar 300 caracteres")
     @Pattern(regexp = "^$|^(?=.*[\\p{L}\\p{N}])(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*$", message = "La descripción contiene caracteres no permitidos")
     private String descripcion;

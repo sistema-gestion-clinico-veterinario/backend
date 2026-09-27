@@ -32,6 +32,9 @@ public class Producto {
     @Column(name = "stock", nullable = false)
     private Integer stock = 0;
 
+    @Column(name = "stock_minimo", nullable = false)
+    private Integer stockMinimo = 0;
+
     @Column(length = 300)
     private String descripcion;
 
