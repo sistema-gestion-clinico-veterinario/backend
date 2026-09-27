@@ -7,8 +7,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "categoria_producto")
-public class CategoriaProducto {
+@Table(name = "unidad_medida")
+public class UnidadMedida {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,7 +18,7 @@ public class CategoriaProducto {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @Column(nullable = false, length = 80)
+    @Column(nullable = false, length = 40)
     private String nombre;
 
     @Column(length = 300)

@@ -143,7 +143,8 @@ public class DataInitializer implements CommandLineRunner {
         seed("VISTA_PAGOS", "Historial de Pagos", "/pagos", "FACTURACION", 2, facturacion, null);
 
         seed("VISTA_PRODUCTOS",             "Catálogo de Productos", "/admin/productos",          "INVENTARIO", 1, inventario, null);
-        seed("VISTA_CATEGORIAS_PRODUCTO",   "Categorías",            "/admin/categorias-producto", "INVENTARIO", 2, inventario, null);
+        seed("VISTA_LOTES",                 "Lotes",                 "/admin/lotes",               "INVENTARIO", 2, inventario, null);
+        seed("VISTA_CATEGORIAS_PRODUCTO",   "Configuración",         "/admin/categorias-producto", "INVENTARIO", 3, inventario, null);
 
         seed("VISTA_APODERADO_DASHBOARD", "Mi Portal",    "/apoderado/dashboard",    "APODERADO", 1, portalApoderado, null);
         seed("VISTA_MIS_MASCOTAS",        "Mis Mascotas", "/apoderado/mis-mascotas", "APODERADO", 2, portalApoderado, null);
@@ -295,6 +296,7 @@ public class DataInitializer implements CommandLineRunner {
                 "VISTA_VISTAS_LISTAR",
                 "VISTA_VISTAS_CREAR",
                 "VISTA_VISTAS_CONFIGURAR",
+                "VISTA_UNIDADES_MEDIDA",
                 "VISTA_EMPLEADOS_LISTAR",
                 "VISTA_EMPLEADOS_CREAR",
                 "VISTA_EMPLEADOS_ROLES",

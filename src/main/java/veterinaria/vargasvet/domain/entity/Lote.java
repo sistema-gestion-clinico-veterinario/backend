@@ -3,12 +3,14 @@ package veterinaria.vargasvet.domain.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "categoria_producto")
-public class CategoriaProducto {
+@Table(name = "lote")
+public class Lote {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,11 +20,24 @@ public class CategoriaProducto {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @Column(nullable = false, length = 80)
-    private String nombre;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "producto_id", nullable = false)
+    private Producto producto;
 
-    @Column(length = 300)
-    private String descripcion;
+    @Column(name = "numero_lote", nullable = false, length = 60)
+    private String numeroLote;
+
+    @Column(name = "fecha_vencimiento", nullable = false)
+    private LocalDate fechaVencimiento;
+
+    @Column(name = "fecha_ingreso")
+    private LocalDate fechaIngreso;
+
+    @Column(nullable = false)
+    private Integer cantidad = 0;
+
+    @Column(name = "costo_unitario", precision = 10, scale = 2)
+    private BigDecimal costoUnitario;
 
     @Column(nullable = false)
     private Boolean activo = true;

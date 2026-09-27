@@ -23,6 +23,7 @@ import veterinaria.vargasvet.repository.PurchaseRepository;
 import veterinaria.vargasvet.repository.VentaLibreDetalleRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.AuditLogService;
+import veterinaria.vargasvet.service.CajaService;
 import veterinaria.vargasvet.service.VentaLibreService;
 
 import java.math.BigDecimal;
@@ -42,6 +43,7 @@ public class VentaLibreServiceImpl implements VentaLibreService {
     private final ApoderadoRepository apoderadoRepository;
     private final CompanyRepository companyRepository;
     private final AuditLogService auditLogService;
+    private final CajaService cajaService;
 
     @Override
     @Transactional
@@ -116,6 +118,10 @@ public class VentaLibreServiceImpl implements VentaLibreService {
             detalle.setPurchase(purchase);
             ventaLibreDetalleRepository.save(detalle);
         }
+
+        cajaService.registrarIngresoPorVentaLibre(
+                companyId, total, request.getMetodoPago(),
+                "Venta " + purchase.getNumeroVenta() + (clienteNombre != null ? " - " + clienteNombre : " - Cliente de mostrador"));
 
         auditLogService.log(
                 companyId,

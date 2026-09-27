@@ -2,6 +2,7 @@ package veterinaria.vargasvet.dto.response;
 
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
+import veterinaria.vargasvet.domain.enums.EspecieMascota;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ public class CuentaCitaResponse {
     private Long citaId;
     private String numeroCita;
     private String mascotaNombre;
+    private EspecieMascota especie;
     private String apoderadoNombre;
     private String servicioNombre;
     private LocalDateTime fechaAtencion;
