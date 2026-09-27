@@ -47,18 +47,34 @@ public class RealtimeTicketService {
 
     @Transactional
     public Optional<Authentication> consume(String ticket) {
+        TokenProvider.RealtimeTicketDetails details;
         try {
-            TokenProvider.RealtimeTicketDetails details = tokenProvider.getRealtimeTicketDetails(ticket);
+            details = tokenProvider.getRealtimeTicketDetails(ticket);
+        } catch (RuntimeException ex) {
+            log.warn("Ticket WebSocket con firma o formato invalido: {}", ex.toString());
+            return Optional.empty();
+        }
+        try {
             UsuarioPrincipal principal = details.authentication().getPrincipal() instanceof UsuarioPrincipal value
                     ? value : null;
             if (principal == null || principal.getActiveRoleId() == null) {
+                log.warn("Ticket WebSocket sin rol activo (jti={}, usuario={})",
+                        details.jti(), details.authentication().getName());
                 return Optional.empty();
             }
-            boolean roleIsCurrent = usuarioPorRolRepository
+            var assignment = usuarioPorRolRepository
                     .findActiveAssignmentByUsuarioIdAndRoleId(principal.getId(), principal.getActiveRoleId())
-                    .filter(assignment -> assignment.getRol().getPermissionVersion() == principal.getPermissionVersion())
-                    .isPresent();
-            if (!roleIsCurrent) {
+                    .orElse(null);
+            if (assignment == null) {
+                log.warn("Ticket WebSocket con asignacion de rol inexistente (jti={}, usuario={}, roleId={})",
+                        details.jti(), details.authentication().getName(), principal.getActiveRoleId());
+                return Optional.empty();
+            }
+            if (assignment.getRol().getPermissionVersion() != principal.getPermissionVersion()) {
+                log.warn("Ticket WebSocket con permissionVersion desactualizada (jti={}, usuario={}, "
+                                + "ticket={}, actual={})",
+                        details.jti(), details.authentication().getName(),
+                        principal.getPermissionVersion(), assignment.getRol().getPermissionVersion());
                 return Optional.empty();
             }
             int consumed = realtimeTicketRepository.consumeOnce(
@@ -69,6 +85,7 @@ public class RealtimeTicketService {
             }
             return consumed == 1 ? Optional.of(details.authentication()) : Optional.empty();
         } catch (RuntimeException ex) {
+            log.warn("Error inesperado consumiendo ticket WebSocket (jti={}): {}", details.jti(), ex.toString());
             return Optional.empty();
         }
     }

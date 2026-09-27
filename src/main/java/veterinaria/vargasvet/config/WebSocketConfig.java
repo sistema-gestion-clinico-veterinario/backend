@@ -23,6 +23,7 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.security.access.AccessDeniedException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import veterinaria.vargasvet.security.UsuarioPrincipal;
 import veterinaria.vargasvet.service.RealtimeTicketService;
 import veterinaria.vargasvet.security.RolePermissionEvaluator;
@@ -34,6 +35,7 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
+@Slf4j
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final RealtimeTicketService ticketService;
@@ -95,19 +97,25 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
                 if (accessor == null) return message;
-                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    String ticket = accessor.getFirstNativeHeader("ticket");
-                    var authentication = ticketService.consume(ticket)
-                            .orElseThrow(() -> new AccessDeniedException("Ticket WebSocket inválido o expirado"));
-                    accessor.setUser(authentication);
-                } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
-                    if (!(accessor.getUser() instanceof org.springframework.security.core.Authentication authentication)
-                            || !authentication.isAuthenticated()) {
-                        throw new AccessDeniedException("WebSocket no autenticado");
+                try {
+                    if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                        String ticket = accessor.getFirstNativeHeader("ticket");
+                        var authentication = ticketService.consume(ticket)
+                                .orElseThrow(() -> new AccessDeniedException("Ticket WebSocket inválido o expirado"));
+                        accessor.setUser(authentication);
+                    } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+                        if (!(accessor.getUser() instanceof org.springframework.security.core.Authentication authentication)
+                                || !authentication.isAuthenticated()) {
+                            throw new AccessDeniedException("WebSocket no autenticado");
+                        }
+                        authorizeDestination(accessor.getDestination(), authentication, accessor.getSessionId());
+                    } else if (StompCommand.SEND.equals(accessor.getCommand())) {
+                        throw new AccessDeniedException("El envío de mensajes WebSocket no está habilitado");
                     }
-                    authorizeDestination(accessor.getDestination(), authentication, accessor.getSessionId());
-                } else if (StompCommand.SEND.equals(accessor.getCommand())) {
-                    throw new AccessDeniedException("El envío de mensajes WebSocket no está habilitado");
+                } catch (AccessDeniedException ex) {
+                    log.warn("WebSocket rechazado ({} {}): {}", accessor.getCommand(),
+                            accessor.getDestination(), ex.getMessage());
+                    throw ex;
                 }
                 return message;
             }
