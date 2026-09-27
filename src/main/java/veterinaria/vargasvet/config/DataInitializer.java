@@ -330,7 +330,6 @@ public class DataInitializer implements CommandLineRunner {
                 "RECETAS",
                 "SERVICIOS",
                 "APODERADOS",
-                "INVENTARIO",
                 "EMPLEADO_DASHBOARD",
                 "MI_HORARIO",
                 "APODERADO_DASHBOARD",
