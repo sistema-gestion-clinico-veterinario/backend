@@ -1,5 +1,6 @@
 package veterinaria.vargasvet.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -52,16 +53,19 @@ public class Vista {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ventana_id", nullable = true)
+    @JsonIgnore
     private Ventana ventana;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id", nullable = true)
     @ToString.Exclude
+    @JsonIgnore
     @Deprecated
     private Vista parent;
 
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
     @ToString.Exclude
+    @JsonIgnore
     @Deprecated
     private List<Vista> hijos = new ArrayList<>();
 }
