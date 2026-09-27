@@ -237,6 +237,7 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
         response.setCitaId(cita.getId());
         response.setNumeroCita(cita.getNumeroCita());
         response.setMascotaNombre(cita.getMascota().getNombreCompleto());
+        response.setEspecie(cita.getMascota().getEspecie());
         String nombre = cita.getMascota().getApoderado().getUser().getNombre();
         String apellido = cita.getMascota().getApoderado().getUser().getApellido();
         response.setApoderadoNombre(((nombre != null ? nombre : "") + " " + (apellido != null ? apellido : "")).trim());

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -29,6 +30,12 @@ public class Producto {
     @Column(name = "precio", precision = 10, scale = 2, nullable = false)
     private BigDecimal precio;
 
+    @Column(name = "costo", precision = 10, scale = 2)
+    private BigDecimal costo;
+
+    @Column(name = "marca", length = 80)
+    private String marca;
+
     @Column(name = "stock", nullable = false)
     private Integer stock = 0;
 
@@ -41,6 +48,22 @@ public class Producto {
     @Column(name = "imagen_url", length = 500)
     private String imagenUrl;
 
+    @Column(name = "sku", nullable = false, length = 30)
+    private String sku;
+
+    @Column(name = "codigo_barras", length = 64)
+    private String codigoBarras;
+
+    @Column(name = "fecha_vencimiento")
+    private LocalDate fechaVencimiento;
+
+    @Column(name = "requiere_receta", nullable = false)
+    private Boolean requiereReceta = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "unidad_medida_id")
+    private UnidadMedida unidadMedida;
+
     @Column(nullable = false)
     private Boolean activo = true;
 
@@ -49,6 +72,12 @@ public class Producto {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "created_by", updatable = false)
+    private String createdBy;
+
+    @Column(name = "updated_by")
+    private String updatedBy;
 
     @PrePersist
     protected void onCreate() {

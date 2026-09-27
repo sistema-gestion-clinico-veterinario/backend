@@ -14,6 +14,7 @@ import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CategoriaProductoRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CategoriaProductoService;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class CategoriaProductoServiceImpl implements CategoriaProductoService {
 
     private final CategoriaProductoRepository categoriaProductoRepository;
     private final CompanyRepository companyRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -55,9 +57,16 @@ public class CategoriaProductoServiceImpl implements CategoriaProductoService {
         CategoriaProducto categoria = new CategoriaProducto();
         categoria.setCompany(company);
         categoria.setNombre(nombre);
+        categoria.setDescripcion(normalizarVacio(request.getDescripcion()));
         categoria.setActivo(true);
+        categoria.setCreatedBy(SecurityUtils.getCurrentUserEmail());
+        categoria.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
 
-        return toResponse(categoriaProductoRepository.save(categoria));
+        CategoriaProducto guardada = categoriaProductoRepository.save(categoria);
+        auditLogService.log(resolvedCompanyId, "CREAR_CATEGORIA_PRODUCTO", "Inventario",
+                "Se creó la categoría de producto " + guardada.getNombre());
+
+        return toResponse(guardada);
     }
 
     @Override
@@ -68,8 +77,14 @@ public class CategoriaProductoServiceImpl implements CategoriaProductoService {
         validarPermisoSobreCategoria(categoria);
 
         categoria.setNombre(request.getNombre().trim());
+        categoria.setDescripcion(normalizarVacio(request.getDescripcion()));
+        categoria.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
 
-        return toResponse(categoriaProductoRepository.save(categoria));
+        CategoriaProducto guardada = categoriaProductoRepository.save(categoria);
+        auditLogService.log(guardada.getCompany().getId(), "ACTUALIZAR_CATEGORIA_PRODUCTO", "Inventario",
+                "Se actualizó la categoría de producto " + guardada.getNombre());
+
+        return toResponse(guardada);
     }
 
     @Override
@@ -79,7 +94,11 @@ public class CategoriaProductoServiceImpl implements CategoriaProductoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
         validarPermisoSobreCategoria(categoria);
         categoria.setActivo(false);
+        categoria.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
         categoriaProductoRepository.save(categoria);
+
+        auditLogService.log(categoria.getCompany().getId(), "DESACTIVAR_CATEGORIA_PRODUCTO", "Inventario",
+                "Se desactivó la categoría de producto " + categoria.getNombre());
     }
 
     @Override
@@ -89,14 +108,33 @@ public class CategoriaProductoServiceImpl implements CategoriaProductoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
         validarPermisoSobreCategoria(categoria);
         categoria.setActivo(!Boolean.TRUE.equals(categoria.getActivo()));
-        return toResponse(categoriaProductoRepository.save(categoria));
+        categoria.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
+
+        CategoriaProducto guardada = categoriaProductoRepository.save(categoria);
+        auditLogService.log(guardada.getCompany().getId(),
+                Boolean.TRUE.equals(guardada.getActivo()) ? "ACTIVAR_CATEGORIA_PRODUCTO" : "DESACTIVAR_CATEGORIA_PRODUCTO",
+                "Inventario",
+                (Boolean.TRUE.equals(guardada.getActivo()) ? "Se activó" : "Se desactivó") + " la categoría de producto " + guardada.getNombre());
+
+        return toResponse(guardada);
+    }
+
+    private String normalizarVacio(String valor) {
+        if (valor == null) return null;
+        String trimmed = valor.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private CategoriaProductoResponse toResponse(CategoriaProducto c) {
         CategoriaProductoResponse r = new CategoriaProductoResponse();
         r.setId(c.getId());
         r.setNombre(c.getNombre());
+        r.setDescripcion(c.getDescripcion());
         r.setActivo(c.getActivo());
+        r.setCreatedAt(c.getCreatedAt());
+        r.setCreatedBy(c.getCreatedBy());
+        r.setUpdatedAt(c.getUpdatedAt());
+        r.setUpdatedBy(c.getUpdatedBy());
         if (c.getCompany() != null) {
             r.setCompanyId(c.getCompany().getId());
             r.setCompanyName(c.getCompany().getName());

@@ -16,6 +16,8 @@ public interface CajaService {
 
     void registrarIngresoPorCita(Cita cita, Integer companyId, java.math.BigDecimal monto, MetodoPago metodoPago);
 
+    void registrarIngresoPorVentaLibre(Integer companyId, java.math.BigDecimal monto, MetodoPago metodoPago, String descripcion);
+
     MovimientoCajaResponse registrarDevolucion(Long citaId);
 
     MovimientoCajaResponse registrarEgreso(MovimientoEgresoRequest request);

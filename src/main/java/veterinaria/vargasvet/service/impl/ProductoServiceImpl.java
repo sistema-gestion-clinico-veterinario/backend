@@ -9,16 +9,23 @@ import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.CategoriaProducto;
 import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Producto;
+import veterinaria.vargasvet.domain.entity.UnidadMedida;
 import veterinaria.vargasvet.dto.request.ProductoRequest;
+import veterinaria.vargasvet.dto.response.CategoriaConteoResponse;
 import veterinaria.vargasvet.dto.response.ProductoResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CategoriaProductoRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.ProductoRepository;
+import veterinaria.vargasvet.repository.UnidadMedidaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.ProductoService;
 
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,23 +35,70 @@ public class ProductoServiceImpl implements ProductoService {
     private final ProductoRepository productoRepository;
     private final CompanyRepository companyRepository;
     private final CategoriaProductoRepository categoriaProductoRepository;
+    private final UnidadMedidaRepository unidadMedidaRepository;
+    private final AuditLogService auditLogService;
+
+    private static final String SKU_PREFIX = "PRD-";
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProductoResponse> listar(Integer companyId, int page, int size) {
+    public Page<ProductoResponse> buscar(Integer companyId, String search, Long categoriaId, Boolean activo, int page, int size) {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
-        return productoRepository.findByCompanyId(
+        Page<ProductoResponse> pagina = productoRepository.buscar(
                 resolvedCompanyId,
+                search != null ? search.trim() : null,
+                categoriaId,
+                activo,
                 PageRequest.of(page, size, Sort.by("nombre").ascending())
         ).map(this::toResponse);
+        enriquecerConProximoVencimiento(pagina.getContent());
+        return pagina;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductoResponse obtener(Long id) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
+        validarPermisoSobreProducto(producto);
+        ProductoResponse response = toResponse(producto);
+        enriquecerConProximoVencimiento(List.of(response));
+        return response;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ProductoResponse> listarActivos(Integer companyId) {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
-        return productoRepository.findByCompanyIdAndActivoTrue(resolvedCompanyId)
+        List<ProductoResponse> responses = productoRepository.findByCompanyIdAndActivoTrue(resolvedCompanyId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
+        enriquecerConProximoVencimiento(responses);
+        return responses;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CategoriaConteoResponse> conteoPorCategoria(Integer companyId) {
+        Integer resolvedCompanyId = resolverCompanyId(companyId);
+        return productoRepository.countActivosPorCategoria(resolvedCompanyId).stream()
+                .map(fila -> {
+                    CategoriaConteoResponse r = new CategoriaConteoResponse();
+                    r.setCategoriaId((Long) fila[0]);
+                    r.setCategoriaNombre((String) fila[1]);
+                    r.setCantidad((Long) fila[2]);
+                    return r;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private void enriquecerConProximoVencimiento(List<ProductoResponse> responses) {
+        if (responses.isEmpty()) return;
+        List<Long> ids = responses.stream().map(ProductoResponse::getId).collect(Collectors.toList());
+        Map<Long, LocalDate> proximos = new HashMap<>();
+        for (Object[] fila : productoRepository.findProximoVencimientoPorProducto(ids)) {
+            proximos.put((Long) fila[0], (LocalDate) fila[1]);
+        }
+        responses.forEach(r -> r.setProximoVencimientoLote(proximos.get(r.getId())));
     }
 
     @Override
@@ -55,19 +109,33 @@ public class ProductoServiceImpl implements ProductoService {
         Company company = companyRepository.findById(resolvedCompanyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + resolvedCompanyId));
         CategoriaProducto categoria = obtenerCategoriaDeLaEmpresa(request.getCategoriaId(), resolvedCompanyId);
+        UnidadMedida unidadMedida = obtenerUnidadMedidaDeLaEmpresa(request.getUnidadMedidaId(), resolvedCompanyId);
 
         Producto producto = new Producto();
         producto.setCompany(company);
         producto.setNombre(nombre);
         producto.setCategoria(categoria);
         producto.setPrecio(request.getPrecio());
+        producto.setCosto(request.getCosto());
+        producto.setMarca(normalizarVacio(request.getMarca()));
         producto.setStock(request.getStock() != null ? request.getStock() : 0);
         producto.setStockMinimo(request.getStockMinimo() != null ? request.getStockMinimo() : 0);
         producto.setDescripcion(request.getDescripcion() != null ? request.getDescripcion().trim() : null);
         producto.setImagenUrl(request.getImagenUrl());
+        producto.setSku(generarSiguienteSku(resolvedCompanyId));
+        producto.setCodigoBarras(normalizarVacio(request.getCodigoBarras()));
+        producto.setFechaVencimiento(request.getFechaVencimiento());
+        producto.setRequiereReceta(Boolean.TRUE.equals(request.getRequiereReceta()));
+        producto.setUnidadMedida(unidadMedida);
         producto.setActivo(true);
+        producto.setCreatedBy(SecurityUtils.getCurrentUserEmail());
+        producto.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
 
-        return toResponse(productoRepository.save(producto));
+        Producto guardado = productoRepository.save(producto);
+        auditLogService.log(resolvedCompanyId, "CREAR_PRODUCTO", "Inventario",
+                "Se creó el producto " + guardado.getNombre() + " (" + guardado.getSku() + ")");
+
+        return toResponse(guardado);
     }
 
     @Override
@@ -77,10 +145,13 @@ public class ProductoServiceImpl implements ProductoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
         validarPermisoSobreProducto(producto);
         CategoriaProducto categoria = obtenerCategoriaDeLaEmpresa(request.getCategoriaId(), producto.getCompany().getId());
+        UnidadMedida unidadMedida = obtenerUnidadMedidaDeLaEmpresa(request.getUnidadMedidaId(), producto.getCompany().getId());
 
         producto.setNombre(request.getNombre().trim());
         producto.setCategoria(categoria);
         producto.setPrecio(request.getPrecio());
+        producto.setCosto(request.getCosto());
+        producto.setMarca(normalizarVacio(request.getMarca()));
         if (request.getStock() != null) {
             producto.setStock(request.getStock());
         }
@@ -89,8 +160,17 @@ public class ProductoServiceImpl implements ProductoService {
         }
         producto.setDescripcion(request.getDescripcion() != null ? request.getDescripcion().trim() : null);
         producto.setImagenUrl(request.getImagenUrl());
+        producto.setCodigoBarras(normalizarVacio(request.getCodigoBarras()));
+        producto.setFechaVencimiento(request.getFechaVencimiento());
+        producto.setRequiereReceta(Boolean.TRUE.equals(request.getRequiereReceta()));
+        producto.setUnidadMedida(unidadMedida);
+        producto.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
 
-        return toResponse(productoRepository.save(producto));
+        Producto guardado = productoRepository.save(producto);
+        auditLogService.log(guardado.getCompany().getId(), "ACTUALIZAR_PRODUCTO", "Inventario",
+                "Se actualizó el producto " + guardado.getNombre() + " (" + guardado.getSku() + ")");
+
+        return toResponse(guardado);
     }
 
     @Override
@@ -100,7 +180,11 @@ public class ProductoServiceImpl implements ProductoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
         validarPermisoSobreProducto(producto);
         producto.setActivo(false);
+        producto.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
         productoRepository.save(producto);
+
+        auditLogService.log(producto.getCompany().getId(), "DESACTIVAR_PRODUCTO", "Inventario",
+                "Se desactivó el producto " + producto.getNombre() + " (" + producto.getSku() + ")");
     }
 
     @Override
@@ -110,7 +194,15 @@ public class ProductoServiceImpl implements ProductoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
         validarPermisoSobreProducto(producto);
         producto.setActivo(!Boolean.TRUE.equals(producto.getActivo()));
-        return toResponse(productoRepository.save(producto));
+        producto.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
+
+        Producto guardado = productoRepository.save(producto);
+        auditLogService.log(guardado.getCompany().getId(),
+                Boolean.TRUE.equals(guardado.getActivo()) ? "ACTIVAR_PRODUCTO" : "DESACTIVAR_PRODUCTO",
+                "Inventario",
+                (Boolean.TRUE.equals(guardado.getActivo()) ? "Se activó" : "Se desactivó") + " el producto " + guardado.getNombre() + " (" + guardado.getSku() + ")");
+
+        return toResponse(guardado);
     }
 
     private CategoriaProducto obtenerCategoriaDeLaEmpresa(Long categoriaId, Integer companyId) {
@@ -122,16 +214,58 @@ public class ProductoServiceImpl implements ProductoService {
         return categoria;
     }
 
+    private UnidadMedida obtenerUnidadMedidaDeLaEmpresa(Long unidadMedidaId, Integer companyId) {
+        if (unidadMedidaId == null) {
+            return null;
+        }
+        UnidadMedida unidad = unidadMedidaRepository.findById(unidadMedidaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Unidad de medida no encontrada con ID: " + unidadMedidaId));
+        if (unidad.getCompany() == null || !unidad.getCompany().getId().equals(companyId)) {
+            throw new IllegalArgumentException("La unidad de medida no pertenece a esta empresa");
+        }
+        return unidad;
+    }
+
+    private String generarSiguienteSku(Integer companyId) {
+        int max = productoRepository.findSkusByCompanyId(companyId).stream()
+                .filter(sku -> sku != null && sku.startsWith(SKU_PREFIX))
+                .mapToInt(sku -> {
+                    try {
+                        return Integer.parseInt(sku.substring(SKU_PREFIX.length()));
+                    } catch (NumberFormatException e) {
+                        return 0;
+                    }
+                })
+                .max().orElse(0);
+        return String.format("%s%05d", SKU_PREFIX, max + 1);
+    }
+
+    private String normalizarVacio(String valor) {
+        if (valor == null) return null;
+        String trimmed = valor.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
     private ProductoResponse toResponse(Producto p) {
         ProductoResponse r = new ProductoResponse();
         r.setId(p.getId());
         r.setNombre(p.getNombre());
         r.setPrecio(p.getPrecio());
+        r.setCosto(p.getCosto());
+        r.setMarca(p.getMarca());
         r.setStock(p.getStock());
         r.setStockMinimo(p.getStockMinimo());
         r.setDescripcion(p.getDescripcion());
         r.setImagenUrl(p.getImagenUrl());
+        r.setSku(p.getSku());
+        r.setCodigoBarras(p.getCodigoBarras());
+        r.setFechaVencimiento(p.getFechaVencimiento());
+        r.setRequiereReceta(p.getRequiereReceta());
         r.setActivo(p.getActivo());
+        r.setCreatedAt(p.getCreatedAt());
+        r.setCreatedBy(p.getCreatedBy());
+        r.setUpdatedAt(p.getUpdatedAt());
+        r.setUpdatedBy(p.getUpdatedBy());
         if (p.getCompany() != null) {
             r.setCompanyId(p.getCompany().getId());
             r.setCompanyName(p.getCompany().getName());
@@ -139,6 +273,10 @@ public class ProductoServiceImpl implements ProductoService {
         if (p.getCategoria() != null) {
             r.setCategoriaId(p.getCategoria().getId());
             r.setCategoriaNombre(p.getCategoria().getNombre());
+        }
+        if (p.getUnidadMedida() != null) {
+            r.setUnidadMedidaId(p.getUnidadMedida().getId());
+            r.setUnidadMedidaNombre(p.getUnidadMedida().getNombre());
         }
         return r;
     }

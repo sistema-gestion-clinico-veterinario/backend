@@ -71,6 +71,28 @@ public class CajaServiceImpl implements CajaService {
 
     @Override
     @Transactional
+    public void registrarIngresoPorVentaLibre(Integer companyId, BigDecimal monto, MetodoPago metodoPago, String descripcion) {
+        if (companyId == null || monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        requireSesionAbierta(companyId);
+        MovimientoCaja m = new MovimientoCaja();
+        m.setTipo(TipoMovimiento.INGRESO);
+        m.setConcepto(ConceptoMovimiento.VENTA_PRODUCTO);
+        m.setMonto(monto);
+        m.setMetodoPago(metodoPago);
+        m.setCitaId(null);
+        m.setDescripcion(descripcion);
+        m.setRegistradoPor(SecurityUtils.getCurrentUserEmail());
+        m.setCompanyId(companyId);
+        movimientoRepo.save(m);
+
+        auditLogService.log(companyId, "REGISTRAR_INGRESO_CAJA", "Caja",
+            "Se registró un ingreso de S/ " + monto + " (" + metodoPago + ") por venta de productos: " + descripcion);
+    }
+
+    @Override
+    @Transactional
     public MovimientoCajaResponse registrarDevolucion(Long citaId) {
         Cita cita = citaRepository.findById(citaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada: " + citaId));
@@ -155,11 +177,17 @@ public class CajaServiceImpl implements CajaService {
         BigDecimal ingresos    = movimientoRepo.sumByTipo(companyId, TipoMovimiento.INGRESO, ini, fin);
         BigDecimal egresos     = movimientoRepo.sumByTipo(companyId, TipoMovimiento.EGRESO, ini, fin);
         BigDecimal devoluciones = movimientoRepo.sumByTipo(companyId, TipoMovimiento.DEVOLUCION, ini, fin);
+        BigDecimal ingresosCitas = movimientoRepo.sumByTipoAndConcepto(
+                companyId, TipoMovimiento.INGRESO, ConceptoMovimiento.PAGO_CITA, ini, fin);
+        BigDecimal ingresosProductos = movimientoRepo.sumByTipoAndConcepto(
+                companyId, TipoMovimiento.INGRESO, ConceptoMovimiento.VENTA_PRODUCTO, ini, fin);
 
         ResumenCajaResponse r = new ResumenCajaResponse();
         r.setTotalIngresos(ingresos);
         r.setTotalEgresos(egresos);
         r.setTotalDevoluciones(devoluciones);
+        r.setIngresosCitas(ingresosCitas);
+        r.setIngresosProductos(ingresosProductos);
         r.setSaldo(ingresos.subtract(egresos).subtract(devoluciones));
         return r;
     }

@@ -2,13 +2,14 @@ package veterinaria.vargasvet.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import veterinaria.vargasvet.domain.enums.MotivoAjusteStock;
 
 import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "categoria_producto")
-public class CategoriaProducto {
+@Table(name = "ajuste_stock")
+public class AjusteStock {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,35 +19,34 @@ public class CategoriaProducto {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    @Column(nullable = false, length = 80)
-    private String nombre;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "producto_id", nullable = false)
+    private Producto producto;
 
-    @Column(length = 300)
-    private String descripcion;
+    @Column(name = "stock_anterior", nullable = false)
+    private Integer stockAnterior;
+
+    @Column(name = "stock_nuevo", nullable = false)
+    private Integer stockNuevo;
 
     @Column(nullable = false)
-    private Boolean activo = true;
+    private Integer diferencia;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private MotivoAjusteStock motivo;
+
+    @Column(length = 300)
+    private String observaciones;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     @Column(name = "created_by", updatable = false)
     private String createdBy;
-
-    @Column(name = "updated_by")
-    private String updatedBy;
 
     @PrePersist
     protected void onCreate() {
         createdAt = veterinaria.vargasvet.util.AppClock.now();
-        updatedAt = veterinaria.vargasvet.util.AppClock.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = veterinaria.vargasvet.util.AppClock.now();
     }
 }
