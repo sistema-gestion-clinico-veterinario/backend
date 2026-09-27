@@ -25,7 +25,7 @@ public class ControlPreventivo {
     private Long id;
 
     @Version
-    private Long version = 0L;
+    private Long version;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "mascota_id", nullable = false)

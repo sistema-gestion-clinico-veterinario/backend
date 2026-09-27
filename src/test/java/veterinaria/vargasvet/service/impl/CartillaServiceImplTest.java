@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -176,6 +177,93 @@ class CartillaServiceImplTest {
             assertThat(control.getFechaRecomendada()).isEqualTo(AppClock.today().plusDays(21));
             assertThat(control.getEstado()).isEqualTo(EstadoControlPreventivo.PROGRAMADO);
         });
+    }
+
+    @Test
+    @DisplayName("[BUG] Rechaza registrar sin servicioId cuando hay mas de un servicio activo del mismo tipo")
+    void rechazaServicioAmbiguoSinIdExplicito() {
+        ServiciosVeterinarios otroServicio = new ServiciosVeterinarios();
+        otroServicio.setId(41L);
+        otroServicio.setCompany(company);
+        otroServicio.setNombre("Vacunacion combo");
+        otroServicio.setTipoControlPreventivo(TipoControlServicio.VACUNACION);
+        otroServicio.setDuracionEstimada(20);
+
+        when(mascotaRepository.findByIdForUpdate(20L)).thenReturn(Optional.of(mascota));
+        when(empleadoRepository.findActiveByUserId(11)).thenReturn(Optional.of(veterinario));
+        when(serviciosRepository.findByCompanyIdAndDisponibleTrueAndActivoTrue(7))
+                .thenReturn(List.of(servicio, otroServicio));
+
+        CartillaAplicacionRequest request = new CartillaAplicacionRequest();
+        request.setMascotaId(20L);
+        request.setTipoVacunaId(50L);
+        request.setFechaAplicacion(AppClock.today());
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+            security.when(SecurityUtils::getCurrentUserId).thenReturn(11);
+            security.when(SecurityUtils::getCurrentUserEmail).thenReturn("vet@example.com");
+            assertThatThrownBy(() -> service.registrarVacunacion(request))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Hay mas de un servicio");
+        }
+        verify(citaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("[BUG] Rechaza el cobro cuando el profesional ya tiene otra mascota agendada en ese horario")
+    void rechazaCitaCobroSiVeterinarioTieneOtraMascotaEnElHorario() {
+        when(mascotaRepository.findByIdForUpdate(20L)).thenReturn(Optional.of(mascota));
+        when(empleadoRepository.findActiveByUserId(11)).thenReturn(Optional.of(veterinario));
+        when(serviciosRepository.findById(40L)).thenReturn(Optional.of(servicio));
+        when(tipoVacunaRepository.findById(50L)).thenReturn(Optional.of(vacuna));
+        when(citaRepository.existsOverlappingCitaVeterinarioOtraMascota(eq(30L), eq(20L), any(), any()))
+                .thenReturn(true);
+
+        CartillaAplicacionRequest request = new CartillaAplicacionRequest();
+        request.setMascotaId(20L);
+        request.setServicioId(40L);
+        request.setTipoVacunaId(50L);
+        request.setFechaAplicacion(AppClock.today());
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+            security.when(SecurityUtils::getCurrentUserId).thenReturn(11);
+            security.when(SecurityUtils::getCurrentUserEmail).thenReturn("vet@example.com");
+            assertThatThrownBy(() -> service.registrarVacunacion(request))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("otra mascota");
+        }
+        verify(citaRepository, never()).save(any());
+        verify(vacunaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("[BUG] Rechaza el cobro cuando la mascota ya tiene cita con otro profesional en ese horario")
+    void rechazaCitaCobroSiMascotaTieneOtroProfesionalEnElHorario() {
+        when(mascotaRepository.findByIdForUpdate(20L)).thenReturn(Optional.of(mascota));
+        when(empleadoRepository.findActiveByUserId(11)).thenReturn(Optional.of(veterinario));
+        when(serviciosRepository.findById(40L)).thenReturn(Optional.of(servicio));
+        when(tipoVacunaRepository.findById(50L)).thenReturn(Optional.of(vacuna));
+        when(citaRepository.existsOverlappingCitaMascotaOtroVeterinario(eq(20L), eq(30L), any(), any()))
+                .thenReturn(true);
+
+        CartillaAplicacionRequest request = new CartillaAplicacionRequest();
+        request.setMascotaId(20L);
+        request.setServicioId(40L);
+        request.setTipoVacunaId(50L);
+        request.setFechaAplicacion(AppClock.today());
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+            security.when(SecurityUtils::getCurrentUserId).thenReturn(11);
+            security.when(SecurityUtils::getCurrentUserEmail).thenReturn("vet@example.com");
+            assertThatThrownBy(() -> service.registrarVacunacion(request))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("otro profesional");
+        }
+        verify(citaRepository, never()).save(any());
+        verify(vacunaRepository, never()).save(any());
     }
 
     @Test

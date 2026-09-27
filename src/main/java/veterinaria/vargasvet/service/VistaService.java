@@ -3,10 +3,12 @@ package veterinaria.vargasvet.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import veterinaria.vargasvet.domain.entity.Ventana;
 import veterinaria.vargasvet.domain.entity.Vista;
 import veterinaria.vargasvet.dto.request.VistaRequestDTO;
 import veterinaria.vargasvet.dto.response.VistaDTO;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
+import veterinaria.vargasvet.repository.VentanaRepository;
 import veterinaria.vargasvet.repository.VistaRepository;
 
 import java.util.List;
@@ -18,6 +20,7 @@ import veterinaria.vargasvet.dto.request.VistaReorderDTO;
 public class VistaService {
 
     private final VistaRepository vistaRepository;
+    private final VentanaRepository ventanaRepository;
 
     @Transactional(readOnly = true)
     public List<VistaDTO> listarTodas() {
@@ -48,6 +51,7 @@ public class VistaService {
         vista.setOrdenGrupo(request.getOrdenGrupo());
         vista.setActivo(request.isActivo());
         vista.setIcono(request.getIcono());
+        vista.setVentana(resolveVentana(request.getVentanaId()));
 
         return toDTO(vistaRepository.save(vista));
     }
@@ -66,8 +70,17 @@ public class VistaService {
         vista.setOrdenGrupo(request.getOrdenGrupo());
         vista.setActivo(request.isActivo());
         vista.setIcono(request.getIcono());
+        vista.setVentana(resolveVentana(request.getVentanaId()));
 
         return toDTO(vistaRepository.save(vista));
+    }
+
+    private Ventana resolveVentana(Integer ventanaId) {
+        if (ventanaId == null) {
+            return null;
+        }
+        return ventanaRepository.findById(ventanaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ventana no encontrada"));
     }
 
     @Transactional
@@ -103,6 +116,8 @@ public class VistaService {
                 .ordenGrupo(v.getOrdenGrupo())
                 .activo(v.isActivo())
                 .icono(v.getIcono())
+                .ventanaId(v.getVentana() != null ? v.getVentana().getId() : null)
+                .ventanaNombre(v.getVentana() != null ? v.getVentana().getNombre() : null)
                 .build();
     }
 

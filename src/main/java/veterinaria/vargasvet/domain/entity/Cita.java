@@ -28,7 +28,7 @@ public class Cita {
     private String numeroCita;
 
     @Version
-    private Long version = 0L;
+    private Long version;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mascota_id", nullable = false)
