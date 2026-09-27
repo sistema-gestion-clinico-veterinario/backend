@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -169,7 +170,7 @@ public class CartillaServiceImpl implements CartillaService {
                 tipo, tipoVacuna);
 
         Cita cobro = crearCitaCobro(mascota, empleado, servicio, tipo.name(), total, aplicacion);
-        citaRepository.save(cobro);
+        cobro = citaRepository.save(cobro);
         notificarCaja(cobro, mascota, tipo, total);
 
         if (tipo == TipoControlPreventivo.VACUNACION) {
@@ -225,13 +226,24 @@ public class CartillaServiceImpl implements CartillaService {
                 ? servicio.getDuracionEstimada() : 30;
         LocalDateTime ahora = fechaAplicacion.isEqual(AppClock.today())
                 ? AppClock.now() : fechaAplicacion.atTime(LocalTime.NOON);
+        LocalDateTime fin = ahora.plusMinutes(duracion);
+
+        if (citaRepository.existsOverlappingCitaVeterinarioOtraMascota(empleado.getId(), mascota.getId(), ahora, fin)) {
+            throw new IllegalArgumentException(
+                    "El profesional ya tiene otra cita programada en ese horario con otra mascota");
+        }
+        if (citaRepository.existsOverlappingCitaMascotaOtroVeterinario(mascota.getId(), empleado.getId(), ahora, fin)) {
+            throw new IllegalArgumentException(
+                    "La mascota ya tiene una cita programada en ese horario con otro profesional");
+        }
+
         Cita cita = new Cita();
         cita.setMascota(mascota);
         cita.setEmpleado(empleado);
         cita.setServicio(servicio);
         cita.setMotivoCita(motivo);
         cita.setFechaHoraInicio(ahora);
-        cita.setFechaHoraFin(ahora.plusMinutes(duracion));
+        cita.setFechaHoraFin(fin);
         cita.setDuracionMinutos(duracion);
         cita.setEstado(EstadoCita.COMPLETADA);
         cita.setTotalServicio(total);
@@ -260,11 +272,19 @@ public class CartillaServiceImpl implements CartillaService {
             Integer companyId = mascota.getApoderado().getCompany().getId();
             TipoControlServicio esperado = tipo == TipoControlPreventivo.VACUNACION
                     ? TipoControlServicio.VACUNACION : TipoControlServicio.DESPARASITACION;
-            return serviciosRepository.findByCompanyIdAndDisponibleTrueAndActivoTrue(companyId).stream()
+            String tipoTexto = tipo == TipoControlPreventivo.VACUNACION ? "vacunacion" : "desparasitacion";
+            List<ServiciosVeterinarios> candidatos = serviciosRepository
+                    .findByCompanyIdAndDisponibleTrueAndActivoTrue(companyId).stream()
                     .filter(s -> s.getTipoControlPreventivo() == esperado)
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("No existe un servicio activo configurado para "
-                            + (tipo == TipoControlPreventivo.VACUNACION ? "vacunacion" : "desparasitacion")));
+                    .toList();
+            if (candidatos.isEmpty()) {
+                throw new IllegalArgumentException("No existe un servicio activo configurado para " + tipoTexto);
+            }
+            if (candidatos.size() > 1) {
+                throw new IllegalArgumentException("Hay mas de un servicio configurado para " + tipoTexto
+                        + "; debe indicar cual usar (servicioId)");
+            }
+            return candidatos.get(0);
         }
         ServiciosVeterinarios servicio = serviciosRepository.findById(servicioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Servicio preventivo no encontrado"));

@@ -11,6 +11,8 @@ public class VistaDTO {
     private String nombre;
     private String ruta;
     private String grupo;
+    private Integer ventanaId;
+    private String ventanaNombre;
     private Integer orden;
     private Integer ordenGrupo;
     private boolean activo;

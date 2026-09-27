@@ -172,6 +172,26 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
         return existsOverlappingCitaMascota(mascotaId, fechaHoraInicio, fechaHoraFin, citaId);
     }
 
+    @Query("SELECT COUNT(c) > 0 FROM Cita c WHERE c.empleado.id = :veterinarioId " +
+            "AND c.mascota.id <> :mascotaId " +
+            "AND " + ESTADOS_NO_ACTIVOS + " " +
+            "AND c.fechaHoraInicio < :fechaHoraFin " +
+            "AND c.fechaHoraFin > :fechaHoraInicio")
+    boolean existsOverlappingCitaVeterinarioOtraMascota(@Param("veterinarioId") Long veterinarioId,
+                                                        @Param("mascotaId") Long mascotaId,
+                                                        @Param("fechaHoraInicio") LocalDateTime fechaHoraInicio,
+                                                        @Param("fechaHoraFin") LocalDateTime fechaHoraFin);
+
+    @Query("SELECT COUNT(c) > 0 FROM Cita c WHERE c.mascota.id = :mascotaId " +
+            "AND c.empleado.id <> :veterinarioId " +
+            "AND " + ESTADOS_NO_ACTIVOS + " " +
+            "AND c.fechaHoraInicio < :fechaHoraFin " +
+            "AND c.fechaHoraFin > :fechaHoraInicio")
+    boolean existsOverlappingCitaMascotaOtroVeterinario(@Param("mascotaId") Long mascotaId,
+                                                        @Param("veterinarioId") Long veterinarioId,
+                                                        @Param("fechaHoraInicio") LocalDateTime fechaHoraInicio,
+                                                        @Param("fechaHoraFin") LocalDateTime fechaHoraFin);
+
     @Query(value = "SELECT c FROM Cita c JOIN FETCH c.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
             "LEFT JOIN FETCH c.consulta " +
             "WHERE a.company.id = :companyId AND c.eliminada = false " +

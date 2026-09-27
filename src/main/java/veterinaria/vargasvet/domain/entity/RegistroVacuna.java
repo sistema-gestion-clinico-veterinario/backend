@@ -21,7 +21,7 @@ public class RegistroVacuna {
     private Long id;
 
     @Version
-    private Long version = 0L;
+    private Long version;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "historia_clinica_id", nullable = false)

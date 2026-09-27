@@ -32,7 +32,10 @@ public class ServicioController {
     }
 
     @GetMapping("/available")
-    @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'LEER')")
+    @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'LEER') "
+            + "or @accesoValidator.can('VISTA_CARTILLA', 'LEER') "
+            + "or @accesoValidator.can('VISTA_CITAS_AGENDA', 'LEER') "
+            + "or @accesoValidator.can('VISTA_MIS_CITAS', 'LEER')")
     public ResponseEntity<ApiResponse<List<ServicioResponse>>> listarDisponibles(
             @RequestParam(required = false) Integer companyId) {
         List<ServicioResponse> resultado = servicioService.listarDisponibles(companyId);

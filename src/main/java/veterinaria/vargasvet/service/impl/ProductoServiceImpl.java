@@ -62,6 +62,7 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setCategoria(categoria);
         producto.setPrecio(request.getPrecio());
         producto.setStock(request.getStock() != null ? request.getStock() : 0);
+        producto.setStockMinimo(request.getStockMinimo() != null ? request.getStockMinimo() : 0);
         producto.setDescripcion(request.getDescripcion() != null ? request.getDescripcion().trim() : null);
         producto.setImagenUrl(request.getImagenUrl());
         producto.setActivo(true);
@@ -82,6 +83,9 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setPrecio(request.getPrecio());
         if (request.getStock() != null) {
             producto.setStock(request.getStock());
+        }
+        if (request.getStockMinimo() != null) {
+            producto.setStockMinimo(request.getStockMinimo());
         }
         producto.setDescripcion(request.getDescripcion() != null ? request.getDescripcion().trim() : null);
         producto.setImagenUrl(request.getImagenUrl());
@@ -124,6 +128,7 @@ public class ProductoServiceImpl implements ProductoService {
         r.setNombre(p.getNombre());
         r.setPrecio(p.getPrecio());
         r.setStock(p.getStock());
+        r.setStockMinimo(p.getStockMinimo());
         r.setDescripcion(p.getDescripcion());
         r.setImagenUrl(p.getImagenUrl());
         r.setActivo(p.getActivo());

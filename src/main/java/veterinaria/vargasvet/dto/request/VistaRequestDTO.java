@@ -28,6 +28,7 @@ public class VistaRequestDTO {
     private Integer orden;
     private Integer ordenGrupo;
     private boolean activo = true;
+    private Integer ventanaId;
 
     @Size(max = 60, message = "El ícono no debe superar 60 caracteres")
     @Pattern(regexp = "^$|^[A-Za-z0-9_\\s-]+$", message = "El icono contiene caracteres no permitidos")
