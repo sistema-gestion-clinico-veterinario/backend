@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.ProductoRequest;
+import veterinaria.vargasvet.dto.response.CategoriaConteoResponse;
 import veterinaria.vargasvet.dto.response.ProductoResponse;
 import veterinaria.vargasvet.service.ProductoService;
 
@@ -25,10 +26,20 @@ public class ProductoController {
     @PreAuthorize("@accesoValidator.can('VISTA_PRODUCTOS', 'LEER')")
     public ResponseEntity<ApiResponse<Page<ProductoResponse>>> listar(
             @RequestParam(required = false) Integer companyId,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long categoriaId,
+            @RequestParam(required = false) Boolean activo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Page<ProductoResponse> resultado = productoService.listar(companyId, page, size);
+        Page<ProductoResponse> resultado = productoService.buscar(companyId, search, categoriaId, activo, page, size);
         return ResponseEntity.ok(new ApiResponse<>(true, "Productos obtenidos", resultado));
+    }
+
+    @GetMapping("/conteo-por-categoria")
+    @PreAuthorize("@accesoValidator.can('VISTA_PRODUCTOS', 'LEER')")
+    public ResponseEntity<ApiResponse<List<CategoriaConteoResponse>>> conteoPorCategoria(
+            @RequestParam(required = false) Integer companyId) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Conteo por categoría obtenido", productoService.conteoPorCategoria(companyId)));
     }
 
     @GetMapping("/activos")
@@ -37,6 +48,12 @@ public class ProductoController {
             @RequestParam(required = false) Integer companyId) {
         List<ProductoResponse> resultado = productoService.listarActivos(companyId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Productos activos", resultado));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("@accesoValidator.can('VISTA_PRODUCTOS', 'LEER')")
+    public ResponseEntity<ApiResponse<ProductoResponse>> obtener(@PathVariable Long id) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Producto obtenido", productoService.obtener(id)));
     }
 
     @PostMapping

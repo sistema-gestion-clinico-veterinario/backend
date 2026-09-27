@@ -11,6 +11,7 @@ import lombok.Data;
 import veterinaria.vargasvet.validation.MeaningfulText;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Data
 public class ProductoRequest {
@@ -30,6 +31,14 @@ public class ProductoRequest {
     @DecimalMax(value = "5000.00", message = "El precio no debe superar S/ 5000.00")
     private BigDecimal precio;
 
+    @DecimalMin(value = "0.0", message = "El costo no puede ser negativo")
+    @DecimalMax(value = "5000.00", message = "El costo no debe superar S/ 5000.00")
+    private BigDecimal costo;
+
+    @Size(max = 80, message = "La marca no debe superar 80 caracteres")
+    @Pattern(regexp = "^$|^(?=.*[\\p{L}\\p{N}])(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*$", message = "La marca contiene caracteres no permitidos")
+    private String marca;
+
     @Min(value = 0, message = "El stock no puede ser negativo")
     private Integer stock = 0;
 
@@ -43,4 +52,14 @@ public class ProductoRequest {
     @Size(max = 500, message = "La URL de la imagen no debe superar 500 caracteres")
     @Pattern(regexp = "^$|^https?://[^\\s<>]+$", message = "La URL de la imagen no es válida")
     private String imagenUrl;
+
+    @Size(max = 64, message = "El código de barras no debe superar 64 caracteres")
+    @Pattern(regexp = "^$|^[A-Za-z0-9-]+$", message = "El código de barras solo puede contener letras, números y guiones")
+    private String codigoBarras;
+
+    private LocalDate fechaVencimiento;
+
+    private Boolean requiereReceta = false;
+
+    private Long unidadMedidaId;
 }

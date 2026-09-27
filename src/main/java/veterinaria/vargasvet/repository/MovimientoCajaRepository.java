@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.MovimientoCaja;
 import veterinaria.vargasvet.domain.enums.TipoMovimiento;
+import veterinaria.vargasvet.domain.enums.ConceptoMovimiento;
 import veterinaria.vargasvet.domain.enums.MetodoPago;
 
 import java.math.BigDecimal;
@@ -36,6 +37,15 @@ public interface MovimientoCajaRepository extends JpaRepository<MovimientoCaja, 
                                   @Param("metodo") MetodoPago metodoPago,
                                   @Param("desde") LocalDateTime desde,
                                   @Param("hasta") LocalDateTime hasta);
+
+    @Query("SELECT COALESCE(SUM(m.monto), 0) FROM MovimientoCaja m " +
+           "WHERE m.companyId = :cId AND m.tipo = :tipo AND m.concepto = :concepto " +
+           "AND m.fecha BETWEEN :desde AND :hasta")
+    BigDecimal sumByTipoAndConcepto(@Param("cId") Integer companyId,
+                                     @Param("tipo") TipoMovimiento tipo,
+                                     @Param("concepto") ConceptoMovimiento concepto,
+                                     @Param("desde") LocalDateTime desde,
+                                     @Param("hasta") LocalDateTime hasta);
 
     boolean existsByCitaIdAndTipo(Long citaId, TipoMovimiento tipo);
 }
