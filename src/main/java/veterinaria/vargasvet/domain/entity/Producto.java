@@ -36,13 +36,17 @@ public class Producto {
     @Column(name = "marca", length = 80)
     private String marca;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "marca_id")
+    private MarcaProducto marcaProducto;
+
     @Column(name = "stock", nullable = false)
     private Integer stock = 0;
 
     @Column(name = "stock_minimo", nullable = false)
     private Integer stockMinimo = 0;
 
-    @Column(length = 300)
+    @Column(length = 1000)
     private String descripcion;
 
     @Column(name = "imagen_url", length = 500)

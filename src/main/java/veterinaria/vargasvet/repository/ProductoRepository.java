@@ -25,7 +25,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
             "AND (:search IS NULL OR :search = '' " +
             "     OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :search, '%')) " +
             "     OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "     OR LOWER(COALESCE(p.marca, '')) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "     OR LOWER(COALESCE(p.marcaProducto.nombre, p.marca, '')) LIKE LOWER(CONCAT('%', :search, '%')) " +
             "     OR LOWER(COALESCE(p.codigoBarras, '')) LIKE LOWER(CONCAT('%', :search, '%'))) " +
             "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
             "AND (:activo IS NULL OR p.activo = :activo)")
@@ -40,6 +40,8 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     long countByCompanyIdAndUnidadMedidaId(Integer companyId, Long unidadMedidaId);
 
+    long countByCompanyIdAndMarcaProductoId(Integer companyId, Long marcaProductoId);
+
     @Query("SELECT p.categoria.id, COUNT(p) FROM Producto p " +
             "WHERE p.company.id = :companyId AND p.categoria.id IN :categoriaIds GROUP BY p.categoria.id")
     List<Object[]> countPorCategoriaIds(@Param("companyId") Integer companyId,
@@ -49,6 +51,11 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
             "WHERE p.company.id = :companyId AND p.unidadMedida.id IN :unidadIds GROUP BY p.unidadMedida.id")
     List<Object[]> countPorUnidadMedidaIds(@Param("companyId") Integer companyId,
                                            @Param("unidadIds") List<Long> unidadIds);
+
+    @Query("SELECT p.marcaProducto.id, COUNT(p) FROM Producto p " +
+            "WHERE p.company.id = :companyId AND p.marcaProducto.id IN :marcaIds GROUP BY p.marcaProducto.id")
+    List<Object[]> countPorMarcaProductoIds(@Param("companyId") Integer companyId,
+                                            @Param("marcaIds") List<Long> marcaIds);
 
     @Query("SELECT l.producto.id, MIN(l.fechaVencimiento) FROM Lote l " +
             "WHERE l.producto.id IN :productoIds AND l.activo = true GROUP BY l.producto.id")

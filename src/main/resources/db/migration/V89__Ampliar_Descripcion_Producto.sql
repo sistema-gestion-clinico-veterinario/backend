@@ -1,0 +1,2 @@
+ALTER TABLE producto
+    ALTER COLUMN descripcion TYPE VARCHAR(1000);

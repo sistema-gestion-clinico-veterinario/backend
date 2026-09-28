@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.CategoriaProducto;
 import veterinaria.vargasvet.domain.entity.Company;
+import veterinaria.vargasvet.domain.entity.MarcaProducto;
 import veterinaria.vargasvet.domain.entity.Producto;
 import veterinaria.vargasvet.domain.entity.UnidadMedida;
 import veterinaria.vargasvet.dto.request.ProductoRequest;
@@ -16,6 +17,7 @@ import veterinaria.vargasvet.dto.response.ProductoResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CategoriaProductoRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
+import veterinaria.vargasvet.repository.MarcaProductoRepository;
 import veterinaria.vargasvet.repository.ProductoRepository;
 import veterinaria.vargasvet.repository.UnidadMedidaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
@@ -37,6 +39,7 @@ public class ProductoServiceImpl implements ProductoService {
     private final CompanyRepository companyRepository;
     private final CategoriaProductoRepository categoriaProductoRepository;
     private final UnidadMedidaRepository unidadMedidaRepository;
+    private final MarcaProductoRepository marcaProductoRepository;
     private final AuditLogService auditLogService;
 
     private static final String SKU_PREFIX = "PRD-";
@@ -114,6 +117,7 @@ public class ProductoServiceImpl implements ProductoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + resolvedCompanyId));
         CategoriaProducto categoria = obtenerCategoriaDeLaEmpresa(request.getCategoriaId(), resolvedCompanyId);
         UnidadMedida unidadMedida = obtenerUnidadMedidaDeLaEmpresa(request.getUnidadMedidaId(), resolvedCompanyId);
+        MarcaProducto marca = obtenerMarcaDeLaEmpresa(request.getMarcaId(), resolvedCompanyId);
 
         Producto producto = new Producto();
         producto.setCompany(company);
@@ -121,7 +125,8 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setCategoria(categoria);
         producto.setPrecio(request.getPrecio());
         producto.setCosto(request.getCosto());
-        producto.setMarca(normalizarVacio(request.getMarca()));
+        producto.setMarcaProducto(marca);
+        producto.setMarca(marca.getNombre());
         producto.setStock(request.getStock() != null ? request.getStock() : 0);
         producto.setStockMinimo(request.getStockMinimo() != null ? request.getStockMinimo() : 0);
         producto.setDescripcion(request.getDescripcion() != null ? request.getDescripcion().trim() : null);
@@ -137,7 +142,8 @@ public class ProductoServiceImpl implements ProductoService {
 
         Producto guardado = productoRepository.save(producto);
         auditLogService.log(resolvedCompanyId, "CREAR_PRODUCTO", "Inventario",
-                "Se creó el producto " + guardado.getNombre() + " (" + guardado.getSku() + ")");
+                "Se creó el producto " + guardado.getNombre() + " (" + guardado.getSku()
+                        + ") con la marca " + marca.getNombre());
 
         return toResponse(guardado);
     }
@@ -149,12 +155,19 @@ public class ProductoServiceImpl implements ProductoService {
         validarPermisoSobreProducto(producto);
         CategoriaProducto categoria = obtenerCategoriaDeLaEmpresa(request.getCategoriaId(), producto.getCompany().getId());
         UnidadMedida unidadMedida = obtenerUnidadMedidaDeLaEmpresa(request.getUnidadMedidaId(), producto.getCompany().getId());
+        Long marcaActualId = producto.getMarcaProducto() != null ? producto.getMarcaProducto().getId() : null;
+        MarcaProducto marca = obtenerMarcaDeLaEmpresa(
+                request.getMarcaId(), producto.getCompany().getId(),
+                marcaActualId != null && marcaActualId.equals(request.getMarcaId()));
+        String marcaAnterior = producto.getMarcaProducto() != null
+                ? producto.getMarcaProducto().getNombre() : producto.getMarca();
 
         producto.setNombre(request.getNombre().trim());
         producto.setCategoria(categoria);
         producto.setPrecio(request.getPrecio());
         producto.setCosto(request.getCosto());
-        producto.setMarca(normalizarVacio(request.getMarca()));
+        producto.setMarcaProducto(marca);
+        producto.setMarca(marca.getNombre());
         if (request.getStock() != null) {
             producto.setStock(request.getStock());
         }
@@ -171,7 +184,9 @@ public class ProductoServiceImpl implements ProductoService {
 
         Producto guardado = productoRepository.save(producto);
         auditLogService.log(guardado.getCompany().getId(), "ACTUALIZAR_PRODUCTO", "Inventario",
-                "Se actualizó el producto " + guardado.getNombre() + " (" + guardado.getSku() + ")");
+                "Se actualizó el producto " + guardado.getNombre() + " (" + guardado.getSku()
+                        + "). Marca: " + (marcaAnterior != null ? marcaAnterior : "sin marca")
+                        + " → " + marca.getNombre());
 
         return toResponse(guardado);
     }
@@ -227,6 +242,22 @@ public class ProductoServiceImpl implements ProductoService {
         return unidad;
     }
 
+    private MarcaProducto obtenerMarcaDeLaEmpresa(Long marcaId, Integer companyId) {
+        return obtenerMarcaDeLaEmpresa(marcaId, companyId, false);
+    }
+
+    private MarcaProducto obtenerMarcaDeLaEmpresa(Long marcaId, Integer companyId, boolean permitirInactivaExistente) {
+        MarcaProducto marca = marcaProductoRepository.findById(marcaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Marca no encontrada con ID: " + marcaId));
+        if (marca.getCompany() == null || !marca.getCompany().getId().equals(companyId)) {
+            throw new IllegalArgumentException("La marca no pertenece a esta empresa");
+        }
+        if (!permitirInactivaExistente && !Boolean.TRUE.equals(marca.getActivo())) {
+            throw new IllegalArgumentException("La marca seleccionada está inactiva");
+        }
+        return marca;
+    }
+
     private String generarSkuAleatorio(Integer companyId) {
         for (int intento = 0; intento < SKU_GENERATION_ATTEMPTS; intento++) {
             StringBuilder codigo = new StringBuilder(SKU_PREFIX);
@@ -255,7 +286,12 @@ public class ProductoServiceImpl implements ProductoService {
         r.setNombre(p.getNombre());
         r.setPrecio(p.getPrecio());
         r.setCosto(p.getCosto());
-        r.setMarca(p.getMarca());
+        if (p.getMarcaProducto() != null) {
+            r.setMarcaId(p.getMarcaProducto().getId());
+            r.setMarca(p.getMarcaProducto().getNombre());
+        } else {
+            r.setMarca(p.getMarca());
+        }
         r.setStock(p.getStock());
         r.setStockMinimo(p.getStockMinimo());
         r.setDescripcion(p.getDescripcion());
