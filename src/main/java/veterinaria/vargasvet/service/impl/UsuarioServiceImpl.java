@@ -507,6 +507,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setCompanyId(companyId);
         response.setCompanyName(company.getName());
         response.setCompanyLogoUrl(company.getLogoUrl());
+        response.setCompanyColorPrimario(company.getColorPrimario());
         response.setCompanySlug(company.getSlug());
         response.setNombreCompleto(resolveNombreCompleto(usuario));
         response.setUserType(resolveUserType(usuario));
@@ -690,6 +691,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setCompanyId(companyId);
         response.setCompanyName(company != null ? company.getName() : null);
         response.setCompanyLogoUrl(company != null ? company.getLogoUrl() : null);
+        response.setCompanyColorPrimario(company != null ? company.getColorPrimario() : null);
         response.setCompanySlug(company != null ? company.getSlug() : null);
         response.setNombreCompleto(resolveNombreCompleto(usuario));
         response.setUserType(resolveUserType(usuario));
@@ -1141,6 +1143,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setCompanyId(companyId);
         response.setCompanyName(sessionCompany != null ? sessionCompany.getName() : null);
         response.setCompanyLogoUrl(sessionCompany != null ? sessionCompany.getLogoUrl() : null);
+        response.setCompanyColorPrimario(sessionCompany != null ? sessionCompany.getColorPrimario() : null);
         response.setCompanySlug(sessionCompany != null ? sessionCompany.getSlug() : null);
         response.setNombreCompleto(resolveNombreCompleto(usuario));
         response.setUserType(resolveUserType(usuario));
