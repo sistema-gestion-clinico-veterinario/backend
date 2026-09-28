@@ -80,6 +80,7 @@ class ProductoRepositoryIntegrationTest {
         producto.setCompany(company);
         producto.setCategoria(categoria);
         producto.setNombre("Alimento Premium 3kg");
+        producto.setSku("PRD-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase());
         producto.setPrecio(new BigDecimal("50.00"));
         producto.setStock(stock);
         producto.setActivo(true);

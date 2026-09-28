@@ -22,6 +22,7 @@ import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.ProductoService;
 
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +40,10 @@ public class ProductoServiceImpl implements ProductoService {
     private final AuditLogService auditLogService;
 
     private static final String SKU_PREFIX = "PRD-";
+    private static final String SKU_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static final int SKU_RANDOM_LENGTH = 12;
+    private static final int SKU_GENERATION_ATTEMPTS = 10;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     @Override
     @Transactional(readOnly = true)
@@ -57,9 +62,8 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProductoResponse obtener(Long id) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
+    public ProductoResponse obtener(String sku, Integer companyId) {
+        Producto producto = obtenerPorSku(sku, companyId);
         validarPermisoSobreProducto(producto);
         ProductoResponse response = toResponse(producto);
         enriquecerConProximoVencimiento(List.of(response));
@@ -122,7 +126,7 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setStockMinimo(request.getStockMinimo() != null ? request.getStockMinimo() : 0);
         producto.setDescripcion(request.getDescripcion() != null ? request.getDescripcion().trim() : null);
         producto.setImagenUrl(request.getImagenUrl());
-        producto.setSku(generarSiguienteSku(resolvedCompanyId));
+        producto.setSku(generarSkuAleatorio(resolvedCompanyId));
         producto.setCodigoBarras(normalizarVacio(request.getCodigoBarras()));
         producto.setFechaVencimiento(request.getFechaVencimiento());
         producto.setRequiereReceta(Boolean.TRUE.equals(request.getRequiereReceta()));
@@ -140,9 +144,8 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    public ProductoResponse actualizar(Long id, ProductoRequest request) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
+    public ProductoResponse actualizar(String sku, ProductoRequest request) {
+        Producto producto = obtenerPorSku(sku, request.getCompanyId());
         validarPermisoSobreProducto(producto);
         CategoriaProducto categoria = obtenerCategoriaDeLaEmpresa(request.getCategoriaId(), producto.getCompany().getId());
         UnidadMedida unidadMedida = obtenerUnidadMedidaDeLaEmpresa(request.getUnidadMedidaId(), producto.getCompany().getId());
@@ -175,9 +178,8 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    public void eliminar(Long id) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
+    public void eliminar(String sku, Integer companyId) {
+        Producto producto = obtenerPorSku(sku, companyId);
         validarPermisoSobreProducto(producto);
         producto.setActivo(false);
         producto.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
@@ -189,9 +191,8 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    public ProductoResponse toggleActivo(Long id) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + id));
+    public ProductoResponse toggleActivo(String sku, Integer companyId) {
+        Producto producto = obtenerPorSku(sku, companyId);
         validarPermisoSobreProducto(producto);
         producto.setActivo(!Boolean.TRUE.equals(producto.getActivo()));
         producto.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
@@ -226,18 +227,20 @@ public class ProductoServiceImpl implements ProductoService {
         return unidad;
     }
 
-    private String generarSiguienteSku(Integer companyId) {
-        int max = productoRepository.findSkusByCompanyId(companyId).stream()
-                .filter(sku -> sku != null && sku.startsWith(SKU_PREFIX))
-                .mapToInt(sku -> {
-                    try {
-                        return Integer.parseInt(sku.substring(SKU_PREFIX.length()));
-                    } catch (NumberFormatException e) {
-                        return 0;
-                    }
-                })
-                .max().orElse(0);
-        return String.format("%s%05d", SKU_PREFIX, max + 1);
+    private String generarSkuAleatorio(Integer companyId) {
+        for (int intento = 0; intento < SKU_GENERATION_ATTEMPTS; intento++) {
+            StringBuilder codigo = new StringBuilder(SKU_PREFIX);
+            for (int i = 0; i < SKU_RANDOM_LENGTH; i++) {
+                codigo.append(SKU_ALPHABET.charAt(SECURE_RANDOM.nextInt(SKU_ALPHABET.length())));
+            }
+
+            String sku = codigo.toString();
+            if (!productoRepository.existsByCompanyIdAndSku(companyId, sku)) {
+                return sku;
+            }
+        }
+
+        throw new IllegalStateException("No se pudo generar un SKU único para el producto");
     }
 
     private String normalizarVacio(String valor) {
@@ -279,6 +282,12 @@ public class ProductoServiceImpl implements ProductoService {
             r.setUnidadMedidaNombre(p.getUnidadMedida().getNombre());
         }
         return r;
+    }
+
+    private Producto obtenerPorSku(String sku, Integer companyId) {
+        Integer resolvedCompanyId = resolverCompanyId(companyId);
+        return productoRepository.findByCompanyIdAndSku(resolvedCompanyId, sku)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
     }
 
     private Integer resolverCompanyId(Integer companyIdParam) {

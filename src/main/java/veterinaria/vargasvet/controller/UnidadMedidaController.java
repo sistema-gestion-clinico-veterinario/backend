@@ -25,9 +25,11 @@ public class UnidadMedidaController {
     @PreAuthorize("@accesoValidator.can('VISTA_CATEGORIAS_PRODUCTO', 'LEER')")
     public ResponseEntity<ApiResponse<Page<UnidadMedidaResponse>>> listar(
             @RequestParam(required = false) Integer companyId,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Page<UnidadMedidaResponse> resultado = unidadMedidaService.listar(companyId, page, size);
+        Page<UnidadMedidaResponse> resultado = unidadMedidaService.listar(companyId, search, activo, page, size);
         return ResponseEntity.ok(new ApiResponse<>(true, "Unidades de medida obtenidas", resultado));
     }
 
@@ -59,7 +61,7 @@ public class UnidadMedidaController {
     @PreAuthorize("@accesoValidator.can('VISTA_CATEGORIAS_PRODUCTO', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         unidadMedidaService.eliminar(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Unidad de medida desactivada", null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Unidad de medida eliminada", null));
     }
 
     @PatchMapping("/{id}/toggle")
