@@ -7,7 +7,7 @@ import veterinaria.vargasvet.dto.response.CategoriaProductoResponse;
 import java.util.List;
 
 public interface CategoriaProductoService {
-    Page<CategoriaProductoResponse> listar(Integer companyId, int page, int size);
+    Page<CategoriaProductoResponse> listar(Integer companyId, String search, Boolean activo, int page, int size);
     List<CategoriaProductoResponse> listarActivas(Integer companyId);
     CategoriaProductoResponse crear(CategoriaProductoRequest request);
     CategoriaProductoResponse actualizar(Long id, CategoriaProductoRequest request);

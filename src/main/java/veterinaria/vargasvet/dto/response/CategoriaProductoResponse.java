@@ -12,6 +12,7 @@ public class CategoriaProductoResponse {
     private String nombre;
     private String descripcion;
     private Boolean activo;
+    private Long productosAsociados;
     private LocalDateTime createdAt;
     private String createdBy;
     private LocalDateTime updatedAt;

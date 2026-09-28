@@ -25,9 +25,11 @@ public class CategoriaProductoController {
     @PreAuthorize("@accesoValidator.can('VISTA_CATEGORIAS_PRODUCTO', 'LEER')")
     public ResponseEntity<ApiResponse<Page<CategoriaProductoResponse>>> listar(
             @RequestParam(required = false) Integer companyId,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        Page<CategoriaProductoResponse> resultado = categoriaProductoService.listar(companyId, page, size);
+        Page<CategoriaProductoResponse> resultado = categoriaProductoService.listar(companyId, search, activo, page, size);
         return ResponseEntity.ok(new ApiResponse<>(true, "Categorías obtenidas", resultado));
     }
 
@@ -59,7 +61,7 @@ public class CategoriaProductoController {
     @PreAuthorize("@accesoValidator.can('VISTA_CATEGORIAS_PRODUCTO', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
         categoriaProductoService.eliminar(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Categoría desactivada", null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Categoría eliminada", null));
     }
 
     @PatchMapping("/{id}/toggle")
