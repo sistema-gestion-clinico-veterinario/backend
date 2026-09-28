@@ -31,4 +31,13 @@ public class PagoRequest {
     public boolean isMontoEfectivoValido() {
         return metodoPago != MetodoPago.EFECTIVO || montoRecibido != null;
     }
+
+    @AssertTrue(message = "El método de pago debe ser Efectivo, Yape, Plin o Tarjeta")
+    public boolean isMetodoPagoPermitido() {
+        return metodoPago == null
+                || metodoPago == MetodoPago.EFECTIVO
+                || metodoPago == MetodoPago.YAPE
+                || metodoPago == MetodoPago.PLIN
+                || metodoPago == MetodoPago.TARJETA;
+    }
 }
