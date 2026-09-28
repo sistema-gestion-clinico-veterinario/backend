@@ -416,6 +416,9 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         Usuario usuario = usuarioRepository.findByEmail(normalizedEmail).orElse(null);
         if (usuario == null) {
             authenticationAuditService.recordLoginFailure(null, normalizedEmail, "credenciales inválidas");
+            if (normalizedSlug != null) {
+                throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+            }
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
@@ -424,7 +427,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             company = companyRepository.findBySlug(normalizedSlug).orElse(null);
             if (company == null || !companyMembershipService.hasActiveMembership(usuario.getId(), company.getId())) {
                 authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "credenciales inválidas");
-                throw new BadCredentialsException("Credenciales inválidas");
+                throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
             }
         } else {
             Set<Integer> activeCompanyIds = companyMembershipService.getActiveCompanyIds(usuario);
@@ -441,6 +444,9 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 resolveCredencial(usuario.getId(), company.getId()).orElse(null);
         if (credencial == null) {
             authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "credenciales inválidas");
+            if (normalizedSlug != null) {
+                throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+            }
             throw new BadCredentialsException("Credenciales inválidas");
         }
 

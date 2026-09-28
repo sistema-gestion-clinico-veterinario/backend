@@ -220,6 +220,16 @@ public class CajaServiceImpl implements CajaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<SesionCajaResponse> listarSesiones(Integer companyId, int page, int size) {
+        validarCompanyId(companyId);
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(50, Math.max(1, size));
+        return sesionCajaRepository.findByCompanyIdOrderByAbiertaAtDesc(
+                companyId, PageRequest.of(safePage, safeSize)).map(this::toSesionResponse);
+    }
+
+    @Override
     @Transactional
     public SesionCajaResponse abrirCaja(AperturaCajaRequest request) {
         validarCompanyId(request.getCompanyId());

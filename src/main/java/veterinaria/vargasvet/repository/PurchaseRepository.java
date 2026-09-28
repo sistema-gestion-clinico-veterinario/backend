@@ -62,4 +62,13 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
            "WHERE p.cita.id IN :citaIds AND p.tipoPurchase = veterinaria.vargasvet.domain.enums.TipoPurchase.SERVICIO_CITA " +
            "AND p.paymentStatus = veterinaria.vargasvet.domain.enums.PaymentStatus.PAID")
     List<Purchase> findPagadosByCitaIds(@Param("citaIds") List<Long> citaIds);
+
+    @Query("SELECT p FROM Purchase p WHERE p.company.id = :companyId " +
+           "AND p.tipoPurchase = :tipo AND p.paymentStatus = :estado " +
+           "AND p.createdAt >= :desde AND p.createdAt < :hasta ORDER BY p.createdAt ASC")
+    List<Purchase> findForSalesReport(@Param("companyId") Integer companyId,
+                                      @Param("tipo") TipoPurchase tipo,
+                                      @Param("estado") PaymentStatus estado,
+                                      @Param("desde") LocalDateTime desde,
+                                      @Param("hasta") LocalDateTime hasta);
 }

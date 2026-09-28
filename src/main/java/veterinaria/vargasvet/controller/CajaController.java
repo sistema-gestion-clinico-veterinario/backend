@@ -39,6 +39,18 @@ public class CajaController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Estado de caja recuperado", sesion));
     }
 
+    @GetMapping("/sesion/historial")
+    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'LEER')")
+    public ResponseEntity<ApiResponse<Page<SesionCajaResponse>>> listarSesiones(
+            @RequestParam Integer companyId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<SesionCajaResponse> sesiones = cajaService.listarSesiones(companyId, page, size);
+        auditLogService.log(companyId, "CONSULTAR_CAJA", "Facturación",
+                "Consultó el historial de aperturas y cierres de caja.");
+        return ResponseEntity.ok(new ApiResponse<>(true, "Historial de caja recuperado", sesiones));
+    }
+
     @PostMapping("/sesion/abrir")
     @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<SesionCajaResponse>> abrirCaja(@Valid @RequestBody AperturaCajaRequest request) {
