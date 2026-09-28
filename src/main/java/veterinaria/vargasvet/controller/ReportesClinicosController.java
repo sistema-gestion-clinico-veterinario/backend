@@ -8,6 +8,7 @@ import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.response.PacientesInactivosPageDTO;
 import veterinaria.vargasvet.dto.response.ReportesClinicosDTO;
 import veterinaria.vargasvet.dto.response.ReportesComparativoEmpresasDTO;
+import veterinaria.vargasvet.dto.response.ReporteVentasProductosDTO;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.service.ReportesClinicosService;
 
@@ -59,5 +60,15 @@ public class ReportesClinicosController {
             @RequestParam(defaultValue = "10") int size) {
         PacientesInactivosPageDTO resultado = reportesClinicosService.obtenerPacientesInactivos(companyId, page, size);
         return ResponseEntity.ok(new ApiResponse<>(true, "Pacientes inactivos obtenidos con éxito", resultado));
+    }
+
+    @GetMapping("/sales-products")
+    public ResponseEntity<ApiResponse<ReporteVentasProductosDTO>> obtenerVentasProductos(
+            @RequestParam(required = false) Integer companyId,
+            @RequestParam(required = false) LocalDate fechaDesde,
+            @RequestParam(required = false) LocalDate fechaHasta) {
+        ReporteVentasProductosDTO resultado = reportesClinicosService.obtenerVentasProductos(
+                companyId, fechaDesde, fechaHasta);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Reporte de ventas y productos obtenido", resultado));
     }
 }
