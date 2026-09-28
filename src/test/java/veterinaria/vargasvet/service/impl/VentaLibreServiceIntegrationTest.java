@@ -25,6 +25,7 @@ import veterinaria.vargasvet.repository.PurchaseRepository;
 import veterinaria.vargasvet.repository.VentaLibreDetalleRepository;
 import veterinaria.vargasvet.security.UsuarioPrincipal;
 import veterinaria.vargasvet.service.AuditLogService;
+import veterinaria.vargasvet.service.CajaService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -62,7 +63,7 @@ class VentaLibreServiceIntegrationTest {
         ventaLibreService = new VentaLibreServiceImpl(
                 purchaseRepository, ventaLibreDetalleRepository, productoRepository,
                 mock(veterinaria.vargasvet.repository.ApoderadoRepository.class),
-                companyRepository, mock(AuditLogService.class)
+                companyRepository, mock(AuditLogService.class), mock(CajaService.class)
         );
     }
 
@@ -180,6 +181,7 @@ class VentaLibreServiceIntegrationTest {
         producto.setCompany(company);
         producto.setCategoria(categoria);
         producto.setNombre(nombre);
+        producto.setSku("PRD-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase());
         producto.setPrecio(new BigDecimal(precio));
         producto.setStock(stock);
         producto.setActivo(true);

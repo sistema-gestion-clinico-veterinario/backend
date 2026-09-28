@@ -9,11 +9,11 @@ import java.util.List;
 
 public interface ProductoService {
     Page<ProductoResponse> buscar(Integer companyId, String search, Long categoriaId, Boolean activo, int page, int size);
-    ProductoResponse obtener(Long id);
+    ProductoResponse obtener(String sku, Integer companyId);
     List<ProductoResponse> listarActivos(Integer companyId);
     List<CategoriaConteoResponse> conteoPorCategoria(Integer companyId);
     ProductoResponse crear(ProductoRequest request);
-    ProductoResponse actualizar(Long id, ProductoRequest request);
-    void eliminar(Long id);
-    ProductoResponse toggleActivo(Long id);
+    ProductoResponse actualizar(String sku, ProductoRequest request);
+    void eliminar(String sku, Integer companyId);
+    ProductoResponse toggleActivo(String sku, Integer companyId);
 }

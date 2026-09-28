@@ -50,10 +50,12 @@ public class ProductoController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Productos activos", resultado));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/sku/{sku}")
     @PreAuthorize("@accesoValidator.can('VISTA_PRODUCTOS', 'LEER')")
-    public ResponseEntity<ApiResponse<ProductoResponse>> obtener(@PathVariable Long id) {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Producto obtenido", productoService.obtener(id)));
+    public ResponseEntity<ApiResponse<ProductoResponse>> obtener(
+            @PathVariable String sku,
+            @RequestParam(required = false) Integer companyId) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Producto obtenido", productoService.obtener(sku, companyId)));
     }
 
     @PostMapping
@@ -64,24 +66,28 @@ public class ProductoController {
                 .body(new ApiResponse<>(true, "Producto creado exitosamente", response));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/sku/{sku}")
     @PreAuthorize("@accesoValidator.can('VISTA_PRODUCTOS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<ProductoResponse>> actualizar(
-            @PathVariable Long id,
+            @PathVariable String sku,
             @Valid @RequestBody ProductoRequest request) {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Producto actualizado", productoService.actualizar(id, request)));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Producto actualizado", productoService.actualizar(sku, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/sku/{sku}")
     @PreAuthorize("@accesoValidator.can('VISTA_PRODUCTOS', 'ELIMINAR')")
-    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
-        productoService.eliminar(id);
+    public ResponseEntity<ApiResponse<Void>> eliminar(
+            @PathVariable String sku,
+            @RequestParam(required = false) Integer companyId) {
+        productoService.eliminar(sku, companyId);
         return ResponseEntity.ok(new ApiResponse<>(true, "Producto desactivado", null));
     }
 
-    @PatchMapping("/{id}/toggle")
+    @PatchMapping("/sku/{sku}/toggle")
     @PreAuthorize("@accesoValidator.can('VISTA_PRODUCTOS', 'MODIFICAR')")
-    public ResponseEntity<ApiResponse<ProductoResponse>> toggleActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Estado actualizado", productoService.toggleActivo(id)));
+    public ResponseEntity<ApiResponse<ProductoResponse>> toggleActivo(
+            @PathVariable String sku,
+            @RequestParam(required = false) Integer companyId) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Estado actualizado", productoService.toggleActivo(sku, companyId)));
     }
 }

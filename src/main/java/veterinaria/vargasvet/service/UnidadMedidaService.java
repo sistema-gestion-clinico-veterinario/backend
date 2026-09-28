@@ -7,7 +7,7 @@ import veterinaria.vargasvet.dto.response.UnidadMedidaResponse;
 import java.util.List;
 
 public interface UnidadMedidaService {
-    Page<UnidadMedidaResponse> listar(Integer companyId, int page, int size);
+    Page<UnidadMedidaResponse> listar(Integer companyId, String search, Boolean activo, int page, int size);
     List<UnidadMedidaResponse> listarActivas(Integer companyId);
     UnidadMedidaResponse crear(UnidadMedidaRequest request);
     UnidadMedidaResponse actualizar(Long id, UnidadMedidaRequest request);
