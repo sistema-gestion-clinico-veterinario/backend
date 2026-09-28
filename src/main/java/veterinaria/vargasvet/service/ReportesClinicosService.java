@@ -3,6 +3,7 @@ package veterinaria.vargasvet.service;
 import veterinaria.vargasvet.dto.response.PacientesInactivosPageDTO;
 import veterinaria.vargasvet.dto.response.ReportesClinicosDTO;
 import veterinaria.vargasvet.dto.response.ReportesComparativoEmpresasDTO;
+import veterinaria.vargasvet.dto.response.ReporteVentasProductosDTO;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 
 import java.time.LocalDate;
@@ -18,4 +19,6 @@ public interface ReportesClinicosService {
     /** Paginado desde la base de datos: evita cargar todas las mascotas activas de la empresa
      * en memoria solo para este panel. */
     PacientesInactivosPageDTO obtenerPacientesInactivos(Integer companyId, int page, int size);
+
+    ReporteVentasProductosDTO obtenerVentasProductos(Integer companyId, LocalDate fechaDesde, LocalDate fechaHasta);
 }

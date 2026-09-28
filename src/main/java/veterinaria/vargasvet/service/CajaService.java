@@ -28,6 +28,8 @@ public interface CajaService {
 
     SesionCajaResponse obtenerSesionActual(Integer companyId);
 
+    Page<SesionCajaResponse> listarSesiones(Integer companyId, int page, int size);
+
     SesionCajaResponse abrirCaja(AperturaCajaRequest request);
 
     SesionCajaResponse arquearCaja(ArqueoCajaRequest request);

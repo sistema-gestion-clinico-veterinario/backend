@@ -46,6 +46,8 @@ class ReportesClinicosServiceImplTest {
     @Mock PurchaseRepository purchaseRepository;
     @Mock AccesoValidator accesoValidator;
     @Mock veterinaria.vargasvet.repository.CompanyRepository companyRepository;
+    @Mock veterinaria.vargasvet.repository.ProductoRepository productoRepository;
+    @Mock veterinaria.vargasvet.repository.VentaLibreDetalleRepository ventaLibreDetalleRepository;
 
     private ReportesClinicosServiceImpl service;
 
@@ -60,7 +62,9 @@ class ReportesClinicosServiceImplTest {
                 empleadoRepository,
                 purchaseRepository,
                 accesoValidator,
-                companyRepository);
+                companyRepository,
+                productoRepository,
+                ventaLibreDetalleRepository);
     }
 
     @Test

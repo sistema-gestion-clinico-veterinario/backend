@@ -124,6 +124,8 @@ public class AuthController {
                 redirectTarget = isActivation
                         ? frontendVerifyUrl(activationToken, "google_correo_no_coincide")
                         : frontendLoginUrl(state, "google_fallo");
+            } catch (veterinaria.vargasvet.exception.GoogleClinicAccessException ex) {
+                redirectTarget = frontendLoginUrl(state, "google_sin_acceso_clinica");
             } catch (Exception ex) {
                 redirectTarget = isActivation
                         ? frontendVerifyUrl(activationToken, "google_fallo")
