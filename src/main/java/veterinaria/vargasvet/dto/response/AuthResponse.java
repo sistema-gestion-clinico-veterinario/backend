@@ -18,6 +18,7 @@ public class AuthResponse {
     private Integer companyId;
     private String companyName;
     private String companyLogoUrl;
+    private String companyColorPrimario;
     /** Slug de la empresa (systemvet.com/<slug>/login) - el frontend lo usa
      * para volver a la pantalla de login correctamente marcada tras cerrar
      * sesion, en vez del fallback generico sin marca. */
