@@ -35,9 +35,11 @@ public class ProductoRequest {
     @DecimalMax(value = "5000.00", message = "El costo no debe superar S/ 5000.00")
     private BigDecimal costo;
 
-    @Size(max = 80, message = "La marca no debe superar 80 caracteres")
-    @Pattern(regexp = "^$|^(?=.*[\\p{L}\\p{N}])(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*$", message = "La marca contiene caracteres no permitidos")
+    @Deprecated
     private String marca;
+
+    @NotNull(message = "La marca es obligatoria")
+    private Long marcaId;
 
     @Min(value = 0, message = "El stock no puede ser negativo")
     private Integer stock = 0;
@@ -45,7 +47,7 @@ public class ProductoRequest {
     @Min(value = 0, message = "El stock mínimo no puede ser negativo")
     private Integer stockMinimo = 0;
 
-    @Size(max = 300, message = "La descripción no debe superar 300 caracteres")
+    @Size(max = 1000, message = "La descripción no debe superar 1.000 caracteres")
     @Pattern(regexp = "^$|^(?=.*[\\p{L}\\p{N}])(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*$", message = "La descripción contiene caracteres no permitidos")
     private String descripcion;
 

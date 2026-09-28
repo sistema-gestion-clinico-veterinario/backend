@@ -17,6 +17,7 @@ public class ProductoResponse {
     private BigDecimal precio;
     private BigDecimal costo;
     private String marca;
+    private Long marcaId;
     private Integer stock;
     private Integer stockMinimo;
     private String descripcion;
