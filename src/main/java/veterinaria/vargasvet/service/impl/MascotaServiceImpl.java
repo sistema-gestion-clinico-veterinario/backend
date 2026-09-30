@@ -21,6 +21,8 @@ import veterinaria.vargasvet.repository.HistoriaClinicaRepository;
 import veterinaria.vargasvet.repository.MascotaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.MascotaService;
+import veterinaria.vargasvet.service.ApoderadoService;
+import veterinaria.vargasvet.service.MascotaRelacionService;
 import veterinaria.vargasvet.util.BusinessValidator;
 
 import java.util.UUID;
@@ -37,6 +39,8 @@ public class MascotaServiceImpl implements MascotaService {
     private final BusinessValidator businessValidator;
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
     private final veterinaria.vargasvet.repository.RazaRepository razaRepository;
+    private final ApoderadoService apoderadoService;
+    private final MascotaRelacionService mascotaRelacionService;
 
     @Override
     @Transactional
@@ -47,9 +51,12 @@ public class MascotaServiceImpl implements MascotaService {
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontró el apoderado con ID: " + request.getApoderadoId()));
 
 
-        if (apoderado.getUser() == null || !apoderado.getUser().isActivo()) {
+        if (!Boolean.TRUE.equals(apoderado.getEstado())) {
             throw new IllegalArgumentException("No se puede registrar una mascota a un dueño inactivo. Active al dueño primero.");
         }
+
+        boolean esPrimeraMascotaActiva = !mascotaRepository
+                .existsByApoderadoIdAndActivoTrue(apoderado.getId());
 
         if (!SecurityUtils.isSuperAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
@@ -102,11 +109,17 @@ public class MascotaServiceImpl implements MascotaService {
         hc.setActiva(true);
         historiaClinicaRepository.save(hc);
 
+        mascotaRelacionService.asegurarPropietarioPrincipal(savedMascota.getId());
+
         auditLogService.log(
             "REGISTRAR_MASCOTA",
             "Mascotas",
             "Se registró a la mascota: " + savedMascota.getNombreCompleto() + " (" + savedMascota.getEspecie() + ")"
         );
+
+        if (esPrimeraMascotaActiva) {
+            apoderadoService.enviarInvitacionAccesoSiTieneMascota(apoderado.getId());
+        }
 
         return mascotaMapper.toResponse(savedMascota);
     }
@@ -132,6 +145,9 @@ public class MascotaServiceImpl implements MascotaService {
     @Transactional
     public MascotaResponse updateMascota(Long id, MascotaRequest request) {
         Mascota mascota = findAccessibleById(id);
+        Apoderado apoderadoAnterior = mascota.getApoderado();
+        boolean titularidadTransferida = false;
+        boolean nuevoTitularSinMascotasActivas = false;
 
         if (!Boolean.TRUE.equals(mascota.getActivo())) {
             throw new IllegalStateException("No se puede editar una mascota inactiva. Active a la mascota primero.");
@@ -142,11 +158,13 @@ public class MascotaServiceImpl implements MascotaService {
                 ? mascota.getApoderado().getCompany().getId() : null);
 
         if (request.getApoderadoId() != null && !request.getApoderadoId().equals(mascota.getApoderado().getId())) {
-            Apoderado nuevoApoderado = apoderadoRepository.findById(request.getApoderadoId())
-                    .orElseThrow(() -> new ResourceNotFoundException("No se encontró el nuevo apoderado con ID: " + request.getApoderadoId()));
+            Integer companyIdMascota = mascota.getApoderado().getCompany().getId();
+            Apoderado nuevoApoderado = apoderadoRepository
+                    .findByIdAndCompanyId(request.getApoderadoId(), companyIdMascota)
+                    .orElseThrow(() -> new ResourceNotFoundException("No se encontró el nuevo propietario en esta clínica"));
             
-            if (nuevoApoderado.getUser() == null || !nuevoApoderado.getUser().isActivo()) {
-                throw new IllegalArgumentException("No se puede transferir una mascota a un dueño inactivo. Active al dueño primero.");
+            if (!Boolean.TRUE.equals(nuevoApoderado.getEstado())) {
+                throw new IllegalArgumentException("No se puede transferir una mascota a un propietario inactivo. Active al propietario primero.");
             }
 
             if (!SecurityUtils.isSuperAdmin()) {
@@ -156,7 +174,10 @@ public class MascotaServiceImpl implements MascotaService {
                 }
             }
 
+            nuevoTitularSinMascotasActivas = !mascotaRepository
+                    .existsByApoderadoIdAndActivoTrue(nuevoApoderado.getId());
             mascota.setApoderado(nuevoApoderado);
+            titularidadTransferida = true;
         }
 
         if (request.getEspecie() != null) {
@@ -189,6 +210,23 @@ public class MascotaServiceImpl implements MascotaService {
 
         Mascota savedMascota = mascotaRepository.save(mascota);
 
+        mascotaRelacionService.asegurarPropietarioPrincipal(savedMascota.getId());
+
+        if (titularidadTransferida) {
+            String anterior = nombreApoderado(apoderadoAnterior);
+            String nuevo = nombreApoderado(savedMascota.getApoderado());
+            auditLogService.log(
+                    savedMascota.getApoderado().getCompany().getId(),
+                    "TRANSFERIR_TITULARIDAD_MASCOTA",
+                    "Mascotas",
+                    "Se transfirió la titularidad de " + savedMascota.getNombreCompleto()
+                            + " de " + anterior + " a " + nuevo
+            );
+            if (nuevoTitularSinMascotasActivas) {
+                apoderadoService.enviarInvitacionAccesoSiTieneMascota(savedMascota.getApoderado().getId());
+            }
+        }
+
         auditLogService.log(
             "ACTUALIZAR_MASCOTA",
             "Mascotas",
@@ -196,6 +234,11 @@ public class MascotaServiceImpl implements MascotaService {
         );
 
         return mascotaMapper.toResponse(savedMascota);
+    }
+
+    private String nombreApoderado(Apoderado apoderado) {
+        if (apoderado == null || apoderado.getUser() == null) return "propietario anterior";
+        return (apoderado.getUser().getNombre() + " " + apoderado.getUser().getApellido()).trim();
     }
 
     @Override

@@ -7,6 +7,7 @@ import veterinaria.vargasvet.dto.response.UserProfileDTO;
 
 public interface ApoderadoService {
     UserProfileDTO registerApoderado(ApoderadoRequest dto);
+    void enviarInvitacionAccesoSiTieneMascota(Long apoderadoId);
     UserProfileDTO updateApoderado(Long id, ApoderadoRequest dto);
     void cambiarEstado(Long id, Boolean nuevoEstado);
     void eliminar(Long id);
