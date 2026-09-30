@@ -6,6 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import veterinaria.vargasvet.controller.ApoderadoController;
 import veterinaria.vargasvet.controller.ConsultaController;
 import veterinaria.vargasvet.controller.MascotaController;
+import veterinaria.vargasvet.controller.MascotaRelacionController;
 import veterinaria.vargasvet.controller.PrescripcionController;
 import veterinaria.vargasvet.controller.RoleController;
 
@@ -32,6 +33,10 @@ class EndpointAuthorizationContractTest {
                 expected(MascotaController.class, "registerMascota", "VISTA_MASCOTAS", "ESCRIBIR"),
                 expected(MascotaController.class, "updateMascota", "VISTA_MASCOTAS", "MODIFICAR"),
                 expected(MascotaController.class, "cambiarEstado", "VISTA_MASCOTAS", "MODIFICAR"),
+                expected(MascotaRelacionController.class, "listar", "VISTA_MASCOTAS", "LEER"),
+                expected(MascotaRelacionController.class, "crear", "VISTA_MASCOTAS", "MODIFICAR"),
+                expected(MascotaRelacionController.class, "actualizar", "VISTA_MASCOTAS", "MODIFICAR"),
+                expected(MascotaRelacionController.class, "revocar", "VISTA_MASCOTAS", "MODIFICAR"),
                 expected(ConsultaController.class, "getConsultaById", "VISTA_HISTORIAS", "LEER"),
                 expected(ConsultaController.class, "updateConsulta", "VISTA_HISTORIAS", "MODIFICAR"),
                 expected(ConsultaController.class, "cerrarConsulta", "VISTA_HISTORIAS", "MODIFICAR"),

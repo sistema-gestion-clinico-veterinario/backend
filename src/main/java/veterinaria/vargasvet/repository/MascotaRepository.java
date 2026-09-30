@@ -20,6 +20,8 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
     @Query("SELECT m FROM Mascota m WHERE m.apoderado.id = :apoderadoId")
     List<Mascota> findByApoderadoId(@Param("apoderadoId") Long apoderadoId);
 
+    boolean existsByApoderadoIdAndActivoTrue(Long apoderadoId);
+
     @Query("SELECT m FROM Mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user " +
            "WHERE a.company.id = :companyId AND m.activo = true")
     List<Mascota> findActiveByCompanyId(@Param("companyId") Integer companyId);
