@@ -16,6 +16,8 @@ import veterinaria.vargasvet.repository.MascotaRepository;
 import veterinaria.vargasvet.repository.RazaRepository;
 import veterinaria.vargasvet.security.UsuarioPrincipal;
 import veterinaria.vargasvet.service.AuditLogService;
+import veterinaria.vargasvet.service.ApoderadoService;
+import veterinaria.vargasvet.service.MascotaRelacionService;
 import veterinaria.vargasvet.util.BusinessValidator;
 
 import java.util.List;
@@ -37,6 +39,8 @@ class MascotaTenantIsolationUnitTest {
     @Mock BusinessValidator businessValidator;
     @Mock AuditLogService auditLogService;
     @Mock RazaRepository razaRepository;
+    @Mock ApoderadoService apoderadoService;
+    @Mock MascotaRelacionService mascotaRelacionService;
 
     @AfterEach
     void clearSecurityContext() {
@@ -72,7 +76,9 @@ class MascotaTenantIsolationUnitTest {
                 mascotaMapper,
                 businessValidator,
                 auditLogService,
-                razaRepository
+                razaRepository,
+                apoderadoService,
+                mascotaRelacionService
         );
     }
 

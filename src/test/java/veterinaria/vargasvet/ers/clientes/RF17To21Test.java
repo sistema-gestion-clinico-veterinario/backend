@@ -42,9 +42,11 @@ import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.UsuarioPrincipal;
 import veterinaria.vargasvet.service.AuditLogService;
+import veterinaria.vargasvet.service.ApoderadoService;
 import veterinaria.vargasvet.service.CompanyRoleProvisioningService;
 import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.service.SessionSecurityService;
+import veterinaria.vargasvet.service.MascotaRelacionService;
 import veterinaria.vargasvet.service.impl.ApoderadoServiceImpl;
 import veterinaria.vargasvet.service.impl.MascotaServiceImpl;
 import veterinaria.vargasvet.util.BusinessValidator;
@@ -63,6 +65,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class RF17To21Test {
@@ -77,6 +80,7 @@ class RF17To21Test {
     private UserMapper userMapper;
     private MascotaMapper mascotaMapper;
     private EmailService emailService;
+    private ApoderadoService invitacionAccesoService;
 
     @BeforeEach
     void setUp() {
@@ -90,6 +94,7 @@ class RF17To21Test {
         userMapper = mock(UserMapper.class);
         mascotaMapper = mock(MascotaMapper.class);
         emailService = mock(EmailService.class);
+        invitacionAccesoService = mock(ApoderadoService.class);
         autenticarEmpresa(7);
     }
 
@@ -114,7 +119,7 @@ class RF17To21Test {
     }
 
     @Test
-    @DisplayName("[CP-RF18-01] Registra cliente inactivo con activación temporal y rol de su empresa")
+    @DisplayName("[CP-RF18-01] Registra cliente sin enviar acceso mientras no tenga mascota")
     void cpRf1801_registraClienteConActivacionTemporal() {
         Company company = company(7);
         Role role = roleCliente(20, company);
@@ -141,8 +146,8 @@ class RF17To21Test {
         Usuario created = userCaptor.getAllValues().get(0);
         assertThat(created.isActivo()).isFalse();
         assertThat(created.isEmailVerified()).isFalse();
-        assertThat(created.getVerificationToken()).isNotBlank();
-        assertThat(created.getVerificationTokenExpiresAt()).isAfter(java.time.LocalDateTime.now());
+        assertThat(created.getVerificationToken()).isNull();
+        assertThat(created.getVerificationTokenExpiresAt()).isNull();
         assertThat(created.getUsuariosPorRol()).extracting(assignment -> assignment.getRol().getId())
                 .containsExactly(20);
 
@@ -151,7 +156,7 @@ class RF17To21Test {
         assertThat(apoderadoCaptor.getValue().getCompany().getId()).isEqualTo(7);
 
         assertThat(response.getApoderadoId()).isEqualTo(40);
-        verify(emailService).sendEmailWithRetry(any(Mail.class), eq("email/welcome-template"));
+        verifyNoInteractions(emailService);
     }
 
     @Test
@@ -187,7 +192,29 @@ class RF17To21Test {
         // Identidad ya existente uniendose a una empresa nueva: se le avisa por
         // correo (no pasa por el flujo de activacion de cuenta nueva, asi que
         // no tiene otra forma de saber que ahora tiene acceso aqui tambien).
-        verify(emailService).sendEmailWithRetry(any(), eq("email/new-company-access-template"));
+        verifyNoInteractions(emailService);
+    }
+
+    @Test
+    @DisplayName("[CP-RF18-03] Envía configuración de acceso cuando el propietario ya tiene mascota")
+    void cpRf1803_enviaAccesoSoloConMascota() {
+        Company company = company(7);
+        Apoderado owner = apoderado(40L, 7, false, "Ana", "Prueba", "12345678");
+        owner.setEstado(true);
+        owner.getUser().setEmail("ana.qa@example.test");
+        owner.getUser().setCompany(company);
+        owner.setCompany(company);
+
+        when(apoderadoRepository.findById(40L)).thenReturn(Optional.of(owner));
+        when(mascotaRepository.existsByApoderadoIdAndActivoTrue(40L)).thenReturn(true);
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(emailService.createMail(anyString(), anyString(), any())).thenReturn(new Mail());
+
+        apoderadoService().enviarInvitacionAccesoSiTieneMascota(40L);
+
+        assertThat(owner.getUser().getVerificationToken()).isNotBlank();
+        assertThat(owner.getUser().getVerificationTokenExpiresAt()).isNotNull();
+        verify(emailService).sendEmailWithRetry(any(Mail.class), eq("email/welcome-template"));
     }
 
     @Test
@@ -238,6 +265,7 @@ class RF17To21Test {
     @DisplayName("[CP-RF21-01] Registra mascota vinculada al cliente permitiendo peso y foto vacíos")
     void cpRf2101_registraMascotaSinPesoNiFoto() {
         Apoderado owner = apoderado(10L, 7, true, "Ana", "Torres", "12345678");
+        owner.getUser().setActivo(false);
         MascotaRequest request = mascotaRequest(10L);
         Raza raza = new Raza();
         raza.setId(5L);
@@ -264,6 +292,7 @@ class RF17To21Test {
         verify(historiaRepository).save(historiaCaptor.capture());
         assertThat(historiaCaptor.getValue().getMascota().getId()).isEqualTo(50L);
         assertThat(response.getId()).isEqualTo(50L);
+        verify(invitacionAccesoService).enviarInvitacionAccesoSiTieneMascota(10L);
     }
 
     @Test
@@ -320,7 +349,9 @@ class RF17To21Test {
                 mascotaMapper,
                 mock(BusinessValidator.class),
                 mock(AuditLogService.class),
-                razaRepository
+                razaRepository,
+                invitacionAccesoService,
+                mock(MascotaRelacionService.class)
         );
     }
 
@@ -368,6 +399,7 @@ class RF17To21Test {
         apoderado.setNumeroDocumento(documento);
         apoderado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
         apoderado.setGenero(Genero.FEMENINO);
+        apoderado.setEstado(active);
         return apoderado;
     }
 

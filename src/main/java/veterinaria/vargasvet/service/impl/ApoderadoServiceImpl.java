@@ -117,7 +117,6 @@ public class ApoderadoServiceImpl implements ApoderadoService {
                 .or(() -> usuarioRepository.findByDniAndCompanyId(dto.getNumeroDocumento(), companyIdToUse));
         boolean esUsuarioNuevo = existingUsuario.isEmpty();
         Usuario savedUser;
-        String verificationToken = null;
 
         if (esUsuarioNuevo) {
             String username = dto.getUsername() == null ? null : dto.getUsername().trim().toLowerCase(java.util.Locale.ROOT);
@@ -137,9 +136,6 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             usuario.setCompany(companyToUse);
             usuario.setActivo(false);
             usuario.setEmailVerified(false);
-            verificationToken = SecurityTokenUtils.generate();
-            usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
-            usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
 
             savedUser = usuarioRepository.save(usuario);
         } else {
@@ -205,10 +201,11 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         companyMembershipService.syncLegacyCompanyField(savedUser);
         contactoService.actualizar(savedUser, companyToUse, dto.getTelefono(), dto.getDireccion());
 
-        if (esUsuarioNuevo) {
-            sendVerificationEmail(savedUser, dto.getNombre() + " " + dto.getApellido(), verificationToken);
-        } else if (esNuevaRelacionParaEsteUsuario) {
-            sendNewCompanyAccessEmail(savedUser, companyToUse);
+        // El alta del cliente solo registra sus datos. La invitacion para configurar
+        // el acceso se envia cuando la clinica registra su primera mascota. De este
+        // modo no se crean accesos utilizables para contactos sin pacientes asociados.
+        if (!esNuevaRelacionParaEsteUsuario) {
+            enviarInvitacionAccesoSiTieneMascota(savedApoderado.getId());
         }
 
         auditLogService.log(
@@ -224,9 +221,40 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         return profileDTO;
     }
 
-    private void sendVerificationEmail(Usuario usuario, String nombre, String verificationToken) {
+    @Override
+    @Transactional
+    public void enviarInvitacionAccesoSiTieneMascota(Long apoderadoId) {
+        Apoderado apoderado = apoderadoRepository.findById(apoderadoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Propietario no encontrado"));
+
+        if (!Boolean.TRUE.equals(apoderado.getEstado())
+                || !mascotaRepository.existsByApoderadoIdAndActivoTrue(apoderadoId)) {
+            return;
+        }
+
+        Usuario usuario = apoderado.getUser();
+        if (usuario == null) {
+            throw new IllegalStateException("El propietario no tiene una cuenta asociada");
+        }
+
+        Company company = apoderado.getCompany();
+        if (!usuario.isActivo() || !usuario.isEmailVerified()) {
+            String verificationToken = SecurityTokenUtils.generate();
+            usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
+            usuario.setVerificationTokenExpiresAt(
+                    veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
+            usuarioRepository.save(usuario);
+            String nombreCompleto = ((usuario.getNombre() == null ? "" : usuario.getNombre()) + " "
+                    + (usuario.getApellido() == null ? "" : usuario.getApellido())).trim();
+            sendVerificationEmail(usuario, nombreCompleto, verificationToken, company);
+            return;
+        }
+
+        sendNewCompanyAccessEmail(usuario, company);
+    }
+
+    private void sendVerificationEmail(Usuario usuario, String nombre, String verificationToken, Company company) {
         try {
-            Company company = usuario.getCompany();
             String resolvedCompanyName = company != null && company.getName() != null ? company.getName() : defaultCompanyName;
             String resolvedLogo = company != null && company.getLogoUrl() != null ? company.getLogoUrl() : defaultCompanyLogo;
             String resolvedEmail = company != null && company.getEmail() != null ? company.getEmail() : companyEmail;
