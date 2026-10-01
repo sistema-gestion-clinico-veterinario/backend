@@ -7,11 +7,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.AssertTrue;
 import lombok.Data;
+import veterinaria.vargasvet.domain.enums.EspecieMascota;
+import veterinaria.vargasvet.domain.enums.TipoAplicacionProducto;
 import veterinaria.vargasvet.validation.MeaningfulText;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class ProductoRequest {
@@ -64,4 +69,20 @@ public class ProductoRequest {
     private Boolean requiereReceta = false;
 
     private Long unidadMedidaId;
+
+    @NotNull(message = "Debe indicar si el producto es de uso general o para especies específicas")
+    private TipoAplicacionProducto aplicacionEspecie;
+
+    private Set<EspecieMascota> especies = new HashSet<>();
+
+    @AssertTrue(message = "Seleccione al menos una especie para el producto")
+    public boolean isAplicacionEspecieValida() {
+        if (aplicacionEspecie == null || aplicacionEspecie == TipoAplicacionProducto.NO_ESPECIFICADO) {
+            return false;
+        }
+        if (aplicacionEspecie == TipoAplicacionProducto.USO_GENERAL) {
+            return especies == null || especies.isEmpty();
+        }
+        return especies != null && !especies.isEmpty() && !especies.contains(null);
+    }
 }

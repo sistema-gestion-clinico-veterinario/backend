@@ -28,4 +28,12 @@ public class DetalleCuentaRequest {
     private BigDecimal precioUnitario;
 
     private Long productoId;
+
+    /**
+     * Obligatorio solo cuando el producto es de especies específicas y no corresponde a la
+     * especie de la mascota de la cita. En ese caso, además, el usuario debe ser veterinario
+     * autorizado (se deja auditoría del uso excepcional).
+     */
+    @Size(max = 500, message = "La justificación clínica no debe superar 500 caracteres")
+    private String justificacionUsoExcepcional;
 }

@@ -5,6 +5,9 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
+import veterinaria.vargasvet.domain.enums.EspecieMascota;
+import veterinaria.vargasvet.domain.enums.TipoAplicacionProducto;
 
 @Data
 public class ProductoResponse {
@@ -28,6 +31,8 @@ public class ProductoResponse {
     private Boolean requiereReceta;
     private Long unidadMedidaId;
     private String unidadMedidaNombre;
+    private TipoAplicacionProducto aplicacionEspecie;
+    private Set<EspecieMascota> especies;
     private LocalDate proximoVencimientoLote;
     private Boolean activo;
     private LocalDateTime createdAt;
