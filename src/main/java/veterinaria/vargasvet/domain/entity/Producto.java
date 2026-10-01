@@ -6,6 +6,10 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import veterinaria.vargasvet.domain.enums.EspecieMascota;
+import veterinaria.vargasvet.domain.enums.TipoAplicacionProducto;
 
 @Data
 @Entity
@@ -67,6 +71,16 @@ public class Producto {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "unidad_medida_id")
     private UnidadMedida unidadMedida;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "aplicacion_especie", nullable = false, length = 30)
+    private TipoAplicacionProducto aplicacionEspecie = TipoAplicacionProducto.NO_ESPECIFICADO;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "producto_especie", joinColumns = @JoinColumn(name = "producto_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "especie", nullable = false, length = 30)
+    private Set<EspecieMascota> especies = new HashSet<>();
 
     @Column(nullable = false)
     private Boolean activo = true;

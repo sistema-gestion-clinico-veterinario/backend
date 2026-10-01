@@ -7,8 +7,13 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import veterinaria.vargasvet.domain.entity.CategoriaProducto;
 import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Producto;
+import veterinaria.vargasvet.domain.enums.EspecieMascota;
+import veterinaria.vargasvet.domain.enums.TipoAplicacionProducto;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,6 +66,30 @@ class ProductoRepositoryIntegrationTest {
         entityManager.clear();
 
         assertThat(productoRepository.findById(producto.getId()).orElseThrow().getStock()).isEqualTo(3);
+    }
+
+    @Test
+    void findEspeciesPorProductoIdsDevuelveSoloLasEspeciesDeLosProductosSolicitados() {
+        Producto producto = crearProductoConStock(2);
+        producto.setAplicacionEspecie(TipoAplicacionProducto.ESPECIES_ESPECIFICAS);
+        producto.setEspecies(new HashSet<>(Set.of(EspecieMascota.PERRO, EspecieMascota.GATO)));
+        productoRepository.save(producto);
+
+        Producto otro = crearProductoConStock(1);
+        otro.setAplicacionEspecie(TipoAplicacionProducto.ESPECIES_ESPECIFICAS);
+        otro.setEspecies(new HashSet<>(Set.of(EspecieMascota.AVE)));
+        productoRepository.save(otro);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        List<Object[]> filas = productoRepository.findEspeciesPorProductoIds(List.of(producto.getId()));
+
+        assertThat(filas).hasSize(2);
+        assertThat(filas).allSatisfy(fila ->
+                assertThat(((Number) fila[0]).longValue()).isEqualTo(producto.getId()));
+        assertThat(filas.stream().map(fila -> (String) fila[1]).toList())
+                .containsExactlyInAnyOrder("PERRO", "GATO");
     }
 
     private Producto crearProductoConStock(int stock) {

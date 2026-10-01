@@ -3,11 +3,15 @@ package veterinaria.vargasvet.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Cita;
 import veterinaria.vargasvet.domain.entity.DetalleCuentaCita;
+import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.entity.Producto;
+import veterinaria.vargasvet.domain.enums.EspecieMascota;
+import veterinaria.vargasvet.domain.enums.TipoAplicacionProducto;
 import veterinaria.vargasvet.domain.enums.TipoDetalleCuenta;
 import veterinaria.vargasvet.dto.request.DetalleCuentaRequest;
 import veterinaria.vargasvet.dto.response.CuentaCitaResponse;
@@ -17,11 +21,16 @@ import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.DetalleCuentaCitaRepository;
 import veterinaria.vargasvet.repository.ProductoRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CuentaCitaService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +39,7 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
     private final CitaRepository citaRepository;
     private final DetalleCuentaCitaRepository detalleRepository;
     private final ProductoRepository productoRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -80,6 +90,7 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
 
         if (request.getProductoId() != null) {
             Producto producto = obtenerProductoDeLaEmpresa(request.getProductoId(), getCompanyId(cita));
+            validarAplicacionPorEspecie(cita, producto, request.getJustificacionUsoExcepcional());
             descontarStockOFallar(producto, request.getCantidad());
             detalle.setProducto(producto);
         }
@@ -105,6 +116,70 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
             throw new IllegalArgumentException("Stock insuficiente para «" + producto.getNombre() + "»");
         }
     }
+
+    /**
+     * Reglas de aplicación por especie cuando la venta queda vinculada a una mascota:
+     * USO_GENERAL y productos aún sin clasificar (NO_ESPECIFICADO) se permiten siempre;
+     * ESPECIES_ESPECIFICAS solo si la especie de la mascota está entre las autorizadas.
+     * Fuera de eso, el producto queda bloqueado salvo que un veterinario autorizado registre
+     * la justificación clínica, caso en el que se deja auditoría del uso excepcional.
+     */
+    private void validarAplicacionPorEspecie(Cita cita, Producto producto, String justificacion) {
+        if (producto.getAplicacionEspecie() != TipoAplicacionProducto.ESPECIES_ESPECIFICAS) {
+            return;
+        }
+        Mascota mascota = cita.getMascota();
+        EspecieMascota especieMascota = mascota != null ? mascota.getEspecie() : null;
+        if (especieMascota == null || producto.getEspecies().contains(especieMascota)) {
+            return;
+        }
+
+        String especies = describirEspecies(producto);
+        if (justificacion == null || justificacion.isBlank()) {
+            throw new IllegalArgumentException("El producto «" + producto.getNombre()
+                    + "» está indicado para " + especies
+                    + " y no corresponde a la especie de la mascota (" + especieMascota
+                    + "). Solo un veterinario autorizado puede registrarlo indicando la justificación clínica");
+        }
+        if (!esVeterinarioAutorizado()) {
+            throw new AccessDeniedException(
+                    "Solo un veterinario autorizado puede registrar el uso excepcional de un producto fuera de la especie indicada");
+        }
+        auditLogService.log(getCompanyId(cita), "USO_EXCEPCIONAL_ESPECIE", "Cuenta de cita",
+                "Uso excepcional de «" + producto.getNombre() + "» (SKU " + producto.getSku()
+                        + ") en " + mascota.getNombreCompleto() + " de especie " + especieMascota
+                        + ". Producto indicado para " + especies
+                        + ". Justificación clínica: " + justificacion.trim());
+    }
+
+    private boolean esVeterinarioAutorizado() {
+        return SecurityUtils.getCurrentRoleNames().stream()
+                .anyMatch(rol -> rol != null && rol.toUpperCase(Locale.ROOT).contains("VETERINARIO"));
+    }
+
+    private String describirEspecies(Producto producto) {
+        Set<EspecieMascota> especies = producto.getEspecies();
+        if (especies == null || especies.isEmpty()) {
+            return "sin especies registradas";
+        }
+        return especies.stream()
+                .map(this::enPlural)
+                .sorted()
+                .collect(Collectors.joining(", "));
+    }
+
+    private String enPlural(EspecieMascota especie) {
+        return ESPECIES_EN_PLURAL.getOrDefault(especie, especie.name().toLowerCase(Locale.ROOT));
+    }
+
+    private static final Map<EspecieMascota, String> ESPECIES_EN_PLURAL = Map.ofEntries(
+            Map.entry(EspecieMascota.PERRO, "perros"),
+            Map.entry(EspecieMascota.GATO, "gatos"),
+            Map.entry(EspecieMascota.AVE, "aves"),
+            Map.entry(EspecieMascota.REPTIL, "reptiles"),
+            Map.entry(EspecieMascota.ROEDOR, "roedores"),
+            Map.entry(EspecieMascota.EXOTICO, "exóticos"),
+            Map.entry(EspecieMascota.OTRO, "otros"));
 
     @Override
     @Transactional

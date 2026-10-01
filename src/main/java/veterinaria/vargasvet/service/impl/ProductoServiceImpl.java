@@ -11,6 +11,8 @@ import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.MarcaProducto;
 import veterinaria.vargasvet.domain.entity.Producto;
 import veterinaria.vargasvet.domain.entity.UnidadMedida;
+import veterinaria.vargasvet.domain.enums.EspecieMascota;
+import veterinaria.vargasvet.domain.enums.TipoAplicacionProducto;
 import veterinaria.vargasvet.dto.request.ProductoRequest;
 import veterinaria.vargasvet.dto.response.CategoriaConteoResponse;
 import veterinaria.vargasvet.dto.response.ProductoResponse;
@@ -29,6 +31,8 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -59,6 +63,7 @@ public class ProductoServiceImpl implements ProductoService {
                 activo,
                 PageRequest.of(page, size, Sort.by("nombre").ascending())
         ).map(this::toResponse);
+        enriquecerEspecies(pagina.getContent());
         enriquecerConProximoVencimiento(pagina.getContent());
         return pagina;
     }
@@ -69,6 +74,7 @@ public class ProductoServiceImpl implements ProductoService {
         Producto producto = obtenerPorSku(sku, companyId);
         validarPermisoSobreProducto(producto);
         ProductoResponse response = toResponse(producto);
+        poblarEspecies(producto, response);
         enriquecerConProximoVencimiento(List.of(response));
         return response;
     }
@@ -79,6 +85,7 @@ public class ProductoServiceImpl implements ProductoService {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
         List<ProductoResponse> responses = productoRepository.findByCompanyIdAndActivoTrue(resolvedCompanyId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
+        enriquecerEspecies(responses);
         enriquecerConProximoVencimiento(responses);
         return responses;
     }
@@ -136,6 +143,7 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setFechaVencimiento(request.getFechaVencimiento());
         producto.setRequiereReceta(Boolean.TRUE.equals(request.getRequiereReceta()));
         producto.setUnidadMedida(unidadMedida);
+        aplicarEspecies(producto, request);
         producto.setActivo(true);
         producto.setCreatedBy(SecurityUtils.getCurrentUserEmail());
         producto.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
@@ -145,7 +153,9 @@ public class ProductoServiceImpl implements ProductoService {
                 "Se creó el producto " + guardado.getNombre() + " (" + guardado.getSku()
                         + ") con la marca " + marca.getNombre());
 
-        return toResponse(guardado);
+        ProductoResponse response = toResponse(guardado);
+        poblarEspecies(guardado, response);
+        return response;
     }
 
     @Override
@@ -180,6 +190,7 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setFechaVencimiento(request.getFechaVencimiento());
         producto.setRequiereReceta(Boolean.TRUE.equals(request.getRequiereReceta()));
         producto.setUnidadMedida(unidadMedida);
+        aplicarEspecies(producto, request);
         producto.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
 
         Producto guardado = productoRepository.save(producto);
@@ -188,7 +199,9 @@ public class ProductoServiceImpl implements ProductoService {
                         + "). Marca: " + (marcaAnterior != null ? marcaAnterior : "sin marca")
                         + " → " + marca.getNombre());
 
-        return toResponse(guardado);
+        ProductoResponse response = toResponse(guardado);
+        poblarEspecies(guardado, response);
+        return response;
     }
 
     @Override
@@ -218,7 +231,9 @@ public class ProductoServiceImpl implements ProductoService {
                 "Inventario",
                 (Boolean.TRUE.equals(guardado.getActivo()) ? "Se activó" : "Se desactivó") + " el producto " + guardado.getNombre() + " (" + guardado.getSku() + ")");
 
-        return toResponse(guardado);
+        ProductoResponse response = toResponse(guardado);
+        poblarEspecies(guardado, response);
+        return response;
     }
 
     private CategoriaProducto obtenerCategoriaDeLaEmpresa(Long categoriaId, Integer companyId) {
@@ -317,7 +332,49 @@ public class ProductoServiceImpl implements ProductoService {
             r.setUnidadMedidaId(p.getUnidadMedida().getId());
             r.setUnidadMedidaNombre(p.getUnidadMedida().getNombre());
         }
+        r.setAplicacionEspecie(p.getAplicacionEspecie());
+        // Las especies NO se leen aquí: en listados la colección es lazy y provocaría un
+        // SELECT por producto (N+1). Se pueblan con poblarEspecies() o enriquecerEspecies().
+        r.setEspecies(new HashSet<>());
         return r;
+    }
+
+    /** Copia las especies de una única entidad ya cargada en memoria (1 producto, sin N+1). */
+    private void poblarEspecies(Producto p, ProductoResponse r) {
+        r.setEspecies(p.getEspecies() != null ? new HashSet<>(p.getEspecies()) : new HashSet<>());
+    }
+
+    /** Carga las especies de un listado completo en una sola consulta por lote de IDs. */
+    private void enriquecerEspecies(List<ProductoResponse> responses) {
+        if (responses.isEmpty()) return;
+        List<Long> ids = responses.stream().map(ProductoResponse::getId).collect(Collectors.toList());
+        Map<Long, Set<EspecieMascota>> porProducto = new HashMap<>();
+        for (Object[] fila : productoRepository.findEspeciesPorProductoIds(ids)) {
+            if (fila == null || fila[0] == null || fila[1] == null) continue;
+            Long productoId = ((Number) fila[0]).longValue();
+            String especie = (String) fila[1];
+            porProducto.computeIfAbsent(productoId, k -> new HashSet<>()).add(EspecieMascota.valueOf(especie));
+        }
+        responses.forEach(r -> r.setEspecies(porProducto.getOrDefault(r.getId(), new HashSet<>())));
+    }
+
+    private void aplicarEspecies(Producto producto, ProductoRequest request) {
+        if (request.getAplicacionEspecie() == null
+                || request.getAplicacionEspecie() == TipoAplicacionProducto.NO_ESPECIFICADO) {
+            throw new IllegalArgumentException("Debe indicar la aplicación por especie del producto");
+        }
+        producto.setAplicacionEspecie(request.getAplicacionEspecie());
+        if (producto.getEspecies() == null) {
+            producto.setEspecies(new HashSet<>());
+        } else {
+            producto.getEspecies().clear();
+        }
+        if (request.getAplicacionEspecie() == TipoAplicacionProducto.ESPECIES_ESPECIFICAS) {
+            if (request.getEspecies() == null || request.getEspecies().isEmpty()) {
+                throw new IllegalArgumentException("Seleccione al menos una especie para el producto");
+            }
+            producto.getEspecies().addAll(request.getEspecies());
+        }
     }
 
     private Producto obtenerPorSku(String sku, Integer companyId) {
