@@ -61,6 +61,14 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
             "WHERE l.producto.id IN :productoIds AND l.activo = true GROUP BY l.producto.id")
     List<Object[]> findProximoVencimientoPorProducto(@Param("productoIds") List<Long> productoIds);
 
+    /**
+     * Carga las especies de todos los productos indicados en una sola consulta.
+     * Evita el acceso lazy por producto (N+1) al mapear listados de ProductoResponse.
+     */
+    @Query(value = "SELECT pe.producto_id, pe.especie FROM producto_especie pe " +
+            "WHERE pe.producto_id IN :productoIds", nativeQuery = true)
+    List<Object[]> findEspeciesPorProductoIds(@Param("productoIds") List<Long> productoIds);
+
     @Modifying(flushAutomatically = true)
     @Query("UPDATE Producto p SET p.stock = p.stock - :cantidad WHERE p.id = :id AND p.stock >= :cantidad")
     int descontarStock(@Param("id") Long id, @Param("cantidad") Integer cantidad);
