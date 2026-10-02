@@ -36,6 +36,9 @@ public class Lote {
     @Column(nullable = false)
     private Integer cantidad = 0;
 
+    @Column(name = "cantidad_inicial", nullable = false)
+    private Integer cantidadInicial = 0;
+
     @Column(name = "costo_unitario", precision = 10, scale = 2)
     private BigDecimal costoUnitario;
 

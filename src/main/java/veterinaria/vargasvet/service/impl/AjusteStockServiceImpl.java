@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.AjusteStock;
 import veterinaria.vargasvet.domain.entity.Producto;
+import veterinaria.vargasvet.domain.enums.TipoControlStock;
 import veterinaria.vargasvet.dto.request.AjusteStockRequest;
 import veterinaria.vargasvet.dto.response.AjusteStockResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
@@ -33,6 +34,10 @@ public class AjusteStockServiceImpl implements AjusteStockService {
         Producto producto = productoRepository.findById(request.getProductoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + request.getProductoId()));
         validarPermisoSobreProducto(producto);
+        if (producto.getControlStock() == TipoControlStock.LOTES) {
+            throw new IllegalArgumentException(
+                    "El stock de este producto se controla por lotes. Registra el ajuste sobre el lote correspondiente");
+        }
 
         int stockAnterior = producto.getStock() != null ? producto.getStock() : 0;
         int stockNuevo = request.getStockNuevo();

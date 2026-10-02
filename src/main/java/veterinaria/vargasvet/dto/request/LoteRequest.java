@@ -30,7 +30,7 @@ public class LoteRequest {
     private LocalDate fechaIngreso;
 
     @NotNull(message = "La cantidad es obligatoria")
-    @Min(value = 0, message = "La cantidad no puede ser negativa")
+    @Min(value = 1, message = "La cantidad recibida debe ser mayor que cero")
     private Integer cantidad;
 
     @DecimalMin(value = "0.0", message = "El costo unitario no puede ser negativo")
