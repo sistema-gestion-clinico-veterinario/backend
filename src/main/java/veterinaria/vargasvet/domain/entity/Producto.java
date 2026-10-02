@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.domain.enums.TipoAplicacionProducto;
+import veterinaria.vargasvet.domain.enums.TipoControlStock;
 
 @Data
 @Entity
@@ -46,6 +47,10 @@ public class Producto {
 
     @Column(name = "stock", nullable = false)
     private Integer stock = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "control_stock", nullable = false, length = 20)
+    private TipoControlStock controlStock = TipoControlStock.DIRECTO;
 
     @Column(name = "stock_minimo", nullable = false)
     private Integer stockMinimo = 0;

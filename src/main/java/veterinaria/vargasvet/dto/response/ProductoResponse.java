@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.domain.enums.TipoAplicacionProducto;
+import veterinaria.vargasvet.domain.enums.TipoControlStock;
 
 @Data
 public class ProductoResponse {
@@ -22,6 +23,7 @@ public class ProductoResponse {
     private String marca;
     private Long marcaId;
     private Integer stock;
+    private TipoControlStock controlStock;
     private Integer stockMinimo;
     private String descripcion;
     private String imagenUrl;

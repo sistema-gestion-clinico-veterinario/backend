@@ -11,6 +11,7 @@ import jakarta.validation.constraints.AssertTrue;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.domain.enums.TipoAplicacionProducto;
+import veterinaria.vargasvet.domain.enums.TipoControlStock;
 import veterinaria.vargasvet.validation.MeaningfulText;
 
 import java.math.BigDecimal;
@@ -48,6 +49,9 @@ public class ProductoRequest {
 
     @Min(value = 0, message = "El stock no puede ser negativo")
     private Integer stock = 0;
+
+    @NotNull(message = "Debe indicar cómo se controlará el stock")
+    private TipoControlStock controlStock = TipoControlStock.DIRECTO;
 
     @Min(value = 0, message = "El stock mínimo no puede ser negativo")
     private Integer stockMinimo = 0;

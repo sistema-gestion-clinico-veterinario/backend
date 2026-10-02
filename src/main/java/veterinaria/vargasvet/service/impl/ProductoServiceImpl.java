@@ -13,6 +13,7 @@ import veterinaria.vargasvet.domain.entity.Producto;
 import veterinaria.vargasvet.domain.entity.UnidadMedida;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.domain.enums.TipoAplicacionProducto;
+import veterinaria.vargasvet.domain.enums.TipoControlStock;
 import veterinaria.vargasvet.dto.request.ProductoRequest;
 import veterinaria.vargasvet.dto.response.CategoriaConteoResponse;
 import veterinaria.vargasvet.dto.response.ProductoResponse;
@@ -21,6 +22,7 @@ import veterinaria.vargasvet.repository.CategoriaProductoRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.MarcaProductoRepository;
 import veterinaria.vargasvet.repository.ProductoRepository;
+import veterinaria.vargasvet.repository.LoteRepository;
 import veterinaria.vargasvet.repository.UnidadMedidaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.AuditLogService;
@@ -44,6 +46,7 @@ public class ProductoServiceImpl implements ProductoService {
     private final CategoriaProductoRepository categoriaProductoRepository;
     private final UnidadMedidaRepository unidadMedidaRepository;
     private final MarcaProductoRepository marcaProductoRepository;
+    private final LoteRepository loteRepository;
     private final AuditLogService auditLogService;
 
     private static final String SKU_PREFIX = "PRD-";
@@ -65,6 +68,7 @@ public class ProductoServiceImpl implements ProductoService {
         ).map(this::toResponse);
         enriquecerEspecies(pagina.getContent());
         enriquecerConProximoVencimiento(pagina.getContent());
+        enriquecerStockPorLotes(pagina.getContent());
         return pagina;
     }
 
@@ -76,6 +80,7 @@ public class ProductoServiceImpl implements ProductoService {
         ProductoResponse response = toResponse(producto);
         poblarEspecies(producto, response);
         enriquecerConProximoVencimiento(List.of(response));
+        enriquecerStockPorLotes(List.of(response));
         return response;
     }
 
@@ -87,6 +92,7 @@ public class ProductoServiceImpl implements ProductoService {
                 .stream().map(this::toResponse).collect(Collectors.toList());
         enriquecerEspecies(responses);
         enriquecerConProximoVencimiento(responses);
+        enriquecerStockPorLotes(responses);
         return responses;
     }
 
@@ -134,13 +140,16 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setCosto(request.getCosto());
         producto.setMarcaProducto(marca);
         producto.setMarca(marca.getNombre());
-        producto.setStock(request.getStock() != null ? request.getStock() : 0);
+        producto.setControlStock(request.getControlStock());
+        producto.setStock(request.getControlStock() == TipoControlStock.LOTES
+                ? 0 : (request.getStock() != null ? request.getStock() : 0));
         producto.setStockMinimo(request.getStockMinimo() != null ? request.getStockMinimo() : 0);
         producto.setDescripcion(request.getDescripcion() != null ? request.getDescripcion().trim() : null);
         producto.setImagenUrl(request.getImagenUrl());
         producto.setSku(generarSkuAleatorio(resolvedCompanyId));
         producto.setCodigoBarras(normalizarVacio(request.getCodigoBarras()));
-        producto.setFechaVencimiento(request.getFechaVencimiento());
+        producto.setFechaVencimiento(request.getControlStock() == TipoControlStock.LOTES
+                ? null : request.getFechaVencimiento());
         producto.setRequiereReceta(Boolean.TRUE.equals(request.getRequiereReceta()));
         producto.setUnidadMedida(unidadMedida);
         aplicarEspecies(producto, request);
@@ -155,6 +164,7 @@ public class ProductoServiceImpl implements ProductoService {
 
         ProductoResponse response = toResponse(guardado);
         poblarEspecies(guardado, response);
+        enriquecerStockPorLotes(List.of(response));
         return response;
     }
 
@@ -171,6 +181,15 @@ public class ProductoServiceImpl implements ProductoService {
                 marcaActualId != null && marcaActualId.equals(request.getMarcaId()));
         String marcaAnterior = producto.getMarcaProducto() != null
                 ? producto.getMarcaProducto().getNombre() : producto.getMarca();
+        TipoControlStock controlSolicitado = request.getControlStock();
+        if (producto.getControlStock() != controlSolicitado) {
+            if ((producto.getStock() != null && producto.getStock() > 0)
+                    || loteRepository.countByProductoId(producto.getId()) > 0) {
+                throw new IllegalArgumentException(
+                        "No se puede cambiar el tipo de control porque el producto ya tiene stock o lotes registrados");
+            }
+            producto.setControlStock(controlSolicitado);
+        }
 
         producto.setNombre(request.getNombre().trim());
         producto.setCategoria(categoria);
@@ -178,8 +197,10 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setCosto(request.getCosto());
         producto.setMarcaProducto(marca);
         producto.setMarca(marca.getNombre());
-        if (request.getStock() != null) {
+        if (producto.getControlStock() == TipoControlStock.DIRECTO && request.getStock() != null) {
             producto.setStock(request.getStock());
+        } else if (producto.getControlStock() == TipoControlStock.LOTES) {
+            producto.setStock(0);
         }
         if (request.getStockMinimo() != null) {
             producto.setStockMinimo(request.getStockMinimo());
@@ -187,7 +208,8 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setDescripcion(request.getDescripcion() != null ? request.getDescripcion().trim() : null);
         producto.setImagenUrl(request.getImagenUrl());
         producto.setCodigoBarras(normalizarVacio(request.getCodigoBarras()));
-        producto.setFechaVencimiento(request.getFechaVencimiento());
+        producto.setFechaVencimiento(producto.getControlStock() == TipoControlStock.LOTES
+                ? null : request.getFechaVencimiento());
         producto.setRequiereReceta(Boolean.TRUE.equals(request.getRequiereReceta()));
         producto.setUnidadMedida(unidadMedida);
         aplicarEspecies(producto, request);
@@ -201,6 +223,7 @@ public class ProductoServiceImpl implements ProductoService {
 
         ProductoResponse response = toResponse(guardado);
         poblarEspecies(guardado, response);
+        enriquecerStockPorLotes(List.of(response));
         return response;
     }
 
@@ -233,6 +256,7 @@ public class ProductoServiceImpl implements ProductoService {
 
         ProductoResponse response = toResponse(guardado);
         poblarEspecies(guardado, response);
+        enriquecerStockPorLotes(List.of(response));
         return response;
     }
 
@@ -308,6 +332,7 @@ public class ProductoServiceImpl implements ProductoService {
             r.setMarca(p.getMarca());
         }
         r.setStock(p.getStock());
+        r.setControlStock(p.getControlStock());
         r.setStockMinimo(p.getStockMinimo());
         r.setDescripcion(p.getDescripcion());
         r.setImagenUrl(p.getImagenUrl());
@@ -356,6 +381,22 @@ public class ProductoServiceImpl implements ProductoService {
             porProducto.computeIfAbsent(productoId, k -> new HashSet<>()).add(EspecieMascota.valueOf(especie));
         }
         responses.forEach(r -> r.setEspecies(porProducto.getOrDefault(r.getId(), new HashSet<>())));
+    }
+
+    private void enriquecerStockPorLotes(List<ProductoResponse> responses) {
+        List<Long> idsPorLotes = responses.stream()
+                .filter(r -> r.getControlStock() == TipoControlStock.LOTES)
+                .map(ProductoResponse::getId)
+                .toList();
+        if (idsPorLotes.isEmpty()) return;
+
+        Map<Long, Integer> stockPorProducto = new HashMap<>();
+        for (Object[] fila : loteRepository.sumarDisponiblesPorProducto(idsPorLotes, LocalDate.now())) {
+            stockPorProducto.put(((Number) fila[0]).longValue(), ((Number) fila[1]).intValue());
+        }
+        responses.stream()
+                .filter(r -> r.getControlStock() == TipoControlStock.LOTES)
+                .forEach(r -> r.setStock(stockPorProducto.getOrDefault(r.getId(), 0)));
     }
 
     private void aplicarEspecies(Producto producto, ProductoRequest request) {

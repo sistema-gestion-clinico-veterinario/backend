@@ -20,9 +20,11 @@ import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.DetalleCuentaCitaRepository;
 import veterinaria.vargasvet.repository.ProductoRepository;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CuentaCitaService;
+import veterinaria.vargasvet.service.InventarioStockService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -40,6 +42,8 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
     private final DetalleCuentaCitaRepository detalleRepository;
     private final ProductoRepository productoRepository;
     private final AuditLogService auditLogService;
+    private final AccesoValidator accesoValidator;
+    private final InventarioStockService inventarioStockService;
 
     @Override
     @Transactional
@@ -91,11 +95,14 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
         if (request.getProductoId() != null) {
             Producto producto = obtenerProductoDeLaEmpresa(request.getProductoId(), getCompanyId(cita));
             validarAplicacionPorEspecie(cita, producto, request.getJustificacionUsoExcepcional());
-            descontarStockOFallar(producto, request.getCantidad());
             detalle.setProducto(producto);
         }
 
-        detalleRepository.save(detalle);
+        detalle = detalleRepository.saveAndFlush(detalle);
+        if (detalle.getProducto() != null) {
+            inventarioStockService.descontar(detalle.getProducto(), detalle.getCantidad(),
+                    "CUENTA_CITA_DETALLE", detalle.getId());
+        }
 
         recalcularTotal(cita);
         return map(cita, detalleRepository.findByCitaIdOrderByCreatedAtAscIdAsc(citaId));
@@ -108,13 +115,6 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
             throw new IllegalArgumentException("El producto no pertenece a esta empresa");
         }
         return producto;
-    }
-
-    private void descontarStockOFallar(Producto producto, Integer cantidad) {
-        int filasActualizadas = productoRepository.descontarStock(producto.getId(), cantidad);
-        if (filasActualizadas == 0) {
-            throw new IllegalArgumentException("Stock insuficiente para «" + producto.getNombre() + "»");
-        }
     }
 
     /**
@@ -139,11 +139,11 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
             throw new IllegalArgumentException("El producto «" + producto.getNombre()
                     + "» está indicado para " + especies
                     + " y no corresponde a la especie de la mascota (" + especieMascota
-                    + "). Solo un veterinario autorizado puede registrarlo indicando la justificación clínica");
+                    + "). Un usuario con permiso para crear o editar productos puede autorizarlo indicando la justificación clínica");
         }
-        if (!esVeterinarioAutorizado()) {
+        if (!puedeAutorizarUsoExcepcional()) {
             throw new AccessDeniedException(
-                    "Solo un veterinario autorizado puede registrar el uso excepcional de un producto fuera de la especie indicada");
+                    "No tienes permiso para autorizar el uso excepcional de este producto");
         }
         auditLogService.log(getCompanyId(cita), "USO_EXCEPCIONAL_ESPECIE", "Cuenta de cita",
                 "Uso excepcional de «" + producto.getNombre() + "» (SKU " + producto.getSku()
@@ -152,9 +152,9 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
                         + ". Justificación clínica: " + justificacion.trim());
     }
 
-    private boolean esVeterinarioAutorizado() {
-        return SecurityUtils.getCurrentRoleNames().stream()
-                .anyMatch(rol -> rol != null && rol.toUpperCase(Locale.ROOT).contains("VETERINARIO"));
+    private boolean puedeAutorizarUsoExcepcional() {
+        return accesoValidator.can("VISTA_PRODUCTOS", "ESCRIBIR")
+                || accesoValidator.can("VISTA_PRODUCTOS", "MODIFICAR");
     }
 
     private String describirEspecies(Producto producto) {
@@ -193,7 +193,8 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
             throw new IllegalArgumentException("El servicio principal de la cita no se puede eliminar");
         }
         if (detalle.getProducto() != null) {
-            productoRepository.restaurarStock(detalle.getProducto().getId(), detalle.getCantidad());
+            inventarioStockService.restaurar(detalle.getProducto(), detalle.getCantidad(),
+                    "CUENTA_CITA_DETALLE", detalle.getId());
         }
         detalleRepository.delete(detalle);
         detalleRepository.flush();
@@ -223,9 +224,11 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
         if (detalle.getProducto() != null) {
             int delta = request.getCantidad() - detalle.getCantidad();
             if (delta > 0) {
-                descontarStockOFallar(detalle.getProducto(), delta);
+                inventarioStockService.descontar(detalle.getProducto(), delta,
+                        "CUENTA_CITA_DETALLE", detalle.getId());
             } else if (delta < 0) {
-                productoRepository.restaurarStock(detalle.getProducto().getId(), -delta);
+                inventarioStockService.restaurar(detalle.getProducto(), -delta,
+                        "CUENTA_CITA_DETALLE", detalle.getId());
             }
         }
 

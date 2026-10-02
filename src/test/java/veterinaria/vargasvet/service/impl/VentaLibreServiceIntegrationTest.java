@@ -23,6 +23,8 @@ import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.ProductoRepository;
 import veterinaria.vargasvet.repository.PurchaseRepository;
 import veterinaria.vargasvet.repository.VentaLibreDetalleRepository;
+import veterinaria.vargasvet.repository.LoteRepository;
+import veterinaria.vargasvet.repository.SalidaLoteRepository;
 import veterinaria.vargasvet.security.UsuarioPrincipal;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CajaService;
@@ -54,6 +56,12 @@ class VentaLibreServiceIntegrationTest {
     private VentaLibreDetalleRepository ventaLibreDetalleRepository;
 
     @Autowired
+    private LoteRepository loteRepository;
+
+    @Autowired
+    private SalidaLoteRepository salidaLoteRepository;
+
+    @Autowired
     private TestEntityManager entityManager;
 
     private VentaLibreServiceImpl ventaLibreService;
@@ -63,7 +71,8 @@ class VentaLibreServiceIntegrationTest {
         ventaLibreService = new VentaLibreServiceImpl(
                 purchaseRepository, ventaLibreDetalleRepository, productoRepository,
                 mock(veterinaria.vargasvet.repository.ApoderadoRepository.class),
-                companyRepository, mock(AuditLogService.class), mock(CajaService.class)
+                companyRepository, mock(AuditLogService.class), mock(CajaService.class),
+                new InventarioStockServiceImpl(productoRepository, loteRepository, salidaLoteRepository)
         );
     }
 

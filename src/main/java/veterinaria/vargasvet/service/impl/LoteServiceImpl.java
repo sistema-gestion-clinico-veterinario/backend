@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Lote;
 import veterinaria.vargasvet.domain.entity.Producto;
+import veterinaria.vargasvet.domain.enums.TipoControlStock;
 import veterinaria.vargasvet.dto.request.LoteRequest;
 import veterinaria.vargasvet.dto.response.AlertaVencimientoResponse;
 import veterinaria.vargasvet.dto.response.LoteResponse;
@@ -63,6 +65,9 @@ public class LoteServiceImpl implements LoteService {
     @Transactional
     public LoteResponse crear(LoteRequest request) {
         Producto producto = obtenerProductoConPermiso(request.getProductoId());
+        if (producto.getControlStock() != TipoControlStock.LOTES) {
+            throw new IllegalArgumentException("Este producto usa control de stock directo y no admite lotes");
+        }
         String numeroLote = request.getNumeroLote().trim();
 
         if (loteRepository.existsByProductoIdAndNumeroLoteIgnoreCase(producto.getId(), numeroLote)) {
@@ -76,12 +81,13 @@ public class LoteServiceImpl implements LoteService {
         lote.setFechaVencimiento(request.getFechaVencimiento());
         lote.setFechaIngreso(request.getFechaIngreso());
         lote.setCantidad(request.getCantidad());
+        lote.setCantidadInicial(request.getCantidad());
         lote.setCostoUnitario(request.getCostoUnitario());
         lote.setActivo(true);
         lote.setCreatedBy(SecurityUtils.getCurrentUserEmail());
         lote.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
 
-        Lote guardado = loteRepository.save(lote);
+        Lote guardado = guardarSinDuplicar(lote, numeroLote);
         auditLogService.log(producto.getCompany().getId(), "CREAR_LOTE", "Inventario",
                 "Se creó el lote " + guardado.getNumeroLote() + " del producto " + producto.getNombre());
 
@@ -94,6 +100,9 @@ public class LoteServiceImpl implements LoteService {
         Lote lote = loteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lote no encontrado con ID: " + id));
         validarPermisoSobreLote(lote);
+        if (!lote.getProducto().getId().equals(request.getProductoId())) {
+            throw new IllegalArgumentException("No se puede cambiar el producto de un lote ya registrado");
+        }
         String numeroLote = request.getNumeroLote().trim();
 
         if (loteRepository.existsByProductoIdAndNumeroLoteIgnoreCaseAndIdNot(lote.getProducto().getId(), numeroLote, id)) {
@@ -103,11 +112,19 @@ public class LoteServiceImpl implements LoteService {
         lote.setNumeroLote(numeroLote);
         lote.setFechaVencimiento(request.getFechaVencimiento());
         lote.setFechaIngreso(request.getFechaIngreso());
-        lote.setCantidad(request.getCantidad());
+        int cantidadInicial = lote.getCantidadInicial() != null ? lote.getCantidadInicial() : lote.getCantidad();
+        int cantidadDisponible = lote.getCantidad() != null ? lote.getCantidad() : 0;
+        int cantidadConsumida = cantidadInicial - cantidadDisponible;
+        if (request.getCantidad() < cantidadConsumida) {
+            throw new IllegalArgumentException("La cantidad recibida no puede ser menor que las "
+                    + cantidadConsumida + " unidades que ya salieron de este lote");
+        }
+        lote.setCantidadInicial(request.getCantidad());
+        lote.setCantidad(request.getCantidad() - cantidadConsumida);
         lote.setCostoUnitario(request.getCostoUnitario());
         lote.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
 
-        Lote guardado = loteRepository.save(lote);
+        Lote guardado = guardarSinDuplicar(lote, numeroLote);
         auditLogService.log(guardado.getCompany().getId(), "ACTUALIZAR_LOTE", "Inventario",
                 "Se actualizó el lote " + guardado.getNumeroLote() + " del producto " + guardado.getProducto().getNombre());
 
@@ -120,6 +137,7 @@ public class LoteServiceImpl implements LoteService {
         Lote lote = loteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lote no encontrado con ID: " + id));
         validarPermisoSobreLote(lote);
+        validarLoteSinStockDisponible(lote);
         lote.setActivo(false);
         lote.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
         loteRepository.save(lote);
@@ -134,6 +152,11 @@ public class LoteServiceImpl implements LoteService {
         Lote lote = loteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lote no encontrado con ID: " + id));
         validarPermisoSobreLote(lote);
+        if (Boolean.TRUE.equals(lote.getActivo())) {
+            validarLoteSinStockDisponible(lote);
+        } else if (lote.getFechaVencimiento().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("No se puede reactivar un lote vencido");
+        }
         lote.setActivo(!Boolean.TRUE.equals(lote.getActivo()));
         lote.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
 
@@ -199,6 +222,26 @@ public class LoteServiceImpl implements LoteService {
         return SecurityUtils.getCurrentCompanyId();
     }
 
+    private void validarLoteSinStockDisponible(Lote lote) {
+        if (lote.getCantidad() != null && lote.getCantidad() > 0) {
+            throw new IllegalArgumentException(
+                    "No se puede desactivar un lote con stock disponible. Registra primero la merma, devolución o ajuste correspondiente");
+        }
+    }
+
+    /**
+     * La consulta previa ofrece un mensaje temprano, pero el índice único es quien evita
+     * realmente que dos solicitudes simultáneas creen el mismo lote.
+     */
+    private Lote guardarSinDuplicar(Lote lote, String numeroLote) {
+        try {
+            return loteRepository.saveAndFlush(lote);
+        } catch (DataIntegrityViolationException ex) {
+            throw new IllegalArgumentException(
+                    "Ya existe un lote con el número \"" + numeroLote + "\" para este producto", ex);
+        }
+    }
+
     private LoteResponse toResponse(Lote l) {
         LoteResponse r = new LoteResponse();
         r.setId(l.getId());
@@ -206,6 +249,7 @@ public class LoteServiceImpl implements LoteService {
         r.setFechaVencimiento(l.getFechaVencimiento());
         r.setFechaIngreso(l.getFechaIngreso());
         r.setCantidad(l.getCantidad());
+        r.setCantidadInicial(l.getCantidadInicial());
         r.setCostoUnitario(l.getCostoUnitario());
         r.setActivo(l.getActivo());
         r.setCreatedAt(l.getCreatedAt());
