@@ -25,8 +25,10 @@ import veterinaria.vargasvet.dto.response.CuentaCitaResponse;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.DetalleCuentaCitaRepository;
 import veterinaria.vargasvet.repository.ProductoRepository;
+import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.security.UsuarioPrincipal;
 import veterinaria.vargasvet.service.AuditLogService;
+import veterinaria.vargasvet.service.InventarioStockService;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -70,6 +72,12 @@ class CuentaCitaEspecieProductoUnitTest {
     @Mock
     private AuditLogService auditLogService;
 
+    @Mock
+    private AccesoValidator accesoValidator;
+
+    @Mock
+    private InventarioStockService inventarioStockService;
+
     @InjectMocks
     private CuentaCitaServiceImpl service;
 
@@ -88,7 +96,7 @@ class CuentaCitaEspecieProductoUnitTest {
         CuentaCitaResponse response = assertDoesNotThrow(() -> service.agregarDetalle(CITA_ID, request()));
 
         assertNotNull(response);
-        verify(productoRepository).descontarStock(PRODUCTO_ID, 1);
+        verify(inventarioStockService).descontar(any(Producto.class), eq(1), eq("CUENTA_CITA_DETALLE"), anyLong());
         verify(auditLogService, never()).log(anyInt(), anyString(), anyString(), anyString());
     }
 
@@ -100,7 +108,7 @@ class CuentaCitaEspecieProductoUnitTest {
         prepararStockYGuardadoExitoso();
 
         assertNotNull(assertDoesNotThrow(() -> service.agregarDetalle(CITA_ID, request())));
-        verify(productoRepository).descontarStock(PRODUCTO_ID, 1);
+        verify(inventarioStockService).descontar(any(Producto.class), eq(1), eq("CUENTA_CITA_DETALLE"), anyLong());
     }
 
     @Test
@@ -112,7 +120,7 @@ class CuentaCitaEspecieProductoUnitTest {
         prepararStockYGuardadoExitoso();
 
         assertNotNull(assertDoesNotThrow(() -> service.agregarDetalle(CITA_ID, request())));
-        verify(productoRepository).descontarStock(PRODUCTO_ID, 1);
+        verify(inventarioStockService).descontar(any(Producto.class), eq(1), eq("CUENTA_CITA_DETALLE"), anyLong());
         verify(auditLogService, never()).log(anyInt(), anyString(), anyString(), anyString());
     }
 
@@ -128,12 +136,12 @@ class CuentaCitaEspecieProductoUnitTest {
 
         assertTrue(ex.getMessage().contains("no corresponde a la especie"), ex.getMessage());
         assertTrue(ex.getMessage().contains("gatos"), ex.getMessage());
-        verify(productoRepository, never()).descontarStock(anyLong(), anyInt());
+        verify(inventarioStockService, never()).descontar(any(), anyInt(), anyString(), anyLong());
         verify(auditLogService, never()).log(anyInt(), anyString(), anyString(), anyString());
     }
 
     @Test
-    void usoExcepcionalJustificadoLoRechazaSiElRolNoEsVeterinario() {
+    void usoExcepcionalJustificadoLoRechazaSinPermisoDeProducto() {
         autenticar(COMPANY_ID, "ROLE_ADMIN");
         prepararCita(EspecieMascota.AVE);
         prepararProducto(producto(TipoAplicacionProducto.ESPECIES_ESPECIFICAS,
@@ -143,28 +151,48 @@ class CuentaCitaEspecieProductoUnitTest {
 
         assertThrows(AccessDeniedException.class, () -> service.agregarDetalle(CITA_ID, request));
 
-        verify(productoRepository, never()).descontarStock(anyLong(), anyInt());
+        verify(inventarioStockService, never()).descontar(any(), anyInt(), anyString(), anyLong());
         verify(auditLogService, never()).log(anyInt(), anyString(), anyString(), anyString());
     }
 
     @Test
-    void usoExcepcionalJustificadoLoRegistraVeterinarioYDejaAuditoria() {
+    void usoExcepcionalJustificadoLoRegistraConPermisoDeCrearYDejaAuditoria() {
         autenticar(COMPANY_ID, "ROLE_VETERINARIO");
         prepararCita(EspecieMascota.AVE);
         prepararProducto(producto(TipoAplicacionProducto.ESPECIES_ESPECIFICAS,
                 Set.of(EspecieMascota.PERRO, EspecieMascota.GATO)));
         DetalleCuentaRequest request = request();
         request.setJustificacionUsoExcepcional("  Paciente con gusanera, dosis unica autorizada  ");
+        when(accesoValidator.can("VISTA_PRODUCTOS", "ESCRIBIR")).thenReturn(true);
         prepararStockYGuardadoExitoso();
 
         assertNotNull(assertDoesNotThrow(() -> service.agregarDetalle(CITA_ID, request)));
 
-        verify(productoRepository).descontarStock(PRODUCTO_ID, 1);
+        verify(inventarioStockService).descontar(any(Producto.class), eq(1), eq("CUENTA_CITA_DETALLE"), anyLong());
         verify(auditLogService).log(
                 eq(COMPANY_ID),
                 eq("USO_EXCEPCIONAL_ESPECIE"),
                 eq("Cuenta de cita"),
                 contains("Justificación clínica: Paciente con gusanera"));
+    }
+
+    @Test
+    void usoExcepcionalJustificadoTambienAceptaPermisoDeEditarProducto() {
+        autenticar(COMPANY_ID, "ROLE_PERSONALIZADO");
+        prepararCita(EspecieMascota.AVE);
+        prepararProducto(producto(TipoAplicacionProducto.ESPECIES_ESPECIFICAS,
+                Set.of(EspecieMascota.PERRO, EspecieMascota.GATO)));
+        DetalleCuentaRequest request = request();
+        request.setJustificacionUsoExcepcional("Tratamiento excepcional indicado para este paciente");
+        when(accesoValidator.can("VISTA_PRODUCTOS", "ESCRIBIR")).thenReturn(false);
+        when(accesoValidator.can("VISTA_PRODUCTOS", "MODIFICAR")).thenReturn(true);
+        prepararStockYGuardadoExitoso();
+
+        assertNotNull(assertDoesNotThrow(() -> service.agregarDetalle(CITA_ID, request)));
+
+        verify(inventarioStockService).descontar(any(Producto.class), eq(1), eq("CUENTA_CITA_DETALLE"), anyLong());
+        verify(auditLogService).log(eq(COMPANY_ID), eq("USO_EXCEPCIONAL_ESPECIE"),
+                eq("Cuenta de cita"), contains("Tratamiento excepcional"));
     }
 
     // ---------------------------------------------------------------- helpers
@@ -190,7 +218,11 @@ class CuentaCitaEspecieProductoUnitTest {
 
     /** Stub usados solo cuando la validación de especie permite continuar. */
     private void prepararStockYGuardadoExitoso() {
-        when(productoRepository.descontarStock(PRODUCTO_ID, 1)).thenReturn(1);
+        when(detalleRepository.saveAndFlush(any())).thenAnswer(invocation -> {
+            var detalle = (veterinaria.vargasvet.domain.entity.DetalleCuentaCita) invocation.getArgument(0);
+            detalle.setId(99L);
+            return detalle;
+        });
         when(detalleRepository.findByCitaIdOrderByCreatedAtAscIdAsc(CITA_ID)).thenReturn(List.of());
     }
 

@@ -25,6 +25,7 @@ import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CajaService;
 import veterinaria.vargasvet.service.VentaLibreService;
+import veterinaria.vargasvet.service.InventarioStockService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -44,6 +45,7 @@ public class VentaLibreServiceImpl implements VentaLibreService {
     private final CompanyRepository companyRepository;
     private final AuditLogService auditLogService;
     private final CajaService cajaService;
+    private final InventarioStockService inventarioStockService;
 
     @Override
     @Transactional
@@ -72,11 +74,6 @@ public class VentaLibreServiceImpl implements VentaLibreService {
             }
             if (!Boolean.TRUE.equals(producto.getActivo())) {
                 throw new IllegalArgumentException("El producto «" + producto.getNombre() + "» no está disponible");
-            }
-
-            int filasActualizadas = productoRepository.descontarStock(producto.getId(), item.getCantidad());
-            if (filasActualizadas == 0) {
-                throw new IllegalArgumentException("Stock insuficiente para «" + producto.getNombre() + "»");
             }
 
             BigDecimal subtotal = producto.getPrecio()
@@ -116,7 +113,9 @@ public class VentaLibreServiceImpl implements VentaLibreService {
 
         for (VentaLibreDetalle detalle : detalles) {
             detalle.setPurchase(purchase);
-            ventaLibreDetalleRepository.save(detalle);
+            detalle = ventaLibreDetalleRepository.saveAndFlush(detalle);
+            inventarioStockService.descontar(detalle.getProducto(), detalle.getCantidad(),
+                    "VENTA_LIBRE_DETALLE", detalle.getId());
         }
 
         cajaService.registrarIngresoPorVentaLibre(

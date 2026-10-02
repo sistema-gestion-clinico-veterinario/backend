@@ -18,6 +18,7 @@ public class LoteResponse {
     private LocalDate fechaVencimiento;
     private LocalDate fechaIngreso;
     private Integer cantidad;
+    private Integer cantidadInicial;
     private BigDecimal costoUnitario;
     private Boolean activo;
     private LocalDateTime createdAt;
