@@ -36,6 +36,9 @@ class MascotaRelacionServiceImplTest {
     @Mock MascotaRepository mascotaRepository;
     @Mock ApoderadoRepository apoderadoRepository;
     @Mock AuditLogService auditLogService;
+    @Mock veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
+    @Mock veterinaria.vargasvet.service.PetLinkNotifier petLinkNotifier;
+    @Mock veterinaria.vargasvet.service.ApoderadoService apoderadoService;
 
     private MascotaRelacionServiceImpl service;
     private Mascota mascota;
@@ -45,7 +48,8 @@ class MascotaRelacionServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new MascotaRelacionServiceImpl(
-                relacionRepository, mascotaRepository, apoderadoRepository, auditLogService);
+                relacionRepository, mascotaRepository, apoderadoRepository, auditLogService,
+                petOwnershipService, petLinkNotifier, apoderadoService);
 
         Company company = new Company();
         company.setId(7);
@@ -76,7 +80,7 @@ class MascotaRelacionServiceImplTest {
     void crearCopropietarioConcedeLasTresAutorizacionesPorDefinicion() {
         when(mascotaRepository.findByUuidAndCompanyId("mascota-uuid", 7)).thenReturn(Optional.of(mascota));
         when(apoderadoRepository.findByIdAndCompanyId(2L, 7)).thenReturn(Optional.of(persona));
-        when(relacionRepository.findByMascotaIdAndApoderadoId(10L, 2L)).thenReturn(Optional.empty());
+        when(relacionRepository.findAllByMascotaIdAndApoderadoIdAndActivoTrue(10L, 2L)).thenReturn(List.of());
         when(relacionRepository.save(any())).thenAnswer(invocation -> {
             MascotaPersonaRelacion relacion = invocation.getArgument(0);
             relacion.setUuid("relacion-uuid");
@@ -101,7 +105,7 @@ class MascotaRelacionServiceImplTest {
     void representanteDebeTenerAlMenosUnaAutorizacion() {
         when(mascotaRepository.findByUuidAndCompanyId("mascota-uuid", 7)).thenReturn(Optional.of(mascota));
         when(apoderadoRepository.findByIdAndCompanyId(2L, 7)).thenReturn(Optional.of(persona));
-        when(relacionRepository.findByMascotaIdAndApoderadoId(10L, 2L)).thenReturn(Optional.empty());
+        when(relacionRepository.findAllByMascotaIdAndApoderadoIdAndActivoTrue(10L, 2L)).thenReturn(List.of());
 
         MascotaRelacionRequest request = request(TipoRelacionMascota.REPRESENTANTE_AUTORIZADO);
 
@@ -130,7 +134,7 @@ class MascotaRelacionServiceImplTest {
     void responsablePagoNoRecibeInformacionNiAutorizaAtencion() {
         when(mascotaRepository.findByUuidAndCompanyId("mascota-uuid", 7)).thenReturn(Optional.of(mascota));
         when(apoderadoRepository.findByIdAndCompanyId(2L, 7)).thenReturn(Optional.of(persona));
-        when(relacionRepository.findByMascotaIdAndApoderadoId(10L, 2L)).thenReturn(Optional.empty());
+        when(relacionRepository.findAllByMascotaIdAndApoderadoIdAndActivoTrue(10L, 2L)).thenReturn(List.of());
         when(relacionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         MascotaRelacionRequest request = request(TipoRelacionMascota.RESPONSABLE_PAGO);
@@ -144,6 +148,55 @@ class MascotaRelacionServiceImplTest {
         assertFalse(captor.getValue().getPuedeRecibirInformacion());
         assertFalse(captor.getValue().getPuedeAutorizarAtencion());
         assertTrue(captor.getValue().getPuedeRealizarPagos());
+    }
+
+    @Test
+    void alVincularSeReevaluaLaMascotaYSeDevuelveElAviso() {
+        when(mascotaRepository.findByUuidAndCompanyId("mascota-uuid", 7)).thenReturn(Optional.of(mascota));
+        when(apoderadoRepository.findByIdAndCompanyId(2L, 7)).thenReturn(Optional.of(persona));
+        when(relacionRepository.findAllByMascotaIdAndApoderadoIdAndActivoTrue(10L, 2L)).thenReturn(List.of());
+        when(relacionRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(petOwnershipService.reevaluate(mascota)).thenReturn("La mascota Max se reactivó");
+
+        var response = service.crear("mascota-uuid", request(TipoRelacionMascota.COPROPIETARIO));
+
+        assertEquals("La mascota Max se reactivó", response.getAvisoMascota());
+    }
+
+    @Test
+    void alRevocarSeReevaluaLaMascotaYSeDevuelveElAviso() {
+        MascotaPersonaRelacion relacion = new MascotaPersonaRelacion();
+        relacion.setUuid("relacion-uuid");
+        relacion.setMascota(mascota);
+        relacion.setApoderado(persona);
+        relacion.setTipoRelacion(TipoRelacionMascota.COPROPIETARIO);
+        relacion.setFechaInicio(java.time.LocalDate.now().minusDays(1));
+        relacion.setActivo(true);
+        when(mascotaRepository.findByUuidAndCompanyId("mascota-uuid", 7)).thenReturn(Optional.of(mascota));
+        when(relacionRepository.findByUuidAndCompanyId("relacion-uuid", 7)).thenReturn(Optional.of(relacion));
+        when(petOwnershipService.reevaluate(mascota)).thenReturn("La mascota Max quedó inactiva");
+
+        String aviso = service.revocar("mascota-uuid", "relacion-uuid");
+
+        assertEquals("La mascota Max quedó inactiva", aviso);
+        assertFalse(relacion.getActivo());
+        verify(petOwnershipService).reevaluate(mascota);
+    }
+
+    @Test
+    void revocarUnaRelacionYaRevocadaNoReevaluaNada() {
+        MascotaPersonaRelacion relacion = new MascotaPersonaRelacion();
+        relacion.setUuid("relacion-uuid");
+        relacion.setMascota(mascota);
+        relacion.setApoderado(persona);
+        relacion.setTipoRelacion(TipoRelacionMascota.COPROPIETARIO);
+        relacion.setFechaInicio(java.time.LocalDate.now().minusDays(1));
+        relacion.setActivo(false);
+        when(mascotaRepository.findByUuidAndCompanyId("mascota-uuid", 7)).thenReturn(Optional.of(mascota));
+        when(relacionRepository.findByUuidAndCompanyId("relacion-uuid", 7)).thenReturn(Optional.of(relacion));
+
+        assertNull(service.revocar("mascota-uuid", "relacion-uuid"));
+        verify(petOwnershipService, never()).reevaluate(any());
     }
 
     private MascotaRelacionRequest request(TipoRelacionMascota tipo) {

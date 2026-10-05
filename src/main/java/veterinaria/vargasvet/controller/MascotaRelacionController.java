@@ -53,7 +53,8 @@ public class MascotaRelacionController {
     public ResponseEntity<ApiResponse<Void>> revocar(
             @PathVariable String mascotaUuid,
             @PathVariable String relacionUuid) {
-        mascotaRelacionService.revocar(mascotaUuid, relacionUuid);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Autorización revocada", null));
+        String aviso = mascotaRelacionService.revocar(mascotaUuid, relacionUuid);
+        return ResponseEntity.ok(new ApiResponse<>(true,
+                aviso == null ? "Autorización revocada" : "Autorización revocada. " + aviso, null));
     }
 }

@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
+import veterinaria.vargasvet.domain.enums.TipoInactividad;
+import veterinaria.vargasvet.dto.request.AccountStatusRequest;
 import veterinaria.vargasvet.dto.request.EmpleadoRequest;
 import veterinaria.vargasvet.dto.request.HorarioEmpleadoRequest;
 import veterinaria.vargasvet.dto.response.EmpleadoListResponse;
@@ -107,17 +109,36 @@ public class EmpleadoController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'ELIMINAR')")
-    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
-        empleadoService.eliminar(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Empleado eliminado exitosamente", null));
+    public ResponseEntity<ApiResponse<java.util.List<String>>> eliminar(@PathVariable Long id) {
+        java.util.List<String> cajas = empleadoService.eliminar(id);
+        return ResponseEntity.ok(new ApiResponse<>(true,
+                "Se dio de baja al empleado. Sus registros se conservan y puedes reactivarlo cuando quieras."
+                        + avisoDeCajas(cajas), cajas));
+    }
+
+    private String avisoDeCajas(java.util.List<String> cajas) {
+        return cajas == null || cajas.isEmpty() ? ""
+                : " Atención: tenía abierta la caja " + String.join(", ", cajas)
+                        + "; un administrador debe cerrarla desde Caja.";
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'MODIFICAR')")
-    public ResponseEntity<ApiResponse<Void>> cambiarEstado(@PathVariable Long id, @RequestParam Boolean active) {
-        empleadoService.cambiarEstado(id, active);
-        String mensaje = active ? "Empleado activado exitosamente" : "Empleado desactivado exitosamente";
-        return ResponseEntity.ok(new ApiResponse<>(true, mensaje, null));
+    public ResponseEntity<ApiResponse<java.util.List<String>>> cambiarEstado(@PathVariable Long id, @RequestParam Boolean active,
+                                                           @Valid @RequestBody(required = false) AccountStatusRequest request) {
+        TipoInactividad tipo = request != null ? request.getTipo() : null;
+        java.util.List<String> cajas = empleadoService.cambiarEstado(id, active, tipo, request != null ? request.getReason() : null);
+        String mensaje = active ? "Empleado reactivado exitosamente"
+                : tipo == TipoInactividad.SUSPENSION ? "Empleado suspendido exitosamente"
+                : "Empleado dado de baja exitosamente";
+        return ResponseEntity.ok(new ApiResponse<>(true, mensaje + avisoDeCajas(cajas), cajas));
+    }
+
+    @PostMapping("/{id}/resend-invitation")
+    @PreAuthorize("@accesoValidator.can('VISTA_EMPLEADOS', 'MODIFICAR')")
+    public ResponseEntity<ApiResponse<Void>> reenviarInvitacion(@PathVariable Long id) {
+        empleadoService.reenviarInvitacion(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Invitación reenviada exitosamente", null));
     }
 
     @GetMapping("/{id}/conflicting-appointments")

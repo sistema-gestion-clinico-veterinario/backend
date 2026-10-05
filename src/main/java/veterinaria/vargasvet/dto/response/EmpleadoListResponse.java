@@ -13,6 +13,8 @@ public class EmpleadoListResponse {
     private String numeroColegiatura;
     private String fotoUrl;
     private Boolean activo;
+    private Boolean cuentaPendiente;
+    private veterinaria.vargasvet.domain.enums.TipoInactividad tipoInactividad;
     private List<String> tiposEmpleado;
     private List<String> especialidades;
     private Integer userId;

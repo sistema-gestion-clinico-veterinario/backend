@@ -34,8 +34,11 @@ class AuthControllerContractTest {
     private final EmailChangeService emailChangeService = mock(EmailChangeService.class);
     private final GoogleOAuthService googleOAuthService = mock(GoogleOAuthService.class);
     private final GoogleLoginExchangeStore googleLoginExchangeStore = mock(GoogleLoginExchangeStore.class);
+    private final veterinaria.vargasvet.service.impl.GoogleOAuthFlowStore googleOAuthFlowStore = mock(veterinaria.vargasvet.service.impl.GoogleOAuthFlowStore.class);
+    private final veterinaria.vargasvet.service.AccountClosureService accountClosureService = mock(veterinaria.vargasvet.service.AccountClosureService.class);
     private final AuthController controller = new AuthController(
-            usuarioService, emailChangeService, googleOAuthService, googleLoginExchangeStore);
+            usuarioService, emailChangeService, googleOAuthService, googleLoginExchangeStore, googleOAuthFlowStore, accountClosureService,
+                org.mockito.Mockito.mock(veterinaria.vargasvet.security.ClientIpResolver.class));
 
     @BeforeEach
     void configureCookies() {
@@ -92,6 +95,20 @@ class AuthControllerContractTest {
     }
 
     @Test
+    @DisplayName("[CP-RF02-02] La recuperación responde con un tiempo mínimo para no delatar qué correos tienen cuenta")
+    void recuperacionRespondeConTiempoMinimo() {
+        ReflectionTestUtils.setField(controller, "recoveryMinResponseMs", 150L);
+        ForgotPasswordRequest request = new ForgotPasswordRequest();
+        request.setEmail("desconocido@example.com");
+
+        long inicio = System.nanoTime();
+        controller.forgotPassword(request);
+        long transcurridoMs = (System.nanoTime() - inicio) / 1_000_000L;
+
+        assertThat(transcurridoMs).isGreaterThanOrEqualTo(140L);
+    }
+
+    @Test
     @DisplayName("[CP-RF03-01] El cambio de contraseña se aplica a la identidad autenticada")
     void cambioDePasswordUsaIdentidadAutenticada() {
         veterinaria.vargasvet.security.UsuarioPrincipal principal = new veterinaria.vargasvet.security.UsuarioPrincipal(
@@ -103,6 +120,55 @@ class AuthControllerContractTest {
         controller.changePassword(request);
 
         verify(usuarioService).changePassword(7, request);
+    }
+
+    @Test
+    @DisplayName("[CP-RF-AUT-08-01] El estado de la sesión se consulta con la identidad autenticada y no emite cookies")
+    void estadoDeSesionUsaIdentidadAutenticadaYNoEmiteCookies() throws Exception {
+        veterinaria.vargasvet.security.UsuarioPrincipal principal = new veterinaria.vargasvet.security.UsuarioPrincipal(
+                7, "actual@example.com", "hash", List.of(), null);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, "token"));
+        AuthResponse auth = new AuthResponse();
+        auth.setToken("access-secret");
+        auth.setRoles(List.of("VETERINARIO"));
+        when(usuarioService.currentSession(7)).thenReturn(auth);
+
+        var response = controller.currentSession();
+
+        verify(usuarioService).currentSession(7);
+        assertThat(new ObjectMapper().writeValueAsString(response.getBody())).doesNotContain("access-secret");
+        assertThat(response.getHeaders().get(HttpHeaders.SET_COOKIE)).isNull();
+    }
+
+    @Test
+    @DisplayName("[CP-RF-AUT-02-01] No existe un alta de usuarios con contraseña enviada por quien llama")
+    void noExisteEndpointDeRegistroConContrasenaAjena() {
+        var rutas = java.util.Arrays.stream(AuthController.class.getDeclaredMethods())
+                .flatMap(method -> java.util.stream.Stream.of(method.getAnnotations()))
+                .filter(annotation -> annotation instanceof org.springframework.web.bind.annotation.PostMapping)
+                .flatMap(annotation -> java.util.Arrays.stream(
+                        ((org.springframework.web.bind.annotation.PostMapping) annotation).value()))
+                .toList();
+
+        assertThat(rutas).doesNotContain("/register");
+        assertThat(java.util.Arrays.stream(UsuarioService.class.getDeclaredMethods()))
+                .noneMatch(method -> method.getName().equals("register"));
+    }
+
+    @Test
+    @DisplayName("[CP-RF-AUT-09-01] La suspensión se hace solo por la gestión de empleados y clientes, no por un endpoint aparte")
+    void noExisteEndpointDeSuspensionAparte() {
+        var rutas = java.util.Arrays.stream(AuthController.class.getDeclaredMethods())
+                .flatMap(method -> java.util.stream.Stream.of(method.getAnnotations()))
+                .filter(annotation -> annotation instanceof org.springframework.web.bind.annotation.PutMapping)
+                .flatMap(annotation -> java.util.Arrays.stream(
+                        ((org.springframework.web.bind.annotation.PutMapping) annotation).value()))
+                .toList();
+
+        assertThat(rutas).doesNotContain("/suspend/{id}");
+        assertThat(java.util.Arrays.stream(UsuarioService.class.getDeclaredMethods()))
+                .noneMatch(method -> method.getName().equals("suspendAccount"));
     }
 
     @Test

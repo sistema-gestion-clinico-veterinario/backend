@@ -64,7 +64,8 @@ class CartillaServiceConcurrencyIntegrationTest {
                 mascotaRepository, historiaClinicaRepository, empleadoRepository, serviciosRepository,
                 tipoVacunaRepository, tipoDesparasitanteRepository, vacunaRepository, desparasitacionRepository,
                 controlRepository, citaRepository, mock(UsuarioContactoService.class), mock(AuditLogService.class),
-                mock(SimpMessagingTemplate.class), mock(MascotaCartillaMapper.class));
+                mock(SimpMessagingTemplate.class), mock(MascotaCartillaMapper.class),
+                mock(veterinaria.vargasvet.service.PetOwnershipService.class));
 
         TransactionTemplate transaction = new TransactionTemplate(transactionManager);
         Setup setup = transaction.execute(status -> crearEscenario());
@@ -107,7 +108,8 @@ class CartillaServiceConcurrencyIntegrationTest {
                 mascotaRepository, historiaClinicaRepository, empleadoRepository, serviciosRepository,
                 tipoVacunaRepository, tipoDesparasitanteRepository, vacunaRepository, desparasitacionRepository,
                 controlRepository, citaRepository, mock(UsuarioContactoService.class), mock(AuditLogService.class),
-                mock(SimpMessagingTemplate.class), mock(MascotaCartillaMapper.class));
+                mock(SimpMessagingTemplate.class), mock(MascotaCartillaMapper.class),
+                mock(veterinaria.vargasvet.service.PetOwnershipService.class));
 
         Setup setup = crearEscenario();
 

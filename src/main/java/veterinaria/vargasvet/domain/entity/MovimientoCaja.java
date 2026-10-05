@@ -48,6 +48,9 @@ public class MovimientoCaja {
     @Column(name = "company_id", nullable = false)
     private Integer companyId;
 
+    @Column(name = "sesion_caja_id")
+    private Long sesionCajaId;
+
     @PrePersist
     protected void onCreate() {
         if (fecha == null) fecha = veterinaria.vargasvet.util.AppClock.now();

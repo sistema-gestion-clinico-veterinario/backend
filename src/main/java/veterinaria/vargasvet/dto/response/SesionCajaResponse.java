@@ -18,6 +18,9 @@ public class SesionCajaResponse {
     private LocalDateTime abiertaAt;
     private LocalDateTime cerradaAt;
     private String abiertaPor;
+    private String abiertaPorNombre;
     private String cerradaPor;
+    private String cerradaPorNombre;
     private String observaciones;
+    private String cajaNombre;
 }

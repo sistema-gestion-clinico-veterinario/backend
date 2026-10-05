@@ -4,7 +4,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +18,10 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
     @Modifying(flushAutomatically = true)
     @Query("DELETE FROM UsuarioPorRol upr WHERE upr.usuario.id = :usuarioId")
     void deleteByUsuarioId(@Param("usuarioId") Integer usuarioId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("DELETE FROM UsuarioPorRol upr WHERE upr.usuario.id = :usuarioId AND upr.company.id = :companyId")
+    void deleteByUsuarioIdAndCompanyId(@Param("usuarioId") Integer usuarioId, @Param("companyId") Integer companyId);
 
     Optional<UsuarioPorRol> findByUsuarioIdAndRolId(Integer usuarioId, Integer rolId);
 
@@ -32,6 +38,18 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
             @Param("usuarioId") Integer usuarioId,
             @Param("rolId") Integer rolId
     );
+
+    /** Personas con un rol activo de ese propósito asignado dentro de la empresa (upr.company es la fuente de verdad). */
+    @Query("""
+            SELECT DISTINCT upr.usuario
+            FROM UsuarioPorRol upr
+            JOIN upr.rol r
+            WHERE upr.company.id = :companyId
+              AND r.purpose = :purpose
+              AND r.activo = true
+            """)
+    List<Usuario> findUsersWithActiveRolePurpose(@Param("companyId") Integer companyId,
+                                                 @Param("purpose") RolePurpose purpose);
 
     boolean existsByUsuarioIdAndRolId(Integer usuarioId, Integer rolId);
 

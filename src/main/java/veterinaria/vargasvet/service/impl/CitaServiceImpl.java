@@ -67,6 +67,8 @@ public class CitaServiceImpl implements CitaService {
     private final EmailService emailService;
     private final SimpMessagingTemplate messagingTemplate;
     private final UsuarioContactoService contactoService;
+    private final veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
+    private final veterinaria.vargasvet.service.OwnerContactPolicy ownerContactPolicy;
     @org.springframework.beans.factory.annotation.Autowired
     private ControlPreventivoRepository controlPreventivoRepository;
 
@@ -78,14 +80,16 @@ public class CitaServiceImpl implements CitaService {
         Mascota mascota = mascotaRepository.findById(request.getMascotaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada con ID: " + request.getMascotaId()));
 
+        petOwnershipService.lockAuthorizers(mascota);
+
         if (!mascota.getActivo()) {
             throw new IllegalArgumentException("No se puede crear una cita para una mascota inactiva");
         }
 
         if (mascota.getApoderado() == null
                 || mascota.getApoderado().getUser() == null
-                || !mascota.getApoderado().getUser().isActivo()) {
-            throw new IllegalArgumentException("No se puede crear una cita porque el propietario de la mascota está inactivo");
+                || !petOwnershipService.hasActiveAuthorizer(mascota)) {
+            throw new IllegalArgumentException("No se puede crear una cita porque la mascota no tiene un propietario activo");
         }
 
         businessValidator.checkCompanyActiva(
@@ -223,10 +227,13 @@ public class CitaServiceImpl implements CitaService {
             "Se agendó una nueva cita para la mascota " + mascota.getNombreCompleto() + " con el veterinario " + (veterinario.getUser() != null ? (veterinario.getUser().getNombre() + " " + veterinario.getUser().getApellido()) : "sin usuario") + " el " + cita.getFechaHoraInicio()
         );
 
-        enviarEmailConfirmacionCita(savedCita, mascota, veterinario, servicio, company);
+        boolean confirmacionPorCorreo = enviarEmailConfirmacionCita(savedCita, mascota, veterinario, servicio, company);
 
         CitaResponse createdResponse = citaMapper.toResponse(savedCita);
         broadcastCitaEvent("CREAR_CITA", savedCita, createdResponse);
+        if (!confirmacionPorCorreo) {
+            marcarAvisoManual(createdResponse, savedCita, "confirmación");
+        }
         return createdResponse;
     }
 
@@ -258,6 +265,7 @@ public class CitaServiceImpl implements CitaService {
         if (!cita.getMascota().getActivo()) {
             throw new IllegalArgumentException("No se puede iniciar la atención porque la mascota está inactiva");
         }
+        petOwnershipService.assertOperable(cita.getMascota());
 
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             java.time.LocalDateTime ahora = veterinaria.vargasvet.util.AppClock.now();
@@ -462,7 +470,7 @@ public class CitaServiceImpl implements CitaService {
 
     @Override
     @Transactional
-    public void cancelarCita(Long id, String motivo) {
+    public CitaResponse cancelarCita(Long id, String motivo) {
         Cita cita = citaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
 
@@ -497,42 +505,17 @@ public class CitaServiceImpl implements CitaService {
         );
 
         // Envío de correo electrónico al apoderado
-        try {
-            if (cita.getMascota().getApoderado() != null && cita.getMascota().getApoderado().getUser() != null) {
-                String emailDestinatario = cita.getMascota().getApoderado().getUser().getEmail();
-                if (emailDestinatario != null && !emailDestinatario.isBlank()) {
-                    Company company = cita.getMascota().getApoderado().getCompany();
-                    if (company == null && cita.getEmpleado() != null && cita.getEmpleado().getUser() != null) {
-                        company = cita.getEmpleado().getCompany();
-                    }
+        boolean avisoManualPendiente = avisarPorCorreo(cita,
+                cita.getEmpleado() != null ? cita.getEmpleado().getCompany() : null,
+                "Cita Cancelada", "email/cita-cancelar-template",
+                Map.of("fechaCita", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(cita.getFechaHoraInicio()),
+                        "motivo", motivo != null && !motivo.isBlank() ? motivo : "No especificado"));
 
-                    String companyName = company != null ? company.getName() : "VargasVet";
-                    String companyLogo = (company != null && company.getLogoUrl() != null) ? company.getLogoUrl() : "";
-                    String companyEmail = company != null ? company.getEmail() : "";
-                    String companyPhone = company != null ? company.getPhone() : "";
-                    String companyAddress = company != null ? company.getAddress() : "";
-
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                    String fechaCitaStr = formatter.format(cita.getFechaHoraInicio());
-
-                    Map<String, Object> model = new HashMap<>();
-                    model.put("nombreApoderado", cita.getMascota().getApoderado().getUser().getNombre());
-                    model.put("nombreMascota", cita.getMascota().getNombreCompleto());
-                    model.put("fechaCita", fechaCitaStr);
-                    model.put("motivo", motivo != null && !motivo.isBlank() ? motivo : "No especificado");
-                    model.put("companyName", companyName);
-                    model.put("companyLogo", companyLogo);
-                    model.put("companyEmail", companyEmail);
-                    model.put("companyPhone", companyPhone);
-                    model.put("companyAddress", companyAddress);
-
-                    Mail mail = emailService.createMail(emailDestinatario, "Cita Cancelada - " + companyName, model);
-                    emailService.sendEmail(mail, "email/cita-cancelar-template");
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("[WARNING] No se pudo enviar el correo de cancelación a " + cita.getMascota().getApoderado().getUser().getEmail() + ": " + e.getMessage());
+        CitaResponse respuesta = citaMapper.toResponse(cita);
+        if (avisoManualPendiente) {
+            marcarAvisoManual(respuesta, cita, "cancelación");
         }
+        return respuesta;
     }
 
     @Override
@@ -634,6 +617,18 @@ public class CitaServiceImpl implements CitaService {
             if (veterinario.getCompany() == null || !veterinario.getCompany().getId().equals(currentCompanyId)) {
                 throw new IllegalArgumentException("No tienes permiso para asignar citas a empleados de otra clínica");
             }
+        }
+
+        if (!mascota.getId().equals(cita.getMascota().getId())) {
+            petOwnershipService.lockAuthorizers(mascota);
+            Integer empresaMascota = mascota.getApoderado() != null && mascota.getApoderado().getCompany() != null
+                    ? mascota.getApoderado().getCompany().getId() : null;
+            Integer empresaVeterinario = veterinario.getCompany() != null ? veterinario.getCompany().getId() : null;
+            if (empresaMascota == null || !empresaMascota.equals(empresaVeterinario)
+                    || (!SecurityUtils.isSuperAdmin() && !empresaMascota.equals(SecurityUtils.getCurrentCompanyId()))) {
+                throw new IllegalArgumentException("No tienes permiso para crear citas para mascotas de otra clínica");
+            }
+            petOwnershipService.assertOperable(mascota);
         }
 
         ServiciosVeterinarios servicio = null;
@@ -803,45 +798,17 @@ public class CitaServiceImpl implements CitaService {
         );
 
         // Envío de correo electrónico al apoderado
-        try {
-            if (cita.getMascota().getApoderado() != null && cita.getMascota().getApoderado().getUser() != null) {
-                String emailDestinatario = cita.getMascota().getApoderado().getUser().getEmail();
-                if (emailDestinatario != null && !emailDestinatario.isBlank()) {
-                    Company company = cita.getMascota().getApoderado().getCompany();
-                    if (company == null && cita.getEmpleado() != null && cita.getEmpleado().getUser() != null) {
-                        company = cita.getEmpleado().getCompany();
-                    }
+        boolean avisoManualPendiente = avisarPorCorreo(cita,
+                cita.getEmpleado() != null ? cita.getEmpleado().getCompany() : null,
+                "Cita Reprogramada", "email/cita-reprogramar-template",
+                Map.of("fechaAnterior", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(originalFechaInicio),
+                        "fechaNueva", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(fechaInicio),
+                        "motivo", request.getMotivoReprogramacion() != null && !request.getMotivoReprogramacion().isBlank()
+                                ? request.getMotivoReprogramacion() : "No especificado"));
 
-                    String companyName = company != null ? company.getName() : "VargasVet";
-                    String companyLogo = (company != null && company.getLogoUrl() != null) ? company.getLogoUrl() : "";
-                    String companyEmail = company != null ? company.getEmail() : "";
-                    String companyPhone = company != null ? company.getPhone() : "";
-                    String companyAddress = company != null ? company.getAddress() : "";
-
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                    String fechaAnteriorStr = formatter.format(originalFechaInicio);
-                    String fechaNuevaStr = formatter.format(fechaInicio);
-
-                    Map<String, Object> model = new HashMap<>();
-                    model.put("nombreApoderado", cita.getMascota().getApoderado().getUser().getNombre());
-                    model.put("nombreMascota", cita.getMascota().getNombreCompleto());
-                    model.put("fechaAnterior", fechaAnteriorStr);
-                    model.put("fechaNueva", fechaNuevaStr);
-                    model.put("motivo", request.getMotivoReprogramacion() != null && !request.getMotivoReprogramacion().isBlank() ? request.getMotivoReprogramacion() : "No especificado");
-                    model.put("companyName", companyName);
-                    model.put("companyLogo", companyLogo);
-                    model.put("companyEmail", companyEmail);
-                    model.put("companyPhone", companyPhone);
-                    model.put("companyAddress", companyAddress);
-
-                    Mail mail = emailService.createMail(emailDestinatario, "Cita Reprogramada - " + companyName, model);
-                    emailService.sendEmail(mail, "email/cita-reprogramar-template");
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("[WARNING] No se pudo enviar el correo de reprogramación a " + cita.getMascota().getApoderado().getUser().getEmail() + ": " + e.getMessage());
+        if (avisoManualPendiente) {
+            marcarAvisoManual(reprogramadaResponse, savedCita, "reprogramación");
         }
-
         return reprogramadaResponse;
     }
 
@@ -888,42 +855,14 @@ public class CitaServiceImpl implements CitaService {
                 " a " + nombreEmpleado(veterinario)
         );
 
-        try {
-            if (cita.getMascota().getApoderado() != null && cita.getMascota().getApoderado().getUser() != null) {
-                String emailDestinatario = cita.getMascota().getApoderado().getUser().getEmail();
-                if (emailDestinatario != null && !emailDestinatario.isBlank()) {
-                    Company company = cita.getMascota().getApoderado().getCompany();
-                    if (company == null && veterinario.getCompany() != null) {
-                        company = veterinario.getCompany();
-                    }
+        boolean avisoManualPendiente = avisarPorCorreo(cita, veterinario.getCompany(),
+                "Cambio de profesional asignado", "email/cita-reasignar-veterinario-template",
+                Map.of("fechaCita", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").format(cita.getFechaHoraInicio()),
+                        "veterinarioNuevo", nombreEmpleado(veterinario)));
 
-                    String companyName = company != null ? company.getName() : "VargasVet";
-                    String companyLogo = (company != null && company.getLogoUrl() != null) ? company.getLogoUrl() : "";
-                    String companyEmail = company != null ? company.getEmail() : "";
-                    String companyPhone = company != null ? company.getPhone() : "";
-                    String companyAddress = company != null ? company.getAddress() : "";
-
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
-                    Map<String, Object> model = new HashMap<>();
-                    model.put("nombreApoderado", cita.getMascota().getApoderado().getUser().getNombre());
-                    model.put("nombreMascota", cita.getMascota().getNombreCompleto());
-                    model.put("fechaCita", formatter.format(cita.getFechaHoraInicio()));
-                    model.put("veterinarioNuevo", nombreEmpleado(veterinario));
-                    model.put("companyName", companyName);
-                    model.put("companyLogo", companyLogo);
-                    model.put("companyEmail", companyEmail);
-                    model.put("companyPhone", companyPhone);
-                    model.put("companyAddress", companyAddress);
-
-                    Mail mail = emailService.createMail(emailDestinatario, "Cambio de profesional asignado - " + companyName, model);
-                    emailService.sendEmail(mail, "email/cita-reasignar-veterinario-template");
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("[WARNING] No se pudo enviar el correo de reasignación de veterinario a " + cita.getMascota().getApoderado().getUser().getEmail() + ": " + e.getMessage());
+        if (avisoManualPendiente) {
+            marcarAvisoManual(response, savedCita, "notificación del cambio de veterinario");
         }
-
         return response;
     }
 
@@ -1045,6 +984,42 @@ public class CitaServiceImpl implements CitaService {
         if (fechaInicio != null && fechaInicio.isBefore(veterinaria.vargasvet.util.AppClock.now().minusMinutes(1))) {
             throw new IllegalArgumentException("La fecha de la cita no puede ser anterior al momento actual");
         }
+    }
+
+    /** Envía el aviso a cada persona que debe recibirlo (el propietario principal y quienes tengan un vínculo vigente con
+     * permiso de recibir información). Devuelve true si la clínica debe avisar por teléfono: el principal no tiene un
+     * correo confirmado o, si el principal ya no es destinatario, nadie puede recibir el correo. */
+    private boolean avisarPorCorreo(Cita cita, Company empresaDeRespaldo, String asunto, String plantilla,
+                                    Map<String, Object> datos) {
+        Mascota mascota = cita.getMascota();
+        Apoderado principal = mascota.getApoderado();
+        if (principal == null) return false;
+        java.util.List<Apoderado> destinatarios = petOwnershipService.destinatariosDeAvisos(mascota);
+        boolean principalRecibe = destinatarios.stream().anyMatch(d -> d.getId().equals(principal.getId()));
+        boolean avisoManual = principalRecibe
+                ? !ownerContactPolicy.puedeRecibirCorreo(principal.getUser())
+                : destinatarios.stream().noneMatch(d -> ownerContactPolicy.puedeRecibirCorreo(d.getUser()));
+        for (Apoderado destinatario : destinatarios) {
+            if (destinatario.getUser() == null || !ownerContactPolicy.puedeRecibirCorreo(destinatario.getUser())) continue;
+            try {
+                Company company = principal.getCompany() != null ? principal.getCompany() : empresaDeRespaldo;
+                String companyName = company != null ? company.getName() : "VargasVet";
+                Map<String, Object> model = new HashMap<>(datos);
+                model.put("nombreApoderado", destinatario.getUser().getNombre());
+                model.put("nombreMascota", mascota.getNombreCompleto());
+                model.put("companyName", companyName);
+                model.put("companyLogo", company != null && company.getLogoUrl() != null ? company.getLogoUrl() : "");
+                model.put("companyEmail", company != null ? company.getEmail() : "");
+                model.put("companyPhone", company != null ? company.getPhone() : "");
+                model.put("companyAddress", company != null ? company.getAddress() : "");
+                Mail mail = emailService.createMail(destinatario.getUser().getEmail(), asunto + " - " + companyName, model);
+                emailService.sendEmail(mail, plantilla);
+            } catch (Exception e) {
+                System.err.println("[WARNING] No se pudo enviar el aviso \"" + asunto + "\" a " + destinatario.getUser().getEmail()
+                        + ": " + e.getMessage());
+            }
+        }
+        return avisoManual;
     }
 
     private void validarPermisoEmpresa(Cita cita) {
@@ -1357,17 +1332,25 @@ public class CitaServiceImpl implements CitaService {
         return dias + (dias == 1 ? " día" : " días");
     }
 
-    private void enviarEmailConfirmacionCita(Cita cita, Mascota mascota, Empleado veterinario,
-                                              ServiciosVeterinarios servicio, Company company) {
+    /** @return false si el propietario no tiene un correo verificado y hay que avisarle por otro medio. */
+    private boolean enviarEmailConfirmacionCita(Cita cita, Mascota mascota, Empleado veterinario,
+                                                ServiciosVeterinarios servicio, Company company) {
+        boolean avisoManual = false;
         try {
             var apoderado = mascota.getApoderado();
-            var user = apoderado.getUser();
-            if (user.getEmail() == null || user.getEmail().isBlank()) {
-                log.warn("No se envía email de confirmación: apoderado sin correo {}", apoderado.getId());
-                return;
+            java.util.List<Apoderado> destinatarios = petOwnershipService.destinatariosDeAvisos(mascota);
+            boolean principalRecibe = destinatarios.stream().anyMatch(d -> d.getId().equals(apoderado.getId()));
+            avisoManual = principalRecibe
+                    ? !ownerContactPolicy.puedeRecibirCorreo(apoderado.getUser())
+                    : destinatarios.stream().noneMatch(d -> ownerContactPolicy.puedeRecibirCorreo(d.getUser()));
+            java.util.List<Apoderado> alcanzables = destinatarios.stream()
+                    .filter(d -> ownerContactPolicy.puedeRecibirCorreo(d.getUser())).toList();
+            if (alcanzables.isEmpty()) {
+                log.warn("No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota {} tiene el correo verificado",
+                        mascota.getId());
+                return false;
             }
 
-            String nombreApoderado = (user.getNombre() + " " + user.getApellido()).trim();
             String nombreMascota = mascota.getNombreCompleto();
             String nombreVeterinario = veterinario.getUser() != null
                     ? (veterinario.getUser().getNombre() + " " + veterinario.getUser().getApellido()).trim()
@@ -1385,6 +1368,9 @@ public class CitaServiceImpl implements CitaService {
             String companyAddress = company != null && company.getAddress() != null ? company.getAddress() : "";
             String companyLogo = company != null && company.getLogoUrl() != null ? company.getLogoUrl() : null;
 
+            for (Apoderado destinatario : alcanzables) {
+            var user = destinatario.getUser();
+            String nombreApoderado = (user.getNombre() + " " + user.getApellido()).trim();
             Map<String, Object> model = new HashMap<>();
             model.put("nombreApoderado", nombreApoderado);
             model.put("nombreMascota", nombreMascota);
@@ -1405,8 +1391,21 @@ public class CitaServiceImpl implements CitaService {
             );
             emailService.sendEmail(mail, "cita-confirmar-template");
             log.info("Email de confirmación de cita enviado a {} para cita #{}", user.getEmail(), cita.getNumeroCita());
+            }
         } catch (Exception e) {
             log.error("Error al enviar email de confirmación de cita {}: {}", cita.getNumeroCita(), e.getMessage());
         }
+        return !avisoManual;
+    }
+
+    private void marcarAvisoManual(CitaResponse response, Cita cita, String aviso) {
+        response.setRequiereAvisoManual(true);
+        response.setTelefonoAviso(ownerContactPolicy.telefono(cita.getMascota().getApoderado()));
+        auditLogService.log(
+                getCitaCompanyId(cita),
+                "AVISO_CITA_MANUAL",
+                "Citas",
+                "No se envió por correo la " + aviso + " de la cita de la mascota " + cita.getMascota().getNombreCompleto()
+                        + " porque el cliente no tiene un correo verificado; se indicó avisarle por teléfono");
     }
 }

@@ -20,4 +20,6 @@ public class ArqueoCajaRequest {
 
     @Size(max = 300)
     private String observaciones;
+
+    private Long sesionId;
 }

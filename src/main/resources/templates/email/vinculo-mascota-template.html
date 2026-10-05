@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Cambio en las personas vinculadas a tu mascota</title></head>
+<body style="margin:0;background:#f4f7fb;font-family:Arial,sans-serif;color:#1e293b">
+<div style="max-width:600px;margin:32px auto;background:#fff;border:1px solid #dbe4ef;border-radius:12px;padding:32px">
+    <h1 style="font-size:22px;margin:0 0 16px;color:#075985">Cambio en las personas vinculadas a tu mascota</h1>
+    <p>Hola <strong th:text="${nombre}">usuario</strong>,</p>
+    <p>La clínica <strong th:text="${companyName}">la veterinaria</strong> <span th:text="${accion}">vinculó</span> a
+        <strong th:text="${persona}">una persona</strong> con tu mascota <strong th:text="${mascota}">tu mascota</strong>.</p>
+    <p style="background:#f1f5f9;border-radius:8px;padding:12px 16px;font-size:14px" th:text="${detalle}">Detalle</p>
+    <p style="font-size:13px;color:#b91c1c">Si no autorizaste este cambio, comunícate con la clínica.</p>
+    <p style="font-size:12px;color:#94a3b8" th:text="${companyName}">Sistema</p>
+</div>
+</body>
+</html>

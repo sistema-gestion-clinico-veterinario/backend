@@ -31,7 +31,7 @@ public interface CitaService {
             LocalDate fechaDesde,
             LocalDate fechaHasta,
             Long veterinarioId);
-    void cancelarCita(Long id, String motivo);
+    CitaResponse cancelarCita(Long id, String motivo);
     CitaResponse marcarNoAsistio(Long id);
     CitaResponse marcarLlegada(Long id);
     void eliminarCita(Long id);

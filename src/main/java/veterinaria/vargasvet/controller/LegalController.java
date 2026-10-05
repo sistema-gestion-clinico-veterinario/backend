@@ -4,10 +4,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.AcceptLegalRequest;
+import veterinaria.vargasvet.dto.request.PublishLegalDocumentRequest;
+import veterinaria.vargasvet.dto.response.LegalAcceptanceDTO;
 import veterinaria.vargasvet.dto.response.LegalDocumentDTO;
 import veterinaria.vargasvet.dto.response.LegalStatusDTO;
 import veterinaria.vargasvet.security.ClientIpResolver;
@@ -44,6 +47,19 @@ public class LegalController {
         legalDocumentService.accept(usuarioId, request.getLegalDocumentIds(),
                 clientIpResolver.resolve(httpRequest), httpRequest.getHeader("User-Agent"));
         return ResponseEntity.ok(new ApiResponse<>(true, "Documentos aceptados exitosamente", null));
+    }
+
+    @GetMapping("/my-acceptances")
+    public ResponseEntity<ApiResponse<List<LegalAcceptanceDTO>>> getMyAcceptances() {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Aceptaciones registradas",
+                legalDocumentService.getMyAcceptances(currentUserId())));
+    }
+
+    @PostMapping("/publish")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN')")
+    public ResponseEntity<ApiResponse<LegalDocumentDTO>> publish(@Valid @RequestBody PublishLegalDocumentRequest request) {
+        LegalDocumentDTO publicado = legalDocumentService.publish(request.getTipo(), request.getVersion(), request.getContenido());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Versión publicada; todas las personas deberán aceptarla", publicado));
     }
 
     private Integer currentUserId() {

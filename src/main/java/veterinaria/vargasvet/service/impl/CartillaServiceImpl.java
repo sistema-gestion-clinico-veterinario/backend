@@ -59,6 +59,7 @@ public class CartillaServiceImpl implements CartillaService {
     private final AuditLogService auditLogService;
     private final SimpMessagingTemplate messagingTemplate;
     private final MascotaCartillaMapper mascotaCartillaMapper;
+    private final veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
 
     @Override
     @Transactional
@@ -125,6 +126,7 @@ public class CartillaServiceImpl implements CartillaService {
         Mascota mascota = mascotaRepository.findByIdForUpdate(request.getMascotaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada"));
         validarCompany(mascota);
+        petOwnershipService.assertOperable(mascota);
 
         Empleado empleado = resolverEmpleado(mascota);
         ServiciosVeterinarios servicio = resolverServicioPreventivo(request.getServicioId(), tipo, mascota);

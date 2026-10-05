@@ -45,6 +45,9 @@ public class CajaServiceImpl implements CajaService {
     private final PurchaseRepository purchaseRepository;
     private final SesionCajaRepository sesionCajaRepository;
     private final AuditLogService auditLogService;
+    private final veterinaria.vargasvet.repository.UsuarioRepository usuarioRepository;
+    private final veterinaria.vargasvet.service.PuntoCobroService puntoCobroService;
+    private final veterinaria.vargasvet.repository.CajaRepository cajaRepository;
 
     @Override
     @Transactional
@@ -52,8 +55,9 @@ public class CajaServiceImpl implements CajaService {
         if (companyId == null || monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
-        requireSesionAbierta(companyId);
+        SesionCaja sesion = sesionDeEsteEquipo(companyId);
         MovimientoCaja m = new MovimientoCaja();
+        m.setSesionCajaId(sesion.getId());
         m.setTipo(TipoMovimiento.INGRESO);
         m.setConcepto(ConceptoMovimiento.PAGO_CITA);
         m.setMonto(monto);
@@ -75,8 +79,9 @@ public class CajaServiceImpl implements CajaService {
         if (companyId == null || monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
-        requireSesionAbierta(companyId);
+        SesionCaja sesion = sesionDeEsteEquipo(companyId);
         MovimientoCaja m = new MovimientoCaja();
+        m.setSesionCajaId(sesion.getId());
         m.setTipo(TipoMovimiento.INGRESO);
         m.setConcepto(ConceptoMovimiento.VENTA_PRODUCTO);
         m.setMonto(monto);
@@ -114,11 +119,12 @@ public class CajaServiceImpl implements CajaService {
         // La cita se busca por ID global sin filtro de empresa (arriba) - sin esto, cualquier
         // usuario podria pasar el citaId de OTRA empresa y mutar su caja/pagos.
         validarCompanyId(companyId);
-        requireSesionAbierta(companyId);
+        SesionCaja sesion = sesionDeEsteEquipo(companyId);
 
         BigDecimal montoDevuelto = cita.getMontoPagado();
 
         MovimientoCaja m = new MovimientoCaja();
+        m.setSesionCajaId(sesion.getId());
         m.setTipo(TipoMovimiento.DEVOLUCION);
         m.setConcepto(ConceptoMovimiento.CANCELACION_DEVOLUCION);
         m.setMonto(montoDevuelto);
@@ -149,8 +155,9 @@ public class CajaServiceImpl implements CajaService {
     @Transactional
     public MovimientoCajaResponse registrarEgreso(MovimientoEgresoRequest request) {
         validarCompanyId(request.getCompanyId());
-        requireSesionAbierta(request.getCompanyId());
+        SesionCaja sesion = sesionDeEsteEquipo(request.getCompanyId());
         MovimientoCaja m = new MovimientoCaja();
+        m.setSesionCajaId(sesion.getId());
         m.setTipo(TipoMovimiento.EGRESO);
         m.setConcepto(request.getConcepto() != null ? request.getConcepto() : ConceptoMovimiento.GASTO_OPERATIVO);
         m.setMonto(request.getMonto());
@@ -197,23 +204,28 @@ public class CajaServiceImpl implements CajaService {
     public Page<MovimientoCajaResponse> listar(Integer companyId, LocalDate desde, LocalDate hasta, int page, int size) {
         validarCompanyId(companyId);
         PageRequest pageable = PageRequest.of(page, size, Sort.by("fecha").descending());
+        java.util.Map<String, String> nombres = new java.util.HashMap<>();
         if (desde != null && hasta != null) {
             return movimientoRepo.findByCompanyIdAndFechaBetweenOrderByFechaDesc(
                     companyId,
                     desde.atStartOfDay(),
                     hasta.atTime(LocalTime.MAX),
                     pageable)
-                    .map(this::toResponse);
+                    .map(movimiento -> toResponse(movimiento, nombres));
         }
         return movimientoRepo.findByCompanyIdOrderByFechaDesc(companyId, pageable)
-                .map(this::toResponse);
+                .map(movimiento -> toResponse(movimiento, nombres));
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public SesionCajaResponse obtenerSesionActual(Integer companyId) {
         validarCompanyId(companyId);
-        return sesionCajaRepository.findFirstByCompanyIdAndEstadoOrderByAbiertaAtDesc(companyId, EstadoSesionCaja.ABIERTA)
+        veterinaria.vargasvet.service.PuntoCobroService.Resolucion resolucion = puntoCobroService.resolver(companyId);
+        if (resolucion.caja() == null) {
+            return null;
+        }
+        return sesionCajaRepository.findFirstByCajaIdAndEstado(resolucion.caja().getId(), EstadoSesionCaja.ABIERTA)
                 .map(this::actualizarCalculo)
                 .map(this::toSesionResponse)
                 .orElse(null);
@@ -225,29 +237,47 @@ public class CajaServiceImpl implements CajaService {
         validarCompanyId(companyId);
         int safePage = Math.max(0, page);
         int safeSize = Math.min(50, Math.max(1, size));
+        java.util.Map<String, String> nombres = new java.util.HashMap<>();
         return sesionCajaRepository.findByCompanyIdOrderByAbiertaAtDesc(
-                companyId, PageRequest.of(safePage, safeSize)).map(this::toSesionResponse);
+                companyId, PageRequest.of(safePage, safeSize)).map(sesion -> toSesionResponse(sesion, nombres));
     }
 
     @Override
     @Transactional
     public SesionCajaResponse abrirCaja(AperturaCajaRequest request) {
         validarCompanyId(request.getCompanyId());
-        if (sesionCajaRepository.findFirstByCompanyIdAndEstadoOrderByAbiertaAtDesc(
-                request.getCompanyId(), EstadoSesionCaja.ABIERTA).isPresent()) {
-            throw new IllegalArgumentException("La caja de esta sede ya se encuentra abierta");
+        veterinaria.vargasvet.domain.entity.Caja caja = puntoCobroService.resolverParaOperar(request.getCompanyId());
+        if (sesionCajaRepository.findFirstByCajaIdAndEstado(caja.getId(), EstadoSesionCaja.ABIERTA).isPresent()) {
+            throw new IllegalArgumentException("La caja de «" + caja.getNombre() + "» ya se encuentra abierta");
         }
+        Integer usuarioId = SecurityUtils.getCurrentUserId();
+        sesionCajaRepository.findFirstByAbiertaPorUsuarioIdAndEstado(usuarioId, EstadoSesionCaja.ABIERTA)
+                .ifPresent(otra -> {
+                    throw new IllegalArgumentException("Ya tienes una caja abierta"
+                            + nombreDeLaCaja(otra) + ". Ciérrala antes de abrir otra.");
+                });
         SesionCaja sesion = new SesionCaja();
         sesion.setCompanyId(request.getCompanyId());
+        sesion.setCajaId(caja.getId());
         sesion.setEstado(EstadoSesionCaja.ABIERTA);
         sesion.setMontoApertura(request.getMontoApertura());
         sesion.setEfectivoEsperado(request.getMontoApertura());
         sesion.setAbiertaAt(veterinaria.vargasvet.util.AppClock.now());
         sesion.setAbiertaPor(SecurityUtils.getCurrentUserEmail());
-        SesionCajaResponse response = toSesionResponse(sesionCajaRepository.save(sesion));
+        sesion.setAbiertaPorUsuarioId(usuarioId);
+        SesionCaja guardada;
+        try {
+            guardada = sesionCajaRepository.saveAndFlush(sesion);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            String causa = String.valueOf(e.getMostSpecificCause().getMessage());
+            throw new IllegalArgumentException(causa.contains("uq_sesion_caja_abierta_por_persona")
+                    ? "Ya tienes una caja abierta. Ciérrala antes de abrir otra."
+                    : "La caja de «" + caja.getNombre() + "» ya se encuentra abierta");
+        }
+        SesionCajaResponse response = toSesionResponse(guardada);
 
         auditLogService.log(request.getCompanyId(), "ABRIR_CAJA", "Caja",
-            "Se abrió la caja con un monto de apertura de S/ " + request.getMontoApertura());
+            "Se abrió la caja de «" + caja.getNombre() + "» con un monto de apertura de S/ " + request.getMontoApertura());
 
         return response;
     }
@@ -256,7 +286,7 @@ public class CajaServiceImpl implements CajaService {
     @Transactional
     public SesionCajaResponse arquearCaja(ArqueoCajaRequest request) {
         validarCompanyId(request.getCompanyId());
-        SesionCaja sesion = requireSesionAbierta(request.getCompanyId());
+        SesionCaja sesion = sesionParaOperar(request);
         actualizarCalculo(sesion);
         sesion.setEfectivoContado(request.getEfectivoContado());
         sesion.setDiferencia(request.getEfectivoContado().subtract(sesion.getEfectivoEsperado()));
@@ -268,7 +298,7 @@ public class CajaServiceImpl implements CajaService {
     @Transactional
     public SesionCajaResponse cerrarCaja(ArqueoCajaRequest request) {
         validarCompanyId(request.getCompanyId());
-        SesionCaja sesion = requireSesionAbierta(request.getCompanyId());
+        SesionCaja sesion = sesionParaOperar(request);
         actualizarCalculo(sesion);
         sesion.setEfectivoContado(request.getEfectivoContado());
         sesion.setDiferencia(request.getEfectivoContado().subtract(sesion.getEfectivoEsperado()));
@@ -276,6 +306,7 @@ public class CajaServiceImpl implements CajaService {
         sesion.setEstado(EstadoSesionCaja.CERRADA);
         sesion.setCerradaAt(veterinaria.vargasvet.util.AppClock.now());
         sesion.setCerradaPor(SecurityUtils.getCurrentUserEmail());
+        sesion.setCerradaPorUsuarioId(SecurityUtils.getCurrentUserId());
         SesionCajaResponse response = toSesionResponse(sesionCajaRepository.save(sesion));
 
         auditLogService.log(request.getCompanyId(), "CERRAR_CAJA", "Caja",
@@ -286,19 +317,35 @@ public class CajaServiceImpl implements CajaService {
         return response;
     }
 
-    private SesionCaja requireSesionAbierta(Integer companyId) {
-        return sesionCajaRepository.findFirstByCompanyIdAndEstadoOrderByAbiertaAtDesc(companyId, EstadoSesionCaja.ABIERTA)
-                .orElseThrow(() -> new IllegalArgumentException("Debe abrir la caja de la sede antes de registrar movimientos"));
+    private SesionCaja sesionDeEsteEquipo(Integer companyId) {
+        veterinaria.vargasvet.domain.entity.Caja caja = puntoCobroService.resolverParaOperar(companyId);
+        return sesionCajaRepository.findFirstByCajaIdAndEstado(caja.getId(), EstadoSesionCaja.ABIERTA)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Debe abrir la caja de «" + caja.getNombre() + "» antes de registrar movimientos"));
+    }
+
+    private SesionCaja sesionParaOperar(ArqueoCajaRequest request) {
+        if (request.getSesionId() == null) {
+            return sesionDeEsteEquipo(request.getCompanyId());
+        }
+        if (!SecurityUtils.isAdmin() && !SecurityUtils.isSuperAdmin()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Solo un administrador puede cerrar la caja de otra persona");
+        }
+        return sesionCajaRepository.findByIdAndCompanyId(request.getSesionId(), request.getCompanyId())
+                .filter(sesion -> sesion.getEstado() == EstadoSesionCaja.ABIERTA)
+                .orElseThrow(() -> new IllegalArgumentException("Esa caja ya no está abierta"));
+    }
+
+    private String nombreDeLaCaja(SesionCaja sesion) {
+        return sesion.getCajaId() == null ? "" : cajaRepository.findById(sesion.getCajaId())
+                .map(caja -> " en «" + caja.getNombre() + "»").orElse("");
     }
 
     private SesionCaja actualizarCalculo(SesionCaja sesion) {
-        LocalDateTime hasta = veterinaria.vargasvet.util.AppClock.now();
-        BigDecimal ingresos = movimientoRepo.sumByTipoAndMetodo(
-                sesion.getCompanyId(), TipoMovimiento.INGRESO, MetodoPago.EFECTIVO, sesion.getAbiertaAt(), hasta);
-        BigDecimal egresos = movimientoRepo.sumByTipoAndMetodo(
-                sesion.getCompanyId(), TipoMovimiento.EGRESO, MetodoPago.EFECTIVO, sesion.getAbiertaAt(), hasta);
-        BigDecimal devoluciones = movimientoRepo.sumByTipoAndMetodo(
-                sesion.getCompanyId(), TipoMovimiento.DEVOLUCION, MetodoPago.EFECTIVO, sesion.getAbiertaAt(), hasta);
+        BigDecimal ingresos = movimientoRepo.sumBySesionAndTipoAndMetodo(sesion.getId(), TipoMovimiento.INGRESO, MetodoPago.EFECTIVO);
+        BigDecimal egresos = movimientoRepo.sumBySesionAndTipoAndMetodo(sesion.getId(), TipoMovimiento.EGRESO, MetodoPago.EFECTIVO);
+        BigDecimal devoluciones = movimientoRepo.sumBySesionAndTipoAndMetodo(sesion.getId(), TipoMovimiento.DEVOLUCION, MetodoPago.EFECTIVO);
         sesion.setEfectivoEsperado(sesion.getMontoApertura().add(ingresos).subtract(egresos).subtract(devoluciones));
         if (sesion.getEfectivoContado() != null) {
             sesion.setDiferencia(sesion.getEfectivoContado().subtract(sesion.getEfectivoEsperado()));
@@ -317,6 +364,10 @@ public class CajaServiceImpl implements CajaService {
     }
 
     private SesionCajaResponse toSesionResponse(SesionCaja sesion) {
+        return toSesionResponse(sesion, new java.util.HashMap<>());
+    }
+
+    private SesionCajaResponse toSesionResponse(SesionCaja sesion, java.util.Map<String, String> nombres) {
         SesionCajaResponse r = new SesionCajaResponse();
         r.setId(sesion.getId());
         r.setCompanyId(sesion.getCompanyId());
@@ -328,9 +379,35 @@ public class CajaServiceImpl implements CajaService {
         r.setAbiertaAt(sesion.getAbiertaAt());
         r.setCerradaAt(sesion.getCerradaAt());
         r.setAbiertaPor(sesion.getAbiertaPor());
+        r.setAbiertaPorNombre(nombreDe(sesion.getAbiertaPorUsuarioId(), sesion.getAbiertaPor(), nombres));
         r.setCerradaPor(sesion.getCerradaPor());
+        r.setCerradaPorNombre(nombreDe(sesion.getCerradaPorUsuarioId(), sesion.getCerradaPor(), nombres));
         r.setObservaciones(sesion.getObservaciones());
+        r.setCajaNombre(sesion.getCajaId() == null ? null : nombres.computeIfAbsent("caja:" + sesion.getCajaId(),
+                k -> cajaRepository.findById(sesion.getCajaId()).map(veterinaria.vargasvet.domain.entity.Caja::getNombre).orElse("")));
+        if (r.getCajaNombre() != null && r.getCajaNombre().isEmpty()) r.setCajaNombre(null);
         return r;
+    }
+
+    private String nombreDe(Integer usuarioId, String correo, java.util.Map<String, String> nombres) {
+        return nombreDe(usuarioId, correo, null, nombres);
+    }
+
+    private String nombreDe(Integer usuarioId, String correo, Integer companyId, java.util.Map<String, String> nombres) {
+        if (usuarioId == null && (correo == null || correo.isBlank())) return null;
+        String clave = usuarioId != null ? "id:" + usuarioId
+                : "correo:" + correo.toLowerCase(java.util.Locale.ROOT) + ":" + companyId;
+        String nombre = nombres.computeIfAbsent(clave, k -> {
+            veterinaria.vargasvet.domain.entity.Usuario usuario = usuarioId != null
+                    ? usuarioRepository.findById(usuarioId).orElse(null)
+                    : usuarioRepository.findAllByEmailIgnoreCase(correo).stream()
+                            .filter(u -> companyId == null || u.getCompany() == null || companyId.equals(u.getCompany().getId()))
+                            .findFirst().orElse(null);
+            if (usuario == null) return "";
+            return ((usuario.getNombre() == null ? "" : usuario.getNombre()) + " "
+                    + (usuario.getApellido() == null ? "" : usuario.getApellido())).trim();
+        });
+        return nombre.isEmpty() ? null : nombre;
     }
 
     private Integer getCitaCompanyId(Cita cita) {
@@ -343,6 +420,20 @@ public class CajaServiceImpl implements CajaService {
     }
 
     private MovimientoCajaResponse toResponse(MovimientoCaja m) {
+        return toResponse(m, new java.util.HashMap<>());
+    }
+
+    private String puntoDeLaSesion(Long sesionId, java.util.Map<String, String> nombres) {
+        if (sesionId == null) return null;
+        String nombre = nombres.computeIfAbsent("sesion:" + sesionId, k -> sesionCajaRepository.findById(sesionId)
+                .map(SesionCaja::getCajaId)
+                .flatMap(cajaRepository::findById)
+                .map(veterinaria.vargasvet.domain.entity.Caja::getNombre)
+                .orElse(""));
+        return nombre.isEmpty() ? null : nombre;
+    }
+
+    private MovimientoCajaResponse toResponse(MovimientoCaja m, java.util.Map<String, String> nombres) {
         MovimientoCajaResponse r = new MovimientoCajaResponse();
         r.setId(m.getId());
         r.setTipo(m.getTipo());
@@ -353,6 +444,8 @@ public class CajaServiceImpl implements CajaService {
         r.setDescripcion(m.getDescripcion());
         r.setFecha(m.getFecha());
         r.setRegistradoPor(m.getRegistradoPor());
+        r.setRegistradoPorNombre(nombreDe(null, m.getRegistradoPor(), m.getCompanyId(), nombres));
+        r.setPuntoCobro(puntoDeLaSesion(m.getSesionCajaId(), nombres));
         r.setCompanyId(m.getCompanyId());
         return r;
     }

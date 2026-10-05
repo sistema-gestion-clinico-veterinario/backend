@@ -14,4 +14,6 @@ public class SetupAccountRequest {
     @Size(min = 12, max = 72, message = "La contraseña debe tener al menos 12 caracteres")
     @StrongPassword
     private String password;
+
+    private Boolean avisoLeido;
 }

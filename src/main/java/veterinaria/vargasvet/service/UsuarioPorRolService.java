@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.AccessDeniedException;
 import veterinaria.vargasvet.domain.entity.*;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.*;
 
@@ -22,6 +23,7 @@ public class UsuarioPorRolService {
     private final EmpleadoRepository empleadoRepository;
     private final ApoderadoRepository apoderadoRepository;
     private final CompanyMembershipService companyMembershipService;
+    private final AdministratorProtection administratorProtection;
 
     @Transactional(readOnly = true)
     public List<UsuarioPorRol> listarPorUsuario(Integer usuarioId) {
@@ -69,6 +71,9 @@ public class UsuarioPorRolService {
         if (!SecurityUtils.isSuperAdmin() && upr.getRol().getScope() == veterinaria.vargasvet.domain.enums.RoleScope.PLATFORM) {
             throw new AccessDeniedException("No puede revocar este rol");
         }
+        if (upr.getRol().getPurpose() == RolePurpose.COMPANY_ADMIN && upr.getCompany() != null) {
+            administratorProtection.assertCanRemoveAdministratorRole(upr.getUsuario(), upr.getCompany().getId());
+        }
         usuarioPorRolRepository.delete(upr);
     }
 
@@ -83,6 +88,9 @@ public class UsuarioPorRolService {
 
     private void assertAssignableRole(Usuario usuario, Role role) {
         if (SecurityUtils.isSuperAdmin()) return;
+        if (role.getPurpose() == RolePurpose.COMPANY_ADMIN || role.getPurpose() == RolePurpose.PLATFORM_ADMIN) {
+            throw new AccessDeniedException("Solo la plataforma puede asignar el rol de administrador");
+        }
         if (role.getScope() == veterinaria.vargasvet.domain.enums.RoleScope.PLATFORM
                 || role.getCompany() == null) {
             throw new AccessDeniedException("No puede asignar este rol");

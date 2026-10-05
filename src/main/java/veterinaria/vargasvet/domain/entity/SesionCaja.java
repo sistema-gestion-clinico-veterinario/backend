@@ -18,6 +18,9 @@ public class SesionCaja {
     @Column(name = "company_id", nullable = false)
     private Integer companyId;
 
+    @Column(name = "caja_id")
+    private Long cajaId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 12)
     private EstadoSesionCaja estado;
@@ -43,8 +46,14 @@ public class SesionCaja {
     @Column(name = "abierta_por", nullable = false, length = 150)
     private String abiertaPor;
 
+    @Column(name = "abierta_por_usuario_id")
+    private Integer abiertaPorUsuarioId;
+
     @Column(name = "cerrada_por", length = 150)
     private String cerradaPor;
+
+    @Column(name = "cerrada_por_usuario_id")
+    private Integer cerradaPorUsuarioId;
 
     @Column(length = 300)
     private String observaciones;

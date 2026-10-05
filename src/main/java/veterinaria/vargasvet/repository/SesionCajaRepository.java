@@ -12,4 +12,12 @@ public interface SesionCajaRepository extends JpaRepository<SesionCaja, Long> {
     Optional<SesionCaja> findFirstByCompanyIdAndEstadoOrderByAbiertaAtDesc(Integer companyId, EstadoSesionCaja estado);
 
     Page<SesionCaja> findByCompanyIdOrderByAbiertaAtDesc(Integer companyId, Pageable pageable);
+
+    Optional<SesionCaja> findFirstByCajaIdAndEstado(Long cajaId, EstadoSesionCaja estado);
+
+    java.util.List<SesionCaja> findAllByCompanyIdAndEstado(Integer companyId, EstadoSesionCaja estado);
+
+    Optional<SesionCaja> findFirstByAbiertaPorUsuarioIdAndEstado(Integer usuarioId, EstadoSesionCaja estado);
+
+    Optional<SesionCaja> findByIdAndCompanyId(Long id, Integer companyId);
 }

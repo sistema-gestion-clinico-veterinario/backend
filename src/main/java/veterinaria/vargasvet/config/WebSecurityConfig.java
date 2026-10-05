@@ -20,6 +20,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import veterinaria.vargasvet.security.JWTFilter;
+import veterinaria.vargasvet.security.SessionCookies;
 import veterinaria.vargasvet.security.JwtAuthenticationEntryPoint;
 import veterinaria.vargasvet.security.CookieSecurityFilter;
 import veterinaria.vargasvet.security.ThesisPerformanceMeasurementFilter;
@@ -59,14 +60,19 @@ public class WebSecurityConfig {
                         .requestMatchers(
                                 "/auth/login",
                                 "/auth/admin-login",
+                                "/auth/account/reactivate",
+                                "/auth/google/intent",
+                                "/auth/google/start",
                                 "/auth/google/callback",
                                 "/auth/google/exchange",
                                 "/auth/refresh",
                                 "/auth/logout",
                                 "/auth/resend-verification",
+                                "/auth/resend-verification-by-token",
                                 "/auth/forgot-password",
                                 "/auth/reset-password",
                                 "/auth/email-change/confirm-current",
+                                "/auth/email-change/cancel",
                                 "/auth/email-change/confirm-new",
                                 "/auth/validate-reset-token",
                                 "/legal/current",
@@ -89,6 +95,8 @@ public class WebSecurityConfig {
 
                         // Buscador de clinica para el login sin slug - mismo motivo que branding.
                         .requestMatchers(HttpMethod.GET, "/company/search").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/public/privacidad/*").permitAll()
 
                         .requestMatchers("/actuator/**").denyAll()
 
@@ -174,6 +182,8 @@ public class WebSecurityConfig {
                 "Content-Type",
                 "Authorization",
                 "X-Requested-With",
+                JWTFilter.COMPANY_HEADER,
+                SessionCookies.SLUG_HEADER,
                 ThesisPerformanceMeasurementFilter.SESSION_HEADER,
                 ThesisPerformanceMeasurementFilter.PHASE_HEADER));
 

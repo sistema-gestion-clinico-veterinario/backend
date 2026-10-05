@@ -14,6 +14,8 @@ public interface EmailChangeRequestRepository extends JpaRepository<EmailChangeR
 
     void deleteByUsuario(Usuario usuario);
 
+    Optional<EmailChangeRequest> findByUsuario(Usuario usuario);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT request FROM EmailChangeRequest request " +
             "JOIN FETCH request.usuario WHERE request.oldEmailTokenHash = :tokenHash")

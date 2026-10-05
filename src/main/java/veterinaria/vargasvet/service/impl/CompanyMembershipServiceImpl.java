@@ -56,6 +56,87 @@ public class CompanyMembershipServiceImpl implements CompanyMembershipService {
                 || usuarioMembresiaRepository.existsByUsuarioIdAndCompanyIdAndEstadoTrue(usuarioId, companyId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasActiveStaffMembership(Integer usuarioId, Integer companyId) {
+        if (usuarioId == null || companyId == null) {
+            return false;
+        }
+        return empleadoRepository.existsByUserIdAndCompanyIdAndEstadoTrue(usuarioId, companyId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasAnyMembership(Integer usuarioId, Integer companyId) {
+        if (usuarioId == null || companyId == null) {
+            return false;
+        }
+        return empleadoRepository.existsByUserIdAndCompanyId(usuarioId, companyId)
+                || apoderadoRepository.existsByUserIdAndCompanyId(usuarioId, companyId)
+                || usuarioMembresiaRepository.existsByUsuarioIdAndCompanyId(usuarioId, companyId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isSuspendedIn(Integer usuarioId, Integer companyId) {
+        return isInactiveAs(usuarioId, companyId, veterinaria.vargasvet.domain.enums.TipoInactividad.SUSPENSION);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isDeactivatedIn(Integer usuarioId, Integer companyId) {
+        return isInactiveAs(usuarioId, companyId, veterinaria.vargasvet.domain.enums.TipoInactividad.BAJA);
+    }
+
+    private boolean isInactiveAs(Integer usuarioId, Integer companyId,
+                                 veterinaria.vargasvet.domain.enums.TipoInactividad tipo) {
+        if (usuarioId == null || companyId == null) {
+            return false;
+        }
+        return empleadoRepository.existsByUserIdAndCompanyIdAndEstadoFalseAndTipoInactividad(usuarioId, companyId, tipo)
+                || apoderadoRepository.existsByUserIdAndCompanyIdAndEstadoFalseAndTipoInactividad(usuarioId, companyId, tipo);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasOnlyInactiveMemberships(Integer usuarioId) {
+        if (usuarioId == null) {
+            return false;
+        }
+        boolean tieneRelaciones = empleadoRepository.existsByUserId(usuarioId)
+                || apoderadoRepository.existsByUserId(usuarioId)
+                || usuarioMembresiaRepository.existsByUsuarioId(usuarioId);
+        if (!tieneRelaciones) {
+            return false;
+        }
+        return !(empleadoRepository.existsByUserIdAndEstadoTrue(usuarioId)
+                || apoderadoRepository.existsByUserIdAndEstadoTrue(usuarioId)
+                || usuarioMembresiaRepository.existsByUsuarioIdAndEstadoTrue(usuarioId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isEmailTakenInUserCompanies(Usuario usuario, String email) {
+        return takenByAnotherUser(usuario, usuarioRepository.findAllByEmailIgnoreCase(email));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isUsernameTakenInUserCompanies(Usuario usuario, String username) {
+        return takenByAnotherUser(usuario, usuarioRepository.findAllByUsernameIgnoreCase(username));
+    }
+
+    private boolean takenByAnotherUser(Usuario usuario, java.util.List<Usuario> candidates) {
+        Set<Integer> companyIds = getActiveCompanyIds(usuario);
+        if (companyIds.isEmpty()) {
+            return false;
+        }
+        return candidates.stream()
+                .filter(candidate -> !Objects.equals(candidate.getId(), usuario.getId()))
+                .anyMatch(candidate -> companyIds.stream()
+                        .anyMatch(companyId -> hasActiveMembership(candidate.getId(), companyId)));
+    }
+
     /**
      * REQUIRED (por defecto): se une a la transaccion del que llama en vez de abrir
      * una propia. Es asi como se cumple la regla de "misma transaccion que la
@@ -66,10 +147,10 @@ public class CompanyMembershipServiceImpl implements CompanyMembershipService {
     @Transactional
     public void syncLegacyCompanyField(Usuario usuario) {
         Set<Integer> activeCompanyIds = getActiveCompanyIds(usuario);
+        Integer currentCompanyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
         Integer resolvedCompanyId = activeCompanyIds.size() == 1
                 ? activeCompanyIds.iterator().next()
-                : null;
-        Integer currentCompanyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
+                : activeCompanyIds.isEmpty() ? currentCompanyId : null;
         if (Objects.equals(currentCompanyId, resolvedCompanyId)) {
             return;
         }

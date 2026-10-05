@@ -22,5 +22,9 @@ public interface UsuarioEmpresaCredencialRepository extends JpaRepository<Usuari
     @Query("SELECT c FROM UsuarioEmpresaCredencial c WHERE c.usuario.id = :usuarioId")
     List<UsuarioEmpresaCredencial> findAllByUsuarioId(@Param("usuarioId") Integer usuarioId);
 
+    @Query("SELECT DISTINCT c.usuario.id FROM UsuarioEmpresaCredencial c " +
+           "WHERE c.usuario.id IN :usuarioIds AND c.passwordChanged = true")
+    java.util.Set<Integer> usuariosConContrasenaCreada(@Param("usuarioIds") java.util.Collection<Integer> usuarioIds);
+
     boolean existsByUsuarioIdAndCompanyId(Integer usuarioId, Integer companyId);
 }

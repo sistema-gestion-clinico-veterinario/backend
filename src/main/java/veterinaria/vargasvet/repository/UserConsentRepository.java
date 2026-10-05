@@ -13,6 +13,8 @@ public interface UserConsentRepository extends JpaRepository<UserConsent, Long> 
 
     List<UserConsent> findByUsuarioId(Integer usuarioId);
 
+    List<UserConsent> findByUsuarioIdOrderByFechaAceptacionDesc(Integer usuarioId);
+
     boolean existsByUsuarioIdAndLegalDocumentId(Integer usuarioId, Long legalDocumentId);
 
     @Query("SELECT ld FROM LegalDocument ld WHERE ld.activo = true AND ld.id NOT IN " +

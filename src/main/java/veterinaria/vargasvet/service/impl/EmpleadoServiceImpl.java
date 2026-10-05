@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.*;
 import veterinaria.vargasvet.domain.enums.DiaSemana;
+import veterinaria.vargasvet.domain.enums.TipoInactividad;
 import veterinaria.vargasvet.dto.Mail;
 import veterinaria.vargasvet.dto.request.EmpleadoRequest;
 import veterinaria.vargasvet.dto.request.HorarioEmpleadoRequest;
@@ -42,6 +43,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EmpleadoServiceImpl implements EmpleadoService {
 
+    private static final long INVITATION_RESEND_COOLDOWN_MINUTES = 5;
+    private static final long STATE_CHANGE_REPEAT_MINUTES = 2;
+    private static final String LICENSE_IN_USE_MESSAGE = "El número de colegiatura ya está registrado en esta empresa";
+    private static final String LICENSE_INDEX = "uq_empleado_colegiatura_activo";
+
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
     private final UsuarioRepository usuarioRepository;
     private final RoleRepository roleRepository;
     private final EmpleadoRepository empleadoRepository;
@@ -62,6 +71,11 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
     private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
     private final UsuarioContactoService contactoService;
+    private final veterinaria.vargasvet.service.AdministratorProtection administratorProtection;
+    private final veterinaria.vargasvet.service.AccountClosureGuard accountClosureGuard;
+    private final veterinaria.vargasvet.service.CajasAbiertasDelPersonal cajasAbiertas;
+    private final veterinaria.vargasvet.service.AccessRestoredNotifier accessRestoredNotifier;
+    private final veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
 
     @Value("${app.url}")
     private String appUrl;
@@ -105,6 +119,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         Company companyToUse = companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
         businessValidator.checkCompanyActiva(companyIdToUse);
+        consentimientoDatosService.exigirAltaValida(companyIdToUse, dto.getAvisoInformado(), false, null);
 
         // Aislamiento total entre empresas: nunca se busca ni se reutiliza una identidad
         // de OTRA empresa, aunque coincida el DNI o el correo - cada empresa es una isla,
@@ -179,7 +194,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         boolean isVeterinario = isVeterinario(dto);
         if (isVeterinario) {
             if (dto.getNumeroColegiatura() == null || dto.getNumeroColegiatura().isBlank()) {
-                throw new IllegalArgumentException("El nÃºmero de colegiatura es obligatorio para veterinarios");
+                throw new IllegalArgumentException("El número de colegiatura es obligatorio para veterinarios");
+            }
+            if (empleadoRepository.existsByNumeroColegiaturaAndCompanyIdAndEstadoTrue(dto.getNumeroColegiatura(), companyIdToUse)) {
+                throw new IllegalArgumentException(LICENSE_IN_USE_MESSAGE);
             }
             empleado.setNumeroColegiatura(dto.getNumeroColegiatura());
 
@@ -199,9 +217,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                     .collect(Collectors.toSet()));
         }
 
-        Empleado savedEmpleado = empleadoRepository.save(empleado);
+        Empleado savedEmpleado = saveTranslatingLicenseConflict(empleado, LICENSE_IN_USE_MESSAGE);
         companyMembershipService.syncLegacyCompanyField(savedUser);
         contactoService.crear(savedUser, companyToUse, dto.getTelefono(), dto.getDireccion());
+        consentimientoDatosService.registrarAlta(savedUser, companyIdToUse, null, SecurityUtils.getCurrentUserId());
 
         if (dto.getHorarios() != null && !dto.getHorarios().isEmpty()) {
             guardarHorarios(savedEmpleado, dto.getHorarios());
@@ -212,7 +231,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         auditLogService.log(
             "CREAR_EMPLEADO",
             "Empleados",
-            "Se registrÃ³ al empleado " + dto.getNombre() + " " + dto.getApellido() + " con email " + dto.getEmail()
+            "Se registró al empleado " + dto.getNombre() + " " + dto.getApellido() + " con email " + dto.getEmail()
         );
 
         UserProfileDTO profile = userMapper.toProfileDTO(savedUser);
@@ -231,16 +250,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
 
         Usuario usuario = empleado.getUser();
-        businessValidator.checkCompanyActiva(usuario.getCompany() != null ? usuario.getCompany().getId() : null);
+        Integer companyIdToUse = companyIdOf(empleado);
+        businessValidator.checkCompanyActiva(companyIdToUse);
 
-        Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-        if (!SecurityUtils.isSuperAdmin()) {
-            if (usuario.getCompany() == null || !usuario.getCompany().getId().equals(currentCompanyId)) {
-                throw new IllegalArgumentException("No tienes permiso para editar a un empleado de otra empresa");
-            }
+        if (!SecurityUtils.isSuperAdmin() && !java.util.Objects.equals(companyIdToUse, SecurityUtils.getCurrentCompanyId())) {
+            throw new IllegalArgumentException("No tienes permiso para editar a un empleado de otra empresa");
         }
-
-        Integer companyIdToUse = usuario.getCompany().getId();
 
 
         if (dto.getNumeroDocumento() != null && !dto.getNumeroDocumento().equals(usuario.getDni())) {
@@ -258,7 +273,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         if (dto.getNombre() != null) usuario.setNombre(dto.getNombre());
         if (dto.getApellido() != null) usuario.setApellido(dto.getApellido());
-        contactoService.actualizar(usuario, usuario.getCompany(), dto.getTelefono(), dto.getDireccion());
+        contactoService.actualizar(usuario, empleado.getCompany(), dto.getTelefono(), dto.getDireccion());
 
 
         if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
@@ -269,13 +284,33 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 throw new IllegalArgumentException("Solo un Super Admin puede modificar los roles de otro Super Admin");
             }
 
-            usuarioPorRolRepository.deleteByUsuarioId(usuario.getId());
-            for (Integer roleId : new java.util.LinkedHashSet<>(dto.getRoleIds())) {
-                Role role = resolveStaffRole(roleId, companyIdToUse);
+            java.util.Map<Integer, Role> rolesActuales = new java.util.LinkedHashMap<>();
+            usuario.getUsuariosPorRol().stream()
+                    .filter(upr -> upr.getCompany() != null
+                            && java.util.Objects.equals(upr.getCompany().getId(), companyIdToUse))
+                    .forEach(upr -> rolesActuales.put(upr.getRol().getId(), upr.getRol()));
+            java.util.Set<Integer> rolesSolicitados = new java.util.LinkedHashSet<>(dto.getRoleIds());
+            if (!rolesSolicitados.equals(rolesActuales.keySet())) {
+                administratorProtection.assertCanManage(usuario, companyIdToUse);
+            }
+            List<Role> nuevosRoles = new java.util.ArrayList<>();
+            for (Integer roleId : rolesSolicitados) {
+                nuevosRoles.add(rolesActuales.containsKey(roleId)
+                        ? rolesActuales.get(roleId)
+                        : resolveStaffRole(roleId, companyIdToUse));
+            }
+            boolean conservaLaAdministracion = nuevosRoles.stream()
+                    .anyMatch(role -> role.getPurpose() == veterinaria.vargasvet.domain.enums.RolePurpose.COMPANY_ADMIN);
+            if (!conservaLaAdministracion) {
+                administratorProtection.assertCanRemoveAdministratorRole(usuario, companyIdToUse);
+            }
+
+            usuarioPorRolRepository.deleteByUsuarioIdAndCompanyId(usuario.getId(), companyIdToUse);
+            for (Role role : nuevosRoles) {
                 UsuarioPorRol upr = new UsuarioPorRol();
                 upr.setUsuario(usuario);
                 upr.setRol(role);
-                upr.setCompany(role.getCompany() != null ? role.getCompany() : usuario.getCompany());
+                upr.setCompany(role.getCompany() != null ? role.getCompany() : empleado.getCompany());
                 usuarioPorRolRepository.save(upr);
             }
         }
@@ -287,7 +322,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         if (dto.getNumeroDocumento() != null) empleado.setNumeroDocumentoIdentidad(dto.getNumeroDocumento());
         if (dto.getFotoUrl() != null) empleado.setFotoUrl(dto.getFotoUrl());
         if (dto.getObservaciones() != null) empleado.setObservaciones(dto.getObservaciones());
-        if (dto.getEstado() != null) empleado.setEstado(dto.getEstado());
+        if (dto.getEstado() != null && !dto.getEstado().equals(empleado.getEstado())) {
+            throw new IllegalArgumentException(
+                    "El estado solo puede cambiarse con la acción de activar o desactivar");
+        }
 
 
         if (dto.getTiposEmpleado() != null) {
@@ -303,6 +341,11 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         boolean isVeterinario = isVeterinario(dto);
         if (isVeterinario) {
             if (dto.getNumeroColegiatura() != null) {
+                if (!dto.getNumeroColegiatura().equals(empleado.getNumeroColegiatura())
+                        && empleadoRepository.existsByNumeroColegiaturaAndCompanyIdAndEstadoTrueAndIdNot(
+                                dto.getNumeroColegiatura(), companyIdToUse, empleado.getId())) {
+                    throw new IllegalArgumentException(LICENSE_IN_USE_MESSAGE);
+                }
                 empleado.setNumeroColegiatura(dto.getNumeroColegiatura());
             }
         }
@@ -340,8 +383,57 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
     @Transactional
     @Override
-    public void cambiarEstado(Long empleadoId, Boolean nuevoEstado) {
+    public void reenviarInvitacion(Long empleadoId) {
         Empleado empleado = findAccessibleEmployee(empleadoId);
+        Usuario usuario = empleado.getUser();
+        if (!Boolean.TRUE.equals(empleado.getEstado())) {
+            throw new IllegalArgumentException("No se puede reenviar la invitación a un empleado inactivo");
+        }
+        if (usuario == null) {
+            throw new IllegalArgumentException("La cuenta de este empleado ya fue activada");
+        }
+        entityManager.lock(usuario, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        entityManager.refresh(usuario);
+        boolean tieneContrasena = credencialRepository.findAllByUsuarioId(usuario.getId()).stream()
+                .anyMatch(veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial::isPasswordChanged);
+        if (!veterinaria.vargasvet.util.CuentaPendiente.es(usuario, tieneContrasena)) {
+            throw new IllegalArgumentException("La cuenta de este empleado ya fue activada");
+        }
+
+        java.time.LocalDateTime ahora = veterinaria.vargasvet.util.AppClock.now();
+        java.time.LocalDateTime venceActual = usuario.getVerificationTokenExpiresAt();
+        if (venceActual != null) {
+            java.time.LocalDateTime puedeReenviarDesde = venceActual.minusHours(verificationTokenValidityHours)
+                    .plusMinutes(INVITATION_RESEND_COOLDOWN_MINUTES);
+            if (puedeReenviarDesde.isAfter(ahora)) {
+                long minutos = Math.max(1, (java.time.Duration.between(ahora, puedeReenviarDesde).getSeconds() + 59) / 60);
+                throw new IllegalArgumentException("La invitación se envió hace poco. Podrás reenviarla en "
+                        + minutos + (minutos == 1 ? " minuto" : " minutos"));
+            }
+        }
+
+        String verificationToken = SecurityTokenUtils.generate();
+        usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
+        usuario.setVerificationTokenExpiresAt(ahora.plusHours(verificationTokenValidityHours));
+        usuarioRepository.save(usuario);
+        String nombre = ((usuario.getNombre() == null ? "" : usuario.getNombre()) + " "
+                + (usuario.getApellido() == null ? "" : usuario.getApellido())).trim();
+        if (veterinaria.vargasvet.util.MailDelivery.failed(
+                sendWelcomeEmail(usuario, nombre, verificationToken, empleado.getCompany()))) {
+            throw new veterinaria.vargasvet.exception.MailDeliveryException(
+                    "No pudimos enviar el correo de invitación. El enlace anterior sigue vigente; intenta de nuevo en unos minutos");
+        }
+
+        auditLogService.log(companyIdOf(empleado), "REENVIAR_INVITACION_EMPLEADO", "Empleados",
+                "Se reenvió la invitación de activación a " + nombre + " (" + usuario.getEmail() + ")");
+    }
+
+    @Transactional
+    @Override
+    public java.util.List<String> cambiarEstado(Long empleadoId, Boolean nuevoEstado, TipoInactividad tipo, String motivo) {
+        Empleado empleado = findAccessibleEmployee(empleadoId);
+        entityManager.lock(empleado, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        entityManager.refresh(empleado);
 
         Usuario usuario = empleado.getUser();
 
@@ -350,78 +442,107 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         if (usuario.getEmail().equals(adminEmail)) {
             throw new IllegalArgumentException("No puedes cambiar tu propio estado de actividad");
         }
-        Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-        if (!SecurityUtils.isSuperAdmin()) {
-            if (usuario.getCompany() == null || !usuario.getCompany().getId().equals(currentCompanyId)) {
-                throw new IllegalArgumentException("No tienes permiso para modificar el estado de un empleado de otra empresa");
+        Integer empleadoCompanyId = companyIdOf(empleado);
+        if (!SecurityUtils.isSuperAdmin() && !java.util.Objects.equals(empleadoCompanyId, SecurityUtils.getCurrentCompanyId())) {
+            throw new IllegalArgumentException("No tienes permiso para modificar el estado de un empleado de otra empresa");
+        }
+        boolean activar = Boolean.TRUE.equals(nuevoEstado);
+        TipoInactividad tipoEfectivo = activar ? null : (tipo != null ? tipo : TipoInactividad.BAJA);
+        boolean yaInactivo = !Boolean.TRUE.equals(empleado.getEstado());
+
+        if (activar && !yaInactivo) {
+            return java.util.List.of();
+        }
+        if (!activar && yaInactivo && empleado.getTipoInactividad() == tipoEfectivo
+                && empleado.getFechaModificacionEstado() != null
+                && empleado.getFechaModificacionEstado().isAfter(
+                        veterinaria.vargasvet.util.AppClock.now().minusMinutes(STATE_CHANGE_REPEAT_MINUTES))) {
+            return java.util.List.of();
+        }
+
+        String licenseTakenMessage = null;
+        if (activar && empleado.getNumeroColegiatura() != null) {
+            licenseTakenMessage = "La colegiatura " + empleado.getNumeroColegiatura()
+                    + " la usa ahora otra persona activa de la clínica. Corrige uno de los dos registros antes de reactivar.";
+            if (empleadoRepository.existsByNumeroColegiaturaAndCompanyIdAndEstadoTrueAndIdNot(
+                    empleado.getNumeroColegiatura(), empleadoCompanyId, empleado.getId())) {
+                throw new IllegalArgumentException(licenseTakenMessage);
             }
         }
-        if (Boolean.FALSE.equals(nuevoEstado) && citaRepository.existsCitaVigenteByEmpleadoId(empleadoId, veterinaria.vargasvet.util.AppClock.now())) {
-            throw new IllegalArgumentException("No se puede desactivar un empleado con citas programadas vigentes");
+        if (activar) {
+            administratorProtection.assertCanManage(usuario, empleadoCompanyId);
+            accountClosureGuard.assertNotSelfClosed(usuario.getId(), empleadoCompanyId);
+        } else {
+            administratorProtection.assertCanDeactivate(usuario, empleadoCompanyId);
+            if (yaInactivo) {
+                boolean pasaDeSuspensionABaja = empleado.getTipoInactividad() == TipoInactividad.SUSPENSION
+                        && tipoEfectivo == TipoInactividad.BAJA;
+                if (!pasaDeSuspensionABaja) {
+                    throw new IllegalArgumentException(empleado.getTipoInactividad() == TipoInactividad.SUSPENSION
+                            ? "El empleado ya está suspendido"
+                            : "El empleado ya está dado de baja; solo puede reactivarse");
+                }
+            } else if (citaRepository.existsCitaVigenteByEmpleadoId(empleadoId, veterinaria.vargasvet.util.AppClock.now())) {
+                throw new IllegalArgumentException("No se puede desactivar un empleado con citas programadas vigentes");
+            }
         }
-        empleado.setEstado(nuevoEstado);
+        empleado.setEstado(activar);
+        empleado.setTipoInactividad(tipoEfectivo);
         empleado.setEstadoModificadoPor(adminEmail);
         empleado.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
         empleado.setUpdatedAt(veterinaria.vargasvet.util.AppClock.now());
-        usuario.setActivo(nuevoEstado);
+        if (activar && usuario.isEmailVerified()) {
+            usuario.setActivo(true);
+        }
 
-        empleadoRepository.save(empleado);
+        saveTranslatingLicenseConflict(empleado, licenseTakenMessage != null ? licenseTakenMessage : LICENSE_IN_USE_MESSAGE);
         // Solo revoca las sesiones de ESTA empresa - desactivar a alguien en Vargas Vet
         // nunca debe desloguearlo de El Duke de Can si tiene sesión abierta ahí.
         sessionSecurityService.invalidateSessionsForCompany(usuario, empleado.getCompany());
 
+        String accion = activar ? "REACTIVAR_EMPLEADO"
+                : tipoEfectivo == TipoInactividad.SUSPENSION ? "SUSPENDER_EMPLEADO" : "DAR_DE_BAJA_EMPLEADO";
+        String hecho = activar ? "Se reactivó" : tipoEfectivo == TipoInactividad.SUSPENSION ? "Se suspendió" : "Se dio de baja";
+        java.util.List<String> cajas = activar ? java.util.List.of() : cajasAbiertas.nombres(usuario, empleadoCompanyId);
         auditLogService.log(
-            Boolean.TRUE.equals(nuevoEstado) ? "ACTIVAR_EMPLEADO" : "DESACTIVAR_EMPLEADO",
+            empleadoCompanyId,
+            accion,
             "Empleados",
-            (Boolean.TRUE.equals(nuevoEstado) ? "Se activÃ³" : "Se desactivÃ³") + " al empleado " + usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ")"
+            hecho + " al empleado " + usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ")"
+                    + veterinaria.vargasvet.util.AuditDetails.reasonSuffix(motivo)
+                    + (cajas.isEmpty() ? "" : ". Tenía abierta la caja " + String.join(", ", cajas)
+                            + ": un administrador debe cerrarla")
         );
+        if (activar) {
+            accessRestoredNotifier.send(usuario, empleado.getCompany());
+        }
+        return cajas;
+    }
+
+    private Empleado saveTranslatingLicenseConflict(Empleado empleado, String message) {
+        try {
+            return empleadoRepository.saveAndFlush(empleado);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            Throwable root = e;
+            while (root.getCause() != null) {
+                root = root.getCause();
+            }
+            String detail = root.getMessage() == null ? "" : root.getMessage();
+            if (detail.contains(LICENSE_INDEX)) {
+                throw new IllegalArgumentException(message);
+            }
+            throw e;
+        }
     }
 
     @Override
     @Transactional
-    public void eliminar(Long empleadoId) {
-        Empleado empleado = findAccessibleEmployee(empleadoId);
-
-        if (citaRepository.existsByEmpleadoId(empleadoId)) {
-            Usuario usuario = empleado.getUser();
-            horarioEmpleadoRepository.deleteByEmpleadoId(empleadoId);
-            empleado.setEstado(false);
-            empleado.setEstadoModificadoPor(SecurityUtils.getCurrentUserEmail());
-            empleado.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
-            if (usuario != null) {
-                usuario.setActivo(false);
-                sessionSecurityService.invalidateSessionsForCompany(usuario, empleado.getCompany());
-            }
-            empleadoRepository.save(empleado);
-
-            String detalleEmpleado = usuario != null
-                    ? usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ")"
-                    : "ID " + empleadoId;
-            auditLogService.log(
-                "DESACTIVAR_EMPLEADO_CON_HISTORIAL",
-                "Empleados",
-                "Se desactivo al empleado " + detalleEmpleado + " porque tiene historial asociado"
-            );
-            return;
+    public java.util.List<String> eliminar(Long empleadoId) {
+        if (!SecurityUtils.isAdmin() && !SecurityUtils.isSuperAdmin()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Solo un administrador puede eliminar a un empleado");
         }
-
-        Usuario usuario = empleado.getUser();
-        String empEmail = usuario.getEmail();
-        String empNombre = usuario.getNombre() + " " + usuario.getApellido();
-        Integer usuarioId = usuario.getId();
-
-        usuarioPorRolRepository.deleteByUsuarioId(usuarioId);
-        empleadoRepository.removeEspecialidades(empleadoId);
-        empleadoRepository.removeTiposEmpleado(empleadoId);
-        horarioEmpleadoRepository.deleteByEmpleadoId(empleadoId);
-        empleadoRepository.deleteById(empleadoId);
-        usuarioRepository.deleteById(usuarioId);
-
-        auditLogService.log(
-            "ELIMINAR_EMPLEADO",
-            "Empleados",
-            "Se eliminÃ³ permanentemente al empleado " + empNombre + " (" + empEmail + ")"
-        );
+        return cambiarEstado(empleadoId, false, TipoInactividad.BAJA, "Eliminado por el administrador");
     }
 
     private void guardarHorarios(Empleado empleado, List<HorarioEmpleadoRequest> horariosRequest) {
@@ -464,13 +585,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         if (opHourOpt.isEmpty()) return;
         CompanyOperatingHour opHour = opHourOpt.get();
         if (Boolean.FALSE.equals(opHour.getIsOpen())) {
-            throw new IllegalArgumentException("La clÃ­nica no abre los dÃ­as " + dia);
+            throw new IllegalArgumentException("La clínica no abre los días " + dia);
         }
         LocalTime opening = opHour.getOpeningTime();
         LocalTime closing = opHour.getClosingTime();
         if (inicio.isBefore(opening) || fin.isAfter(closing)) {
             throw new IllegalArgumentException(String.format(
-                "El horario (%s - %s) estÃ¡ fuera del horario de atenciÃ³n de la clÃ­nica (%s - %s)",
+                "El horario (%s - %s) está fuera del horario de atención de la clínica (%s - %s)",
                 inicio, fin, opening, closing));
         }
     }
@@ -482,33 +603,33 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         companyExceptionRepository.findByCompanyIdAndDate(companyId, fecha)
                 .ifPresent(ex -> {
                     if (Boolean.FALSE.equals(ex.getIsOpen())) {
-                        throw new IllegalArgumentException("La clÃ­nica estÃ¡ cerrada el dÃ­a " + fecha + " (" + ex.getDescription() + ")");
+                        throw new IllegalArgumentException("La clínica está cerrada el día " + fecha + " (" + ex.getDescription() + ")");
                     }
                 });
 
-        // 2. Validar horario de atenciÃ³n del dÃ­a (solo si estÃ¡ configurado)
+        // 2. Validar horario de atención del día (solo si está configurado)
         var opHourOpt = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, dia);
         if (opHourOpt.isEmpty()) {
-            // Sin configuraciÃ³n de horario, se permite cualquier hora
+            // Sin configuración de horario, se permite cualquier hora
             return;
         }
 
         CompanyOperatingHour opHour = opHourOpt.get();
         if (Boolean.FALSE.equals(opHour.getIsOpen())) {
-            throw new IllegalArgumentException("La clÃ­nica no abre los dÃ­as " + dia);
+            throw new IllegalArgumentException("La clínica no abre los días " + dia);
         }
 
         LocalTime opening = opHour.getOpeningTime();
         LocalTime closing = opHour.getClosingTime();
 
-        // Validar si el turno estÃ¡ contenido en el horario de atenciÃ³n
-        // Si el turno cruza la medianoche (inicio >= fin), es invÃ¡lido si la clÃ­nica no abre 24h
+        // Validar si el turno está contenido en el horario de atención
+        // Si el turno cruza la medianoche (inicio >= fin), es inválido si la clínica no abre 24h
         if (!inicio.isBefore(fin)) {
-            throw new IllegalArgumentException("La hora de inicio debe ser anterior a la de fin (no se permiten turnos de duraciÃ³n cero o que crucen la medianoche)");
+            throw new IllegalArgumentException("La hora de inicio debe ser anterior a la de fin (no se permiten turnos de duración cero o que crucen la medianoche)");
         }
 
         if (inicio.isBefore(opening) || fin.isAfter(closing)) {
-            throw new IllegalArgumentException(String.format("El horario (%s - %s) estÃ¡ fuera del horario de atenciÃ³n de la clÃ­nica (%s - %s)",
+            throw new IllegalArgumentException(String.format("El horario (%s - %s) está fuera del horario de atención de la clínica (%s - %s)",
                     inicio, fin, opening, closing));
         }
     }
@@ -534,7 +655,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         if (start.isAfter(end)) throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la de fin");
 
         // 1. Validar citas existentes en el rango si no es sobreescritura total o si se eliminan turnos
-        // Para simplificar, si hay citas en el rango, mostramos cuÃ¡les son.
+        // Para simplificar, si hay citas en el rango, mostramos cuáles son.
         List<Cita> citas = citaRepository.findByEmpleadoIdAndDateRange(empleadoId, start, end);
         if (!citas.isEmpty()) {
             StringBuilder sb = new StringBuilder("No se puede modificar el horario porque existen citas programadas: ");
@@ -545,24 +666,24 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             throw new IllegalStateException(sb.toString());
         }
 
-        // 3. Generar turnos dÃ­a por dÃ­a
+        // 3. Generar turnos día por día
         for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
             final LocalDate currentDay = date;
             DiaSemana dia = toDiaSemana(currentDay.getDayOfWeek());
 
-            // Verificar si la empresa abre ese dÃ­a
+            // Verificar si la empresa abre ese día
             if (!isEmpresaAbiertaEnDia(companyId, currentDay, dia)) {
                 continue;
             }
 
-            // Filtrar solo los turnos que aplican a este dÃ­a de la semana
+            // Filtrar solo los turnos que aplican a este día de la semana
             List<HorarioEmpleadoRequest> shiftsParaHoy = request.getShifts().stream()
                     .filter(s -> s.getDiaSemana() == null || s.getDiaSemana().equals(dia))
                     .toList();
             
             if (shiftsParaHoy.isEmpty()) continue;
 
-            // Si hay sobreescritura, borrar SOLO el turno original que se estÃ¡ reemplazando
+            // Si hay sobreescritura, borrar SOLO el turno original que se está reemplazando
             if (Boolean.TRUE.equals(request.getOverwrite()) && request.getOriginalStartTime() != null) {
                 LocalTime originalStart = request.getOriginalStartTime();
                 empleado.getHorarios().removeIf(h -> h.getFecha().equals(currentDay) && h.getHoraInicio().equals(originalStart));
@@ -572,12 +693,12 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             // Validar traslapes con OTROS turnos que ya existan (y que no son el que estamos reemplazando)
             for (HorarioEmpleadoRequest shiftReq : shiftsParaHoy) {
                 if (horarioEmpleadoRepository.existsOverlap(empleadoId, currentDay, shiftReq.getHoraInicio(), shiftReq.getHoraFin())) {
-                    throw new IllegalStateException("Conflicto de horario el dÃ­a " + currentDay + ": el nuevo rango (" + 
+                    throw new IllegalStateException("Conflicto de horario el día " + currentDay + ": el nuevo rango (" + 
                         shiftReq.getHoraInicio() + "-" + shiftReq.getHoraFin() + ") se traslapa con otro turno existente.");
                 }
             }
 
-            // Validar refrigerio solo si hay mÃ¡s de un turno para el MISMO dÃ­a
+            // Validar refrigerio solo si hay más de un turno para el MISMO día
             if (shiftsParaHoy.size() > 1) {
                 validarRefrigerio(shiftsParaHoy);
             }
@@ -588,7 +709,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 // Solo verificar traslape si NO estamos sobrescribiendo (porque ya borramos arriba)
                 if (!Boolean.TRUE.equals(request.getOverwrite())) {
                     if (horarioEmpleadoRepository.existsOverlap(empleadoId, currentDay, shiftReq.getHoraInicio(), shiftReq.getHoraFin())) {
-                        throw new IllegalStateException("Conflicto de horario el dÃ­a " + currentDay + " en la franja " + shiftReq.getHoraInicio());
+                        throw new IllegalStateException("Conflicto de horario el día " + currentDay + " en la franja " + shiftReq.getHoraInicio());
                     }
                 }
 
@@ -612,24 +733,24 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         auditLogService.log(
             "ASIGNAR_HORARIOS_MASIVO",
             "Horarios",
-            "AsignaciÃ³n masiva de horarios para el empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " entre " + start + " y " + end
+            "Asignación masiva de horarios para el empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " entre " + start + " y " + end
         );
     }
 
     /**
-     * Verifica si la empresa estÃ¡ abierta en un dÃ­a determinado.
-     * Si no hay horario operativo configurado, se permite la asignaciÃ³n (retorna true).
+     * Verifica si la empresa está abierta en un día determinado.
+     * Si no hay horario operativo configurado, se permite la asignación (retorna true).
      */
     private boolean isEmpresaAbiertaEnDia(Integer companyId, LocalDate fecha, DiaSemana dia) {
-        // Verificar excepciones (feriados/cierres especiales) - solo bloquear si existe y estÃ¡ cerrado
+        // Verificar excepciones (feriados/cierres especiales) - solo bloquear si existe y está cerrado
         var exception = companyExceptionRepository.findByCompanyIdAndDate(companyId, fecha);
         if (exception.isPresent() && Boolean.FALSE.equals(exception.get().getIsOpen())) {
             return false;
         }
 
-        // Verificar horario operativo del dÃ­a
+        // Verificar horario operativo del día
         var opHour = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, dia);
-        // Si no hay configuraciÃ³n, se permite (no bloquear). Solo bloquear si explÃ­citamente cerrado.
+        // Si no hay configuración, se permite (no bloquear). Solo bloquear si explícitamente cerrado.
         if (opHour.isPresent() && Boolean.FALSE.equals(opHour.get().getIsOpen())) {
             return false;
         }
@@ -755,10 +876,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 .toList();
     }
 
-    private void sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken) {
+    private java.util.concurrent.CompletableFuture<Boolean> sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken) {
+        return sendWelcomeEmail(usuario, nombre, verificationToken, usuario.getCompany());
+    }
+
+    private java.util.concurrent.CompletableFuture<Boolean> sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken, Company company) {
         try {
             Map<String, Object> model = new HashMap<>();
-            Company company = usuario.getCompany();
             String resolvedCompanyName = company != null && company.getName() != null ? company.getName() : defaultCompanyName;
             String resolvedLogo = company != null && company.getLogoUrl() != null ? company.getLogoUrl() : defaultCompanyLogo;
             String resolvedEmail = company != null && company.getEmail() != null ? company.getEmail() : companyEmail;
@@ -780,9 +904,10 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                     model
             );
 
-            emailService.sendEmailWithRetry(mail, "email/welcome-template");
+            return emailService.sendEmailWithRetry(mail, "email/welcome-template");
         } catch (Exception e) {
             System.err.println("[WARNING] No se pudo enviar el correo de bienvenida a " + usuario.getEmail() + ": " + e.getMessage());
+            return java.util.concurrent.CompletableFuture.completedFuture(false);
         }
     }
 
@@ -796,16 +921,17 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         String apellidoFiltro = (apellido != null && !apellido.isBlank()) ? apellido.trim() : null;
         String emailFiltro = (email != null && !email.isBlank()) ? email.trim() : null;
         String numeroDocumentoFiltro = (numeroDocumento != null && !numeroDocumento.isBlank()) ? numeroDocumento.trim() : null;
-        return empleadoRepository.buscar(resolvedCompanyId, nombreFiltro, apellidoFiltro, emailFiltro,
+        Page<Empleado> resultado = empleadoRepository.buscar(resolvedCompanyId, nombreFiltro, apellidoFiltro, emailFiltro,
                 numeroDocumentoFiltro, roleId, activo, tipoEmpleadoId, especialidadId,
-                PageRequest.of(page, size, Sort.unsorted()))
-                .map(this::toListResponse);
+                PageRequest.of(page, size, Sort.unsorted()));
+        java.util.Set<Integer> conContrasena = usuariosConContrasenaCreada(resultado.getContent());
+        return resultado.map(e -> toListResponse(e, conContrasena));
     }
 
     private Integer resolverCompanyId(Integer companyIdParam) {
         if (SecurityUtils.isSuperAdmin()) {
             if (companyIdParam == null) {
-                throw new IllegalArgumentException("El parÃ¡metro companyId es requerido para SUPER_ADMIN");
+                throw new IllegalArgumentException("El parámetro companyId es requerido para SUPER_ADMIN");
             }
             return companyIdParam;
         }
@@ -824,10 +950,14 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         dto.setApellido(usuario.getApellido());
         dto.setEmail(usuario.getEmail());
         dto.setNumeroDocumento(usuario.getDni());
-        Integer empleadoCompanyIdForDto = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
+        Integer empleadoCompanyIdForDto = companyIdOf(empleado);
         dto.setTelefono(contactoService.telefono(usuario.getId(), empleadoCompanyIdForDto));
         dto.setDireccion(contactoService.direccion(usuario.getId(), empleadoCompanyIdForDto));
-        dto.setRoleIds(usuario.getUsuariosPorRol().stream().map(upr -> upr.getRol().getId()).collect(Collectors.toSet()));
+        dto.setRoleIds(usuario.getUsuariosPorRol().stream()
+                .filter(upr -> upr.getCompany() != null
+                        && java.util.Objects.equals(upr.getCompany().getId(), empleadoCompanyIdForDto))
+                .map(upr -> upr.getRol().getId())
+                .collect(Collectors.toSet()));
         dto.setCompanyId(empleadoCompanyIdForDto);
 
         dto.setGenero(empleado.getGenero());
@@ -841,13 +971,22 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         return dto;
     }
 
-    private EmpleadoListResponse toListResponse(Empleado empleado) {
+    private java.util.Set<Integer> usuariosConContrasenaCreada(java.util.List<Empleado> empleados) {
+        java.util.List<Integer> ids = empleados.stream()
+                .map(Empleado::getUser).filter(java.util.Objects::nonNull).map(Usuario::getId).toList();
+        return ids.isEmpty() ? java.util.Set.of() : credencialRepository.usuariosConContrasenaCreada(ids);
+    }
+
+    private EmpleadoListResponse toListResponse(Empleado empleado, java.util.Set<Integer> conContrasena) {
         EmpleadoListResponse response = new EmpleadoListResponse();
         response.setId(empleado.getId());
         response.setNumeroColegiatura(empleado.getNumeroColegiatura());
         response.setFotoUrl(empleado.getFotoUrl());
         response.setActivo(empleado.getEstado());
+        response.setTipoInactividad(empleado.getTipoInactividad());
         if (empleado.getUser() != null) {
+            response.setCuentaPendiente(Boolean.TRUE.equals(empleado.getEstado())
+                    && veterinaria.vargasvet.util.CuentaPendiente.es(empleado.getUser(), conContrasena.contains(empleado.getUser().getId())));
             response.setNombre(empleado.getUser().getNombre());
             response.setApellido(empleado.getUser().getApellido());
             response.setEmail(empleado.getUser().getEmail());
@@ -878,13 +1017,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         LocalDate targetEnd = targetStart.plusDays(6);
         String adminEmail  = SecurityUtils.getCurrentUserEmail();
 
-        // â”€â”€ 1. La semana destino no puede ser igual o anterior a la semana origen â”€â”€â”€â”€â”€â”€
+        // ── 1. La semana destino no puede ser igual o anterior a la semana origen ──────
         if (!targetStart.isAfter(sourceStart)) {
             throw new IllegalArgumentException(
                 "La semana destino (" + targetStart + ") debe ser posterior a la semana origen (" + sourceStart + ").");
         }
 
-        // â”€â”€ 2. Obtener turnos de la semana origen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── 2. Obtener turnos de la semana origen ────────────────────────────────────
         List<HorarioEmpleado> sourceShifts =
                 horarioEmpleadoRepository.findByEmpleadoIdAndFechaBetween(empleadoId, sourceStart, sourceEnd);
 
@@ -893,7 +1032,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 "No hay turnos registrados en la semana origen (" + sourceStart + " al " + sourceEnd + ") para clonar.");
         }
 
-        // â”€â”€ 3. Validar citas existentes en la semana destino â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── 3. Validar citas existentes en la semana destino ────────────────────────
         List<Cita> citasEnDestino = citaRepository.findByEmpleadoIdAndDateRange(empleadoId, targetStart, targetEnd);
         if (!citasEnDestino.isEmpty()) {
             StringBuilder sb = new StringBuilder(
@@ -907,8 +1046,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             throw new IllegalStateException(sb.toString().replaceAll(", $", ""));
         }
 
-        // â”€â”€ 4. Pre-validar cada dÃ­a destino contra horario de clÃ­nica y feriados â”€â”€â”€â”€
-        //      (antes de borrar nada, para fallar rÃ¡pido si algo es invÃ¡lido)
+        // ── 4. Pre-validar cada día destino contra horario de clínica y feriados ────
+        //      (antes de borrar nada, para fallar rápido si algo es inválido)
         long daysDiff = java.time.temporal.ChronoUnit.DAYS.between(sourceStart, targetStart);
         List<String> warnings = new java.util.ArrayList<>();
 
@@ -920,22 +1059,22 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             var exception = companyExceptionRepository.findByCompanyIdAndDate(companyId, targetDay);
             if (exception.isPresent() && Boolean.FALSE.equals(exception.get().getIsOpen())) {
                 throw new IllegalArgumentException(
-                    "No se puede clonar el turno al " + targetDay + ": la clÃ­nica estÃ¡ cerrada ese dÃ­a (" +
+                    "No se puede clonar el turno al " + targetDay + ": la clínica está cerrada ese día (" +
                     exception.get().getDescription() + ").");
             }
 
-            // 4b. Verificar horario operativo del dÃ­a destino
+            // 4b. Verificar horario operativo del día destino
             var opHourOpt = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, dia);
             if (opHourOpt.isPresent()) {
                 CompanyOperatingHour opHour = opHourOpt.get();
 
                 if (Boolean.FALSE.equals(opHour.getIsOpen())) {
-                    // DÃ­a cerrado â†’ omitir con advertencia (no lanzar error, solo skip)
-                    warnings.add("El dÃ­a " + targetDay + " (" + dia + ") fue omitido: la clÃ­nica no abre ese dÃ­a.");
+                    // Día cerrado → omitir con advertencia (no lanzar error, solo skip)
+                    warnings.add("El día " + targetDay + " (" + dia + ") fue omitido: la clínica no abre ese día.");
                     continue;
                 }
 
-                // 4c. Validar que las horas del turno estÃ©n dentro del horario de la clÃ­nica
+                // 4c. Validar que las horas del turno estén dentro del horario de la clínica
                 LocalTime inicio   = source.getHoraInicio();
                 LocalTime fin      = source.getHoraFin();
                 LocalTime opening  = opHour.getOpeningTime();
@@ -944,22 +1083,22 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 if (inicio.isBefore(opening) || fin.isAfter(closing)) {
                     throw new IllegalArgumentException(String.format(
                         "El turno del %s (%s - %s) no puede clonarse al %s: " +
-                        "estÃ¡ fuera del horario de atenciÃ³n de la clÃ­nica (%s - %s).",
+                        "está fuera del horario de atención de la clínica (%s - %s).",
                         source.getFecha(), inicio, fin, targetDay, opening, closing));
                 }
             }
         }
 
-        // â”€â”€ 5. Limpiar SOLO si todas las validaciones pasaron â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── 5. Limpiar SOLO si todas las validaciones pasaron ────────────────────────
         empleado.getHorarios().removeIf(h -> !h.getFecha().isBefore(targetStart) && !h.getFecha().isAfter(targetEnd));
         empleadoRepository.saveAndFlush(empleado);
 
-        // â”€â”€ 6. Clonar dÃ­a por dÃ­a, respetando dÃ­as cerrados â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── 6. Clonar día por día, respetando días cerrados ──────────────────────────
         for (HorarioEmpleado source : sourceShifts) {
             LocalDate targetDay = source.getFecha().plusDays(daysDiff);
             DiaSemana dia       = toDiaSemana(targetDay.getDayOfWeek());
 
-            // Omitir dÃ­as cerrados (ya detectados en el pre-check de arriba)
+            // Omitir días cerrados (ya detectados en el pre-check de arriba)
             var opHourOpt = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, dia);
             if (opHourOpt.isPresent() && Boolean.FALSE.equals(opHourOpt.get().getIsOpen())) {
                 continue;
@@ -988,7 +1127,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         auditLogService.log(
             "CLONAR_HORARIOS_SEMANA",
             "Horarios",
-            "Se clonÃ³ la semana de horarios del empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " desde " + sourceStart + " hacia " + targetStart
+            "Se clonó la semana de horarios del empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " desde " + sourceStart + " hacia " + targetStart
         );
     }
 
@@ -1015,14 +1154,14 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         if (sourceShifts.isEmpty()) {
             throw new IllegalArgumentException(
-                "No hay turnos registrados en el dÃ­a de origen (" + sourceDate + ") para clonar.");
+                "No hay turnos registrados en el día de origen (" + sourceDate + ") para clonar.");
         }
 
-        // 3. Validar citas existentes en el dÃ­a destino
+        // 3. Validar citas existentes en el día destino
         List<Cita> citasEnDestino = citaRepository.findByEmpleadoIdAndDateRange(empleadoId, targetDate, targetDate);
         if (!citasEnDestino.isEmpty()) {
             StringBuilder sb = new StringBuilder(
-                "No se puede clonar el horario porque el empleado tiene citas programadas en el dÃ­a destino: ");
+                "No se puede clonar el horario porque el empleado tiene citas programadas en el día destino: ");
             for (Cita c : citasEnDestino) {
                 sb.append(String.format("[%s %s - %s], ",
                     c.getFechaHoraInicio().toLocalDate(),
@@ -1032,28 +1171,28 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             throw new IllegalStateException(sb.toString().replaceAll(", $", ""));
         }
 
-        // 4. Pre-validar el dÃ­a destino contra horario de clÃ­nica y feriados
+        // 4. Pre-validar el día destino contra horario de clínica y feriados
         DiaSemana diaDestino = toDiaSemana(targetDate.getDayOfWeek());
 
         // 4a. Verificar cierre especial / feriado en la fecha destino exacta
         var exception = companyExceptionRepository.findByCompanyIdAndDate(companyId, targetDate);
         if (exception.isPresent() && Boolean.FALSE.equals(exception.get().getIsOpen())) {
             throw new IllegalArgumentException(
-                "No se puede clonar el turno al " + targetDate + ": la clÃ­nica estÃ¡ cerrada ese dÃ­a (" +
+                "No se puede clonar el turno al " + targetDate + ": la clínica está cerrada ese día (" +
                 exception.get().getDescription() + ").");
         }
 
-        // 4b. Verificar horario operativo del dÃ­a destino
+        // 4b. Verificar horario operativo del día destino
         var opHourOpt = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, diaDestino);
         if (opHourOpt.isPresent()) {
             CompanyOperatingHour opHour = opHourOpt.get();
 
             if (Boolean.FALSE.equals(opHour.getIsOpen())) {
                 throw new IllegalArgumentException(
-                    "No se puede clonar el turno al " + targetDate + ": la clÃ­nica no abre los dÃ­as " + diaDestino + ".");
+                    "No se puede clonar el turno al " + targetDate + ": la clínica no abre los días " + diaDestino + ".");
             }
 
-            // 4c. Validar que las horas del turno estÃ©n dentro del horario de la clÃ­nica
+            // 4c. Validar que las horas del turno estén dentro del horario de la clínica
             for (HorarioEmpleado source : sourceShifts) {
                 LocalTime inicio = source.getHoraInicio();
                 LocalTime fin    = source.getHoraFin();
@@ -1063,17 +1202,17 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 if (inicio.isBefore(opening) || fin.isAfter(closing)) {
                     throw new IllegalArgumentException(String.format(
                         "El turno del %s (%s - %s) no puede clonarse al %s: " +
-                        "estÃ¡ fuera del horario de atenciÃ³n de la clÃ­nica (%s - %s).",
+                        "está fuera del horario de atención de la clínica (%s - %s).",
                         source.getFecha(), inicio, fin, targetDate, opening, closing));
                 }
             }
         }
 
-        // 5. Limpiar horarios previos del dÃ­a destino
+        // 5. Limpiar horarios previos del día destino
         empleado.getHorarios().removeIf(h -> h.getFecha().equals(targetDate));
         empleadoRepository.saveAndFlush(empleado);
 
-        // 6. Clonar dÃ­a por dÃ­a
+        // 6. Clonar día por día
         for (HorarioEmpleado source : sourceShifts) {
             HorarioEmpleado target = new HorarioEmpleado();
             target.setEmpleado(empleado);
@@ -1094,7 +1233,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         auditLogService.log(
             "CLONAR_HORARIOS_DIA",
             "Horarios",
-            "Se clonÃ³ el dÃ­a de horarios del empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " del " + sourceDate + " hacia el " + targetDate
+            "Se clonó el día de horarios del empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " del " + sourceDate + " hacia el " + targetDate
         );
     }
 
@@ -1213,6 +1352,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         response.setHoraFin(horario.getHoraFin());
         response.setActivo(horario.getActivo());
         return response;
+    }
+
+    private Integer companyIdOf(Empleado empleado) {
+        if (empleado.getCompany() != null) return empleado.getCompany().getId();
+        return empleado.getUser() != null && empleado.getUser().getCompany() != null
+                ? empleado.getUser().getCompany().getId()
+                : null;
     }
 
     private Empleado findAccessibleEmployee(Long employeeId) {

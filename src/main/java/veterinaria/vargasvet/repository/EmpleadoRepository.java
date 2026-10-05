@@ -33,16 +33,22 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
      * por empresa y solo entre relaciones activas (uq_empleado_colegiatura_activo). */
     boolean existsByNumeroColegiaturaAndCompanyIdAndEstadoTrue(String numeroColegiatura, Integer companyId);
 
+    boolean existsByNumeroColegiaturaAndCompanyIdAndEstadoTrueAndIdNot(String numeroColegiatura, Integer companyId, Long id);
+
     /** El unico "empleado" con sentido de un usuario en un momento dado: como mucho hay
      * una fila activa por usuario (indice uq_empleado_activo_por_usuario), asi que este
      * metodo es seguro para cualquier usuario, sin importar cuantas filas historicas tenga. */
     @Query("SELECT e FROM Empleado e WHERE e.user.id = :userId AND e.estado = true")
     Optional<Empleado> findActiveByUserId(@Param("userId") Integer userId);
 
+    Optional<Empleado> findByUserIdAndCompanyIdAndEstadoTrue(Integer userId, Integer companyId);
+
     boolean existsByUserIdAndEstadoTrue(Integer userId);
     boolean existsByUserId(Integer userId);
     boolean existsByUserIdAndCompanyId(Integer userId, Integer companyId);
     boolean existsByUserIdAndCompanyIdAndEstadoTrue(Integer userId, Integer companyId);
+    boolean existsByUserIdAndCompanyIdAndEstadoFalseAndTipoInactividad(
+            Integer userId, Integer companyId, veterinaria.vargasvet.domain.enums.TipoInactividad tipoInactividad);
 
     @Query("SELECT e FROM Empleado e WHERE e.id = :id AND e.company.id = :companyId")
     Optional<Empleado> findByIdAndCompanyId(@Param("id") Long id,

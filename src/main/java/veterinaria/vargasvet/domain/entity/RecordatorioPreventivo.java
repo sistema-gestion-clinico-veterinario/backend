@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "recordatorio_preventivo", uniqueConstraints = @UniqueConstraint(
-        name = "uk_recordatorio_control_tipo_fecha",
-        columnNames = {"control_preventivo_id", "tipo_aviso", "fecha_programada"}))
+        name = "uk_recordatorio_control_tipo_fecha_persona",
+        columnNames = {"control_preventivo_id", "tipo_aviso", "fecha_programada", "apoderado_id"}))
 public class RecordatorioPreventivo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
