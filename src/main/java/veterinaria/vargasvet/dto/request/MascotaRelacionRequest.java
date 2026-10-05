@@ -22,7 +22,9 @@ public class MascotaRelacionRequest {
     private Boolean puedeRecibirInformacion = false;
     private Boolean puedeAutorizarAtencion = false;
     private Boolean puedeRealizarPagos = false;
+    private LocalDate fechaInicio;
     private LocalDate fechaFin;
+    private Boolean darAccesoPortal = false;
 
     @Size(max = 500, message = "Las observaciones no deben superar 500 caracteres")
     @MeaningfulText(message = "Las observaciones deben contener texto real")

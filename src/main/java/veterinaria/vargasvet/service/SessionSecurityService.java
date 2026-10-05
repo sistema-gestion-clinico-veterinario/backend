@@ -10,10 +10,12 @@ import veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial;
 import veterinaria.vargasvet.repository.RefreshTokenRepository;
 import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
+import veterinaria.vargasvet.security.RealtimeSubscriptionGuard;
 import veterinaria.vargasvet.util.AppClock;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -22,9 +24,10 @@ public class SessionSecurityService {
     private final UsuarioRepository usuarioRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UsuarioEmpresaCredencialRepository credencialRepository;
+    private final RealtimeSubscriptionGuard realtimeSubscriptionGuard;
 
     /** Invalida TODAS las sesiones de la persona, en todas sus empresas - para eventos
-     * de seguridad realmente globales (ej. suspensión de cuenta completa). Para un cambio
+     * de seguridad realmente globales (ej. cambio de correo de acceso). Para un cambio
      * de contraseña o reset, que solo afecta a una empresa, usar
      * invalidateSessionsForCredential en su lugar. */
     @Transactional
@@ -56,6 +59,7 @@ public class SessionSecurityService {
                 .findAllByUsuarioAndRevokedAtIsNull(usuario);
         activeTokens.forEach(token -> token.setRevokedAt(revokedAt));
         refreshTokenRepository.saveAll(activeTokens);
+        closeRealtimeConnections(activeTokens);
     }
 
     /** Revoca solo las sesiones (refresh tokens) que el usuario estableció con esta
@@ -77,5 +81,15 @@ public class SessionSecurityService {
         Instant revokedAt = AppClock.instantNow();
         activeTokens.forEach(token -> token.setRevokedAt(revokedAt));
         refreshTokenRepository.saveAll(activeTokens);
+        closeRealtimeConnections(activeTokens);
+    }
+
+    /** Sin esto, una conexión en tiempo real de una sesión recién revocada seguiría abierta hasta la próxima revisión periódica. */
+    private void closeRealtimeConnections(List<RefreshToken> revokedTokens) {
+        revokedTokens.stream()
+                .map(RefreshToken::getFamilyId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .forEach(realtimeSubscriptionGuard::closeConnectionsOfSession);
     }
 }

@@ -17,6 +17,7 @@ import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.util.AppClock;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -26,12 +27,52 @@ class RecordatorioPreventivoServiceImplTest {
     @Mock ControlPreventivoRepository controlRepository;
     @Mock RecordatorioPreventivoRepository recordatorioRepository;
     @Mock EmailService emailService;
+    @Mock veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
 
     private RecordatorioPreventivoServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new RecordatorioPreventivoServiceImpl(controlRepository, recordatorioRepository, emailService);
+        service = new RecordatorioPreventivoServiceImpl(controlRepository, recordatorioRepository, emailService,
+                new veterinaria.vargasvet.service.OwnerContactPolicy(mock(UsuarioContactoService.class)),
+                new veterinaria.vargasvet.service.PetOwnershipService(
+                        mock(veterinaria.vargasvet.repository.MascotaRepository.class),
+                        mock(veterinaria.vargasvet.repository.MascotaPersonaRelacionRepository.class),
+                        mock(veterinaria.vargasvet.repository.CitaRepository.class),
+                        mock(veterinaria.vargasvet.service.AuditLogService.class)),
+                consentimientoDatosService);
+        lenient().when(consentimientoDatosService.usuariosQueOtorgaron(anyCollection(), anyInt(), any()))
+                .thenAnswer(invocation -> Set.copyOf(invocation.getArgument(0)));
+    }
+
+    @Test
+    @DisplayName("No envía el recordatorio a un correo que la persona aún no verificó")
+    void noEnviaAUnCorreoSinVerificar() {
+        ControlPreventivo vacuna = control(1L, "Antirrabica", TipoControlPreventivo.VACUNACION, 1L);
+        vacuna.getMascota().getApoderado().getUser().setEmailVerified(false);
+        when(controlRepository.findReminderCandidates(any(), any())).thenReturn(List.of(vacuna));
+        when(recordatorioRepository.findExistingKeys(anyCollection())).thenReturn(List.of());
+        when(recordatorioRepository.findApoderadoIdsWithRecentReminder(anyCollection(), any())).thenReturn(List.of());
+
+        service.procesarRecordatorios();
+
+        verifyNoInteractions(emailService);
+        verify(recordatorioRepository, never()).save(any(RecordatorioPreventivo.class));
+    }
+
+    @Test
+    @DisplayName("No envía recordatorios si el propietario no los aceptó expresamente")
+    void noEnviaSinConsentimientoExpreso() {
+        ControlPreventivo vacuna = control(1L, "Antirrabica", TipoControlPreventivo.VACUNACION, 1L);
+        when(controlRepository.findReminderCandidates(any(), any())).thenReturn(List.of(vacuna));
+        when(recordatorioRepository.findExistingKeys(anyCollection())).thenReturn(List.of());
+        when(consentimientoDatosService.usuariosQueOtorgaron(anyCollection(), eq(7), any()))
+                .thenReturn(Set.of());
+
+        service.procesarRecordatorios();
+
+        verifyNoInteractions(emailService);
+        verify(recordatorioRepository, never()).save(any(RecordatorioPreventivo.class));
     }
 
     @Test
@@ -92,6 +133,7 @@ class RecordatorioPreventivoServiceImplTest {
         when(existente.getControlId()).thenReturn(1L);
         when(existente.getTipoAviso()).thenReturn(TipoAvisoRecordatorio.PROXIMO);
         when(existente.getFechaProgramada()).thenReturn(control.getFechaRecomendada());
+        when(existente.getApoderadoId()).thenReturn(1L);
         when(controlRepository.findReminderCandidates(any(), any())).thenReturn(List.of(control));
         when(recordatorioRepository.findExistingKeys(anyCollection())).thenReturn(List.of(existente));
 
@@ -103,13 +145,18 @@ class RecordatorioPreventivoServiceImplTest {
 
     private ControlPreventivo control(Long id, String nombre, TipoControlPreventivo tipo, Long apoderadoId) {
         Company company = new Company();
+        company.setId(7);
         company.setName("Patitas Felices");
         Usuario user = new Usuario();
         user.setNombre("Ana");
         user.setApellido("Perez");
         user.setEmail("ana@example.com");
+        user.setEmailVerified(true);
+        user.setActivo(true);
+        user.setId(Math.toIntExact(apoderadoId));
         user.setCompany(company);
         Apoderado apoderado = new Apoderado();
+        apoderado.setCompany(company);
         apoderado.setId(apoderadoId);
         apoderado.setUser(user);
         Mascota mascota = new Mascota();

@@ -14,6 +14,11 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.Map;
 
 /** Intercambia el "code" de autorización que Google le entrega al navegador (tras el
@@ -24,6 +29,7 @@ import java.util.Map;
 public class GoogleOAuthService {
 
     private static final String TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
+    private static final String AUTHORIZATION_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
     private static final String USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v3/userinfo";
 
     private final RestTemplate restTemplate;
@@ -39,13 +45,43 @@ public class GoogleOAuthService {
 
     public record GoogleIdentity(String email, boolean emailVerified) {}
 
-    public GoogleIdentity resolveIdentity(String authorizationCode) {
+    public String buildAuthorizationUrl(String state, String codeChallenge) {
+        if (clientId.isBlank()) {
+            throw new IllegalStateException("Google OAuth no está configurado (GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET)");
+        }
+        return AUTHORIZATION_ENDPOINT
+                + "?client_id=" + encode(clientId)
+                + "&redirect_uri=" + encode(redirectUri)
+                + "&response_type=code"
+                + "&scope=" + encode("openid email profile")
+                + "&prompt=select_account"
+                + "&state=" + encode(state)
+                + "&code_challenge=" + encode(codeChallenge)
+                + "&code_challenge_method=S256";
+    }
+
+    public static String codeChallenge(String codeVerifier) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(codeVerifier.getBytes(StandardCharsets.US_ASCII));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 no está disponible", ex);
+        }
+    }
+
+    private static String encode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    public GoogleIdentity resolveIdentity(String authorizationCode, String codeVerifier) {
         if (clientId.isBlank() || clientSecret.isBlank()) {
             throw new IllegalStateException("Google OAuth no está configurado (GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET)");
         }
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("code", authorizationCode);
+        body.add("code_verifier", codeVerifier);
         body.add("client_id", clientId);
         body.add("client_secret", clientSecret);
         body.add("redirect_uri", redirectUri);

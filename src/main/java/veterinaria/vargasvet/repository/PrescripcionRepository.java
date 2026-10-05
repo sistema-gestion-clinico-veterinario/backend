@@ -87,6 +87,14 @@ public interface PrescripcionRepository extends JpaRepository<Prescripcion, Long
            "ORDER BY p.createdAt DESC")
     List<Prescripcion> findByApoderadoId(@Param("apoderadoId") Long apoderadoId);
 
+    @Query("SELECT p FROM Prescripcion p " +
+           "JOIN p.consulta c " +
+           "JOIN c.historiaClinica hc " +
+           "JOIN hc.mascota m " +
+           "WHERE m.id IN :mascotaIds " +
+           "ORDER BY p.createdAt DESC")
+    List<Prescripcion> findByMascotaIds(@Param("mascotaIds") java.util.Collection<Long> mascotaIds);
+
     @Query("SELECT YEAR(p.createdAt), MONTH(p.createdAt), COUNT(p) FROM Prescripcion p " +
            "JOIN p.consulta c JOIN c.historiaClinica h JOIN h.mascota m JOIN m.apoderado a JOIN a.user u " +
            "WHERE a.company.id = :companyId AND p.createdAt >= :desde " +

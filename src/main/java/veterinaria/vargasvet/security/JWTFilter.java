@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
+import veterinaria.vargasvet.repository.RefreshTokenRepository;
 import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
@@ -26,11 +27,14 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JWTFilter extends GenericFilterBean {
+
+    public static final String COMPANY_HEADER = "X-Company-Id";
     private final TokenProvider tokenProvider;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioPorRolRepository usuarioPorRolRepository;
     private final UsuarioEmpresaCredencialRepository credencialRepository;
     private final LegalDocumentService legalDocumentService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -86,6 +90,14 @@ public class JWTFilter extends GenericFilterBean {
                     throw new org.springframework.security.authentication.CredentialsExpiredException(
                             "La sesión fue invalidada por un evento de seguridad");
                 }
+                // Cerrar sesión (o que se revoque) invalida también el access token que ya circula:
+                // sin esto seguiría sirviendo hasta que venza. Los tokens anteriores a este campo no
+                // traen sesión y se aceptan hasta su vencimiento.
+                if (principal.getSessionId() != null
+                        && !refreshTokenRepository.existsByFamilyIdAndRevokedAtIsNull(principal.getSessionId())) {
+                    throw new org.springframework.security.authentication.CredentialsExpiredException(
+                            "La sesión fue cerrada");
+                }
                 boolean bloqueado = !currentUser.isActivo()
                         || (!esSuperAdmin && currentUser.getCompany() != null
                         && !currentUser.getCompany().isActivo());
@@ -109,13 +121,45 @@ public class JWTFilter extends GenericFilterBean {
                     return;
                 }
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                String declaredCompany = httpRequest.getHeader(COMPANY_HEADER);
+                if (declaredCompany != null && principal.getCompanyId() != null
+                        && !declaredCompany.trim().equals(String.valueOf(principal.getCompanyId()))) {
+                    rejectCompanyMismatch((HttpServletResponse) response);
+                    return;
+                }
+
+                String declaredSlug = SessionCookies.slugOf(httpRequest);
+                if (declaredSlug != null && principal.getCompanyId() != null) {
+                    String companySlug = activeAssignment.getRol().getCompany() == null
+                            ? null
+                            : SessionCookies.sanitize(activeAssignment.getRol().getCompany().getSlug());
+                    if (!java.util.Objects.equals(declaredSlug, companySlug)) {
+                        rejectCompanyMismatch((HttpServletResponse) response);
+                        return;
+                    }
+                }
+
+                boolean declaraClinica = declaredCompany != null || SessionCookies.slugOf(httpRequest) != null;
+                if (declaraClinica && principal.getCompanyId() == null) {
+                    SecurityContextHolder.clearContext();
+                } else {
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             } catch (Exception e) {
                 SecurityContextHolder.clearContext();
             }
         }
 
         chain.doFilter(request, response);
+    }
+
+    private void rejectCompanyMismatch(HttpServletResponse response) throws IOException {
+        SecurityContextHolder.clearContext();
+        response.setStatus(HttpServletResponse.SC_CONFLICT);
+        response.setContentType("application/json");
+        response.getWriter().write(
+                "{\"error\":\"La sesión abierta en este navegador pertenece a otra clínica.\","
+                        + "\"code\":\"SESSION_COMPANY_MISMATCH\"}");
     }
 
     private boolean isPublicAuthEndpoint(HttpServletRequest request) {
@@ -129,11 +173,12 @@ public class JWTFilter extends GenericFilterBean {
                 || path.equals("/auth/forgot-password")
                 || path.equals("/auth/reset-password")
                 || path.equals("/auth/email-change/confirm-current")
+                || path.equals("/auth/email-change/cancel")
                 || path.equals("/auth/email-change/confirm-new")
                 || path.equals("/auth/validate-reset-token")
                 || path.equals("/auth/setup-account")
                 || path.equals("/auth/resend-verification")
-                || path.startsWith("/auth/register")
+                || path.equals("/auth/resend-verification-by-token")
                 || path.startsWith("/setup/")
                 || path.startsWith("/v3/api-docs/")
                 || path.startsWith("/swagger-ui/")
@@ -152,17 +197,10 @@ public class JWTFilter extends GenericFilterBean {
     }
 
     private String resolveToken(HttpServletRequest request) {
-        // 1. Try access_token cookie first
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("access_token".equals(cookie.getName())) {
-                    String value = cookie.getValue();
-                    if (StringUtils.hasText(value)) {
-                        return value;
-                    }
-                }
-            }
+        // 1. La cookie de la clínica que declara la pestaña (o la anterior sin sufijo)
+        java.util.Optional<String> delNavegador = SessionCookies.readAccess(request);
+        if (delNavegador.isPresent()) {
+            return delNavegador.get();
         }
         // 2. Fallback to Authorization: Bearer header
         String bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION);

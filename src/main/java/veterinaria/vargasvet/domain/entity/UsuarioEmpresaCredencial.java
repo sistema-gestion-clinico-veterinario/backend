@@ -36,6 +36,9 @@ public class UsuarioEmpresaCredencial {
     @Column(name = "password_changed", nullable = false)
     private boolean passwordChanged = false;
 
+    @Column(name = "activada_con_google", nullable = false)
+    private boolean activatedWithGoogle = false;
+
     @Column(name = "credentials_version", nullable = false)
     private long credentialsVersion = 0L;
 

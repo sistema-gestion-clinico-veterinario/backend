@@ -92,7 +92,8 @@ class PagoServiceIntegrationTest {
                 purchaseRepository,
                 usuarioRepository,
                 auditLogService,
-                cajaService
+                cajaService,
+                mock(veterinaria.vargasvet.service.PetOwnershipService.class)
         );
     }
 

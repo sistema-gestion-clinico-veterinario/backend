@@ -37,6 +37,7 @@ public class PagoServiceImpl implements PagoService {
     private final UsuarioRepository usuarioRepository;
     private final AuditLogService auditLogService;
     private final CajaService cajaService;
+    private final veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
 
     @Override
     @Transactional
@@ -45,6 +46,10 @@ public class PagoServiceImpl implements PagoService {
 
         if (cita.getEstado() == EstadoCita.CANCELADA || cita.getEstado() == EstadoCita.NO_ASISTIO) {
             throw new IllegalArgumentException("No se puede registrar un pago para una cita con estado: " + cita.getEstado());
+        }
+
+        if (cita.getEstado() != EstadoCita.COMPLETADA) {
+            petOwnershipService.assertOperable(cita.getMascota());
         }
 
         BigDecimal total = cita.getTotalServicio() != null ? cita.getTotalServicio() : BigDecimal.ZERO;

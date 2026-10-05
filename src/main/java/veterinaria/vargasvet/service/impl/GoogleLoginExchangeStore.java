@@ -3,6 +3,7 @@ package veterinaria.vargasvet.service.impl;
 import org.springframework.stereotype.Component;
 import veterinaria.vargasvet.dto.response.AuthResponse;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -21,12 +22,13 @@ public class GoogleLoginExchangeStore {
 
     private record Entry(AuthResponse response, Instant expiresAt) {}
 
+    private Clock clock = Clock.systemUTC();
     private final Map<String, Entry> store = new ConcurrentHashMap<>();
 
     public String store(AuthResponse response) {
         // Purga oportunista: sin @EnableScheduling en la app, este es el único
         // momento en que el mapa se limpia de códigos ya vencidos.
-        Instant now = Instant.now();
+        Instant now = Instant.now(clock);
         store.entrySet().removeIf(e -> e.getValue().expiresAt().isBefore(now));
 
         String code = UUID.randomUUID().toString();
@@ -37,7 +39,7 @@ public class GoogleLoginExchangeStore {
     /** Canje de un solo uso: se retira del mapa aunque haya expirado. */
     public AuthResponse consume(String code) {
         Entry entry = store.remove(code);
-        if (entry == null || entry.expiresAt().isBefore(Instant.now())) {
+        if (entry == null || entry.expiresAt().isBefore(Instant.now(clock))) {
             return null;
         }
         return entry.response();

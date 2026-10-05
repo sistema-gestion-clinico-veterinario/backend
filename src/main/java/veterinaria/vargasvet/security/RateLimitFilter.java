@@ -42,6 +42,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Value("${app.rate-limit.realtime-ticket-per-minute:10}")
     private int realtimeTicketPerMinute;
 
+    @Value("${app.rate-limit.switch-role-per-minute:10}")
+    private int switchRolePerMinute;
+
     private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
             .maximumSize(100_000)
             .expireAfterAccess(Duration.ofHours(1))
@@ -88,6 +91,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 || path.contains("/auth/resend-verification")) {
             allowed = sharedRateLimitService.tryConsume(
                     "account-recovery-ip", ip, passwordResetPerWindow, Duration.ofMinutes(15));
+        } else if (path.contains("/auth/switch-role")) {
+            String key = user != null ? "switch-role:" + user : "switch-role:" + ip;
+            allowed = resolveBucket(key, switchRolePerMinute, Duration.ofMinutes(1)).tryConsume(1);
         } else if (path.contains("/realtime/ticket")) {
             String key = user != null ? "realtime-ticket:" + user : "realtime-ticket:" + ip;
             allowed = resolveBucket(key, realtimeTicketPerMinute, Duration.ofMinutes(1)).tryConsume(1);

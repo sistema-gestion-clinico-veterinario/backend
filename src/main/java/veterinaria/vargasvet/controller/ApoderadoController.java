@@ -8,6 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
+import veterinaria.vargasvet.domain.enums.TipoInactividad;
+import veterinaria.vargasvet.dto.request.AccountStatusRequest;
+import veterinaria.vargasvet.dto.response.ApoderadoEstadoResponse;
 import veterinaria.vargasvet.dto.request.ApoderadoRequest;
 import veterinaria.vargasvet.dto.response.ApoderadoListResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
@@ -66,17 +69,31 @@ public class ApoderadoController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'ELIMINAR')")
-    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
-        apoderadoService.eliminar(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Propietario eliminado exitosamente", null));
+    public ResponseEntity<ApiResponse<ApoderadoEstadoResponse>> eliminar(@PathVariable Long id) {
+        ApoderadoEstadoResponse mascotas = apoderadoService.eliminar(id);
+        return ResponseEntity.ok(new ApiResponse<>(true,
+                "Se dio de baja al cliente. Sus registros se conservan y puedes reactivarlo cuando quieras.", mascotas));
     }
 
     @PatchMapping("/{id}/status")
     @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'MODIFICAR')")
-    public ResponseEntity<ApiResponse<Void>> cambiarEstado(@PathVariable Long id, @RequestParam Boolean active) {
-        apoderadoService.cambiarEstado(id, active);
-        String mensaje = active ? "Dueño activado exitosamente" : "Dueño desactivado exitosamente";
-        return ResponseEntity.ok(new ApiResponse<>(true, mensaje, null));
+    public ResponseEntity<ApiResponse<ApoderadoEstadoResponse>> cambiarEstado(
+            @PathVariable Long id, @RequestParam Boolean active,
+            @Valid @RequestBody(required = false) AccountStatusRequest request) {
+        TipoInactividad tipo = request != null ? request.getTipo() : null;
+        ApoderadoEstadoResponse mascotas = apoderadoService.cambiarEstado(
+                id, active, tipo, request != null ? request.getReason() : null);
+        String mensaje = active ? "Cliente reactivado exitosamente"
+                : tipo == TipoInactividad.SUSPENSION ? "Cliente suspendido exitosamente"
+                : "Cliente dado de baja exitosamente";
+        return ResponseEntity.ok(new ApiResponse<>(true, mensaje, mascotas));
+    }
+
+    @PostMapping("/{id}/resend-invitation")
+    @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'MODIFICAR')")
+    public ResponseEntity<ApiResponse<Void>> reenviarInvitacion(@PathVariable Long id) {
+        apoderadoService.reenviarInvitacion(id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Invitación reenviada exitosamente", null));
     }
 
     @GetMapping("/{id}/conflicting-appointments")

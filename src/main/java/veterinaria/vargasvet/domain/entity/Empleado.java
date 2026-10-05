@@ -53,6 +53,11 @@ public class Empleado {
     @Column(name = "estado", nullable = false)
     private Boolean estado = true;
 
+    /** Solo tiene valor mientras estado=false (ver ck_empleado_tipo_inactividad). */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_inactividad", length = 16)
+    private veterinaria.vargasvet.domain.enums.TipoInactividad tipoInactividad;
+
     // Nullable para no-veterinarios. Unicidad real: uq_empleado_colegiatura_activo
     // (numero_colegiatura, company_id) WHERE estado=true - se libera tras una baja,
     // no es un unique=true simple (ver V65__Company_Membership_Constraints.sql).

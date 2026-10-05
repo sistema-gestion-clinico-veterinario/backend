@@ -67,6 +67,16 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>(false, ex.getMessage(), null));
     }
 
+    @ExceptionHandler(ClienteInactivoException.class)
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> handleClienteInactivo(ClienteInactivoException ex) {
+        java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("code", "CLIENTE_INACTIVO");
+        data.put("apoderadoId", ex.getApoderadoId());
+        data.put("tipoInactividad", ex.getTipoInactividad().name());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiResponse<>(false, ex.getMessage(), data));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -76,6 +86,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalStateException(IllegalStateException ex) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ApiResponse<>(false, ex.getMessage(), null));
+    }
+
+    @ExceptionHandler(MailDeliveryException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMailDelivery(MailDeliveryException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(new ApiResponse<>(false, ex.getMessage(), null));
     }
 

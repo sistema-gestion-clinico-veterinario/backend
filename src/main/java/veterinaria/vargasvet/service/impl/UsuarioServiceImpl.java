@@ -7,10 +7,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Company;
+import veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.dto.request.LoginDTO;
-import veterinaria.vargasvet.dto.request.UserRegistrationDTO;
 import veterinaria.vargasvet.dto.response.AuthResponse;
 import veterinaria.vargasvet.dto.response.AssignedRoleResponse;
 import veterinaria.vargasvet.dto.response.MenuItemDTO;
@@ -50,7 +50,9 @@ import veterinaria.vargasvet.domain.enums.RolePurpose;
 @RequiredArgsConstructor
 public class UsuarioServiceImpl implements veterinaria.vargasvet.service.UsuarioService {
 
-    private static final String DUMMY_BCRYPT_HASH = "$2a$10$7EqJtq98hPqEX7fNZaFWoO5LwR8mH3eQfPJfQZpD1fM9L0f.R8j6u";
+    private static final String NO_ASSIGNED_ROLE_MESSAGE =
+            "Todavía no tienes un rol asignado en esta clínica. Pide a tu administrador que te lo asigne para poder ingresar.";
+    private static final String DUMMY_BCRYPT_HASH ="$2a$10$7EqJtq98hPqEX7fNZaFWoO5LwR8mH3eQfPJfQZpD1fM9L0f.R8j6u";
 
     private final UsuarioRepository usuarioRepository;
     private final veterinaria.vargasvet.repository.EmpleadoRepository empleadoRepository;
@@ -75,6 +77,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private final PasswordPolicyService passwordPolicyService;
     private final veterinaria.vargasvet.service.LegalDocumentService legalDocumentService;
     private final UsuarioContactoService contactoService;
+    private final veterinaria.vargasvet.security.RealtimeSubscriptionGuard realtimeSubscriptionGuard;
+    private final veterinaria.vargasvet.service.AdministratorProtection administratorProtection;
+    private final veterinaria.vargasvet.service.AccountClosureGuard accountClosureGuard;
+    private final veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
 
     @Value("${app.url}")
     private String appUrl;
@@ -97,6 +103,9 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Value("${jwt.absolute-timeout-seconds}")
     private long absoluteTimeoutSeconds;
 
+    @Value("${jwt.refresh-reuse-grace-seconds:0}")
+    private long refreshReuseGraceSeconds;
+
     @Value("${jwt.refresh-validity-in-seconds:604800}")
     private long refreshValiditySeconds;
 
@@ -111,65 +120,6 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
     @Value("${app.rate-limit.recovery-per-account-per-hour:3}")
     private int recoveryPerAccountPerHour;
-
-    @Override
-    @Transactional
-    public UserProfileDTO register(UserRegistrationDTO registrationDTO) {
-        registrationDTO.setEmail(normalizeSecurityIdentifier(registrationDTO.getEmail()));
-        registrationDTO.setUsername(normalizeSecurityIdentifier(registrationDTO.getUsername()));
-
-        Company company = null;
-        if (registrationDTO.getCompanyId() != null) {
-            company = companyRepository.findById(registrationDTO.getCompanyId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
-        }
-        Integer companyIdToUse = company != null ? company.getId() : null;
-
-        // Aislamiento total entre empresas: los duplicados (correo, username) solo se
-        // validan dentro de la misma empresa (o entre cuentas sin empresa).
-        boolean emailEnUso = companyIdToUse == null
-                ? usuarioRepository.existsByEmailIgnoreCaseAndCompanyIsNull(registrationDTO.getEmail())
-                : usuarioRepository.existsByEmailIgnoreCaseAndCompanyId(registrationDTO.getEmail(), companyIdToUse);
-        if (emailEnUso) {
-            throw new IllegalArgumentException("El email ya está en uso");
-        }
-        boolean usernameEnUso = companyIdToUse == null
-                ? usuarioRepository.existsByUsernameIgnoreCaseAndCompanyIsNull(registrationDTO.getUsername())
-                : usuarioRepository.existsByUsernameIgnoreCaseAndCompanyId(registrationDTO.getUsername(), companyIdToUse);
-        if (usernameEnUso) {
-            throw new IllegalArgumentException("El usuario ya está en uso");
-        }
-
-        passwordPolicyService.validate(registrationDTO.getPassword(), registrationDTO.getEmail(),
-                registrationDTO.getNombre(), registrationDTO.getApellido());
-        String encodedPassword = passwordEncoder.encode(registrationDTO.getPassword());
-        Usuario usuario = userMapper.toEntity(registrationDTO);
-        String verificationToken = SecurityTokenUtils.generate();
-        usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
-        usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
-        usuario.setEmailVerified(false);
-        usuario.setActivo(false);
-        usuario.setCompany(company);
-
-        Usuario saved = usuarioRepository.save(usuario);
-
-        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
-                new veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial();
-        credencial.setUsuario(saved);
-        credencial.setCompany(company);
-        credencial.setPassword(encodedPassword);
-        credencial.setPasswordChanged(false);
-        credencial.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
-        credencialRepository.save(credencial);
-        contactoService.crear(saved, company, registrationDTO.getTelefono(), registrationDTO.getDireccion());
-
-        sendVerificationEmail(saved, verificationToken);
-
-        UserProfileDTO profile = userMapper.toProfileDTO(saved);
-        profile.setTelefono(registrationDTO.getTelefono());
-        profile.setDireccion(registrationDTO.getDireccion());
-        return profile;
-    }
 
     /**
      * Resuelve los datos de marca (nombre, logo, contacto) de la empresa del usuario para
@@ -190,12 +140,12 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         return branding;
     }
 
-    private void sendVerificationEmail(Usuario usuario, String verificationToken) {
+    private void sendVerificationEmail(Usuario usuario, String verificationToken, Company company) {
         try {
-            Map<String, Object> model = new HashMap<>(resolveCompanyBranding(usuario));
+            Map<String, Object> model = new HashMap<>(resolveCompanyBranding(usuario, company));
             model.put("nombre", usuario.getEmail());
             model.put("validityHours", verificationTokenValidityHours);
-            String slug = usuario.getCompany() != null ? usuario.getCompany().getSlug() : null;
+            String slug = company != null ? company.getSlug() : null;
             model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
                     "/auth/verify#token=" + verificationToken, slug));
 
@@ -213,33 +163,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
     @Override
     @Transactional
-    public void verifyEmail(String token) {
-        Usuario usuario = usuarioRepository.findByVerificationTokenForUpdate(SecurityTokenUtils.hash(token))
-                .orElseThrow(() -> new ResourceNotFoundException("Token de verificacion invalido"));
-        assertVerificationTokenNotExpired(usuario);
-
-        if (usuario.isEmailVerified() || anyCredencialPasswordChanged(usuario.getId())) {
-            usuario.setVerificationToken(null);
-            usuario.setVerificationTokenExpiresAt(null);
-            usuarioRepository.save(usuario);
-            throw new IllegalArgumentException("La cuenta ya fue activada. Inicia sesion o recupera tu contrasena.");
-        }
-
-        usuario.setEmailVerified(true);
-        usuario.setActivo(true);
-        usuario.setVerificationToken(null);
-        usuario.setVerificationTokenExpiresAt(null);
-        usuarioRepository.save(usuario);
-        authenticationAuditService.record(usuario, "ACTIVAR_CUENTA",
-                "La cuenta fue activada mediante confirmación del correo.");
-    }
-
-    @Override
-    @Transactional
-    public void setupAccount(String token, String password) {
+    public void setupAccount(String token, String password, Boolean avisoLeido, String ipAddress, String userAgent) {
         Usuario usuario = usuarioRepository.findByVerificationTokenForUpdate(SecurityTokenUtils.hash(token))
                 .orElseThrow(() -> new ResourceNotFoundException("Token de verificacion invalido o expirado"));
-        assertVerificationTokenNotExpired(usuario);
+        assertVerificationTokenUsable(usuario);
 
         if (usuario.isEmailVerified() || anyCredencialPasswordChanged(usuario.getId())) {
             usuario.setVerificationToken(null);
@@ -251,6 +178,12 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial = resolveSingleCredencial(usuario.getId())
                 .orElseThrow(() -> new IllegalStateException(
                         "No se pudo determinar la credencial a configurar para este usuario"));
+
+        Integer companyId = credencial.getCompany() == null ? null : credencial.getCompany().getId();
+        if (consentimientoDatosService.hayAvisoPublicado(companyId) && !Boolean.TRUE.equals(avisoLeido)) {
+            throw new IllegalArgumentException(
+                    "Lee el aviso de privacidad de la clínica y confirma que lo leíste para activar tu cuenta");
+        }
 
         passwordPolicyService.validate(password, usuario.getEmail(), usuario.getNombre(), usuario.getApellido());
         if (passwordEncoder.matches(password, credencial.getPassword())) {
@@ -264,6 +197,8 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         usuario.setVerificationToken(null);
         usuario.setVerificationTokenExpiresAt(null);
         usuarioRepository.save(usuario);
+        consentimientoDatosService.registrarEnterado(usuario.getId(), companyId,
+                veterinaria.vargasvet.domain.enums.CanalConsentimiento.ACTIVACION, null, ipAddress, userAgent);
         authenticationAuditService.record(usuario, "CONFIGURAR_CREDENCIALES",
                 "El usuario estableció su contraseña inicial y activó la cuenta.");
     }
@@ -273,7 +208,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     public AuthResponse activateAccountWithGoogle(String token, String googleEmail) {
         Usuario usuario = usuarioRepository.findByVerificationTokenForUpdate(SecurityTokenUtils.hash(token))
                 .orElseThrow(() -> new ResourceNotFoundException("Token de verificacion invalido o expirado"));
-        assertVerificationTokenNotExpired(usuario);
+        assertVerificationTokenUsable(usuario);
 
         if (usuario.isEmailVerified() || anyCredencialPasswordChanged(usuario.getId())) {
             usuario.setVerificationToken(null);
@@ -294,6 +229,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .orElseThrow(() -> new IllegalStateException(
                         "No se pudo determinar la credencial a configurar para este usuario"));
 
+        if (assignedRoleNames(usuario, credencial.getCompany()).isEmpty()) {
+            throw new DisabledException(NO_ASSIGNED_ROLE_MESSAGE);
+        }
+
         // Sin contraseña: Google ya verifico la identidad, igual que en cualquier alta por
         // SSO - la persona puede crear una contraseña mas adelante (perfil, o "olvide mi
         // contraseña") si alguna vez la necesita.
@@ -302,21 +241,44 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         usuario.setVerificationToken(null);
         usuario.setVerificationTokenExpiresAt(null);
         usuarioRepository.save(usuario);
+        credencial.setActivatedWithGoogle(true);
         credencial.setUltimoAcceso(veterinaria.vargasvet.util.AppClock.now());
         credencialRepository.save(credencial);
         authenticationAuditService.record(usuario, "ACTIVAR_CUENTA_GOOGLE",
                 "El usuario activó su cuenta con Google, sin crear contraseña.");
 
-        return buildLoginResponse(usuario, credencial.getCompany(), credencial, normalizedGoogleEmail);
+        return buildLoginResponse(usuario, credencial.getCompany(), credencial, normalizedGoogleEmail, true);
     }
 
     @Override
     @Transactional
-    public void resendVerificationToken(String email) {
+    public void resendVerificationToken(String email, String slug) {
         email = normalizeSecurityIdentifier(email);
         sharedRateLimitService.enforce("verification-account", email,
                 recoveryPerAccountPerHour, java.time.Duration.ofHours(1));
-        Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
+
+        // El correo ya no es unico en toda la plataforma: la empresa la fija el slug del
+        // enlace (igual que forgotPassword) y solo cuenta quien tiene una relacion ACTIVA
+        // con ella. Asi un correo repetido entre empresas no rompe el reenvio, y quien fue
+        // dado de baja antes de activar su cuenta no recibe un enlace nuevo.
+        String normalizedSlug = slug == null || slug.isBlank() ? null : slug.trim().toLowerCase(Locale.ROOT);
+        Company company = null;
+        Usuario usuario = null;
+        if (normalizedSlug != null) {
+            company = companyRepository.findBySlug(normalizedSlug).orElse(null);
+            if (company != null) {
+                final Integer companyId = company.getId();
+                usuario = usuarioRepository.findAllByEmailIgnoreCase(email).stream()
+                        .filter(u -> companyMembershipService.hasActiveMembership(u.getId(), companyId))
+                        .findFirst()
+                        .orElse(null);
+            }
+        } else {
+            usuario = usuarioRepository.findByEmailAndCompanyIsNull(email)
+                    .filter(u -> !companyMembershipService.hasOnlyInactiveMemberships(u.getId()))
+                    .orElse(null);
+        }
+
         // Respuesta uniforme: no revelar si la cuenta existe o ya fue activada.
         if (usuario == null) {
             passwordEncoder.matches("verification-probe", DUMMY_BCRYPT_HASH);
@@ -330,12 +292,62 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             return;
         }
 
+        reissueVerificationToken(usuario, company);
+    }
+
+    @Override
+    @Transactional
+    public String resendVerificationByToken(String token, String slug) {
+        if (token == null || token.isBlank()) {
+            throw new ResourceNotFoundException("El enlace no es válido");
+        }
+        // El enlace (vencido o no) prueba que la persona recibió la invitación, así que no
+        // hace falta que vuelva a escribir su correo: se reenvía a la dirección guardada.
+        Usuario usuario = usuarioRepository.findByVerificationTokenForUpdate(SecurityTokenUtils.hash(token))
+                .orElseThrow(() -> new ResourceNotFoundException("El enlace no es válido"));
+        sharedRateLimitService.enforce("verification-account", normalizeSecurityIdentifier(usuario.getEmail()),
+                recoveryPerAccountPerHour, java.time.Duration.ofHours(1));
+
+        String normalizedSlug = slug == null || slug.isBlank() ? null : slug.trim().toLowerCase(Locale.ROOT);
+        Company company;
+        if (normalizedSlug != null) {
+            company = companyRepository.findBySlug(normalizedSlug).orElse(null);
+            if (company == null || !companyMembershipService.hasActiveMembership(usuario.getId(), company.getId())) {
+                throw new ResourceNotFoundException("El enlace no es válido");
+            }
+        } else {
+            company = usuario.getCompany();
+            if (companyMembershipService.hasOnlyInactiveMemberships(usuario.getId())) {
+                throw new ResourceNotFoundException("El enlace no es válido");
+            }
+        }
+
+        if (usuario.isEmailVerified() || anyCredencialPasswordChanged(usuario.getId()) || usuario.isActivo()) {
+            throw new IllegalArgumentException("La cuenta ya fue activada. Inicia sesion o recupera tu contrasena.");
+        }
+
+        reissueVerificationToken(usuario, company);
+        return maskEmail(usuario.getEmail());
+    }
+
+    private void reissueVerificationToken(Usuario usuario, Company company) {
         String newToken = SecurityTokenUtils.generate();
         usuario.setVerificationToken(SecurityTokenUtils.hash(newToken));
         usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
         usuarioRepository.save(usuario);
 
-        sendVerificationEmail(usuario, newToken);
+        sendVerificationEmail(usuario, newToken, company);
+    }
+
+    private String maskEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return "";
+        }
+        int at = email.indexOf('@');
+        if (at <= 0) {
+            return "***";
+        }
+        return email.charAt(0) + "***" + email.substring(at);
     }
 
     @Override
@@ -395,7 +407,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         credencialRepository.save(credencial);
         accountLockoutService.registerSuccessfulLogin(username);
 
-        return buildLoginResponse(usuario, company, credencial, username);
+        return buildLoginResponse(usuario, company, credencial, username, false);
     }
 
     /** Login vía "Continuar con Google". Google ya verificó que la persona controla ese
@@ -408,67 +420,95 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Transactional
     public AuthResponse loginWithGoogle(String email, String slug) {
         String normalizedEmail = normalizeSecurityIdentifier(email);
-        String normalizedSlug = slug == null ? null : slug.trim().toLowerCase(Locale.ROOT);
+        String normalizedSlug = slug == null ? "" : slug.trim().toLowerCase(Locale.ROOT);
+        if (normalizedSlug.isEmpty()) {
+            authenticationAuditService.recordLoginFailure(null, normalizedEmail, "inicio de sesión de Google sin clínica");
+            throw new BadCredentialsException("Credenciales inválidas");
+        }
         sharedRateLimitService.enforce("login-account", normalizedEmail,
                 loginPerAccountPerWindow, java.time.Duration.ofMinutes(15));
         accountLockoutService.assertNotLocked(normalizedEmail);
 
-        Usuario usuario = usuarioRepository.findByEmail(normalizedEmail).orElse(null);
-        if (usuario == null) {
-            authenticationAuditService.recordLoginFailure(null, normalizedEmail, "credenciales inválidas");
-            if (normalizedSlug != null) {
-                throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
-            }
-            throw new BadCredentialsException("Credenciales inválidas");
+        // El correo puede existir en varias empresas. Google acredita el correo, pero el
+        // slug decide qué cuenta concreta se está autenticando; jamás se toma la primera
+        // coincidencia global porque revelaría o adoptaría la identidad de otra clínica.
+        List<Usuario> emailCandidates = usuarioRepository.findAllByEmailIgnoreCase(normalizedEmail);
+        if (emailCandidates.isEmpty()) {
+            authenticationAuditService.recordLoginFailure(null, normalizedEmail, "correo de Google sin cuenta");
+            throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
         }
-
-        Company company;
-        if (normalizedSlug != null) {
-            company = companyRepository.findBySlug(normalizedSlug).orElse(null);
-            if (company == null || !companyMembershipService.hasActiveMembership(usuario.getId(), company.getId())) {
-                authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "credenciales inválidas");
-                throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+        Company company = companyRepository.findBySlug(normalizedSlug).orElse(null);
+        if (company == null) {
+            authenticationAuditService.recordLoginFailure(null, normalizedEmail, "empresa de Google inexistente");
+            throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+        }
+        Usuario usuario = emailCandidates.stream()
+                .filter(u -> companyMembershipService.hasAnyMembership(u.getId(), company.getId()))
+                .findFirst()
+                .orElse(null);
+        if (usuario == null) {
+            authenticationAuditService.recordLoginFailure(emailCandidates.get(0), normalizedEmail,
+                    "cuenta de Google sin acceso a la empresa");
+            throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+        }
+        if (!companyMembershipService.hasActiveMembership(usuario.getId(), company.getId())) {
+            if (accountClosureGuard.hasOpenClosure(usuario.getId(), company.getId())) {
+                authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta cerrada por la persona (con Google)");
+                throw new veterinaria.vargasvet.exception.GoogleAccountClosedException();
             }
-        } else {
-            Set<Integer> activeCompanyIds = companyMembershipService.getActiveCompanyIds(usuario);
-            company = activeCompanyIds.size() == 1
-                    ? companyRepository.findById(activeCompanyIds.iterator().next()).orElse(null)
-                    : null;
-            if (company == null) {
-                authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "credenciales inválidas");
-                throw new BadCredentialsException("Credenciales inválidas");
+            if (companyMembershipService.isSuspendedIn(usuario.getId(), company.getId())) {
+                authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta suspendida (con Google)");
+                throw new veterinaria.vargasvet.exception.GoogleAccountSuspendedException();
             }
+            if (companyMembershipService.isDeactivatedIn(usuario.getId(), company.getId())) {
+                authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta dada de baja (con Google)");
+                throw new veterinaria.vargasvet.exception.GoogleAccountDeactivatedException();
+            }
+            authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta de Google sin acceso a la empresa");
+            throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
         }
 
         veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
                 resolveCredencial(usuario.getId(), company.getId()).orElse(null);
         if (credencial == null) {
-            authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "credenciales inválidas");
-            if (normalizedSlug != null) {
-                throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
-            }
-            throw new BadCredentialsException("Credenciales inválidas");
+            authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta de Google sin credencial en la empresa");
+            throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
         }
 
         credencial.setUltimoAcceso(veterinaria.vargasvet.util.AppClock.now());
         credencialRepository.save(credencial);
         accountLockoutService.registerSuccessfulLogin(normalizedEmail);
 
-        return buildLoginResponse(usuario, company, credencial, normalizedEmail);
+        return buildLoginResponse(usuario, company, credencial, normalizedEmail, true);
+    }
+
+    /** Quien activó su cuenta con Google no tiene una contraseña que cambiar: no se le pide una. */
+    private boolean isPasswordPromptSatisfied(veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial) {
+        return credencial.isPasswordChanged() || credencial.isActivatedWithGoogle();
+    }
+
+    private List<String> assignedRoleNames(Usuario usuario, Company company) {
+        return usuario.getUsuariosPorRol().stream()
+                .filter(upr -> upr.getCompany() != null && upr.getCompany().getId().equals(company.getId()))
+                .filter(upr -> isRoleOperable(usuario.getId(), upr))
+                .map(upr -> upr.getRol().getName())
+                .collect(Collectors.toList());
     }
 
     /** Cola compartida por login() (con contraseña) y loginWithGoogle() (sin contraseña):
      * una vez identificada la persona, la empresa y su credencial en esa empresa, el resto
      * del proceso (estado de cuenta, roles activos, emisión de JWT, auditoría) es idéntico. */
     private AuthResponse buildLoginResponse(Usuario usuario, Company company,
-            veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial, String username) {
+            veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial, String username,
+            boolean viaGoogle) {
+        String via = viaGoogle ? " (con Google)" : "";
         if (!usuario.isEmailVerified()) {
-            authenticationAuditService.recordLoginFailure(usuario, username, "cuenta no habilitada");
+            authenticationAuditService.recordLoginFailure(usuario, username, "cuenta no habilitada" + via);
             throw new DisabledException("Tu cuenta aún no ha sido verificada. Por favor, revisa tu correo electrónico.");
         }
 
         if (!usuario.isActivo()) {
-            authenticationAuditService.recordLoginFailure(usuario, username, "cuenta no habilitada");
+            authenticationAuditService.recordLoginFailure(usuario, username, "cuenta no habilitada" + via);
             throw new DisabledException("La cuenta está suspendida");
         }
 
@@ -479,29 +519,29 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         // Solo los roles de ESTA empresa (la del slug) - si la persona
         // tambien trabaja o es cliente en otra empresa, esos roles no deben
         // verse ni activarse aqui.
-        List<String> assignedRoles = usuario.getUsuariosPorRol().stream()
-                .filter(upr -> upr.getCompany() != null && upr.getCompany().getId().equals(company.getId()))
-                .map(upr -> upr.getRol().getName())
-                .collect(Collectors.toList());
+        List<String> assignedRoles = assignedRoleNames(usuario, company);
+        if (assignedRoles.isEmpty()) {
+            authenticationAuditService.recordLoginFailure(usuario, username, "sin rol asignado" + via);
+            throw new DisabledException(NO_ASSIGNED_ROLE_MESSAGE);
+        }
 
         UsuarioPorRol activeAssignment = resolveActiveAssignment(usuario, null, null, company.getId());
-        if (activeAssignment == null && !assignedRoles.isEmpty()) {
+        if (activeAssignment == null) {
             throw new DisabledException("Tu rol activo se encuentra desactivado. Contacta al administrador.");
         }
-        String activeRole = activeAssignment != null ? activeAssignment.getRol().getName() : null;
+        String activeRole = activeAssignment.getRol().getName();
 
-        List<String> activeRolesList = activeRole != null
-                ? java.util.Collections.singletonList(activeRole)
-                : java.util.Collections.emptyList();
+        List<String> activeRolesList = java.util.Collections.singletonList(activeRole);
 
         Integer companyId = company.getId();
 
         Integer activeRoleId = activeAssignment != null ? activeAssignment.getRol().getId() : null;
         List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRoleId));
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRoleId);
-        String jwt = createAccessToken(usuario, activeAssignment, activeRolesList, permissions, companyId,
-                credencial.getCredentialsVersion());
-        String refreshToken = createRefreshToken(usuario, activeAssignment, Instant.now(), UUID.randomUUID().toString(),
+        String sessionId = UUID.randomUUID().toString();
+        String jwt = createAccessToken(usuario, activeAssignment, activeRolesList, companyId,
+                credencial.getCredentialsVersion(), sessionId);
+        String refreshToken = createRefreshToken(usuario, activeAssignment, Instant.now(), sessionId,
                 company, credencial.getCredentialsVersion());
 
         AuthResponse response = new AuthResponse();
@@ -516,11 +556,11 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setCompanyColorPrimario(company.getColorPrimario());
         response.setCompanySlug(company.getSlug());
         response.setNombreCompleto(resolveNombreCompleto(usuario));
-        response.setUserType(resolveUserType(usuario));
-        response.setPasswordChanged(credencial.isPasswordChanged());
+        response.setUserType(resolveUserType(usuario, companyId));
+        response.setPasswordChanged(isPasswordPromptSatisfied(credencial));
         response.setNeedsLegalAcceptance(legalDocumentService.hasPendingConsent(usuario.getId()));
         response.setLegalAcceptanceOverdue(legalDocumentService.isPastGracePeriod(usuario.getId()));
-        response.setEmpleadoId(resolveActiveEmpleadoId(usuario));
+        response.setEmpleadoId(resolveActiveEmpleadoId(usuario, companyId));
         response.setMenu(menu);
         response.setPermissions(permissions);
         populateActiveRole(response, activeAssignment);
@@ -533,7 +573,8 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             company.getName(),
             "LOGIN_EXITOSO",
             "Seguridad",
-            "Inicio de sesión exitoso del usuario " + usuario.getUsername() + " con rol activo " + activeRole,
+            "Inicio de sesión exitoso del usuario " + usuario.getUsername() + " con rol activo " + activeRole
+                    + (viaGoogle ? " mediante Google" : " mediante contraseña"),
             null
         );
 
@@ -607,9 +648,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         Integer activeRoleId = activeAssignment.getRol().getId();
         List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRoleId));
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRoleId);
-        String jwt = createAccessToken(usuario, activeAssignment, activeRolesList, permissions, null,
-                credencial.getCredentialsVersion());
-        String refreshToken = createRefreshToken(usuario, activeAssignment, Instant.now(), UUID.randomUUID().toString(),
+        String sessionId = UUID.randomUUID().toString();
+        String jwt = createAccessToken(usuario, activeAssignment, activeRolesList, null,
+                credencial.getCredentialsVersion(), sessionId);
+        String refreshToken = createRefreshToken(usuario, activeAssignment, Instant.now(), sessionId,
                 null, credencial.getCredentialsVersion());
 
         AuthResponse response = new AuthResponse();
@@ -620,7 +662,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         response.setAvailableRoles(toAvailableRoles(usuario, null));
         response.setCompanyId(null);
         response.setNombreCompleto(resolveNombreCompleto(usuario));
-        response.setUserType(resolveUserType(usuario));
+        response.setUserType(resolveUserType(usuario, null));
         response.setPasswordChanged(credencial.isPasswordChanged());
         response.setNeedsLegalAcceptance(legalDocumentService.hasPendingConsent(usuario.getId()));
         response.setLegalAcceptanceOverdue(legalDocumentService.isPastGracePeriod(usuario.getId()));
@@ -643,7 +685,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = BadCredentialsException.class)
     public AuthResponse switchRole(Integer usuarioId, Integer roleId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
@@ -654,61 +696,47 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         // inicio sesion, nunca "saltar" a un rol de otra empresa.
         Integer companyId = SecurityUtils.getCurrentCompanyId();
 
-        List<String> assignedRoles = usuario.getUsuariosPorRol().stream()
+        List<UsuarioPorRol> companyAssignments = usuario.getUsuariosPorRol().stream()
                 .filter(upr -> companyId == null
-                        || (upr.getCompany() != null && companyId.equals(upr.getCompany().getId())))
+                        ? upr.getCompany() == null
+                        : upr.getCompany() != null && companyId.equals(upr.getCompany().getId()))
+                .toList();
+        List<String> assignedRoles = companyAssignments.stream()
+                .filter(upr -> companyId == null || isRoleOperable(usuario.getId(), upr))
                 .map(upr -> upr.getRol().getName())
                 .collect(Collectors.toList());
 
-        UsuarioPorRol activeAssignment = resolveActiveAssignment(usuario, roleId, null, companyId);
-        if (activeAssignment == null) {
-            throw new IllegalArgumentException("El rol seleccionado se encuentra desactivado");
-        }
+        UsuarioPorRol activeAssignment = requireSwitchableAssignment(companyAssignments, usuario.getId(), roleId);
+        RefreshToken currentSession = requireCurrentSession(usuario);
 
         String roleName = activeAssignment.getRol().getName();
+        String previousRoles = String.join(", ", SecurityUtils.getCurrentRoleNames());
 
         List<String> activeRolesList = java.util.Collections.singletonList(roleName);
         Company company = companyId != null ? companyRepository.findById(companyId).orElse(null) : null;
 
-        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+        UsuarioEmpresaCredencial credencial =
                 resolveCredencial(usuario.getId(), companyId).orElseThrow(
                         () -> new IllegalStateException("No se encontró la credencial de esta empresa"));
 
         Integer activeRoleId = activeAssignment.getRol().getId();
         List<Object> menu = new java.util.ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRoleId));
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRoleId);
-        String jwt = createAccessToken(usuario, activeAssignment, activeRolesList, permissions, companyId,
-                credencial.getCredentialsVersion());
-        Instant sessionStartedAt = refreshTokenRepository.findFirstByUsuarioOrderByExpiryDateDesc(usuario)
-                .map(RefreshToken::getSessionStartedAt)
-                .orElse(Instant.now());
-        // Solo revoca las sesiones de ESTA empresa - cambiar de rol dentro de Vargas Vet
-        // nunca debe desloguear a la persona de El Duke de Can si tiene sesión abierta ahí.
-        sessionSecurityService.invalidateSessionsForCompany(usuario, company);
-        String refreshToken = createRefreshToken(usuario, activeAssignment, sessionStartedAt, UUID.randomUUID().toString(),
-                company, credencial.getCredentialsVersion());
+        // Se reemplaza solo ESTA sesión: las de otros dispositivos o empresas siguen abiertas.
+        // La nueva hereda el inicio de la actual, así que cambiar de rol no renueva el límite absoluto.
+        String previousSessionId = currentSession.getFamilyId();
+        revokeFamily(previousSessionId, veterinaria.vargasvet.util.AppClock.instantNow());
+        realtimeSubscriptionGuard.closeConnectionsOfSession(previousSessionId);
+        String sessionId = UUID.randomUUID().toString();
+        String jwt = createAccessToken(usuario, activeAssignment, activeRolesList, companyId,
+                credencial.getCredentialsVersion(), sessionId);
+        String refreshToken = createRefreshToken(usuario, activeAssignment, currentSession.getSessionStartedAt(),
+                sessionId, company, credencial.getCredentialsVersion());
 
-        AuthResponse response = new AuthResponse();
+        AuthResponse response = buildSessionResponse(usuario, activeAssignment, companyId, company, credencial,
+                assignedRoles, activeRolesList, menu, permissions);
         response.setToken(jwt);
         response.setRefreshToken(refreshToken);
-        response.setRoles(activeRolesList);
-        response.setAssignedRoles(assignedRoles);
-        response.setAvailableRoles(toAvailableRoles(usuario, companyId));
-        response.setCompanyId(companyId);
-        response.setCompanyName(company != null ? company.getName() : null);
-        response.setCompanyLogoUrl(company != null ? company.getLogoUrl() : null);
-        response.setCompanyColorPrimario(company != null ? company.getColorPrimario() : null);
-        response.setCompanySlug(company != null ? company.getSlug() : null);
-        response.setNombreCompleto(resolveNombreCompleto(usuario));
-        response.setUserType(resolveUserType(usuario));
-        response.setPasswordChanged(credencial.isPasswordChanged());
-        response.setNeedsLegalAcceptance(legalDocumentService.hasPendingConsent(usuario.getId()));
-        response.setLegalAcceptanceOverdue(legalDocumentService.isPastGracePeriod(usuario.getId()));
-        response.setEmpleadoId(resolveActiveEmpleadoId(usuario));
-
-        response.setMenu(menu);
-        response.setPermissions(permissions);
-        populateActiveRole(response, activeAssignment);
 
         // Registrar log de auditoría para cambio de rol
         auditLogService.log(
@@ -718,11 +746,88 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             company != null ? company.getName() : null,
             "CAMBIO_ROL",
             "Seguridad",
-            "Cambio de rol activo del usuario a " + roleName,
+            "Cambio de rol activo del usuario de " + (previousRoles.isBlank() ? "desconocido" : previousRoles)
+                    + " a " + roleName,
             null
         );
 
         return response;
+    }
+
+    /** Un rol que no es de la cuenta se rechaza (403); no se sustituye en silencio por otro. */
+    private UsuarioPorRol requireSwitchableAssignment(List<UsuarioPorRol> companyAssignments, Integer userId,
+                                                      Integer roleId) {
+        List<UsuarioPorRol> sameRole = companyAssignments.stream()
+                .filter(upr -> Objects.equals(upr.getRol().getId(), roleId))
+                .toList();
+        if (sameRole.isEmpty()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "El rol seleccionado no pertenece a tu cuenta");
+        }
+        return sameRole.stream()
+                .filter(upr -> upr.getRol().isActivo())
+                .filter(upr -> isRoleOperable(userId, upr))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("El rol seleccionado se encuentra desactivado"));
+    }
+
+    /** La sesión que se está usando, identificada por el `sid` del access token y bloqueada para reemplazarla. */
+    private RefreshToken requireCurrentSession(Usuario usuario) {
+        String sessionId = SecurityUtils.getCurrentSessionId();
+        if (sessionId == null) {
+            // Access token anterior a los identificadores de sesión: el cliente lo renueva y reintenta.
+            throw new BadCredentialsException("La sesión debe renovarse. Inténtalo nuevamente.");
+        }
+        Instant now = veterinaria.vargasvet.util.AppClock.instantNow();
+        RefreshToken current = refreshTokenRepository.findActiveByFamilyIdForUpdate(sessionId).stream()
+                .filter(token -> Objects.equals(token.getUsuario().getId(), usuario.getId()))
+                .findFirst()
+                .orElseThrow(() -> new BadCredentialsException("La sesión ya no está activa. Inicie sesión nuevamente."));
+        if (current.getExpiryDate().isBefore(now)
+                || current.getSessionStartedAt().plusSeconds(absoluteTimeoutSeconds).isBefore(now)) {
+            revokeFamily(sessionId, now);
+            throw new BadCredentialsException("La sesión ha expirado. Por favor, inicie sesión nuevamente.");
+        }
+        return current;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuthResponse currentSession(Integer usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        Company company = companyId != null ? companyRepository.findById(companyId).orElse(null) : null;
+        UsuarioEmpresaCredencial credencial = resolveCredencial(usuario.getId(), companyId).orElseThrow(
+                () -> new IllegalStateException("No se encontró la credencial de esta empresa"));
+
+        List<UsuarioPorRol> companyAssignments = usuario.getUsuariosPorRol().stream()
+                .filter(upr -> companyId == null
+                        ? upr.getCompany() == null
+                        : upr.getCompany() != null && companyId.equals(upr.getCompany().getId()))
+                .toList();
+        List<String> assignedRoles = companyAssignments.stream()
+                .filter(upr -> companyId == null || isRoleOperable(usuario.getId(), upr))
+                .map(upr -> upr.getRol().getName())
+                .collect(Collectors.toList());
+        Integer tokenRoleId = SecurityUtils.getCurrentRoleId();
+        UsuarioPorRol activeAssignment = null;
+        if (tokenRoleId != null) {
+            try {
+                activeAssignment = requireSwitchableAssignment(companyAssignments, usuario.getId(), tokenRoleId);
+            } catch (org.springframework.security.access.AccessDeniedException | IllegalArgumentException ex) {
+                throw new DisabledException("El rol de la sesión ya no está disponible");
+            }
+        }
+        List<String> activeRoles = activeAssignment != null
+                ? Collections.singletonList(activeAssignment.getRol().getName())
+                : Collections.emptyList();
+        Integer activeRoleId = activeAssignment != null ? activeAssignment.getRol().getId() : null;
+        List<Object> menu = new ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRoleId));
+        List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRoleId);
+
+        return buildSessionResponse(usuario, activeAssignment, companyId, company, credencial,
+                assignedRoles, activeRoles, menu, permissions);
     }
 
     @Override
@@ -737,65 +842,6 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
     @Override
     @Transactional
-    public void suspendAccount(Integer id) {
-        Usuario usuario = findManageableUser(id);
-        if (Objects.equals(SecurityUtils.getCurrentUserId(), usuario.getId())) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "No puede suspender su propia cuenta");
-        }
-        usuario.setActivo(false);
-        sessionSecurityService.invalidateAllSessions(usuario);
-
-        auditLogService.log(
-            "SUSPENSION_CUENTA",
-            "Seguridad",
-            "Se suspendió administrativamente la cuenta del usuario: " + usuario.getEmail()
-        );
-    }
-
-    @Override
-    @Transactional
-    public void adminChangeEmail(Integer targetUserId, String newEmail) {
-        Usuario usuario = findManageableUser(targetUserId);
-        String normalizedNewEmail = normalizeSecurityIdentifier(newEmail);
-        Integer companyId = usuario.getCompany() != null ? usuario.getCompany().getId() : null;
-
-        if (usuario.getEmail().equalsIgnoreCase(normalizedNewEmail)) {
-            throw new IllegalArgumentException("El nuevo correo debe ser diferente del correo actual");
-        }
-        boolean emailEnUso = companyId == null
-                ? usuarioRepository.existsByEmailIgnoreCaseAndCompanyIsNull(normalizedNewEmail)
-                : usuarioRepository.existsByEmailIgnoreCaseAndCompanyId(normalizedNewEmail, companyId);
-        if (emailEnUso) {
-            throw new IllegalArgumentException("El nuevo correo no está disponible en esta empresa");
-        }
-
-        String oldEmail = usuario.getEmail();
-        // Mismo resguardo que EmailChangeService: si el username coincidia con el correo
-        // viejo, se sincroniza - de lo contrario el correo viejo seguiria funcionando
-        // como credencial de acceso via el campo username, que este cambio no tocaria.
-        if (usuario.getUsername().equalsIgnoreCase(oldEmail)) {
-            boolean usernameEnUso = companyId == null
-                    ? usuarioRepository.existsByUsernameIgnoreCaseAndCompanyIsNull(normalizedNewEmail)
-                    : usuarioRepository.existsByUsernameIgnoreCaseAndCompanyId(normalizedNewEmail, companyId);
-            if (!usernameEnUso) {
-                usuario.setUsername(normalizedNewEmail);
-            }
-        }
-        usuario.setEmail(normalizedNewEmail);
-        sessionSecurityService.invalidateAllSessions(usuario);
-
-        auditLogService.log(
-            "CAMBIO_CORREO_ADMINISTRATIVO",
-            "Seguridad",
-            "Un administrador cambió el correo del usuario " + usuario.getUsername()
-                + " de " + oldEmail + " a " + normalizedNewEmail
-                + " (forzado, sin doble confirmación - ej. pérdida de acceso al correo anterior)"
-        );
-    }
-
-    @Override
-    @Transactional
     public void changePassword(Integer usuarioId, veterinaria.vargasvet.dto.request.ChangePasswordDTO dto) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
@@ -803,6 +849,13 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         // Cambia solo la credencial de la empresa con la que se inició la sesión actual -
         // nunca la de otra empresa donde la persona también tenga cuenta.
         Integer companyId = SecurityUtils.getCurrentCompanyId();
+
+        // Comprobar la contraseña actual es lo que impide que una sesión robada cambie la
+        // credencial: sin tope, esa comprobación se podría adivinar por fuerza bruta.
+        sharedRateLimitService.enforce("change-password-account",
+                usuarioId + ":" + (companyId == null ? "global" : companyId),
+                5, java.time.Duration.ofMinutes(15));
+
         veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
                 resolveCredencial(usuarioId, companyId)
                         .orElseThrow(() -> new IllegalStateException("No se encontró la credencial de esta empresa"));
@@ -836,33 +889,52 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     @Override
     @Transactional
     public void requestPasswordReset(veterinaria.vargasvet.dto.request.AdminPasswordResetRequest dto) {
-        Usuario usuario;
-        if (dto.getUserId() != null) {
-            usuario = findManageableUser(dto.getUserId());
-        } else if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
-            usuario = findManageableUser(normalizeSecurityIdentifier(dto.getEmail()));
-        } else {
-            throw new IllegalArgumentException("Debe proporcionar el ID de usuario o el correo electrónico");
-        }
+        boolean platformAdmin = SecurityUtils.isSuperAdmin();
+        Usuario usuario = findPasswordResetTarget(dto, platformAdmin);
 
         if (!usuario.isActivo() || !usuario.isEmailVerified()) {
             throw new IllegalStateException(
                     "La cuenta todavía no está habilitada; debe completar primero su activación");
         }
 
-        sharedRateLimitService.enforce("admin-reset-account", normalizeSecurityIdentifier(usuario.getEmail()),
+        Integer companyId = platformAdmin ? dto.getCompanyId() : SecurityUtils.getCurrentCompanyId();
+        Company company = null;
+        if (companyId != null) {
+            company = companyRepository.findById(companyId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
+            administratorProtection.assertCanManage(usuario, companyId);
+            if (!companyMembershipService.hasActiveMembership(usuario.getId(), companyId)) {
+                throw new IllegalStateException("La persona no tiene acceso activo en esta empresa");
+            }
+        }
+
+        sharedRateLimitService.enforce("admin-reset-account",
+                (companyId == null ? "global" : companyId) + ":" + normalizeSecurityIdentifier(usuario.getEmail()),
                 recoveryPerAccountPerHour, java.time.Duration.ofHours(1));
 
-        // findManageableUser ya garantiza (salvo SuperAdmin) que el usuario pertenece a la
-        // empresa activa del admin, así que esa es la credencial correcta a restablecer.
-        Integer companyId = SecurityUtils.getCurrentCompanyId();
-        Company company = companyId != null ? companyRepository.findById(companyId).orElse(null) : null;
-        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
-                resolveCredencial(usuario.getId(), companyId)
-                        .orElseThrow(() -> new IllegalStateException("No se encontró la credencial de esta empresa"));
+        resolveCredencial(usuario.getId(), companyId)
+                .orElseThrow(() -> new IllegalStateException("No se encontró la credencial de esta empresa"));
 
-        issuePasswordResetToken(usuario, company, credencial, "SOLICITAR_RESET_ADMINISTRATIVO",
-                "Un administrador solicitó el restablecimiento de acceso del usuario");
+        String token = createPasswordResetToken(usuario, company);
+        auditLogService.log(companyId, "SOLICITAR_RESET_ADMINISTRATIVO", "Seguridad",
+                "Solicitó el restablecimiento de acceso de " + resolveNombreCompleto(usuario)
+                        + " (" + usuario.getEmail() + ")");
+        sendPasswordResetEmail(usuario, company, token, true);
+    }
+
+    private Usuario findPasswordResetTarget(veterinaria.vargasvet.dto.request.AdminPasswordResetRequest dto,
+                                            boolean platformAdmin) {
+        if (dto.getUserId() != null) {
+            return findManageableUser(dto.getUserId());
+        }
+        if (dto.getEmail() == null || dto.getEmail().isBlank()) {
+            throw new IllegalArgumentException("Debe proporcionar el ID de usuario o el correo electrónico");
+        }
+        String email = normalizeSecurityIdentifier(dto.getEmail());
+        if (platformAdmin && dto.getCompanyId() != null) {
+            return findByEmailInCompany(email, dto.getCompanyId());
+        }
+        return findManageableUser(email);
     }
 
     private void sendPasswordChangeNotification(Usuario usuario) {
@@ -932,6 +1004,27 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private void issuePasswordResetToken(Usuario usuario, Company company,
                                          veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial,
                                          String action, String detail) {
+        String token = createPasswordResetToken(usuario, company);
+
+        try {
+            sendPasswordResetEmail(usuario, company, token, false);
+
+            auditLogService.log(
+                usuario.getEmail(),
+                "USER",
+                company != null ? company.getId() : null,
+                company != null ? company.getName() : companyName,
+                action,
+                "Seguridad",
+                detail,
+                null
+            );
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo enviar el correo de recuperación a " + usuario.getEmail() + ": " + e.getMessage());
+        }
+    }
+
+    private String createPasswordResetToken(Usuario usuario, Company company) {
         if (company != null) {
             passwordResetTokenRepository.deleteByUsuarioAndCompany(usuario, company);
         } else {
@@ -950,47 +1043,36 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .build();
 
         passwordResetTokenRepository.save(resetToken);
+        return token;
+    }
 
-        try {
-            Map<String, Object> model = new HashMap<>(resolveCompanyBranding(usuario, company));
-            model.put("usuario", resolveNombreCompleto(usuario));
+    private void sendPasswordResetEmail(Usuario usuario, Company company, String token, boolean initiatedByAdmin) {
+        Map<String, Object> model = new HashMap<>(resolveCompanyBranding(usuario, company));
+        model.put("usuario", resolveNombreCompleto(usuario));
+        model.put("initiatedByAdmin", initiatedByAdmin);
 
-            String slug = company != null ? company.getSlug() : null;
-            String resetUrl = appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
-                    "/reset-password#token=" + token, slug);
-            model.put("resetUrl", resetUrl);
+        String slug = company != null ? company.getSlug() : null;
+        String resetUrl = appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
+                "/reset-password#token=" + token, slug);
+        model.put("resetUrl", resetUrl);
 
-            Mail mail = emailService.createMail(
-                    usuario.getEmail(),
-                    "Restablecer Contraseña - " + model.get("companyName"),
-                    model
-            );
-            emailService.sendEmailWithRetry(mail, "email/forgot-password-template");
-
-            auditLogService.log(
+        Mail mail = emailService.createMail(
                 usuario.getEmail(),
-                "USER",
-                company != null ? company.getId() : null,
-                company != null ? company.getName() : companyName,
-                action,
-                "Seguridad",
-                detail,
-                null
-            );
-        } catch (Exception e) {
-            System.err.println("[WARNING] No se pudo enviar el correo de recuperación a " + usuario.getEmail() + ": " + e.getMessage());
-        }
+                "Restablecer Contraseña - " + model.get("companyName"),
+                model
+        );
+        emailService.sendEmailWithRetry(mail, "email/forgot-password-template");
     }
 
     @Override
     @Transactional
     public void resetPasswordWithToken(veterinaria.vargasvet.dto.request.ResetPasswordRequest request) {
         PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenForUpdate(hashToken(request.getToken()))
-                .orElseThrow(() -> new IllegalArgumentException("El token es inválido o no existe."));
+                .orElseThrow(() -> new ResourceNotFoundException("El token es inválido o no existe."));
 
+        // 404 (no 400) para que la pantalla ofrezca pedir un enlace nuevo en vez de un error de formulario.
         if (resetToken.getExpiryDate().isBefore(veterinaria.vargasvet.util.AppClock.now())) {
-            passwordResetTokenRepository.delete(resetToken);
-            throw new IllegalArgumentException("El token ha expirado. Por favor solicite uno nuevo.");
+            throw new ResourceNotFoundException("El token ha expirado. Por favor solicite uno nuevo.");
         }
 
         Usuario usuario = resetToken.getUsuario();
@@ -1008,6 +1090,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         credencial.setPasswordChanged(true);
         credencialRepository.save(credencial);
         sessionSecurityService.invalidateSessionsForCredential(credencial);
+
+        // El login acepta usuario o correo y cada uno lleva su propio contador de intentos.
+        accountLockoutService.clearLockout(usuario.getUsername());
+        accountLockoutService.clearLockout(usuario.getEmail());
 
         passwordResetTokenRepository.delete(resetToken);
 
@@ -1055,7 +1141,15 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         boolean tokenMismatch = !Objects.equals(refreshToken.getJti(), tokenDetails.jti())
                 || !Objects.equals(refreshToken.getFamilyId(), tokenDetails.familyId())
                 || !Objects.equals(refreshToken.getUsuario().getEmail(), tokenDetails.email());
-        if (tokenMismatch || refreshToken.getUsedAt() != null || refreshToken.getRevokedAt() != null) {
+        boolean rotadoHaceUnMomento = !tokenMismatch
+                && refreshReuseGraceSeconds > 0
+                && refreshToken.getUsedAt() != null
+                && refreshToken.getUsedAt().equals(refreshToken.getRevokedAt())
+                && refreshToken.getUsedAt().plusSeconds(refreshReuseGraceSeconds)
+                        .isAfter(veterinaria.vargasvet.util.AppClock.instantNow())
+                && refreshTokenRepository.existsByFamilyIdAndRevokedAtIsNull(refreshToken.getFamilyId());
+        if (tokenMismatch
+                || ((refreshToken.getUsedAt() != null || refreshToken.getRevokedAt() != null) && !rotadoHaceUnMomento)) {
             revokeFamily(refreshToken.getFamilyId(), veterinaria.vargasvet.util.AppClock.instantNow());
             auditLogService.log(refreshToken.getUsuario().getEmail(), "USER",
                     refreshToken.getUsuario().getCompany() != null ? refreshToken.getUsuario().getCompany().getId() : null,
@@ -1113,6 +1207,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         List<String> userRoles = usuario.getUsuariosPorRol().stream()
                 .filter(upr -> companyId == null
                         || (upr.getCompany() != null && companyId.equals(upr.getCompany().getId())))
+                .filter(upr -> companyId == null || isRoleOperable(usuario.getId(), upr))
                 .map(upr -> upr.getRol().getName())
                 .collect(Collectors.toList());
 
@@ -1130,36 +1225,22 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         Integer activeRoleId = activeAssignment != null ? activeAssignment.getRol().getId() : null;
         List<Object> menu = new ArrayList<>(menuBuilderService.construirMenuJerarquico(usuario.getId(), activeRoleId));
         List<String> permissions = menuBuilderService.construirPermissions(usuario.getId(), activeRoleId);
-        String newJwt = createAccessToken(usuario, activeAssignment, activeRolesList, permissions, companyId,
-                credencial.getCredentialsVersion());
+        String newJwt = createAccessToken(usuario, activeAssignment, activeRolesList, companyId,
+                credencial.getCredentialsVersion(), refreshToken.getFamilyId());
 
-        refreshToken.setUsedAt(now);
-        refreshToken.setRevokedAt(now);
-        refreshTokenRepository.save(refreshToken);
+        if (!rotadoHaceUnMomento) {
+            refreshToken.setUsedAt(now);
+            refreshToken.setRevokedAt(now);
+            refreshTokenRepository.save(refreshToken);
+        }
         String newRefreshToken = createRefreshToken(usuario, activeAssignment,
                 refreshToken.getSessionStartedAt(), refreshToken.getFamilyId(), sessionCompany,
                 credencial.getCredentialsVersion());
 
-        AuthResponse response = new AuthResponse();
+        AuthResponse response = buildSessionResponse(usuario, activeAssignment, companyId, sessionCompany,
+                credencial, userRoles, activeRolesList, menu, permissions);
         response.setToken(newJwt);
         response.setRefreshToken(newRefreshToken);
-        response.setRoles(activeRolesList);
-        response.setAssignedRoles(userRoles);
-        response.setAvailableRoles(toAvailableRoles(usuario, companyId));
-        response.setCompanyId(companyId);
-        response.setCompanyName(sessionCompany != null ? sessionCompany.getName() : null);
-        response.setCompanyLogoUrl(sessionCompany != null ? sessionCompany.getLogoUrl() : null);
-        response.setCompanyColorPrimario(sessionCompany != null ? sessionCompany.getColorPrimario() : null);
-        response.setCompanySlug(sessionCompany != null ? sessionCompany.getSlug() : null);
-        response.setNombreCompleto(resolveNombreCompleto(usuario));
-        response.setUserType(resolveUserType(usuario));
-        response.setPasswordChanged(credencial.isPasswordChanged());
-        response.setNeedsLegalAcceptance(legalDocumentService.hasPendingConsent(usuario.getId()));
-        response.setLegalAcceptanceOverdue(legalDocumentService.isPastGracePeriod(usuario.getId()));
-        response.setEmpleadoId(resolveActiveEmpleadoId(usuario));
-        response.setMenu(menu);
-        response.setPermissions(permissions);
-        populateActiveRole(response, activeAssignment);
 
         return response;
     }
@@ -1173,6 +1254,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         refreshTokenRepository.findByTokenHashForUpdate(hashToken(refreshToken))
                 .ifPresent(token -> {
                     revokeFamily(token.getFamilyId(), veterinaria.vargasvet.util.AppClock.instantNow());
+                    realtimeSubscriptionGuard.closeConnectionsOfSession(token.getFamilyId());
                     Usuario usuario = token.getUsuario();
                     auditLogService.log(
                             usuario.getEmail(), null,
@@ -1215,13 +1297,17 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         return value == null ? "unknown" : value.trim().toLowerCase(Locale.ROOT);
     }
 
-    private void assertVerificationTokenNotExpired(Usuario usuario) {
+    private void assertVerificationTokenUsable(Usuario usuario) {
         if (usuario.getVerificationTokenExpiresAt() == null
                 || usuario.getVerificationTokenExpiresAt().isBefore(veterinaria.vargasvet.util.AppClock.now())) {
             usuario.setVerificationToken(null);
             usuario.setVerificationTokenExpiresAt(null);
             usuarioRepository.save(usuario);
-            throw new IllegalArgumentException("El enlace de activación es inválido o expiró");
+            throw new ResourceNotFoundException("El enlace de activación es inválido o expiró");
+        }
+        // Un enlace emitido antes de la baja no debe permitir que la persona se reactive sola.
+        if (companyMembershipService.hasOnlyInactiveMemberships(usuario.getId())) {
+            throw new ResourceNotFoundException("Token de verificacion invalido o expirado");
         }
     }
 
@@ -1241,7 +1327,8 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         if (companyId == null) {
             throw new ResourceNotFoundException("Usuario no encontrado");
         }
-        return usuarioRepository.findByIdAndCompanyId(userId, companyId)
+        return usuarioRepository.findById(userId)
+                .filter(usuario -> companyMembershipService.hasAnyMembership(usuario.getId(), companyId))
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
     }
 
@@ -1254,7 +1341,13 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         if (companyId == null) {
             throw new ResourceNotFoundException("Usuario no encontrado");
         }
-        return usuarioRepository.findByEmailAndCompanyId(email, companyId)
+        return findByEmailInCompany(email, companyId);
+    }
+
+    private Usuario findByEmailInCompany(String email, Integer companyId) {
+        return usuarioRepository.findAllByEmailIgnoreCase(email).stream()
+                .filter(usuario -> companyMembershipService.hasAnyMembership(usuario.getId(), companyId))
+                .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
     }
 
@@ -1269,7 +1362,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .filter(upr -> upr.getRol().isActivo())
                 .filter(upr -> companyId == null
                         || (upr.getCompany() != null && companyId.equals(upr.getCompany().getId())))
-                .filter(upr -> isCompanyMembershipActive(usuario.getId(), upr.getCompany()))
+                .filter(upr -> isRoleOperable(usuario.getId(), upr))
                 .toList();
 
         if (preferredRoleId != null) {
@@ -1303,18 +1396,29 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
      * paso el acceso al rol de la Empresa A, aunque ahi su Empleado siguiera con estado=false.
      * Sin fila de Empleado NI de Apoderado en esa empresa (ej. rol PLATFORM_ADMIN, sin
      * empresa asociada) no hay membresia que validar, asi que no bloquea. */
-    private boolean isCompanyMembershipActive(Integer userId, Company company) {
+    private boolean isRoleOperable(Integer userId, UsuarioPorRol assignment) {
+        Company company = assignment.getCompany();
         if (company == null) {
             return true;
         }
         Integer companyId = company.getId();
-        if (empleadoRepository.existsByUserIdAndCompanyId(userId, companyId)) {
-            return empleadoRepository.existsByUserIdAndCompanyIdAndEstadoTrue(userId, companyId);
+        boolean esEmpleado = empleadoRepository.existsByUserIdAndCompanyId(userId, companyId);
+        boolean esApoderado = apoderadoRepository.existsByUserIdAndCompanyId(userId, companyId);
+        if (!esEmpleado && !esApoderado) {
+            return true;
         }
-        if (apoderadoRepository.existsByUserIdAndCompanyId(userId, companyId)) {
-            return apoderadoRepository.existsByUserIdAndCompanyIdAndEstadoTrue(userId, companyId);
+        // Cada rol depende de SU relación: un rol de personal necesita un empleado activo y uno de cliente, un
+        // cliente activo. Quien está suspendido como empleado pero sigue siendo cliente entra solo como cliente.
+        veterinaria.vargasvet.domain.enums.RoleScope scope = assignment.getRol().getScope();
+        boolean empleadoActivo = empleadoRepository.existsByUserIdAndCompanyIdAndEstadoTrue(userId, companyId);
+        boolean apoderadoActivo = apoderadoRepository.existsByUserIdAndCompanyIdAndEstadoTrue(userId, companyId);
+        if (scope == veterinaria.vargasvet.domain.enums.RoleScope.STAFF) {
+            return empleadoActivo;
         }
-        return true;
+        if (scope == veterinaria.vargasvet.domain.enums.RoleScope.CLIENT) {
+            return apoderadoActivo;
+        }
+        return empleadoActivo || apoderadoActivo;
     }
 
     /** Cada empresa tiene su propia credencial (contraseña, password_changed,
@@ -1344,16 +1448,41 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     private String createAccessToken(Usuario usuario, UsuarioPorRol activeAssignment,
-                                     List<String> activeRoles, List<String> permissions,
-                                     Integer companyId, long credentialsVersion) {
+                                     List<String> activeRoles,
+                                     Integer companyId, long credentialsVersion, String sessionId) {
         if (activeAssignment == null) {
-            return tokenProvider.createToken(usuario.getId(), usuario.getEmail(), activeRoles, permissions,
-                    companyId, null, null, null, 0L, credentialsVersion);
+            return tokenProvider.createToken(usuario.getId(), usuario.getEmail(), activeRoles,
+                    companyId, null, null, null, 0L, credentialsVersion, sessionId);
         }
         var role = activeAssignment.getRol();
-        return tokenProvider.createToken(usuario.getId(), usuario.getEmail(), activeRoles, permissions,
+        return tokenProvider.createToken(usuario.getId(), usuario.getEmail(), activeRoles,
                 companyId, role.getId(), role.getScope(), role.getPurpose(), role.getPermissionVersion(),
-                credentialsVersion);
+                credentialsVersion, sessionId);
+    }
+
+    private AuthResponse buildSessionResponse(Usuario usuario, UsuarioPorRol activeAssignment, Integer companyId,
+                                              Company company, UsuarioEmpresaCredencial credencial,
+                                              List<String> assignedRoles, List<String> activeRoles,
+                                              List<Object> menu, List<String> permissions) {
+        AuthResponse response = new AuthResponse();
+        response.setRoles(activeRoles);
+        response.setAssignedRoles(assignedRoles);
+        response.setAvailableRoles(toAvailableRoles(usuario, companyId));
+        response.setCompanyId(companyId);
+        response.setCompanyName(company != null ? company.getName() : null);
+        response.setCompanyLogoUrl(company != null ? company.getLogoUrl() : null);
+        response.setCompanyColorPrimario(company != null ? company.getColorPrimario() : null);
+        response.setCompanySlug(company != null ? company.getSlug() : null);
+        response.setNombreCompleto(resolveNombreCompleto(usuario));
+        response.setUserType(resolveUserType(usuario, companyId));
+        response.setPasswordChanged(isPasswordPromptSatisfied(credencial));
+        response.setNeedsLegalAcceptance(legalDocumentService.hasPendingConsent(usuario.getId()));
+        response.setLegalAcceptanceOverdue(legalDocumentService.isPastGracePeriod(usuario.getId()));
+        response.setEmpleadoId(resolveActiveEmpleadoId(usuario, companyId));
+        response.setMenu(menu);
+        response.setPermissions(permissions);
+        populateActiveRole(response, activeAssignment);
+        return response;
     }
 
     private void populateActiveRole(AuthResponse response, UsuarioPorRol activeAssignment) {
@@ -1377,6 +1506,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .filter(upr -> companyId == null
                         ? upr.getCompany() == null
                         : upr.getCompany() != null && companyId.equals(upr.getCompany().getId()))
+                .filter(upr -> companyId == null || isRoleOperable(usuario.getId(), upr))
                 .map(UsuarioPorRol::getRol)
                 .filter(veterinaria.vargasvet.domain.entity.Role::isActivo)
                 .sorted(Comparator.comparing(veterinaria.vargasvet.domain.entity.Role::getName))
@@ -1396,19 +1526,24 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         return usuario.getEmail();
     }
 
-    private String resolveUserType(Usuario usuario) {
+    private String resolveUserType(Usuario usuario, Integer companyId) {
         boolean isSuperAdmin = usuario.getUsuariosPorRol().stream()
+                .filter(upr -> companyId == null
+                        ? upr.getCompany() == null
+                        : upr.getCompany() != null && companyId.equals(upr.getCompany().getId()))
                 .anyMatch(upr -> upr.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN);
         if (isSuperAdmin) return "SUPER_ADMIN";
-        if (empleadoRepository.existsByUserIdAndEstadoTrue(usuario.getId())) return "EMPLEADO";
+        if (companyId != null
+                && empleadoRepository.existsByUserIdAndCompanyIdAndEstadoTrue(usuario.getId(), companyId)) {
+            return "EMPLEADO";
+        }
         return "USUARIO";
     }
 
-    /** Como mucho hay una relacion laboral activa por usuario (indice
-     * uq_empleado_activo_por_usuario), asi que esto es seguro sin importar cuantas
-     * filas historicas de Empleado tenga el usuario. */
-    private Integer resolveActiveEmpleadoId(Usuario usuario) {
-        return empleadoRepository.findActiveByUserId(usuario.getId())
+    /** El empleado de la respuesta pertenece siempre a la empresa firmada en la sesión. */
+    private Integer resolveActiveEmpleadoId(Usuario usuario, Integer companyId) {
+        if (companyId == null) return null;
+        return empleadoRepository.findByUserIdAndCompanyIdAndEstadoTrue(usuario.getId(), companyId)
                 .map(empleado -> Math.toIntExact(empleado.getId()))
                 .orElse(null);
     }

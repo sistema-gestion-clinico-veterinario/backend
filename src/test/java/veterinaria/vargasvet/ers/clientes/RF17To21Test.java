@@ -81,6 +81,7 @@ class RF17To21Test {
     private MascotaMapper mascotaMapper;
     private EmailService emailService;
     private ApoderadoService invitacionAccesoService;
+    private veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
 
     @BeforeEach
     void setUp() {
@@ -95,6 +96,7 @@ class RF17To21Test {
         mascotaMapper = mock(MascotaMapper.class);
         emailService = mock(EmailService.class);
         invitacionAccesoService = mock(ApoderadoService.class);
+        petOwnershipService = mock(veterinaria.vargasvet.service.PetOwnershipService.class);
         autenticarEmpresa(7);
     }
 
@@ -245,6 +247,67 @@ class RF17To21Test {
     }
 
     @Test
+    @DisplayName("[CP-RF18-04] Un cliente dado de baja no vuelve por el registro: se le reactiva desde la lista y no cambia nada")
+    void cpRf1804_unClienteDeBajaNoVuelvePorElRegistro() {
+        Company company = company(7);
+        Role role = roleCliente(20, company);
+        ApoderadoRequest request = apoderadoRequest(7, role.getId());
+        Usuario existente = new Usuario();
+        existente.setId(99);
+        existente.setEmail("ana.qa@example.test");
+        existente.setCompany(company);
+        Apoderado deBaja = new Apoderado();
+        deBaja.setId(41L);
+        deBaja.setUser(existente);
+        deBaja.setCompany(company);
+        deBaja.setEstado(false);
+        deBaja.setTipoInactividad(veterinaria.vargasvet.domain.enums.TipoInactividad.BAJA);
+        deBaja.setFechaSalida(java.time.LocalDate.now().minusDays(20));
+
+        when(usuarioRepository.findByEmailAndCompanyId("ana.qa@example.test", 7)).thenReturn(Optional.of(existente));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
+        when(apoderadoRepository.findByUserIdAndCompanyId(99, 7)).thenReturn(Optional.of(deBaja));
+        when(roleRepository.findAllById(Set.of(20))).thenReturn(List.of(role));
+
+        assertThatThrownBy(() -> apoderadoService().registerApoderado(request))
+                .isInstanceOfSatisfying(veterinaria.vargasvet.exception.ClienteInactivoException.class,
+                        error -> assertThat(error.getApoderadoId()).isEqualTo(41L))
+                .hasMessageContaining("dado de baja")
+                .hasMessageContaining("Reactivar");
+
+        assertThat(deBaja.getEstado()).isFalse();
+        assertThat(deBaja.getTipoInactividad()).isEqualTo(veterinaria.vargasvet.domain.enums.TipoInactividad.BAJA);
+        verify(apoderadoRepository, never()).save(any(Apoderado.class));
+        verify(petOwnershipService, never()).syncPets(any(), any());
+    }
+
+    @Test
+    @DisplayName("[CP-RF18-05] Un cliente nuevo no necesita restaurar mascotas")
+    void cpRf1805_clienteNuevoNoRestauraMascotas() {
+        Company company = company(7);
+        Role role = roleCliente(20, company);
+        ApoderadoRequest request = apoderadoRequest(7, role.getId());
+        Usuario existente = new Usuario();
+        existente.setId(99);
+        existente.setEmail("ana.qa@example.test");
+        existente.setCompany(company);
+
+        when(usuarioRepository.findByEmailAndCompanyId("ana.qa@example.test", 7)).thenReturn(Optional.of(existente));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
+        when(roleRepository.findAllById(Set.of(20))).thenReturn(List.of(role));
+        when(apoderadoRepository.save(any(Apoderado.class))).thenAnswer(invocation -> {
+            Apoderado value = invocation.getArgument(0);
+            value.setId(42L);
+            return value;
+        });
+        when(userMapper.toProfileDTO(any(Usuario.class))).thenReturn(new UserProfileDTO());
+
+        apoderadoService().registerApoderado(request);
+
+        verify(petOwnershipService, never()).syncPets(any(), any());
+    }
+
+    @Test
     @DisplayName("[CP-RF20-01] Lista únicamente mascotas filtradas de la empresa autenticada")
     void cpRf2001_listaMascotasAutorizadasConFiltros() {
         Mascota luna = mascota(50L, apoderado(10L, 7, true, "Ana", "Torres", "12345678"));
@@ -328,8 +391,13 @@ class RF17To21Test {
                 mock(veterinaria.vargasvet.service.CompanyMembershipService.class),
                 mock(CitaRepository.class),
                 mock(veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository.class),
-                mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class)
-        );
+                mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class),
+                petOwnershipService,
+                mock(veterinaria.vargasvet.service.AccountClosureGuard.class),
+                mock(veterinaria.vargasvet.service.AdministratorProtection.class),
+                mock(veterinaria.vargasvet.service.AccessRestoredNotifier.class)
+        ,
+                org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class));
         ReflectionTestUtils.setField(service, "appUrl", "https://frontend.test");
         ReflectionTestUtils.setField(service, "defaultCompanyName", "Veterinaria QA");
         ReflectionTestUtils.setField(service, "defaultCompanyLogo", "");
@@ -351,7 +419,8 @@ class RF17To21Test {
                 mock(AuditLogService.class),
                 razaRepository,
                 invitacionAccesoService,
-                mock(MascotaRelacionService.class)
+                mock(MascotaRelacionService.class),
+                petOwnershipService
         );
     }
 

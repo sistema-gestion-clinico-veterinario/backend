@@ -21,6 +21,7 @@ public class RealtimeTicketService {
     private final TokenProvider tokenProvider;
     private final RealtimeTicketRepository realtimeTicketRepository;
     private final UsuarioPorRolRepository usuarioPorRolRepository;
+    private final veterinaria.vargasvet.repository.RefreshTokenRepository refreshTokenRepository;
 
     @Transactional
     public String issue(Authentication authentication) {
@@ -35,7 +36,7 @@ public class RealtimeTicketService {
                 userId, authentication.getName(),
                 authentication.getAuthorities().stream().map(a -> a.getAuthority()).toList(), companyId,
                 principal.getActiveRoleId(), principal.getActiveRoleScope(),
-                principal.getActiveRolePurpose(), principal.getPermissionVersion());
+                principal.getActiveRolePurpose(), principal.getPermissionVersion(), principal.getSessionId());
         realtimeTicketRepository.save(RealtimeTicket.builder()
                 .jti(issued.jti())
                 .usuarioId(userId)
@@ -75,6 +76,12 @@ public class RealtimeTicketService {
                                 + "ticket={}, actual={})",
                         details.jti(), details.authentication().getName(),
                         principal.getPermissionVersion(), assignment.getRol().getPermissionVersion());
+                return Optional.empty();
+            }
+            if (principal.getSessionId() != null
+                    && !refreshTokenRepository.existsByFamilyIdAndRevokedAtIsNull(principal.getSessionId())) {
+                log.warn("Ticket WebSocket de una sesión cerrada (jti={}, usuario={})",
+                        details.jti(), details.authentication().getName());
                 return Optional.empty();
             }
             int consumed = realtimeTicketRepository.consumeOnce(

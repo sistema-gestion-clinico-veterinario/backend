@@ -64,10 +64,19 @@ public class TokenProvider {
     }
 
     public String createToken(Integer userId, String email, List<String> roles,
-                              List<String> permissions, Integer companyId,
+                              Integer companyId,
                               Integer activeRoleId, RoleScope activeRoleScope,
                               RolePurpose activeRolePurpose, long permissionVersion,
                               long credentialsVersion) {
+        return createToken(userId, email, roles, companyId, activeRoleId, activeRoleScope,
+                activeRolePurpose, permissionVersion, credentialsVersion, null);
+    }
+
+    public String createToken(Integer userId, String email, List<String> roles,
+                              Integer companyId,
+                              Integer activeRoleId, RoleScope activeRoleScope,
+                              RolePurpose activeRolePurpose, long permissionVersion,
+                              long credentialsVersion, String sessionId) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + (jwtValidityInSeconds * 1000));
 
@@ -79,13 +88,13 @@ public class TokenProvider {
                 .claim("token_type", "access")
                 .claim("userId", userId)
                 .claim("roles", roles)
-                .claim("permissions", permissions)
                 .claim("companyId", companyId)
                 .claim("activeRoleId", activeRoleId)
                 .claim("activeRoleScope", activeRoleScope != null ? activeRoleScope.name() : null)
                 .claim("activeRolePurpose", activeRolePurpose != null ? activeRolePurpose.name() : null)
                 .claim("permissionVersion", permissionVersion)
                 .claim("credentialsVersion", credentialsVersion)
+                .claim("sid", sessionId)
                 .issuedAt(now)
                 .expiration(validity)
                 .signWith(privateKey, Jwts.SIG.RS256)
@@ -172,6 +181,15 @@ public class TokenProvider {
                                                       List<String> authorities, Integer companyId,
                                                       Integer activeRoleId, RoleScope activeRoleScope,
                                                       RolePurpose activeRolePurpose, long permissionVersion) {
+        return createRealtimeTicket(userId, email, authorities, companyId, activeRoleId, activeRoleScope,
+                activeRolePurpose, permissionVersion, null);
+    }
+
+    public IssuedRealtimeTicket createRealtimeTicket(Integer userId, String email,
+                                                      List<String> authorities, Integer companyId,
+                                                      Integer activeRoleId, RoleScope activeRoleScope,
+                                                      RolePurpose activeRolePurpose, long permissionVersion,
+                                                      String sessionId) {
         Instant issuedAt = veterinaria.vargasvet.util.AppClock.instantNow();
         Instant expiresAt = issuedAt.plusSeconds(60);
         String jti = UUID.randomUUID().toString();
@@ -183,12 +201,12 @@ public class TokenProvider {
                 .claim("token_type", "realtime")
                 .claim("userId", userId)
                 .claim("roles", authorities.stream().filter(a -> a.startsWith("ROLE_")).toList())
-                .claim("permissions", authorities.stream().filter(a -> !a.startsWith("ROLE_")).toList())
                 .claim("companyId", companyId)
                 .claim("activeRoleId", activeRoleId)
                 .claim("activeRoleScope", activeRoleScope != null ? activeRoleScope.name() : null)
                 .claim("activeRolePurpose", activeRolePurpose != null ? activeRolePurpose.name() : null)
                 .claim("permissionVersion", permissionVersion)
+                .claim("sid", sessionId)
                 .issuedAt(Date.from(issuedAt))
                 .expiration(Date.from(expiresAt))
                 .signWith(privateKey, Jwts.SIG.RS256)
@@ -218,14 +236,6 @@ public class TokenProvider {
                     .map(SimpleGrantedAuthority::new)
                     .forEach(authorities::add);
         }
-        List<?> permissions = claims.get("permissions", List.class);
-        if (permissions != null) {
-            permissions.stream()
-                    .map(Object::toString)
-                    .map(SimpleGrantedAuthority::new)
-                    .forEach(authorities::add);
-        }
-
         String email = claims.getSubject();
         Integer companyId = claims.get("companyId", Integer.class);
 
@@ -246,6 +256,7 @@ public class TokenProvider {
                 longClaim(claims, "permissionVersion")
         );
         principal.setCredentialsVersion(longClaim(claims, "credentialsVersion"));
+        principal.setSessionId(claims.get("sid", String.class));
 
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }

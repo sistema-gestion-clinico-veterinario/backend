@@ -39,6 +39,12 @@ public interface MovimientoCajaRepository extends JpaRepository<MovimientoCaja, 
                                   @Param("hasta") LocalDateTime hasta);
 
     @Query("SELECT COALESCE(SUM(m.monto), 0) FROM MovimientoCaja m " +
+           "WHERE m.sesionCajaId = :sesionId AND m.tipo = :tipo AND m.metodoPago = :metodo")
+    BigDecimal sumBySesionAndTipoAndMetodo(@Param("sesionId") Long sesionId,
+                                           @Param("tipo") TipoMovimiento tipo,
+                                           @Param("metodo") MetodoPago metodoPago);
+
+    @Query("SELECT COALESCE(SUM(m.monto), 0) FROM MovimientoCaja m " +
            "WHERE m.companyId = :cId AND m.tipo = :tipo AND m.concepto = :concepto " +
            "AND m.fecha BETWEEN :desde AND :hasta")
     BigDecimal sumByTipoAndConcepto(@Param("cId") Integer companyId,

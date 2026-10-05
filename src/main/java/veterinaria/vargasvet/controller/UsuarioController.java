@@ -22,6 +22,7 @@ public class UsuarioController {
             @Valid @RequestBody AdminPasswordResetRequest request) {
         usuarioService.requestPasswordReset(request);
         return ResponseEntity.ok(new ApiResponse<>(true,
-                "Se enviaron al usuario las instrucciones para restablecer su acceso", null));
+                "Estamos enviando al correo de la persona un enlace para que cree su nueva contraseña. "
+                        + "Si no le llega en unos minutos, revisa que su correo esté bien escrito e inténtalo de nuevo.", null));
     }
 }

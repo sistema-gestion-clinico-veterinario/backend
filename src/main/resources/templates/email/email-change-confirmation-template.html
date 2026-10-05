@@ -11,7 +11,11 @@
     <p style="margin:28px 0">
         <a th:href="${confirmationUrl}" style="background:#0066aa;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:bold">Confirmar correo</a>
     </p>
-    <p style="font-size:13px;color:#64748b">El enlace es temporal y el cambio solo se aplicará cuando ambos correos hayan sido confirmados. Si no solicitaste esto, no confirmes y contacta al administrador.</p>
+    <p th:if="${cancelUrl}" style="margin:0 0 20px">
+        <a th:href="${cancelUrl}" style="font-size:13px;color:#b91c1c;font-weight:bold">No fui yo — cancelar esta solicitud</a>
+    </p>
+    <p th:if="${administrative}" style="font-size:13px;color:#64748b">Un administrador de la empresa solicitó este cambio para tu cuenta. El correo de acceso se actualizará cuando confirmes este correo. Si no reconoces la solicitud, no confirmes y contacta a la empresa.</p>
+    <p th:unless="${administrative}" style="font-size:13px;color:#64748b">El enlace es temporal y el cambio solo se aplicará cuando ambos correos hayan sido confirmados. Si no solicitaste esto, no confirmes y contacta al administrador.</p>
     <p style="font-size:12px;color:#94a3b8" th:text="${companyName}">Sistema</p>
 </div>
 </body>

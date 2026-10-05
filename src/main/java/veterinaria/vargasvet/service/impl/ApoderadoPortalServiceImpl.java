@@ -47,6 +47,45 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     private final CitaMapper citaMapper;
     private final ConsultaMapper consultaMapper;
     private final UsuarioContactoService contactoService;
+    private final veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
+
+    private static final veterinaria.vargasvet.service.PetOwnershipService.Permiso INFORMACION =
+            veterinaria.vargasvet.service.PetOwnershipService.Permiso.INFORMACION;
+    private static final veterinaria.vargasvet.service.PetOwnershipService.Permiso AUTORIZAR =
+            veterinaria.vargasvet.service.PetOwnershipService.Permiso.AUTORIZAR;
+    private static final veterinaria.vargasvet.service.PetOwnershipService.Permiso PAGOS =
+            veterinaria.vargasvet.service.PetOwnershipService.Permiso.PAGOS;
+
+    private boolean esPrincipal(Apoderado persona, Mascota mascota) {
+        return mascota.getApoderado() != null && persona.getId().equals(mascota.getApoderado().getId());
+    }
+
+    private List<Long> idsDeMascotas(Apoderado persona, veterinaria.vargasvet.service.PetOwnershipService.Permiso... permisos) {
+        List<Long> ids = petOwnershipService.mascotasConAlgunPermiso(persona, permisos).stream()
+                .map(Mascota::getId).collect(Collectors.toList());
+        return ids.isEmpty() ? List.of(-1L) : ids;
+    }
+
+    /** Quien no es el propietario principal no recibe los datos personales de este. */
+    private MascotaResponse paraLaPersona(Apoderado persona, Mascota mascota) {
+        MascotaResponse response = mascotaMapper.toResponse(mascota);
+        if (!esPrincipal(persona, mascota)) {
+            response.setApoderadoId(null);
+            response.setApoderadoNombreCompleto(null);
+        }
+        return response;
+    }
+
+    private CitaResponse paraLaPersona(Apoderado persona, Cita cita) {
+        CitaResponse response = citaMapper.toResponse(cita);
+        if (!esPrincipal(persona, cita.getMascota())) {
+            response.setApoderadoId(null);
+            response.setApoderadoNombre(null);
+            response.setApoderadoEmail(null);
+            response.setTelefonoAviso(null);
+        }
+        return response;
+    }
 
     private Apoderado getAuthenticatedApoderado() {
         // Por id, no por email: el correo ya no identifica de forma unica a la
@@ -133,9 +172,9 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     @Transactional(readOnly = true)
     public List<MascotaResponse> getMascotas() {
         Apoderado apoderado = getAuthenticatedApoderado();
-        return mascotaRepository.findByApoderadoId(apoderado.getId()).stream()
+        return petOwnershipService.mascotasConAlgunPermiso(apoderado, INFORMACION, AUTORIZAR).stream()
                 .filter(m -> Boolean.TRUE.equals(m.getActivo()))
-                .map(mascotaMapper::toResponse)
+                .map(m -> paraLaPersona(apoderado, m))
                 .collect(Collectors.toList());
     }
 
@@ -143,8 +182,9 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<MascotaResponse> getMascotasPaginated(String nombre, veterinaria.vargasvet.domain.enums.EspecieMascota especie, Boolean activo, org.springframework.data.domain.Pageable pageable) {
         Apoderado apoderado = getAuthenticatedApoderado();
-        return mascotaRepository.buscarPortalMascotas(apoderado.getId(), nombre, especie, activo, pageable)
-                .map(mascotaMapper::toResponse);
+        return mascotaRepository.buscarPortalMascotasPorIds(idsDeMascotas(apoderado, INFORMACION, AUTORIZAR),
+                        nombre, especie, activo, pageable)
+                .map(m -> paraLaPersona(apoderado, m));
     }
 
     @Override
@@ -154,15 +194,13 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         Mascota mascota = mascotaRepository.findById(mascotaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada"));
 
-        if (!mascota.getApoderado().getId().equals(apoderado.getId())) {
-            throw new AccessDeniedException("No tienes permiso para editar esta mascota");
-        }
+        petOwnershipService.exigir(apoderado, mascota, "No tienes permiso para editar esta mascota", AUTORIZAR);
 
         if (request.getFotoUrl() != null) {
             mascota.setFotoUrl(request.getFotoUrl().isBlank() ? null : request.getFotoUrl());
         }
 
-        return mascotaMapper.toResponse(mascotaRepository.save(mascota));
+        return paraLaPersona(apoderado, mascotaRepository.save(mascota));
     }
 
     @Override
@@ -172,11 +210,16 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         Mascota mascota = mascotaRepository.findById(mascotaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada"));
 
-        if (!mascota.getApoderado().getId().equals(apoderado.getId())) {
-            throw new AccessDeniedException("No tienes permiso para acceder al historial de esta mascota");
-        }
+        petOwnershipService.exigir(apoderado, mascota, "No tienes permiso para acceder al historial de esta mascota", INFORMACION);
 
-        return historiaClinicaService.getPorMascota(mascotaId);
+        HistoriaClinicaDetalleResponse historia = historiaClinicaService.getPorMascota(mascotaId);
+        if (!esPrincipal(apoderado, mascota) && historia != null) {
+            historia.setApoderadoId(null);
+            historia.setPropietarioNombre(null);
+            historia.setPropietarioTelefono(null);
+            historia.setPropietarioDireccion(null);
+        }
+        return historia;
     }
 
     @Override
@@ -185,18 +228,23 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         Apoderado apoderado = getAuthenticatedApoderado();
         Page<Cita> rawCitas;
         if (mascotaId != null) {
-            rawCitas = citaRepository.findByApoderadoIdAndMascotaIdPaginated(apoderado.getId(), mascotaId, pageable);
+            Mascota mascota = mascotaRepository.findById(mascotaId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada"));
+            petOwnershipService.exigir(apoderado, mascota, "No tienes permiso para ver las citas de esta mascota",
+                    INFORMACION, AUTORIZAR);
+            rawCitas = citaRepository.findByMascota_IdAndEliminadaFalseOrderByFechaHoraInicioDesc(mascotaId, pageable);
         } else {
-            rawCitas = citaRepository.findByApoderadoIdPaginated(apoderado.getId(), pageable);
+            rawCitas = citaRepository.findByMascota_IdInAndEliminadaFalseOrderByFechaHoraInicioDesc(
+                    idsDeMascotas(apoderado, INFORMACION, AUTORIZAR), pageable);
         }
-        return rawCitas.map(citaMapper::toResponse);
+        return rawCitas.map(cita -> paraLaPersona(apoderado, cita));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PrescripcionResumenResponse> getRecetas() {
         Apoderado apoderado = getAuthenticatedApoderado();
-        return prescripcionRepository.findByApoderadoId(apoderado.getId()).stream()
+        return prescripcionRepository.findByMascotaIds(idsDeMascotas(apoderado, INFORMACION)).stream()
                 .map(consultaMapper::toPrescripcionListResponse)
                 .collect(Collectors.toList());
     }
@@ -425,13 +473,11 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         Mascota mascota = mascotaRepository.findById(request.getMascotaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada con ID: " + request.getMascotaId()));
 
-        if (!mascota.getApoderado().getId().equals(apoderado.getId())) {
-            throw new AccessDeniedException("No tienes permiso para programar citas para esta mascota");
-        }
+        petOwnershipService.exigir(apoderado, mascota, "No tienes permiso para programar citas para esta mascota", AUTORIZAR);
 
         // Limit validations for clients (apoderados)
         LocalDate bookingDate = request.getFechaHoraInicio().toLocalDate();
-        List<Cita> todayAppointments = citaRepository.findActiveByApoderadoIdAndFecha(apoderado.getId(), bookingDate);
+        List<Cita> todayAppointments = citaRepository.findActiveByApoderadoIdAndFecha(mascota.getApoderado().getId(), bookingDate);
 
         // Limit 1: Max 2 appointments for the same pet on a single day
         long samePetCount = todayAppointments.stream()
@@ -456,9 +502,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         Cita cita = citaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con el ID: " + id));
 
-        if (!cita.getMascota().getApoderado().getId().equals(apoderado.getId())) {
-            throw new AccessDeniedException("No tienes permiso para actualizar esta cita");
-        }
+        petOwnershipService.exigir(apoderado, cita.getMascota(), "No tienes permiso para actualizar esta cita", AUTORIZAR);
 
         if (cita.getEstado() == EstadoCita.COMPLETADA || cita.getEstado() == EstadoCita.CANCELADA || cita.getEstado() == EstadoCita.EN_PROCESO) {
             throw new IllegalArgumentException("No se puede modificar una cita que ya se encuentra " + cita.getEstado());
@@ -467,9 +511,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         // Validate that the new pet belongs to the apoderado
         Mascota mascota = mascotaRepository.findById(request.getMascotaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada con el ID: " + request.getMascotaId()));
-        if (!mascota.getApoderado().getId().equals(apoderado.getId())) {
-            throw new AccessDeniedException("No tienes permiso para registrar citas para esta mascota");
-        }
+        petOwnershipService.exigir(apoderado, mascota, "No tienes permiso para registrar citas para esta mascota", AUTORIZAR);
 
         // The apoderado cannot change the date/time in this standard details update action. Preserve original date/time.
         request.setFechaHoraInicio(cita.getFechaHoraInicio());
@@ -488,9 +530,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         Cita cita = citaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con el ID: " + id));
 
-        if (!cita.getMascota().getApoderado().getId().equals(apoderado.getId())) {
-            throw new AccessDeniedException("No tienes permiso para reprogramar esta cita");
-        }
+        petOwnershipService.exigir(apoderado, cita.getMascota(), "No tienes permiso para reprogramar esta cita", AUTORIZAR);
 
         // Rule: Only Scheduled, Canceled, or Rescheduled states can be rescheduled
         if (cita.getEstado() != EstadoCita.PROGRAMADA && cita.getEstado() != EstadoCita.CANCELADA && cita.getEstado() != EstadoCita.REPROGRAMADA) {
@@ -592,9 +632,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         Cita cita = citaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con el ID: " + id));
 
-        if (!cita.getMascota().getApoderado().getId().equals(apoderado.getId())) {
-            throw new AccessDeniedException("No tienes permiso para cancelar esta cita");
-        }
+        petOwnershipService.exigir(apoderado, cita.getMascota(), "No tienes permiso para cancelar esta cita", AUTORIZAR);
 
         String finalMotivo = (motivo == null || motivo.isBlank()) ? "Cancelada por el cliente desde el portal" : motivo;
         citaService.cancelarCita(id, finalMotivo);
@@ -604,14 +642,20 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<PagoPortalResponse> getPaymentHistory(org.springframework.data.domain.Pageable pageable) {
         Apoderado apoderado = getAuthenticatedApoderado();
-        org.springframework.data.domain.Page<Cita> citasPage = citaRepository.findByApoderadoIdPaginated(apoderado.getId(), pageable);
+        org.springframework.data.domain.Page<Cita> citasPage = citaRepository
+                .findByMascota_IdInAndEliminadaFalseOrderByFechaHoraInicioDesc(
+                        idsDeMascotas(apoderado, INFORMACION, PAGOS), pageable);
 
         return citasPage.map(cita -> {
             Purchase purchase = null;
             if (cita.getPagos() != null && !cita.getPagos().isEmpty()) {
                 purchase = cita.getPagos().get(0);
             }
-            return mapToPaymentResponse(cita, purchase);
+            PagoPortalResponse respuesta = mapToPaymentResponse(cita, purchase);
+            if (!petOwnershipService.puede(apoderado, cita.getMascota(), INFORMACION)) {
+                respuesta.setVeterinarioNombre(null);
+            }
+            return respuesta;
         });
     }
 

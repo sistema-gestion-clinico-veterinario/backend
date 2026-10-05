@@ -41,6 +41,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
     private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
     private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
     private final UsuarioContactoService contactoService;
+    private final veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
 
     @Value("${app.url}")
     private String appUrl;
@@ -69,6 +70,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         if (companyId == null) throw new IllegalArgumentException("Debe seleccionar una empresa");
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
+        consentimientoDatosService.exigirAltaValida(companyId, dto.getAvisoInformado(), false, null);
 
         if (empleadoRepository.existsByNumeroColegiaturaAndCompanyIdAndEstadoTrue(dto.getNumeroColegiatura(), companyId)) {
             throw new IllegalArgumentException("El número de colegiatura ya está registrado en esta empresa");
@@ -161,6 +163,7 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         empleadoRepository.save(empleado);
         companyMembershipService.syncLegacyCompanyField(savedUser);
         contactoService.crear(savedUser, company, dto.getTelefono(), dto.getDireccion());
+        consentimientoDatosService.registrarAlta(savedUser, companyId, null, SecurityUtils.getCurrentUserId());
 
         sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
 

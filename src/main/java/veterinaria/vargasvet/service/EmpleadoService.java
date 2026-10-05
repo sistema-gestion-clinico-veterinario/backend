@@ -11,8 +11,12 @@ import java.util.List;
 public interface EmpleadoService {
     UserProfileDTO registerEmpleado(EmpleadoRequest dto);
     UserProfileDTO updateEmpleado(Long empleadoId, EmpleadoRequest dto);
-    void cambiarEstado(Long empleadoId, Boolean nuevoEstado);
-    void eliminar(Long empleadoId);
+    java.util.List<String> cambiarEstado(Long empleadoId, Boolean nuevoEstado, veterinaria.vargasvet.domain.enums.TipoInactividad tipo, String motivo);
+
+    /** Genera un enlace de activación nuevo y lo envía al correo del empleado con cuenta pendiente. */
+    void reenviarInvitacion(Long empleadoId);
+    /** Borrado lógico: la clínica conserva los registros, así que eliminar equivale a dar de baja. */
+    java.util.List<String> eliminar(Long empleadoId);
     Page<EmpleadoListResponse> listar(Integer companyId, String nombre, String apellido, String email,
                                        String numeroDocumento, Integer roleId, Boolean activo,
                                        Long tipoEmpleadoId, Long especialidadId, int page, int size);

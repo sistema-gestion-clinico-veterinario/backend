@@ -78,7 +78,8 @@ class MascotaTenantIsolationUnitTest {
                 auditLogService,
                 razaRepository,
                 apoderadoService,
-                mascotaRelacionService
+                mascotaRelacionService,
+                org.mockito.Mockito.mock(veterinaria.vargasvet.service.PetOwnershipService.class)
         );
     }
 

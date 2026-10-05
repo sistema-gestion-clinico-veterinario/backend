@@ -30,14 +30,15 @@ class RealtimeTicketServiceTest {
     @Mock TokenProvider tokenProvider;
     @Mock RealtimeTicketRepository repository;
     @Mock UsuarioPorRolRepository usuarioPorRolRepository;
+    @Mock veterinaria.vargasvet.repository.RefreshTokenRepository refreshTokenRepository;
 
     @Test
     void registraElJtiAlEmitirTicket() {
-        RealtimeTicketService service = new RealtimeTicketService(tokenProvider, repository, usuarioPorRolRepository);
+        RealtimeTicketService service = new RealtimeTicketService(tokenProvider, repository, usuarioPorRolRepository, refreshTokenRepository);
         Authentication authentication = authentication();
         Instant now = Instant.parse("2026-08-27T20:00:00Z");
         when(tokenProvider.createRealtimeTicket(eq(7), eq("vet@example.com"), anyList(), eq(3),
-                eq(12), eq(RoleScope.STAFF), eq(RolePurpose.COMPANY_ADMIN), eq(4L)))
+                eq(12), eq(RoleScope.STAFF), eq(RolePurpose.COMPANY_ADMIN), eq(4L), any()))
                 .thenReturn(new TokenProvider.IssuedRealtimeTicket(
                         "signed-ticket", "ticket-jti", now, now.plusSeconds(60)));
 
@@ -51,7 +52,7 @@ class RealtimeTicketServiceTest {
 
     @Test
     void unTicketConsumidoNoPuedeReutilizarse() {
-        RealtimeTicketService service = new RealtimeTicketService(tokenProvider, repository, usuarioPorRolRepository);
+        RealtimeTicketService service = new RealtimeTicketService(tokenProvider, repository, usuarioPorRolRepository, refreshTokenRepository);
         Authentication authentication = authentication();
         TokenProvider.RealtimeTicketDetails details = new TokenProvider.RealtimeTicketDetails(
                 authentication, "ticket-jti", Instant.now().plusSeconds(60));

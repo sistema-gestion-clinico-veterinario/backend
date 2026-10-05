@@ -9,6 +9,9 @@ public interface MascotaRelacionService {
     List<MascotaRelacionResponse> listar(String mascotaUuid);
     MascotaRelacionResponse crear(String mascotaUuid, MascotaRelacionRequest request);
     MascotaRelacionResponse actualizar(String mascotaUuid, String relacionUuid, MascotaRelacionRequest request);
-    void revocar(String mascotaUuid, String relacionUuid);
+    String revocar(String mascotaUuid, String relacionUuid);
     void asegurarPropietarioPrincipal(Long mascotaId);
+
+    /** Cierra los vínculos cuya fecha de fin ya pasó y deja constancia en la auditoría; devuelve cuántos cerró. */
+    int cerrarVencidas();
 }

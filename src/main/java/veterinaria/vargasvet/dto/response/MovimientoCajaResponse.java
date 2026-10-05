@@ -20,5 +20,7 @@ public class MovimientoCajaResponse {
     private String descripcion;
     private LocalDateTime fecha;
     private String registradoPor;
+    private String registradoPorNombre;
+    private String puntoCobro;
     private Integer companyId;
 }

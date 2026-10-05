@@ -20,7 +20,20 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
     @Query("SELECT m FROM Mascota m WHERE m.apoderado.id = :apoderadoId")
     List<Mascota> findByApoderadoId(@Param("apoderadoId") Long apoderadoId);
 
+    /** Mascotas de las que esta persona es propietaria principal, siempre dentro de su empresa. */
+    @Query("SELECT m FROM Mascota m WHERE m.apoderado.id = :apoderadoId AND m.apoderado.company.id = :companyId")
+    List<Mascota> findByApoderadoIdAndCompanyId(@Param("apoderadoId") Long apoderadoId,
+                                                @Param("companyId") Integer companyId);
+
+    @Query("SELECT m FROM Mascota m JOIN FETCH m.apoderado a " +
+           "WHERE m.activo = true AND a.estado = false AND m.id > :afterId ORDER BY m.id")
+    List<Mascota> findActiveWithInactiveOwner(@Param("afterId") Long afterId,
+                                              org.springframework.data.domain.Pageable pageable);
+
     boolean existsByApoderadoIdAndActivoTrue(Long apoderadoId);
+
+    @Query("SELECT DISTINCT m.apoderado.id FROM Mascota m WHERE m.apoderado.id IN :apoderadoIds AND m.activo = true")
+    java.util.Set<Long> apoderadosConMascotaActiva(@Param("apoderadoIds") java.util.Collection<Long> apoderadoIds);
 
     @Query("SELECT m FROM Mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user " +
            "WHERE a.company.id = :companyId AND m.activo = true")
@@ -57,6 +70,17 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
 
     @Query("SELECT m FROM Mascota m WHERE m.apoderado.id = :apoderadoId AND m.activo = true ORDER BY m.nombreCompleto ASC")
     Page<Mascota> findActiveByApoderadoId(@Param("apoderadoId") Long apoderadoId, Pageable pageable);
+
+    @Query("SELECT m FROM Mascota m WHERE m.id IN :mascotaIds " +
+           "AND (CAST(:nombre AS text) IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
+           "AND (:especie IS NULL OR m.especie = :especie) " +
+           "AND (:activo IS NULL OR m.activo = :activo) " +
+           "ORDER BY m.nombreCompleto ASC")
+    Page<Mascota> buscarPortalMascotasPorIds(@Param("mascotaIds") java.util.Collection<Long> mascotaIds,
+                                             @Param("nombre") String nombre,
+                                             @Param("especie") veterinaria.vargasvet.domain.enums.EspecieMascota especie,
+                                             @Param("activo") Boolean activo,
+                                             Pageable pageable);
 
     @Query("SELECT m FROM Mascota m WHERE m.apoderado.id = :apoderadoId " +
            "AND (CAST(:nombre AS text) IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +

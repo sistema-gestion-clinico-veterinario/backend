@@ -16,6 +16,8 @@ import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.LegalDocumentRepository;
 import veterinaria.vargasvet.repository.UserConsentRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
+import veterinaria.vargasvet.service.AuditLogService;
+import veterinaria.vargasvet.util.LegalText;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,6 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -47,11 +51,14 @@ class LegalDocumentServiceUnitTest {
     @Mock
     private UsuarioRepository usuarioRepository;
 
+    @Mock
+    private AuditLogService auditLogService;
+
     private LegalDocumentServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new LegalDocumentServiceImpl(legalDocumentRepository, userConsentRepository, usuarioRepository);
+        service = new LegalDocumentServiceImpl(legalDocumentRepository, userConsentRepository, usuarioRepository, auditLogService);
         ReflectionTestUtils.setField(service, "gracePeriodDays", GRACE_PERIOD_DAYS);
     }
 
@@ -61,6 +68,7 @@ class LegalDocumentServiceUnitTest {
         doc.setTipo(LegalDocumentType.TERMINOS_Y_CONDICIONES);
         doc.setVersion("1.0");
         doc.setContenido("contenido");
+        doc.setContenidoHash(LegalText.sha256Hex("contenido"));
         doc.setVigenteDesde(vigenteDesde);
         doc.setActivo(true);
         return doc;
@@ -136,12 +144,72 @@ class LegalDocumentServiceUnitTest {
         service.accept(USUARIO_ID, List.of(1L), "127.0.0.1", "JUnit-Agent");
 
         ArgumentCaptor<UserConsent> captor = ArgumentCaptor.forClass(UserConsent.class);
-        verify(userConsentRepository, times(1)).save(captor.capture());
+        verify(userConsentRepository, times(1)).saveAndFlush(captor.capture());
         UserConsent saved = captor.getValue();
         assertEquals(usuario, saved.getUsuario());
         assertEquals(documento, saved.getLegalDocument());
         assertEquals("127.0.0.1", saved.getIpAddress());
         assertEquals("JUnit-Agent", saved.getUserAgent());
+        assertEquals(LegalDocumentType.TERMINOS_Y_CONDICIONES, saved.getDocumentoTipo());
+        assertEquals("1.0", saved.getDocumentoVersion());
+        assertEquals(documento.getContenidoHash(), saved.getContenidoHash());
+        assertTrue(saved.isTextoRecuperable());
+    }
+
+    @Test
+    void accept_unaVersionRetirada_seRechazaYNoRegistraNada() {
+        Usuario usuario = new Usuario();
+        usuario.setId(USUARIO_ID);
+        LegalDocument retirada = buildDocument(1L, LocalDateTime.now());
+        retirada.setActivo(false);
+        when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+        when(legalDocumentRepository.findById(1L)).thenReturn(Optional.of(retirada));
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> service.accept(USUARIO_ID, List.of(1L), "127.0.0.1", "JUnit-Agent"));
+
+        assertTrue(error.getMessage().contains("ya no está vigente"));
+        verify(userConsentRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void accept_recortaElNavegadorYLaIpALoQueCabeEnLaBaseDeDatos() {
+        Usuario usuario = new Usuario();
+        usuario.setId(USUARIO_ID);
+        when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+        when(legalDocumentRepository.findById(1L)).thenReturn(Optional.of(buildDocument(1L, LocalDateTime.now())));
+
+        service.accept(USUARIO_ID, List.of(1L), "i".repeat(100), "u".repeat(400));
+
+        ArgumentCaptor<UserConsent> captor = ArgumentCaptor.forClass(UserConsent.class);
+        verify(userConsentRepository).saveAndFlush(captor.capture());
+        assertEquals(255, captor.getValue().getUserAgent().length());
+        assertEquals(64, captor.getValue().getIpAddress().length());
+    }
+
+    @Test
+    void accept_siLaConstanciaSeDuplicaPorUnaCargaSimultanea_avisaEnVezDeFallarConUnErrorDeBaseDeDatos() {
+        Usuario usuario = new Usuario();
+        usuario.setId(USUARIO_ID);
+        when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+        when(legalDocumentRepository.findById(1L)).thenReturn(Optional.of(buildDocument(1L, LocalDateTime.now())));
+        when(userConsentRepository.saveAndFlush(any()))
+                .thenThrow(new org.springframework.dao.DataIntegrityViolationException("duplicada"));
+
+        assertThrows(IllegalStateException.class,
+                () -> service.accept(USUARIO_ID, List.of(1L), "127.0.0.1", "JUnit-Agent"));
+    }
+
+    @Test
+    void accept_unMismoDocumentoRepetidoEnLaSolicitudSeRegistraUnaVez() {
+        Usuario usuario = new Usuario();
+        usuario.setId(USUARIO_ID);
+        when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+        when(legalDocumentRepository.findById(1L)).thenReturn(Optional.of(buildDocument(1L, LocalDateTime.now())));
+
+        service.accept(USUARIO_ID, List.of(1L, 1L), "127.0.0.1", "JUnit-Agent");
+
+        verify(userConsentRepository, times(1)).saveAndFlush(any());
     }
 
     @Test
@@ -154,7 +222,7 @@ class LegalDocumentServiceUnitTest {
 
         service.accept(USUARIO_ID, List.of(1L), "127.0.0.1", "JUnit-Agent");
 
-        verify(userConsentRepository, never()).save(any());
+        verify(userConsentRepository, never()).saveAndFlush(any());
     }
 
     @Test
@@ -163,5 +231,132 @@ class LegalDocumentServiceUnitTest {
 
         assertThrows(ResourceNotFoundException.class,
                 () -> service.accept(USUARIO_ID, List.of(1L), "127.0.0.1", "JUnit-Agent"));
+    }
+
+    private static final String TEXTO_FINAL = "TÉRMINOS Y CONDICIONES\nTexto definitivo y completo de la versión siguiente.";
+
+    @Test
+    void publish_retiraLaVigenteYPublicaLaNuevaConSuHuella() {
+        LegalDocument vigente = buildDocument(1L, LocalDateTime.now().minusDays(30));
+        vigente.setVersion("1.0");
+        when(legalDocumentRepository.existsByTipoAndVersion(LegalDocumentType.TERMINOS_Y_CONDICIONES, "2.0")).thenReturn(false);
+        when(legalDocumentRepository.findActiveByTipoForUpdate(LegalDocumentType.TERMINOS_Y_CONDICIONES))
+                .thenReturn(Optional.of(vigente));
+        when(legalDocumentRepository.save(any(LegalDocument.class))).thenAnswer(inv -> {
+            LegalDocument d = inv.getArgument(0);
+            d.setId(2L);
+            return d;
+        });
+
+        var publicado = service.publish(LegalDocumentType.TERMINOS_Y_CONDICIONES, " 2.0 ", TEXTO_FINAL + "\r\n");
+
+        assertFalse(vigente.isActivo());
+        ArgumentCaptor<LegalDocument> captor = ArgumentCaptor.forClass(LegalDocument.class);
+        verify(legalDocumentRepository).save(captor.capture());
+        LegalDocument nuevo = captor.getValue();
+        assertTrue(nuevo.isActivo());
+        assertEquals("2.0", nuevo.getVersion());
+        assertEquals(TEXTO_FINAL, nuevo.getContenido());
+        assertEquals(LegalText.sha256Hex(TEXTO_FINAL), nuevo.getContenidoHash());
+        assertEquals("2.0", publicado.getVersion());
+        verify(auditLogService).log(eq("PUBLICAR_DOCUMENTO_LEGAL"), eq("Seguridad"), contains("reemplaza la 1.0"));
+    }
+
+    @Test
+    void publish_siOtraPublicacionGanoPorUnaCargaSimultanea_avisaEnVezDeFallarConUnErrorDeBaseDeDatos() {
+        when(legalDocumentRepository.findActiveByTipoForUpdate(LegalDocumentType.TERMINOS_Y_CONDICIONES))
+                .thenReturn(Optional.empty());
+        when(legalDocumentRepository.save(any(LegalDocument.class)))
+                .thenThrow(new org.springframework.dao.DataIntegrityViolationException("ux_legal_document_tipo_activo"));
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> service.publish(LegalDocumentType.TERMINOS_Y_CONDICIONES, "3.0", TEXTO_FINAL));
+
+        assertTrue(error.getMessage().contains("Otra publicación"));
+        verify(auditLogService, never()).log(eq("PUBLICAR_DOCUMENTO_LEGAL"), any(), any());
+    }
+
+    @Test
+    void publish_sinVersionVigentePublicaLaPrimera() {
+        when(legalDocumentRepository.findActiveByTipoForUpdate(LegalDocumentType.POLITICA_PRIVACIDAD))
+                .thenReturn(Optional.empty());
+        when(legalDocumentRepository.save(any(LegalDocument.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        service.publish(LegalDocumentType.POLITICA_PRIVACIDAD, "1.0", TEXTO_FINAL);
+
+        verify(legalDocumentRepository).save(any(LegalDocument.class));
+    }
+
+    @Test
+    void publish_rechazaUnTextoConBorradorOCamposSinCompletar() {
+        for (String texto : List.of(
+                "VERSIÓN 2.0 — BORRADOR PROVISIONAL del documento",
+                "El titular es [Razón Social], con domicilio en [POR COMPLETAR]",
+                "Plazo de [PENDIENTE DE DEFINIR] días")) {
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                    () -> service.publish(LegalDocumentType.TERMINOS_Y_CONDICIONES, "2.0", texto));
+            assertTrue(error.getMessage().contains("borrador o tiene campos sin completar"), texto);
+        }
+        verify(legalDocumentRepository, never()).save(any());
+    }
+
+    @Test
+    void publish_rechazaUnaVersionQueYaExiste() {
+        when(legalDocumentRepository.existsByTipoAndVersion(LegalDocumentType.TERMINOS_Y_CONDICIONES, "1.0")).thenReturn(true);
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> service.publish(LegalDocumentType.TERMINOS_Y_CONDICIONES, "1.0", TEXTO_FINAL));
+
+        assertTrue(error.getMessage().contains("publica una versión nueva"));
+        verify(legalDocumentRepository, never()).save(any());
+    }
+
+    @Test
+    void publish_rechazaUnTextoIdenticoAlVigente() {
+        LegalDocument vigente = buildDocument(1L, LocalDateTime.now());
+        vigente.setContenidoHash(LegalText.sha256Hex(TEXTO_FINAL));
+        when(legalDocumentRepository.findActiveByTipoForUpdate(LegalDocumentType.TERMINOS_Y_CONDICIONES))
+                .thenReturn(Optional.of(vigente));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.publish(LegalDocumentType.TERMINOS_Y_CONDICIONES, "2.0", TEXTO_FINAL));
+
+        assertTrue(vigente.isActivo());
+        verify(legalDocumentRepository, never()).save(any());
+    }
+
+    @Test
+    void publish_rechazaUnaVersionMalFormadaOUnTextoVacio() {
+        for (String version : new String[] {"", "  ", "2 0", "-1", "x".repeat(21), null}) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.publish(LegalDocumentType.TERMINOS_Y_CONDICIONES, version, TEXTO_FINAL));
+        }
+        assertThrows(IllegalArgumentException.class,
+                () -> service.publish(LegalDocumentType.TERMINOS_Y_CONDICIONES, "2.0", "  \n "));
+    }
+
+    @Test
+    void getMyAcceptances_devuelveLoQueSeAceptoConSuHuellaYMarcaLasNoRecuperables() {
+        UserConsent reciente = new UserConsent();
+        reciente.setDocumentoTipo(LegalDocumentType.POLITICA_PRIVACIDAD);
+        reciente.setDocumentoVersion("2.0");
+        reciente.setContenidoHash("abc");
+        reciente.setTextoRecuperable(true);
+        reciente.setFechaAceptacion(LocalDateTime.now());
+        UserConsent antigua = new UserConsent();
+        antigua.setDocumentoTipo(LegalDocumentType.TERMINOS_Y_CONDICIONES);
+        antigua.setDocumentoVersion("1.0");
+        antigua.setTextoRecuperable(false);
+        antigua.setFechaAceptacion(LocalDateTime.now().minusDays(40));
+        when(userConsentRepository.findByUsuarioIdOrderByFechaAceptacionDesc(USUARIO_ID))
+                .thenReturn(List.of(reciente, antigua));
+
+        var historial = service.getMyAcceptances(USUARIO_ID);
+
+        assertEquals(2, historial.size());
+        assertEquals("2.0", historial.get(0).version());
+        assertEquals("abc", historial.get(0).contenidoHash());
+        assertFalse(historial.get(1).textoRecuperable());
+        assertEquals(null, historial.get(1).contenidoHash());
     }
 }

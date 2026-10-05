@@ -27,7 +27,7 @@ public interface ControlPreventivoRepository extends JpaRepository<ControlPreven
     @Query("SELECT cp FROM ControlPreventivo cp " +
            "JOIN FETCH cp.mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user u " +
            "WHERE cp.fechaRecomendada <= :hasta AND cp.estado IN :estados " +
-           "AND m.activo = true AND u.activo = true AND u.emailVerified = true")
+           "AND m.activo = true")
     List<ControlPreventivo> findReminderCandidates(@Param("hasta") LocalDate hasta,
                                                    @Param("estados") Collection<EstadoControlPreventivo> estados);
 

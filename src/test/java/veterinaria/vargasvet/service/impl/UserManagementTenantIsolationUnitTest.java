@@ -52,6 +52,7 @@ class UserManagementTenantIsolationUnitTest {
     @Mock RefreshTokenRepository refreshTokenRepository;
     @Mock CompanyRoleProvisioningService companyRoleProvisioningService;
     @Mock SessionSecurityService sessionSecurityService;
+    @Mock veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
 
     @InjectMocks EmpleadoServiceImpl empleadoService;
     @InjectMocks ApoderadoServiceImpl apoderadoService;
@@ -89,6 +90,41 @@ class UserManagementTenantIsolationUnitTest {
         assertThrows(ResourceNotFoundException.class, () -> empleadoService.findById(81L));
 
         verify(empleadoRepository, never()).findByIdAndCompanyId(81L, null);
+    }
+
+    @Test
+    void registrarClienteSinAvisoDeLaClinicaNoCreaNada() {
+        authenticateTenant(7);
+        veterinaria.vargasvet.domain.entity.Company clinica = new veterinaria.vargasvet.domain.entity.Company();
+        clinica.setId(7);
+        when(companyRepository.findById(7)).thenReturn(Optional.of(clinica));
+        org.mockito.Mockito.doThrow(new IllegalStateException("sin aviso"))
+                .when(consentimientoDatosService).exigirAltaValida(7, null, true, null);
+        veterinaria.vargasvet.dto.request.ApoderadoRequest request = new veterinaria.vargasvet.dto.request.ApoderadoRequest();
+        request.setEmail("cliente@example.test");
+
+        assertThrows(IllegalStateException.class, () -> apoderadoService.registerApoderado(request));
+
+        verify(usuarioRepository, never()).save(org.mockito.ArgumentMatchers.any());
+        verify(consentimientoDatosService, never()).registrarAlta(org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void registrarEmpleadoSinConstanciaDeInformadoNoCreaNada() {
+        authenticateTenant(7);
+        veterinaria.vargasvet.domain.entity.Company clinica = new veterinaria.vargasvet.domain.entity.Company();
+        clinica.setId(7);
+        when(companyRepository.findById(7)).thenReturn(Optional.of(clinica));
+        org.mockito.Mockito.doThrow(new IllegalArgumentException("sin constancia"))
+                .when(consentimientoDatosService).exigirAltaValida(7, false, false, null);
+        veterinaria.vargasvet.dto.request.EmpleadoRequest request = new veterinaria.vargasvet.dto.request.EmpleadoRequest();
+        request.setEmail("empleado@example.test");
+        request.setAvisoInformado(false);
+
+        assertThrows(IllegalArgumentException.class, () -> empleadoService.registerEmpleado(request));
+
+        verify(usuarioRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     private void authenticateTenant(Integer companyId) {

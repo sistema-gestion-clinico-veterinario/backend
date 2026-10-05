@@ -15,4 +15,9 @@ public interface UsuarioMembresiaRepository extends JpaRepository<UsuarioMembres
     List<UsuarioMembresia> findAllActiveByUsuarioId(@Param("usuarioId") Integer usuarioId);
 
     boolean existsByUsuarioIdAndCompanyIdAndEstadoTrue(Integer usuarioId, Integer companyId);
+    boolean existsByUsuarioIdAndCompanyId(Integer usuarioId, Integer companyId);
+
+    boolean existsByUsuarioId(Integer usuarioId);
+
+    boolean existsByUsuarioIdAndEstadoTrue(Integer usuarioId);
 }

@@ -1,12 +1,10 @@
 package veterinaria.vargasvet.service;
 
 import veterinaria.vargasvet.dto.request.LoginDTO;
-import veterinaria.vargasvet.dto.request.UserRegistrationDTO;
 import veterinaria.vargasvet.dto.response.AuthResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 
 public interface UsuarioService {
-    UserProfileDTO register(UserRegistrationDTO registrationDTO);
     AuthResponse login(LoginDTO loginDTO);
 
     /** Ruta reservada para SuperAdmin (PLATFORM_ADMIN) - no pasa por slug de
@@ -18,23 +16,20 @@ public interface UsuarioService {
      * credencial creada en esa empresa - no crea cuentas nuevas. */
     AuthResponse loginWithGoogle(String email, String slug);
     UserProfileDTO getProfile(Integer id);
-    void suspendAccount(Integer id);
 
-    /** Un admin de la empresa fuerza el cambio de correo de otra cuenta, sin pasar por
-     * la doble confirmación (correo actual + nuevo) del autoservicio - pensado para
-     * cuando la persona perdió el acceso a su correo anterior (que es justo el motivo
-     * más común para querer cambiarlo) y por eso nunca podría confirmarlo. Requiere que
-     * quien ejecuta la acción ya esté autenticado como admin de esa empresa. */
-    void adminChangeEmail(Integer targetUserId, String newEmail);
-    void verifyEmail(String token);
-    void setupAccount(String token, String password);
+    void setupAccount(String token, String password, Boolean avisoLeido, String ipAddress, String userAgent);
 
     /** Activa la cuenta invitada sin contraseña: el correo que Google verificó debe
      * coincidir con el correo del usuario dueño del token (si no, GoogleEmailMismatchException) -
      * no crea contraseña, la persona puede crear una despues desde su perfil o con
      * "olvide mi contraseña" si algun dia necesita login con usuario/contraseña. */
     AuthResponse activateAccountWithGoogle(String token, String googleEmail);
-    void resendVerificationToken(String email);
+    void resendVerificationToken(String email, String slug);
+
+    /** Reenvía el enlace de activación usando el enlace anterior (aunque haya vencido) como
+     * prueba de que la persona recibió la invitación; devuelve el correo enmascarado al que
+     * se envió. 404 si el enlace no existe o ya no corresponde a una cuenta pendiente. */
+    String resendVerificationByToken(String token, String slug);
     void changePassword(Integer usuarioId, veterinaria.vargasvet.dto.request.ChangePasswordDTO dto);
     void requestPasswordReset(veterinaria.vargasvet.dto.request.AdminPasswordResetRequest dto);
     void forgotPassword(veterinaria.vargasvet.dto.request.ForgotPasswordRequest request);
@@ -42,5 +37,6 @@ public interface UsuarioService {
     boolean validateResetToken(String token);
     AuthResponse refreshToken(String refreshToken);
     AuthResponse switchRole(Integer usuarioId, Integer roleId);
+    AuthResponse currentSession(Integer usuarioId);
     void revokeRefreshToken(String refreshToken);
 }

@@ -29,6 +29,9 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
     private final ControlPreventivoRepository controlRepository;
     private final RecordatorioPreventivoRepository recordatorioRepository;
     private final EmailService emailService;
+    private final veterinaria.vargasvet.service.OwnerContactPolicy ownerContactPolicy;
+    private final veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
+    private final veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
 
     @Override
     @Transactional
@@ -43,20 +46,45 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
         Set<ReminderKey> existentes = candidatos.isEmpty() ? Set.of() : recordatorioRepository
                 .findExistingKeys(candidatos.stream().map(ControlPreventivo::getId).toList())
                 .stream()
-                .map(item -> new ReminderKey(item.getControlId(), item.getTipoAviso(), item.getFechaProgramada()))
+                .map(item -> new ReminderKey(item.getControlId(), item.getTipoAviso(), item.getFechaProgramada(),
+                        item.getApoderadoId()))
                 .collect(java.util.stream.Collectors.toSet());
 
+        Map<Long, List<veterinaria.vargasvet.domain.entity.Apoderado>> destinatariosPorMascota =
+                petOwnershipService.destinatariosDeAvisos(candidatos.stream()
+                        .map(ControlPreventivo::getMascota).distinct().toList());
+        Set<ConsentKey> aceptaronRecordatorios = new HashSet<>();
+        destinatariosPorMascota.values().stream().flatMap(List::stream)
+                .filter(apoderado -> apoderado.getCompany() != null && apoderado.getUser() != null)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        apoderado -> apoderado.getCompany().getId(),
+                        java.util.stream.Collectors.mapping(
+                                apoderado -> apoderado.getUser().getId(),
+                                java.util.stream.Collectors.toSet())))
+                .forEach((companyId, usuarioIds) -> consentimientoDatosService
+                        .usuariosQueOtorgaron(usuarioIds, companyId,
+                                veterinaria.vargasvet.domain.enums.FinalidadDatos.RECORDATORIOS_PREVENTIVOS)
+                        .forEach(usuarioId -> aceptaronRecordatorios.add(new ConsentKey(usuarioId, companyId))));
+
         Map<Long, List<AvisoPendiente>> porApoderado = new LinkedHashMap<>();
+        Map<Long, veterinaria.vargasvet.domain.entity.Apoderado> personas = new HashMap<>();
         for (ControlPreventivo control : candidatos) {
             TipoAvisoRecordatorio tipoAviso = determinarAviso(control, hoy);
             actualizarEstado(control, hoy);
-            if (tipoAviso == null || existentes.contains(
-                    new ReminderKey(control.getId(), tipoAviso, control.getFechaRecomendada()))) {
-                continue;
+            if (tipoAviso == null) continue;
+            for (var destinatario : destinatariosPorMascota.getOrDefault(control.getMascota().getId(), List.of())) {
+                if (destinatario.getUser() == null || !destinatario.getUser().isActivo()
+                        || destinatario.getCompany() == null
+                        || !aceptaronRecordatorios.contains(new ConsentKey(
+                                destinatario.getUser().getId(), destinatario.getCompany().getId()))
+                        || existentes.contains(new ReminderKey(control.getId(), tipoAviso,
+                                control.getFechaRecomendada(), destinatario.getId()))) {
+                    continue;
+                }
+                personas.put(destinatario.getId(), destinatario);
+                porApoderado.computeIfAbsent(destinatario.getId(), ignored -> new ArrayList<>())
+                        .add(new AvisoPendiente(control, tipoAviso));
             }
-            Long apoderadoId = control.getMascota().getApoderado().getId();
-            porApoderado.computeIfAbsent(apoderadoId, ignored -> new ArrayList<>())
-                    .add(new AvisoPendiente(control, tipoAviso));
         }
 
         if (porApoderado.isEmpty()) return;
@@ -65,16 +93,21 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
 
         porApoderado.forEach((apoderadoId, avisos) -> {
             if (!avisadosRecientemente.contains(apoderadoId)) {
-                enviarConsolidado(avisos, hoy);
+                enviarConsolidado(personas.get(apoderadoId), avisos, hoy);
             }
         });
     }
 
-    private void enviarConsolidado(List<AvisoPendiente> avisos, LocalDate hoy) {
+    private void enviarConsolidado(veterinaria.vargasvet.domain.entity.Apoderado destinatario,
+                                   List<AvisoPendiente> avisos, LocalDate hoy) {
         if (avisos.isEmpty()) return;
         avisos.sort(Comparator.comparing((AvisoPendiente a) -> prioridad(a.tipoAviso()))
                 .thenComparing(a -> a.control().getFechaRecomendada()));
-        var usuario = avisos.get(0).control().getMascota().getApoderado().getUser();
+        var usuario = destinatario.getUser();
+        if (!ownerContactPolicy.puedeRecibirCorreo(usuario)) {
+            log.debug("Recordatorio preventivo omitido: el correo del propietario {} no está verificado.", usuario.getId());
+            return;
+        }
         var company = usuario.getCompany();
 
         List<Map<String, Object>> controles = avisos.stream().map(aviso -> {
@@ -139,7 +172,7 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
         LocalDateTime enviadoAt = AppClock.now();
         for (AvisoPendiente aviso : avisos) {
             RecordatorioPreventivo registro = new RecordatorioPreventivo();
-            registro.setApoderado(aviso.control().getMascota().getApoderado());
+            registro.setApoderado(destinatario);
             registro.setControlPreventivo(aviso.control());
             registro.setTipoAviso(aviso.tipoAviso());
             registro.setFechaProgramada(aviso.control().getFechaRecomendada());
@@ -183,5 +216,6 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
     }
 
     private record AvisoPendiente(ControlPreventivo control, TipoAvisoRecordatorio tipoAviso) {}
-    private record ReminderKey(Long controlId, TipoAvisoRecordatorio tipoAviso, LocalDate fechaProgramada) {}
+    private record ReminderKey(Long controlId, TipoAvisoRecordatorio tipoAviso, LocalDate fechaProgramada, Long apoderadoId) {}
+    private record ConsentKey(Integer usuarioId, Integer companyId) {}
 }

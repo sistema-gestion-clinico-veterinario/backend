@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Reactivaste tu cuenta</title></head>
+<body style="margin:0;background:#f4f7fb;font-family:Arial,sans-serif;color:#1e293b">
+<div style="max-width:600px;margin:32px auto;background:#fff;border:1px solid #dbe4ef;border-radius:12px;padding:32px">
+    <h1 style="font-size:22px;margin:0 0 16px;color:#075985">Tu cuenta está activa de nuevo</h1>
+    <p>Hola <strong th:text="${nombre}">usuario</strong>,</p>
+    <p>Reactivaste tu cuenta en <strong th:text="${companyName}">la veterinaria</strong>. Ya puedes iniciar sesión con tus datos de siempre.</p>
+    <p style="margin:24px 0"><a th:href="${loginUrl}" style="background:#0369a1;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:700">Iniciar sesión</a></p>
+    <p style="font-size:13px;color:#b91c1c">Si no fuiste tú quien la reactivó, cambia tu contraseña y avisa al administrador de la clínica.</p>
+    <p style="font-size:12px;color:#94a3b8" th:text="${companyName}">Sistema</p>
+</div>
+</body>
+</html>

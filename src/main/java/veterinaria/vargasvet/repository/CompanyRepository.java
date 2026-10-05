@@ -13,6 +13,12 @@ public interface CompanyRepository extends JpaRepository<Company, Integer> {
     /** Resuelve la empresa a partir del slug de la URL (systemvet.com/<slug>/login). */
     Optional<Company> findBySlug(String slug);
 
+    /** Bloquea la fila de la empresa hasta que termine la transacción: las operaciones que pueden dejarla sin
+     * administradores se atienden de una en una. */
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("SELECT c FROM Company c WHERE c.id = :id")
+    Optional<Company> lockById(@org.springframework.data.repository.query.Param("id") Integer id);
+
     boolean existsBySlug(String slug);
 
     boolean existsBySlugAndIdNot(String slug, Integer id);
