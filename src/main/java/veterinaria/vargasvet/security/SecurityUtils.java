@@ -39,6 +39,14 @@ public class SecurityUtils {
         return null;
     }
 
+    public static String getCurrentSessionId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UsuarioPrincipal principal) {
+            return principal.getSessionId();
+        }
+        return null;
+    }
+
     public static Integer getCurrentRoleId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof UsuarioPrincipal principal) {

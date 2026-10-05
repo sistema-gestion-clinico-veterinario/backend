@@ -47,4 +47,6 @@ public interface ApoderadoRepository extends JpaRepository<Apoderado, Long> {
     boolean existsByUserIdAndEstadoTrue(Integer userId);
     boolean existsByUserIdAndCompanyId(Integer userId, Integer companyId);
     boolean existsByUserIdAndCompanyIdAndEstadoTrue(Integer userId, Integer companyId);
+    boolean existsByUserIdAndCompanyIdAndEstadoFalseAndTipoInactividad(
+            Integer userId, Integer companyId, veterinaria.vargasvet.domain.enums.TipoInactividad tipoInactividad);
 }

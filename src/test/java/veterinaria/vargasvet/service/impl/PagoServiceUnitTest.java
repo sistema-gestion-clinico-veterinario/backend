@@ -64,6 +64,42 @@ class PagoServiceUnitTest {
     @Mock
     private CajaService cajaService;
 
+    @Mock
+    private veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
+
+    @Test
+    void registrar_rechazaCitaNoCompletadaDeMascotaSinPropietarioActivo() {
+        PagoServiceImpl service = service();
+        Cita cita = cita(10L, EstadoCita.PROGRAMADA, BigDecimal.ZERO);
+        when(citaRepository.findByIdAndCompanyIdForUpdate(10L, 3)).thenReturn(Optional.of(cita));
+        org.mockito.Mockito.doThrow(new IllegalArgumentException("La mascota Firulais no tiene un propietario activo que autorice su atención"))
+                .when(petOwnershipService).assertOperable(cita.getMascota());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> service.registrar(efectivoRequest(10L, new BigDecimal("100.00"))));
+
+        assertEquals("La mascota Firulais no tiene un propietario activo que autorice su atención", ex.getMessage());
+        verify(purchaseRepository, never()).save(any(Purchase.class));
+    }
+
+    @Test
+    void registrar_permitePagarElSaldoDeUnaCitaCompletadaAunqueLaMascotaNoSeaOperable() {
+        PagoServiceImpl service = service();
+        Cita cita = cita(10L, EstadoCita.COMPLETADA, new BigDecimal("40.00"));
+        when(citaRepository.findByIdAndCompanyIdForUpdate(10L, 3)).thenReturn(Optional.of(cita));
+        when(purchaseRepository.save(any(Purchase.class))).thenAnswer(invocation -> {
+            Purchase pago = invocation.getArgument(0);
+            pago.setId(90L);
+            return pago;
+        });
+
+        PagoResponse response = service.registrar(efectivoRequest(10L, new BigDecimal("60.00")));
+
+        assertEquals(new BigDecimal("60.00"), response.getMonto());
+        assertEquals(new BigDecimal("100.00"), cita.getMontoPagado());
+        verify(petOwnershipService, never()).assertOperable(any());
+    }
+
     @Test
     void registrar_rechazaCitaCancelada() {
         PagoServiceImpl service = service();
@@ -182,7 +218,8 @@ class PagoServiceUnitTest {
                 purchaseRepository,
                 usuarioRepository,
                 auditLogService,
-                cajaService
+                cajaService,
+                petOwnershipService
         );
     }
 

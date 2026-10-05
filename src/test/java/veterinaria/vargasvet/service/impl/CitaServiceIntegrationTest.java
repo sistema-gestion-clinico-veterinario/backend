@@ -81,17 +81,28 @@ class CitaServiceIntegrationTest {
     @Autowired private HorarioEmpleadoRepository horarioEmpleadoRepository;
     @Autowired private CompanyRepository companyRepository;
     @Autowired private ApoderadoRepository apoderadoRepository;
+    @Autowired private veterinaria.vargasvet.repository.MascotaPersonaRelacionRepository relacionRepository;
     @Autowired private PlatformTransactionManager transactionManager;
+    @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager entityManager;
 
     private CitaServiceImpl citaService;
+    private CitaMapper citaMapper;
+    private veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
+    private EmailService emailService;
+    private veterinaria.vargasvet.service.impl.UsuarioContactoService contactoAvisos;
 
     @BeforeEach
     void setUp() {
-        CitaMapper citaMapper = mock(CitaMapper.class);
+        emailService = mock(EmailService.class);
+        contactoAvisos = mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class);
+        citaMapper = mock(CitaMapper.class);
         when(citaMapper.toResponse(any(Cita.class))).thenReturn(new CitaResponse());
         AccesoValidator accesoValidator = mock(AccesoValidator.class);
         when(accesoValidator.canAccessCompanyData("VISTA_CITAS_AGENDA")).thenReturn(true);
 
+        petOwnershipService = new veterinaria.vargasvet.service.PetOwnershipService(
+                mascotaRepository, relacionRepository, citaRepository, mock(AuditLogService.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(petOwnershipService, "entityManager", entityManager);
         citaService = new CitaServiceImpl(
                 citaRepository,
                 mascotaRepository,
@@ -108,9 +119,11 @@ class CitaServiceIntegrationTest {
                 mock(BusinessValidator.class),
                 accesoValidator,
                 mock(AuditLogService.class),
-                mock(EmailService.class),
+                emailService,
                 mock(SimpMessagingTemplate.class),
-                mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class)
+                mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class),
+                petOwnershipService,
+                new veterinaria.vargasvet.service.OwnerContactPolicy(contactoAvisos)
         );
         autenticarSuperAdmin();
     }
@@ -227,6 +240,163 @@ class CitaServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("[CP-RF27-02] Cancelar la cita de un cliente con correo sin verificar no envía correo y pide avisar por teléfono")
+    void cancelarCitaDeClientePendienteNoEnviaCorreoYPideAvisarPorTelefono() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        marcarCorreoSinVerificar(cita);
+        when(contactoAvisos.telefono(any(), any())).thenReturn("987654321");
+
+        CitaResponse respuesta = citaService.cancelarCita(cita.getId(), "Solicitud del cliente");
+
+        assertThat(respuesta.getRequiereAvisoManual()).isTrue();
+        assertThat(respuesta.getTelefonoAviso()).isEqualTo("987654321");
+        org.mockito.Mockito.verifyNoInteractions(emailService);
+    }
+
+    @Test
+    @DisplayName("[CP-RF27-02] Cancelar la cita de un cliente con correo verificado le envía el aviso por correo")
+    void cancelarCitaDeClienteConCorreoVerificadoEnviaElCorreo() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        String correo = cita.getMascota().getApoderado().getUser().getEmail();
+
+        CitaResponse respuesta = citaService.cancelarCita(cita.getId(), "Solicitud del cliente");
+
+        assertThat(respuesta.getRequiereAvisoManual()).isNull();
+        org.mockito.Mockito.verify(emailService).createMail(
+                org.mockito.ArgumentMatchers.eq(correo),
+                org.mockito.ArgumentMatchers.contains("Cita Cancelada"),
+                org.mockito.ArgumentMatchers.anyMap());
+    }
+
+    @Test
+    @DisplayName("[CP-RF26-02] Reprogramar la cita de un cliente con correo sin verificar no envía correo y pide avisar por teléfono")
+    void reprogramarCitaDeClientePendienteNoEnviaCorreoYPideAvisarPorTelefono() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        cita.setEsEmergencia(true);
+        citaRepository.saveAndFlush(cita);
+        marcarCorreoSinVerificar(cita);
+        when(contactoAvisos.telefono(any(), any())).thenReturn("912345678");
+
+        CitaResponse respuesta = citaService.reprogramarCita(cita.getId(),
+                reprogramacion(cita, LocalDateTime.now().plusDays(4).withSecond(0).withNano(0)));
+
+        assertThat(respuesta.getRequiereAvisoManual()).isTrue();
+        assertThat(respuesta.getTelefonoAviso()).isEqualTo("912345678");
+        org.mockito.Mockito.verifyNoInteractions(emailService);
+    }
+
+    @Test
+    @DisplayName("[CP-RF26-03] Reasignar el veterinario de la cita de un cliente con correo sin verificar pide avisar por teléfono")
+    void reasignarVeterinarioDeClientePendienteNoEnviaCorreoYPideAvisarPorTelefono() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        cita.setEsEmergencia(true);
+        citaRepository.saveAndFlush(cita);
+        marcarCorreoSinVerificar(cita);
+        Company company = cita.getEmpleado().getUser().getCompany();
+        Empleado otroVeterinario = new Empleado();
+        otroVeterinario.setUser(usuario("vet2", company));
+        otroVeterinario.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
+        otroVeterinario.setNumeroDocumentoIdentidad(uniqueDigits(8));
+        otroVeterinario.setGenero(Genero.FEMENINO);
+        otroVeterinario.setEstado(true);
+        otroVeterinario = empleadoRepository.saveAndFlush(otroVeterinario);
+        veterinaria.vargasvet.dto.request.CitaReasignacionVeterinarioRequest request =
+                new veterinaria.vargasvet.dto.request.CitaReasignacionVeterinarioRequest();
+        request.setVeterinarioId(otroVeterinario.getId());
+
+        CitaResponse respuesta = citaService.reasignarVeterinario(cita.getId(), request);
+
+        assertThat(respuesta.getRequiereAvisoManual()).isTrue();
+        org.mockito.Mockito.verifyNoInteractions(emailService);
+    }
+
+    private Usuario vincularCopropietario(Cita cita) {
+        Company company = cita.getMascota().getApoderado().getCompany();
+        Usuario usuarioCopropietario = usuario("copropietario", company);
+        Apoderado copropietario = new Apoderado();
+        copropietario.setUser(usuarioCopropietario);
+        copropietario.setCompany(company);
+        copropietario.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
+        copropietario.setNumeroDocumento(uniqueDigits(8));
+        copropietario.setGenero(Genero.MASCULINO);
+        copropietario = apoderadoRepository.saveAndFlush(copropietario);
+        veterinaria.vargasvet.domain.entity.MascotaPersonaRelacion relacion = new veterinaria.vargasvet.domain.entity.MascotaPersonaRelacion();
+        relacion.setMascota(cita.getMascota());
+        relacion.setApoderado(copropietario);
+        relacion.setCompany(company);
+        relacion.setTipoRelacion(veterinaria.vargasvet.domain.enums.TipoRelacionMascota.COPROPIETARIO);
+        relacion.setPuedeRecibirInformacion(true);
+        relacion.setPuedeAutorizarAtencion(true);
+        relacion.setPuedeRealizarPagos(true);
+        relacion.setFechaInicio(java.time.LocalDate.now().minusDays(2));
+        relacion.setActivo(true);
+        relacion.setCreatedBy("test");
+        relacion.setUpdatedBy("test");
+        relacionRepository.saveAndFlush(relacion);
+        return usuarioCopropietario;
+    }
+
+    @Test
+    @DisplayName("[RF-PDP-01] Cancelar una cita avisa por correo al propietario y a cada persona vinculada con permiso de recibir información")
+    void cancelarCitaAvisaAlPrincipalYAlCopropietario() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        String correoPrincipal = cita.getMascota().getApoderado().getUser().getEmail();
+        String correoCopropietario = vincularCopropietario(cita).getEmail();
+
+        CitaResponse respuesta = citaService.cancelarCita(cita.getId(), "Solicitud del cliente");
+
+        assertThat(respuesta.getRequiereAvisoManual()).isNull();
+        org.mockito.Mockito.verify(emailService).createMail(org.mockito.ArgumentMatchers.eq(correoPrincipal),
+                org.mockito.ArgumentMatchers.contains("Cita Cancelada"), org.mockito.ArgumentMatchers.anyMap());
+        org.mockito.Mockito.verify(emailService).createMail(org.mockito.ArgumentMatchers.eq(correoCopropietario),
+                org.mockito.ArgumentMatchers.contains("Cita Cancelada"), org.mockito.ArgumentMatchers.anyMap());
+    }
+
+    @Test
+    @DisplayName("[RF-PDP-01] Si el propietario no tiene correo verificado, el copropietario recibe el aviso y la clínica igual llama al propietario")
+    void conElPrincipalSinCorreoVerificadoElCopropietarioRecibeElAvisoYSePideLlamarAlPrincipal() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        String correoCopropietario = vincularCopropietario(cita).getEmail();
+        marcarCorreoSinVerificar(cita);
+        when(contactoAvisos.telefono(any(), any())).thenReturn("987654321");
+
+        CitaResponse respuesta = citaService.cancelarCita(cita.getId(), "Solicitud del cliente");
+
+        assertThat(respuesta.getRequiereAvisoManual()).isTrue();
+        org.mockito.Mockito.verify(emailService).createMail(org.mockito.ArgumentMatchers.eq(correoCopropietario),
+                org.mockito.ArgumentMatchers.contains("Cita Cancelada"), org.mockito.ArgumentMatchers.anyMap());
+        org.mockito.Mockito.verify(emailService, org.mockito.Mockito.times(1)).createMail(org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyMap());
+    }
+
+    @Test
+    @DisplayName("[RF-PDP-01] Un propietario dado de baja no recibe el aviso de la cita; quien sigue vinculado sí")
+    void unPrincipalDadoDeBajaNoRecibeElAvisoDeLaCita() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        String correoPrincipal = cita.getMascota().getApoderado().getUser().getEmail();
+        String correoCopropietario = vincularCopropietario(cita).getEmail();
+        Apoderado principal = cita.getMascota().getApoderado();
+        principal.setEstado(false);
+        principal.setTipoInactividad(veterinaria.vargasvet.domain.enums.TipoInactividad.BAJA);
+        apoderadoRepository.saveAndFlush(principal);
+
+        CitaResponse respuesta = citaService.cancelarCita(cita.getId(), "Solicitud del cliente");
+
+        assertThat(respuesta.getRequiereAvisoManual()).isNull();
+        org.mockito.Mockito.verify(emailService).createMail(org.mockito.ArgumentMatchers.eq(correoCopropietario),
+                org.mockito.ArgumentMatchers.contains("Cita Cancelada"), org.mockito.ArgumentMatchers.anyMap());
+        org.mockito.Mockito.verify(emailService, org.mockito.Mockito.never()).createMail(org.mockito.ArgumentMatchers.eq(correoPrincipal),
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyMap());
+    }
+
+    private void marcarCorreoSinVerificar(Cita cita) {
+        Usuario propietario = cita.getMascota().getApoderado().getUser();
+        propietario.setActivo(false);
+        propietario.setEmailVerified(false);
+        usuarioRepository.saveAndFlush(propietario);
+    }
+
+    @Test
     @DisplayName("[CP-RF24-02][PARCIAL] El repositorio detecta un cruce del veterinario")
     void repositorioDetectaCruceDeHorarioDelVeterinario() {
         Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(1).withHour(10).withMinute(0));
@@ -273,6 +443,95 @@ class CitaServiceIntegrationTest {
     }
 
     @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @DisplayName("[CP-RF24-04] Agendar una cita y dar de baja a su dueño a la vez nunca deja una cita vigente de un cliente dado de baja")
+    void agendarYDarDeBajaAlDuenoALaVezNoDejaUnaCitaDeUnClienteDeBaja() throws Exception {
+        veterinaria.vargasvet.service.SessionSecurityService sesiones =
+                mock(veterinaria.vargasvet.service.SessionSecurityService.class);
+        org.mockito.Mockito.doAnswer(invocation -> {
+            Thread.sleep(400);
+            return null;
+        }).when(sesiones).invalidateSessionsForCompany(any(), any());
+        when(citaMapper.toResponse(any(Cita.class))).thenAnswer(invocation -> {
+            Thread.sleep(400);
+            return new CitaResponse();
+        });
+        veterinaria.vargasvet.service.impl.ApoderadoServiceImpl apoderadoService =
+                new veterinaria.vargasvet.service.impl.ApoderadoServiceImpl(
+                        usuarioRepository, apoderadoRepository, mascotaRepository,
+                        mock(veterinaria.vargasvet.repository.RefreshTokenRepository.class),
+                        mock(veterinaria.vargasvet.repository.UsuarioPorRolRepository.class),
+                        mock(veterinaria.vargasvet.repository.RoleRepository.class), companyRepository,
+                        mock(org.springframework.security.crypto.password.PasswordEncoder.class),
+                        mock(veterinaria.vargasvet.mapper.UserMapper.class), mock(BusinessValidator.class), emailService,
+                        mock(AuditLogService.class), mock(veterinaria.vargasvet.service.CompanyRoleProvisioningService.class),
+                        sesiones, mock(veterinaria.vargasvet.service.CompanyMembershipService.class), citaRepository,
+                        mock(veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository.class),
+                        mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class), petOwnershipService,
+                        mock(veterinaria.vargasvet.service.AccountClosureGuard.class),
+                        mock(veterinaria.vargasvet.service.AdministratorProtection.class),
+                        mock(veterinaria.vargasvet.service.AccessRestoredNotifier.class),
+                mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(apoderadoService, "entityManager", entityManager);
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+
+        for (boolean agendaPrimero : new boolean[]{true, false}) {
+            Object[] datos = transaction.execute(status -> {
+                Cita plantilla = crearCita(EstadoCita.PROGRAMADA,
+                        LocalDateTime.now().plusDays(3).withHour(10).withMinute(0).withSecond(0).withNano(0));
+                CitaRequest request = requestDesde(plantilla, plantilla.getFechaHoraInicio().plusDays(1));
+                Long apoderadoId = plantilla.getMascota().getApoderado().getId();
+                citaRepository.delete(plantilla);
+                citaRepository.flush();
+                return new Object[]{request, apoderadoId};
+            });
+            CitaRequest request = (CitaRequest) datos[0];
+            Long apoderadoId = (Long) datos[1];
+            Runnable agendar = () -> citaService.createCita(request);
+            Runnable baja = () -> apoderadoService.cambiarEstado(apoderadoId, false,
+                    veterinaria.vargasvet.domain.enums.TipoInactividad.BAJA, "Prueba");
+
+            CountDownLatch inicio = new CountDownLatch(1);
+            ExecutorService executor = Executors.newFixedThreadPool(2);
+            try {
+                Future<Throwable> primera = executor.submit(
+                        () -> ejecutarConEspera(transaction, agendaPrimero ? agendar : baja, inicio, 0));
+                Future<Throwable> segunda = executor.submit(
+                        () -> ejecutarConEspera(transaction, agendaPrimero ? baja : agendar, inicio, 100));
+                inicio.countDown();
+                List<Throwable> resultados = Arrays.asList(primera.get(), segunda.get());
+                assertThat(resultados).filteredOn(r -> r != null && !(r instanceof IllegalArgumentException)).isEmpty();
+            } finally {
+                executor.shutdownNow();
+            }
+
+            Boolean violado = transaction.execute(status -> {
+                Apoderado dueno = apoderadoRepository.findById(apoderadoId).orElseThrow();
+                return !Boolean.TRUE.equals(dueno.getEstado())
+                        && citaRepository.existsCitaVigenteByApoderadoId(apoderadoId, LocalDateTime.now());
+            });
+            assertThat(violado)
+                    .as("cliente dado de baja con una cita vigente (agenda primero: %s)", agendaPrimero)
+                    .isFalse();
+        }
+    }
+
+    private Throwable ejecutarConEspera(TransactionTemplate transaction, Runnable accion, CountDownLatch inicio, long esperaMs) {
+        try {
+            autenticarSuperAdmin();
+            inicio.await();
+            Thread.sleep(esperaMs);
+            transaction.executeWithoutResult(status -> accion.run());
+            return null;
+        } catch (Throwable error) {
+            return error;
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
     @DisplayName("[CP-RF24-03] Rechaza crear una cita para una mascota inactiva sin persistirla")
     void crearCitaRechazaMascotaInactiva() {
         Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
@@ -290,20 +549,52 @@ class CitaServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("[CP-RF24-03] Rechaza crear una cita cuando el propietario está inactivo")
+    @DisplayName("[CP-RF24-03] Rechaza crear una cita cuando el propietario está suspendido o dado de baja")
     void crearCitaRechazaPropietarioInactivo() {
+        Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        CitaRequest request = requestDesde(plantilla, LocalDateTime.now().plusDays(3));
+        Apoderado propietario = plantilla.getMascota().getApoderado();
+        citaRepository.delete(plantilla);
+        citaRepository.flush();
+        propietario.setEstado(false);
+        propietario.setTipoInactividad(veterinaria.vargasvet.domain.enums.TipoInactividad.SUSPENSION);
+        apoderadoRepository.saveAndFlush(propietario);
+
+        assertThatThrownBy(() -> citaService.createCita(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("propietario");
+        assertThat(citaRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("[CP-RF24-04] Un cliente pendiente de activar sí puede tener cita, y se avisa por teléfono porque su correo no está verificado")
+    void crearCitaParaClientePendienteDeActivarAvisaPorTelefono() {
         Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
         CitaRequest request = requestDesde(plantilla, LocalDateTime.now().plusDays(3));
         Usuario propietario = plantilla.getMascota().getApoderado().getUser();
         citaRepository.delete(plantilla);
         citaRepository.flush();
         propietario.setActivo(false);
+        propietario.setEmailVerified(false);
         usuarioRepository.saveAndFlush(propietario);
 
-        assertThatThrownBy(() -> citaService.createCita(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("propietario");
-        assertThat(citaRepository.findAll()).isEmpty();
+        CitaResponse creada = citaService.createCita(request);
+
+        assertThat(citaRepository.findAll()).hasSize(1);
+        assertThat(creada.getRequiereAvisoManual()).isTrue();
+    }
+
+    @Test
+    @DisplayName("[CP-RF24-04] Con un correo verificado no se pide avisar por teléfono")
+    void crearCitaConCorreoVerificadoNoPideAvisoManual() {
+        Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        CitaRequest request = requestDesde(plantilla, LocalDateTime.now().plusDays(3));
+        citaRepository.delete(plantilla);
+        citaRepository.flush();
+
+        CitaResponse creada = citaService.createCita(request);
+
+        assertThat(creada.getRequiereAvisoManual()).isNull();
     }
 
     @Test
@@ -378,6 +669,77 @@ class CitaServiceIntegrationTest {
         assertThat(sinCambios.getEstado()).isEqualTo(EstadoCita.PROGRAMADA);
     }
 
+    private Mascota otraMascota(String nombre, Apoderado dueno) {
+        Mascota mascota = new Mascota();
+        mascota.setNombreCompleto(nombre);
+        mascota.setEspecie(EspecieMascota.GATO);
+        mascota.setApoderado(dueno);
+        mascota.setUuid(UUID.randomUUID().toString());
+        return mascotaRepository.saveAndFlush(mascota);
+    }
+
+    private CitaRequest edicionConOtraMascota(Cita cita, Mascota nueva) {
+        CitaRequest request = requestDesde(cita, LocalDateTime.now().plusDays(3));
+        request.setMascotaId(nueva.getId());
+        return request;
+    }
+
+    private Cita citaConVeterinarioDeLaClinica() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        Empleado veterinario = cita.getEmpleado();
+        veterinario.setCompany(cita.getMascota().getApoderado().getCompany());
+        empleadoRepository.saveAndFlush(veterinario);
+        return cita;
+    }
+
+    @Test
+    @DisplayName("[CP-RF19-01] Editar una cita para cambiarle la mascota exige una mascota activa de la misma clínica con propietario activo")
+    void editarCitaConOtraMascotaExigeMascotaOperableDeLaMismaClinica() {
+        Cita cita = citaConVeterinarioDeLaClinica();
+        Apoderado dueno = cita.getMascota().getApoderado();
+        Mascota gato = otraMascota("Michi", dueno);
+
+        citaService.actualizarCita(cita.getId(), edicionConOtraMascota(cita, gato));
+        assertThat(citaRepository.findById(cita.getId()).orElseThrow().getMascota().getId()).isEqualTo(gato.getId());
+
+        Cita otra = citaConVeterinarioDeLaClinica();
+        Apoderado duenoDeOtraClinica = otra.getMascota().getApoderado();
+        Mascota ajena = otraMascota("Ajena", duenoDeOtraClinica);
+        assertThatThrownBy(() -> citaService.actualizarCita(cita.getId(), edicionConOtraMascota(cita, ajena)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("otra clínica");
+
+        Mascota inactiva = otraMascota("Dormida", dueno);
+        inactiva.setActivo(false);
+        mascotaRepository.saveAndFlush(inactiva);
+        assertThatThrownBy(() -> citaService.actualizarCita(cita.getId(), edicionConOtraMascota(cita, inactiva)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("inactiva");
+
+        Mascota sinAutorizador = otraMascota("Huerfana", dueno);
+        dueno.setEstado(false);
+        dueno.setTipoInactividad(veterinaria.vargasvet.domain.enums.TipoInactividad.BAJA);
+        apoderadoRepository.saveAndFlush(dueno);
+        assertThatThrownBy(() -> citaService.actualizarCita(cita.getId(), edicionConOtraMascota(cita, sinAutorizador)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no tiene un propietario activo");
+    }
+
+    @Test
+    @DisplayName("[CP-RF19-02] No se inicia la atención de una mascota sin propietario activo que autorice")
+    void iniciarAtencionExigeUnPropietarioActivo() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().minusMinutes(20));
+        Apoderado dueno = cita.getMascota().getApoderado();
+        dueno.setEstado(false);
+        dueno.setTipoInactividad(veterinaria.vargasvet.domain.enums.TipoInactividad.SUSPENSION);
+        apoderadoRepository.saveAndFlush(dueno);
+
+        assertThatThrownBy(() -> citaService.iniciarAtencion(cita.getId()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no tiene un propietario activo");
+        assertThat(citaRepository.findById(cita.getId()).orElseThrow().getEstado()).isEqualTo(EstadoCita.PROGRAMADA);
+    }
+
     private Cita crearCita(EstadoCita estado, LocalDateTime fechaInicio) {
         Company company = new Company();
         company.setName("VargasVet Citas");
@@ -389,6 +751,7 @@ class CitaServiceIntegrationTest {
         Usuario apoderadoUser = usuario("cliente", company);
         Apoderado apoderado = new Apoderado();
         apoderado.setUser(apoderadoUser);
+        apoderado.setCompany(company);
         apoderado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
         apoderado.setNumeroDocumento(uniqueDigits(8));
         apoderado.setGenero(Genero.FEMENINO);

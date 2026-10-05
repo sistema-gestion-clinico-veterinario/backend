@@ -145,11 +145,11 @@ public class CitaController {
     }
 
     @DeleteMapping("/{id}/cancel")
-    public ResponseEntity<ApiResponse<Void>> cancelarCita(@PathVariable Long id, @RequestParam(required = false) String motivo) {
+    public ResponseEntity<ApiResponse<CitaResponse>> cancelarCita(@PathVariable Long id, @RequestParam(required = false) String motivo) {
         accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
         String finalMotivo = (motivo == null || motivo.isBlank()) ? "Cancelado por el usuario" : motivo;
-        citaService.cancelarCita(id, finalMotivo);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Cita cancelada con éxito", null));
+        CitaResponse cancelada = citaService.cancelarCita(id, finalMotivo);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Cita cancelada con éxito", cancelada));
     }
 
     @PatchMapping("/{id}/no-show")

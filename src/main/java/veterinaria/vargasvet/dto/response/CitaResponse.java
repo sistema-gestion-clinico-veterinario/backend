@@ -17,6 +17,9 @@ public class CitaResponse {
     private Long apoderadoId;
     private String apoderadoNombre;
     private String apoderadoEmail;
+    /** Solo al crear, reprogramar, reasignar o cancelar: el aviso al cliente no pudo ir por correo. */
+    private Boolean requiereAvisoManual;
+    private String telefonoAviso;
     private Long veterinarioId;
     private String veterinarioNombre;
     private Long servicioId;

@@ -23,9 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RealtimeSubscriptionGuard {
 
     private final RolePermissionEvaluator rolePermissionEvaluator;
+    private final veterinaria.vargasvet.repository.RefreshTokenRepository refreshTokenRepository;
 
     private final Map<String, WebSocketSession> sessionsById = new ConcurrentHashMap<>();
     private final Map<String, Subscription> guardedSubscriptions = new ConcurrentHashMap<>();
+    private final Map<String, String> sessionIdByWebSocket = new ConcurrentHashMap<>();
 
     public void trackSession(WebSocketSession session) {
         sessionsById.put(session.getId(), session);
@@ -34,6 +36,48 @@ public class RealtimeSubscriptionGuard {
     public void untrackSession(String sessionId) {
         sessionsById.remove(sessionId);
         guardedSubscriptions.remove(sessionId);
+        sessionIdByWebSocket.remove(sessionId);
+    }
+
+    /** Asocia la conexión con la sesión de login que la autorizó (puede ser null en tickets antiguos). */
+    public void bindSession(String webSocketSessionId, String loginSessionId) {
+        if (webSocketSessionId != null && loginSessionId != null) {
+            sessionIdByWebSocket.put(webSocketSessionId, loginSessionId);
+        }
+    }
+
+    /** Cierra de inmediato las conexiones abiertas de una sesión que acaba de cerrarse. */
+    public void closeConnectionsOfSession(String loginSessionId) {
+        if (loginSessionId == null) return;
+        sessionIdByWebSocket.forEach((webSocketId, sessionId) -> {
+            if (loginSessionId.equals(sessionId)) {
+                closeConnection(webSocketId, "Sesión cerrada");
+            }
+        });
+    }
+
+    private void closeConnection(String webSocketId, String reason) {
+        WebSocketSession session = sessionsById.get(webSocketId);
+        try {
+            if (session != null && session.isOpen()) {
+                session.close(CloseStatus.POLICY_VIOLATION.withReason(reason));
+            }
+        } catch (Exception e) {
+            log.warn("No se pudo cerrar la sesión WebSocket {}: {}", webSocketId, reason);
+        } finally {
+            untrackSession(webSocketId);
+        }
+    }
+
+    private void closeConnectionsOfRevokedSessions() {
+        if (sessionIdByWebSocket.isEmpty()) return;
+        java.util.Set<String> activeSessions = new java.util.HashSet<>(
+                refreshTokenRepository.findActiveFamilyIds(new java.util.HashSet<>(sessionIdByWebSocket.values())));
+        sessionIdByWebSocket.forEach((webSocketId, sessionId) -> {
+            if (!activeSessions.contains(sessionId)) {
+                closeConnection(webSocketId, "Sesión cerrada");
+            }
+        });
     }
 
     /**
@@ -46,6 +90,7 @@ public class RealtimeSubscriptionGuard {
 
     @Scheduled(fixedDelay = 30_000)
     public void revalidate() {
+        closeConnectionsOfRevokedSessions();
         guardedSubscriptions.forEach((sessionId, subscription) -> {
             boolean stillAllowed = rolePermissionEvaluator.can(
                     subscription.userId(), subscription.roleId(), subscription.viewCode(), subscription.action());

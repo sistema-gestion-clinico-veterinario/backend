@@ -16,11 +16,12 @@ public interface RecordatorioPreventivoRepository extends JpaRepository<Recordat
         Long getControlId();
         TipoAvisoRecordatorio getTipoAviso();
         LocalDate getFechaProgramada();
+        Long getApoderadoId();
     }
 
     @Query("""
             select r.controlPreventivo.id as controlId, r.tipoAviso as tipoAviso,
-                   r.fechaProgramada as fechaProgramada
+                   r.fechaProgramada as fechaProgramada, r.apoderado.id as apoderadoId
             from RecordatorioPreventivo r
             where r.controlPreventivo.id in :controlIds
             """)

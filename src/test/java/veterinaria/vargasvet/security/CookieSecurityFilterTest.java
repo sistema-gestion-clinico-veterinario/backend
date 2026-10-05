@@ -44,6 +44,20 @@ class CookieSecurityFilterTest {
     }
 
     @Test
+    void lasCookiesDeSesionPorClinicaTambienExigenOrigenConfiableEnLasEscrituras() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/pets");
+        request.setServletPath("/pets");
+        request.setCookies(new Cookie("access_token__clinica-a", "token"));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain chain = mock(FilterChain.class);
+
+        filter.doFilter(request, response, chain);
+
+        org.assertj.core.api.Assertions.assertThat(response.getStatus()).isEqualTo(403);
+        org.mockito.Mockito.verify(chain, org.mockito.Mockito.never()).doFilter(request, response);
+    }
+
+    @Test
     void lecturaNoRequiereCabeceraOrigin() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/pets");
         request.setServletPath("/pets");

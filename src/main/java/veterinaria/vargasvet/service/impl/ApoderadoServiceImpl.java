@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Apoderado;
+import veterinaria.vargasvet.domain.enums.TipoInactividad;
 import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.entity.Usuario;
@@ -33,6 +34,7 @@ import veterinaria.vargasvet.util.BusinessValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import veterinaria.vargasvet.dto.response.ApoderadoEstadoResponse;
 import veterinaria.vargasvet.dto.response.ApoderadoListResponse;
 
 import java.time.LocalDateTime;
@@ -44,6 +46,12 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ApoderadoServiceImpl implements ApoderadoService {
+
+    private static final long INVITATION_RESEND_COOLDOWN_MINUTES = 5;
+    private static final long STATE_CHANGE_REPEAT_MINUTES = 2;
+
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
 
     private final UsuarioRepository usuarioRepository;
     private final ApoderadoRepository apoderadoRepository;
@@ -63,6 +71,11 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     private final veterinaria.vargasvet.repository.CitaRepository citaRepository;
     private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
     private final UsuarioContactoService contactoService;
+    private final veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
+    private final veterinaria.vargasvet.service.AccountClosureGuard accountClosureGuard;
+    private final veterinaria.vargasvet.service.AdministratorProtection administratorProtection;
+    private final veterinaria.vargasvet.service.AccessRestoredNotifier accessRestoredNotifier;
+    private final veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
 
     @Value("${app.frontend.login-url}")
     private String loginUrl;
@@ -108,6 +121,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         businessValidator.checkCompanyActiva(companyIdToUse);
         Company companyToUse = companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
+        consentimientoDatosService.exigirAltaValida(companyIdToUse, dto.getAvisoInformado(), true, dto.getConsentimientoRecordatorios());
 
         // Aislamiento total entre empresas: la busqueda de "ya existe" es SOLO dentro de
         // esta misma empresa (ej. la persona ya es empleado aqui y ahora tambien se
@@ -154,23 +168,27 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         }
         replaceClientRoles(savedUser, companyIdToUse, requestedRoleIds);
 
-        // Reingreso a la MISMA empresa: reactiva la fila existente en vez de crear una
-        // nueva (numero_documento se mantiene reservado por empresa incluso inactivo -
-        // ver uq_apoderado_documento_empresa - asi que insertar una segunda fila
-        // chocaria con el indice). Esto ademas preserva mascotas/historial ya asociados
-        // a esa fila, que se perderian de vista si se creara una fila nueva.
-        Apoderado apoderado = apoderadoRepository.findByUserIdAndCompanyId(savedUser.getId(), companyIdToUse)
-                .orElseGet(Apoderado::new);
-        if (apoderado.getId() != null && Boolean.TRUE.equals(apoderado.getEstado())) {
-            throw new IllegalArgumentException("Este cliente ya está registrado y activo en esta empresa");
+        java.util.Optional<Apoderado> existente = apoderadoRepository.findByUserIdAndCompanyId(savedUser.getId(), companyIdToUse);
+        if (existente.isPresent()) {
+            Apoderado registrado = existente.get();
+            if (Boolean.TRUE.equals(registrado.getEstado())) {
+                throw new IllegalArgumentException("Este cliente ya está registrado y activo en esta empresa");
+            }
+            accountClosureGuard.assertNotSelfClosed(savedUser.getId(), companyIdToUse);
+            TipoInactividad tipoRegistrado = registrado.getTipoInactividad() == TipoInactividad.SUSPENSION
+                    ? TipoInactividad.SUSPENSION : TipoInactividad.BAJA;
+            throw new veterinaria.vargasvet.exception.ClienteInactivoException(
+                    tipoRegistrado == TipoInactividad.SUSPENSION
+                            ? "Este cliente está suspendido. Para devolverle el acceso usa «Reactivar» en la lista de clientes"
+                            : "Este cliente fue dado de baja. Para devolverle el acceso usa «Reactivar» en la lista de clientes",
+                    registrado.getId(), tipoRegistrado);
         }
+        Apoderado apoderado = new Apoderado();
         // Si ya existia como identidad EN ESTA EMPRESA (ej. ya es empleado aqui) pero
         // esta es su primera vez como cliente aqui, se le avisa por correo - de otro
         // modo no tiene forma de saber que ahora tambien tiene acceso como cliente, con
         // el mismo usuario y contraseña que ya usa en esta empresa.
-        boolean esNuevaRelacionParaEsteUsuario = apoderado.getId() == null;
-        if (esNuevaRelacionParaEsteUsuario
-                && !credencialRepository.existsByUsuarioIdAndCompanyId(savedUser.getId(), companyIdToUse)) {
+        if (!credencialRepository.existsByUsuarioIdAndCompanyId(savedUser.getId(), companyIdToUse)) {
             // Cada empresa tiene su propia credencial - aunque savedUser ya exista, su
             // primera relación con ESTA empresa recibe una contraseña temporal propia,
             // nunca la que ya usa en otra empresa.
@@ -192,21 +210,17 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         apoderado.setReferencias(dto.getReferencias());
         apoderado.setObservaciones(dto.getObservaciones());
         apoderado.setEstado(true);
-        apoderado.setFechaSalida(null);
-        if (apoderado.getFechaIngreso() == null) {
-            apoderado.setFechaIngreso(veterinaria.vargasvet.util.AppClock.today());
-        }
+        apoderado.setFechaIngreso(veterinaria.vargasvet.util.AppClock.today());
 
         Apoderado savedApoderado = apoderadoRepository.save(apoderado);
         companyMembershipService.syncLegacyCompanyField(savedUser);
         contactoService.actualizar(savedUser, companyToUse, dto.getTelefono(), dto.getDireccion());
+        consentimientoDatosService.registrarAlta(savedUser, companyIdToUse, dto.getConsentimientoRecordatorios(),
+                SecurityUtils.getCurrentUserId());
 
         // El alta del cliente solo registra sus datos. La invitacion para configurar
         // el acceso se envia cuando la clinica registra su primera mascota. De este
         // modo no se crean accesos utilizables para contactos sin pacientes asociados.
-        if (!esNuevaRelacionParaEsteUsuario) {
-            enviarInvitacionAccesoSiTieneMascota(savedApoderado.getId());
-        }
 
         auditLogService.log(
             "CREAR_APODERADO",
@@ -231,7 +245,20 @@ public class ApoderadoServiceImpl implements ApoderadoService {
                 || !mascotaRepository.existsByApoderadoIdAndActivoTrue(apoderadoId)) {
             return;
         }
+        enviarInvitacion(apoderado);
+    }
 
+    @Override
+    @Transactional
+    public void invitarAcceso(Long apoderadoId) {
+        Apoderado apoderado = findAccessibleClient(apoderadoId);
+        if (!Boolean.TRUE.equals(apoderado.getEstado())) {
+            throw new IllegalArgumentException("No se puede invitar a una persona inactiva");
+        }
+        enviarInvitacion(apoderado);
+    }
+
+    private void enviarInvitacion(Apoderado apoderado) {
         Usuario usuario = apoderado.getUser();
         if (usuario == null) {
             throw new IllegalStateException("El propietario no tiene una cuenta asociada");
@@ -253,7 +280,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         sendNewCompanyAccessEmail(usuario, company);
     }
 
-    private void sendVerificationEmail(Usuario usuario, String nombre, String verificationToken, Company company) {
+    private java.util.concurrent.CompletableFuture<Boolean> sendVerificationEmail(Usuario usuario, String nombre, String verificationToken, Company company) {
         try {
             String resolvedCompanyName = company != null && company.getName() != null ? company.getName() : defaultCompanyName;
             String resolvedLogo = company != null && company.getLogoUrl() != null ? company.getLogoUrl() : defaultCompanyLogo;
@@ -277,9 +304,10 @@ public class ApoderadoServiceImpl implements ApoderadoService {
                     model
             );
 
-            emailService.sendEmailWithRetry(mail, "email/welcome-template");
+            return emailService.sendEmailWithRetry(mail, "email/welcome-template");
         } catch (Exception e) {
             System.err.println("[WARNING] No se pudo enviar el correo de verificación al apoderado " + usuario.getEmail() + ": " + e.getMessage());
+            return java.util.concurrent.CompletableFuture.completedFuture(false);
         }
     }
 
@@ -371,11 +399,66 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
     @Override
     @Transactional
-    public void cambiarEstado(Long id, Boolean nuevoEstado) {
+    public void reenviarInvitacion(Long id) {
         Apoderado apoderado = findAccessibleClient(id);
+        Usuario usuario = apoderado.getUser();
+        if (!Boolean.TRUE.equals(apoderado.getEstado())) {
+            throw new IllegalArgumentException("No se puede reenviar la invitación a un cliente inactivo");
+        }
+        if (usuario == null) {
+            throw new IllegalArgumentException("La cuenta de este cliente ya fue activada");
+        }
+        entityManager.lock(usuario, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        entityManager.refresh(usuario);
+        boolean tieneContrasena = credencialRepository.findAllByUsuarioId(usuario.getId()).stream()
+                .anyMatch(veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial::isPasswordChanged);
+        if (!veterinaria.vargasvet.util.CuentaPendiente.es(usuario, tieneContrasena)) {
+            throw new IllegalArgumentException("La cuenta de este cliente ya fue activada");
+        }
+        if (!mascotaRepository.existsByApoderadoIdAndActivoTrue(apoderado.getId())
+                && !petOwnershipService.tieneVinculoVigente(apoderado)) {
+            throw new IllegalArgumentException(
+                    "Este cliente aún no tiene mascotas registradas ni está vinculado a ninguna. "
+                            + "Se le invita cuando se registre su primera mascota o se le vincule a una");
+        }
+
+        java.time.LocalDateTime ahora = veterinaria.vargasvet.util.AppClock.now();
+        java.time.LocalDateTime venceActual = usuario.getVerificationTokenExpiresAt();
+        if (venceActual != null) {
+            java.time.LocalDateTime puedeReenviarDesde = venceActual.minusHours(verificationTokenValidityHours)
+                    .plusMinutes(INVITATION_RESEND_COOLDOWN_MINUTES);
+            if (puedeReenviarDesde.isAfter(ahora)) {
+                long minutos = Math.max(1, (java.time.Duration.between(ahora, puedeReenviarDesde).getSeconds() + 59) / 60);
+                throw new IllegalArgumentException("La invitación se envió hace poco. Podrás reenviarla en "
+                        + minutos + (minutos == 1 ? " minuto" : " minutos"));
+            }
+        }
+
+        String verificationToken = SecurityTokenUtils.generate();
+        usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
+        usuario.setVerificationTokenExpiresAt(ahora.plusHours(verificationTokenValidityHours));
+        usuarioRepository.save(usuario);
+        String nombreCompleto = ((usuario.getNombre() == null ? "" : usuario.getNombre()) + " "
+                + (usuario.getApellido() == null ? "" : usuario.getApellido())).trim();
+        if (veterinaria.vargasvet.util.MailDelivery.failed(
+                sendVerificationEmail(usuario, nombreCompleto, verificationToken, apoderado.getCompany()))) {
+            throw new veterinaria.vargasvet.exception.MailDeliveryException(
+                    "No pudimos enviar el correo de invitación. El enlace anterior sigue vigente; intenta de nuevo en unos minutos");
+        }
+
+        Integer companyId = apoderado.getCompany() != null ? apoderado.getCompany().getId() : null;
+        auditLogService.log(companyId, "REENVIAR_INVITACION_CLIENTE", "Clientes",
+                "Se reenvió la invitación de activación a " + nombreCompleto + " (" + usuario.getEmail() + ")");
+    }
+
+    @Override
+    @Transactional
+    public ApoderadoEstadoResponse cambiarEstado(Long id, Boolean nuevoEstado, TipoInactividad tipo, String motivo) {
+        Apoderado apoderado = findAccessibleClient(id);
+        entityManager.lock(apoderado, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        entityManager.refresh(apoderado);
 
         Usuario usuario = apoderado.getUser();
-
 
         Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
         if (!SecurityUtils.isSuperAdmin()) {
@@ -384,16 +467,47 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             }
         }
 
-        if (Boolean.FALSE.equals(nuevoEstado)
-                && citaRepository.existsCitaVigenteByApoderadoId(apoderado.getId(), veterinaria.vargasvet.util.AppClock.now())) {
-            throw new IllegalArgumentException("No se puede desactivar un cliente con citas programadas vigentes");
+        boolean activar = Boolean.TRUE.equals(nuevoEstado);
+        TipoInactividad tipoEfectivo = activar ? null : (tipo != null ? tipo : TipoInactividad.BAJA);
+        boolean yaInactivo = !Boolean.TRUE.equals(apoderado.getEstado());
+
+        if (activar && !yaInactivo) {
+            return new ApoderadoEstadoResponse();
+        }
+        if (!activar && yaInactivo && apoderado.getTipoInactividad() == tipoEfectivo
+                && apoderado.getFechaModificacionEstado() != null
+                && apoderado.getFechaModificacionEstado().isAfter(
+                        veterinaria.vargasvet.util.AppClock.now().minusMinutes(STATE_CHANGE_REPEAT_MINUTES))) {
+            return new ApoderadoEstadoResponse();
+        }
+
+        administratorProtection.assertCanManage(usuario, apoderado.getCompany().getId());
+        if (activar) {
+            accountClosureGuard.assertNotSelfClosed(usuario.getId(), apoderado.getCompany().getId());
+        }
+        if (!activar) {
+            if (yaInactivo) {
+                boolean pasaDeSuspensionABaja = apoderado.getTipoInactividad() == TipoInactividad.SUSPENSION
+                        && tipoEfectivo == TipoInactividad.BAJA;
+                if (!pasaDeSuspensionABaja) {
+                    throw new IllegalArgumentException(apoderado.getTipoInactividad() == TipoInactividad.SUSPENSION
+                            ? "El cliente ya está suspendido"
+                            : "El cliente ya está dado de baja; solo puede reactivarse");
+                }
+            } else if (citaRepository.existsCitaVigenteByApoderadoId(apoderado.getId(), veterinaria.vargasvet.util.AppClock.now())) {
+                throw new IllegalArgumentException("No se puede desactivar un cliente con citas programadas vigentes");
+            }
+            if (tipoEfectivo == TipoInactividad.BAJA) {
+                assertSinDeuda(apoderado);
+            }
         }
 
         // Solo afecta la relacion con ESTA empresa (apoderado.estado), nunca
         // usuario.activo (login global) - un apoderado puede ser cliente activo de
         // otra empresa a la vez, y desactivarlo aqui no debe bloquearle el acceso ahi.
-        apoderado.setEstado(nuevoEstado);
-        if (Boolean.FALSE.equals(nuevoEstado)) {
+        apoderado.setEstado(activar);
+        apoderado.setTipoInactividad(tipoEfectivo);
+        if (tipoEfectivo == TipoInactividad.BAJA) {
             apoderado.setFechaSalida(veterinaria.vargasvet.util.AppClock.today());
         } else {
             apoderado.setFechaSalida(null);
@@ -405,51 +519,47 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         apoderadoRepository.save(apoderado);
         companyMembershipService.syncLegacyCompanyField(usuario);
 
+        ApoderadoEstadoResponse mascotas = petOwnershipService.syncPets(apoderado, tipoEfectivo);
 
-        // Al desactivar, se da de baja en cascada a las mascotas del apoderado (con motivo
-        // y auditoria propios, igual que el flujo individual de MascotaServiceImpl). Al
-        // reactivar, en cambio, NO se reactivan las mascotas automaticamente: una mascota
-        // pudo quedar inactiva por una causa propia y no relacionada (fallecimiento, cambio
-        // de propietario), y reactivar al apoderado no debe revertir eso silenciosamente.
-        if (Boolean.FALSE.equals(nuevoEstado)) {
-            List<Mascota> mascotas = mascotaRepository.findByApoderadoId(apoderado.getId());
-            for (Mascota mascota : mascotas) {
-                if (!Boolean.TRUE.equals(mascota.getActivo())) continue;
-                mascota.setActivo(false);
-                mascota.setMotivoBaja(veterinaria.vargasvet.domain.enums.MotivoBajaMascota.DEJA_ASISTIR);
-                mascota.setOtroMotivoBaja(null);
-                mascota.setEstadoModificadoPor(SecurityUtils.getCurrentUserEmail());
-                mascota.setFechaModificacionEstado(veterinaria.vargasvet.util.AppClock.now());
-                mascotaRepository.save(mascota);
-            }
-        }
-
+        String accion = activar ? "REACTIVAR_APODERADO"
+                : tipoEfectivo == TipoInactividad.SUSPENSION ? "SUSPENDER_APODERADO" : "DAR_DE_BAJA_APODERADO";
+        String hecho = activar ? "Se reactivó" : tipoEfectivo == TipoInactividad.SUSPENSION ? "Se suspendió" : "Se dio de baja";
         auditLogService.log(
-            Boolean.TRUE.equals(nuevoEstado) ? "ACTIVAR_APODERADO" : "DESACTIVAR_APODERADO",
+            apoderado.getCompany() != null ? apoderado.getCompany().getId() : null,
+            accion,
             "Clientes",
-            (Boolean.TRUE.equals(nuevoEstado) ? "Se activó" : "Se desactivó") + " al cliente/apoderado " + usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ")"
+            hecho + " al cliente/apoderado " + usuario.getNombre() + " " + usuario.getApellido() + " (" + usuario.getEmail() + ")"
+                    + veterinaria.vargasvet.util.AuditDetails.reasonSuffix(motivo)
+                    + resumenMascotas(mascotas)
         );
+        if (activar) {
+            accessRestoredNotifier.send(usuario, apoderado.getCompany());
+        }
+        return mascotas;
+    }
+
+    private void assertSinDeuda(Apoderado apoderado) {
+        java.math.BigDecimal deuda = citaRepository.saldoPendienteByApoderadoId(apoderado.getId());
+        if (deuda != null && deuda.signum() > 0) {
+            throw new IllegalArgumentException("No se puede dar de baja a un cliente con deuda pendiente de S/ "
+                    + deuda.setScale(2, java.math.RoundingMode.HALF_UP) + ". Registra su pago antes de darlo de baja.");
+        }
+    }
+
+    private String resumenMascotas(ApoderadoEstadoResponse mascotas) {
+        return ". Mascotas pausadas: " + mascotas.getMascotasPausadas().size()
+                + ", restauradas: " + mascotas.getMascotasRestauradas().size()
+                + ", que siguen activas por otro autorizador: " + mascotas.getMascotasQueSiguenActivas().size();
     }
 
     @Override
     @Transactional
-    public void eliminar(Long id) {
-        Apoderado apoderado = findAccessibleClient(id);
-        if (!mascotaRepository.findByApoderadoId(apoderado.getId()).isEmpty()) {
-            throw new IllegalArgumentException("No se puede eliminar un propietario que tiene mascotas registradas");
+    public ApoderadoEstadoResponse eliminar(Long id) {
+        if (!SecurityUtils.isAdmin() && !SecurityUtils.isSuperAdmin()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Solo un administrador puede eliminar a un cliente");
         }
-        Usuario usuario = apoderado.getUser();
-        String clientNombre = usuario.getNombre() + " " + usuario.getApellido();
-        String clientEmail = usuario.getEmail();
-        refreshTokenRepository.deleteByUsuario(usuario);
-        apoderadoRepository.delete(apoderado);
-        usuarioRepository.delete(usuario);
-
-        auditLogService.log(
-            "ELIMINAR_APODERADO",
-            "Clientes",
-            "Se eliminó permanentemente al cliente/apoderado " + clientNombre + " (" + clientEmail + ")"
-        );
+        return cambiarEstado(id, false, TipoInactividad.BAJA, "Eliminado por el administrador");
     }
 
     @Override
@@ -458,9 +568,17 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
         String nombreFiltro = (nombre != null && !nombre.isBlank()) ? nombre.trim().replaceAll("\\s+", " ") : null;
         String docFiltro = (numeroDocumento != null && !numeroDocumento.isBlank()) ? numeroDocumento.trim() : null;
-        return apoderadoRepository.buscar(resolvedCompanyId, nombreFiltro, docFiltro,
-                PageRequest.of(page, size, Sort.unsorted()))
-                .map(this::toListResponse);
+        Page<Apoderado> resultado = apoderadoRepository.buscar(resolvedCompanyId, nombreFiltro, docFiltro,
+                PageRequest.of(page, size, Sort.unsorted()));
+        java.util.List<Integer> userIds = resultado.getContent().stream()
+                .map(Apoderado::getUser).filter(java.util.Objects::nonNull).map(Usuario::getId).toList();
+        java.util.List<Long> apoderadoIds = resultado.getContent().stream().map(Apoderado::getId).toList();
+        java.util.Set<Integer> conContrasena = userIds.isEmpty()
+                ? java.util.Set.of() : credencialRepository.usuariosConContrasenaCreada(userIds);
+        java.util.Set<Long> conMascota = apoderadoIds.isEmpty()
+                ? java.util.Set.of() : mascotaRepository.apoderadosConMascotaActiva(apoderadoIds);
+        java.util.Set<Integer> informados = consentimientoDatosService.usuariosInformados(userIds, resolvedCompanyId);
+        return resultado.map(a -> toListResponse(a, conContrasena, conMascota, informados));
     }
 
     private Integer resolverCompanyId(Integer companyIdParam) {
@@ -534,9 +652,16 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         usuario.getUsuariosPorRol().removeIf(assignment -> assignment.getRol() != null
                 && assignment.getRol().getScope() == RoleScope.CLIENT
                 && assignment.getCompany() != null
-                && companyId.equals(assignment.getCompany().getId()));
+                && companyId.equals(assignment.getCompany().getId())
+                && !uniqueRoleIds.contains(assignment.getRol().getId()));
+        Set<Integer> alreadyAssigned = usuario.getUsuariosPorRol().stream()
+                .filter(assignment -> assignment.getRol() != null
+                        && assignment.getCompany() != null
+                        && companyId.equals(assignment.getCompany().getId()))
+                .map(assignment -> assignment.getRol().getId())
+                .collect(java.util.stream.Collectors.toSet());
 
-        roles.stream().map(role -> {
+        roles.stream().filter(role -> !alreadyAssigned.contains(role.getId())).map(role -> {
             UsuarioPorRol assignment = new UsuarioPorRol();
             assignment.setUsuario(usuario);
             assignment.setRol(role);
@@ -560,18 +685,26 @@ public class ApoderadoServiceImpl implements ApoderadoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
     }
 
-    private ApoderadoListResponse toListResponse(Apoderado apoderado) {
+    private ApoderadoListResponse toListResponse(Apoderado apoderado, java.util.Set<Integer> conContrasena, java.util.Set<Long> conMascota,
+                                                 java.util.Set<Integer> informados) {
         ApoderadoListResponse response = new ApoderadoListResponse();
         response.setId(apoderado.getId());
         response.setTipoDocumento(apoderado.getTipoDocumentoIdentidad());
         response.setNumeroDocumento(apoderado.getNumeroDocumento());
         if (apoderado.getUser() != null) {
+            response.setUserId(apoderado.getUser().getId());
             response.setNombre(apoderado.getUser().getNombre());
             response.setApellido(apoderado.getUser().getApellido());
             response.setEmail(apoderado.getUser().getEmail());
             Integer listCompanyId = apoderado.getCompany() != null ? apoderado.getCompany().getId() : null;
             response.setTelefono(contactoService.telefono(apoderado.getUser().getId(), listCompanyId));
             response.setActivo(apoderado.getEstado());
+            response.setTipoInactividad(apoderado.getTipoInactividad());
+            boolean pendiente = Boolean.TRUE.equals(apoderado.getEstado())
+                    && veterinaria.vargasvet.util.CuentaPendiente.es(apoderado.getUser(), conContrasena.contains(apoderado.getUser().getId()));
+            response.setCuentaPendiente(pendiente);
+            response.setPuedeReenviarInvitacion(pendiente && conMascota.contains(apoderado.getId()));
+            response.setAvisoInformado(informados.contains(apoderado.getUser().getId()));
         }
         return response;
     }

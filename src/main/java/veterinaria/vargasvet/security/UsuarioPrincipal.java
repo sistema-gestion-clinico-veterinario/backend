@@ -24,6 +24,9 @@ public class UsuarioPrincipal implements UserDetails {
     private long permissionVersion;
     private long credentialsVersion;
 
+    /** Identificador de la sesión (familia del refresh token); null en tokens anteriores a este campo. */
+    private String sessionId;
+
     public UsuarioPrincipal(Integer id, String email, String password, Collection<? extends GrantedAuthority> authorities, Integer companyId) {
         this(id, email, password, authorities, companyId, null, null, null, 0L);
     }

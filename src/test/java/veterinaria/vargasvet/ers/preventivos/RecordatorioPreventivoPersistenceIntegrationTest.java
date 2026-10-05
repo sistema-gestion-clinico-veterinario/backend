@@ -52,6 +52,7 @@ class RecordatorioPreventivoPersistenceIntegrationTest {
     @Autowired private MascotaRepository mascotaRepository;
     @Autowired private ControlPreventivoRepository controlRepository;
     @Autowired private RecordatorioPreventivoRepository recordatorioRepository;
+    @Autowired private veterinaria.vargasvet.repository.MascotaPersonaRelacionRepository relacionRepository;
 
     @Test
     void cpRf3304_laBaseDeDatosImpideDuplicarLaClaveDelRecordatorio() {
@@ -110,8 +111,17 @@ class RecordatorioPreventivoPersistenceIntegrationTest {
                 .thenReturn(new veterinaria.vargasvet.dto.Mail());
         when(emailService.sendEmail(any(), eq("email/recordatorio-preventivo-template")))
                 .thenReturn(java.util.concurrent.CompletableFuture.completedFuture(true));
+        veterinaria.vargasvet.service.ConsentimientoDatosService consentimiento =
+                org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class);
+        when(consentimiento.usuariosQueOtorgaron(any(), any(), any()))
+                .thenAnswer(invocation -> java.util.Set.copyOf(invocation.getArgument(0)));
         RecordatorioPreventivoServiceImpl service = new RecordatorioPreventivoServiceImpl(
-                controlRepository, recordatorioRepository, emailService);
+                controlRepository, recordatorioRepository, emailService,
+                new veterinaria.vargasvet.service.OwnerContactPolicy(mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class)),
+                new veterinaria.vargasvet.service.PetOwnershipService(mascotaRepository, relacionRepository,
+                        mock(veterinaria.vargasvet.repository.CitaRepository.class),
+                        mock(veterinaria.vargasvet.service.AuditLogService.class)),
+                consentimiento);
 
         service.procesarRecordatorios();
         recordatorioRepository.flush();
@@ -153,6 +163,7 @@ class RecordatorioPreventivoPersistenceIntegrationTest {
         Apoderado apoderado = new Apoderado();
         apoderado.setUser(usuario);
         apoderado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
+        apoderado.setCompany(company);
         apoderado.setNumeroDocumento("98" + System.nanoTime());
         apoderado.setGenero(Genero.FEMENINO);
         apoderado = apoderadoRepository.saveAndFlush(apoderado);

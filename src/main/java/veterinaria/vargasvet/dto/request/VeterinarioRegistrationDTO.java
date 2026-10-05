@@ -65,6 +65,7 @@ public class VeterinarioRegistrationDTO {
     private String numeroDocumento;
     private Genero genero;
     private Integer companyId;
+    private Boolean avisoInformado;
 
     @NotEmpty(message = "Debe asignar al menos un rol")
     private Set<Integer> roleIds;

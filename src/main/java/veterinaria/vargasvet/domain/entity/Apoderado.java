@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.Genero;
 import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
+import veterinaria.vargasvet.domain.enums.TipoInactividad;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -40,6 +41,11 @@ public class Apoderado {
      * a la MISMA empresa reactiva esta fila (estado=true) en vez de crear una nueva. */
     @Column(name = "estado", nullable = false)
     private Boolean estado = true;
+
+    /** Solo tiene valor mientras estado=false (ver ck_apoderado_tipo_inactividad). */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_inactividad", length = 16)
+    private TipoInactividad tipoInactividad;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_documento_identidad", nullable = false)

@@ -66,6 +66,16 @@ public class AccountLockoutService {
         jdbcTemplate.update("DELETE FROM account_lockouts WHERE account_key = ?", accountKey(identifier));
     }
 
+    /** Para cuando la persona recupera el acceso por otra vía (restablecer contraseña con token):
+     * evita que siga bloqueada tras haber demostrado que controla su correo. Se ejecuta en la
+     * transacción del llamador y ignora identificadores vacíos para no tocar el contador "unknown". */
+    public void clearLockout(String identifier) {
+        if (identifier == null || identifier.isBlank()) {
+            return;
+        }
+        jdbcTemplate.update("DELETE FROM account_lockouts WHERE account_key = ?", accountKey(identifier));
+    }
+
     @Scheduled(cron = "${app.account-lockout.cleanup-cron:0 27 * * * *}")
     public void deleteStaleCounters() {
         jdbcTemplate.update(

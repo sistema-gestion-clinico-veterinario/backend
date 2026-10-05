@@ -41,6 +41,7 @@ public class MascotaServiceImpl implements MascotaService {
     private final veterinaria.vargasvet.repository.RazaRepository razaRepository;
     private final ApoderadoService apoderadoService;
     private final MascotaRelacionService mascotaRelacionService;
+    private final veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
 
     @Override
     @Transactional
@@ -150,7 +151,14 @@ public class MascotaServiceImpl implements MascotaService {
         boolean nuevoTitularSinMascotasActivas = false;
 
         if (!Boolean.TRUE.equals(mascota.getActivo())) {
-            throw new IllegalStateException("No se puede editar una mascota inactiva. Active a la mascota primero.");
+            boolean pausadaPorElSistema = mascota.getMotivoBaja() != null && mascota.getMotivoBaja().esAutomatico();
+            boolean pideTransferir = request.getApoderadoId() != null && mascota.getApoderado() != null
+                    && !request.getApoderadoId().equals(mascota.getApoderado().getId());
+            if (!(pausadaPorElSistema && pideTransferir)) {
+                throw new IllegalStateException(pausadaPorElSistema
+                        ? "La mascota está inactiva porque su propietario no está activo. Reactiva al propietario o transfiere la titularidad a un cliente activo."
+                        : "No se puede editar una mascota inactiva. Active a la mascota primero.");
+            }
         }
         businessValidator.checkCompanyActiva(
             mascota.getApoderado() != null && mascota.getApoderado().getUser() != null
@@ -213,6 +221,8 @@ public class MascotaServiceImpl implements MascotaService {
         mascotaRelacionService.asegurarPropietarioPrincipal(savedMascota.getId());
 
         if (titularidadTransferida) {
+            petOwnershipService.reevaluate(savedMascota);
+
             String anterior = nombreApoderado(apoderadoAnterior);
             String nuevo = nombreApoderado(savedMascota.getApoderado());
             auditLogService.log(
@@ -245,6 +255,7 @@ public class MascotaServiceImpl implements MascotaService {
     @Transactional
     public void cambiarEstado(Long id, veterinaria.vargasvet.dto.request.EstadoMascotaRequest request) {
         Mascota mascota = findAccessibleById(id);
+        petOwnershipService.lockPet(mascota);
 
         if (!request.getActive()) {
             if (citaRepository.existsCitaVigenteByMascotaId(id, veterinaria.vargasvet.util.AppClock.now())) {
@@ -252,6 +263,9 @@ public class MascotaServiceImpl implements MascotaService {
             }
             if (request.getMotivoBaja() == null) {
                 throw new IllegalArgumentException("Debe proporcionar un motivo de baja para desactivar la mascota");
+            }
+            if (request.getMotivoBaja().esAutomatico()) {
+                throw new IllegalArgumentException("Ese motivo de baja solo lo asigna el sistema");
             }
             if (request.getMotivoBaja() == veterinaria.vargasvet.domain.enums.MotivoBajaMascota.OTRO) {
                 if (request.getOtroMotivoBaja() == null || request.getOtroMotivoBaja().trim().isEmpty()) {
@@ -261,6 +275,7 @@ public class MascotaServiceImpl implements MascotaService {
             mascota.setMotivoBaja(request.getMotivoBaja());
             mascota.setOtroMotivoBaja(request.getMotivoBaja() == veterinaria.vargasvet.domain.enums.MotivoBajaMascota.OTRO ? request.getOtroMotivoBaja() : null);
         } else {
+            petOwnershipService.assertCanBeReactivated(mascota);
             mascota.setMotivoBaja(null);
             mascota.setOtroMotivoBaja(null);
         }

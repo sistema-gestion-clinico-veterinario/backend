@@ -22,8 +22,11 @@ public class MascotaRelacionResponse {
     private LocalDate fechaFin;
     private String observaciones;
     private Boolean activo;
+    private Boolean porEmpezar;
+    private Boolean cuentaActivada;
     private LocalDateTime createdAt;
     private String createdBy;
     private LocalDateTime updatedAt;
     private String updatedBy;
+    private String avisoMascota;
 }

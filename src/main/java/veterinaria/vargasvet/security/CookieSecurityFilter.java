@@ -55,8 +55,7 @@ public class CookieSecurityFilter extends OncePerRequestFilter {
     private boolean hasAuthenticationCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) return false;
-        return Arrays.stream(cookies).anyMatch(cookie ->
-                "access_token".equals(cookie.getName()) || "refresh_token".equals(cookie.getName()));
+        return Arrays.stream(cookies).anyMatch(cookie -> SessionCookies.isSessionCookie(cookie.getName()));
     }
 
     private boolean hasTrustedOrigin(HttpServletRequest request) {

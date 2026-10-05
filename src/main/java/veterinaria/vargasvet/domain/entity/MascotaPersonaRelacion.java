@@ -14,7 +14,6 @@ import java.util.UUID;
 @Getter
 @Setter
 @Table(name = "mascota_persona_relacion", uniqueConstraints = {
-        @UniqueConstraint(name = "uq_mascota_persona_relacion", columnNames = {"mascota_id", "apoderado_id"}),
         @UniqueConstraint(name = "uq_mascota_persona_relacion_uuid", columnNames = "uuid")
 }, indexes = {
         @Index(name = "idx_mascota_persona_relacion_mascota", columnList = "mascota_id,activo"),

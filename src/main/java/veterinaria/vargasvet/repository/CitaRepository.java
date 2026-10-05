@@ -53,6 +53,7 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     java.util.Optional<Cita> findByIdForUpdate(@Param("id") Long id);
 
     String ESTADOS_NO_ACTIVOS = "c.estado NOT IN ('CANCELADA', 'ELIMINADA') AND c.eliminada = false";
+    String VIGENTE_EN_EL_TIEMPO = "(c.fechaHoraInicio >= :ahora OR c.fechaHoraFin >= :ahora OR c.estado IN ('SALA_DE_ESPERA', 'EN_PROCESO'))";
     String ESTADOS_VIGENTES = "c.estado IN ('PROGRAMADA', 'PENDIENTE', 'CONFIRMADA', 'REPROGRAMADA', 'SALA_DE_ESPERA', 'EN_PROCESO')";
 
     @Query("SELECT DISTINCT c FROM Cita c " +
@@ -267,7 +268,7 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     long countEnProcesoByEmpleadoExcluding(@Param("empleadoId") Long empleadoId, @Param("excludeId") Long excludeId);
 
     @Query("SELECT COUNT(c) > 0 FROM Cita c WHERE c.empleado.id = :empleadoId " +
-            "AND c.eliminada = false AND c.fechaHoraInicio >= :ahora AND " + ESTADOS_VIGENTES)
+            "AND c.eliminada = false AND " + VIGENTE_EN_EL_TIEMPO + " AND " + ESTADOS_VIGENTES)
     boolean existsCitaVigenteByEmpleadoId(@Param("empleadoId") Long empleadoId,
                                           @Param("ahora") LocalDateTime ahora);
 
@@ -281,6 +282,11 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     Page<Cita> findByMascota_Apoderado_IdAndMascota_IdAndEliminadaFalseOrderByFechaHoraInicioDesc(
             Long apoderadoId, Long mascotaId, Pageable pageable);
+
+    Page<Cita> findByMascota_IdAndEliminadaFalseOrderByFechaHoraInicioDesc(Long mascotaId, Pageable pageable);
+
+    Page<Cita> findByMascota_IdInAndEliminadaFalseOrderByFechaHoraInicioDesc(
+            java.util.Collection<Long> mascotaIds, Pageable pageable);
 
     default Page<Cita> findByApoderadoIdPaginated(Long apoderadoId, Pageable pageable) {
         return findByMascota_Apoderado_IdAndEliminadaFalseOrderByFechaHoraInicioDesc(apoderadoId, pageable);
@@ -304,23 +310,29 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
                                                @Param("fecha") LocalDate fecha);
 
     @Query("SELECT COUNT(c) > 0 FROM Cita c WHERE c.mascota.id = :mascotaId " +
-            "AND c.eliminada = false AND c.fechaHoraInicio >= :ahora AND " + ESTADOS_VIGENTES)
+            "AND c.eliminada = false AND " + VIGENTE_EN_EL_TIEMPO + " AND " + ESTADOS_VIGENTES)
     boolean existsCitaVigenteByMascotaId(@Param("mascotaId") Long mascotaId,
                                          @Param("ahora") LocalDateTime ahora);
 
+    @Query("SELECT COALESCE(SUM(c.totalServicio - COALESCE(c.montoPagado, 0)), 0) FROM Cita c " +
+            "WHERE c.mascota.apoderado.id = :apoderadoId AND c.eliminada = false " +
+            "AND c.estado = veterinaria.vargasvet.domain.enums.EstadoCita.COMPLETADA " +
+            "AND c.totalServicio > COALESCE(c.montoPagado, 0)")
+    java.math.BigDecimal saldoPendienteByApoderadoId(@Param("apoderadoId") Long apoderadoId);
+
     @Query("SELECT COUNT(c) > 0 FROM Cita c WHERE c.mascota.apoderado.id = :apoderadoId " +
-            "AND c.eliminada = false AND c.fechaHoraInicio >= :ahora AND " + ESTADOS_VIGENTES)
+            "AND c.eliminada = false AND " + VIGENTE_EN_EL_TIEMPO + " AND " + ESTADOS_VIGENTES)
     boolean existsCitaVigenteByApoderadoId(@Param("apoderadoId") Long apoderadoId,
                                            @Param("ahora") LocalDateTime ahora);
 
     @Query("SELECT c FROM Cita c WHERE c.empleado.id = :empleadoId " +
-            "AND c.eliminada = false AND c.fechaHoraInicio >= :ahora AND " + ESTADOS_VIGENTES +
+            "AND c.eliminada = false AND " + VIGENTE_EN_EL_TIEMPO + " AND " + ESTADOS_VIGENTES +
             " ORDER BY c.fechaHoraInicio ASC")
     List<Cita> findCitasVigentesByEmpleadoId(@Param("empleadoId") Long empleadoId,
                                              @Param("ahora") LocalDateTime ahora);
 
     @Query("SELECT c FROM Cita c WHERE c.mascota.apoderado.id = :apoderadoId " +
-            "AND c.eliminada = false AND c.fechaHoraInicio >= :ahora AND " + ESTADOS_VIGENTES +
+            "AND c.eliminada = false AND " + VIGENTE_EN_EL_TIEMPO + " AND " + ESTADOS_VIGENTES +
             " ORDER BY c.fechaHoraInicio ASC")
     List<Cita> findCitasVigentesByApoderadoId(@Param("apoderadoId") Long apoderadoId,
                                               @Param("ahora") LocalDateTime ahora);

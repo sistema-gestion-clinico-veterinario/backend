@@ -44,6 +44,7 @@ class CartillaServiceImplTest {
     @Mock AuditLogService auditLogService;
     @Mock SimpMessagingTemplate messagingTemplate;
     @Mock veterinaria.vargasvet.service.impl.UsuarioContactoService contactoService;
+    @Mock veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
 
     @InjectMocks CartillaServiceImpl service;
 

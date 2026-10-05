@@ -103,6 +103,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         var authentication = ticketService.consume(ticket)
                                 .orElseThrow(() -> new AccessDeniedException("Ticket WebSocket inválido o expirado"));
                         accessor.setUser(authentication);
+                        if (authentication.getPrincipal() instanceof UsuarioPrincipal ticketPrincipal) {
+                            subscriptionGuard.bindSession(accessor.getSessionId(), ticketPrincipal.getSessionId());
+                        }
                     } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
                         if (!(accessor.getUser() instanceof org.springframework.security.core.Authentication authentication)
                                 || !authentication.isAuthenticated()) {

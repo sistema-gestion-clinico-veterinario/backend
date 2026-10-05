@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Cerraste tu cuenta</title></head>
+<body style="margin:0;background:#f4f7fb;font-family:Arial,sans-serif;color:#1e293b">
+<div style="max-width:600px;margin:32px auto;background:#fff;border:1px solid #dbe4ef;border-radius:12px;padding:32px">
+    <h1 style="font-size:22px;margin:0 0 16px;color:#075985">Cerraste tu cuenta</h1>
+    <p>Hola <strong th:text="${nombre}">usuario</strong>,</p>
+    <p>Cerraste tu cuenta en <strong th:text="${companyName}">la veterinaria</strong>. Ya no podrás iniciar sesión, y las sesiones abiertas se cerraron.</p>
+    <p>La clínica conserva sus registros (citas, historias clínicas y pagos). Tus mascotas quedan sin atención programada hasta que reactives tu cuenta.</p>
+    <p>Si cambias de opinión, puedes reactivarla hasta el <strong th:text="${expiresOn}">01/01/2027</strong> (<span th:text="${graceDays}">30</span> días):</p>
+    <p style="margin:24px 0"><a th:href="${reactivateUrl}" style="background:#0369a1;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:700">Reactivar mi cuenta</a></p>
+    <p>Pasado ese plazo se eliminarán tus credenciales de acceso y, para volver, la clínica tendrá que registrarte de nuevo.</p>
+    <p style="font-size:13px;color:#b91c1c">Si no fuiste tú, usa el botón de arriba para reactivarla y avisa de inmediato al administrador de la clínica.</p>
+    <p style="font-size:12px;color:#94a3b8" th:text="${companyName}">Sistema</p>
+</div>
+</body>
+</html>

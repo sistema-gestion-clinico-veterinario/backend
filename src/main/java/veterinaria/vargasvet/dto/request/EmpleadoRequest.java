@@ -77,6 +77,7 @@ public class EmpleadoRequest {
     private String observaciones;
     private Boolean estado;
     private Integer companyId;
+    private Boolean avisoInformado;
     private List<@Valid HorarioEmpleadoRequest> horarios;
 
     @AssertTrue(message = "El numero de documento no corresponde al tipo seleccionado")

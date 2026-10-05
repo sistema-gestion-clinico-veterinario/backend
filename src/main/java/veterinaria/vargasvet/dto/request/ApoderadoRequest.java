@@ -57,6 +57,8 @@ public class ApoderadoRequest {
     private Integer companyId;
     @Size(min = 1, message = "Debe asignar al menos un rol de cliente")
     private Set<Integer> roleIds;
+    private Boolean avisoInformado;
+    private Boolean consentimientoRecordatorios;
 
     @AssertTrue(message = "El numero de documento no corresponde al tipo seleccionado")
     public boolean isNumeroDocumentoValido() {

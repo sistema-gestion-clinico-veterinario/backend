@@ -12,6 +12,7 @@ import veterinaria.vargasvet.dto.response.HorarioEmpleadoResponse;
 import veterinaria.vargasvet.dto.response.ProfileResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.ApoderadoRepository;
+import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.HorarioEmpleadoRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
@@ -31,33 +32,20 @@ public class ProfileServiceImpl implements ProfileService {
     private final EmpleadoRepository empleadoRepository;
     private final HorarioEmpleadoRepository horarioEmpleadoRepository;
     private final ApoderadoRepository apoderadoRepository;
+    private final CompanyRepository companyRepository;
     private final UsuarioContactoService contactoService;
 
     @Override
     @Transactional(readOnly = true)
     public ProfileResponse getMyProfile() {
         Usuario usuario = getCurrentUser();
-        Optional<Empleado> empleadoOpt = empleadoRepository.findActiveByUserId(usuario.getId());
-        Optional<Apoderado> apoderadoOpt = Optional.empty();
-
-        if (empleadoOpt.isEmpty() && (SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin())) {
-            Integer companyId = SecurityUtils.getCurrentCompanyId();
-            if (companyId != null) {
-                List<Empleado> companyEmployees = empleadoRepository.findAllByCompanyId(companyId);
-                if (!companyEmployees.isEmpty()) {
-                    empleadoOpt = Optional.of(companyEmployees.get(0));
-                }
-            } else {
-                List<Empleado> allEmployees = empleadoRepository.findAll();
-                if (!allEmployees.isEmpty()) {
-                    empleadoOpt = Optional.of(allEmployees.get(0));
-                }
-            }
-        }
-
-        if (empleadoOpt.isEmpty()) {
-            apoderadoOpt = apoderadoRepository.findByUserIdAndCompanyId(usuario.getId(), SecurityUtils.getCurrentCompanyId());
-        }
+        Integer companyId = requireSessionCompanyForTenantProfile();
+        Optional<Empleado> empleadoOpt = companyId == null
+                ? Optional.empty()
+                : empleadoRepository.findByUserIdAndCompanyIdAndEstadoTrue(usuario.getId(), companyId);
+        Optional<Apoderado> apoderadoOpt = empleadoOpt.isEmpty() && companyId != null
+                ? apoderadoRepository.findByUserIdAndCompanyId(usuario.getId(), companyId)
+                : Optional.empty();
 
         return buildResponse(usuario, empleadoOpt.orElse(null), apoderadoOpt.orElse(null));
     }
@@ -66,13 +54,16 @@ public class ProfileServiceImpl implements ProfileService {
     @Transactional
     public ProfileResponse updateMyProfile(ProfileUpdateRequest dto) {
         Usuario usuario = getCurrentUser();
+        Integer companyId = requireSessionCompanyForTenantProfile();
 
         if (dto.getNombre() != null && !dto.getNombre().isBlank()) usuario.setNombre(dto.getNombre());
         if (dto.getApellido() != null && !dto.getApellido().isBlank()) usuario.setApellido(dto.getApellido());
         usuarioRepository.save(usuario);
-        contactoService.actualizar(usuario, SecurityUtils.getCurrentCompanyId(), dto.getTelefono(), dto.getDireccion());
+        contactoService.actualizar(usuario, companyId, dto.getTelefono(), dto.getDireccion());
 
-        Optional<Empleado> empleadoOpt = empleadoRepository.findActiveByUserId(usuario.getId());
+        Optional<Empleado> empleadoOpt = companyId == null
+                ? Optional.empty()
+                : empleadoRepository.findByUserIdAndCompanyIdAndEstadoTrue(usuario.getId(), companyId);
         Optional<Apoderado> apoderadoOpt = Optional.empty();
         empleadoOpt.ifPresent(empleado -> {
             if (dto.getObservaciones() != null) empleado.setObservaciones(dto.getObservaciones());
@@ -82,7 +73,9 @@ public class ProfileServiceImpl implements ProfileService {
         });
 
         if (empleadoOpt.isEmpty()) {
-            apoderadoOpt = apoderadoRepository.findByUserIdAndCompanyId(usuario.getId(), SecurityUtils.getCurrentCompanyId());
+            apoderadoOpt = companyId == null
+                    ? Optional.empty()
+                    : apoderadoRepository.findByUserIdAndCompanyId(usuario.getId(), companyId);
         }
 
         return buildResponse(usuario, empleadoOpt.orElse(null), apoderadoOpt.orElse(null));
@@ -105,8 +98,16 @@ public class ProfileServiceImpl implements ProfileService {
         res.setTelefono(contactoService.telefono(usuario.getId(), companyId));
         res.setDireccion(contactoService.direccion(usuario.getId(), companyId));
         res.setActivo(usuario.isActivo());
-        res.setRoles(usuario.getUsuariosPorRol().stream().map(upr -> upr.getRol().getName()).collect(Collectors.toSet()));
-        res.setCompanyName(usuario.getCompany() != null ? usuario.getCompany().getName() : null);
+        res.setRoles(usuario.getUsuariosPorRol().stream()
+                .filter(upr -> companyId == null
+                        ? upr.getCompany() == null
+                        : upr.getCompany() != null && companyId.equals(upr.getCompany().getId()))
+                .filter(upr -> upr.getRol().isActivo())
+                .map(upr -> upr.getRol().getName())
+                .collect(Collectors.toSet()));
+        res.setCompanyName(companyId == null
+                ? null
+                : companyRepository.findById(companyId).map(c -> c.getName()).orElse(null));
 
         if (empleado != null) {
             res.setEmpleado(true);
@@ -144,5 +145,19 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         return res;
+    }
+
+    /**
+     * Un perfil de clínica solo puede resolverse con la empresa firmada en el JWT.
+     * Nunca se infiere por correo, por el primer empleado disponible ni por un dato
+     * enviado por la interfaz.
+     */
+    private Integer requireSessionCompanyForTenantProfile() {
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        if (companyId == null && !SecurityUtils.isSuperAdmin()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "La sesión no tiene una clínica válida");
+        }
+        return companyId;
     }
 }

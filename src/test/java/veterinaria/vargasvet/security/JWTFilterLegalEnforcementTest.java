@@ -63,13 +63,16 @@ class JWTFilterLegalEnforcementTest {
     private UsuarioEmpresaCredencialRepository credencialRepository;
 
     @Mock
+    private veterinaria.vargasvet.repository.RefreshTokenRepository refreshTokenRepository;
+
+    @Mock
     private FilterChain filterChain;
 
     private JWTFilter filter;
 
     @BeforeEach
     void setUp() {
-        filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, credencialRepository, legalDocumentService);
+        filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, credencialRepository, legalDocumentService, refreshTokenRepository);
         SecurityContextHolder.clearContext();
     }
 
