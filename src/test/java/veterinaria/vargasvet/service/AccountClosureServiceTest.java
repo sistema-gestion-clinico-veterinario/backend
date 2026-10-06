@@ -102,6 +102,10 @@ class AccountClosureServiceTest {
         ReflectionTestUtils.setField(service, "codeValidityMinutes", 10L);
         ReflectionTestUtils.setField(service, "frontendUrl", "https://app.test");
         ReflectionTestUtils.setField(service, "defaultCompanyName", "SoftVet");
+        ReflectionTestUtils.setField(service, "defaultCompanyLogo", "https://cdn.test/default.png");
+        ReflectionTestUtils.setField(service, "defaultCompanyEmail", "soporte@softvet.test");
+        ReflectionTestUtils.setField(service, "defaultCompanyPhone", "+51 000 000 000");
+        ReflectionTestUtils.setField(service, "defaultCompanyAddress", "Lima");
 
         usuario = new Usuario();
         usuario.setId(10);
@@ -389,6 +393,65 @@ class AccountClosureServiceTest {
     }
 
     @Test
+    void elCorreoLlevaLaMarcaDeLaClinicaDeLaPersonaYSoloUnColorValido() {
+        sesion(RolePurpose.CLIENT_PORTAL, 7);
+        cliente();
+        credencial.setPasswordChanged(false);
+        company.setLogoUrl("https://cdn.test/patitas.png");
+        company.setEmail("hola@patitas.test");
+        company.setPhone("+51 999 111 222");
+        company.setAddress("Av. Principal 123");
+        company.setColorPrimario("#0a7d8c");
+        when(verificationCodeService.issue(usuario, company, "CIERRE_CUENTA")).thenReturn("111222");
+
+        service.requestClosure(null);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Object>> modelo = ArgumentCaptor.forClass(Map.class);
+        verify(emailService).createMail(anyString(), anyString(), modelo.capture());
+        assertThat(modelo.getValue())
+                .containsEntry("companyName", "Vargas Vet")
+                .containsEntry("companyLogo", "https://cdn.test/patitas.png")
+                .containsEntry("companyEmail", "hola@patitas.test")
+                .containsEntry("companyPhone", "+51 999 111 222")
+                .containsEntry("companyAddress", "Av. Principal 123")
+                .containsEntry("accentColor", "#0a7d8c");
+    }
+
+    @Test
+    void unColorQueNoEsHexadecimalNoLlegaAlCorreo() {
+        sesion(RolePurpose.CLIENT_PORTAL, 7);
+        cliente();
+        credencial.setPasswordChanged(false);
+        company.setColorPrimario("red;} body{display:none");
+        when(verificationCodeService.issue(usuario, company, "CIERRE_CUENTA")).thenReturn("111222");
+
+        service.requestClosure(null);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Object>> modelo = ArgumentCaptor.forClass(Map.class);
+        verify(emailService).createMail(anyString(), anyString(), modelo.capture());
+        assertThat(modelo.getValue()).doesNotContainKey("accentColor");
+    }
+
+    @Test
+    void sinDatosPropiosLaClinicaUsaLosDeLaPlataforma() {
+        sesion(RolePurpose.CLIENT_PORTAL, 7);
+        cliente();
+        credencial.setPasswordChanged(false);
+        when(verificationCodeService.issue(usuario, company, "CIERRE_CUENTA")).thenReturn("111222");
+
+        service.requestClosure(null);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, Object>> modelo = ArgumentCaptor.forClass(Map.class);
+        verify(emailService).createMail(anyString(), anyString(), modelo.capture());
+        assertThat(modelo.getValue())
+                .containsEntry("companyLogo", "https://cdn.test/default.png")
+                .containsEntry("companyEmail", "soporte@softvet.test");
+    }
+
+    @Test
     void siHayUnImpedimentoNoSeGastaNingunCodigo() {
         sesion(RolePurpose.CLIENT_PORTAL, 7);
         cliente();
@@ -523,6 +586,67 @@ class AccountClosureServiceTest {
         verify(emailService).sendEmailWithRetry(any(), eq("email/account-reactivated-template"));
         verify(auditLogService).log(eq("ana@example.test"), eq("USER"), eq(7), eq("Vargas Vet"), eq("REACTIVAR_CUENTA"),
                 eq("Seguridad"), anyString(), any());
+    }
+
+    private CierreCuenta cierreDelDuenoConApoderado(Boolean estado, TipoInactividad tipo) {
+        usuario.setActivo(true);
+        CierreCuenta cierre = cierreAbierto("sin-enlace");
+        cierre.setApoderadoId(40L);
+        Apoderado apoderado = new Apoderado();
+        apoderado.setId(40L);
+        apoderado.setEstado(estado);
+        apoderado.setTipoInactividad(tipo);
+        lenient().when(apoderadoRepository.findById(40L)).thenReturn(Optional.of(apoderado));
+        lenient().when(cierreCuentaRepository.findByUsuarioAndCompanyAndEstadoForUpdate(10, 7, EstadoCierreCuenta.CERRADA))
+                .thenReturn(List.of(cierre));
+        return cierre;
+    }
+
+    @Test
+    void quienCerroSuCuentaPuedeReactivarlaSinElEnlaceDelCorreo() {
+        CierreCuenta cierre = cierreDelDuenoConApoderado(false, TipoInactividad.BAJA);
+
+        service.reactivateOwn(10, 7);
+
+        assertThat(cierre.getEstado()).isEqualTo(EstadoCierreCuenta.REACTIVADA);
+        verify(petOwnershipService).syncPets(any(Apoderado.class), eq(null));
+        verify(emailService).sendEmailWithRetry(any(), eq("email/account-reactivated-template"));
+    }
+
+    @Test
+    void siLaClinicaSuspendioElAccesoDespuesDelCierreNoSeReactivaIniciandoSesion() {
+        CierreCuenta cierre = cierreDelDuenoConApoderado(false, TipoInactividad.SUSPENSION);
+
+        assertThatThrownBy(() -> service.reactivateOwn(10, 7))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+                .hasMessageContaining("lo gestiona el administrador");
+
+        assertThat(cierre.getEstado()).isEqualTo(EstadoCierreCuenta.CERRADA);
+        verifyNoInteractions(petOwnershipService, emailService);
+    }
+
+    @Test
+    void siElUsuarioFueDesactivadoNoSeReactiva() {
+        CierreCuenta cierre = cierreDelDuenoConApoderado(false, TipoInactividad.BAJA);
+        usuario.setActivo(false);
+
+        assertThatThrownBy(() -> service.reactivateOwn(10, 7))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+
+        assertThat(cierre.getEstado()).isEqualTo(EstadoCierreCuenta.CERRADA);
+    }
+
+    @Test
+    void sinUnCierreVigenteNoHayNadaQueReactivarPorLaCuenta() {
+        when(cierreCuentaRepository.findByUsuarioAndCompanyAndEstadoForUpdate(10, 7, EstadoCierreCuenta.CERRADA))
+                .thenReturn(List.of());
+
+        assertThatThrownBy(() -> service.reactivateOwn(10, 7)).isInstanceOf(ResourceNotFoundException.class);
+
+        CierreCuenta vencido = cierreDelDuenoConApoderado(false, TipoInactividad.BAJA);
+        vencido.setVenceAt(AppClock.now().minusMinutes(1));
+
+        assertThatThrownBy(() -> service.reactivateOwn(10, 7)).isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

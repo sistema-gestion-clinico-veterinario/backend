@@ -65,7 +65,31 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginDTO loginDTO,
                                                            HttpServletResponse httpResponse) {
-        AuthResponse response = usuarioService.login(loginDTO);
+        AuthResponse response;
+        try {
+            response = usuarioService.login(loginDTO);
+        } catch (veterinaria.vargasvet.exception.AccountClosedException ex) {
+            if (!loginDTO.isReactivarCuenta()) {
+                throw ex;
+            }
+            accountClosureService.reactivateOwn(ex.getUsuarioId(), ex.getCompanyId());
+            response = usuarioService.login(loginDTO);
+        }
+        setAuthCookies(httpResponse, response);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Login exitoso", response));
+    }
+
+    @PostMapping("/google/reactivate")
+    public ResponseEntity<ApiResponse<AuthResponse>> googleReactivate(
+            @Valid @RequestBody veterinaria.vargasvet.dto.request.GoogleReactivateRequest request,
+            HttpServletResponse httpResponse) {
+        GoogleLoginExchangeStore.Reactivation data = googleLoginExchangeStore.consumeReactivation(request.getTicket());
+        if (data == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse<>(false, "La confirmación de Google expiró. Vuelve a continuar con Google.", null));
+        }
+        accountClosureService.reactivateOwn(data.usuarioId(), data.companyId());
+        AuthResponse response = usuarioService.loginWithGoogle(data.email(), data.slug());
         setAuthCookies(httpResponse, response);
         return ResponseEntity.ok(new ApiResponse<>(true, "Login exitoso", response));
     }
@@ -176,6 +200,11 @@ public class AuthController {
                 redirectTarget = frontendLoginUrl(slug, "google_cuenta_suspendida");
             } catch (veterinaria.vargasvet.exception.GoogleAccountClosedException ex) {
                 redirectTarget = frontendLoginUrl(slug, "google_cuenta_cerrada");
+                if (ex.getUsuarioId() != null) {
+                    String ticket = googleLoginExchangeStore.storeReactivation(new GoogleLoginExchangeStore.Reactivation(
+                            ex.getUsuarioId(), ex.getCompanyId(), ex.getEmail(), ex.getSlug()));
+                    redirectTarget += "#reactivar=" + java.net.URLEncoder.encode(ticket, java.nio.charset.StandardCharsets.UTF_8);
+                }
             } catch (veterinaria.vargasvet.exception.GoogleAccountDeactivatedException ex) {
                 redirectTarget = frontendLoginUrl(slug, "google_cuenta_dada_de_baja");
             } catch (org.springframework.security.authentication.DisabledException ex) {
@@ -324,7 +353,7 @@ public class AuthController {
         accountClosureService.confirmClosure(request.getCode());
         clearAuthCookies(httpResponse, veterinaria.vargasvet.security.SessionCookies.slugOf(httpRequest));
         return ResponseEntity.ok(new ApiResponse<>(true,
-                "Cerraste tu cuenta. Te enviamos un correo con el enlace para reactivarla durante los próximos 30 días.", null));
+                "Cerraste tu cuenta. Para volver, inicia sesión durante los próximos 30 días y reactívala.", null));
     }
 
     @PostMapping("/account/reactivate")

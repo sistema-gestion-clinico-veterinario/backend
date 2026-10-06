@@ -67,6 +67,22 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>(false, ex.getMessage(), null));
     }
 
+    @ExceptionHandler(AutorizacionIaRequeridaException.class)
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> handleAutorizacionIa(AutorizacionIaRequeridaException ex) {
+        java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("code", "IA_SIN_AUTORIZACION");
+        data.put("apoderadoId", ex.getApoderadoId());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>(false, ex.getMessage(), data));
+    }
+
+    @ExceptionHandler(AccountClosedException.class)
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> handleAccountClosed(AccountClosedException ex) {
+        java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("code", "CUENTA_CERRADA");
+        data.put("reactivableHasta", ex.getReactivableHasta() == null ? null : ex.getReactivableHasta().toString());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiResponse<>(false, ex.getMessage(), data));
+    }
+
     @ExceptionHandler(CodeResendTooSoonException.class)
     public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> handleCodeResendTooSoon(CodeResendTooSoonException ex) {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)

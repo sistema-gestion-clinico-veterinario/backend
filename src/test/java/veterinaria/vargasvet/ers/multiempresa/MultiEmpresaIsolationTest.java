@@ -142,7 +142,7 @@ class MultiEmpresaIsolationTest {
     @BeforeEach
     void setUp() {
         veterinaria.vargasvet.service.AccountClosureGuard accountClosureGuard =
-                new veterinaria.vargasvet.service.AccountClosureGuard(cierreCuentaRepository);
+                new veterinaria.vargasvet.service.AccountClosureGuard(cierreCuentaRepository, empleadoRepository, apoderadoRepository);
         CompanyMembershipService companyMembershipService = new CompanyMembershipServiceImpl(
                 empleadoRepository, apoderadoRepository, usuarioMembresiaRepository, usuarioRepository, companyRepository);
         SessionSecurityService sessionSecurityService = new SessionSecurityService(
@@ -710,6 +710,8 @@ class MultiEmpresaIsolationTest {
         assertThatThrownBy(() -> usuarioService.loginWithGoogle("ana11@example.test", "clinica-a-11"))
                 .isInstanceOf(veterinaria.vargasvet.exception.GoogleAccountClosedException.class);
         assertThatThrownBy(() -> usuarioService.login(login("ana.once", "ClaveA123!", "clinica-a-11")))
+                .isInstanceOf(veterinaria.vargasvet.exception.AccountClosedException.class);
+        assertThatThrownBy(() -> usuarioService.login(login("ana.once", "clave-equivocada", "clinica-a-11")))
                 .isInstanceOf(BadCredentialsException.class);
 
         // El administrador de A no puede reactivar lo que la persona cerró
@@ -727,6 +729,28 @@ class MultiEmpresaIsolationTest {
                 .isEqualTo(clinicaA.getId());
         assertThatThrownBy(() -> cierre.reactivate(token))
                 .isInstanceOf(veterinaria.vargasvet.exception.ResourceNotFoundException.class);
+
+        // Cierra otra vez y vuelve iniciando sesión, sin el enlace; una suspensión de la clínica no se levanta así
+        autenticarComoCliente(ana.getId(), clinicaA.getId());
+        cierre.requestClosure("ClaveA123!");
+        cierre.confirmClosure(valorDelUltimoCorreo(emailService, "code"));
+        SecurityContextHolder.clearContext();
+        assertThat(enA.getEstado()).isFalse();
+
+        enA.setTipoInactividad(veterinaria.vargasvet.domain.enums.TipoInactividad.SUSPENSION);
+        apoderadoRepository.saveAndFlush(enA);
+        assertThatThrownBy(() -> usuarioService.login(login("ana.once", "ClaveA123!", "clinica-a-11")))
+                .isInstanceOf(BadCredentialsException.class);
+        assertThatThrownBy(() -> cierre.reactivateOwn(ana.getId(), clinicaA.getId()))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+        assertThat(enA.getEstado()).isFalse();
+        enA.setTipoInactividad(veterinaria.vargasvet.domain.enums.TipoInactividad.BAJA);
+        apoderadoRepository.saveAndFlush(enA);
+
+        cierre.reactivateOwn(ana.getId(), clinicaA.getId());
+        assertThat(enA.getEstado()).isTrue();
+        assertThat(usuarioService.login(login("ana.once", "ClaveA123!", "clinica-a-11")).getCompanyId())
+                .isEqualTo(clinicaA.getId());
 
         // Cierra de nuevo y vence el plazo: se borra el secreto de A y solo el de A
         autenticarComoCliente(ana.getId(), clinicaA.getId());
