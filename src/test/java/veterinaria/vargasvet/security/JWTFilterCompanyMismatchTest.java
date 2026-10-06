@@ -76,6 +76,10 @@ class JWTFilterCompanyMismatchTest {
     }
 
     private void sesion(Integer companyId, RolePurpose purpose) {
+        sesion(companyId, purpose, true, true);
+    }
+
+    private void sesion(Integer companyId, RolePurpose purpose, boolean rolConClinica, boolean asignacionConClinica) {
         Role role = new Role();
         role.setId(1);
         role.setPurpose(purpose);
@@ -90,7 +94,8 @@ class JWTFilterCompanyMismatchTest {
         company.setId(companyId);
         company.setSlug(companyId == null ? null : "clinica-a");
         company.setActivo(true);
-        role.setCompany(companyId == null ? null : company);
+        role.setCompany(companyId == null || !rolConClinica ? null : company);
+        assignment.setCompany(companyId == null || !asignacionConClinica ? null : company);
         Usuario usuario = new Usuario();
         usuario.setId(42);
         usuario.setActivo(true);
@@ -174,6 +179,49 @@ class JWTFilterCompanyMismatchTest {
         filter.doFilter(request, new MockHttpServletResponse(), chain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    private HttpServletRequest requestConSlug(String slug) {
+        HttpServletRequest request = org.mockito.Mockito.mock(HttpServletRequest.class);
+        when(request.getMethod()).thenReturn("GET");
+        when(request.getServletPath()).thenReturn("/me/navigation");
+        when(request.getCookies()).thenReturn(new Cookie[]{new Cookie("access_token__" + slug, ACCESS_TOKEN)});
+        when(request.getHeader(SessionCookies.SLUG_HEADER)).thenReturn(slug);
+        org.mockito.Mockito.lenient().when(request.getHeader(JWTFilter.COMPANY_HEADER)).thenReturn("7");
+        return request;
+    }
+
+    @Test
+    void unRolGeneralSinClinicaAutenticaPorLaClinicaDeSuAsignacion() throws Exception {
+        sesion(7, RolePurpose.COMPANY_ADMIN, false, true);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(requestConSlug("clinica-a"), response, chain);
+
+        assertThat(response.getStatus()).isNotEqualTo(409);
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
+        verify(chain).doFilter(any(), any());
+    }
+
+    @Test
+    void unRolGeneralTampocoDejaUsarLaSesionBajoElNombreDeOtraClinica() throws Exception {
+        sesion(7, RolePurpose.COMPANY_ADMIN, false, true);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(requestConSlug("clinica-b"), response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(409);
+        assertThat(response.getContentAsString()).contains("SESSION_COMPANY_MISMATCH");
+        verify(chain, never()).doFilter(any(), any());
+    }
+
+    @Test
+    void sinClinicaEnLaAsignacionNiEnElRolSeUsaLaDelUsuario() throws Exception {
+        sesion(7, RolePurpose.COMPANY_ADMIN, false, false);
+
+        filter.doFilter(requestConSlug("clinica-a"), new MockHttpServletResponse(), chain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
     }
 
     @Test
