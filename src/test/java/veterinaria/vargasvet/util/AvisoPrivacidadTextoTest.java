@@ -33,7 +33,7 @@ class AvisoPrivacidadTextoTest {
                 .contains("Consecuencias de proporcionar sus datos o de negarse")
                 .contains("Mientras sea cliente y 10 años después")
                 .contains("privacidad@patitas.test")
-                .contains("retirar su consentimiento")
+                .contains("dejar de recibir los recordatorios por correo")
                 .contains("Autoridad Nacional de Protección de Datos Personales");
     }
 

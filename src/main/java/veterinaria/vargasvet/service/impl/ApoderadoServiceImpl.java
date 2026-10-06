@@ -121,7 +121,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         businessValidator.checkCompanyActiva(companyIdToUse);
         Company companyToUse = companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
-        consentimientoDatosService.exigirAltaValida(companyIdToUse, dto.getAvisoInformado(), true, dto.getConsentimientoRecordatorios());
+        consentimientoDatosService.exigirAltaValida(companyIdToUse, dto.getAvisoInformado());
 
         // Aislamiento total entre empresas: la busqueda de "ya existe" es SOLO dentro de
         // esta misma empresa (ej. la persona ya es empleado aqui y ahora tambien se
@@ -297,6 +297,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             model.put("companyAddress", resolvedAddress);
             model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
                     "/auth/verify#token=" + verificationToken, company != null ? company.getSlug() : null));
+            model.put("avisoPrivacidadLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug("/privacidad", company != null ? company.getSlug() : null));
 
             veterinaria.vargasvet.dto.Mail mail = emailService.createMail(
                     usuario.getEmail(),

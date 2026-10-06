@@ -15,6 +15,10 @@ import java.util.Optional;
 @Repository
 public interface ConsentimientoDatosRepository extends JpaRepository<ConsentimientoDatos, Long> {
 
+    boolean existsByUsuarioIdAndCompanyIdAndFinalidadAndAvisoIdAndCanalIn(
+            Integer usuarioId, Integer companyId, FinalidadDatos finalidad, Long avisoId,
+            Collection<veterinaria.vargasvet.domain.enums.CanalConsentimiento> canales);
+
     Optional<ConsentimientoDatos> findFirstByUsuarioIdAndCompanyIdAndFinalidadOrderByIdDesc(
             Integer usuarioId, Integer companyId, FinalidadDatos finalidad);
 
