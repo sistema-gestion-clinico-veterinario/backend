@@ -34,6 +34,8 @@ public class ConsentimientoDatosService {
     public static final String MENSAJE_SIN_AVISO = "La clínica aún no publicó su aviso de privacidad. "
             + "Publícalo en Configuración > Aviso de privacidad antes de registrar personas.";
 
+    private static final List<CanalConsentimiento> CANALES_DE_LA_PERSONA =
+            List.of(CanalConsentimiento.PORTAL, CanalConsentimiento.ACTIVACION);
     private static final int MAX_USER_AGENT = 255;
     private static final int MAX_IP = 64;
 
@@ -50,17 +52,13 @@ public class ConsentimientoDatosService {
     }
 
     @Transactional(readOnly = true)
-    public void exigirAltaValida(Integer companyId, Boolean informada, boolean pideRecordatorios, Boolean recordatorios) {
+    public void exigirAltaValida(Integer companyId, Boolean informada) {
         if (avisoRepository.findByCompanyIdAndActivoTrue(companyId).isEmpty()) {
             throw new IllegalStateException(MENSAJE_SIN_AVISO);
         }
         if (!Boolean.TRUE.equals(informada)) {
             throw new IllegalArgumentException(
                     "Confirma que la persona fue informada del aviso de privacidad antes de registrarla");
-        }
-        if (pideRecordatorios && recordatorios == null) {
-            throw new IllegalArgumentException(
-                    "Indica si el cliente acepta recibir recordatorios por correo; puede decir que no");
         }
     }
 
@@ -101,7 +99,7 @@ public class ConsentimientoDatosService {
         if (cambio && canal == CanalConsentimiento.PRESENCIAL) {
             auditLogService.log(otorgar ? "OTORGAR_CONSENTIMIENTO_DATOS" : "RETIRAR_CONSENTIMIENTO_DATOS", "Seguridad",
                     "Se registró en la clínica que " + usuario.getNombre() + " " + usuario.getApellido()
-                            + (otorgar ? " acepta" : " no acepta") + ": " + finalidad.getDescripcion());
+                            + (otorgar ? " pidió recibir" : " pidió no recibir") + ": " + finalidad.getDescripcion());
         }
     }
 
@@ -122,9 +120,13 @@ public class ConsentimientoDatosService {
                             ultima == null ? null : ultima.getFecha(), ultima == null ? null : ultima.getCanal());
                 })
                 .toList();
+        boolean vistaPorLaPersona = aviso.isPresent() && consentimientoRepository
+                .existsByUsuarioIdAndCompanyIdAndFinalidadAndAvisoIdAndCanalIn(usuarioId, companyId,
+                        FinalidadDatos.ENTERADO, aviso.get().getId(), CANALES_DE_LA_PERSONA);
         return new ConsentimientoEstadoResponse(aviso.isPresent(), aviso.map(AvisoPrivacidad::getVersion).orElse(null),
                 enterado != null, enterado == null ? null : enterado.getAvisoVersion(),
-                enterado == null ? null : enterado.getFecha(), enterado == null ? null : enterado.getCanal(), finalidades);
+                enterado == null ? null : enterado.getFecha(), enterado == null ? null : enterado.getCanal(),
+                vistaPorLaPersona, finalidades);
     }
 
     @Transactional(readOnly = true)
@@ -138,13 +140,13 @@ public class ConsentimientoDatosService {
     }
 
     @Transactional(readOnly = true)
-    public Set<Integer> usuariosQueOtorgaron(Collection<Integer> usuarioIds, Integer companyId,
+    public Set<Integer> usuariosQueRetiraron(Collection<Integer> usuarioIds, Integer companyId,
                                              FinalidadDatos finalidad) {
         if (usuarioIds.isEmpty()) {
             return Set.of();
         }
         return new HashSet<>(consentimientoRepository.usuariosConUltimoEstado(
-                usuarioIds, companyId, finalidad, EstadoConsentimiento.OTORGADO));
+                usuarioIds, companyId, finalidad, EstadoConsentimiento.RETIRADO));
     }
 
     @Transactional(readOnly = true)
@@ -158,10 +160,8 @@ public class ConsentimientoDatosService {
 
     private void registrarEnterado(Usuario usuario, AvisoPrivacidad aviso, CanalConsentimiento canal,
                                    Integer registradoPorId, String ip, String userAgent) {
-        Optional<ConsentimientoDatos> ultimo = consentimientoRepository
-                .findFirstByUsuarioIdAndCompanyIdAndFinalidadOrderByIdDesc(
-                        usuario.getId(), aviso.getCompany().getId(), FinalidadDatos.ENTERADO);
-        if (ultimo.isPresent() && ultimo.get().getAviso().getId().equals(aviso.getId())) {
+        if (consentimientoRepository.existsByUsuarioIdAndCompanyIdAndFinalidadAndAvisoIdAndCanalIn(
+                usuario.getId(), aviso.getCompany().getId(), FinalidadDatos.ENTERADO, aviso.getId(), List.of(canal))) {
             return;
         }
         guardar(usuario, aviso, FinalidadDatos.ENTERADO, EstadoConsentimiento.OTORGADO, canal, registradoPorId, null, ip, userAgent);

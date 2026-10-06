@@ -113,9 +113,7 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
         apoderado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
         apoderado.setNumeroDocumento("9" + System.nanoTime());
         apoderado.setGenero(Genero.FEMENINO);
-        apoderado = apoderadoRepository.saveAndFlush(apoderado);
-        decidirRecordatorios(apoderado, true);
-        return apoderado;
+        return apoderadoRepository.saveAndFlush(apoderado);
     }
 
     private void vincular(Mascota mascota, Apoderado persona, TipoRelacionMascota tipo, boolean informacion, boolean pagos) {
@@ -243,7 +241,7 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
     }
 
     @Test
-    void quienRetiroSuConsentimientoNoRecibeRecordatoriosPeroElRestoSi() {
+    void quienPidioNoRecibirlosNoLosRecibePeroElRestoSi() {
         Apoderado maria = cliente("maria");
         Apoderado carlos = cliente("carlos");
         Apoderado rosa = cliente("rosa");
@@ -262,7 +260,7 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
     }
 
     @Test
-    void volverAAceptarRestableceLosRecordatorios() {
+    void volverAPedirlosRestableceLosRecordatorios() {
         Apoderado maria = cliente("maria");
         mascotaConControl(maria);
         decidirRecordatorios(maria, false);
@@ -274,7 +272,7 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
     }
 
     @Test
-    void sinNingunRecordatorioAceptadoNoSeEnviaNada() {
+    void siElUnicoDestinatarioPidioNoRecibirlosNoSeEnviaNada() {
         Apoderado maria = cliente("maria");
         mascotaConControl(maria);
         decidirRecordatorios(maria, false);
@@ -283,5 +281,15 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
 
         verify(emailService, never()).sendEmail(any(), anyString());
         assertThat(recordatorioRepository.count()).isZero();
+    }
+
+    @Test
+    void sinNingunaDecisionLosRecordatoriosLlegaComoSiempre() {
+        Apoderado maria = cliente("maria");
+        mascotaConControl(maria);
+
+        service.procesarRecordatorios();
+
+        assertThat(destinatariosDeLosCorreos()).containsExactly(maria.getUser().getEmail());
     }
 }

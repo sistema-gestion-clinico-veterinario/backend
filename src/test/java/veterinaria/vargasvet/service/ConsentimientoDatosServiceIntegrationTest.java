@@ -102,7 +102,7 @@ class ConsentimientoDatosServiceIntegrationTest {
 
     @Test
     void sinAvisoPublicadoNoSePuedeRegistrarANadie() {
-        assertThatThrownBy(() -> service.exigirAltaValida(clinica.getId(), true, false, null))
+        assertThatThrownBy(() -> service.exigirAltaValida(clinica.getId(), true))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage(ConsentimientoDatosService.MENSAJE_SIN_AVISO);
         assertThat(service.hayAvisoPublicado(clinica.getId())).isFalse();
@@ -112,26 +112,16 @@ class ConsentimientoDatosServiceIntegrationTest {
     void conAvisoPublicadoSeExigeLaConstanciaDeQueSeInformo() {
         publicarAviso(clinica, "Av. Los Olivos 123, Lima");
 
-        assertThatThrownBy(() -> service.exigirAltaValida(clinica.getId(), null, false, null)).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.exigirAltaValida(clinica.getId(), false, false, null)).isInstanceOf(IllegalArgumentException.class);
-        service.exigirAltaValida(clinica.getId(), true, false, null);
-    }
-
-    @Test
-    void alRegistrarUnClienteLaDecisionSobreRecordatoriosEsExplicitaPeroPuedeSerNo() {
-        publicarAviso(clinica, "Av. Los Olivos 123, Lima");
-
-        assertThatThrownBy(() -> service.exigirAltaValida(clinica.getId(), true, true, null))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("recordatorios");
-        service.exigirAltaValida(clinica.getId(), true, true, false);
-        service.exigirAltaValida(clinica.getId(), true, true, true);
+        assertThatThrownBy(() -> service.exigirAltaValida(clinica.getId(), null)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.exigirAltaValida(clinica.getId(), false)).isInstanceOf(IllegalArgumentException.class);
+        service.exigirAltaValida(clinica.getId(), true);
     }
 
     @Test
     void elAvisoDeOtraClinicaNoValeParaEstaClinica() {
         publicarAviso(otraClinica, "Jr. Cusco 456, Lima");
 
-        assertThatThrownBy(() -> service.exigirAltaValida(clinica.getId(), true, false, null)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> service.exigirAltaValida(clinica.getId(), true)).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -145,8 +135,8 @@ class ConsentimientoDatosServiceIntegrationTest {
         assertThat(estado.informadaVersion()).isEqualTo(1);
         assertThat(estado.informadaCanal()).isEqualTo(CanalConsentimiento.PRESENCIAL);
         assertThat(recordatorios(estado).estado()).isEqualTo("RETIRADO");
-        assertThat(service.usuariosQueOtorgaron(Set.of(ana.getId(), recepcion.getId()), clinica.getId(),
-                FinalidadDatos.RECORDATORIOS_PREVENTIVOS)).isEmpty();
+        assertThat(service.usuariosQueRetiraron(Set.of(ana.getId(), recepcion.getId()), clinica.getId(),
+                FinalidadDatos.RECORDATORIOS_PREVENTIVOS)).containsExactly(ana.getId());
         ConsentimientoDatos constancia = consentimientoRepository
                 .findByUsuarioIdAndCompanyIdOrderByIdDesc(ana.getId(), clinica.getId()).get(0);
         assertThat(constancia.getRegistradoPor().getId()).isEqualTo(recepcion.getId());
@@ -165,13 +155,13 @@ class ConsentimientoDatosServiceIntegrationTest {
     }
 
     @Test
-    void sinDecidirNoSeRegistraRecordatoriosYQuedaSinRegistro() {
+    void sinDecidirQuedaSinRegistroYSeSiguenRecibiendoLosRecordatorios() {
         publicarAviso(clinica, "Av. Los Olivos 123, Lima");
 
         service.registrarAlta(ana, clinica.getId(), null, recepcion.getId());
 
         assertThat(recordatorios(service.estado(ana.getId(), clinica.getId())).estado()).isEqualTo("SIN_REGISTRO");
-        assertThat(service.usuariosQueOtorgaron(Set.of(ana.getId()), clinica.getId(),
+        assertThat(service.usuariosQueRetiraron(Set.of(ana.getId()), clinica.getId(),
                 FinalidadDatos.RECORDATORIOS_PREVENTIVOS)).isEmpty();
     }
 
@@ -183,15 +173,15 @@ class ConsentimientoDatosServiceIntegrationTest {
         service.cambiarFinalidad(ana.getId(), clinica.getId(), FinalidadDatos.RECORDATORIOS_PREVENTIVOS, false,
                 CanalConsentimiento.PORTAL, null, "No quiero correos", "10.0.0.1", "navegador");
         assertThat(recordatorios(service.estado(ana.getId(), clinica.getId())).estado()).isEqualTo("RETIRADO");
-        assertThat(service.usuariosQueOtorgaron(Set.of(ana.getId()), clinica.getId(),
-                FinalidadDatos.RECORDATORIOS_PREVENTIVOS)).isEmpty();
+        assertThat(service.usuariosQueRetiraron(Set.of(ana.getId()), clinica.getId(),
+                FinalidadDatos.RECORDATORIOS_PREVENTIVOS)).containsExactly(ana.getId());
 
         service.cambiarFinalidad(ana.getId(), clinica.getId(), FinalidadDatos.RECORDATORIOS_PREVENTIVOS, true,
                 CanalConsentimiento.PORTAL, null, null, "10.0.0.1", "navegador");
 
         assertThat(recordatorios(service.estado(ana.getId(), clinica.getId())).estado()).isEqualTo("OTORGADO");
-        assertThat(service.usuariosQueOtorgaron(Set.of(ana.getId()), clinica.getId(),
-                FinalidadDatos.RECORDATORIOS_PREVENTIVOS)).containsExactly(ana.getId());
+        assertThat(service.usuariosQueRetiraron(Set.of(ana.getId()), clinica.getId(),
+                FinalidadDatos.RECORDATORIOS_PREVENTIVOS)).isEmpty();
         List<ConsentimientoDatos> historial = consentimientoRepository
                 .findByUsuarioIdAndCompanyIdOrderByIdDesc(ana.getId(), clinica.getId());
         assertThat(historial).hasSize(4);
@@ -268,5 +258,41 @@ class ConsentimientoDatosServiceIntegrationTest {
         assertThat(service.usuariosInformados(Set.of(ana.getId(), recepcion.getId()), clinica.getId()))
                 .containsExactly(ana.getId());
         assertThat(service.usuariosInformados(Set.of(), clinica.getId())).isEmpty();
+    }
+
+    @Test
+    void recepcionYLaPersonaDejanCadaUnaSuConstanciaYSoloLaDeLaPersonaCuentaComoVista() {
+        publicarAviso(clinica, "Av. Los Olivos 123, Lima");
+        service.registrarAlta(ana, clinica.getId(), null, recepcion.getId());
+
+        ConsentimientoEstadoResponse soloRecepcion = service.estado(ana.getId(), clinica.getId());
+        assertThat(soloRecepcion.informada()).isTrue();
+        assertThat(soloRecepcion.vistaPorLaPersona()).isFalse();
+
+        service.registrarEnterado(ana.getId(), clinica.getId(), CanalConsentimiento.PORTAL, null, "10.0.0.1", "navegador");
+        service.registrarEnterado(ana.getId(), clinica.getId(), CanalConsentimiento.PORTAL, null, "10.0.0.1", "navegador");
+
+        ConsentimientoEstadoResponse conLaPersona = service.estado(ana.getId(), clinica.getId());
+        assertThat(conLaPersona.vistaPorLaPersona()).isTrue();
+        assertThat(consentimientoRepository.findByUsuarioIdAndCompanyIdOrderByIdDesc(ana.getId(), clinica.getId()))
+                .extracting(ConsentimientoDatos::getCanal)
+                .containsExactly(CanalConsentimiento.PORTAL, CanalConsentimiento.PRESENCIAL);
+    }
+
+    @Test
+    void laActivacionTambienCuentaComoVistaPorLaPersonaYUnAvisoNuevoLaReinicia() {
+        publicarAviso(clinica, "Av. Los Olivos 123, Lima");
+        service.registrarEnterado(ana.getId(), clinica.getId(), CanalConsentimiento.ACTIVACION, null, null, null);
+        assertThat(service.estado(ana.getId(), clinica.getId()).vistaPorLaPersona()).isTrue();
+
+        publicarAviso(clinica, "Jr. Cusco 456, Lima");
+
+        assertThat(service.estado(ana.getId(), clinica.getId()).vistaPorLaPersona()).isFalse();
+    }
+
+    @Test
+    void sinAvisoPublicadoNadieTieneNadaPendienteDeVer() {
+        assertThat(service.estado(ana.getId(), clinica.getId()).vistaPorLaPersona()).isFalse();
+        assertThat(service.estado(ana.getId(), clinica.getId()).avisoPublicado()).isFalse();
     }
 }

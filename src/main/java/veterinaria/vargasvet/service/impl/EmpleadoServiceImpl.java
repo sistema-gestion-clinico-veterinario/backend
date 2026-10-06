@@ -119,7 +119,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         Company companyToUse = companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
         businessValidator.checkCompanyActiva(companyIdToUse);
-        consentimientoDatosService.exigirAltaValida(companyIdToUse, dto.getAvisoInformado(), false, null);
+        consentimientoDatosService.exigirAltaValida(companyIdToUse, dto.getAvisoInformado());
 
         // Aislamiento total entre empresas: nunca se busca ni se reutiliza una identidad
         // de OTRA empresa, aunque coincida el DNI o el correo - cada empresa es una isla,
@@ -897,6 +897,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             model.put("companyAddress", resolvedAddress);
             model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
                     "/auth/verify#token=" + verificationToken, company != null ? company.getSlug() : null));
+            model.put("avisoPrivacidadLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug("/privacidad", company != null ? company.getSlug() : null));
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),

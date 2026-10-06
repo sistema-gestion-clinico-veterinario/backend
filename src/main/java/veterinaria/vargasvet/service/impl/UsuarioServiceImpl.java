@@ -148,6 +148,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             String slug = company != null ? company.getSlug() : null;
             model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
                     "/auth/verify#token=" + verificationToken, slug));
+            model.put("avisoPrivacidadLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug("/privacidad", slug));
 
             Mail mail = emailService.createMail(
                     usuario.getEmail(),
