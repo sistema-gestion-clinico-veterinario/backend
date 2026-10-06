@@ -105,7 +105,7 @@ public class AccountClosureService {
     }
 
     @Transactional
-    public void requestClosure(String password) {
+    public long requestClosure(String password) {
         Context context = loadContext();
         String key = context.usuario().getId() + ":" + context.company().getId();
         sharedRateLimitService.enforce("account-closure-request", key, 3, Duration.ofHours(1));
@@ -124,6 +124,7 @@ public class AccountClosureService {
         emailService.sendEmailWithRetry(mail, "email/account-close-code-template");
         auditLogService.log(context.company().getId(), "SOLICITAR_CIERRE_CUENTA", "Seguridad",
                 "El usuario pidió el código para cerrar su cuenta");
+        return verificationCodeService.segundosParaPedirOtro(context.usuario(), context.company(), CODE_PURPOSE);
     }
 
     @Transactional

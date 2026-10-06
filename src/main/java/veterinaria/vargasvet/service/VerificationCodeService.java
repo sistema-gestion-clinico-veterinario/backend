@@ -14,6 +14,7 @@ import veterinaria.vargasvet.security.SecurityTokenUtils;
 import veterinaria.vargasvet.util.AppClock;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 
@@ -31,9 +32,25 @@ public class VerificationCodeService {
     @Value("${security.verification-code-max-attempts:5}")
     private int maxAttempts;
 
+    @Value("${security.verification-code-resend-seconds:60}")
+    private long resendSeconds;
+
+    @Value("${security.verification-code-resend-max-seconds:900}")
+    private long resendMaxSeconds;
+
+    private static final Duration VENTANA_DE_REENVIOS = Duration.ofHours(1);
+
     @Transactional
     public String issue(Usuario usuario, Company company, String purpose) {
-        repository.deletePendientes(usuario.getId(), company.getId(), purpose);
+        repository.findFirstByUsuarioIdAndCompanyIdAndPropositoOrderByCreadoAtDesc(usuario.getId(), company.getId(), purpose)
+                .ifPresent(ultimo -> {
+                    long espera = esperaTrasEmitir(Math.max(emitidosEnLaVentana(usuario, company, purpose), 1));
+                    long faltan = espera - Duration.between(ultimo.getCreadoAt(), AppClock.now()).getSeconds();
+                    if (faltan > 0) {
+                        throw new veterinaria.vargasvet.exception.CodeResendTooSoonException(faltan);
+                    }
+                });
+        repository.invalidarPendientes(usuario.getId(), company.getId(), purpose, AppClock.now());
         String code = String.format("%06d", RANDOM.nextInt(1_000_000));
         String salt = SecurityTokenUtils.generate().substring(0, 16);
         CodigoVerificacion row = new CodigoVerificacion();
@@ -46,6 +63,24 @@ public class VerificationCodeService {
         row.setExpiraAt(AppClock.now().plusMinutes(validityMinutes));
         repository.save(row);
         return code;
+    }
+
+    @Transactional(readOnly = true)
+    public long segundosParaPedirOtro(Usuario usuario, Company company, String purpose) {
+        return esperaTrasEmitir(Math.max(emitidosEnLaVentana(usuario, company, purpose), 1));
+    }
+
+    private long emitidosEnLaVentana(Usuario usuario, Company company, String purpose) {
+        return repository.countByUsuarioIdAndCompanyIdAndPropositoAndCreadoAtAfter(
+                usuario.getId(), company.getId(), purpose, AppClock.now().minus(VENTANA_DE_REENVIOS));
+    }
+
+    private long esperaTrasEmitir(long emitidos) {
+        long espera = resendSeconds;
+        for (long i = 1; i < emitidos && espera < resendMaxSeconds; i++) {
+            espera *= 2;
+        }
+        return Math.min(espera, Math.max(resendMaxSeconds, resendSeconds));
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, noRollbackFor = InvalidVerificationCodeException.class)
