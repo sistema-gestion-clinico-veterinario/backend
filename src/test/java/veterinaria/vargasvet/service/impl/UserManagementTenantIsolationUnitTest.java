@@ -99,7 +99,7 @@ class UserManagementTenantIsolationUnitTest {
         clinica.setId(7);
         when(companyRepository.findById(7)).thenReturn(Optional.of(clinica));
         org.mockito.Mockito.doThrow(new IllegalStateException("sin aviso"))
-                .when(consentimientoDatosService).exigirAltaValida(7, null, true, null);
+                .when(consentimientoDatosService).exigirAltaValida(7, null);
         veterinaria.vargasvet.dto.request.ApoderadoRequest request = new veterinaria.vargasvet.dto.request.ApoderadoRequest();
         request.setEmail("cliente@example.test");
 
@@ -117,7 +117,7 @@ class UserManagementTenantIsolationUnitTest {
         clinica.setId(7);
         when(companyRepository.findById(7)).thenReturn(Optional.of(clinica));
         org.mockito.Mockito.doThrow(new IllegalArgumentException("sin constancia"))
-                .when(consentimientoDatosService).exigirAltaValida(7, false, false, null);
+                .when(consentimientoDatosService).exigirAltaValida(7, false);
         veterinaria.vargasvet.dto.request.EmpleadoRequest request = new veterinaria.vargasvet.dto.request.EmpleadoRequest();
         request.setEmail("empleado@example.test");
         request.setAvisoInformado(false);

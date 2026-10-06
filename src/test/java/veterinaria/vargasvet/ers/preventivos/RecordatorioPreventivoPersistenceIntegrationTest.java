@@ -113,8 +113,6 @@ class RecordatorioPreventivoPersistenceIntegrationTest {
                 .thenReturn(java.util.concurrent.CompletableFuture.completedFuture(true));
         veterinaria.vargasvet.service.ConsentimientoDatosService consentimiento =
                 org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class);
-        when(consentimiento.usuariosQueOtorgaron(any(), any(), any()))
-                .thenAnswer(invocation -> java.util.Set.copyOf(invocation.getArgument(0)));
         RecordatorioPreventivoServiceImpl service = new RecordatorioPreventivoServiceImpl(
                 controlRepository, recordatorioRepository, emailService,
                 new veterinaria.vargasvet.service.OwnerContactPolicy(mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class)),

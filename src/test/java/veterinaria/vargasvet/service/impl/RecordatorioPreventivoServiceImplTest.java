@@ -41,8 +41,6 @@ class RecordatorioPreventivoServiceImplTest {
                         mock(veterinaria.vargasvet.repository.CitaRepository.class),
                         mock(veterinaria.vargasvet.service.AuditLogService.class)),
                 consentimientoDatosService);
-        lenient().when(consentimientoDatosService.usuariosQueOtorgaron(anyCollection(), anyInt(), any()))
-                .thenAnswer(invocation -> Set.copyOf(invocation.getArgument(0)));
     }
 
     @Test
@@ -61,13 +59,13 @@ class RecordatorioPreventivoServiceImplTest {
     }
 
     @Test
-    @DisplayName("No envía recordatorios si el propietario no los aceptó expresamente")
-    void noEnviaSinConsentimientoExpreso() {
+    @DisplayName("No envía recordatorios a quien pidió no recibirlos")
+    void noEnviaAQuienPidioNoRecibirlos() {
         ControlPreventivo vacuna = control(1L, "Antirrabica", TipoControlPreventivo.VACUNACION, 1L);
         when(controlRepository.findReminderCandidates(any(), any())).thenReturn(List.of(vacuna));
         when(recordatorioRepository.findExistingKeys(anyCollection())).thenReturn(List.of());
-        when(consentimientoDatosService.usuariosQueOtorgaron(anyCollection(), eq(7), any()))
-                .thenReturn(Set.of());
+        when(consentimientoDatosService.usuariosQueRetiraron(anyCollection(), eq(7), any()))
+                .thenAnswer(invocation -> Set.copyOf(invocation.getArgument(0)));
 
         service.procesarRecordatorios();
 
