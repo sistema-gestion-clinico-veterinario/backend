@@ -86,6 +86,18 @@ public class AccountClosureService {
     @Value("${app.company.name}")
     private String defaultCompanyName;
 
+    @Value("${app.company.logo:}")
+    private String defaultCompanyLogo;
+
+    @Value("${app.company.email:}")
+    private String defaultCompanyEmail;
+
+    @Value("${app.company.phone:}")
+    private String defaultCompanyPhone;
+
+    @Value("${app.company.address:}")
+    private String defaultCompanyAddress;
+
     private record Context(Usuario usuario, Company company, UsuarioEmpresaCredencial credencial,
                            Empleado empleado, Apoderado apoderado) {}
 
@@ -193,6 +205,34 @@ public class AccountClosureService {
                 .filter(c -> c.getEstado() == EstadoCierreCuenta.CERRADA)
                 .filter(c -> c.getVenceAt().isAfter(AppClock.now()))
                 .orElseThrow(() -> new ResourceNotFoundException("El enlace no es válido o ya venció"));
+        aplicarReactivacion(closure);
+    }
+
+    @Transactional
+    public void reactivateOwn(Integer usuarioId, Integer companyId) {
+        CierreCuenta closure = cierreCuentaRepository
+                .findByUsuarioAndCompanyAndEstadoForUpdate(usuarioId, companyId, EstadoCierreCuenta.CERRADA).stream()
+                .filter(c -> c.getVenceAt().isAfter(AppClock.now()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Tu cuenta ya no se puede reactivar"));
+        asegurarQueSigueCerradaPorSuDueno(closure);
+        aplicarReactivacion(closure);
+    }
+
+    private void asegurarQueSigueCerradaPorSuDueno(CierreCuenta closure) {
+        boolean usuarioActivo = closure.getUsuario().isActivo();
+        boolean empleadoDeBaja = closure.getEmpleadoId() == null || empleadoRepository.findById(closure.getEmpleadoId())
+                .map(e -> Boolean.FALSE.equals(e.getEstado()) && e.getTipoInactividad() == TipoInactividad.BAJA)
+                .orElse(false);
+        boolean apoderadoDeBaja = closure.getApoderadoId() == null || apoderadoRepository.findById(closure.getApoderadoId())
+                .map(a -> Boolean.FALSE.equals(a.getEstado()) && a.getTipoInactividad() == TipoInactividad.BAJA)
+                .orElse(false);
+        if (!usuarioActivo || !empleadoDeBaja || !apoderadoDeBaja) {
+            throw new AccessDeniedException("Tu acceso a esta clínica lo gestiona el administrador. Contáctalo para volver.");
+        }
+    }
+
+    private void aplicarReactivacion(CierreCuenta closure) {
         Usuario usuario = closure.getUsuario();
         Company company = closure.getCompany();
         LocalDateTime now = AppClock.now();
@@ -330,6 +370,14 @@ public class AccountClosureService {
         Map<String, Object> model = new HashMap<>();
         model.put("nombre", displayName(usuario));
         model.put("companyName", company != null && company.getName() != null ? company.getName() : defaultCompanyName);
+        model.put("companyLogo", company != null && company.getLogoUrl() != null ? company.getLogoUrl() : defaultCompanyLogo);
+        model.put("companyEmail", company != null && company.getEmail() != null ? company.getEmail() : defaultCompanyEmail);
+        model.put("companyPhone", company != null && company.getPhone() != null ? company.getPhone() : defaultCompanyPhone);
+        model.put("companyAddress", company != null && company.getAddress() != null ? company.getAddress() : defaultCompanyAddress);
+        String color = company != null ? company.getColorPrimario() : null;
+        if (color != null && color.matches("#[0-9a-fA-F]{6}")) {
+            model.put("accentColor", color);
+        }
         return model;
     }
 

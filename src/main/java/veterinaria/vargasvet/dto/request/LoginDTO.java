@@ -24,4 +24,6 @@ public class LoginDTO {
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(max = 72, message = "La contrasena no debe superar 72 caracteres")
     private String password;
+
+    private boolean reactivarCuenta;
 }

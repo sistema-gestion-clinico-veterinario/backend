@@ -31,6 +31,7 @@ class AccountClosureTemplatesTest {
         Map<String, Object> model = new HashMap<>();
         model.put("nombre", "Ana Pérez");
         model.put("companyName", "Vargas Vet");
+        model.put("currentYear", 2026);
         model.putAll(extra);
         Context context = new Context();
         context.setVariables(model);
@@ -61,5 +62,83 @@ class AccountClosureTemplatesTest {
         String html = render("email/account-reactivated-template", Map.of("loginUrl", "https://app.test/vargas-vet/login"));
 
         assertThat(html).contains("Tu cuenta está activa de nuevo").contains("https://app.test/vargas-vet/login");
+    }
+
+    private Map<String, Object> marca(String nombre, String color) {
+        Map<String, Object> marca = new HashMap<>();
+        marca.put("companyName", nombre);
+        marca.put("companyLogo", "https://cdn.test/" + nombre.hashCode() + ".png");
+        marca.put("companyEmail", "contacto@" + nombre.toLowerCase().replace(" ", "") + ".test");
+        marca.put("companyPhone", "+51 999 111 222");
+        marca.put("companyAddress", "Av. Principal 123, Lima");
+        if (color != null) {
+            marca.put("accentColor", color);
+        }
+        return marca;
+    }
+
+    private Map<String, Object> conDatos(Map<String, Object> marca) {
+        Map<String, Object> modelo = new HashMap<>(marca);
+        modelo.put("code", "482913");
+        modelo.put("validityMinutes", 10);
+        modelo.put("graceDays", 30);
+        modelo.put("expiresOn", "04/11/2026");
+        modelo.put("reactivateUrl", "https://app.test/clinica/reactivate-account#token=abc");
+        modelo.put("loginUrl", "https://app.test/clinica/login");
+        return modelo;
+    }
+
+    @Test
+    void cadaCorreoLlevaLaMarcaYElContactoDeLaClinicaQueLoEnvia() {
+        for (String plantilla : new String[]{"account-close-code-template", "account-closed-template", "account-reactivated-template"}) {
+            String html = render("email/" + plantilla, conDatos(marca("Clinica Patitas", "#0a7d8c")));
+
+            assertThat(html).as(plantilla)
+                    .contains("Clinica Patitas")
+                    .contains("<img src=\"https://cdn.test/")
+                    .contains("mailto:contacto@clinicapatitas.test")
+                    .contains("+51 999 111 222").contains("Av. Principal 123, Lima")
+                    .contains("#0a7d8c")
+                    .contains("2026");
+        }
+    }
+
+    @Test
+    void dosClinicasNoComparteNiNombreNiColorNiContacto() {
+        String deA = render("email/account-closed-template", conDatos(marca("Clinica Patitas", "#0a7d8c")));
+        String deB = render("email/account-closed-template", conDatos(marca("Vet Norte", "#b45309")));
+
+        assertThat(deA).contains("Clinica Patitas").contains("#0a7d8c")
+                .doesNotContain("Vet Norte").doesNotContain("#b45309").doesNotContain("vetnorte.test");
+        assertThat(deB).contains("Vet Norte").contains("#b45309")
+                .doesNotContain("Clinica Patitas").doesNotContain("#0a7d8c").doesNotContain("clinicapatitas.test");
+    }
+
+    @Test
+    void sinLogoNiContactoNiColorElCorreoSigueSiendoValidoYUsaElColorDeLaPlataforma() {
+        Map<String, Object> minimo = new HashMap<>();
+        minimo.put("code", "482913");
+        minimo.put("validityMinutes", 10);
+
+        String html = render("email/account-close-code-template", minimo);
+
+        assertThat(html).contains("482913").contains("#4f46e5")
+                .doesNotContain("<img").doesNotContain("mailto:").doesNotContain("null");
+    }
+
+    @Test
+    void elCorreoDeCierreExplicaQueSeVuelveIniciandoSesionYQueElBotonEsOpcional() {
+        String html = render("email/account-closed-template", conDatos(marca("Clinica Patitas", null)));
+
+        assertThat(html).contains("inicia sesión como siempre").contains("Reactivar mi cuenta")
+                .contains("Qué pasa con tus datos").contains("Si no fuiste tú");
+    }
+
+    @Test
+    void elCorreoDelCodigoMuestraElCodigoGrandeYAvisaQueNoSeComparta() {
+        String html = render("email/account-close-code-template", conDatos(marca("Clinica Patitas", null)));
+
+        assertThat(html).contains(">482913<").contains("No compartas este código con nadie")
+                .contains("Si no pediste cerrar tu cuenta");
     }
 }

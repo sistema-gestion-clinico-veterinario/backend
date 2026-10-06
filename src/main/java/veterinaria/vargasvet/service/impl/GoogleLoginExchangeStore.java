@@ -36,6 +36,30 @@ public class GoogleLoginExchangeStore {
         return code;
     }
 
+    public record Reactivation(Integer usuarioId, Integer companyId, String email, String slug) {}
+
+    private record ReactivationEntry(Reactivation data, Instant expiresAt) {}
+
+    private static final java.time.Duration REACTIVATION_TTL = java.time.Duration.ofMinutes(5);
+
+    private final Map<String, ReactivationEntry> reactivations = new ConcurrentHashMap<>();
+
+    public String storeReactivation(Reactivation data) {
+        Instant now = Instant.now(clock);
+        reactivations.entrySet().removeIf(e -> e.getValue().expiresAt().isBefore(now));
+        String ticket = UUID.randomUUID().toString();
+        reactivations.put(ticket, new ReactivationEntry(data, now.plus(REACTIVATION_TTL)));
+        return ticket;
+    }
+
+    public Reactivation consumeReactivation(String ticket) {
+        ReactivationEntry entry = ticket == null ? null : reactivations.remove(ticket);
+        if (entry == null || entry.expiresAt().isBefore(Instant.now(clock))) {
+            return null;
+        }
+        return entry.data();
+    }
+
     /** Canje de un solo uso: se retira del mapa aunque haya expirado. */
     public AuthResponse consume(String code) {
         Entry entry = store.remove(code);

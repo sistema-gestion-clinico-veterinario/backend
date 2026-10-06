@@ -16,12 +16,16 @@ import veterinaria.vargasvet.service.RadiografiaIAService;
 public class RadiografiaIAController {
 
     private final RadiografiaIAService radiografiaIAService;
+    private final veterinaria.vargasvet.service.AutorizacionIaService autorizacionIaService;
 
     @PostMapping(value = "/analizar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@accesoValidator.can('VISTA_LABORATORIO', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<RadiografiaPrediccionResponse>> analizarRadiografia(
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("mascotaId") Long mascotaId) {
+        var autorizacion = autorizacionIaService.exigir(mascotaId);
         RadiografiaPrediccionResponse resultado = radiografiaIAService.analizarRadiografia(file);
+        autorizacionIaService.registrarUso(mascotaId, "radiografía", autorizacion);
         return ResponseEntity.ok(new ApiResponse<>(true, "Radiografía analizada exitosamente", resultado));
     }
 }
