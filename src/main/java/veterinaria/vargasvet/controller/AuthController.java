@@ -308,11 +308,12 @@ public class AuthController {
     }
 
     @PostMapping("/account/closure/request")
-    public ResponseEntity<ApiResponse<Void>> requestAccountClosure(
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> requestAccountClosure(
             @Valid @RequestBody veterinaria.vargasvet.dto.request.AccountClosureRequest request) {
-        accountClosureService.requestClosure(request.getPassword());
+        long espera = accountClosureService.requestClosure(request.getPassword());
         return ResponseEntity.ok(new ApiResponse<>(true,
-                "Te enviamos un código de 6 dígitos a tu correo. Vale 10 minutos.", null));
+                "Te enviamos un código de 6 dígitos a tu correo. Vale 10 minutos.",
+                java.util.Map.of("retryAfterSeconds", espera)));
     }
 
     @PostMapping("/account/closure/confirm")

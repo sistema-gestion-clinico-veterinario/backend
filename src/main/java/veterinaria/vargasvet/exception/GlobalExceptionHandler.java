@@ -67,6 +67,14 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>(false, ex.getMessage(), null));
     }
 
+    @ExceptionHandler(CodeResendTooSoonException.class)
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> handleCodeResendTooSoon(CodeResendTooSoonException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+                .body(new ApiResponse<>(false, ex.getMessage(),
+                        java.util.Map.of("retryAfterSeconds", ex.getRetryAfterSeconds())));
+    }
+
     @ExceptionHandler(ClienteInactivoException.class)
     public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> handleClienteInactivo(ClienteInactivoException ex) {
         java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();

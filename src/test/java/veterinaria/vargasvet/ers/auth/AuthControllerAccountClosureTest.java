@@ -59,6 +59,17 @@ class AuthControllerAccountClosureTest {
     }
 
     @Test
+    void pedirElCodigoDevuelveCuantoHayQueEsperarParaPedirOtro() {
+        when(service.requestClosure("Clave-123")).thenReturn(120L);
+        AccountClosureRequest request = new AccountClosureRequest();
+        request.setPassword("Clave-123");
+
+        var respuesta = controller.requestAccountClosure(request);
+
+        assertThat(respuesta.getBody().getData()).containsEntry("retryAfterSeconds", 120L);
+    }
+
+    @Test
     void confirmarElCierreCierraLaSesionDelNavegadorYExplicaLosPasosSiguientes() {
         AccountClosureConfirmRequest request = new AccountClosureConfirmRequest();
         request.setCode("482913");
