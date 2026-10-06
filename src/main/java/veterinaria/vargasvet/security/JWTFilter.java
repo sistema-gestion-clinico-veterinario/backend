@@ -130,10 +130,13 @@ public class JWTFilter extends GenericFilterBean {
 
                 String declaredSlug = SessionCookies.slugOf(httpRequest);
                 if (declaredSlug != null && principal.getCompanyId() != null) {
-                    String companySlug = activeAssignment.getRol().getCompany() == null
-                            ? null
-                            : SessionCookies.sanitize(activeAssignment.getRol().getCompany().getSlug());
-                    if (!java.util.Objects.equals(declaredSlug, companySlug)) {
+                    veterinaria.vargasvet.domain.entity.Company empresaDeLaSesion = activeAssignment.getCompany() != null
+                            ? activeAssignment.getCompany()
+                            : activeAssignment.getRol().getCompany() != null
+                                    ? activeAssignment.getRol().getCompany()
+                                    : currentUser.getCompany();
+                    if (empresaDeLaSesion != null
+                            && !java.util.Objects.equals(declaredSlug, SessionCookies.sanitize(empresaDeLaSesion.getSlug()))) {
                         rejectCompanyMismatch((HttpServletResponse) response);
                         return;
                     }

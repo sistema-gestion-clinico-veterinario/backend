@@ -30,6 +30,7 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
             FROM UsuarioPorRol upr
             JOIN FETCH upr.rol rol
             LEFT JOIN FETCH rol.company
+            LEFT JOIN FETCH upr.company
             WHERE upr.usuario.id = :usuarioId
               AND rol.id = :rolId
               AND rol.activo = true
