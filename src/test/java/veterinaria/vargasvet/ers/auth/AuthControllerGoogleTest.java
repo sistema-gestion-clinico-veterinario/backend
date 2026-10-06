@@ -45,9 +45,11 @@ class AuthControllerGoogleTest {
     private final GoogleOAuthService googleOAuthService = mock(GoogleOAuthService.class);
     private final GoogleLoginExchangeStore exchangeStore = mock(GoogleLoginExchangeStore.class);
     private final GoogleOAuthFlowStore flowStore = new GoogleOAuthFlowStore();
+    private final veterinaria.vargasvet.service.AccountClosureService closureService =
+            mock(veterinaria.vargasvet.service.AccountClosureService.class);
     private final AuthController controller = new AuthController(
             usuarioService, mock(EmailChangeService.class), googleOAuthService, exchangeStore, flowStore,
-            mock(veterinaria.vargasvet.service.AccountClosureService.class),
+            closureService,
                 org.mockito.Mockito.mock(veterinaria.vargasvet.security.ClientIpResolver.class));
 
     private String estadoEnviadoAGoogle;
@@ -330,5 +332,52 @@ class AuthControllerGoogleTest {
         assertThat(respuestaHttp.getHeaders(HttpHeaders.SET_COOKIE)).hasSize(2)
                 .allSatisfy(cookie -> assertThat(cookie).contains("HttpOnly").contains("Secure"));
         assertThat(rechazado.getStatusCode().value()).isEqualTo(401);
+    }
+
+    @Test
+    void unaCuentaCerradaPorSuDuenoRecibeUnaConfirmacionDeUnSoloUsoParaReactivarla() {
+        String state = empezarLogin();
+        when(googleOAuthService.resolveIdentity(anyString(), anyString()))
+                .thenReturn(new GoogleOAuthService.GoogleIdentity("ana@example.test", true));
+        doThrow(new veterinaria.vargasvet.exception.GoogleAccountClosedException(10, 7, "ana@example.test", "vargas-vet"))
+                .when(usuarioService).loginWithGoogle(anyString(), anyString());
+        when(exchangeStore.storeReactivation(new GoogleLoginExchangeStore.Reactivation(10, 7, "ana@example.test", "vargas-vet")))
+                .thenReturn("ticket-1");
+
+        var redireccion = volverDeGoogle("codigo", state, state);
+
+        assertThat(destino(redireccion))
+                .isEqualTo(FRONTEND + "/vargas-vet/login?authError=google_cuenta_cerrada#reactivar=ticket-1");
+    }
+
+    @Test
+    void confirmarLaReactivacionConGoogleReactivaYDejaEntrar() {
+        AuthResponse sesion = new AuthResponse();
+        when(exchangeStore.consumeReactivation("ticket-1"))
+                .thenReturn(new GoogleLoginExchangeStore.Reactivation(10, 7, "ana@example.test", "vargas-vet"));
+        when(usuarioService.loginWithGoogle("ana@example.test", "vargas-vet")).thenReturn(sesion);
+        var peticion = new veterinaria.vargasvet.dto.request.GoogleReactivateRequest();
+        peticion.setTicket("ticket-1");
+
+        var respuesta = controller.googleReactivate(peticion, new MockHttpServletResponse());
+
+        assertThat(respuesta.getStatusCode().is2xxSuccessful()).isTrue();
+        assertThat(respuesta.getBody().getData()).isSameAs(sesion);
+        org.mockito.InOrder orden = org.mockito.Mockito.inOrder(closureService, usuarioService);
+        orden.verify(closureService).reactivateOwn(10, 7);
+        orden.verify(usuarioService).loginWithGoogle("ana@example.test", "vargas-vet");
+    }
+
+    @Test
+    void unaConfirmacionVencidaOYaUsadaNoReactivaNada() {
+        when(exchangeStore.consumeReactivation("vieja")).thenReturn(null);
+        var peticion = new veterinaria.vargasvet.dto.request.GoogleReactivateRequest();
+        peticion.setTicket("vieja");
+
+        var respuesta = controller.googleReactivate(peticion, new MockHttpServletResponse());
+
+        assertThat(respuesta.getStatusCode().value()).isEqualTo(401);
+        verifyNoInteractions(closureService);
+        verify(usuarioService, never()).loginWithGoogle(anyString(), anyString());
     }
 }

@@ -18,6 +18,8 @@ import veterinaria.vargasvet.service.impl.GoogleOAuthFlowStore;
 import veterinaria.vargasvet.service.impl.GoogleOAuthService;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,8 +27,9 @@ import static org.mockito.Mockito.when;
 class AuthControllerAccountClosureTest {
 
     private final AccountClosureService service = mock(AccountClosureService.class);
+    private final UsuarioService usuarioService = mock(UsuarioService.class);
     private final AuthController controller = new AuthController(
-            mock(UsuarioService.class), mock(EmailChangeService.class), mock(GoogleOAuthService.class),
+            usuarioService, mock(EmailChangeService.class), mock(GoogleOAuthService.class),
             mock(GoogleLoginExchangeStore.class), new GoogleOAuthFlowStore(), service,
                 org.mockito.Mockito.mock(veterinaria.vargasvet.security.ClientIpResolver.class));
 
@@ -107,5 +110,39 @@ class AuthControllerAccountClosureTest {
 
         verify(service).reactivate("token-del-correo");
         assertThat(respuesta.getBody().getMessage()).contains("Ya puedes iniciar sesión");
+    }
+
+    private veterinaria.vargasvet.dto.request.LoginDTO loginDe(boolean reactivar) {
+        veterinaria.vargasvet.dto.request.LoginDTO dto = new veterinaria.vargasvet.dto.request.LoginDTO();
+        dto.setSlug("vargas-vet");
+        dto.setUsername("ana");
+        dto.setPassword("Clave-123");
+        dto.setReactivarCuenta(reactivar);
+        return dto;
+    }
+
+    private veterinaria.vargasvet.exception.AccountClosedException cuentaCerrada() {
+        return new veterinaria.vargasvet.exception.AccountClosedException(10, 7, java.time.LocalDateTime.now().plusDays(5));
+    }
+
+    @Test
+    void iniciarSesionConUnaCuentaCerradaSoloAvisaYNoLaReactivaSinQueLaPersonaLoAcepte() {
+        when(usuarioService.login(any())).thenThrow(cuentaCerrada());
+
+        assertThatThrownBy(() -> controller.login(loginDe(false), new MockHttpServletResponse()))
+                .isInstanceOf(veterinaria.vargasvet.exception.AccountClosedException.class);
+
+        verify(service, org.mockito.Mockito.never()).reactivateOwn(any(), any());
+    }
+
+    @Test
+    void siLaPersonaAceptaSeReactivaYEntraEnLaMismaPeticion() {
+        veterinaria.vargasvet.dto.response.AuthResponse sesion = new veterinaria.vargasvet.dto.response.AuthResponse();
+        when(usuarioService.login(any())).thenThrow(cuentaCerrada()).thenReturn(sesion);
+
+        var respuesta = controller.login(loginDe(true), new MockHttpServletResponse());
+
+        verify(service).reactivateOwn(10, 7);
+        assertThat(respuesta.getBody().getData()).isSameAs(sesion);
     }
 }

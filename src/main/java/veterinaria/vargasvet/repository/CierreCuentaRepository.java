@@ -16,6 +16,15 @@ public interface CierreCuentaRepository extends JpaRepository<CierreCuenta, Long
 
     boolean existsByUsuarioIdAndCompanyIdAndEstado(Integer usuarioId, Integer companyId, EstadoCierreCuenta estado);
 
+    Optional<CierreCuenta> findFirstByUsuarioIdAndCompanyIdAndEstadoOrderByCerradaAtDesc(
+            Integer usuarioId, Integer companyId, EstadoCierreCuenta estado);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT c FROM CierreCuenta c WHERE c.usuario.id = :usuarioId AND c.company.id = :companyId "
+            + "AND c.estado = :estado ORDER BY c.cerradaAt DESC")
+    List<CierreCuenta> findByUsuarioAndCompanyAndEstadoForUpdate(@Param("usuarioId") Integer usuarioId,
+            @Param("companyId") Integer companyId, @Param("estado") EstadoCierreCuenta estado);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM CierreCuenta c WHERE c.tokenHash = :tokenHash")
     Optional<CierreCuenta> findByTokenHashForUpdate(@Param("tokenHash") String tokenHash);

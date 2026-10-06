@@ -389,6 +389,11 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                         .findFirst())
                 .orElse(null);
         if (usuario == null) {
+            veterinaria.vargasvet.exception.AccountClosedException cerrada =
+                    cuentaCerradaConClaveCorrecta(username, company, loginDTO.getPassword());
+            if (cerrada != null) {
+                throw cerrada;
+            }
             passwordEncoder.matches(loginDTO.getPassword(), DUMMY_BCRYPT_HASH);
             authenticationAuditService.recordLoginFailure(null, username, "credenciales inválidas");
             throw new BadCredentialsException("Credenciales inválidas");
@@ -453,9 +458,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
         }
         if (!companyMembershipService.hasActiveMembership(usuario.getId(), company.getId())) {
-            if (accountClosureGuard.hasOpenClosure(usuario.getId(), company.getId())) {
+            if (accountClosureGuard.findReactivable(usuario.getId(), company.getId()).isPresent()) {
                 authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta cerrada por la persona (con Google)");
-                throw new veterinaria.vargasvet.exception.GoogleAccountClosedException();
+                throw new veterinaria.vargasvet.exception.GoogleAccountClosedException(
+                        usuario.getId(), company.getId(), normalizedEmail, normalizedSlug);
             }
             if (companyMembershipService.isSuspendedIn(usuario.getId(), company.getId())) {
                 authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta suspendida (con Google)");
@@ -481,6 +487,30 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         accountLockoutService.registerSuccessfulLogin(normalizedEmail);
 
         return buildLoginResponse(usuario, company, credencial, normalizedEmail, true);
+    }
+
+    /** Una cuenta cerrada por su dueño solo se revela como tal si la contraseña es la correcta;
+     * con cualquier otra, el login responde igual que para una cuenta que no existe. */
+    private veterinaria.vargasvet.exception.AccountClosedException cuentaCerradaConClaveCorrecta(
+            String username, Company company, String password) {
+        List<Usuario> candidatos = new java.util.ArrayList<>(usuarioRepository.findAllByUsernameIgnoreCase(username));
+        usuarioRepository.findAllByEmailIgnoreCase(username).stream()
+                .filter(u -> candidatos.stream().noneMatch(c -> c.getId().equals(u.getId())))
+                .forEach(candidatos::add);
+        for (Usuario candidato : candidatos) {
+            veterinaria.vargasvet.domain.entity.CierreCuenta cierre =
+                    accountClosureGuard.findReactivable(candidato.getId(), company.getId()).orElse(null);
+            if (cierre == null) {
+                continue;
+            }
+            veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                    resolveCredencial(candidato.getId(), company.getId()).orElse(null);
+            if (credencial != null && passwordEncoder.matches(password, credencial.getPassword())) {
+                return new veterinaria.vargasvet.exception.AccountClosedException(
+                        candidato.getId(), company.getId(), cierre.getVenceAt());
+            }
+        }
+        return null;
     }
 
     /** Quien activó su cuenta con Google no tiene una contraseña que cambiar: no se le pide una. */

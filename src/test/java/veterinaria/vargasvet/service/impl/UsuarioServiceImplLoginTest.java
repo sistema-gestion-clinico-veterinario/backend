@@ -384,10 +384,16 @@ class UsuarioServiceImplLoginTest {
         when(companyRepository.findBySlug("vargas-vet")).thenReturn(Optional.of(company));
         when(companyMembershipService.hasAnyMembership(10, 7)).thenReturn(true);
         when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(false);
-        when(accountClosureGuard.hasOpenClosure(10, 7)).thenReturn(true);
+        when(accountClosureGuard.findReactivable(10, 7))
+                .thenReturn(Optional.of(new veterinaria.vargasvet.domain.entity.CierreCuenta()));
 
         assertThatThrownBy(() -> service.loginWithGoogle("ana@example.test", "vargas-vet"))
-                .isInstanceOf(veterinaria.vargasvet.exception.GoogleAccountClosedException.class);
+                .isInstanceOfSatisfying(veterinaria.vargasvet.exception.GoogleAccountClosedException.class, ex -> {
+                    assertThat(ex.getUsuarioId()).isEqualTo(10);
+                    assertThat(ex.getCompanyId()).isEqualTo(7);
+                    assertThat(ex.getEmail()).isEqualTo("ana@example.test");
+                    assertThat(ex.getSlug()).isEqualTo("vargas-vet");
+                });
 
         verify(authenticationAuditService).recordLoginFailure(cerrada, "ana@example.test", "cuenta cerrada por la persona (con Google)");
         verifyNoInteractions(tokenProvider);
@@ -544,5 +550,59 @@ class UsuarioServiceImplLoginTest {
         service.revokeRefreshToken("  ");
 
         verifyNoInteractions(refreshTokenRepository, realtimeSubscriptionGuard);
+    }
+
+    private void cuentaCerradaPorSuDueno(String claveEscrita, boolean claveCorrecta) {
+        Company company = vargasVet();
+        Usuario cerrada = usuarioValido();
+        veterinaria.vargasvet.domain.entity.CierreCuenta cierre = new veterinaria.vargasvet.domain.entity.CierreCuenta();
+        cierre.setVenceAt(java.time.LocalDateTime.now().plusDays(5));
+        when(companyRepository.findBySlug("vargas-vet")).thenReturn(Optional.of(company));
+        when(usuarioRepository.findAllByUsernameIgnoreCase("ana.qa")).thenReturn(List.of(cerrada));
+        when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(false);
+        when(accountClosureGuard.findReactivable(10, 7)).thenReturn(Optional.of(cierre));
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial = credencialValida();
+        when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencial));
+        when(passwordEncoder.matches(claveEscrita, "hash-almacenado")).thenReturn(claveCorrecta);
+    }
+
+    @Test
+    void conLaClaveCorrectaUnaCuentaCerradaPorSuDuenoAvisaQueSePuedeReactivar() {
+        cuentaCerradaPorSuDueno("Password-123", true);
+
+        assertThatThrownBy(() -> service.login(loginConSlug("vargas-vet")))
+                .isInstanceOfSatisfying(veterinaria.vargasvet.exception.AccountClosedException.class, ex -> {
+                    assertThat(ex.getUsuarioId()).isEqualTo(10);
+                    assertThat(ex.getCompanyId()).isEqualTo(7);
+                    assertThat(ex.getReactivableHasta()).isNotNull();
+                });
+
+        verifyNoInteractions(tokenProvider);
+    }
+
+    @Test
+    void conUnaClaveIncorrectaNoSeRevelaQueLaCuentaEstaCerrada() {
+        cuentaCerradaPorSuDueno("Password-123", false);
+
+        assertThatThrownBy(() -> service.login(loginConSlug("vargas-vet")))
+                .isInstanceOf(BadCredentialsException.class)
+                .hasMessage("Credenciales inválidas");
+
+        verifyNoInteractions(tokenProvider);
+    }
+
+    @Test
+    void unaCuentaSinCierreDelDuenoNoOfreceReactivacionAunqueLaClaveSeaCorrecta() {
+        Company company = vargasVet();
+        Usuario inactiva = usuarioValido();
+        when(companyRepository.findBySlug("vargas-vet")).thenReturn(Optional.of(company));
+        when(usuarioRepository.findAllByUsernameIgnoreCase("ana.qa")).thenReturn(List.of(inactiva));
+        when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(false);
+        when(accountClosureGuard.findReactivable(10, 7)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.login(loginConSlug("vargas-vet")))
+                .isInstanceOf(BadCredentialsException.class);
+
+        verifyNoInteractions(tokenProvider);
     }
 }

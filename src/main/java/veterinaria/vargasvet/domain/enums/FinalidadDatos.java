@@ -2,7 +2,8 @@ package veterinaria.vargasvet.domain.enums;
 
 public enum FinalidadDatos {
     ENTERADO("Fue informada del aviso de privacidad", false),
-    RECORDATORIOS_PREVENTIVOS("Recordatorios de vacunas y desparasitaciones por correo", true);
+    RECORDATORIOS_PREVENTIVOS("Recordatorios de vacunas y desparasitaciones por correo", true),
+    USO_IA_CLINICA("Uso de inteligencia artificial con los datos clínicos de sus mascotas", true);
 
     private final String descripcion;
     private final boolean opcional;
