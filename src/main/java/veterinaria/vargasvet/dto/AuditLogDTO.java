@@ -20,4 +20,5 @@ public class AuditLogDTO {
     private String module;
     private String details;
     private String ipAddress;
+    private String dispositivo;
 }

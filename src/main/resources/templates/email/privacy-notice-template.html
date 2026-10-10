@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Aviso de privacidad</title></head>
+<body style="margin:0;padding:0;background:#f4f7f8;font-family:Arial,sans-serif;color:#1e293b;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px;">
+  <table role="presentation" width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;background:#fff;border:1px solid #dbe3e8;border-radius:12px;overflow:hidden;">
+    <tr><td style="padding:28px 36px;border-bottom:3px solid #0f9299;">
+      <table role="presentation" width="100%"><tr>
+        <td th:if="${companyLogo != null}" width="52"><img th:src="${companyLogo}" alt="" width="40" height="40" style="object-fit:contain;border-radius:8px;"></td>
+        <td><strong style="font-size:16px;" th:text="${companyName}">Clínica veterinaria</strong></td>
+      </tr></table>
+    </td></tr>
+    <tr><td style="padding:32px 36px;">
+      <p style="margin:0 0 8px;font-size:22px;font-weight:700;" th:text="${esActualizacion} ? 'Actualizamos nuestro aviso de privacidad' : 'Información sobre tus datos personales'">Información sobre tus datos personales</p>
+      <p style="margin:0 0 20px;font-size:14px;line-height:1.7;color:#64748b;">Hola <span th:text="${nombre}">usuario</span>. <span th:text="${companyName}">La clínica</span> registró tus datos para gestionar la relación contigo, las mascotas vinculadas, las citas, las atenciones y los pagos que correspondan.</p>
+      <div style="padding:16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+        <p style="margin:0;font-size:13px;line-height:1.7;">Este correo informa la disponibilidad del aviso de privacidad <strong>versión <span th:text="${avisoVersion}">1</span></strong>. No autoriza recordatorios, promociones, inteligencia artificial ni otras finalidades opcionales.</p>
+      </div>
+      <p style="margin:24px 0;text-align:center;"><a th:href="${avisoLink}" style="display:inline-block;padding:12px 20px;background:#0f9299;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:700;">Consultar aviso de privacidad</a></p>
+      <p style="margin:0;font-size:12px;line-height:1.6;color:#64748b;">Cuando ingreses al portal, te pediremos confirmar únicamente que pudiste consultar el aviso. Las autorizaciones opcionales se solicitarán por separado.</p>
+    </td></tr>
+    <tr><td style="padding:18px 36px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;">© <span th:text="${currentYear}">2026</span> <span th:text="${companyName}">Clínica veterinaria</span> · Gestionado mediante SoftVet</td></tr>
+  </table>
+</td></tr></table>
+</body>
+</html>

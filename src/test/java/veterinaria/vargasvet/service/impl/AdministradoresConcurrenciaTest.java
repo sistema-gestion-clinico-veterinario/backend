@@ -150,10 +150,10 @@ class AdministradoresConcurrenciaTest {
         CompanyMembershipServiceImpl membership = new CompanyMembershipServiceImpl(
                 empleadoRepository, apoderadoRepository, usuarioMembresiaRepository, usuarioRepository, companyRepository);
         EmpleadoServiceImpl service = new EmpleadoServiceImpl(
-                usuarioRepository, roleRepository, empleadoRepository, especialidadRepository, tipoEmpleadoRepository,
+                usuarioRepository, empleadoRepository, especialidadRepository, tipoEmpleadoRepository,
                 companyRepository, horarioEmpleadoRepository, companyOperatingHourRepository, companyExceptionRepository,
                 citaRepository, mock(PasswordEncoder.class), new UserMapper(new ModelMapper()), mock(EmailService.class),
-                mock(BusinessValidator.class), mock(AuditLogService.class), usuarioPorRolRepository, sessions, membership,
+                mock(BusinessValidator.class), mock(AuditLogService.class), mock(veterinaria.vargasvet.service.RoleAssignmentService.class), sessions, membership,
                 credencialRepository, mock(UsuarioContactoService.class),
                 new AdministratorProtection(usuarioPorRolRepository, membership, companyRepository),
                 mock(AccountClosureGuard.class), mock(veterinaria.vargasvet.service.CajasAbiertasDelPersonal.class),

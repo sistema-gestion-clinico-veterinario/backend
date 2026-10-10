@@ -146,8 +146,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             model.put("nombre", usuario.getEmail());
             model.put("validityHours", verificationTokenValidityHours);
             String slug = company != null ? company.getSlug() : null;
+            Integer companyId = company == null ? null : company.getId();
+            String audiencia = audienciaDeActivacion(usuario.getId(), companyId).name();
             model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
-                    "/auth/verify#token=" + verificationToken, slug));
+                    "/auth/verify?audiencia=" + audiencia + "#token=" + verificationToken, slug));
             model.put("avisoPrivacidadLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug("/privacidad", slug));
 
             Mail mail = emailService.createMail(
@@ -180,12 +182,6 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .orElseThrow(() -> new IllegalStateException(
                         "No se pudo determinar la credencial a configurar para este usuario"));
 
-        Integer companyId = credencial.getCompany() == null ? null : credencial.getCompany().getId();
-        if (consentimientoDatosService.hayAvisoPublicado(companyId) && !Boolean.TRUE.equals(avisoLeido)) {
-            throw new IllegalArgumentException(
-                    "Lee el aviso de privacidad de la clínica y confirma que lo leíste para activar tu cuenta");
-        }
-
         passwordPolicyService.validate(password, usuario.getEmail(), usuario.getNombre(), usuario.getApellido());
         if (passwordEncoder.matches(password, credencial.getPassword())) {
             throw new IllegalArgumentException("La nueva contraseña debe ser diferente de la actual");
@@ -198,10 +194,18 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         usuario.setVerificationToken(null);
         usuario.setVerificationTokenExpiresAt(null);
         usuarioRepository.save(usuario);
-        consentimientoDatosService.registrarEnterado(usuario.getId(), companyId,
-                veterinaria.vargasvet.domain.enums.CanalConsentimiento.ACTIVACION, null, ipAddress, userAgent);
         authenticationAuditService.record(usuario, "CONFIGURAR_CREDENCIALES",
                 "El usuario estableció su contraseña inicial y activó la cuenta.");
+    }
+
+    /** Solo selecciona qué aviso se enlaza en el correo; la lectura se confirma en el primer ingreso. */
+    private veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad audienciaDeActivacion(
+            Integer usuarioId, Integer companyId) {
+        boolean esPersonal = companyId != null && usuarioPorRolRepository.existsActiveRoleScope(
+                usuarioId, companyId, veterinaria.vargasvet.domain.enums.RoleScope.STAFF);
+        return esPersonal
+                ? veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS
+                : veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS;
     }
 
     @Override

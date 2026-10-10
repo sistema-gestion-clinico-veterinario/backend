@@ -132,7 +132,12 @@ public class CompanyServiceImpl implements CompanyService {
             throw new IllegalStateException("La empresa está inactiva. Solo un super administrador puede modificarla.");
         }
         updateEntityFromDTO(company, dto);
-        if (dto.getSlug() != null && !dto.getSlug().isBlank()) {
+        if (dto.getSlug() != null && !dto.getSlug().isBlank()
+                && !slugify(dto.getSlug()).equals(company.getSlug())) {
+            if (!SecurityUtils.isSuperAdmin()) {
+                throw new AccessDeniedException(
+                        "Solo el administrador de la plataforma puede cambiar la URL de acceso de la clínica.");
+            }
             company.setSlug(resolveSlugForUpdate(company.getId(), dto.getSlug()));
         }
         company.setUpdatedAt(LocalDateTime.now());

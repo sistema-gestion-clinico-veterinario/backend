@@ -80,6 +80,7 @@ class RF10AndRF11Test {
     @Mock private EmailService emailService;
     @Mock private BusinessValidator businessValidator;
     @Mock private AuditLogService auditLogService;
+    @Mock private veterinaria.vargasvet.service.RoleAssignmentService roleAssignmentService;
     @Mock private UsuarioPorRolRepository usuarioPorRolRepository;
     @Mock private SessionSecurityService sessionSecurityService;
     @Mock private veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
@@ -136,7 +137,6 @@ class RF10AndRF11Test {
             user.setId(20);
             return user;
         });
-        when(roleRepository.findById(8)).thenReturn(Optional.of(role));
         when(empleadoRepository.saveAndFlush(any(Empleado.class))).thenAnswer(invocation -> {
             Empleado empleado = invocation.getArgument(0);
             empleado.setId(30L);
@@ -344,21 +344,18 @@ class RF10AndRF11Test {
     }
 
     @Test
-    @DisplayName("[CP-RF11-11] Cambiar los roles de un empleado sin el de administrador pasa por la protección de administradores")
-    void cambiarRolesSinAdministracionConsultaLaProteccion() {
+    @DisplayName("[CP-RF11-11] La edición delega la asignación de roles al servicio autorizado")
+    void cambiarRolesDelegaEnElServicioDeAsignaciones() {
         Empleado empleado = empleadoExistente();
         empleado.setCompany(company);
         EmpleadoRequest request = requestValido();
         request.setEmail(empleado.getUser().getEmail());
-        Role vet = roleStaff(8);
         when(empleadoRepository.findByIdAndCompanyId(30L, 3)).thenReturn(Optional.of(empleado));
-        when(roleRepository.findById(8)).thenReturn(Optional.of(vet));
         when(userMapper.toProfileDTO(any())).thenReturn(new UserProfileDTO());
 
         service.updateEmpleado(30L, request);
 
-        verify(administratorProtection).assertCanRemoveAdministratorRole(empleado.getUser(), 3);
-        verify(usuarioPorRolRepository).deleteByUsuarioIdAndCompanyId(20, 3);
+        verify(roleAssignmentService).replaceStaffRoles(empleado.getUser(), company, Set.of(8));
     }
 
     @Test
@@ -369,21 +366,19 @@ class RF10AndRF11Test {
         EmpleadoRequest request = requestValido();
         request.setEmail(empleado.getUser().getEmail());
         when(empleadoRepository.findByIdAndCompanyId(30L, 3)).thenReturn(Optional.of(empleado));
-        when(roleRepository.findById(8)).thenReturn(Optional.of(roleStaff(8)));
         org.mockito.Mockito.doThrow(new IllegalStateException("No se puede quitar el rol de administrador al único administrador activo"))
-                .when(administratorProtection).assertCanRemoveAdministratorRole(empleado.getUser(), 3);
+                .when(roleAssignmentService).replaceStaffRoles(empleado.getUser(), company, Set.of(8));
 
         assertThatThrownBy(() -> service.updateEmpleado(30L, request))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("único administrador activo");
 
-        verify(usuarioPorRolRepository, never()).deleteByUsuarioId(any());
-        verify(usuarioPorRolRepository, never()).save(any());
+        verify(empleadoRepository, never()).saveAndFlush(any());
     }
 
     @Test
-    @DisplayName("[CP-RF11-13] Conservar el rol de administrador no consulta la protección")
-    void conservarLaAdministracionNoConsultaLaProteccion() {
+    @DisplayName("[CP-RF11-13] La plataforma también delega la asignación del administrador")
+    void plataformaDelegaLaAsignacionDelAdministrador() {
         UsuarioPrincipal plataforma = new UsuarioPrincipal(
                 1, "plataforma@test.local", "", List.of(), null,
                 1, RoleScope.PLATFORM, RolePurpose.PLATFORM_ADMIN, 1L);
@@ -398,13 +393,11 @@ class RF10AndRF11Test {
         admin.setPurpose(RolePurpose.COMPANY_ADMIN);
         request.setRoleIds(Set.of(9));
         when(empleadoRepository.findById(30L)).thenReturn(Optional.of(empleado));
-        when(roleRepository.findById(9)).thenReturn(Optional.of(admin));
         when(userMapper.toProfileDTO(any())).thenReturn(new UserProfileDTO());
 
         service.updateEmpleado(30L, request);
 
-        verify(administratorProtection, never()).assertCanRemoveAdministratorRole(any(), any());
-        verify(usuarioPorRolRepository).deleteByUsuarioIdAndCompanyId(20, 3);
+        verify(roleAssignmentService).replaceStaffRoles(empleado.getUser(), company, Set.of(9));
     }
 
     @Test
@@ -550,7 +543,6 @@ class RF10AndRF11Test {
             user.setId(20);
             return user;
         });
-        when(roleRepository.findById(8)).thenReturn(Optional.of(roleStaff(8)));
         when(empleadoRepository.existsByNumeroColegiaturaAndCompanyIdAndEstadoTrue("CMVP-1234", 3)).thenReturn(true);
 
         assertThatThrownBy(() -> service.registerEmpleado(request))

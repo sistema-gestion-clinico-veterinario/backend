@@ -70,7 +70,9 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         if (companyId == null) throw new IllegalArgumentException("Debe seleccionar una empresa");
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
-        consentimientoDatosService.exigirAltaValida(companyId, dto.getAvisoInformado());
+        consentimientoDatosService.exigirAltaValida(companyId,
+                veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS,
+                dto.getAvisoInformado());
 
         if (empleadoRepository.existsByNumeroColegiaturaAndCompanyIdAndEstadoTrue(dto.getNumeroColegiatura(), companyId)) {
             throw new IllegalArgumentException("El número de colegiatura ya está registrado en esta empresa");
@@ -163,7 +165,9 @@ public class VeterinarioServiceImpl implements VeterinarioService {
         empleadoRepository.save(empleado);
         companyMembershipService.syncLegacyCompanyField(savedUser);
         contactoService.crear(savedUser, company, dto.getTelefono(), dto.getDireccion());
-        consentimientoDatosService.registrarAlta(savedUser, companyId, null, SecurityUtils.getCurrentUserId());
+        consentimientoDatosService.registrarAlta(savedUser, companyId,
+                veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS,
+                null, SecurityUtils.getCurrentUserId());
 
         sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
 
@@ -189,7 +193,8 @@ public class VeterinarioServiceImpl implements VeterinarioService {
             model.put("companyPhone", resolvedPhone);
             model.put("companyAddress", resolvedAddress);
             model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
-                    "/auth/verify#token=" + verificationToken, company != null ? company.getSlug() : null));
+                    "/auth/verify?audiencia=TRABAJADORES_Y_USUARIOS#token=" + verificationToken,
+                    company != null ? company.getSlug() : null));
             model.put("avisoPrivacidadLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug("/privacidad", company != null ? company.getSlug() : null));
 
             Mail mail = emailService.createMail(

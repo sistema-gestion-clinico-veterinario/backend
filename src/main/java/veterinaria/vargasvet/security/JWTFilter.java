@@ -20,6 +20,8 @@ import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad;
+import veterinaria.vargasvet.service.ConsentimientoDatosService;
 import veterinaria.vargasvet.service.LegalDocumentService;
 
 import java.io.IOException;
@@ -29,10 +31,14 @@ import java.io.IOException;
 public class JWTFilter extends GenericFilterBean {
 
     public static final String COMPANY_HEADER = "X-Company-Id";
+    private static final int HTTP_PRECONDITION_REQUIRED = 428;
+    private static final String PRIVACY_NOTICE_REQUIRED = "PRIVACY_NOTICE_REQUIRED";
+    private static final String TERMS_NOT_ACCEPTED = "TERMS_NOT_ACCEPTED";
     private final TokenProvider tokenProvider;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioPorRolRepository usuarioPorRolRepository;
     private final UsuarioEmpresaCredencialRepository credencialRepository;
+    private final ConsentimientoDatosService consentimientoDatosService;
     private final LegalDocumentService legalDocumentService;
     private final RefreshTokenRepository refreshTokenRepository;
 
@@ -111,21 +117,25 @@ public class JWTFilter extends GenericFilterBean {
                     return;
                 }
 
-                if (!isLegalExemptEndpoint(httpRequest) && legalDocumentService.isPastGracePeriod(principal.getId())) {
-                    SecurityContextHolder.clearContext();
-                    HttpServletResponse httpResponse = (HttpServletResponse) response;
-                    httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    httpResponse.setContentType("application/json");
-                    httpResponse.getWriter().write(
-                            "{\"error\":\"Debe aceptar los Términos y Condiciones / Política de Privacidad vigentes.\",\"code\":\"TERMS_NOT_ACCEPTED\"}");
-                    return;
-                }
-
                 String declaredCompany = httpRequest.getHeader(COMPANY_HEADER);
-                if (declaredCompany != null && principal.getCompanyId() != null
-                        && !declaredCompany.trim().equals(String.valueOf(principal.getCompanyId()))) {
-                    rejectCompanyMismatch((HttpServletResponse) response);
-                    return;
+                if (declaredCompany != null) {
+                    Integer declaredCompanyId = parseCompanyId(declaredCompany);
+                    if (declaredCompanyId == null) {
+                        rejectInvalidCompany((HttpServletResponse) response);
+                        return;
+                    }
+                    if (principal.getCompanyId() != null
+                            && !declaredCompanyId.equals(principal.getCompanyId())) {
+                        rejectCompanyMismatch((HttpServletResponse) response);
+                        return;
+                    }
+                    if (principal.getCompanyId() == null) {
+                        if (!esSuperAdmin) {
+                            rejectCompanyMismatch((HttpServletResponse) response);
+                            return;
+                        }
+                        ActiveCompanyContext.set(httpRequest, declaredCompanyId);
+                    }
                 }
 
                 String declaredSlug = SessionCookies.slugOf(httpRequest);
@@ -142,8 +152,19 @@ public class JWTFilter extends GenericFilterBean {
                     }
                 }
 
-                boolean declaraClinica = declaredCompany != null || SessionCookies.slugOf(httpRequest) != null;
-                if (declaraClinica && principal.getCompanyId() == null) {
+                AudienciaAvisoPrivacidad audiencia = audienciaPara(activeAssignment.getRol().getPurpose());
+                if (debeRevisarAviso(httpRequest, principal, audiencia)) {
+                    rejectPrivacyNotice((HttpServletResponse) response);
+                    return;
+                }
+
+                if (!isLegalExemptEndpoint(httpRequest) && legalDocumentService.isPastGracePeriod(principal.getId())) {
+                    rejectLegalDocuments((HttpServletResponse) response);
+                    return;
+                }
+
+                boolean declaraSlugClinica = SessionCookies.slugOf(httpRequest) != null;
+                if (declaraSlugClinica && principal.getCompanyId() == null) {
                     SecurityContextHolder.clearContext();
                 } else {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -156,13 +177,58 @@ public class JWTFilter extends GenericFilterBean {
         chain.doFilter(request, response);
     }
 
+    private AudienciaAvisoPrivacidad audienciaPara(RolePurpose rolePurpose) {
+        return rolePurpose == RolePurpose.CLIENT_PORTAL
+                ? AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS
+                : AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS;
+    }
+
+    private boolean debeRevisarAviso(HttpServletRequest request, UsuarioPrincipal principal,
+                                     AudienciaAvisoPrivacidad audiencia) {
+        return !isPrivacyNoticeExemptEndpoint(request)
+                && consentimientoDatosService.requiereLecturaPersonal(
+                        principal.getId(), principal.getCompanyId(), audiencia);
+    }
+
+    private void rejectPrivacyNotice(HttpServletResponse response) throws IOException {
+        writeJsonError(response, HTTP_PRECONDITION_REQUIRED,
+                "Debes revisar el aviso de privacidad vigente de la clínica antes de continuar.",
+                PRIVACY_NOTICE_REQUIRED);
+    }
+
+    private void rejectLegalDocuments(HttpServletResponse response) throws IOException {
+        writeJsonError(response, HttpServletResponse.SC_FORBIDDEN,
+                "Debes revisar los documentos vigentes de SoftVet antes de continuar.",
+                TERMS_NOT_ACCEPTED);
+    }
+
     private void rejectCompanyMismatch(HttpServletResponse response) throws IOException {
+        writeJsonError(response, HttpServletResponse.SC_CONFLICT,
+                "La sesión abierta en este navegador pertenece a otra clínica.",
+                "SESSION_COMPANY_MISMATCH");
+    }
+
+    private void rejectInvalidCompany(HttpServletResponse response) throws IOException {
+        writeJsonError(response, HttpServletResponse.SC_BAD_REQUEST,
+                "La empresa activa indicada no es válida.",
+                "INVALID_ACTIVE_COMPANY");
+    }
+
+    private Integer parseCompanyId(String value) {
+        try {
+            int companyId = Integer.parseInt(value.trim());
+            return companyId > 0 ? companyId : null;
+        } catch (NumberFormatException exception) {
+            return null;
+        }
+    }
+
+    private void writeJsonError(HttpServletResponse response, int status, String message, String code)
+            throws IOException {
         SecurityContextHolder.clearContext();
-        response.setStatus(HttpServletResponse.SC_CONFLICT);
+        response.setStatus(status);
         response.setContentType("application/json");
-        response.getWriter().write(
-                "{\"error\":\"La sesión abierta en este navegador pertenece a otra clínica.\","
-                        + "\"code\":\"SESSION_COMPANY_MISMATCH\"}");
+        response.getWriter().write("{\"error\":\"" + message + "\",\"code\":\"" + code + "\"}");
     }
 
     private boolean isPublicAuthEndpoint(HttpServletRequest request) {
@@ -195,6 +261,20 @@ public class JWTFilter extends GenericFilterBean {
     private boolean isLegalExemptEndpoint(HttpServletRequest request) {
         String path = request.getServletPath();
         return path.startsWith("/legal/")
+                // El aviso de la clínica se muestra antes que los documentos de la plataforma.
+                // Sin esta excepción un usuario con términos vencidos no podría consultar ni
+                // reconocer el aviso y el frontend entraría directamente a /legal/accept.
+                || path.startsWith("/privacidad/")
+                || path.equals("/auth/logout")
+                || path.equals("/auth/refresh");
+    }
+
+    private boolean isPrivacyNoticeExemptEndpoint(HttpServletRequest request) {
+        String path = request.getServletPath();
+        String method = request.getMethod();
+        return ("GET".equalsIgnoreCase(method) && path.equals("/privacidad/aviso-vigente"))
+                || ("GET".equalsIgnoreCase(method) && path.equals("/privacidad/mi-estado"))
+                || ("POST".equalsIgnoreCase(method) && path.equals("/privacidad/enterado"))
                 || path.equals("/auth/logout")
                 || path.equals("/auth/refresh");
     }

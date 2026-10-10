@@ -120,4 +120,109 @@ class CompanyServiceImplTest {
 
         verify(companyRepository, never()).save(any());
     }
+
+    private Company empresaExistente(String slug) {
+        Company existente = new Company();
+        existente.setId(5);
+        existente.setName("Clínica Patitas");
+        existente.setSlug(slug);
+        existente.setActivo(true);
+        when(companyRepository.findById(5)).thenReturn(Optional.of(existente));
+        lenient().when(companyRepository.save(any(Company.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        return existente;
+    }
+
+    private MockedStatic<SecurityUtils> comoAdministradorDeLaClinica() {
+        MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class);
+        security.when(SecurityUtils::isSuperAdmin).thenReturn(false);
+        security.when(SecurityUtils::getCurrentCompanyId).thenReturn(5);
+        return security;
+    }
+
+    @Test
+    void elAdministradorDeLaClinicaNoPuedeCambiarLaUrlDeAcceso() {
+        Company existente = empresaExistente("patitas");
+        CompanyDTO dto = dtoValido();
+        dto.setSlug("otra-url");
+
+        try (MockedStatic<SecurityUtils> security = comoAdministradorDeLaClinica()) {
+            org.junit.jupiter.api.Assertions.assertThrows(
+                    org.springframework.security.access.AccessDeniedException.class, () -> service.update(5, dto));
+        }
+
+        assertThat(existente.getSlug()).isEqualTo("patitas");
+        verify(companyRepository, never()).save(any());
+    }
+
+    @Test
+    void elAdministradorDeLaClinicaTampocoPuedeHacerloPorLaRutaDeSuPropiaEmpresa() {
+        Company existente = empresaExistente("patitas");
+        CompanyDTO dto = dtoValido();
+        dto.setSlug("otra-url");
+
+        try (MockedStatic<SecurityUtils> security = comoAdministradorDeLaClinica()) {
+            org.junit.jupiter.api.Assertions.assertThrows(
+                    org.springframework.security.access.AccessDeniedException.class, () -> service.updateCompanyInfo(dto));
+        }
+
+        assertThat(existente.getSlug()).isEqualTo("patitas");
+        verify(companyRepository, never()).save(any());
+    }
+
+    @Test
+    void siLaClinicaEnviaSuMismaUrlLaEdicionDeSusDemasDatosSigueFuncionando() {
+        Company existente = empresaExistente("patitas");
+        CompanyDTO dto = dtoValido();
+        dto.setSlug("patitas");
+
+        try (MockedStatic<SecurityUtils> security = comoAdministradorDeLaClinica()) {
+            service.update(5, dto);
+        }
+
+        assertThat(existente.getSlug()).isEqualTo("patitas");
+        assertThat(existente.getName()).isEqualTo("Clínica Veterinaria Vargas Vet");
+        verify(companyRepository).save(existente);
+    }
+
+    @Test
+    void siLaClinicaNoEnviaUrlSeConservaLaActual() {
+        Company existente = empresaExistente("patitas");
+
+        try (MockedStatic<SecurityUtils> security = comoAdministradorDeLaClinica()) {
+            service.update(5, dtoValido());
+        }
+
+        assertThat(existente.getSlug()).isEqualTo("patitas");
+        verify(companyRepository).save(existente);
+    }
+
+    @Test
+    void laMismaUrlEscritaConMayusculasOEspaciosNoCuentaComoUnCambio() {
+        Company existente = empresaExistente("patitas");
+        CompanyDTO dto = dtoValido();
+        dto.setSlug("  Patitas ");
+
+        try (MockedStatic<SecurityUtils> security = comoAdministradorDeLaClinica()) {
+            service.update(5, dto);
+        }
+
+        assertThat(existente.getSlug()).isEqualTo("patitas");
+    }
+
+    @Test
+    void elAdministradorDeLaPlataformaSiPuedeCambiarla() {
+        Company existente = empresaExistente("patitas");
+        when(companyRepository.existsBySlugAndIdNot("url-nueva", 5)).thenReturn(false);
+        CompanyDTO dto = dtoValido();
+        dto.setSlug("url-nueva");
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            service.update(5, dto);
+        }
+
+        assertThat(existente.getSlug()).isEqualTo("url-nueva");
+        verify(companyRepository).save(existente);
+    }
 }

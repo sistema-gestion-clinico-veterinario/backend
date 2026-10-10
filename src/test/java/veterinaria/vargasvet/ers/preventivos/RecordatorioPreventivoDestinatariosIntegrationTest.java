@@ -89,7 +89,8 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
                 .thenAnswer(invocation -> apoderadoRepository.existsByUserIdAndCompanyId(
                         invocation.getArgument(0), invocation.getArgument(1)));
         consentimientos = new veterinaria.vargasvet.service.ConsentimientoDatosService(consentimientoRepository, avisoRepository,
-                usuarioRepository, apoderadoRepository, mock(AuditLogService.class), membershipService);
+                usuarioRepository, apoderadoRepository, mock(AuditLogService.class), membershipService,
+                mock(veterinaria.vargasvet.service.AvisoPrivacidadEntregaService.class));
         service = new RecordatorioPreventivoServiceImpl(controlRepository, recordatorioRepository, emailService,
                 new OwnerContactPolicy(mock(UsuarioContactoService.class)),
                 new PetOwnershipService(mascotaRepository, relacionRepository, mock(CitaRepository.class), mock(AuditLogService.class)),
@@ -165,6 +166,8 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
         Mascota luna = mascotaConControl(maria);
         vincular(luna, carlos, TipoRelacionMascota.COPROPIETARIO, true, true);
         vincular(luna, luis, TipoRelacionMascota.RESPONSABLE_PAGO, false, true);
+        decidirRecordatorios(maria, true);
+        decidirRecordatorios(carlos, true);
 
         service.procesarRecordatorios();
         recordatorioRepository.flush();
@@ -185,6 +188,7 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
         Apoderado carlos = cliente("carlos");
         Mascota luna = mascotaConControl(maria);
         vincular(luna, carlos, TipoRelacionMascota.COPROPIETARIO, true, true);
+        decidirRecordatorios(carlos, true);
         maria.setEstado(false);
         maria.setTipoInactividad(TipoInactividad.BAJA);
         apoderadoRepository.saveAndFlush(maria);
@@ -216,6 +220,7 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
         MascotaPersonaRelacion relacion = relacionRepository.findAllByMascotaIdAndApoderadoIdAndActivoTrue(luna.getId(), carlos.getId()).get(0);
         relacion.setActivo(false);
         relacionRepository.saveAndFlush(relacion);
+        decidirRecordatorios(maria, true);
 
         service.procesarRecordatorios();
 
@@ -241,7 +246,7 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
     }
 
     @Test
-    void quienPidioNoRecibirlosNoLosRecibePeroElRestoSi() {
+    void soloQuienAutorizoLosRecordatoriosLosRecibe() {
         Apoderado maria = cliente("maria");
         Apoderado carlos = cliente("carlos");
         Apoderado rosa = cliente("rosa");
@@ -254,9 +259,9 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
         service.procesarRecordatorios();
         recordatorioRepository.flush();
 
-        assertThat(destinatariosDeLosCorreos()).containsExactlyInAnyOrder(carlos.getUser().getEmail(), rosa.getUser().getEmail());
+        assertThat(destinatariosDeLosCorreos()).containsExactly(rosa.getUser().getEmail());
         assertThat(recordatorioRepository.findAll()).extracting(r -> r.getApoderado().getId())
-                .containsExactlyInAnyOrder(carlos.getId(), rosa.getId());
+                .containsExactly(rosa.getId());
     }
 
     @Test
@@ -284,12 +289,13 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
     }
 
     @Test
-    void sinNingunaDecisionLosRecordatoriosLlegaComoSiempre() {
+    void sinNingunaDecisionNoSeEnviaElRecordatorio() {
         Apoderado maria = cliente("maria");
         mascotaConControl(maria);
 
         service.procesarRecordatorios();
 
-        assertThat(destinatariosDeLosCorreos()).containsExactly(maria.getUser().getEmail());
+        verify(emailService, never()).sendEmail(any(), anyString());
+        assertThat(recordatorioRepository.count()).isZero();
     }
 }

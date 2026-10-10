@@ -56,6 +56,7 @@ class JWTFilterCompanyMismatchTest {
     @BeforeEach
     void setUp() {
         filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, credencialRepository,
+                org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class),
                 legalDocumentService, refreshTokenRepository);
         SecurityContextHolder.clearContext();
     }
@@ -155,15 +156,28 @@ class JWTFilterCompanyMismatchTest {
     }
 
     @Test
-    void unaSesionDePlataformaNoAutenticaUnaSolicitudQueDeclaraUnaClinica() throws Exception {
+    void unaSesionDePlataformaConservaLaEmpresaActivaEnLaSolicitud() throws Exception {
+        sesion(null, RolePurpose.PLATFORM_ADMIN);
+        HttpServletRequest request = request("3");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
+        verify(request).setAttribute(ActiveCompanyContext.REQUEST_ATTRIBUTE, 3);
+        verify(chain).doFilter(any(), any());
+    }
+
+    @Test
+    void rechazaUnaEmpresaActivaConFormatoInvalido() throws Exception {
         sesion(null, RolePurpose.PLATFORM_ADMIN);
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        filter.doFilter(request("3"), response, chain);
+        filter.doFilter(request("abc"), response, chain);
 
-        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
-        assertThat(response.getStatus()).isNotEqualTo(409);
-        verify(chain).doFilter(any(), any());
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(response.getContentAsString()).contains("INVALID_ACTIVE_COMPANY");
+        verify(chain, never()).doFilter(any(), any());
     }
 
     @Test

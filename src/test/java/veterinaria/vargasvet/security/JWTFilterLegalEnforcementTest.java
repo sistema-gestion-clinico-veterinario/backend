@@ -72,7 +72,9 @@ class JWTFilterLegalEnforcementTest {
 
     @BeforeEach
     void setUp() {
-        filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, credencialRepository, legalDocumentService, refreshTokenRepository);
+        filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, credencialRepository,
+                org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class),
+                legalDocumentService, refreshTokenRepository);
         SecurityContextHolder.clearContext();
     }
 

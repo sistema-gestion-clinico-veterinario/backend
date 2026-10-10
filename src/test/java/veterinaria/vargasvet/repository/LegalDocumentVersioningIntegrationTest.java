@@ -59,6 +59,9 @@ class LegalDocumentVersioningIntegrationTest {
         consent.setUsuario(usuario);
         consent.setLegalDocument(doc);
         consent.setDocumentoTipo(doc.getTipo());
+        consent.setTipoConstancia(doc.getTipo() == LegalDocumentType.TERMINOS_Y_CONDICIONES
+                ? veterinaria.vargasvet.domain.enums.TipoConstanciaLegal.ACEPTACION
+                : veterinaria.vargasvet.domain.enums.TipoConstanciaLegal.CONSTANCIA_LECTURA);
         consent.setDocumentoVersion(doc.getVersion());
         consent.setContenidoHash(doc.getContenidoHash());
         consent.setFechaAceptacion(LocalDateTime.now());

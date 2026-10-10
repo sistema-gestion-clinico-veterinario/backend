@@ -10,9 +10,7 @@ import java.util.List;
 @Data
 @Entity
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@Table(name = "usuario_por_rol", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"usuario_id", "rol_id"})
-})
+@Table(name = "usuario_por_rol")
 public class UsuarioPorRol {
 
     @Id
