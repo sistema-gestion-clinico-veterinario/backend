@@ -40,8 +40,6 @@ src/main/resources/application-local.properties
 keys/*.pem
 src/main/resources/keys/*.pem
 
-# ===== DATABASE SCRIPTS (LOCAL ONLY) =====
-# Las migraciones se aplican manualmente y no se publican en el repositorio.
 *.sql
 src/main/resources/db/migration/REGISTRO_LOCAL.md
 
