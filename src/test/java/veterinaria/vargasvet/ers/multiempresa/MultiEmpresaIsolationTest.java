@@ -174,11 +174,20 @@ class MultiEmpresaIsolationTest {
                 accountClosureGuard,
                 org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class));
 
+        veterinaria.vargasvet.service.RoleAssignmentService roleAssignmentService =
+                new veterinaria.vargasvet.service.RoleAssignmentService(
+                        usuarioPorRolRepository,
+                        roleRepository,
+                        mock(veterinaria.vargasvet.security.AccesoValidator.class),
+                        new veterinaria.vargasvet.service.AdministratorProtection(
+                                usuarioPorRolRepository, companyMembershipService, companyRepository),
+                        mock(AuditLogService.class));
+
         empleadoService = new EmpleadoServiceImpl(
-                usuarioRepository, roleRepository, empleadoRepository, especialidadRepository, tipoEmpleadoRepository,
+                usuarioRepository, empleadoRepository, especialidadRepository, tipoEmpleadoRepository,
                 companyRepository, horarioEmpleadoRepository, companyOperatingHourRepository, companyExceptionRepository,
                 citaRepository, passwordEncoder, userMapper, mock(EmailService.class), mock(BusinessValidator.class),
-                mock(AuditLogService.class), usuarioPorRolRepository, sessionSecurityService, companyMembershipService,
+                mock(AuditLogService.class), roleAssignmentService, sessionSecurityService, companyMembershipService,
                 credencialRepository, contactoService,
                 new veterinaria.vargasvet.service.AdministratorProtection(usuarioPorRolRepository, companyMembershipService, companyRepository),
                 accountClosureGuard,
@@ -188,7 +197,7 @@ class MultiEmpresaIsolationTest {
 
         apoderadoService = new ApoderadoServiceImpl(
                 usuarioRepository, apoderadoRepository, mascotaRepository,
-                refreshTokenRepository, usuarioPorRolRepository, roleRepository, companyRepository, passwordEncoder,
+                refreshTokenRepository, roleAssignmentService, companyRepository, passwordEncoder,
                 userMapper, mock(BusinessValidator.class), mock(EmailService.class), mock(AuditLogService.class),
                 mock(veterinaria.vargasvet.service.CompanyRoleProvisioningService.class), sessionSecurityService,
                 companyMembershipService, citaRepository, credencialRepository, contactoService,

@@ -9,6 +9,7 @@ import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.ConsentimientoDatos;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.enums.CanalConsentimiento;
+import veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad;
 import veterinaria.vargasvet.domain.enums.FinalidadDatos;
 import veterinaria.vargasvet.dto.request.CamposAvisoPrivacidad;
 import veterinaria.vargasvet.dto.request.PublicarAvisoPrivacidadRequest;
@@ -58,7 +59,8 @@ class ConsentimientoDatosServiceIntegrationTest {
                     .orElse(false);
         });
         service = new ConsentimientoDatosService(consentimientoRepository, avisoRepository, usuarioRepository,
-                apoderadoRepository, mock(AuditLogService.class), membership);
+                apoderadoRepository, mock(AuditLogService.class), membership,
+                mock(AvisoPrivacidadEntregaService.class));
         clinica = empresa("Clínica Patitas");
         otraClinica = empresa("Clínica Garras");
         ana = persona("ana", clinica);
@@ -86,14 +88,44 @@ class ConsentimientoDatosServiceIntegrationTest {
     }
 
     private void publicarAviso(Company empresa, String domicilio) {
+        publicarAviso(empresa, domicilio, AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS);
+    }
+
+    private void publicarAviso(Company empresa, String domicilio, AudienciaAvisoPrivacidad audiencia) {
         CamposAvisoPrivacidad campos = new CamposAvisoPrivacidad("Clínica S.A.C.", "20123456789", domicilio,
                 "privacidad@clinica.test", null, null, List.of("Atender a su mascota"), List.of("Nombres y apellidos"),
                 List.of(), List.of("El personal de la clínica"), "No se transfieren datos fuera del Perú",
                 "Mientras sea cliente");
         PublicarAvisoPrivacidadRequest request = new PublicarAvisoPrivacidadRequest();
+        request.setAudiencia(audiencia);
         request.setCampos(campos);
         request.setConfirmoRevisionLegal(true);
         avisoService.publicar(empresa.getId(), request);
+    }
+
+    @Test
+    void lasConstanciasDePropietarioYTrabajadorNoSeMezclanAunqueSeaLaMismaPersona() {
+        publicarAviso(clinica, "Av. Clientes 100, Lima", AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS);
+        publicarAviso(clinica, "Av. Personal 200, Lima", AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS);
+
+        service.registrarEnterado(ana.getId(), clinica.getId(),
+                AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS,
+                CanalConsentimiento.PORTAL, null, null, null);
+
+        assertThat(service.estado(ana.getId(), clinica.getId(),
+                AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS).informada()).isTrue();
+        ConsentimientoEstadoResponse trabajador = service.estado(ana.getId(), clinica.getId(),
+                AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS);
+        assertThat(trabajador.informada()).isFalse();
+        assertThat(trabajador.finalidades()).isEmpty();
+
+        service.registrarEnterado(ana.getId(), clinica.getId(),
+                AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS,
+                CanalConsentimiento.PORTAL, null, null, null);
+        assertThat(service.estado(ana.getId(), clinica.getId(),
+                AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS).informada()).isTrue();
+        assertThat(consentimientoRepository.findByUsuarioIdAndCompanyIdOrderByIdDesc(
+                ana.getId(), clinica.getId())).hasSize(2);
     }
 
     private ConsentimientoEstadoResponse.Finalidad recordatorios(ConsentimientoEstadoResponse estado) {
@@ -137,10 +169,31 @@ class ConsentimientoDatosServiceIntegrationTest {
         assertThat(recordatorios(estado).estado()).isEqualTo("RETIRADO");
         assertThat(service.usuariosQueRetiraron(Set.of(ana.getId(), recepcion.getId()), clinica.getId(),
                 FinalidadDatos.RECORDATORIOS_PREVENTIVOS)).containsExactly(ana.getId());
+        assertThat(service.usuariosQueAutorizaron(Set.of(ana.getId(), recepcion.getId()), clinica.getId(),
+                FinalidadDatos.RECORDATORIOS_PREVENTIVOS)).isEmpty();
         ConsentimientoDatos constancia = consentimientoRepository
                 .findByUsuarioIdAndCompanyIdOrderByIdDesc(ana.getId(), clinica.getId()).get(0);
         assertThat(constancia.getRegistradoPor().getId()).isEqualTo(recepcion.getId());
         assertThat(constancia.getContenidoHash()).hasSize(64);
+    }
+
+    @Test
+    void laConstanciaPresencialNoSustituyeLaLecturaPersonalYUnaVersionNuevaLaExigeOtraVez() {
+        publicarAviso(clinica, "Av. Los Olivos 123, Lima");
+        service.registrarAlta(ana, clinica.getId(), false, recepcion.getId());
+
+        assertThat(service.requiereLecturaPersonal(ana.getId(), clinica.getId(),
+                AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS)).isTrue();
+
+        service.registrarEnterado(ana.getId(), clinica.getId(),
+                AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS,
+                CanalConsentimiento.PORTAL, null, "10.0.0.1", "navegador");
+        assertThat(service.requiereLecturaPersonal(ana.getId(), clinica.getId(),
+                AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS)).isFalse();
+
+        publicarAviso(clinica, "Jr. Nueva versión 456, Lima");
+        assertThat(service.requiereLecturaPersonal(ana.getId(), clinica.getId(),
+                AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS)).isTrue();
     }
 
     @Test
@@ -155,13 +208,15 @@ class ConsentimientoDatosServiceIntegrationTest {
     }
 
     @Test
-    void sinDecidirQuedaSinRegistroYSeSiguenRecibiendoLosRecordatorios() {
+    void sinDecidirQuedaSinRegistroYNoAutorizaLosRecordatorios() {
         publicarAviso(clinica, "Av. Los Olivos 123, Lima");
 
         service.registrarAlta(ana, clinica.getId(), null, recepcion.getId());
 
         assertThat(recordatorios(service.estado(ana.getId(), clinica.getId())).estado()).isEqualTo("SIN_REGISTRO");
         assertThat(service.usuariosQueRetiraron(Set.of(ana.getId()), clinica.getId(),
+                FinalidadDatos.RECORDATORIOS_PREVENTIVOS)).isEmpty();
+        assertThat(service.usuariosQueAutorizaron(Set.of(ana.getId()), clinica.getId(),
                 FinalidadDatos.RECORDATORIOS_PREVENTIVOS)).isEmpty();
     }
 
@@ -182,6 +237,8 @@ class ConsentimientoDatosServiceIntegrationTest {
         assertThat(recordatorios(service.estado(ana.getId(), clinica.getId())).estado()).isEqualTo("OTORGADO");
         assertThat(service.usuariosQueRetiraron(Set.of(ana.getId()), clinica.getId(),
                 FinalidadDatos.RECORDATORIOS_PREVENTIVOS)).isEmpty();
+        assertThat(service.usuariosQueAutorizaron(Set.of(ana.getId()), clinica.getId(),
+                FinalidadDatos.RECORDATORIOS_PREVENTIVOS)).containsExactly(ana.getId());
         List<ConsentimientoDatos> historial = consentimientoRepository
                 .findByUsuarioIdAndCompanyIdOrderByIdDesc(ana.getId(), clinica.getId());
         assertThat(historial).hasSize(4);

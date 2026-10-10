@@ -72,7 +72,8 @@ class AutorizacionIaServiceIntegrationTest {
         when(membership.hasAnyMembership(anyInt(), anyInt())).thenAnswer(invocation ->
                 apoderadoRepository.existsByUserIdAndCompanyId(invocation.getArgument(0), invocation.getArgument(1)));
         consentimientos = new ConsentimientoDatosService(consentimientoRepository, avisoRepository, usuarioRepository,
-                apoderadoRepository, mock(AuditLogService.class), membership);
+                apoderadoRepository, mock(AuditLogService.class), membership,
+                mock(AvisoPrivacidadEntregaService.class));
         service = new AutorizacionIaService(mascotaRepository, consentimientoRepository, auditLogService);
 
         clinicaA = empresa("Clínica A");

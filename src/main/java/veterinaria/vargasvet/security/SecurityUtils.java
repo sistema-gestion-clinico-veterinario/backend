@@ -14,7 +14,12 @@ public class SecurityUtils {
     public static Integer getCurrentCompanyId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof UsuarioPrincipal principal) {
-            return principal.getCompanyId();
+            if (principal.getCompanyId() != null) {
+                return principal.getCompanyId();
+            }
+            if (principal.getActiveRolePurpose() == RolePurpose.PLATFORM_ADMIN) {
+                return ActiveCompanyContext.get();
+            }
         }
         return null;
     }

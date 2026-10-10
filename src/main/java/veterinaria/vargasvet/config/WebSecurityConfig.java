@@ -23,7 +23,6 @@ import veterinaria.vargasvet.security.JWTFilter;
 import veterinaria.vargasvet.security.SessionCookies;
 import veterinaria.vargasvet.security.JwtAuthenticationEntryPoint;
 import veterinaria.vargasvet.security.CookieSecurityFilter;
-import veterinaria.vargasvet.security.ThesisPerformanceMeasurementFilter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,7 +38,6 @@ public class WebSecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final veterinaria.vargasvet.security.RateLimitFilter rateLimitFilter;
     private final CookieSecurityFilter cookieSecurityFilter;
-    private final ThesisPerformanceMeasurementFilter thesisPerformanceMeasurementFilter;
 
     @Value("${cors.allowed-origins:https://systemvetfrontend.vercel.app,http://localhost:4200}")
     private String allowedOriginsRaw;
@@ -146,13 +144,6 @@ public class WebSecurityConfig {
                 JWTFilter.class
         );
 
-        // Solo registra operaciones clínicas cuando el usuario inicia explícitamente
-        // una sesión de medición para la tesis.
-        http.addFilterAfter(
-                thesisPerformanceMeasurementFilter,
-                veterinaria.vargasvet.security.RateLimitFilter.class
-        );
-
         return http.build();
     }
 
@@ -183,9 +174,7 @@ public class WebSecurityConfig {
                 "Authorization",
                 "X-Requested-With",
                 JWTFilter.COMPANY_HEADER,
-                SessionCookies.SLUG_HEADER,
-                ThesisPerformanceMeasurementFilter.SESSION_HEADER,
-                ThesisPerformanceMeasurementFilter.PHASE_HEADER));
+                SessionCookies.SLUG_HEADER));
 
         config.setAllowCredentials(true);
 
@@ -210,12 +199,6 @@ public class WebSecurityConfig {
     @Bean
     public FilterRegistrationBean<veterinaria.vargasvet.security.RateLimitFilter> rateLimitFilterRegistration(
             veterinaria.vargasvet.security.RateLimitFilter filter) {
-        return securityFilterRegistration(filter);
-    }
-
-    @Bean
-    public FilterRegistrationBean<ThesisPerformanceMeasurementFilter> thesisPerformanceMeasurementFilterRegistration(
-            ThesisPerformanceMeasurementFilter filter) {
         return securityFilterRegistration(filter);
     }
 

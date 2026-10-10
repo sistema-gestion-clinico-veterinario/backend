@@ -123,6 +123,7 @@ public class AuditLogServiceImpl implements AuditLogService {
                 .module(module)
                 .details(details)
                 .ipAddress(ipAddress != null ? ipAddress : getClientIp())
+                .dispositivo(getDispositivo())
                 .build();
 
         AuditLog saved = auditLogRepository.save(auditLog);
@@ -141,6 +142,15 @@ public class AuditLogServiceImpl implements AuditLogService {
         }
         return auditLogRepository.filterLogs(resolvedCompanyId, userEmail, action, module,
                 startDate, endDate, pageable);
+    }
+
+    private String getDispositivo() {
+        if (httpServletRequest == null) return null;
+        try {
+            return veterinaria.vargasvet.util.DispositivoInfo.describir(httpServletRequest.getHeader("User-Agent"));
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private String getClientIp() {

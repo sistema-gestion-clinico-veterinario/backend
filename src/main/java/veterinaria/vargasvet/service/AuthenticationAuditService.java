@@ -58,6 +58,7 @@ public class AuthenticationAuditService {
                 .module("Seguridad")
                 .details(details)
                 .ipAddress(clientIpResolver.resolve(request))
+                .dispositivo(request == null ? null : veterinaria.vargasvet.util.DispositivoInfo.describir(request.getHeader("User-Agent")))
                 .build());
         auditRealtimePublisher.publishAfterCommit(saved);
     }

@@ -53,7 +53,7 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
         Map<Long, List<veterinaria.vargasvet.domain.entity.Apoderado>> destinatariosPorMascota =
                 petOwnershipService.destinatariosDeAvisos(candidatos.stream()
                         .map(ControlPreventivo::getMascota).distinct().toList());
-        Set<ConsentKey> pidieronNoRecibirlos = new HashSet<>();
+        Set<ConsentKey> autorizaronRecibirlos = new HashSet<>();
         destinatariosPorMascota.values().stream().flatMap(List::stream)
                 .filter(apoderado -> apoderado.getCompany() != null && apoderado.getUser() != null)
                 .collect(java.util.stream.Collectors.groupingBy(
@@ -62,9 +62,9 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
                                 apoderado -> apoderado.getUser().getId(),
                                 java.util.stream.Collectors.toSet())))
                 .forEach((companyId, usuarioIds) -> consentimientoDatosService
-                        .usuariosQueRetiraron(usuarioIds, companyId,
+                        .usuariosQueAutorizaron(usuarioIds, companyId,
                                 veterinaria.vargasvet.domain.enums.FinalidadDatos.RECORDATORIOS_PREVENTIVOS)
-                        .forEach(usuarioId -> pidieronNoRecibirlos.add(new ConsentKey(usuarioId, companyId))));
+                        .forEach(usuarioId -> autorizaronRecibirlos.add(new ConsentKey(usuarioId, companyId))));
 
         Map<Long, List<AvisoPendiente>> porApoderado = new LinkedHashMap<>();
         Map<Long, veterinaria.vargasvet.domain.entity.Apoderado> personas = new HashMap<>();
@@ -74,8 +74,9 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
             if (tipoAviso == null) continue;
             for (var destinatario : destinatariosPorMascota.getOrDefault(control.getMascota().getId(), List.of())) {
                 if (destinatario.getUser() == null || !destinatario.getUser().isActivo()
-                        || (destinatario.getCompany() != null && pidieronNoRecibirlos.contains(new ConsentKey(
-                                destinatario.getUser().getId(), destinatario.getCompany().getId())))
+                        || destinatario.getCompany() == null
+                        || !autorizaronRecibirlos.contains(new ConsentKey(
+                                destinatario.getUser().getId(), destinatario.getCompany().getId()))
                         || existentes.contains(new ReminderKey(control.getId(), tipoAviso,
                                 control.getFechaRecomendada(), destinatario.getId()))) {
                     continue;

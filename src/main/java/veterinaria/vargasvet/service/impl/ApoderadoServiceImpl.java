@@ -10,7 +10,6 @@ import veterinaria.vargasvet.domain.enums.TipoInactividad;
 import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.entity.Usuario;
-import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.dto.request.ApoderadoRequest;
@@ -21,7 +20,6 @@ import veterinaria.vargasvet.repository.ApoderadoRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.MascotaRepository;
 import veterinaria.vargasvet.repository.RefreshTokenRepository;
-import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.security.SecurityTokenUtils;
@@ -39,7 +37,6 @@ import veterinaria.vargasvet.dto.response.ApoderadoListResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -57,8 +54,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     private final ApoderadoRepository apoderadoRepository;
     private final MascotaRepository mascotaRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final veterinaria.vargasvet.repository.UsuarioPorRolRepository usuarioPorRolRepository;
-    private final RoleRepository roleRepository;
+    private final veterinaria.vargasvet.service.RoleAssignmentService roleAssignmentService;
     private final CompanyRepository companyRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
@@ -121,7 +117,9 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         businessValidator.checkCompanyActiva(companyIdToUse);
         Company companyToUse = companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
-        consentimientoDatosService.exigirAltaValida(companyIdToUse, dto.getAvisoInformado());
+        consentimientoDatosService.exigirAltaValida(companyIdToUse,
+                veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS,
+                dto.getAvisoInformado());
 
         // Aislamiento total entre empresas: la busqueda de "ya existe" es SOLO dentro de
         // esta misma empresa (ej. la persona ya es empleado aqui y ahora tambien se
@@ -166,8 +164,6 @@ public class ApoderadoServiceImpl implements ApoderadoService {
                     .clientPortal();
             requestedRoleIds = Set.of(defaultClientRole.getId());
         }
-        replaceClientRoles(savedUser, companyIdToUse, requestedRoleIds);
-
         java.util.Optional<Apoderado> existente = apoderadoRepository.findByUserIdAndCompanyId(savedUser.getId(), companyIdToUse);
         if (existente.isPresent()) {
             Apoderado registrado = existente.get();
@@ -214,9 +210,11 @@ public class ApoderadoServiceImpl implements ApoderadoService {
 
         Apoderado savedApoderado = apoderadoRepository.save(apoderado);
         companyMembershipService.syncLegacyCompanyField(savedUser);
+        roleAssignmentService.replaceClientRoles(savedUser, companyToUse, requestedRoleIds);
         contactoService.actualizar(savedUser, companyToUse, dto.getTelefono(), dto.getDireccion());
-        consentimientoDatosService.registrarAlta(savedUser, companyIdToUse, dto.getConsentimientoRecordatorios(),
-                SecurityUtils.getCurrentUserId());
+        consentimientoDatosService.registrarAlta(savedUser, companyIdToUse,
+                veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS,
+                dto.getConsentimientoRecordatorios(), SecurityUtils.getCurrentUserId());
 
         // El alta del cliente solo registra sus datos. La invitacion para configurar
         // el acceso se envia cuando la clinica registra su primera mascota. De este
@@ -296,7 +294,8 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             model.put("companyPhone", resolvedPhone);
             model.put("companyAddress", resolvedAddress);
             model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
-                    "/auth/verify#token=" + verificationToken, company != null ? company.getSlug() : null));
+                    "/auth/verify?audiencia=PROPIETARIOS_Y_AUTORIZADOS#token=" + verificationToken,
+                    company != null ? company.getSlug() : null));
             model.put("avisoPrivacidadLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug("/privacidad", company != null ? company.getSlug() : null));
 
             veterinaria.vargasvet.dto.Mail mail = emailService.createMail(
@@ -375,7 +374,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         usuarioRepository.save(usuario);
 
         if (dto.getRoleIds() != null) {
-            replaceClientRoles(usuario, apoderadoCompanyId, dto.getRoleIds());
+            roleAssignmentService.replaceClientRoles(usuario, apoderado.getCompany(), dto.getRoleIds());
         }
 
         if (dto.getGenero() != null) apoderado.setGenero(dto.getGenero());
@@ -624,52 +623,6 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         dto.setObservaciones(apoderado.getObservaciones());
 
         return dto;
-    }
-
-    /** companyId se recibe explicito (no se deriva de usuario.getCompany()) porque un
-     * Apoderado puede estar activo en varias empresas a la vez - Usuario.company es
-     * solo una cache que queda en null apenas hay ambiguedad. Solo se tocan las
-     * asignaciones CLIENT de ESTA empresa; nunca las de otras empresas del mismo
-     * usuario. */
-    private void replaceClientRoles(Usuario usuario, Integer companyId, Set<Integer> requestedRoleIds) {
-        if (requestedRoleIds == null || requestedRoleIds.isEmpty()) {
-            throw new IllegalArgumentException("Debe asignar al menos un rol de cliente");
-        }
-
-        Set<Integer> uniqueRoleIds = new HashSet<>(requestedRoleIds);
-        List<Role> roles = roleRepository.findAllById(uniqueRoleIds);
-        if (roles.size() != uniqueRoleIds.size()) {
-            throw new IllegalArgumentException("Uno o más roles seleccionados no existen");
-        }
-
-        boolean invalidRole = roles.stream().anyMatch(role -> !role.isActivo()
-                || role.getScope() != RoleScope.CLIENT
-                || role.getCompany() == null
-                || !companyId.equals(role.getCompany().getId()));
-        if (invalidRole) {
-            throw new IllegalArgumentException("Solo puede asignar roles de cliente activos de la misma empresa");
-        }
-
-        usuario.getUsuariosPorRol().removeIf(assignment -> assignment.getRol() != null
-                && assignment.getRol().getScope() == RoleScope.CLIENT
-                && assignment.getCompany() != null
-                && companyId.equals(assignment.getCompany().getId())
-                && !uniqueRoleIds.contains(assignment.getRol().getId()));
-        Set<Integer> alreadyAssigned = usuario.getUsuariosPorRol().stream()
-                .filter(assignment -> assignment.getRol() != null
-                        && assignment.getCompany() != null
-                        && companyId.equals(assignment.getCompany().getId()))
-                .map(assignment -> assignment.getRol().getId())
-                .collect(java.util.stream.Collectors.toSet());
-
-        roles.stream().filter(role -> !alreadyAssigned.contains(role.getId())).map(role -> {
-            UsuarioPorRol assignment = new UsuarioPorRol();
-            assignment.setUsuario(usuario);
-            assignment.setRol(role);
-            assignment.setCompany(role.getCompany());
-            return assignment;
-        }).forEach(usuario.getUsuariosPorRol()::add);
-        usuarioRepository.save(usuario);
     }
 
     private Apoderado findAccessibleClient(Long clientId) {

@@ -154,6 +154,25 @@ class LegalDocumentServiceUnitTest {
         assertEquals("1.0", saved.getDocumentoVersion());
         assertEquals(documento.getContenidoHash(), saved.getContenidoHash());
         assertTrue(saved.isTextoRecuperable());
+        assertEquals(veterinaria.vargasvet.domain.enums.TipoConstanciaLegal.ACEPTACION,
+                saved.getTipoConstancia());
+    }
+
+    @Test
+    void accept_politicaInformativaRegistraLecturaYNoAceptacionContractual() {
+        Usuario usuario = new Usuario();
+        usuario.setId(USUARIO_ID);
+        LegalDocument politica = buildDocument(2L, LocalDateTime.now());
+        politica.setTipo(LegalDocumentType.POLITICA_PRIVACIDAD);
+        when(usuarioRepository.findById(USUARIO_ID)).thenReturn(Optional.of(usuario));
+        when(legalDocumentRepository.findById(2L)).thenReturn(Optional.of(politica));
+
+        service.accept(USUARIO_ID, List.of(2L), "127.0.0.1", "JUnit-Agent");
+
+        ArgumentCaptor<UserConsent> captor = ArgumentCaptor.forClass(UserConsent.class);
+        verify(userConsentRepository).saveAndFlush(captor.capture());
+        assertEquals(veterinaria.vargasvet.domain.enums.TipoConstanciaLegal.CONSTANCIA_LECTURA,
+                captor.getValue().getTipoConstancia());
     }
 
     @Test
@@ -339,12 +358,14 @@ class LegalDocumentServiceUnitTest {
     void getMyAcceptances_devuelveLoQueSeAceptoConSuHuellaYMarcaLasNoRecuperables() {
         UserConsent reciente = new UserConsent();
         reciente.setDocumentoTipo(LegalDocumentType.POLITICA_PRIVACIDAD);
+        reciente.setTipoConstancia(veterinaria.vargasvet.domain.enums.TipoConstanciaLegal.CONSTANCIA_LECTURA);
         reciente.setDocumentoVersion("2.0");
         reciente.setContenidoHash("abc");
         reciente.setTextoRecuperable(true);
         reciente.setFechaAceptacion(LocalDateTime.now());
         UserConsent antigua = new UserConsent();
         antigua.setDocumentoTipo(LegalDocumentType.TERMINOS_Y_CONDICIONES);
+        antigua.setTipoConstancia(veterinaria.vargasvet.domain.enums.TipoConstanciaLegal.ACEPTACION);
         antigua.setDocumentoVersion("1.0");
         antigua.setTextoRecuperable(false);
         antigua.setFechaAceptacion(LocalDateTime.now().minusDays(40));
@@ -356,6 +377,10 @@ class LegalDocumentServiceUnitTest {
         assertEquals(2, historial.size());
         assertEquals("2.0", historial.get(0).version());
         assertEquals("abc", historial.get(0).contenidoHash());
+        assertEquals(veterinaria.vargasvet.domain.enums.TipoConstanciaLegal.CONSTANCIA_LECTURA,
+                historial.get(0).tipoConstancia());
+        assertEquals(veterinaria.vargasvet.domain.enums.TipoConstanciaLegal.ACEPTACION,
+                historial.get(1).tipoConstancia());
         assertFalse(historial.get(1).textoRecuperable());
         assertEquals(null, historial.get(1).contenidoHash());
     }

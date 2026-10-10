@@ -122,10 +122,11 @@ class CoreBusinessServiceUnitTest {
         role.setProtectedRole(true);
         role.setActivo(true);
         when(roleRepository.findById(1)).thenReturn(Optional.of(role));
-        when(roleRepository.save(any(Role.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> roleService.updateRole(1, "ROL_CUSTOM", "Descripción permitida", RoleScope.STAFF));
 
-        roleService.updateRole(1, "ROL_CUSTOM", "Descripción permitida", RoleScope.STAFF);
-
+        assertEquals("Los roles base del sistema no se pueden modificar", exception.getMessage());
         assertEquals("ROLE_SUPER_ADMIN", role.getName());
         assertEquals(RoleScope.PLATFORM, role.getScope());
         assertEquals(RolePurpose.PLATFORM_ADMIN, role.getPurpose());
@@ -180,6 +181,7 @@ class CoreBusinessServiceUnitTest {
                 ventanaRepository,
                 rolVentanaConfiguracionRepository,
                 rolVistaConfiguracionRepository,
+                org.mockito.Mockito.mock(veterinaria.vargasvet.repository.RolVentanaPermisoRepository.class),
                 org.mockito.Mockito.mock(veterinaria.vargasvet.repository.UsuarioPorRolRepository.class),
                 org.mockito.Mockito.mock(veterinaria.vargasvet.service.AuditLogService.class)
         );
