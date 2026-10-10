@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.LegalDocument;
 import veterinaria.vargasvet.domain.entity.UserConsent;
 import veterinaria.vargasvet.domain.enums.LegalDocumentType;
+import veterinaria.vargasvet.domain.enums.TipoConstanciaLegal;
 import veterinaria.vargasvet.dto.response.LegalAcceptanceDTO;
 import veterinaria.vargasvet.dto.response.LegalDocumentDTO;
 import veterinaria.vargasvet.dto.response.LegalStatusDTO;
@@ -97,6 +98,9 @@ public class LegalDocumentServiceImpl implements LegalDocumentService {
             consent.setUsuario(usuario);
             consent.setLegalDocument(documento);
             consent.setDocumentoTipo(documento.getTipo());
+            consent.setTipoConstancia(documento.getTipo() == LegalDocumentType.TERMINOS_Y_CONDICIONES
+                    ? TipoConstanciaLegal.ACEPTACION
+                    : TipoConstanciaLegal.CONSTANCIA_LECTURA);
             consent.setDocumentoVersion(documento.getVersion());
             consent.setContenidoHash(documento.getContenidoHash());
             consent.setTextoRecuperable(true);
@@ -173,7 +177,8 @@ public class LegalDocumentServiceImpl implements LegalDocumentService {
     public List<LegalAcceptanceDTO> getMyAcceptances(Integer usuarioId) {
         return userConsentRepository.findByUsuarioIdOrderByFechaAceptacionDesc(usuarioId).stream()
                 .map(uc -> new LegalAcceptanceDTO(uc.getDocumentoTipo(), uc.getDocumentoVersion(),
-                        uc.getContenidoHash(), uc.isTextoRecuperable(), uc.getFechaAceptacion()))
+                        uc.getContenidoHash(), uc.isTextoRecuperable(), uc.getFechaAceptacion(),
+                        uc.getTipoConstancia()))
                 .toList();
     }
 

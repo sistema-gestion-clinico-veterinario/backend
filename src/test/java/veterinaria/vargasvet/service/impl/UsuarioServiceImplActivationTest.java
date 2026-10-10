@@ -14,6 +14,8 @@ import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
+import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
+import veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad;
 import veterinaria.vargasvet.security.SharedRateLimitService;
 import veterinaria.vargasvet.service.AuthenticationAuditService;
 import veterinaria.vargasvet.service.CompanyMembershipService;
@@ -51,6 +53,7 @@ class UsuarioServiceImplActivationTest {
     @Mock EmailService emailService;
     @Mock PasswordPolicyService passwordPolicyService;
     @Mock UsuarioEmpresaCredencialRepository credencialRepository;
+    @Mock UsuarioPorRolRepository usuarioPorRolRepository;
     @Mock veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
 
     @InjectMocks UsuarioServiceImpl service;
@@ -179,37 +182,47 @@ class UsuarioServiceImplActivationTest {
     }
 
     @Test
-    void setupAccountExigeHaberLeidoElAvisoCuandoLaClinicaYaLoPublico() {
+    void setupAccountSoloConfiguraCredencialesYDejaElAvisoParaElPrimerIngreso() {
         Usuario pendiente = conTokenVigente(pendiente(10, "ana@example.test"));
         when(usuarioRepository.findByVerificationTokenForUpdate(anyString())).thenReturn(Optional.of(pendiente));
         when(companyMembershipService.hasOnlyInactiveMemberships(10)).thenReturn(false);
         when(credencialRepository.findAllByUsuarioId(10)).thenReturn(List.of(credencialPendiente(pendiente, 7)));
-        when(consentimientoDatosService.hayAvisoPublicado(7)).thenReturn(true);
+        when(passwordEncoder.encode(anyString())).thenReturn("hash-nuevo");
 
-        assertThatThrownBy(() -> service.setupAccount("token", "Contrasena-Segura-123", null, "10.0.0.1", "navegador"))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("aviso de privacidad");
-        assertThatThrownBy(() -> service.setupAccount("token", "Contrasena-Segura-123", false, "10.0.0.1", "navegador"))
-                .isInstanceOf(IllegalArgumentException.class);
+        service.setupAccount("token", "Contrasena-Segura-123", false, "10.0.0.1", "navegador");
 
-        assertThat(pendiente.isActivo()).isFalse();
-        verifyNoInteractions(passwordPolicyService);
-        verify(consentimientoDatosService, never()).registrarEnterado(any(), any(), any(), any(), any(), any());
+        assertThat(pendiente.isActivo()).isTrue();
+        verify(consentimientoDatosService, never()).registrarEnterado(
+                any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
-    void setupAccountConElAvisoLeidoDejaConstanciaDeLaActivacion() {
+    void setupAccountNoConvierteLaActivacionEnReconocimientoDelAviso() {
         Usuario pendiente = conTokenVigente(pendiente(10, "ana@example.test"));
         when(usuarioRepository.findByVerificationTokenForUpdate(anyString())).thenReturn(Optional.of(pendiente));
         when(companyMembershipService.hasOnlyInactiveMemberships(10)).thenReturn(false);
         when(credencialRepository.findAllByUsuarioId(10)).thenReturn(List.of(credencialPendiente(pendiente, 7)));
-        when(consentimientoDatosService.hayAvisoPublicado(7)).thenReturn(true);
         when(passwordEncoder.encode(anyString())).thenReturn("hash-nuevo");
 
         service.setupAccount("token", "Contrasena-Segura-123", true, "10.0.0.1", "navegador");
 
         assertThat(pendiente.isActivo()).isTrue();
-        verify(consentimientoDatosService).registrarEnterado(10, 7,
-                veterinaria.vargasvet.domain.enums.CanalConsentimiento.ACTIVACION, null, "10.0.0.1", "navegador");
+        verify(consentimientoDatosService, never()).registrarEnterado(
+                any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void setupAccountDelPersonalTambienDejaElAvisoParaElPrimerIngreso() {
+        Usuario pendiente = conTokenVigente(pendiente(10, "personal@example.test"));
+        when(usuarioRepository.findByVerificationTokenForUpdate(anyString())).thenReturn(Optional.of(pendiente));
+        when(companyMembershipService.hasOnlyInactiveMemberships(10)).thenReturn(false);
+        when(credencialRepository.findAllByUsuarioId(10)).thenReturn(List.of(credencialPendiente(pendiente, 7)));
+        when(passwordEncoder.encode(anyString())).thenReturn("hash-nuevo");
+
+        service.setupAccount("token", "Contrasena-Segura-123", true, "10.0.0.2", "navegador");
+
+        verify(consentimientoDatosService, never()).registrarEnterado(
+                any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -218,7 +231,6 @@ class UsuarioServiceImplActivationTest {
         when(usuarioRepository.findByVerificationTokenForUpdate(anyString())).thenReturn(Optional.of(pendiente));
         when(companyMembershipService.hasOnlyInactiveMemberships(10)).thenReturn(false);
         when(credencialRepository.findAllByUsuarioId(10)).thenReturn(List.of(credencialPendiente(pendiente, 7)));
-        when(consentimientoDatosService.hayAvisoPublicado(7)).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("hash-nuevo");
 
         service.setupAccount("token", "Contrasena-Segura-123", null, null, null);

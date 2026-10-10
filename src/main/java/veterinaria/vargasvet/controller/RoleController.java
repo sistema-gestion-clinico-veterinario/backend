@@ -107,7 +107,7 @@ public class RoleController {
     @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'ELIMINAR')")
     public ResponseEntity<ApiResponse<Void>> deleteRole(@PathVariable Integer id) {
         roleService.deleteRole(id);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Rol desactivado", null));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Rol eliminado", null));
     }
 
     @GetMapping("/{id}/views")
@@ -115,16 +115,6 @@ public class RoleController {
     public ResponseEntity<ApiResponse<List<RolVistaPermisoDTO>>> getVistas(@PathVariable Integer id) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Vistas del rol",
                 roleService.getVistasByRole(id)));
-    }
-
-    @PutMapping("/{id}/views")
-    @Deprecated
-    @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'MODIFICAR')")
-    public ResponseEntity<ApiResponse<List<RolVistaPermisoDTO>>> saveVistasLegacy(
-            @PathVariable Integer id,
-            @RequestBody List<RolVistaPermisoDTO> permisos) {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Permisos guardados",
-                roleService.saveVistasByRole(id, null, permisos)));
     }
 
     @PutMapping("/{id}/views/versioned")

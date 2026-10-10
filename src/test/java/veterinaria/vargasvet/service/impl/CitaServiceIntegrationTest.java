@@ -461,8 +461,7 @@ class CitaServiceIntegrationTest {
                 new veterinaria.vargasvet.service.impl.ApoderadoServiceImpl(
                         usuarioRepository, apoderadoRepository, mascotaRepository,
                         mock(veterinaria.vargasvet.repository.RefreshTokenRepository.class),
-                        mock(veterinaria.vargasvet.repository.UsuarioPorRolRepository.class),
-                        mock(veterinaria.vargasvet.repository.RoleRepository.class), companyRepository,
+                        mock(veterinaria.vargasvet.service.RoleAssignmentService.class), companyRepository,
                         mock(org.springframework.security.crypto.password.PasswordEncoder.class),
                         mock(veterinaria.vargasvet.mapper.UserMapper.class), mock(BusinessValidator.class), emailService,
                         mock(AuditLogService.class), mock(veterinaria.vargasvet.service.CompanyRoleProvisioningService.class),

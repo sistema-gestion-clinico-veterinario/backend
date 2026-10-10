@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.RoleScope;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +16,20 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
 
     List<UsuarioPorRol> findByUsuarioId(Integer usuarioId);
 
+    @Query("""
+            SELECT upr
+            FROM UsuarioPorRol upr
+            JOIN FETCH upr.rol r
+            LEFT JOIN FETCH r.company
+            WHERE upr.usuario.id = :usuarioId
+              AND upr.company.id = :companyId
+              AND r.scope = :scope
+            """)
+    List<UsuarioPorRol> findByUsuarioIdAndCompanyIdAndRoleScope(
+            @Param("usuarioId") Integer usuarioId,
+            @Param("companyId") Integer companyId,
+            @Param("scope") RoleScope scope);
+
     @Modifying(flushAutomatically = true)
     @Query("DELETE FROM UsuarioPorRol upr WHERE upr.usuario.id = :usuarioId")
     void deleteByUsuarioId(@Param("usuarioId") Integer usuarioId);
@@ -22,6 +37,18 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
     @Modifying(flushAutomatically = true)
     @Query("DELETE FROM UsuarioPorRol upr WHERE upr.usuario.id = :usuarioId AND upr.company.id = :companyId")
     void deleteByUsuarioIdAndCompanyId(@Param("usuarioId") Integer usuarioId, @Param("companyId") Integer companyId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            DELETE FROM UsuarioPorRol upr
+            WHERE upr.usuario.id = :usuarioId
+              AND upr.company.id = :companyId
+              AND upr.rol.scope = :scope
+            """)
+    void deleteByUsuarioIdAndCompanyIdAndRoleScope(
+            @Param("usuarioId") Integer usuarioId,
+            @Param("companyId") Integer companyId,
+            @Param("scope") RoleScope scope);
 
     Optional<UsuarioPorRol> findByUsuarioIdAndRolId(Integer usuarioId, Integer rolId);
 
@@ -51,6 +78,19 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
             """)
     List<Usuario> findUsersWithActiveRolePurpose(@Param("companyId") Integer companyId,
                                                  @Param("purpose") RolePurpose purpose);
+
+    @Query("""
+            SELECT COUNT(upr) > 0
+            FROM UsuarioPorRol upr
+            JOIN upr.rol r
+            WHERE upr.usuario.id = :usuarioId
+              AND upr.company.id = :companyId
+              AND r.scope = :scope
+              AND r.activo = true
+            """)
+    boolean existsActiveRoleScope(@Param("usuarioId") Integer usuarioId,
+                                  @Param("companyId") Integer companyId,
+                                  @Param("scope") RoleScope scope);
 
     boolean existsByUsuarioIdAndRolId(Integer usuarioId, Integer rolId);
 

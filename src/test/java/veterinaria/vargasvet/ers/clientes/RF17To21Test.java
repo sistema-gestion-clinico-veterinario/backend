@@ -80,6 +80,7 @@ class RF17To21Test {
     private UserMapper userMapper;
     private MascotaMapper mascotaMapper;
     private EmailService emailService;
+    private veterinaria.vargasvet.service.RoleAssignmentService roleAssignmentService;
     private ApoderadoService invitacionAccesoService;
     private veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
 
@@ -95,6 +96,7 @@ class RF17To21Test {
         userMapper = mock(UserMapper.class);
         mascotaMapper = mock(MascotaMapper.class);
         emailService = mock(EmailService.class);
+        roleAssignmentService = mock(veterinaria.vargasvet.service.RoleAssignmentService.class);
         invitacionAccesoService = mock(ApoderadoService.class);
         petOwnershipService = mock(veterinaria.vargasvet.service.PetOwnershipService.class);
         autenticarEmpresa(7);
@@ -150,8 +152,7 @@ class RF17To21Test {
         assertThat(created.isEmailVerified()).isFalse();
         assertThat(created.getVerificationToken()).isNull();
         assertThat(created.getVerificationTokenExpiresAt()).isNull();
-        assertThat(created.getUsuariosPorRol()).extracting(assignment -> assignment.getRol().getId())
-                .containsExactly(20);
+        verify(roleAssignmentService).replaceClientRoles(created, company, Set.of(20));
 
         ArgumentCaptor<Apoderado> apoderadoCaptor = ArgumentCaptor.forClass(Apoderado.class);
         verify(apoderadoRepository).save(apoderadoCaptor.capture());
@@ -378,8 +379,7 @@ class RF17To21Test {
                 apoderadoRepository,
                 mascotaRepository,
                 mock(RefreshTokenRepository.class),
-                mock(UsuarioPorRolRepository.class),
-                roleRepository,
+                roleAssignmentService,
                 companyRepository,
                 mock(PasswordEncoder.class, invocation -> "hash-temporal"),
                 userMapper,

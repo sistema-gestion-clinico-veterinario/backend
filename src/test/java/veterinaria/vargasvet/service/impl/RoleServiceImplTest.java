@@ -14,6 +14,7 @@ import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.ViewAudience;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
+import veterinaria.vargasvet.repository.RolVentanaPermisoRepository;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
 import veterinaria.vargasvet.repository.RolVistaConfiguracionRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
@@ -22,6 +23,7 @@ import veterinaria.vargasvet.repository.VentanaRepository;
 import veterinaria.vargasvet.repository.VistaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.exception.StalePermissionConfigurationException;
+import veterinaria.vargasvet.service.AuditLogService;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,7 +42,9 @@ class RoleServiceImplTest {
     private final RolVistaPermisoRepository rolVistaPermisoRepository = mock(RolVistaPermisoRepository.class);
     private final RolVentanaConfiguracionRepository rolVentanaConfiguracionRepository = mock(RolVentanaConfiguracionRepository.class);
     private final RolVistaConfiguracionRepository rolVistaConfiguracionRepository = mock(RolVistaConfiguracionRepository.class);
+    private final RolVentanaPermisoRepository rolVentanaPermisoRepository = mock(RolVentanaPermisoRepository.class);
     private final UsuarioPorRolRepository usuarioPorRolRepository = mock(UsuarioPorRolRepository.class);
+    private final AuditLogService auditLogService = mock(AuditLogService.class);
     private final RoleServiceImpl service = new RoleServiceImpl(
             roleRepository,
             mock(CompanyRepository.class),
@@ -49,8 +53,9 @@ class RoleServiceImplTest {
             mock(VentanaRepository.class),
             rolVentanaConfiguracionRepository,
             rolVistaConfiguracionRepository,
+            rolVentanaPermisoRepository,
             usuarioPorRolRepository,
-            mock(veterinaria.vargasvet.service.AuditLogService.class)
+            auditLogService
     );
 
     @Test
@@ -237,6 +242,91 @@ class RoleServiceImplTest {
             assertThrows(IllegalArgumentException.class,
                     () -> service.updateRole(9, "Asistente Veterinario", null, RoleScope.CLIENT));
         }
+    }
+
+    @Test
+    void createRoleRejectsACompanyRoleWithoutCompany() {
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.createRole("Recepción", null, null, RoleScope.STAFF));
+        }
+    }
+
+    @Test
+    void createRoleRejectsAPlatformRoleOwnedByCompany() {
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.createRole("Soporte", null, 7, RoleScope.PLATFORM));
+        }
+    }
+
+    @Test
+    void updateRoleRejectsProtectedSystemRole() {
+        Role role = role(20, null, RoleScope.PLATFORM, true);
+        role.setProtectedRole(true);
+        role.setSystemManaged(true);
+        when(roleRepository.findById(20)).thenReturn(Optional.of(role));
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.updateRole(20, "Administrador", null, RoleScope.PLATFORM));
+        }
+    }
+
+    @Test
+    void savePermissionsRequiresOptimisticLockVersion() {
+        Role role = role(21, company(7), RoleScope.STAFF, true);
+        when(roleRepository.findByIdForPermissionUpdate(21)).thenReturn(Optional.of(role));
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.saveVistasByRole(21, null, List.of()));
+            verify(rolVistaPermisoRepository, never()).deleteByRolId(21);
+        }
+    }
+
+    @Test
+    void deleteRoleRejectsARoleWithAssignedUsers() {
+        Role role = role(22, company(7), RoleScope.STAFF, true);
+        when(roleRepository.findById(22)).thenReturn(Optional.of(role));
+        when(usuarioPorRolRepository.existsByRolId(22)).thenReturn(true);
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            assertThrows(IllegalArgumentException.class, () -> service.deleteRole(22));
+            verify(roleRepository, never()).delete(role);
+        }
+    }
+
+    @Test
+    void deleteUnusedRoleRemovesItsConfigurationAndAuditsTheAction() {
+        Company company = company(7);
+        Role role = role(23, company, RoleScope.STAFF, true);
+        when(roleRepository.findById(23)).thenReturn(Optional.of(role));
+        when(usuarioPorRolRepository.existsByRolId(23)).thenReturn(false);
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            service.deleteRole(23);
+        }
+
+        verify(rolVistaConfiguracionRepository).deleteByRolId(23);
+        verify(rolVentanaConfiguracionRepository).deleteByRolId(23);
+        verify(rolVentanaPermisoRepository).deleteByRolId(23);
+        verify(rolVistaPermisoRepository).deleteByRolId(23);
+        verify(roleRepository).delete(role);
+        verify(auditLogService).log(7, "ELIMINAR_ROL", "Roles",
+                "Se eliminó el rol sin asignaciones ROLE_23");
     }
 
     private Company company(int id) {

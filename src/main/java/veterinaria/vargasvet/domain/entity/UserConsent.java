@@ -4,11 +4,12 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import veterinaria.vargasvet.domain.enums.LegalDocumentType;
+import veterinaria.vargasvet.domain.enums.TipoConstanciaLegal;
 
 import java.time.LocalDateTime;
 
 /**
- * Constancia de que una persona aceptó una versión de un documento legal. Solo se inserta: no se
+ * Constancia de que una persona aceptó o fue informada de una versión de un documento legal. Solo se inserta: no se
  * modifica ni se elimina. Copia el tipo, la versión y la huella del texto para poder demostrar qué se
  * aceptó aunque el documento cambie después; las constancias anteriores a la versión inmutable no
  * tienen huella y se marcan como no recuperables.
@@ -37,6 +38,10 @@ public class UserConsent {
     @Enumerated(EnumType.STRING)
     @Column(name = "documento_tipo", nullable = false, length = 30)
     private LegalDocumentType documentoTipo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_constancia", nullable = false, length = 25)
+    private TipoConstanciaLegal tipoConstancia;
 
     @Column(name = "documento_version", nullable = false, length = 20)
     private String documentoVersion;

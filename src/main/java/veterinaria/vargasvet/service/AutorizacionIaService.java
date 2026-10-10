@@ -7,6 +7,7 @@ import veterinaria.vargasvet.domain.entity.ConsentimientoDatos;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.enums.EstadoConsentimiento;
 import veterinaria.vargasvet.domain.enums.FinalidadDatos;
+import veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad;
 import veterinaria.vargasvet.dto.response.AutorizacionIaResponse;
 import veterinaria.vargasvet.exception.AutorizacionIaRequeridaException;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
@@ -18,8 +19,8 @@ import java.util.Optional;
 
 /**
  * La IA solo se usa con los datos clínicos de una mascota si su titular (el cliente principal) la autorizó de forma
- * expresa y separada de los términos. A diferencia de los recordatorios, aquí no hay autorización por omisión: sin
- * constancia vigente, o con la última constancia retirada, no se usa.
+ * expresa y separada de los términos. Al igual que con las demás finalidades opcionales, no hay autorización por
+ * omisión: sin constancia vigente, o con la última constancia retirada, no se usa.
  */
 @Service
 @RequiredArgsConstructor
@@ -57,8 +58,9 @@ public class AutorizacionIaService {
         var apoderado = mascota.getApoderado();
         var titular = apoderado.getUser();
         Optional<ConsentimientoDatos> ultima = consentimientoRepository
-                .findFirstByUsuarioIdAndCompanyIdAndFinalidadOrderByIdDesc(
-                        titular.getId(), companyId, FinalidadDatos.USO_IA_CLINICA);
+                .findFirstByUsuarioIdAndCompanyIdAndFinalidadAndAvisoAudienciaOrderByIdDesc(
+                        titular.getId(), companyId, FinalidadDatos.USO_IA_CLINICA,
+                        AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS);
         boolean autorizada = ultima.isPresent() && ultima.get().getEstado() == EstadoConsentimiento.OTORGADO;
         String nombre = (titular.getNombre() + " " + titular.getApellido()).strip();
         return new AutorizacionIaResponse(autorizada, apoderado.getId(), nombre,

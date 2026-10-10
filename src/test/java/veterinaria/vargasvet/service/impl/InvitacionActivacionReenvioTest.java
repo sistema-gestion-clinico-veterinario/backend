@@ -150,7 +150,8 @@ class InvitacionActivacionReenvioTest {
         assertThat(usuario.getVerificationToken()).isNotEqualTo("hash-anterior").isNotNull();
         assertThat(usuario.getVerificationTokenExpiresAt()).isAfter(AppClock.now().plusHours(23));
         assertThat((String) model.getValue().get("verificationLink"))
-                .startsWith("https://frontend.test").contains("vargas-vet").contains("/auth/verify#token=");
+                .startsWith("https://frontend.test").contains("vargas-vet")
+                .contains("/auth/verify?audiencia=TRABAJADORES_Y_USUARIOS#token=");
         verify(usuarioRepository).save(usuario);
         verify(emailService).sendEmailWithRetry(any(), eq("email/welcome-template"));
         org.mockito.InOrder bloqueo = org.mockito.Mockito.inOrder(entityManager);
@@ -252,7 +253,8 @@ class InvitacionActivacionReenvioTest {
         apoderadoService.reenviarInvitacion(40L);
 
         assertThat(usuario.getVerificationToken()).isNotEqualTo("hash-anterior");
-        assertThat((String) model.getValue().get("verificationLink")).contains("vargas-vet").contains("/auth/verify#token=");
+        assertThat((String) model.getValue().get("verificationLink")).contains("vargas-vet")
+                .contains("/auth/verify?audiencia=PROPIETARIOS_Y_AUTORIZADOS#token=");
         verify(emailService).sendEmailWithRetry(any(), eq("email/welcome-template"));
         verify(auditLogService).log(eq(3), eq("REENVIAR_INVITACION_CLIENTE"), eq("Clientes"),
                 eq("Se reenvió la invitación de activación a Ana Pérez (ana@empresa.test)"));

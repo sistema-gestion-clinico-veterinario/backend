@@ -28,6 +28,7 @@ import veterinaria.vargasvet.repository.VistaRepository;
 import veterinaria.vargasvet.repository.VentanaRepository;
 import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
 import veterinaria.vargasvet.repository.RolVistaConfiguracionRepository;
+import veterinaria.vargasvet.repository.RolVentanaPermisoRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.RoleService;
@@ -41,6 +42,12 @@ import veterinaria.vargasvet.security.SecurityUtils;
 @RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
 
+    /** Vistas cuya regla de negocio define de forma verificable qué significa "propio". */
+    private static final Set<String> DATA_SCOPE_CAPABLE_VIEWS = Set.of(
+            "VISTA_CITAS_AGENDA",
+            "VISTA_HISTORIAS",
+            "VISTA_REPORTES");
+
     private final RoleRepository roleRepository;
     private final CompanyRepository companyRepository;
     private final VistaRepository vistaRepository;
@@ -48,6 +55,7 @@ public class RoleServiceImpl implements RoleService {
     private final VentanaRepository ventanaRepository;
     private final RolVentanaConfiguracionRepository rolVentanaConfiguracionRepository;
     private final RolVistaConfiguracionRepository rolVistaConfiguracionRepository;
+    private final RolVentanaPermisoRepository rolVentanaPermisoRepository;
     private final UsuarioPorRolRepository usuarioPorRolRepository;
     private final AuditLogService auditLogService;
 
@@ -103,7 +111,9 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public RolDTO createRole(String nombre, String descripcion, Integer companyId, RoleScope requestedScope) {
         RoleScope scope = requestedScope != null ? requestedScope : RoleScope.STAFF;
-        if (!SecurityUtils.isSuperAdmin()) {
+        if (SecurityUtils.isSuperAdmin()) {
+            assertSelectedCompany(companyId);
+        } else {
             Integer currentCompanyId = requireCurrentCompany();
             if (companyId != null && !Objects.equals(companyId, currentCompanyId)) {
                 throw new AccessDeniedException("No puede crear roles para otra empresa");
@@ -113,8 +123,9 @@ public class RoleServiceImpl implements RoleService {
                 throw new AccessDeniedException("Una empresa no puede crear roles de plataforma");
             }
         }
-        nombre =         normalizarNombreRol(nombre);
+        nombre = normalizarNombreRol(nombre);
         descripcion = normalizarDescripcion(descripcion);
+        validateCustomRolePlacement(companyId, scope);
         validarDuplicado(nombre, companyId);
 
         Role role = new Role();
@@ -131,7 +142,9 @@ public class RoleServiceImpl implements RoleService {
             role.setCompany(company);
         }
 
-        return toDTO(roleRepository.save(role));
+        Role saved = roleRepository.save(role);
+        auditRole(saved, "CREAR_ROL", "Se creó el rol " + saved.getName());
+        return toDTO(saved);
     }
 
     @Override
@@ -141,23 +154,28 @@ public class RoleServiceImpl implements RoleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
         assertCanManageRole(role);
 
-        if (role.getPurpose() != RolePurpose.PLATFORM_ADMIN) {
-            nombre = normalizarNombreRol(nombre);
-            Integer companyId = role.getCompany() != null ? role.getCompany().getId() : null;
-            validarDuplicadoEdicion(id, nombre, companyId);
-            role.setName(nombre);
-            if (requestedScope != null && !role.isSystemManaged()) {
-                RoleScope newScope = requestedScope;
-                if (!SecurityUtils.isSuperAdmin() && newScope == RoleScope.PLATFORM) {
-                    throw new AccessDeniedException("Una empresa no puede convertir un rol en rol de plataforma");
-                }
-                validateScopeChange(role, newScope);
-                role.setScope(newScope);
+        if (role.isSystemManaged() || role.isProtectedRole()) {
+            throw new IllegalArgumentException("Los roles base del sistema no se pueden modificar");
+        }
+
+        nombre = normalizarNombreRol(nombre);
+        Integer companyId = role.getCompany() != null ? role.getCompany().getId() : null;
+        validarDuplicadoEdicion(id, nombre, companyId);
+        role.setName(nombre);
+        if (requestedScope != null) {
+            RoleScope newScope = requestedScope;
+            if (!SecurityUtils.isSuperAdmin() && newScope == RoleScope.PLATFORM) {
+                throw new AccessDeniedException("Una empresa no puede convertir un rol en rol de plataforma");
             }
+            validateCustomRolePlacement(companyId, newScope);
+            validateScopeChange(role, newScope);
+            role.setScope(newScope);
         }
         role.setDescripcion(normalizarDescripcion(descripcion));
 
-        return toDTO(roleRepository.save(role));
+        Role saved = roleRepository.save(role);
+        auditRole(saved, "MODIFICAR_ROL", "Se actualizó el rol " + saved.getName());
+        return toDTO(saved);
     }
 
     @Override
@@ -170,7 +188,10 @@ public class RoleServiceImpl implements RoleService {
             throw new IllegalArgumentException("No se puede desactivar un rol protegido del sistema");
         }
         role.setActivo(!role.isActivo());
-        return toDTO(roleRepository.save(role));
+        Role saved = roleRepository.save(role);
+        auditRole(saved, saved.isActivo() ? "ACTIVAR_ROL" : "DESACTIVAR_ROL",
+                "Se " + (saved.isActivo() ? "activó" : "desactivó") + " el rol " + saved.getName());
+        return toDTO(saved);
     }
 
     @Override
@@ -180,12 +201,23 @@ public class RoleServiceImpl implements RoleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
         assertCanManageRole(role);
 
-        if (role.isProtectedRole()) {
+        if (role.isProtectedRole() || role.isSystemManaged()) {
             throw new IllegalArgumentException("No se puede eliminar un rol del sistema");
         }
+        if (usuarioPorRolRepository.existsByRolId(id)) {
+            throw new IllegalArgumentException(
+                    "El rol tiene usuarios asignados y no puede eliminarse. Desactívelo para conservar el historial.");
+        }
 
-        role.setActivo(false);
-        roleRepository.save(role);
+        Integer companyId = role.getCompany() != null ? role.getCompany().getId() : null;
+        String roleName = role.getName();
+        rolVistaConfiguracionRepository.deleteByRolId(id);
+        rolVentanaConfiguracionRepository.deleteByRolId(id);
+        rolVentanaPermisoRepository.deleteByRolId(id);
+        rolVistaPermisoRepository.deleteByRolId(id);
+        roleRepository.delete(role);
+        auditLogService.log(companyId, "ELIMINAR_ROL", "Roles",
+                "Se eliminó el rol sin asignaciones " + roleName);
     }
 
     @Override
@@ -244,8 +276,12 @@ public class RoleServiceImpl implements RoleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
         assertCanManageRole(role);
 
-        // null se admite únicamente desde el endpoint legacy durante la migración.
-        if (expectedVersion != null && role.getPermissionVersion() != expectedVersion) {
+        assertRoleConfigurationEditable(role);
+
+        if (expectedVersion == null) {
+            throw new IllegalArgumentException("Debe indicar la versión actual de los permisos");
+        }
+        if (role.getPermissionVersion() != expectedVersion) {
             throw new StalePermissionConfigurationException();
         }
 
@@ -269,7 +305,8 @@ public class RoleServiceImpl implements RoleService {
             rvp.setEscribir(dto.isEscribir());
             rvp.setModificar(dto.isModificar());
             rvp.setEliminar(dto.isEliminar());
-            rvp.setDataScope(dto.getDataScope() != null
+            rvp.setDataScope(DATA_SCOPE_CAPABLE_VIEWS.contains(vista.getCodigo())
+                    && dto.getDataScope() != null
                     ? dto.getDataScope()
                     : veterinaria.vargasvet.domain.enums.DataScope.OWN);
             rolVistaPermisoRepository.save(rvp);
@@ -326,6 +363,7 @@ public class RoleServiceImpl implements RoleService {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
         assertCanManageRole(role);
+        assertRoleConfigurationEditable(role);
         if (!role.isActivo()) {
             throw new IllegalArgumentException("No se puede configurar el menú de un rol inactivo");
         }
@@ -427,6 +465,7 @@ public class RoleServiceImpl implements RoleService {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
         assertCanManageRole(role);
+        assertRoleConfigurationEditable(role);
         if (!role.isActivo()) {
             throw new IllegalArgumentException("No se puede ordenar el menú de un rol inactivo");
         }
@@ -692,8 +731,12 @@ public class RoleServiceImpl implements RoleService {
     }
 
     private boolean canReadRole(Role role) {
-        if (SecurityUtils.isSuperAdmin()) return true;
         Integer roleCompanyId = role.getCompany() != null ? role.getCompany().getId() : null;
+        if (SecurityUtils.isSuperAdmin()) {
+            Integer selectedCompanyId = SecurityUtils.getCurrentCompanyId();
+            return selectedCompanyId == null || roleCompanyId == null
+                    || Objects.equals(roleCompanyId, selectedCompanyId);
+        }
         return roleCompanyId != null && Objects.equals(roleCompanyId, SecurityUtils.getCurrentCompanyId());
     }
 
@@ -713,17 +756,52 @@ public class RoleServiceImpl implements RoleService {
         }
     }
 
+    private void validateCustomRolePlacement(Integer companyId, RoleScope scope) {
+        if (scope == RoleScope.PLATFORM && companyId != null) {
+            throw new IllegalArgumentException("Un rol de plataforma no puede pertenecer a una empresa");
+        }
+        if (scope != RoleScope.PLATFORM && companyId == null) {
+            throw new IllegalArgumentException("Los roles de personal o clientes deben pertenecer a una empresa");
+        }
+    }
+
+    private void assertRoleConfigurationEditable(Role role) {
+        if (role.isSystemManaged() || role.isProtectedRole()) {
+            throw new IllegalArgumentException("La configuración de un rol base del sistema es inmutable");
+        }
+    }
+
+    private void auditRole(Role role, String action, String details) {
+        Integer companyId = role.getCompany() != null ? role.getCompany().getId() : null;
+        auditLogService.log(companyId, action, "Roles", details);
+    }
+
     private void assertCanManageRole(Role role) {
-        if (SecurityUtils.isSuperAdmin()) return;
         Integer roleCompanyId = role.getCompany() != null ? role.getCompany().getId() : null;
+        if (SecurityUtils.isSuperAdmin()) {
+            assertSelectedCompany(roleCompanyId);
+            return;
+        }
         if (roleCompanyId == null || !Objects.equals(roleCompanyId, requireCurrentCompany())) {
             throw new AccessDeniedException("No puede modificar un rol global o de otra empresa");
         }
     }
 
     private void assertCompanyAccess(Integer companyId) {
-        if (!SecurityUtils.isSuperAdmin() && !Objects.equals(companyId, requireCurrentCompany())) {
+        if (SecurityUtils.isSuperAdmin()) {
+            assertSelectedCompany(companyId);
+            return;
+        }
+        if (!Objects.equals(companyId, requireCurrentCompany())) {
             throw new AccessDeniedException("No tiene acceso a los roles de otra empresa");
+        }
+    }
+
+    private void assertSelectedCompany(Integer requestedCompanyId) {
+        Integer selectedCompanyId = SecurityUtils.getCurrentCompanyId();
+        if (selectedCompanyId != null && selectedCompanyId > 0 && requestedCompanyId != null
+                && !Objects.equals(selectedCompanyId, requestedCompanyId)) {
+            throw new AccessDeniedException("La operación no pertenece a la empresa activa");
         }
     }
 

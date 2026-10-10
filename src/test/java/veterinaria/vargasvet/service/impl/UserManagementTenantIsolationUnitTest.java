@@ -99,7 +99,10 @@ class UserManagementTenantIsolationUnitTest {
         clinica.setId(7);
         when(companyRepository.findById(7)).thenReturn(Optional.of(clinica));
         org.mockito.Mockito.doThrow(new IllegalStateException("sin aviso"))
-                .when(consentimientoDatosService).exigirAltaValida(7, null);
+                .when(consentimientoDatosService).exigirAltaValida(
+                        7,
+                        veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS,
+                        null);
         veterinaria.vargasvet.dto.request.ApoderadoRequest request = new veterinaria.vargasvet.dto.request.ApoderadoRequest();
         request.setEmail("cliente@example.test");
 
@@ -107,7 +110,8 @@ class UserManagementTenantIsolationUnitTest {
 
         verify(usuarioRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(consentimientoDatosService, never()).registrarAlta(org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -117,7 +121,10 @@ class UserManagementTenantIsolationUnitTest {
         clinica.setId(7);
         when(companyRepository.findById(7)).thenReturn(Optional.of(clinica));
         org.mockito.Mockito.doThrow(new IllegalArgumentException("sin constancia"))
-                .when(consentimientoDatosService).exigirAltaValida(7, false);
+                .when(consentimientoDatosService).exigirAltaValida(
+                        7,
+                        veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS,
+                        false);
         veterinaria.vargasvet.dto.request.EmpleadoRequest request = new veterinaria.vargasvet.dto.request.EmpleadoRequest();
         request.setEmail("empleado@example.test");
         request.setAvisoInformado(false);

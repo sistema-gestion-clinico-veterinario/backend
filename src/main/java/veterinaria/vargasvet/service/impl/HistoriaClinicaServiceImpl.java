@@ -80,19 +80,20 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         String propietarioFiltro = normalizarFiltroTexto(nombrePropietario);
         LocalDateTime desde = fechaDesde != null ? fechaDesde.atStartOfDay() : null;
         LocalDateTime hasta = fechaHasta != null ? fechaHasta.plusDays(1).atStartOfDay() : null;
+        Long ownVeterinarianId = resolveOwnVeterinarianFilter(isSuperAdmin, effectiveCompanyId);
 
         PageRequest pageRequest = PageRequest.of(page, size, Sort.unsorted());
         Page<HistoriaClinica> pageHc;
 
         if (pacienteFiltro != null || propietarioFiltro != null) {
             pageHc = historiaClinicaRepository.buscarConCoincidenciaFlexible(
-                    isSuperAdmin, effectiveCompanyId, hcFiltro,
+                    isSuperAdmin, effectiveCompanyId, ownVeterinarianId, hcFiltro,
                     pacienteFiltro, propietarioFiltro,
                     desde, hasta,
                     pageRequest);
         } else {
             pageHc = historiaClinicaRepository.buscar(
-                    isSuperAdmin, effectiveCompanyId, hcFiltro, null, null,
+                    isSuperAdmin, effectiveCompanyId, ownVeterinarianId, hcFiltro, null, null,
                     desde, hasta,
                     pageRequest);
         }
@@ -114,6 +115,18 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
                 .replaceAll("\\s+", " ")
                 .trim();
         return normalized.isBlank() ? null : normalized;
+    }
+
+    private Long resolveOwnVeterinarianFilter(boolean isSuperAdmin, Integer companyId) {
+        if (isSuperAdmin
+                || SecurityUtils.getCurrentRoleScope() == veterinaria.vargasvet.domain.enums.RoleScope.CLIENT
+                || accesoValidator.canAccessCompanyData("VISTA_HISTORIAS")) {
+            return null;
+        }
+        return empleadoRepository
+                .findByUserIdAndCompanyIdAndEstadoTrue(SecurityUtils.getCurrentUserId(), companyId)
+                .map(Empleado::getId)
+                .orElse(-1L);
     }
 
     @Override
@@ -189,8 +202,10 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
     }
 
     private void verificarAlcancePropio(HistoriaClinica hc) {
-        Empleado propio = empleadoRepository != null
-                ? empleadoRepository.findActiveByUserId(SecurityUtils.getCurrentUserId()).orElse(null)
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        Empleado propio = empleadoRepository != null && companyId != null
+                ? empleadoRepository.findByUserIdAndCompanyIdAndEstadoTrue(
+                        SecurityUtils.getCurrentUserId(), companyId).orElse(null)
                 : null;
         if (propio == null) {
             throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");

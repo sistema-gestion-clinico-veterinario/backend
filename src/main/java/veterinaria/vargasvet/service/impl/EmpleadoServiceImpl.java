@@ -52,7 +52,6 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private jakarta.persistence.EntityManager entityManager;
 
     private final UsuarioRepository usuarioRepository;
-    private final RoleRepository roleRepository;
     private final EmpleadoRepository empleadoRepository;
     private final EspecialidadRepository especialidadRepository;
     private final TipoEmpleadoRepository tipoEmpleadoRepository;
@@ -66,7 +65,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final EmailService emailService;
     private final BusinessValidator businessValidator;
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
-    private final UsuarioPorRolRepository usuarioPorRolRepository;
+    private final veterinaria.vargasvet.service.RoleAssignmentService roleAssignmentService;
     private final SessionSecurityService sessionSecurityService;
     private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
     private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
@@ -119,7 +118,9 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         Company companyToUse = companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
         businessValidator.checkCompanyActiva(companyIdToUse);
-        consentimientoDatosService.exigirAltaValida(companyIdToUse, dto.getAvisoInformado());
+        consentimientoDatosService.exigirAltaValida(companyIdToUse,
+                veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS,
+                dto.getAvisoInformado());
 
         // Aislamiento total entre empresas: nunca se busca ni se reutiliza una identidad
         // de OTRA empresa, aunque coincida el DNI o el correo - cada empresa es una isla,
@@ -165,19 +166,6 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         credencial.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
         credencialRepository.save(credencial);
 
-        if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
-            usuarioPorRolRepository.deleteByUsuarioId(savedUser.getId());
-            for (Integer roleId : new java.util.LinkedHashSet<>(dto.getRoleIds())) {
-                Role role = resolveStaffRole(roleId, companyIdToUse);
-                UsuarioPorRol upr = new UsuarioPorRol();
-                upr.setUsuario(savedUser);
-                upr.setRol(role);
-                upr.setCompany(role.getCompany() != null ? role.getCompany() : companyToUse);
-                usuarioPorRolRepository.save(upr);
-            }
-        }
-
-
         Empleado empleado = new Empleado();
         empleado.setUser(savedUser);
         empleado.setCompany(companyToUse);
@@ -219,8 +207,11 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         Empleado savedEmpleado = saveTranslatingLicenseConflict(empleado, LICENSE_IN_USE_MESSAGE);
         companyMembershipService.syncLegacyCompanyField(savedUser);
+        roleAssignmentService.replaceStaffRoles(savedUser, companyToUse, dto.getRoleIds());
         contactoService.crear(savedUser, companyToUse, dto.getTelefono(), dto.getDireccion());
-        consentimientoDatosService.registrarAlta(savedUser, companyIdToUse, null, SecurityUtils.getCurrentUserId());
+        consentimientoDatosService.registrarAlta(savedUser, companyIdToUse,
+                veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS,
+                null, SecurityUtils.getCurrentUserId());
 
         if (dto.getHorarios() != null && !dto.getHorarios().isEmpty()) {
             guardarHorarios(savedEmpleado, dto.getHorarios());
@@ -276,43 +267,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         contactoService.actualizar(usuario, empleado.getCompany(), dto.getTelefono(), dto.getDireccion());
 
 
-        if (dto.getRoleIds() != null && !dto.getRoleIds().isEmpty()) {
-            boolean isTargetSuperAdmin = usuario.getUsuariosPorRol().stream()
-                    .anyMatch(upr -> upr.getRol().getPurpose()
-                            == veterinaria.vargasvet.domain.enums.RolePurpose.PLATFORM_ADMIN);
-            if (isTargetSuperAdmin && !SecurityUtils.isSuperAdmin()) {
-                throw new IllegalArgumentException("Solo un Super Admin puede modificar los roles de otro Super Admin");
-            }
-
-            java.util.Map<Integer, Role> rolesActuales = new java.util.LinkedHashMap<>();
-            usuario.getUsuariosPorRol().stream()
-                    .filter(upr -> upr.getCompany() != null
-                            && java.util.Objects.equals(upr.getCompany().getId(), companyIdToUse))
-                    .forEach(upr -> rolesActuales.put(upr.getRol().getId(), upr.getRol()));
-            java.util.Set<Integer> rolesSolicitados = new java.util.LinkedHashSet<>(dto.getRoleIds());
-            if (!rolesSolicitados.equals(rolesActuales.keySet())) {
-                administratorProtection.assertCanManage(usuario, companyIdToUse);
-            }
-            List<Role> nuevosRoles = new java.util.ArrayList<>();
-            for (Integer roleId : rolesSolicitados) {
-                nuevosRoles.add(rolesActuales.containsKey(roleId)
-                        ? rolesActuales.get(roleId)
-                        : resolveStaffRole(roleId, companyIdToUse));
-            }
-            boolean conservaLaAdministracion = nuevosRoles.stream()
-                    .anyMatch(role -> role.getPurpose() == veterinaria.vargasvet.domain.enums.RolePurpose.COMPANY_ADMIN);
-            if (!conservaLaAdministracion) {
-                administratorProtection.assertCanRemoveAdministratorRole(usuario, companyIdToUse);
-            }
-
-            usuarioPorRolRepository.deleteByUsuarioIdAndCompanyId(usuario.getId(), companyIdToUse);
-            for (Role role : nuevosRoles) {
-                UsuarioPorRol upr = new UsuarioPorRol();
-                upr.setUsuario(usuario);
-                upr.setRol(role);
-                upr.setCompany(role.getCompany() != null ? role.getCompany() : empleado.getCompany());
-                usuarioPorRolRepository.save(upr);
-            }
+        if (dto.getRoleIds() != null) {
+            roleAssignmentService.replaceStaffRoles(usuario, empleado.getCompany(), dto.getRoleIds());
         }
 
         usuarioRepository.saveAndFlush(usuario);
@@ -896,7 +852,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             model.put("companyPhone", resolvedPhone);
             model.put("companyAddress", resolvedAddress);
             model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
-                    "/auth/verify#token=" + verificationToken, company != null ? company.getSlug() : null));
+                    "/auth/verify?audiencia=TRABAJADORES_Y_USUARIOS#token=" + verificationToken,
+                    company != null ? company.getSlug() : null));
             model.put("avisoPrivacidadLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug("/privacidad", company != null ? company.getSlug() : null));
 
             Mail mail = emailService.createMail(
@@ -1374,22 +1331,6 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
         return empleadoRepository.findByIdAndCompanyId(employeeId, companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
-    }
-
-    private Role resolveStaffRole(Integer roleId, Integer companyId) {
-        Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado: " + roleId));
-        Integer roleCompanyId = role.getCompany() != null ? role.getCompany().getId() : null;
-        boolean globalCompanyAdminAssignable = SecurityUtils.isSuperAdmin() && role.getPurpose()
-                == veterinaria.vargasvet.domain.enums.RolePurpose.COMPANY_ADMIN
-                && roleCompanyId == null;
-        if (!role.isActivo()
-                || role.getScope() != veterinaria.vargasvet.domain.enums.RoleScope.STAFF
-                || (!globalCompanyAdminAssignable && !java.util.Objects.equals(roleCompanyId, companyId))) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "El rol no pertenece al personal de esta empresa");
-        }
-        return role;
     }
 
     private boolean isVeterinario(EmpleadoRequest dto) {

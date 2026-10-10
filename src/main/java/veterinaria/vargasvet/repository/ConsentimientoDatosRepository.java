@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.ConsentimientoDatos;
 import veterinaria.vargasvet.domain.enums.EstadoConsentimiento;
 import veterinaria.vargasvet.domain.enums.FinalidadDatos;
+import veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,6 +23,10 @@ public interface ConsentimientoDatosRepository extends JpaRepository<Consentimie
     Optional<ConsentimientoDatos> findFirstByUsuarioIdAndCompanyIdAndFinalidadOrderByIdDesc(
             Integer usuarioId, Integer companyId, FinalidadDatos finalidad);
 
+    Optional<ConsentimientoDatos> findFirstByUsuarioIdAndCompanyIdAndFinalidadAndAvisoAudienciaOrderByIdDesc(
+            Integer usuarioId, Integer companyId, FinalidadDatos finalidad,
+            AudienciaAvisoPrivacidad audiencia);
+
     List<ConsentimientoDatos> findByUsuarioIdAndCompanyIdOrderByIdDesc(Integer usuarioId, Integer companyId);
 
     @Query("SELECT c FROM ConsentimientoDatos c WHERE c.usuario.id = :usuarioId AND c.company.id = :companyId AND c.id = "
@@ -29,6 +34,15 @@ public interface ConsentimientoDatosRepository extends JpaRepository<Consentimie
             + "AND c2.company.id = c.company.id AND c2.finalidad = c.finalidad)")
     List<ConsentimientoDatos> ultimasPorFinalidad(@Param("usuarioId") Integer usuarioId,
                                                    @Param("companyId") Integer companyId);
+
+    @Query("SELECT c FROM ConsentimientoDatos c WHERE c.usuario.id = :usuarioId "
+            + "AND c.company.id = :companyId AND c.aviso.audiencia = :audiencia AND c.id = "
+            + "(SELECT MAX(c2.id) FROM ConsentimientoDatos c2 WHERE c2.usuario.id = c.usuario.id "
+            + "AND c2.company.id = c.company.id AND c2.finalidad = c.finalidad "
+            + "AND c2.aviso.audiencia = :audiencia)")
+    List<ConsentimientoDatos> ultimasPorFinalidadYAudiencia(@Param("usuarioId") Integer usuarioId,
+                                                             @Param("companyId") Integer companyId,
+                                                             @Param("audiencia") AudienciaAvisoPrivacidad audiencia);
 
     @Query("SELECT c.usuario.id FROM ConsentimientoDatos c WHERE c.usuario.id IN :usuarioIds "
             + "AND c.company.id = :companyId AND c.finalidad = :finalidad "
@@ -45,4 +59,12 @@ public interface ConsentimientoDatosRepository extends JpaRepository<Consentimie
     List<Integer> usuariosConRegistro(@Param("usuarioIds") Collection<Integer> usuarioIds,
                                       @Param("companyId") Integer companyId,
                                       @Param("finalidad") FinalidadDatos finalidad);
+
+    @Query("SELECT DISTINCT c.usuario.id FROM ConsentimientoDatos c WHERE c.usuario.id IN :usuarioIds "
+            + "AND c.company.id = :companyId AND c.finalidad = :finalidad "
+            + "AND c.aviso.audiencia = :audiencia")
+    List<Integer> usuariosConRegistroPorAudiencia(@Param("usuarioIds") Collection<Integer> usuarioIds,
+                                                   @Param("companyId") Integer companyId,
+                                                   @Param("finalidad") FinalidadDatos finalidad,
+                                                   @Param("audiencia") AudienciaAvisoPrivacidad audiencia);
 }

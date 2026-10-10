@@ -49,4 +49,7 @@ public class AuditLog {
 
     @Column(name = "ip_address")
     private String ipAddress;
+
+    @Column(name = "dispositivo", length = 120)
+    private String dispositivo;
 }

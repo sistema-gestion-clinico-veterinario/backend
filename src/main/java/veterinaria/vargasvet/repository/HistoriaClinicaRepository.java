@@ -28,6 +28,7 @@ public interface HistoriaClinicaRepository extends JpaRepository<HistoriaClinica
                    "JOIN apoderado a ON a.id = m.apoderado_id " +
                    "JOIN usuario u ON u.id = a.user_id " +
                    "WHERE (:isSuperAdmin = true OR a.company_id = :companyId) " +
+                   "AND (CAST(:veterinarioId AS bigint) IS NULL OR EXISTS (SELECT 1 FROM consulta own_c WHERE own_c.historia_clinica_id = hc.id AND own_c.veterinario_id = :veterinarioId)) " +
                    "AND (CAST(:numeroHc AS varchar) IS NULL OR hc.numero_hc = CAST(:numeroHc AS varchar)) " +
                    "AND (CAST(:nombrePaciente AS varchar) IS NULL OR LOWER(m.nombre_completo) LIKE CAST(:nombrePaciente AS varchar)) " +
                    "AND (CAST(:nombrePropietario AS varchar) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE CAST(:nombrePropietario AS varchar)) " +
@@ -40,7 +41,8 @@ public interface HistoriaClinicaRepository extends JpaRepository<HistoriaClinica
                         "JOIN mascota m ON m.id = hc.mascota_id " +
                         "JOIN apoderado a ON a.id = m.apoderado_id " +
                         "JOIN usuario u ON u.id = a.user_id " +
-                        "WHERE (:isSuperAdmin = true OR a.company_id = :companyId) " +
+                         "WHERE (:isSuperAdmin = true OR a.company_id = :companyId) " +
+                         "AND (CAST(:veterinarioId AS bigint) IS NULL OR EXISTS (SELECT 1 FROM consulta own_c WHERE own_c.historia_clinica_id = hc.id AND own_c.veterinario_id = :veterinarioId)) " +
                         "AND (CAST(:numeroHc AS varchar) IS NULL OR hc.numero_hc = CAST(:numeroHc AS varchar)) " +
                         "AND (CAST(:nombrePaciente AS varchar) IS NULL OR LOWER(m.nombre_completo) LIKE CAST(:nombrePaciente AS varchar)) " +
                         "AND (CAST(:nombrePropietario AS varchar) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE CAST(:nombrePropietario AS varchar)) " +
@@ -52,6 +54,7 @@ public interface HistoriaClinicaRepository extends JpaRepository<HistoriaClinica
     Page<HistoriaClinica> buscar(
             @Param("isSuperAdmin") boolean isSuperAdmin,
             @Param("companyId") Integer companyId,
+            @Param("veterinarioId") Long veterinarioId,
             @Param("numeroHc") String numeroHc,
             @Param("nombrePaciente") String nombrePaciente,
             @Param("nombrePropietario") String nombrePropietario,
@@ -64,6 +67,7 @@ public interface HistoriaClinicaRepository extends JpaRepository<HistoriaClinica
                    "JOIN apoderado a ON a.id = m.apoderado_id " +
                    "JOIN usuario u ON u.id = a.user_id " +
                    "WHERE (:isSuperAdmin = true OR a.company_id = :companyId) " +
+                   "AND (CAST(:veterinarioId AS bigint) IS NULL OR EXISTS (SELECT 1 FROM consulta own_c WHERE own_c.historia_clinica_id = hc.id AND own_c.veterinario_id = :veterinarioId)) " +
                    "AND (CAST(:numeroHc AS varchar) IS NULL OR hc.numero_hc = CAST(:numeroHc AS varchar)) " +
                    "AND (CAST(:nombrePaciente AS varchar) IS NULL OR LOWER(m.nombre_completo) LIKE LOWER(CONCAT('%', CAST(:nombrePaciente AS varchar), '%')) " +
                    "     OR LOWER(m.nombre_completo) % LOWER(CAST(:nombrePaciente AS varchar))) " +
@@ -78,7 +82,8 @@ public interface HistoriaClinicaRepository extends JpaRepository<HistoriaClinica
                         "JOIN mascota m ON m.id = hc.mascota_id " +
                         "JOIN apoderado a ON a.id = m.apoderado_id " +
                         "JOIN usuario u ON u.id = a.user_id " +
-                        "WHERE (:isSuperAdmin = true OR a.company_id = :companyId) " +
+                         "WHERE (:isSuperAdmin = true OR a.company_id = :companyId) " +
+                         "AND (CAST(:veterinarioId AS bigint) IS NULL OR EXISTS (SELECT 1 FROM consulta own_c WHERE own_c.historia_clinica_id = hc.id AND own_c.veterinario_id = :veterinarioId)) " +
                         "AND (CAST(:numeroHc AS varchar) IS NULL OR hc.numero_hc = CAST(:numeroHc AS varchar)) " +
                         "AND (CAST(:nombrePaciente AS varchar) IS NULL OR LOWER(m.nombre_completo) LIKE LOWER(CONCAT('%', CAST(:nombrePaciente AS varchar), '%')) " +
                         "     OR LOWER(m.nombre_completo) % LOWER(CAST(:nombrePaciente AS varchar))) " +
@@ -92,6 +97,7 @@ public interface HistoriaClinicaRepository extends JpaRepository<HistoriaClinica
     Page<HistoriaClinica> buscarConCoincidenciaFlexible(
             @Param("isSuperAdmin") boolean isSuperAdmin,
             @Param("companyId") Integer companyId,
+            @Param("veterinarioId") Long veterinarioId,
             @Param("numeroHc") String numeroHc,
             @Param("nombrePaciente") String nombrePaciente,
             @Param("nombrePropietario") String nombrePropietario,

@@ -1037,7 +1037,8 @@ public class CitaServiceImpl implements CitaService {
 
     private Long resolverFiltroEmpleado(Long requestedEmpleadoId) {
         if (accesoValidator.canAccessCompanyData("VISTA_CITAS_AGENDA")) return requestedEmpleadoId;
-        Long ownEmpleadoId = empleadoRepository.findActiveByUserId(SecurityUtils.getCurrentUserId())
+        Long ownEmpleadoId = empleadoRepository.findByUserIdAndCompanyIdAndEstadoTrue(
+                        SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentCompanyId())
                 .map(Empleado::getId)
                 .orElse(-1L);
         if (requestedEmpleadoId != null && !requestedEmpleadoId.equals(ownEmpleadoId)) {
@@ -1052,7 +1053,8 @@ public class CitaServiceImpl implements CitaService {
         // no es empleado y elige libremente al veterinario, no aplica esta regla.
         if (SecurityUtils.getCurrentRoleScope() == veterinaria.vargasvet.domain.enums.RoleScope.CLIENT) return;
         if (accesoValidator.canAccessCompanyData("VISTA_CITAS_AGENDA")) return;
-        Long ownEmpleadoId = empleadoRepository.findActiveByUserId(SecurityUtils.getCurrentUserId())
+        Long ownEmpleadoId = empleadoRepository.findByUserIdAndCompanyIdAndEstadoTrue(
+                        SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentCompanyId())
                 .map(Empleado::getId)
                 .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException(
                         "El usuario no está asociado a un empleado"));

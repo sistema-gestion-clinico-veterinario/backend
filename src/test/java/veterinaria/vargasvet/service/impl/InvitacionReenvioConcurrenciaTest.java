@@ -133,10 +133,10 @@ class InvitacionReenvioConcurrenciaTest {
 
         CompanyMembershipService membership = mock(CompanyMembershipService.class);
         EmpleadoServiceImpl service = new EmpleadoServiceImpl(
-                usuarioRepository, roleRepository, empleadoRepository, especialidadRepository, tipoEmpleadoRepository,
+                usuarioRepository, empleadoRepository, especialidadRepository, tipoEmpleadoRepository,
                 companyRepository, horarioEmpleadoRepository, companyOperatingHourRepository, companyExceptionRepository,
                 citaRepository, new BCryptPasswordEncoder(), new UserMapper(new ModelMapper()), emailService,
-                mock(BusinessValidator.class), mock(AuditLogService.class), usuarioPorRolRepository,
+                mock(BusinessValidator.class), mock(AuditLogService.class), mock(veterinaria.vargasvet.service.RoleAssignmentService.class),
                 mock(SessionSecurityService.class), membership, credencialRepository, mock(UsuarioContactoService.class),
                 mock(AdministratorProtection.class), mock(AccountClosureGuard.class),
                 mock(veterinaria.vargasvet.service.CajasAbiertasDelPersonal.class),

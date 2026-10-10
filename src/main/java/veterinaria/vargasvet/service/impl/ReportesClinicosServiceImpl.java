@@ -357,7 +357,8 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
         if (accesoValidator.canAccessCompanyData("VISTA_REPORTES")) {
             return requestedVeterinarioId;
         }
-        return empleadoRepository.findActiveByUserId(SecurityUtils.getCurrentUserId())
+        return empleadoRepository.findByUserIdAndCompanyIdAndEstadoTrue(
+                        SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentCompanyId())
                 .map(veterinaria.vargasvet.domain.entity.Empleado::getId)
                 .orElse(-1L);
     }

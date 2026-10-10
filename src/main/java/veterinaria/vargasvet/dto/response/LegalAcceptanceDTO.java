@@ -1,14 +1,16 @@
 package veterinaria.vargasvet.dto.response;
 
 import veterinaria.vargasvet.domain.enums.LegalDocumentType;
+import veterinaria.vargasvet.domain.enums.TipoConstanciaLegal;
 
 import java.time.LocalDateTime;
 
-/** Una aceptación propia: qué documento y versión, cuándo, y si el texto exacto se puede demostrar. */
+/** Una constancia propia: aceptación contractual o lectura informativa, con su versión y evidencia. */
 public record LegalAcceptanceDTO(
         LegalDocumentType tipo,
         String version,
         String contenidoHash,
         boolean textoRecuperable,
-        LocalDateTime fechaAceptacion) {
+        LocalDateTime fechaAceptacion,
+        TipoConstanciaLegal tipoConstancia) {
 }

@@ -30,6 +30,7 @@ public class AuditRealtimePublisher {
                         .module(saved.getModule())
                         .details(saved.getDetails())
                         .ipAddress(saved.getIpAddress())
+                        .dispositivo(saved.getDispositivo())
                         .build();
 
                 messagingTemplate.convertAndSend("/topic/audit-logs", dto);
