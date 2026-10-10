@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8ef16273-d33e-4236-ac8a-9607d61e8aac" name="Changes" comment="" />
+    <list default="true" id="8ef16273-d33e-4236-ac8a-9607d61e8aac" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/e2e/E2eDataInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/e2e/E2eDataInitializer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/e2e/E2eTestConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/e2e/E2eTestConfiguration.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -222,7 +226,7 @@
       <workItem from="1791433247477" duration="145000" />
       <workItem from="1791436650348" duration="694000" />
       <workItem from="1791476225141" duration="784000" />
-      <workItem from="1791648828096" duration="676000" />
+      <workItem from="1791648828096" duration="2004000" />
     </task>
     <servers />
   </component>
