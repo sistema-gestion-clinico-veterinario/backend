@@ -41,6 +41,10 @@ public class RefreshToken {
     @Column(nullable = false)
     private Instant sessionStartedAt;
 
+    /** Última petición autenticada de la sesión; nulo en filas anteriores a que se midiera la inactividad. */
+    @Column(name = "last_activity_at")
+    private Instant lastActivityAt;
+
     @ManyToOne
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
     private Usuario usuario;

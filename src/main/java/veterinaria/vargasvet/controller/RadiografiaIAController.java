@@ -24,7 +24,7 @@ public class RadiografiaIAController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("mascotaId") Long mascotaId) {
         var autorizacion = autorizacionIaService.exigir(mascotaId);
-        RadiografiaPrediccionResponse resultado = radiografiaIAService.analizarRadiografia(file);
+        RadiografiaPrediccionResponse resultado = radiografiaIAService.analizarRadiografia(file, mascotaId);
         autorizacionIaService.registrarUso(mascotaId, "radiografía", autorizacion);
         return ResponseEntity.ok(new ApiResponse<>(true, "Radiografía analizada exitosamente", resultado));
     }

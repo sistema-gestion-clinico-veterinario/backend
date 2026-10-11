@@ -408,8 +408,14 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<AuthResponse>> refresh(jakarta.servlet.http.HttpServletRequest request,
                                                              HttpServletResponse httpResponse) {
-        AuthResponse response = usuarioService.refreshToken(
-                veterinaria.vargasvet.security.SessionCookies.readRefresh(request).orElse(null));
+        AuthResponse response;
+        try {
+            response = usuarioService.refreshToken(
+                    veterinaria.vargasvet.security.SessionCookies.readRefresh(request).orElse(null));
+        } catch (veterinaria.vargasvet.exception.SessionInactivityException ex) {
+            clearAuthCookies(httpResponse, veterinaria.vargasvet.security.SessionCookies.slugOf(request));
+            throw ex;
+        }
         setAuthCookies(httpResponse, response);
         return ResponseEntity.ok(new ApiResponse<>(true, "Token refrescado exitosamente", response));
     }

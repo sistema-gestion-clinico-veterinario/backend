@@ -147,27 +147,27 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             throw new AccessDeniedException("Solo la administración de plataforma puede ver eventos globales");
         }
         if (destination.startsWith("/topic/audit-logs")) {
-            if (!rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(),
+            if (!rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(), principal.getCompanyId(),
                     "VISTA_AUDITORIA_ADMIN", "LEER")) {
                 throw new AccessDeniedException("Sin acceso a eventos de auditoría");
             }
-            subscriptionGuard.guard(sessionId, principal.getId(), principal.getActiveRoleId(),
+            subscriptionGuard.guard(sessionId, principal.getId(), principal.getActiveRoleId(), principal.getCompanyId(),
                     "VISTA_AUDITORIA_ADMIN", "LEER");
         }
         if (destination.startsWith("/topic/caja/")
-                && !rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(),
+                && !rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(), principal.getCompanyId(),
                         "VISTA_CAJA", "LEER")) {
             throw new AccessDeniedException("Sin acceso a eventos de caja");
         }
         if (destination.startsWith("/topic/citas/")
-                && !rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(),
+                && !rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(), principal.getCompanyId(),
                         "VISTA_CITAS_AGENDA", "LEER")
-                && !rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(),
+                && !rolePermissionEvaluator.can(principal.getId(), principal.getActiveRoleId(), principal.getCompanyId(),
                         "VISTA_MIS_CITAS", "LEER")) {
             throw new AccessDeniedException("Sin acceso a eventos de citas");
         }
         if (destination.startsWith("/topic/citas/")
-                && rolePermissionEvaluator.dataScope(principal.getId(), principal.getActiveRoleId(),
+                && rolePermissionEvaluator.dataScope(principal.getId(), principal.getActiveRoleId(), principal.getCompanyId(),
                         "VISTA_CITAS_AGENDA")
                         != veterinaria.vargasvet.domain.enums.DataScope.COMPANY) {
             throw new AccessDeniedException("El canal global de citas requiere alcance de empresa");

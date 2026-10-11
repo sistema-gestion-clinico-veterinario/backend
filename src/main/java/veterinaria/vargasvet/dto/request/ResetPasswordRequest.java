@@ -14,5 +14,6 @@ public class ResetPasswordRequest {
     @NotBlank(message = "La nueva contraseña es obligatoria")
     @Size(min = 12, max = 72, message = "La nueva contraseña debe tener al menos 12 caracteres")
     @StrongPassword
+    @lombok.ToString.Exclude
     private String newPassword;
 }

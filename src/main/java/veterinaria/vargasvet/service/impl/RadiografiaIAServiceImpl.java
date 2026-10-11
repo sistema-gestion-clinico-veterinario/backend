@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import veterinaria.vargasvet.dto.response.RadiografiaPrediccionResponse;
 import veterinaria.vargasvet.integration.RadiografiaIAClient;
+import veterinaria.vargasvet.security.AiServiceScope;
+import veterinaria.vargasvet.security.AiServiceTokenProvider;
 import veterinaria.vargasvet.service.RadiografiaIAService;
 
 @Service
@@ -12,9 +14,10 @@ import veterinaria.vargasvet.service.RadiografiaIAService;
 public class RadiografiaIAServiceImpl implements RadiografiaIAService {
 
     private final RadiografiaIAClient radiografiaIAClient;
+    private final AiServiceTokenProvider aiServiceTokenProvider;
 
     @Override
-    public RadiografiaPrediccionResponse analizarRadiografia(MultipartFile file) {
+    public RadiografiaPrediccionResponse analizarRadiografia(MultipartFile file, Long mascotaId) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("El archivo de radiografía no puede estar vacío.");
         }
@@ -28,7 +31,8 @@ public class RadiografiaIAServiceImpl implements RadiografiaIAService {
         }
 
         try {
-            return radiografiaIAClient.predict(file);
+            String token = aiServiceTokenProvider.issue(AiServiceScope.RADIOGRAFIA, mascotaId);
+            return radiografiaIAClient.predict(file, token);
         } catch (Exception e) {
             throw new RuntimeException("Error al conectar con el servicio de análisis de radiografías: " + e.getMessage());
         }

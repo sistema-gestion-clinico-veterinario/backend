@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -31,5 +32,17 @@ class AccountLockoutServiceTest {
         service.clearLockout("   ");
 
         verifyNoInteractions(jdbcTemplate);
+    }
+
+    @Test
+    void antesDeConsultarElBloqueoEliminaUnBloqueoYaVencido() {
+        service.assertNotLocked("company:7:ana");
+
+        verify(jdbcTemplate).update(
+                eq("DELETE FROM account_lockouts WHERE account_key = ? "
+                        + "AND locked_until IS NOT NULL AND locked_until <= CURRENT_TIMESTAMP"),
+                anyString());
+        verify(jdbcTemplate).query(eq("SELECT locked_until FROM account_lockouts WHERE account_key = ?"),
+                any(org.springframework.jdbc.core.ResultSetExtractor.class), anyString());
     }
 }

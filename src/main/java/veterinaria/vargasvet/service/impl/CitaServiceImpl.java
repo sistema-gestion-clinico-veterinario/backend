@@ -911,6 +911,7 @@ public class CitaServiceImpl implements CitaService {
     public java.util.List<CitaResponse> listarCitasVigentesPorEmpleado(Long empleadoId) {
         Empleado empleado = empleadoRepository.findById(empleadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
+        exigirEmpleadoDeLaEmpresa(empleado);
         validarEmpleadoSegunAlcance(empleado.getId());
         return citaRepository.findCitasVigentesByEmpleadoId(empleadoId, veterinaria.vargasvet.util.AppClock.now())
                 .stream().map(citaMapper::toResponse).toList();
@@ -1020,6 +1021,16 @@ public class CitaServiceImpl implements CitaService {
             }
         }
         return avisoManual;
+    }
+
+    private void exigirEmpleadoDeLaEmpresa(Empleado empleado) {
+        if (SecurityUtils.isSuperAdmin()) {
+            return;
+        }
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        if (empleado.getCompany() == null || !empleado.getCompany().getId().equals(companyId)) {
+            throw new ResourceNotFoundException("Empleado no encontrado");
+        }
     }
 
     private void validarPermisoEmpresa(Cita cita) {

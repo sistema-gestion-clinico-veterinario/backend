@@ -118,6 +118,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
         boolean puedePagos = tienePermiso("VISTA_PAGOS");
         boolean puedeMascotas = tienePermiso("VISTA_MASCOTAS");
         boolean puedeControlPreventivo = tienePermiso("VISTA_CARTILLA");
+        boolean alcanceEmpresa = tieneAlcanceEmpresa();
 
         return ReportesClinicosDTO.builder()
                 .fechaDesde(desde.toString())
@@ -133,21 +134,23 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                 .frecuenciaConsultasPorPaciente(puedeCitas ? calcularFrecuencia(actuales) : null)
                 .serviciosMasSolicitados(puedeCitas ? group(actuales, this::servicioLabel) : null)
                 .demandaPorHorario(puedeCitas ? calcularDemanda(actuales) : null)
-                .proximasVacunas(puedeControlPreventivo ? findProximasVacunas(targetCompanyId) : null)
-                .proximasDesparasitaciones(puedeControlPreventivo ? findProximasDesparasitaciones(targetCompanyId) : null)
-                .controlesPreventivosProximos(puedeControlPreventivo ? findControlesPreventivosProximos(targetCompanyId) : null)
+                // Estas métricas no tienen un responsable individual inequívoco. Con alcance
+                // OWN se omiten en lugar de exponer datos agregados de toda la clínica.
+                .proximasVacunas(puedeControlPreventivo && alcanceEmpresa ? findProximasVacunas(targetCompanyId) : null)
+                .proximasDesparasitaciones(puedeControlPreventivo && alcanceEmpresa ? findProximasDesparasitaciones(targetCompanyId) : null)
+                .controlesPreventivosProximos(puedeControlPreventivo && alcanceEmpresa ? findControlesPreventivosProximos(targetCompanyId) : null)
                 .ingresosPorMetodoPago(puedePagos ? calcularIngresosPorMetodoPago(actuales) : null)
                 .ingresosPorServicio(puedePagos ? calcularIngresosPorServicio(actuales) : null)
-                .cumplimientoVacunacion(puedeControlPreventivo
+                .cumplimientoVacunacion(puedeControlPreventivo && alcanceEmpresa
                         ? calcularCumplimiento(targetCompanyId, TipoControlPreventivo.VACUNACION) : null)
-                .cumplimientoDesparasitacion(puedeControlPreventivo
+                .cumplimientoDesparasitacion(puedeControlPreventivo && alcanceEmpresa
                         ? calcularCumplimiento(targetCompanyId, TipoControlPreventivo.DESPARASITACION) : null)
                 .pacientesFrecuentes(puedeCitas ? calcularPacientesFrecuentes(actuales) : null)
-                .vacunasMasAplicadas(puedeControlPreventivo
+                .vacunasMasAplicadas(puedeControlPreventivo && alcanceEmpresa
                         ? calcularVacunasMasAplicadas(targetCompanyId, desde, hasta) : null)
-                .desparasitantesMasAplicados(puedeControlPreventivo
+                .desparasitantesMasAplicados(puedeControlPreventivo && alcanceEmpresa
                         ? calcularDesparasitantesMasAplicados(targetCompanyId, desde, hasta) : null)
-                .pacientesInactivos(puedeMascotas && puedeCitas
+                .pacientesInactivos(puedeMascotas && puedeCitas && alcanceEmpresa
                         ? calcularPacientesInactivos(targetCompanyId, hoy) : null)
                 .build();
     }
@@ -208,10 +211,12 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
         int pageSize = Math.max(1, Math.min(size, 100));
         LocalDate hoy = AppClock.today();
         LocalDateTime umbral = hoy.minusMonths(3).atStartOfDay();
+        Long veterinarioId = tieneAlcanceEmpresa() ? null : resolveVeterinarioId(null);
 
         org.springframework.data.domain.Page<veterinaria.vargasvet.domain.entity.Mascota> paginaMascotas =
                 mascotaRepository.findInactivasByCompanyId(
-                        targetCompanyId, umbral, org.springframework.data.domain.PageRequest.of(Math.max(0, page), pageSize));
+                        targetCompanyId, veterinarioId, umbral,
+                        org.springframework.data.domain.PageRequest.of(Math.max(0, page), pageSize));
 
         List<Long> mascotaIds = paginaMascotas.getContent().stream()
                 .map(veterinaria.vargasvet.domain.entity.Mascota::getId)
@@ -265,6 +270,8 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
 
         boolean puedePagos = tienePermiso("VISTA_PAGOS");
         boolean puedeProductos = tienePermiso("VISTA_PRODUCTOS");
+        boolean alcanceEmpresa = tieneAlcanceEmpresa();
+        Integer registradoPorUsuarioId = alcanceEmpresa ? null : SecurityUtils.getCurrentUserId();
         if (targetCompanyId == null) {
             return ReporteVentasProductosDTO.builder().fechaDesde(desde).fechaHasta(hasta)
                     .resumen(ReporteVentasProductosDTO.Resumen.builder().ventas(0L).ingresos(BigDecimal.ZERO)
@@ -276,12 +283,15 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
 
         List<Purchase> ventas = puedePagos
                 ? purchaseRepository.findForSalesReport(targetCompanyId, TipoPurchase.TIENDA, PaymentStatus.PAID,
-                        desde.atStartOfDay(), hasta.plusDays(1).atStartOfDay())
+                        desde.atStartOfDay(), hasta.plusDays(1).atStartOfDay(), registradoPorUsuarioId)
                 : List.of();
         List<VentaLibreDetalle> detalles = puedeProductos && !ventas.isEmpty()
                 ? ventaLibreDetalleRepository.findForReportByPurchaseIds(ventas.stream().map(Purchase::getId).toList())
                 : List.of();
-        List<Producto> productos = puedeProductos
+        // El inventario es un recurso común de la clínica y no tiene "propietario" individual.
+        // Solo se muestran sus métricas cuando el rol tiene alcance COMPANY.
+        boolean puedeInventarioEmpresa = puedeProductos && alcanceEmpresa;
+        List<Producto> productos = puedeInventarioEmpresa
                 ? productoRepository.findByCompanyIdAndActivoTrue(targetCompanyId) : List.of();
 
         BigDecimal ingresos = ventas.stream().map(Purchase::getTotal).filter(java.util.Objects::nonNull)
@@ -331,16 +341,20 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                         .ingresos(puedePagos ? ingresos : null)
                         .unidadesVendidas(puedeProductos && puedePagos ? unidades : null)
                         .ticketPromedio(puedePagos ? ticket : null)
-                        .productosStockBajo(puedeProductos ? stockBajo : null)
-                        .productosSinStock(puedeProductos ? sinStock : null).build())
+                        .productosStockBajo(puedeInventarioEmpresa ? stockBajo : null)
+                        .productosSinStock(puedeInventarioEmpresa ? sinStock : null).build())
                 .ventasPorMetodo(puedePagos ? ventasPorMetodo : null)
                 .ventasPorDia(puedePagos ? ventasPorDia : null)
                 .productosMasVendidos(puedeProductos && puedePagos ? masVendidos : null)
-                .alertasStock(puedeProductos ? alertas : null).build();
+                .alertasStock(puedeInventarioEmpresa ? alertas : null).build();
     }
 
     private boolean tienePermiso(String vista) {
         return SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin() || accesoValidator.can(vista, "LEER");
+    }
+
+    private boolean tieneAlcanceEmpresa() {
+        return SecurityUtils.isSuperAdmin() || accesoValidator.canAccessCompanyData("VISTA_REPORTES");
     }
 
     private Integer resolveCompanyId(Integer requestedCompanyId) {

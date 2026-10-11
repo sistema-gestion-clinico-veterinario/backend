@@ -62,7 +62,7 @@ class RealtimeTicketServiceTest {
         role.setPermissionVersion(4L);
         UsuarioPorRol assignment = new UsuarioPorRol();
         assignment.setRol(role);
-        when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleId(7, 12))
+        when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(7, 12, 3))
                 .thenReturn(java.util.Optional.of(assignment));
         when(repository.consumeOnce(eq("ticket-jti"), any(Instant.class))).thenReturn(1, 0);
 

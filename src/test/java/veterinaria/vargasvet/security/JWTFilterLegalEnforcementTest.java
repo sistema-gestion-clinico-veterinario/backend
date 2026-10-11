@@ -63,7 +63,7 @@ class JWTFilterLegalEnforcementTest {
     private UsuarioEmpresaCredencialRepository credencialRepository;
 
     @Mock
-    private veterinaria.vargasvet.repository.RefreshTokenRepository refreshTokenRepository;
+    private veterinaria.vargasvet.service.SessionActivityService sessionActivityService;
 
     @Mock
     private FilterChain filterChain;
@@ -74,7 +74,7 @@ class JWTFilterLegalEnforcementTest {
     void setUp() {
         filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, credencialRepository,
                 org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class),
-                legalDocumentService, refreshTokenRepository);
+                legalDocumentService, sessionActivityService);
         SecurityContextHolder.clearContext();
     }
 
@@ -117,7 +117,7 @@ class JWTFilterLegalEnforcementTest {
         credencial.setCredentialsVersion(0L);
 
         when(tokenProvider.getAuthentication(ACCESS_TOKEN)).thenReturn(authentication);
-        when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleId(USUARIO_ID, 1))
+        when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(USUARIO_ID, 1, null))
                 .thenReturn(Optional.of(asignacion));
         when(usuarioRepository.findByIdWithCompany(USUARIO_ID)).thenReturn(Optional.of(usuario));
         // principal.getCompanyId() es null en este test (rol CLIENT_PORTAL sin empresa).

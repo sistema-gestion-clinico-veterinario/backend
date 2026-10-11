@@ -4,5 +4,5 @@ import org.springframework.web.multipart.MultipartFile;
 import veterinaria.vargasvet.dto.response.RadiografiaPrediccionResponse;
 
 public interface RadiografiaIAService {
-    RadiografiaPrediccionResponse analizarRadiografia(MultipartFile file);
+    RadiografiaPrediccionResponse analizarRadiografia(MultipartFile file, Long mascotaId);
 }

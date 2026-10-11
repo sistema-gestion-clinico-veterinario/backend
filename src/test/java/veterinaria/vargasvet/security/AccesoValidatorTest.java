@@ -50,7 +50,7 @@ class AccesoValidatorTest {
 
         UsuarioPorRol assignment = new UsuarioPorRol();
         assignment.setRol(role);
-        when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleId(7, 20))
+        when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(7, 20, 3))
                 .thenReturn(Optional.of(assignment));
 
         var authorities = List.of(new SimpleGrantedAuthority("ROLE_CUALQUIER_NOMBRE"));
@@ -107,6 +107,18 @@ class AccesoValidatorTest {
 
         assertFalse(validator.can("VISTA_CITAS_AGENDA", "MODIFICAR"));
         assertTrue(validator.canAccessCompanyData("VISTA_CITAS_AGENDA"));
+    }
+
+    @Test
+    void alcanceDeEmpresaNoAmpliaAccesoSiLaVistaNoTieneLectura() {
+        RolVistaPermiso permiso = permiso(ViewAudience.STAFF);
+        permiso.getVista().setCodigo("VISTA_CITAS_AGENDA");
+        permiso.setLeer(false);
+        permiso.setDataScope(DataScope.COMPANY);
+        when(rolVistaPermisoRepository.findByRolIdAndVistaCodigo(20, "VISTA_CITAS_AGENDA"))
+                .thenReturn(Optional.of(permiso));
+
+        assertFalse(validator.canAccessCompanyData("VISTA_CITAS_AGENDA"));
     }
 
     private RolVistaPermiso permiso(ViewAudience audience) {

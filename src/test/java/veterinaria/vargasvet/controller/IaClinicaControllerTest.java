@@ -9,6 +9,8 @@ import veterinaria.vargasvet.exception.AutorizacionIaRequeridaException;
 import veterinaria.vargasvet.integration.DiagnosticoIAClient;
 import veterinaria.vargasvet.integration.DiagnosticoIAClient.ArchivoParte;
 import veterinaria.vargasvet.service.AutorizacionIaService;
+import veterinaria.vargasvet.security.AiServiceScope;
+import veterinaria.vargasvet.security.AiServiceTokenProvider;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -33,7 +36,8 @@ class IaClinicaControllerTest {
 
     private final AutorizacionIaService autorizaciones = mock(AutorizacionIaService.class);
     private final DiagnosticoIAClient cliente = mock(DiagnosticoIAClient.class);
-    private final IaClinicaController controller = new IaClinicaController(autorizaciones, cliente);
+    private final AiServiceTokenProvider tokens = mock(AiServiceTokenProvider.class);
+    private final IaClinicaController controller = new IaClinicaController(autorizaciones, cliente, tokens);
     private final AutorizacionIaResponse vigente =
             new AutorizacionIaResponse(true, 5L, "Ana Pérez", LocalDateTime.of(2026, 10, 6, 10, 0), CanalConsentimiento.PORTAL);
 
@@ -51,6 +55,7 @@ class IaClinicaControllerTest {
     @Test
     void conAutorizacionReenviaSoloLosCamposPermitidosYLosArchivosYDejaAuditoria() throws Exception {
         when(autorizaciones.exigir(7L)).thenReturn(vigente);
+        when(tokens.issue(AiServiceScope.DIAGNOSTICO, 7L)).thenReturn("token-interno");
         MockMultipartFile hemograma = new MockMultipartFile("archivo_hemograma", "hemo.pdf", "application/pdf", new byte[]{1, 2});
         MockMultipartFile vacio = new MockMultipartFile("archivo_radiografia", "vacio.png", "image/png", new byte[0]);
         MockMultipartFile radio = new MockMultipartFile("archivo_radiografia", "rx.png", "image/png", new byte[]{3});
@@ -62,7 +67,7 @@ class IaClinicaControllerTest {
 
         org.mockito.ArgumentCaptor<Map<String, String>> enviados = org.mockito.ArgumentCaptor.forClass(Map.class);
         org.mockito.ArgumentCaptor<List<ArchivoParte>> archivos = org.mockito.ArgumentCaptor.forClass(List.class);
-        verify(cliente).transmitir(enviados.capture(), archivos.capture(), any());
+        verify(cliente).transmitir(enviados.capture(), archivos.capture(), eq("token-interno"), any());
         assertThat(enviados.getValue()).containsOnlyKeys("motivo_consulta", "especie", "nombre_paciente");
         assertThat(archivos.getValue()).extracting(ArchivoParte::campo, ArchivoParte::nombre)
                 .containsExactly(org.assertj.core.groups.Tuple.tuple("archivo_hemograma", "hemo.pdf"),
@@ -75,8 +80,9 @@ class IaClinicaControllerTest {
     @Test
     void siElServicioDeIaFallaLaPantallaRecibeUnEventoDeErrorSinDetalles() throws Exception {
         when(autorizaciones.exigir(7L)).thenReturn(vigente);
+        when(tokens.issue(AiServiceScope.DIAGNOSTICO, 7L)).thenReturn("token-interno");
         doThrow(new IllegalStateException("conexión rechazada a https://interno")).when(cliente)
-                .transmitir(anyMap(), anyList(), any());
+                .transmitir(anyMap(), anyList(), anyString(), any());
 
         var respuesta = controller.diagnostico(7L, Map.of("motivo_consulta", "tos"), null, null);
         ByteArrayOutputStream salida = new ByteArrayOutputStream();

@@ -45,18 +45,14 @@ public class ConsultaServiceImpl implements ConsultaService {
         Consulta consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + id));
 
+        exigirMismaEmpresa(consulta, "No tienes permiso para modificar esta consulta");
+
         if (!consulta.getVersion().equals(request.getVersion())) {
             throw new IllegalArgumentException("La consulta cambió mientras editabas. Tus datos continúan en pantalla; no recargues la página y vuelve a intentar.");
         }
 
         boolean puedeModificarPorPermiso = accesoValidator.can("VISTA_HISTORIAS", "MODIFICAR");
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
-            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-            if (consulta.getHistoriaClinica().getMascota().getApoderado().getCompany() == null ||
-                !consulta.getHistoriaClinica().getMascota().getApoderado().getCompany().getId().equals(currentCompanyId)) {
-                throw new IllegalArgumentException("No tienes permiso para modificar esta consulta");
-            }
-
             Integer currentUserId = SecurityUtils.getCurrentUserId();
             boolean esVeterinarioAsignado = consulta.getVeterinario() != null &&
                     consulta.getVeterinario().getUser() != null &&
@@ -134,11 +130,23 @@ public class ConsultaServiceImpl implements ConsultaService {
         return consultaMapper.toResponse(consulta);
     }
 
+    private void exigirMismaEmpresa(Consulta consulta, String mensaje) {
+        if (SecurityUtils.isSuperAdmin()) {
+            return;
+        }
+        var empresa = consulta.getHistoriaClinica().getMascota().getApoderado().getCompany();
+        if (empresa == null || !empresa.getId().equals(SecurityUtils.getCurrentCompanyId())) {
+            throw new IllegalArgumentException(mensaje);
+        }
+    }
+
     @Override
     @Transactional
     public ConsultaResponse cerrarConsulta(Long id, CerrarConsultaRequest request) {
         Consulta consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + id));
+
+        exigirMismaEmpresa(consulta, "No tienes permiso para cerrar esta consulta");
 
         if (!consulta.getVersion().equals(request.getVersion())) {
             throw new IllegalArgumentException("La consulta cambió mientras editabas. Tus datos continúan en pantalla; no recargues la página y vuelve a intentar.");
@@ -146,12 +154,6 @@ public class ConsultaServiceImpl implements ConsultaService {
 
         boolean puedeCerrarPorPermiso = accesoValidator.can("VISTA_HISTORIAS", "MODIFICAR");
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
-            Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
-            if (consulta.getHistoriaClinica().getMascota().getApoderado().getCompany() == null ||
-                !consulta.getHistoriaClinica().getMascota().getApoderado().getCompany().getId().equals(currentCompanyId)) {
-                throw new IllegalArgumentException("No tienes permiso para cerrar esta consulta");
-            }
-
             Integer currentUserId = SecurityUtils.getCurrentUserId();
             boolean esVeterinarioAsignado = consulta.getVeterinario() != null &&
                     consulta.getVeterinario().getUser() != null &&
@@ -201,6 +203,7 @@ public class ConsultaServiceImpl implements ConsultaService {
         if (!SecurityUtils.isSuperAdmin() && !SecurityUtils.isAdmin()) {
             throw new IllegalArgumentException("Solo un administrador puede reabrir una historia clínica cerrada");
         }
+        exigirMismaEmpresa(consulta, "No tienes permiso para reabrir esta consulta");
 
         if (consulta.getEstado() != EstadoConsulta.CERRADA) {
             throw new IllegalArgumentException("La consulta no se encuentra cerrada");

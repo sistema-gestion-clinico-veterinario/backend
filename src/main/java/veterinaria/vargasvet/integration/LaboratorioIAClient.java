@@ -22,9 +22,10 @@ public class LaboratorioIAClient {
     @Value("${ia.laboratorio.url}")
     private String iaUrl;
 
-    public LaboratorioIAResponse analizar(MultipartFile archivo, String especie) throws IOException {
+    public LaboratorioIAResponse analizar(MultipartFile archivo, String especie, String accessToken) throws IOException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setBearerAuth(accessToken);
 
         ByteArrayResource fileResource = new ByteArrayResource(archivo.getBytes()) {
             @Override

@@ -24,6 +24,7 @@ class DiagnosticoIAClientTest {
     private HttpServer servidor;
     private final AtomicReference<String> cuerpoRecibido = new AtomicReference<>();
     private final AtomicReference<String> contentType = new AtomicReference<>();
+    private final AtomicReference<String> authorization = new AtomicReference<>();
     private volatile int estado = 200;
 
     @BeforeEach
@@ -32,6 +33,7 @@ class DiagnosticoIAClientTest {
         servidor.createContext("/ia/diagnostico", exchange -> {
             cuerpoRecibido.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
             contentType.set(exchange.getRequestHeaders().getFirst("Content-Type"));
+            authorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
             byte[] respuesta = ("data: {\"type\":\"meta\",\"escenario\":\"HC\"}\n\n"
                     + "data: {\"type\":\"chunk\",\"text\":\"Hola\"}\n\n"
                     + "data: {\"type\":\"done\"}\n\n").getBytes(StandardCharsets.UTF_8);
@@ -63,9 +65,10 @@ class DiagnosticoIAClientTest {
         cliente().transmitir(campos, List.of(
                         new ArchivoParte("archivo_hemograma", "hemograma.pdf", "CONTENIDO-PDF".getBytes(StandardCharsets.UTF_8)),
                         new ArchivoParte("archivo_radiografia", "rx.png", new byte[]{9, 8, 7})),
-                salida);
+                "token-interno", salida);
 
         assertThat(contentType.get()).startsWith("multipart/form-data").contains("boundary=");
+        assertThat(authorization.get()).isEqualTo("Bearer token-interno");
         assertThat(cuerpoRecibido.get())
                 .contains("name=\"motivo_consulta\"").contains("Tos desde hace 3 días").contains("name=\"especie\"").contains("Perro")
                 .contains("name=\"archivo_hemograma\"; filename=\"hemograma.pdf\"").contains("CONTENIDO-PDF")
@@ -79,7 +82,7 @@ class DiagnosticoIAClientTest {
         estado = 503;
         ByteArrayOutputStream salida = new ByteArrayOutputStream();
 
-        assertThatThrownBy(() -> cliente().transmitir(Map.of("motivo_consulta", "x"), List.of(), salida))
+        assertThatThrownBy(() -> cliente().transmitir(Map.of("motivo_consulta", "x"), List.of(), "token", salida))
                 .isInstanceOf(RuntimeException.class);
 
         assertThat(salida.size()).isZero();
@@ -89,7 +92,7 @@ class DiagnosticoIAClientTest {
     void siElServicioNoEstaDisponibleSeLanzaUnaExcepcion() {
         servidor.stop(0);
 
-        assertThatThrownBy(() -> cliente().transmitir(Map.of("motivo_consulta", "x"), List.of(), new ByteArrayOutputStream()))
+        assertThatThrownBy(() -> cliente().transmitir(Map.of("motivo_consulta", "x"), List.of(), "token", new ByteArrayOutputStream()))
                 .isInstanceOf(RuntimeException.class);
     }
 }

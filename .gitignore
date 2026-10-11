@@ -41,6 +41,8 @@ keys/*.pem
 src/main/resources/keys/*.pem
 
 *.sql
+!src/main/resources/db/migration/*.sql
+!src/main/resources/db/local-manual/*.sql
 src/main/resources/db/migration/REGISTRO_LOCAL.md
 
 # ===== INTELLIJ IDEA =====
@@ -82,3 +84,10 @@ uploads/
 # ===== GITKEEP =====
 # Los archivos .gitkeep se pueden mantener si deseas preservar carpetas vacias.
 !.gitkeep
+
+# ===== Respaldos: nunca subir volcados ni claves =====
+*.dump
+*.dump.gpg
+*.tar.gz.gpg
+privada*.asc
+restauracion-error.log

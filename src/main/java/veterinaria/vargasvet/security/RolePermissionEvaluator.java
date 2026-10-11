@@ -19,12 +19,13 @@ public class RolePermissionEvaluator {
     private final RolVistaPermisoRepository rolVistaPermisoRepository;
     private final UsuarioPorRolRepository usuarioPorRolRepository;
 
-    public boolean can(Integer userId, Integer roleId, String viewCode, String action) {
+    public boolean can(Integer userId, Integer roleId, Integer assignmentCompanyId,
+                       String viewCode, String action) {
         if (userId == null || roleId == null || viewCode == null || viewCode.isBlank()
                 || action == null || action.isBlank()) return false;
 
         UsuarioPorRol assignment = usuarioPorRolRepository
-                .findActiveAssignmentByUsuarioIdAndRoleId(userId, roleId)
+                .findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(userId, roleId, assignmentCompanyId)
                 .orElse(null);
         if (assignment == null) return false;
         if (assignment.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN) return true;
@@ -43,10 +44,10 @@ public class RolePermissionEvaluator {
                 .orElse(false);
     }
 
-    public DataScope dataScope(Integer userId, Integer roleId, String viewCode) {
+    public DataScope dataScope(Integer userId, Integer roleId, Integer assignmentCompanyId, String viewCode) {
         if (userId == null || roleId == null || viewCode == null || viewCode.isBlank()) return DataScope.OWN;
         UsuarioPorRol assignment = usuarioPorRolRepository
-                .findActiveAssignmentByUsuarioIdAndRoleId(userId, roleId)
+                .findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(userId, roleId, assignmentCompanyId)
                 .orElse(null);
         if (assignment == null) return DataScope.OWN;
         if (assignment.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN
@@ -54,6 +55,10 @@ public class RolePermissionEvaluator {
             return DataScope.COMPANY;
         }
         return rolVistaPermisoRepository.findByRolIdAndVistaCodigo(roleId, viewCode)
+                .filter(permission -> permission.getVista().isActivo())
+                .filter(permission -> permission.isLeer())
+                .filter(permission -> isAudienceCompatible(
+                        assignment.getRol().getScope(), permission.getVista().getAudience()))
                 .map(permission -> permission.getDataScope() != null ? permission.getDataScope() : DataScope.OWN)
                 .orElse(DataScope.OWN);
     }

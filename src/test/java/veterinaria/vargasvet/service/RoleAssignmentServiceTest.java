@@ -13,13 +13,17 @@ import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.RoleAssignmentAction;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.repository.RoleRepository;
+import veterinaria.vargasvet.repository.CompanyRepository;
+import veterinaria.vargasvet.repository.RoleAssignmentHistoryRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.security.SecurityUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,6 +39,8 @@ class RoleAssignmentServiceTest {
 
     @Mock private UsuarioPorRolRepository assignmentRepository;
     @Mock private RoleRepository roleRepository;
+    @Mock private CompanyRepository companyRepository;
+    @Mock private RoleAssignmentHistoryRepository historyRepository;
     @Mock private AccesoValidator accesoValidator;
     @Mock private AdministratorProtection administratorProtection;
     @Mock private AuditLogService auditLogService;
@@ -45,12 +51,13 @@ class RoleAssignmentServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new RoleAssignmentService(
-                assignmentRepository, roleRepository, accesoValidator,
-                administratorProtection, auditLogService);
         usuario = new Usuario();
         usuario.setId(20);
         company = company(7);
+        service = new RoleAssignmentService(
+                assignmentRepository, roleRepository, companyRepository, historyRepository,
+                accesoValidator, administratorProtection, auditLogService);
+        org.mockito.Mockito.lenient().when(companyRepository.lockById(7)).thenReturn(Optional.of(company));
     }
 
     @Test
@@ -61,8 +68,9 @@ class RoleAssignmentServiceTest {
 
         withCompanyContext(7, () -> service.replaceStaffRoles(usuario, company, Set.of(3)));
 
+        verify(companyRepository).lockById(7);
         verifyNoInteractions(roleRepository, accesoValidator, administratorProtection, auditLogService);
-        verify(assignmentRepository, never()).deleteByUsuarioIdAndCompanyIdAndRoleScope(20, 7, RoleScope.STAFF);
+        verify(assignmentRepository, never()).deleteAll(org.mockito.ArgumentMatchers.any());
         verify(assignmentRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
@@ -77,11 +85,21 @@ class RoleAssignmentServiceTest {
         withCompanyContext(7, () -> service.replaceStaffRoles(usuario, company, Set.of(4)));
 
         verify(accesoValidator).validarModificar("VISTA_ROLES");
-        verify(assignmentRepository).deleteByUsuarioIdAndCompanyIdAndRoleScope(20, 7, RoleScope.STAFF);
+        verify(assignmentRepository).deleteAll(org.mockito.ArgumentMatchers.any());
         ArgumentCaptor<UsuarioPorRol> captor = ArgumentCaptor.forClass(UsuarioPorRol.class);
         verify(assignmentRepository).save(captor.capture());
         assertThat(captor.getValue().getCompany()).isSameAs(company);
         assertThat(captor.getValue().getRol()).isSameAs(nuevo);
+        verify(historyRepository).saveAll(org.mockito.ArgumentMatchers.argThat(events -> {
+            List<veterinaria.vargasvet.domain.entity.RoleAssignmentHistory> values =
+                    new java.util.ArrayList<>();
+            events.forEach(values::add);
+            return values.size() == 2
+                    && values.stream().anyMatch(event -> event.getRolId().equals(3)
+                    && event.getAction() == RoleAssignmentAction.REVOKED)
+                    && values.stream().anyMatch(event -> event.getRolId().equals(4)
+                    && event.getAction() == RoleAssignmentAction.ASSIGNED);
+        }));
         verify(auditLogService).log(
                 7, "MODIFICAR_ASIGNACIONES_ROL", "Roles", "Usuario 20: roles [ROL_3] -> [ROL_4]");
     }
@@ -98,7 +116,7 @@ class RoleAssignmentServiceTest {
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("empresa activa");
 
-        verify(assignmentRepository, never()).deleteByUsuarioIdAndCompanyIdAndRoleScope(20, 7, RoleScope.STAFF);
+        verify(assignmentRepository, never()).deleteAll(org.mockito.ArgumentMatchers.any());
         verify(assignmentRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 

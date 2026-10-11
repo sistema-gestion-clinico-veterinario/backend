@@ -126,12 +126,8 @@ class ReportesClinicosServiceImplTest {
         when(citaRepository.findForClinicalReport(
                 eq(1), any(LocalDateTime.class), any(LocalDateTime.class), eq(55L), isNull()))
                 .thenReturn(List.of(), List.of());
-        when(registroVacunaRepository.findProximasVacunas(eq(1), any(), any(), any())).thenReturn(List.of());
-        when(registroDesparasitacionRepository.findProximasDesparasitaciones(eq(1), any(), any(), any()))
-                .thenReturn(List.of());
-        when(controlPreventivoRepository.findProximosByCompany(eq(1), any(), any(), anyCollection(), any()))
-                .thenReturn(List.of());
 
+        veterinaria.vargasvet.dto.response.ReportesClinicosDTO reporte;
         try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
             security.when(SecurityUtils::isSuperAdmin).thenReturn(false);
             security.when(SecurityUtils::isAdmin).thenReturn(false);
@@ -140,8 +136,16 @@ class ReportesClinicosServiceImplTest {
             when(accesoValidator.canAccessCompanyData("VISTA_REPORTES")).thenReturn(false);
 
             // Solicita explícitamente el reporte de OTRO empleado (999); debe ser ignorado.
-            assertDoesNotThrow(() -> service.obtenerReportes(1, desde, hasta, 999L, null));
+            reporte = service.obtenerReportes(1, desde, hasta, 999L, null);
         }
+
+        assertThat(reporte.getProximasVacunas()).isNull();
+        assertThat(reporte.getProximasDesparasitaciones()).isNull();
+        assertThat(reporte.getControlesPreventivosProximos()).isNull();
+        assertThat(reporte.getCumplimientoVacunacion()).isNull();
+        assertThat(reporte.getPacientesInactivos()).isNull();
+        org.mockito.Mockito.verifyNoInteractions(
+                registroVacunaRepository, registroDesparasitacionRepository, controlPreventivoRepository);
 
         // Verifica que la consulta real a la BD se hizo con el id del propio empleado (55),
         // nunca con el 999 solicitado por query param.
@@ -401,7 +405,7 @@ class ReportesClinicosServiceImplTest {
                         1);
 
         when(mascotaRepository.findInactivasByCompanyId(
-                eq(1), any(LocalDateTime.class), any(org.springframework.data.domain.Pageable.class)))
+                eq(1), isNull(), any(LocalDateTime.class), any(org.springframework.data.domain.Pageable.class)))
                 .thenReturn(pagina);
         when(citaRepository.findUltimaVisitaCompletadaByMascotaIds(List.of(9L))).thenReturn(List.of());
 
@@ -417,6 +421,98 @@ class ReportesClinicosServiceImplTest {
         });
         assertThat(resultado.getTotalElements()).isEqualTo(1);
         assertThat(resultado.getTotalPages()).isEqualTo(1);
+    }
+
+    private org.springframework.data.domain.Page<Mascota> paginaVacia() {
+        return new org.springframework.data.domain.PageImpl<>(
+                List.of(), org.springframework.data.domain.PageRequest.of(0, 10), 0);
+    }
+
+    private void comoUsuarioConAlcance(MockedStatic<SecurityUtils> security, boolean empresa) {
+        security.when(SecurityUtils::isSuperAdmin).thenReturn(false);
+        security.when(SecurityUtils::isAdmin).thenReturn(false);
+        security.when(SecurityUtils::getCurrentCompanyId).thenReturn(1);
+        security.when(SecurityUtils::getCurrentUserId).thenReturn(7);
+        org.mockito.Mockito.lenient().when(accesoValidator.can(anyString(), anyString())).thenReturn(true);
+        when(accesoValidator.canAccessCompanyData("VISTA_REPORTES")).thenReturn(empresa);
+    }
+
+    @Test
+    void pacientesInactivosConAlcancePropioSoloIncluyeLosAtendidosPorElProfesional() {
+        veterinaria.vargasvet.domain.entity.Empleado propio = new veterinaria.vargasvet.domain.entity.Empleado();
+        propio.setId(55L);
+        when(empleadoRepository.findByUserIdAndCompanyIdAndEstadoTrue(7, 1)).thenReturn(java.util.Optional.of(propio));
+        when(mascotaRepository.findInactivasByCompanyId(
+                eq(1), eq(55L), any(LocalDateTime.class), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(paginaVacia());
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            comoUsuarioConAlcance(security, false);
+            service.obtenerPacientesInactivos(1, 0, 10);
+        }
+
+        org.mockito.Mockito.verify(mascotaRepository).findInactivasByCompanyId(
+                eq(1), eq(55L), any(LocalDateTime.class), any(org.springframework.data.domain.Pageable.class));
+    }
+
+    @Test
+    void pacientesInactivosConAlcancePropioYSinFichaDeEmpleadoNoDevuelveNingunPaciente() {
+        when(empleadoRepository.findByUserIdAndCompanyIdAndEstadoTrue(7, 1)).thenReturn(java.util.Optional.empty());
+        when(mascotaRepository.findInactivasByCompanyId(
+                eq(1), eq(-1L), any(LocalDateTime.class), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(paginaVacia());
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            comoUsuarioConAlcance(security, false);
+            service.obtenerPacientesInactivos(1, 0, 10);
+        }
+
+        org.mockito.Mockito.verify(mascotaRepository, org.mockito.Mockito.never()).findInactivasByCompanyId(
+                eq(1), isNull(), any(LocalDateTime.class), any(org.springframework.data.domain.Pageable.class));
+    }
+
+    @Test
+    void pacientesInactivosConAlcanceDeEmpresaNoFiltraPorProfesional() {
+        when(mascotaRepository.findInactivasByCompanyId(
+                eq(1), isNull(), any(LocalDateTime.class), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(paginaVacia());
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            comoUsuarioConAlcance(security, true);
+            service.obtenerPacientesInactivos(1, 0, 10);
+        }
+
+        org.mockito.Mockito.verify(empleadoRepository, org.mockito.Mockito.never())
+                .findByUserIdAndCompanyIdAndEstadoTrue(any(), any());
+    }
+
+    @Test
+    void ventasConAlcancePropioSoloIncluyenLoRegistradoPorElUsuarioYOmitenElInventarioDeLaClinica() {
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            comoUsuarioConAlcance(security, false);
+            var reporte = service.obtenerVentasProductos(1, LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 31));
+
+            org.mockito.Mockito.verify(purchaseRepository).findForSalesReport(
+                    eq(1), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), eq(7));
+            org.mockito.Mockito.verify(productoRepository, org.mockito.Mockito.never())
+                    .findByCompanyIdAndActivoTrue(any());
+            assertThat(reporte.getAlertasStock()).isNull();
+            assertThat(reporte.getResumen().getProductosStockBajo()).isNull();
+            assertThat(reporte.getResumen().getProductosSinStock()).isNull();
+        }
+    }
+
+    @Test
+    void ventasConAlcanceDeEmpresaIncluyenTodoYElInventario() {
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            comoUsuarioConAlcance(security, true);
+            var reporte = service.obtenerVentasProductos(1, LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 31));
+
+            org.mockito.Mockito.verify(purchaseRepository).findForSalesReport(
+                    eq(1), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), isNull());
+            org.mockito.Mockito.verify(productoRepository).findByCompanyIdAndActivoTrue(1);
+            assertThat(reporte.getAlertasStock()).isNotNull();
+        }
     }
 
     private Cita cita(Long id, Mascota mascota, LocalDateTime fecha) {

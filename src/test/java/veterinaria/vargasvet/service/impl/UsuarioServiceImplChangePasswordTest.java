@@ -147,7 +147,7 @@ class UsuarioServiceImplChangePasswordTest {
 
     @Test
     void elTopeDeIntentosSeAplicaPorUsuarioYClinicaAntesDeVerificarLaContrasena() {
-        doThrow(new RateLimitExceededException()).when(sharedRateLimitService)
+        doThrow(new RateLimitExceededException(Duration.ofMinutes(15))).when(sharedRateLimitService)
                 .enforce(anyString(), anyString(), org.mockito.ArgumentMatchers.anyInt(), any(Duration.class));
 
         assertThatThrownBy(() -> service.changePassword(10, dto("Cualquiera-123", "Nueva-Contrasena-123")))

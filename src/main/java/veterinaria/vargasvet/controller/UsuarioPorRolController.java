@@ -24,7 +24,8 @@ public class UsuarioPorRolController {
 
         Integer usuarioId = SecurityUtils.getCurrentUserId();
 
-        List<MenuItemDTO> menu = menuBuilderService.construirMenu(usuarioId, SecurityUtils.getCurrentRoleId());
+        List<MenuItemDTO> menu = menuBuilderService.construirMenu(
+                usuarioId, SecurityUtils.getCurrentRoleId(), SecurityUtils.getSessionCompanyId());
         return ResponseEntity.ok(new ApiResponse<>(true, "Menú del usuario", menu));
     }
 }

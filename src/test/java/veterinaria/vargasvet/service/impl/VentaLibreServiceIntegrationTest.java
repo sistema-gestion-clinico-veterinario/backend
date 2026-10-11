@@ -12,6 +12,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import veterinaria.vargasvet.domain.entity.CategoriaProducto;
 import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Producto;
+import veterinaria.vargasvet.domain.entity.Purchase;
+import veterinaria.vargasvet.domain.entity.Usuario;
+import veterinaria.vargasvet.domain.enums.PaymentStatus;
 import veterinaria.vargasvet.domain.enums.MetodoPago;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.TipoPurchase;
@@ -22,6 +25,7 @@ import veterinaria.vargasvet.repository.CategoriaProductoRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.ProductoRepository;
 import veterinaria.vargasvet.repository.PurchaseRepository;
+import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.repository.VentaLibreDetalleRepository;
 import veterinaria.vargasvet.repository.LoteRepository;
 import veterinaria.vargasvet.repository.SalidaLoteRepository;
@@ -30,6 +34,7 @@ import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CajaService;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -62,6 +67,9 @@ class VentaLibreServiceIntegrationTest {
     private SalidaLoteRepository salidaLoteRepository;
 
     @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
     private TestEntityManager entityManager;
 
     private VentaLibreServiceImpl ventaLibreService;
@@ -72,7 +80,8 @@ class VentaLibreServiceIntegrationTest {
                 purchaseRepository, ventaLibreDetalleRepository, productoRepository,
                 mock(veterinaria.vargasvet.repository.ApoderadoRepository.class),
                 companyRepository, mock(AuditLogService.class), mock(CajaService.class),
-                new InventarioStockServiceImpl(productoRepository, loteRepository, salidaLoteRepository)
+                new InventarioStockServiceImpl(productoRepository, loteRepository, salidaLoteRepository),
+                usuarioRepository
         );
     }
 
@@ -164,6 +173,48 @@ class VentaLibreServiceIntegrationTest {
         assertThat(productoRepository.findById(producto.getId()).orElseThrow().getStock()).isEqualTo(1);
     }
 
+    @Test
+    @DisplayName("La venta deja registrado a quien la hizo, distinto del cliente que compra")
+    void laVentaGuardaAlUsuarioQueLaRegistra() {
+        Company company = crearCompany();
+        Producto producto = crearProducto(company, "Collar", "25.00", 10);
+        Usuario cajero = setCompanyContext(company.getId());
+
+        VentaLibreResponse response = ventaLibreService.registrar(ventaDe(company, producto));
+        entityManager.flush();
+        entityManager.clear();
+
+        Purchase guardada = purchaseRepository.findById(response.getId()).orElseThrow();
+        assertThat(guardada.getUser().getId()).isEqualTo(cajero.getId());
+        assertThat(guardada.getCliente()).isNull();
+    }
+
+    @Test
+    @DisplayName("El reporte de ventas con alcance propio solo devuelve lo que registró ese usuario")
+    void elReporteDeVentasConAlcancePropioNoMuestraLasVentasDeOtros() {
+        Company company = crearCompany();
+        Producto producto = crearProducto(company, "Juguete", "25.00", 10);
+        Usuario ana = setCompanyContext(company.getId(), "ana@vargasvet.test");
+        Long ventaDeAna = ventaLibreService.registrar(ventaDe(company, producto)).getId();
+        Usuario beto = setCompanyContext(company.getId(), "beto@vargasvet.test");
+        Long ventaDeBeto = ventaLibreService.registrar(ventaDe(company, producto)).getId();
+        entityManager.flush();
+        entityManager.clear();
+        LocalDateTime desde = LocalDateTime.now().minusDays(1);
+        LocalDateTime hasta = LocalDateTime.now().plusDays(1);
+
+        List<Long> soloAna = purchaseRepository.findForSalesReport(company.getId(), TipoPurchase.TIENDA,
+                PaymentStatus.PAID, desde, hasta, ana.getId()).stream().map(Purchase::getId).toList();
+        List<Long> soloBeto = purchaseRepository.findForSalesReport(company.getId(), TipoPurchase.TIENDA,
+                PaymentStatus.PAID, desde, hasta, beto.getId()).stream().map(Purchase::getId).toList();
+        List<Long> todas = purchaseRepository.findForSalesReport(company.getId(), TipoPurchase.TIENDA,
+                PaymentStatus.PAID, desde, hasta, null).stream().map(Purchase::getId).toList();
+
+        assertThat(soloAna).containsExactly(ventaDeAna);
+        assertThat(soloBeto).containsExactly(ventaDeBeto);
+        assertThat(todas).containsExactlyInAnyOrder(ventaDeAna, ventaDeBeto);
+    }
+
     private VentaLibreItemRequest item(Long productoId, int cantidad) {
         VentaLibreItemRequest item = new VentaLibreItemRequest();
         item.setProductoId(productoId);
@@ -197,12 +248,31 @@ class VentaLibreServiceIntegrationTest {
         return productoRepository.save(producto);
     }
 
-    private void setCompanyContext(Integer companyId) {
+    private Usuario setCompanyContext(Integer companyId) {
+        return setCompanyContext(companyId, "cajero-" + UUID.randomUUID() + "@vargasvet.test");
+    }
+
+    private Usuario setCompanyContext(Integer companyId, String email) {
+        Usuario usuario = new Usuario();
+        usuario.setEmail(email);
+        usuario.setUsername(email);
+        usuario.setCompany(companyRepository.findById(companyId).orElseThrow());
+        usuario = usuarioRepository.save(usuario);
         UsuarioPrincipal principal = new UsuarioPrincipal(
-                1, "cajero@vargasvet.test", "n/a", List.of(), companyId,
+                usuario.getId(), email, "n/a", List.of(), companyId,
                 null, null, RolePurpose.COMPANY_ADMIN, 0L);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
+        return usuario;
+    }
+
+    private VentaLibreRequest ventaDe(Company company, Producto producto) {
+        VentaLibreRequest request = new VentaLibreRequest();
+        request.setCompanyId(company.getId());
+        request.setItems(List.of(item(producto.getId(), 1)));
+        request.setMetodoPago(MetodoPago.EFECTIVO);
+        request.setMontoRecibido(new BigDecimal("100.00"));
+        return request;
     }
 
     private String uniqueDigits(int length) {

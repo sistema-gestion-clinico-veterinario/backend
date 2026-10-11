@@ -54,7 +54,7 @@ public class GoogleOAuthFlowStore {
         Instant now = Instant.now(clock);
         map.entrySet().removeIf(entry -> entry.getValue().expiresAt().isBefore(now));
         if (map.size() >= MAX_ENTRIES) {
-            throw new RateLimitExceededException();
+            throw new RateLimitExceededException(INTENT_TTL);
         }
         String key = SecurityTokenUtils.generate();
         map.put(key, new Entry<>(value, now.plus(ttl)));

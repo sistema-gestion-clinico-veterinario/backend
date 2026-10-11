@@ -67,7 +67,7 @@ public class SharedRateLimitService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void enforce(String namespace, String identifier, int capacity, Duration period) {
         if (!tryConsume(namespace, identifier, capacity, period)) {
-            throw new RateLimitExceededException();
+            throw new RateLimitExceededException(period);
         }
     }
 

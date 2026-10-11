@@ -84,8 +84,9 @@ public class RealtimeSubscriptionGuard {
      * Registra una suscripción para revalidación continua. Solo debe usarse para canales donde
      * perder el permiso en caliente sea sensible (p. ej. auditoría), no para todos los topics.
      */
-    public void guard(String sessionId, Integer userId, Integer roleId, String viewCode, String action) {
-        guardedSubscriptions.put(sessionId, new Subscription(userId, roleId, viewCode, action));
+    public void guard(String sessionId, Integer userId, Integer roleId, Integer companyId,
+                      String viewCode, String action) {
+        guardedSubscriptions.put(sessionId, new Subscription(userId, roleId, companyId, viewCode, action));
     }
 
     @Scheduled(fixedDelay = 30_000)
@@ -93,7 +94,8 @@ public class RealtimeSubscriptionGuard {
         closeConnectionsOfRevokedSessions();
         guardedSubscriptions.forEach((sessionId, subscription) -> {
             boolean stillAllowed = rolePermissionEvaluator.can(
-                    subscription.userId(), subscription.roleId(), subscription.viewCode(), subscription.action());
+                    subscription.userId(), subscription.roleId(), subscription.companyId(),
+                    subscription.viewCode(), subscription.action());
             if (stillAllowed) return;
 
             WebSocketSession session = sessionsById.get(sessionId);
@@ -111,6 +113,7 @@ public class RealtimeSubscriptionGuard {
         });
     }
 
-    private record Subscription(Integer userId, Integer roleId, String viewCode, String action) {
+    private record Subscription(
+            Integer userId, Integer roleId, Integer companyId, String viewCode, String action) {
     }
 }

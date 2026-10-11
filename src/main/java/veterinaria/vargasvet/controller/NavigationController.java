@@ -29,7 +29,8 @@ public class NavigationController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<MenuStructureDTO>>> getEffectiveNavigation() {
         List<MenuStructureDTO> navigation = menuBuilderService.construirMenuJerarquico(
-                SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentRoleId());
+                SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentRoleId(),
+                SecurityUtils.getSessionCompanyId());
         return ResponseEntity.ok(new ApiResponse<>(true, "Navegación efectiva obtenida", navigation));
     }
 }

@@ -49,6 +49,11 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
     @Query(
         value = "SELECT m FROM Mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user " +
             "WHERE a.company.id = :companyId AND m.activo = true " +
+            "AND (CAST(:veterinarioId AS long) IS NULL OR EXISTS (" +
+            "  SELECT 1 FROM Cita own_c WHERE own_c.mascota = m " +
+            "  AND own_c.empleado.id = :veterinarioId AND own_c.estado = 'COMPLETADA' " +
+            "  AND own_c.eliminada = false" +
+            ")) " +
             "AND COALESCE(" +
             "  (SELECT MAX(c.fechaHoraInicio) FROM Cita c WHERE c.mascota = m AND c.estado = 'COMPLETADA' AND c.eliminada = false), " +
             "  m.createdAt" +
@@ -59,12 +64,18 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
             ") ASC",
         countQuery = "SELECT COUNT(m) FROM Mascota m " +
             "WHERE m.apoderado.company.id = :companyId AND m.activo = true " +
+            "AND (CAST(:veterinarioId AS long) IS NULL OR EXISTS (" +
+            "  SELECT 1 FROM Cita own_c WHERE own_c.mascota = m " +
+            "  AND own_c.empleado.id = :veterinarioId AND own_c.estado = 'COMPLETADA' " +
+            "  AND own_c.eliminada = false" +
+            ")) " +
             "AND COALESCE(" +
             "  (SELECT MAX(c.fechaHoraInicio) FROM Cita c WHERE c.mascota = m AND c.estado = 'COMPLETADA' AND c.eliminada = false), " +
             "  m.createdAt" +
             ") < :umbral"
     )
     Page<Mascota> findInactivasByCompanyId(@Param("companyId") Integer companyId,
+                                           @Param("veterinarioId") Long veterinarioId,
                                            @Param("umbral") java.time.LocalDateTime umbral,
                                            Pageable pageable);
 

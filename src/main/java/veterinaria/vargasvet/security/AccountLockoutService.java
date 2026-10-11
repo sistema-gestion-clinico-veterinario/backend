@@ -21,13 +21,23 @@ public class AccountLockoutService {
     private final JdbcTemplate jdbcTemplate;
 
     @Value("${app.account-lockout.max-failed-attempts:5}")
-    private int maxFailedAttempts;
+    private int maxFailedAttempts = 5;
 
     @Value("${app.account-lockout.lockout-minutes:30}")
-    private int lockoutMinutes;
+    private int lockoutMinutes = 30;
 
+    @Value("${app.account-lockout.observation-minutes:15}")
+    private int observationMinutes = 15;
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void assertNotLocked(String identifier) {
         String key = accountKey(identifier);
+        // Un bloqueo vencido inicia un ciclo limpio. Mantener el contador anterior
+        // haría que un único error posterior volviera a bloquear inmediatamente.
+        jdbcTemplate.update(
+                "DELETE FROM account_lockouts WHERE account_key = ? "
+                        + "AND locked_until IS NOT NULL AND locked_until <= CURRENT_TIMESTAMP",
+                key);
         Timestamp lockedUntil = jdbcTemplate.query(
                 "SELECT locked_until FROM account_lockouts WHERE account_key = ?",
                 rs -> rs.next() ? rs.getTimestamp("locked_until") : null,
@@ -41,18 +51,24 @@ public class AccountLockoutService {
     public void registerFailedAttempt(String identifier) {
         String key = accountKey(identifier);
         Instant now = Instant.now();
+        Instant observationStartedAt = now.minus(Duration.ofMinutes(observationMinutes));
 
-        jdbcTemplate.update("""
+        Integer attempts = jdbcTemplate.queryForObject("""
                 INSERT INTO account_lockouts (account_key, failed_attempts, locked_until, updated_at)
                 VALUES (?, 1, NULL, ?)
                 ON CONFLICT (account_key) DO UPDATE SET
-                    failed_attempts = account_lockouts.failed_attempts + 1,
+                    failed_attempts = CASE
+                        WHEN account_lockouts.updated_at < ? THEN 1
+                        ELSE account_lockouts.failed_attempts + 1
+                    END,
+                    locked_until = CASE
+                        WHEN account_lockouts.updated_at < ? THEN NULL
+                        ELSE account_lockouts.locked_until
+                    END,
                     updated_at = EXCLUDED.updated_at
-                """, key, Timestamp.from(now));
-
-        Integer attempts = jdbcTemplate.queryForObject(
-                "SELECT failed_attempts FROM account_lockouts WHERE account_key = ?",
-                Integer.class, key);
+                RETURNING failed_attempts
+                """, Integer.class, key, Timestamp.from(now), Timestamp.from(observationStartedAt),
+                Timestamp.from(observationStartedAt));
 
         if (attempts != null && attempts >= maxFailedAttempts) {
             jdbcTemplate.update(

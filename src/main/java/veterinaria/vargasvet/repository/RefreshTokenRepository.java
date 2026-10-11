@@ -10,6 +10,7 @@ import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.RefreshToken;
 import veterinaria.vargasvet.domain.entity.Usuario;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.List;
 import jakarta.persistence.LockModeType;
@@ -26,6 +27,24 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
 
     /** ¿La sesión (familia) sigue abierta? Se consulta en cada petición: usa idx_refresh_tokens_family_active. */
     boolean existsByFamilyIdAndRevokedAtIsNull(String familyId);
+
+    interface ActividadDeSesion {
+        long getAbiertas();
+        Instant getUltimaActividad();
+    }
+
+    /** Estado de la sesión en una sola lectura por petición: cuántos tokens siguen abiertos y cuándo fue su última actividad. */
+    @Query("select count(r) as abiertas, max(r.lastActivityAt) as ultimaActividad "
+            + "from RefreshToken r where r.familyId = :familyId and r.revokedAt is null")
+    ActividadDeSesion resumenDeActividad(@Param("familyId") String familyId);
+
+    /** Última actividad de toda la sesión, incluidos los tokens ya rotados. */
+    @Query("select max(r.lastActivityAt) from RefreshToken r where r.familyId = :familyId")
+    Instant ultimaActividadDeLaSesion(@Param("familyId") String familyId);
+
+    @Modifying
+    @Query("update RefreshToken r set r.lastActivityAt = :ahora where r.familyId = :familyId and r.revokedAt is null")
+    int registrarActividad(@Param("familyId") String familyId, @Param("ahora") Instant ahora);
 
     @Query("select distinct r.familyId from RefreshToken r where r.familyId in :familyIds and r.revokedAt is null")
     List<String> findActiveFamilyIds(@Param("familyIds") java.util.Collection<String> familyIds);

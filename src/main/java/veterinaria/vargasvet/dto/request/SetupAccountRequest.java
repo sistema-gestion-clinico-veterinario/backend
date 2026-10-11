@@ -13,6 +13,7 @@ public class SetupAccountRequest {
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(min = 12, max = 72, message = "La contraseña debe tener al menos 12 caracteres")
     @StrongPassword
+    @lombok.ToString.Exclude
     private String password;
 
     private Boolean avisoLeido;

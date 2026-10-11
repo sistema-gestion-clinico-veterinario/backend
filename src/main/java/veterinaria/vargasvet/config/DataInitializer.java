@@ -86,14 +86,12 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void createVentanaIfNotExists(String codigo, String nombre, String grupo, Integer orden) {
-        Ventana ventana = ventanaRepository.findByCodigo(codigo);
-        boolean esNueva = ventana == null;
-
-        if (esNueva) {
-            ventana = new Ventana();
-            ventana.setCodigo(codigo);
+        if (ventanaRepository.findByCodigo(codigo) != null) {
+            return;
         }
 
+        Ventana ventana = new Ventana();
+        ventana.setCodigo(codigo);
         ventana.setNombre(nombre);
         ventana.setGrupo(grupo);
         ventana.setOrden(orden);
@@ -102,10 +100,7 @@ public class DataInitializer implements CommandLineRunner {
                 ? MenuPresentation.FLAT
                 : MenuPresentation.GROUPED);
         ventanaRepository.save(ventana);
-
-        if (esNueva) {
-            log.info(" Ventana creada: {}", codigo);
-        }
+        log.info(" Ventana creada: {}", codigo);
     }
 
     private void seedVistasIfNotExist() {
