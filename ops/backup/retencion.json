@@ -1,0 +1,28 @@
+{
+  "Rules": [
+    {
+      "ID": "base-diaria-8-dias",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "base/diario/" },
+      "Expiration": { "Days": 8 }
+    },
+    {
+      "ID": "base-semanal-31-dias",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "base/semanal/" },
+      "Expiration": { "Days": 31 }
+    },
+    {
+      "ID": "base-mensual-190-dias",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "base/mensual/" },
+      "Expiration": { "Days": 190 }
+    },
+    {
+      "ID": "archivos-semanal-31-dias",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "archivos/semanal/" },
+      "Expiration": { "Days": 31 }
+    }
+  ]
+}

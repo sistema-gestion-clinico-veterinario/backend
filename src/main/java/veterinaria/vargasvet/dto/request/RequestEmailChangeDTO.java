@@ -10,6 +10,7 @@ public class RequestEmailChangeDTO {
 
     @NotBlank(message = "La contraseña actual es requerida")
     @Size(max = 72, message = "La contraseña actual no es válida")
+    @lombok.ToString.Exclude
     private String currentPassword;
 
     @NotBlank(message = "El nuevo correo es requerido")

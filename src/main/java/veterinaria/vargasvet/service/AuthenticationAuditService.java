@@ -35,10 +35,20 @@ public class AuthenticationAuditService {
         String subjectHash = SecurityTokenUtils.hash(normalize(attemptedIdentifier)).substring(0, 12);
         save(knownUser, "LOGIN_FALLIDO",
                 "Intento de inicio de sesión rechazado (" + reason + ", referencia " + subjectHash + ").");
+    }
 
-        if ("credenciales inválidas".equals(reason)) {
-            accountLockoutService.registerFailedAttempt(attemptedIdentifier);
-        }
+    /**
+     * Registra una contraseña incorrecta y actualiza el bloqueo de la credencial
+     * concreta. La clave de bloqueo ya incluye empresa/plataforma; el identificador
+     * separado se utiliza solo para generar la referencia anónima de auditoría.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void recordInvalidCredentials(Usuario knownUser, String attemptedIdentifier, String lockoutKey) {
+        String subjectHash = SecurityTokenUtils.hash(normalize(attemptedIdentifier)).substring(0, 12);
+        save(knownUser, "LOGIN_FALLIDO",
+                "Intento de inicio de sesión rechazado (credenciales inválidas, referencia "
+                        + subjectHash + ").");
+        accountLockoutService.registerFailedAttempt(lockoutKey);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

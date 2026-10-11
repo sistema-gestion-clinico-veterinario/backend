@@ -1,0 +1,109 @@
+name: "Respaldo · Base de datos y archivos"
+
+on:
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+    inputs:
+      incluir_archivos:
+        description: "Respaldar también los archivos de Supabase Storage"
+        type: boolean
+        default: false
+
+concurrency:
+  group: respaldo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  base-de-datos:
+    name: Respaldar la base de datos
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      verificacion:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: verificacion
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar el cliente de PostgreSQL 17
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common jq
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Respaldar, verificar, cifrar y subir
+        env:
+          BACKUP_DB_URL: ${{ secrets.BACKUP_DB_URL }}
+          VERIFY_DB_URL: postgresql://postgres:verificacion@localhost:5432/postgres
+          GPG_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_PUBLIC_KEY }}
+          BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_APPLICATION_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.BACKUP_S3_REGION }}
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+          HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_BASE_URL }}
+        run: bash ops/backup/respaldar-base.sh
+
+  archivos:
+    name: Respaldar los archivos
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: base-de-datos
+    env:
+      TIENE_ACCESO_A_STORAGE: ${{ secrets.SUPABASE_S3_ACCESS_KEY != '' }}
+
+    steps:
+      - name: Decidir si toca
+        id: decidir
+        run: |
+          if [ "${TIENE_ACCESO_A_STORAGE}" != "true" ]; then
+            echo "Sin credenciales de Supabase Storage: se omite."
+            echo "ejecutar=false" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.incluir_archivos }}" = "true" ]; then
+            echo "ejecutar=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "schedule" ] && [ "$(date -u +%u)" = "7" ]; then
+            echo "ejecutar=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ejecutar=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Descargar el código
+        if: steps.decidir.outputs.ejecutar == 'true'
+        uses: actions/checkout@v4
+
+      - name: Respaldar, cifrar y subir los archivos
+        if: steps.decidir.outputs.ejecutar == 'true'
+        env:
+          SUPABASE_S3_ENDPOINT: ${{ secrets.SUPABASE_S3_ENDPOINT }}
+          SUPABASE_S3_ACCESS_KEY: ${{ secrets.SUPABASE_S3_ACCESS_KEY }}
+          SUPABASE_S3_SECRET_KEY: ${{ secrets.SUPABASE_S3_SECRET_KEY }}
+          SUPABASE_S3_REGION: ${{ secrets.SUPABASE_S3_REGION }}
+          SUPABASE_BUCKET: ${{ secrets.SUPABASE_BUCKET }}
+          GPG_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_PUBLIC_KEY }}
+          BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_APPLICATION_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.BACKUP_S3_REGION }}
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+          HEALTHCHECK_ARCHIVOS_URL: ${{ secrets.HEALTHCHECK_ARCHIVOS_URL }}
+        run: bash ops/backup/respaldar-archivos.sh

@@ -24,6 +24,17 @@ public class SecurityUtils {
         return null;
     }
 
+    /** Empresa incluida en la identidad autenticada. A diferencia de {@link #getCurrentCompanyId()},
+     * no devuelve la empresa seleccionada temporalmente por un administrador de plataforma. Se usa
+     * para validar la asignación exacta que originó el token. */
+    public static Integer getSessionCompanyId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof UsuarioPrincipal principal) {
+            return principal.getCompanyId();
+        }
+        return null;
+    }
+
     public static boolean isSuperAdmin() {
         return getCurrentRolePurpose() == RolePurpose.PLATFORM_ADMIN;
     }

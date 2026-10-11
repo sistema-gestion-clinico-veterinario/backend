@@ -26,8 +26,10 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
 
     boolean existsByCitaIdAndTipoPurchaseAndPaymentStatusNot(Long citaId, TipoPurchase tipoPurchase, PaymentStatus paymentStatus);
 
-    @Query("SELECT p FROM Purchase p WHERE p.cita.mascota.apoderado.user.id = :userId AND p.tipoPurchase = :tipo ORDER BY p.createdAt DESC")
-    Page<Purchase> findByApoderadoUserId(@Param("userId") Integer userId, @Param("tipo") TipoPurchase tipo, Pageable pageable);
+    @Query("SELECT p FROM Purchase p WHERE p.cita.mascota.apoderado.user.id = :userId "
+            + "AND p.cita.mascota.apoderado.company.id = :companyId AND p.tipoPurchase = :tipo ORDER BY p.createdAt DESC")
+    Page<Purchase> findByApoderadoUserIdAndCompanyId(@Param("userId") Integer userId, @Param("companyId") Integer companyId,
+                                                     @Param("tipo") TipoPurchase tipo, Pageable pageable);
 
     @Query("SELECT p FROM Purchase p WHERE p.cita.mascota.apoderado.company.id = :companyId AND p.tipoPurchase = :tipo ORDER BY p.createdAt DESC")
     Page<Purchase> findByCompanyId(@Param("companyId") Integer companyId, @Param("tipo") TipoPurchase tipo, Pageable pageable);
@@ -65,10 +67,12 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
 
     @Query("SELECT p FROM Purchase p WHERE p.company.id = :companyId " +
            "AND p.tipoPurchase = :tipo AND p.paymentStatus = :estado " +
+           "AND (:registradoPorUsuarioId IS NULL OR p.user.id = :registradoPorUsuarioId) " +
            "AND p.createdAt >= :desde AND p.createdAt < :hasta ORDER BY p.createdAt ASC")
     List<Purchase> findForSalesReport(@Param("companyId") Integer companyId,
                                       @Param("tipo") TipoPurchase tipo,
                                       @Param("estado") PaymentStatus estado,
                                       @Param("desde") LocalDateTime desde,
-                                      @Param("hasta") LocalDateTime hasta);
+                                      @Param("hasta") LocalDateTime hasta,
+                                      @Param("registradoPorUsuarioId") Integer registradoPorUsuarioId);
 }

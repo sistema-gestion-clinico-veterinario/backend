@@ -33,7 +33,8 @@ class SharedRateLimitServiceTest {
         when(jdbc.queryForObject(anyString(), eq(Integer.class), any(Object[].class))).thenReturn(4);
         SharedRateLimitService service = new SharedRateLimitService(jdbc);
 
-        assertThrows(RateLimitExceededException.class,
+        RateLimitExceededException exception = assertThrows(RateLimitExceededException.class,
                 () -> service.enforce("login-account", "persona@example.com", 3, Duration.ofMinutes(15)));
+        assertEquals(900, exception.getRetryAfterSeconds());
     }
 }

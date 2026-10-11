@@ -17,6 +17,7 @@ import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.dto.response.AuthResponse;
 import veterinaria.vargasvet.exception.RefreshTokenReuseException;
+import veterinaria.vargasvet.exception.SessionInactivityException;
 import veterinaria.vargasvet.repository.ApoderadoRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
@@ -41,6 +42,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -69,6 +72,7 @@ class UsuarioServiceImplRefreshReuseTest {
     @Mock EmpleadoRepository empleadoRepository;
     @Mock ApoderadoRepository apoderadoRepository;
     @Mock CompanyMembershipService companyMembershipService;
+    @Mock veterinaria.vargasvet.service.SessionActivityService sessionActivityService;
 
     @InjectMocks UsuarioServiceImpl service;
 
@@ -183,6 +187,35 @@ class UsuarioServiceImplRefreshReuseTest {
         rotadoHace(3);
 
         assertThatThrownBy(() -> service.refreshToken(TOKEN)).isInstanceOf(RefreshTokenReuseException.class);
+    }
+
+    @Test
+    void unaSesionInactivaNoSeRenuevaYQuedaRevocada() {
+        RefreshToken vigente = RefreshToken.builder().familyId(FAMILIA).build();
+        when(refreshTokenRepository.findAllByFamilyIdAndRevokedAtIsNull(FAMILIA)).thenReturn(List.of(vigente));
+        when(sessionActivityService.estaInactiva(FAMILIA)).thenReturn(true);
+        when(sessionActivityService.limiteDeInactividadEnSegundos()).thenReturn(1800L);
+
+        assertThatThrownBy(() -> service.refreshToken(TOKEN)).isInstanceOf(SessionInactivityException.class);
+
+        assertThat(vigente.getRevokedAt()).isNotNull();
+        verify(tokenProvider, never()).createRefreshToken(anyString(), any(), any(), anyString(), anyLong());
+        verify(auditLogService).log(eq("ana@example.test"), eq("USER"), eq(COMPANY_ID), any(),
+                eq("SESION_EXPIRADA_INACTIVIDAD"), eq("Seguridad"), anyString(), isNull());
+    }
+
+    @Test
+    void laRenovacionDeUnaSesionConActividadRecienteRegistraLaActividadDelNuevoToken() {
+        when(sessionActivityService.estaInactiva(FAMILIA)).thenReturn(false);
+
+        service.refreshToken(TOKEN);
+
+        org.mockito.ArgumentCaptor<RefreshToken> guardado = org.mockito.ArgumentCaptor.forClass(RefreshToken.class);
+        verify(refreshTokenRepository, org.mockito.Mockito.atLeastOnce()).save(guardado.capture());
+        assertThat(guardado.getAllValues()).anySatisfy(token -> {
+            assertThat(token.getJti()).isEqualTo("jti-nuevo");
+            assertThat(token.getLastActivityAt()).isNotNull();
+        });
     }
 
     @Test

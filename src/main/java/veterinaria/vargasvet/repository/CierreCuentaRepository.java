@@ -30,4 +30,6 @@ public interface CierreCuentaRepository extends JpaRepository<CierreCuenta, Long
     Optional<CierreCuenta> findByTokenHashForUpdate(@Param("tokenHash") String tokenHash);
 
     List<CierreCuenta> findTop100ByEstadoAndVenceAtBeforeOrderByVenceAtAsc(EstadoCierreCuenta estado, LocalDateTime ahora);
+
+    java.util.List<veterinaria.vargasvet.domain.entity.CierreCuenta> findByUsuarioIdAndCompanyId(Integer usuarioId, Integer companyId);
 }

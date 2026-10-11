@@ -50,8 +50,6 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
             @Param("companyId") Integer companyId,
             @Param("scope") RoleScope scope);
 
-    Optional<UsuarioPorRol> findByUsuarioIdAndRolId(Integer usuarioId, Integer rolId);
-
     @Query("""
             SELECT upr
             FROM UsuarioPorRol upr
@@ -61,10 +59,13 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
             WHERE upr.usuario.id = :usuarioId
               AND rol.id = :rolId
               AND rol.activo = true
+              AND ((:companyId IS NULL AND upr.company IS NULL)
+                   OR (:companyId IS NOT NULL AND upr.company.id = :companyId))
             """)
-    Optional<UsuarioPorRol> findActiveAssignmentByUsuarioIdAndRoleId(
+    Optional<UsuarioPorRol> findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(
             @Param("usuarioId") Integer usuarioId,
-            @Param("rolId") Integer rolId
+            @Param("rolId") Integer rolId,
+            @Param("companyId") Integer companyId
     );
 
     /** Personas con un rol activo de ese propósito asignado dentro de la empresa (upr.company es la fuente de verdad). */
@@ -92,7 +93,18 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
                                   @Param("companyId") Integer companyId,
                                   @Param("scope") RoleScope scope);
 
-    boolean existsByUsuarioIdAndRolId(Integer usuarioId, Integer rolId);
+    @Query("""
+            SELECT COUNT(upr) > 0
+            FROM UsuarioPorRol upr
+            WHERE upr.usuario.id = :usuarioId
+              AND upr.rol.id = :rolId
+              AND ((:companyId IS NULL AND upr.company IS NULL)
+                   OR (:companyId IS NOT NULL AND upr.company.id = :companyId))
+            """)
+    boolean existsByUsuarioIdAndRolIdAndCompanyId(
+            @Param("usuarioId") Integer usuarioId,
+            @Param("rolId") Integer rolId,
+            @Param("companyId") Integer companyId);
 
     /** Usado para decidir si el "ámbito" (STAFF/CLIENT) de un rol se puede seguir editando:
      * solo mientras nadie lo tenga asignado. */
@@ -132,17 +144,4 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
             @Param("rolActivo") String rolActivo
     );
 
-    @Query("""
-            SELECT DISTINCT upr
-            FROM UsuarioPorRol upr
-            JOIN FETCH upr.rol rol
-            LEFT JOIN FETCH rol.company
-            WHERE upr.usuario.id = :usuarioId
-              AND rol.name = :rolActivo
-              AND rol.activo = true
-            """)
-    List<UsuarioPorRol> findActiveAssignmentsByUsuarioIdAndRoleName(
-            @Param("usuarioId") Integer usuarioId,
-            @Param("rolActivo") String rolActivo
-    );
 }

@@ -63,11 +63,12 @@ public class AccesoValidator {
         }
 
         return rolePermissionEvaluator.can(SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentRoleId(),
-                codigoVista, accion);
+                SecurityUtils.getSessionCompanyId(), codigoVista, accion);
     }
 
     public boolean canAccessCompanyData(String codigoVista) {
         return rolePermissionEvaluator.dataScope(SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentRoleId(),
-                codigoVista) == veterinaria.vargasvet.domain.enums.DataScope.COMPANY;
+                SecurityUtils.getSessionCompanyId(), codigoVista)
+                == veterinaria.vargasvet.domain.enums.DataScope.COMPANY;
     }
 }

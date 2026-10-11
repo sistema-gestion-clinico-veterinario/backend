@@ -6,12 +6,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Role;
+import veterinaria.vargasvet.domain.entity.RoleAssignmentHistory;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.RoleAssignmentAction;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.RoleRepository;
+import veterinaria.vargasvet.repository.CompanyRepository;
+import veterinaria.vargasvet.repository.RoleAssignmentHistoryRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.security.SecurityUtils;
@@ -41,6 +45,8 @@ public class RoleAssignmentService {
 
     private final UsuarioPorRolRepository assignmentRepository;
     private final RoleRepository roleRepository;
+    private final CompanyRepository companyRepository;
+    private final RoleAssignmentHistoryRepository historyRepository;
     private final AccesoValidator accesoValidator;
     private final AdministratorProtection administratorProtection;
     private final AuditLogService auditLogService;
@@ -61,6 +67,8 @@ public class RoleAssignmentService {
                                      Set<Integer> requestedRoleIds,
                                      boolean allowInitialClientPortalRole) {
         requireCompanyContext(company);
+        companyRepository.lockById(company.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
         if (requestedRoleIds == null || requestedRoleIds.isEmpty()) {
             throw new IllegalArgumentException("Debe asignar al menos un rol");
         }
@@ -99,15 +107,45 @@ public class RoleAssignmentService {
         Set<String> previousNames = roleNames(currentRoles.values());
         Set<String> requestedNames = roleNames(requestedRoles);
 
-        assignmentRepository.deleteByUsuarioIdAndCompanyIdAndRoleScope(
-                usuario.getId(), company.getId(), expectedScope);
-        for (Role role : requestedRoles) {
+        Set<Integer> requestedRoleIdSet = requestedRoles.stream()
+                .map(Role::getId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        List<UsuarioPorRol> removedAssignments = currentAssignments.stream()
+                .filter(assignment -> !requestedRoleIdSet.contains(assignment.getRol().getId()))
+                .toList();
+        List<Role> addedRoles = requestedRoles.stream()
+                .filter(role -> !currentRoles.containsKey(role.getId()))
+                .toList();
+
+        assignmentRepository.deleteAll(removedAssignments);
+        Set<Integer> removedAssignmentIds = removedAssignments.stream()
+                .map(UsuarioPorRol::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Set<Integer> removedRoleIds = removedAssignments.stream()
+                .map(assignment -> assignment.getRol().getId())
+                .collect(Collectors.toSet());
+        usuario.getUsuariosPorRol().removeIf(assignment ->
+                (assignment.getId() != null && removedAssignmentIds.contains(assignment.getId()))
+                        || (assignment.getRol() != null
+                        && removedRoleIds.contains(assignment.getRol().getId())
+                        && assignment.getCompany() != null
+                        && Objects.equals(assignment.getCompany().getId(), company.getId())));
+        for (Role role : addedRoles) {
             UsuarioPorRol assignment = new UsuarioPorRol();
             assignment.setUsuario(usuario);
             assignment.setRol(role);
             assignment.setCompany(company);
             assignmentRepository.save(assignment);
+            usuario.getUsuariosPorRol().add(assignment);
         }
+
+        List<RoleAssignmentHistory> history = new ArrayList<>();
+        removedAssignments.forEach(assignment -> history.add(historyEvent(
+                usuario, company, assignment.getRol(), RoleAssignmentAction.REVOKED)));
+        addedRoles.forEach(role -> history.add(historyEvent(
+                usuario, company, role, RoleAssignmentAction.ASSIGNED)));
+        historyRepository.saveAll(history);
 
         auditLogService.log(
                 company.getId(),
@@ -166,5 +204,20 @@ public class RoleAssignmentService {
         return roles.stream()
                 .map(Role::getName)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    private RoleAssignmentHistory historyEvent(
+            Usuario target, Company company, Role role, RoleAssignmentAction action) {
+        RoleAssignmentHistory event = new RoleAssignmentHistory();
+        event.setUsuarioId(target.getId());
+        event.setRolId(role.getId());
+        event.setRoleName(role.getName());
+        event.setCompanyId(company.getId());
+        event.setRoleScope(role.getScope());
+        event.setAction(action);
+        event.setOccurredAt(veterinaria.vargasvet.util.AppClock.now());
+        event.setPerformedByUserId(SecurityUtils.getCurrentUserId());
+        event.setPerformedByEmail(SecurityUtils.getCurrentUserEmail());
+        return event;
     }
 }

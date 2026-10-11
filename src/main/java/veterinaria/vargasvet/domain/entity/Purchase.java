@@ -26,6 +26,8 @@ public class Purchase {
     private PaymentStatus paymentStatus;
     @OneToMany(mappedBy = "purchase", cascade = CascadeType.ALL)
     private List<PurchaseItem> items;
+
+    /** Usuario autenticado que registró la operación; el comprador se guarda en {@link #cliente}. */
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id"
             , foreignKey = @ForeignKey(name = "FK_purchase_user"))

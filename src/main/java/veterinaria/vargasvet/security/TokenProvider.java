@@ -48,6 +48,12 @@ public class TokenProvider {
     @Value("${jwt.audience:systemvet-web}")
     private String audience;
 
+    @Value("${ia.service.jwt-audience:systemvet-ai}")
+    private String aiServiceAudience;
+
+    @Value("${ia.service.token-validity-seconds:45}")
+    private long aiServiceTokenValiditySeconds;
+
     private PrivateKey privateKey;
     private PublicKey publicKey;
 
@@ -212,6 +218,35 @@ public class TokenProvider {
                 .signWith(privateKey, Jwts.SIG.RS256)
                 .compact();
         return new IssuedRealtimeTicket(token, jti, issuedAt, expiresAt);
+    }
+
+    /**
+     * Crea una autorización delegada, breve y limitada a una operación y mascota.
+     * Este token no sustituye ni expone el token de sesión del usuario.
+     */
+    public String createAiServiceToken(Integer userId, Integer companyId,
+                                       String operation, Long mascotaId) {
+        Objects.requireNonNull(userId, "userId");
+        Objects.requireNonNull(companyId, "companyId");
+        Objects.requireNonNull(operation, "operation");
+        Objects.requireNonNull(mascotaId, "mascotaId");
+
+        Instant issuedAt = veterinaria.vargasvet.util.AppClock.instantNow();
+        Instant expiresAt = issuedAt.plusSeconds(aiServiceTokenValiditySeconds);
+        return Jwts.builder()
+                .subject(userId.toString())
+                .issuer(issuer)
+                .audience().add(aiServiceAudience).and()
+                .id(UUID.randomUUID().toString())
+                .claim("token_type", "ai_service")
+                .claim("operation", operation)
+                .claim("companyId", companyId)
+                .claim("mascotaId", mascotaId)
+                .issuedAt(Date.from(issuedAt))
+                .notBefore(Date.from(issuedAt.minusSeconds(2)))
+                .expiration(Date.from(expiresAt))
+                .signWith(privateKey, Jwts.SIG.RS256)
+                .compact();
     }
 
     public RealtimeTicketDetails getRealtimeTicketDetails(String ticket) {

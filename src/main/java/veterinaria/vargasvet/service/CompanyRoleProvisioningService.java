@@ -8,7 +8,6 @@ import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.entity.RolVistaPermiso;
 import veterinaria.vargasvet.domain.entity.Vista;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
-import veterinaria.vargasvet.domain.entity.RolVentanaConfiguracion;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.domain.enums.ViewAudience;
@@ -16,11 +15,10 @@ import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
 import veterinaria.vargasvet.repository.VistaRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
-import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
-import veterinaria.vargasvet.repository.RolVistaConfiguracionRepository;
 import veterinaria.vargasvet.repository.RolVentanaPermisoRepository;
 
 import java.util.Set;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -32,8 +30,6 @@ public class CompanyRoleProvisioningService {
     private final VistaRepository vistaRepository;
     private final RolVistaPermisoRepository rolVistaPermisoRepository;
     private final UsuarioPorRolRepository usuarioPorRolRepository;
-    private final RolVentanaConfiguracionRepository rolVentanaConfiguracionRepository;
-    private final RolVistaConfiguracionRepository rolVistaConfiguracionRepository;
     private final RolVentanaPermisoRepository rolVentanaPermisoRepository;
 
     @Transactional
@@ -51,12 +47,13 @@ public class CompanyRoleProvisioningService {
             Role source = assignment.getRol();
             Company company = assignment.getUsuario().getCompany();
             if (source == null || source.getScope() == RoleScope.PLATFORM) continue;
+            if (company == null) continue;
 
             if (source.getPurpose() == RolePurpose.COMPANY_ADMIN) {
-                migrateAssignment(assignment, globalCompanyAdmin);
+                migrateAssignment(assignment, globalCompanyAdmin, company);
                 continue;
             }
-            if (source.getCompany() != null || company == null) continue;
+            if (source.getCompany() != null) continue;
 
             CompanyRoles required = ensureRequiredRoles(company);
             Role target = switch (source.getPurpose()) {
@@ -65,19 +62,26 @@ public class CompanyRoleProvisioningService {
                 case CUSTOM -> ensureLegacyCustomRole(company, source);
                 case PLATFORM_ADMIN -> source;
             };
-            migrateAssignment(assignment, target);
+            migrateAssignment(assignment, target, company);
         }
 
         removeObsoleteCompanyAdminRoles(globalCompanyAdmin.getId());
     }
 
-    private void migrateAssignment(UsuarioPorRol assignment, Role target) {
-        if (target.getId().equals(assignment.getRol().getId())) return;
-        if (usuarioPorRolRepository.existsByUsuarioIdAndRolId(
-                assignment.getUsuario().getId(), target.getId())) {
+    private void migrateAssignment(UsuarioPorRol assignment, Role target, Company company) {
+        Integer assignmentCompanyId = assignment.getCompany() != null
+                ? assignment.getCompany().getId()
+                : null;
+        if (target.getId().equals(assignment.getRol().getId())
+                && Objects.equals(company.getId(), assignmentCompanyId)) {
+            return;
+        }
+        if (usuarioPorRolRepository.existsByUsuarioIdAndRolIdAndCompanyId(
+                assignment.getUsuario().getId(), target.getId(), company.getId())) {
             usuarioPorRolRepository.delete(assignment);
         } else {
             assignment.setRol(target);
+            assignment.setCompany(company);
             usuarioPorRolRepository.save(assignment);
         }
     }
@@ -103,8 +107,6 @@ public class CompanyRoleProvisioningService {
                 .filter(role -> role.getPurpose() == RolePurpose.COMPANY_ADMIN)
                 .filter(role -> !role.getId().equals(globalRoleId))
                 .forEach(role -> {
-                    rolVistaConfiguracionRepository.deleteByRolId(role.getId());
-                    rolVentanaConfiguracionRepository.deleteByRolId(role.getId());
                     rolVentanaPermisoRepository.deleteByRolId(role.getId());
                     rolVistaPermisoRepository.deleteByRolId(role.getId());
                     roleRepository.delete(role);
@@ -125,7 +127,6 @@ public class CompanyRoleProvisioningService {
                     target.setActivo(source.isActivo());
                     target = roleRepository.save(target);
                     copyPermissions(source, target);
-                    copyMenuConfiguration(source, target);
                     return target;
                 });
     }
@@ -142,18 +143,6 @@ public class CompanyRoleProvisioningService {
             permission.setEliminar(original.isEliminar());
             permission.setDataScope(original.getDataScope());
             rolVistaPermisoRepository.save(permission);
-        }
-    }
-
-    private void copyMenuConfiguration(Role source, Role target) {
-        for (RolVentanaConfiguracion original
-                : rolVentanaConfiguracionRepository.findByRolIdWithVentana(source.getId())) {
-            RolVentanaConfiguracion config = new RolVentanaConfiguracion();
-            config.setRol(target);
-            config.setVentana(original.getVentana());
-            config.setPresentacion(original.getPresentacion());
-            config.setOrden(original.getOrden());
-            rolVentanaConfiguracionRepository.save(config);
         }
     }
 

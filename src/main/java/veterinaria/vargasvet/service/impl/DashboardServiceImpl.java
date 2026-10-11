@@ -7,6 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.dto.response.DashboardOverviewDTO;
 import veterinaria.vargasvet.dto.response.DashboardStatsDTO;
+import veterinaria.vargasvet.dto.response.DashboardAppointmentSummary;
+import veterinaria.vargasvet.dto.response.DashboardAuditSummary;
+import veterinaria.vargasvet.dto.response.DashboardCompanySummary;
+import veterinaria.vargasvet.dto.response.DashboardEmployeeSummary;
+import veterinaria.vargasvet.dto.response.DashboardGuardianSummary;
+import veterinaria.vargasvet.dto.response.DashboardPaymentSummary;
+import veterinaria.vargasvet.dto.response.DashboardPetSummary;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
@@ -55,10 +62,12 @@ public class DashboardServiceImpl implements DashboardService {
                 ? auditLogService.getLogs(
                         targetCompanyId, null, null, null, null, null,
                         PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "timestamp"))).getContent()
-                : List.<veterinaria.vargasvet.domain.entity.AuditLog>of();
+                        .stream().map(this::toAuditSummary).toList()
+                : List.<DashboardAuditSummary>of();
         var companies = canRead("VISTA_COMPANY")
-                ? companyService.listarTodas(0, 200).getContent()
-                : List.<veterinaria.vargasvet.dto.response.CompanyListResponse>of();
+                ? companyService.listarTodas(0, 200).getContent().stream()
+                        .map(this::toCompanySummary).toList()
+                : List.<DashboardCompanySummary>of();
 
         if (globalMode) {
             return DashboardOverviewDTO.builder()
@@ -81,22 +90,104 @@ public class DashboardServiceImpl implements DashboardService {
                 .recentLogs(recentLogs)
                 .employees(canRead("VISTA_EMPLEADOS")
                         ? empleadoService.listar(targetCompanyId, null, null, null,
-                                null, null, null, null, null, 0, 5).getContent() : List.of())
+                                null, null, null, null, null, 0, 5).getContent().stream()
+                                .map(this::toEmployeeSummary).toList() : List.of())
                 .todayAppointments(canRead("VISTA_CITAS_AGENDA")
                         ? citaService.listar(targetCompanyId, today, null, null,
-                                null, null, 0, 30).getContent() : List.of())
+                                null, null, 0, 30).getContent().stream()
+                                .map(this::toAppointmentSummary).toList() : List.of())
                 .pets(canRead("VISTA_MASCOTAS")
                         ? mascotaService.listar(targetCompanyId, null, null, null,
-                                null, 0, 6).getContent() : List.of())
+                                null, 0, 6).getContent().stream()
+                                .map(this::toPetSummary).toList() : List.of())
                 .roles(canRead("VISTA_ROLES")
                         ? roleService.getRolesByCompany(targetCompanyId) : List.of())
                 .guardians(canRead("VISTA_CLIENTES")
-                        ? apoderadoService.listar(targetCompanyId, null, null, 0, 5).getContent() : List.of())
+                        ? apoderadoService.listar(targetCompanyId, null, null, 0, 5).getContent().stream()
+                                .map(this::toGuardianSummary).toList() : List.of())
                 .schedules(canRead("VISTA_HORARIOS")
                         ? empleadoService.getSchedulesReportForDate(targetCompanyId, today) : List.of())
                 .payments(canRead("VISTA_PAGOS")
-                        ? pagoService.listarHistorialPorEmpresa(0, 5, targetCompanyId, null, null, null, null, null).getContent() : List.of())
+                        ? pagoService.listarHistorialPorEmpresa(0, 5, targetCompanyId, null, null, null, null, null)
+                                .getContent().stream().map(this::toPaymentSummary).toList() : List.of())
                 .companies(companies)
+                .build();
+    }
+
+    private DashboardAuditSummary toAuditSummary(veterinaria.vargasvet.domain.entity.AuditLog log) {
+        return DashboardAuditSummary.builder()
+                .id(log.getId())
+                .timestamp(log.getTimestamp())
+                .userRole(log.getUserRole())
+                .companyName(log.getCompanyName())
+                .action(log.getAction())
+                .module(log.getModule())
+                .build();
+    }
+
+    private DashboardCompanySummary toCompanySummary(
+            veterinaria.vargasvet.dto.response.CompanyListResponse company) {
+        return DashboardCompanySummary.builder()
+                .id(company.getId())
+                .name(company.getName())
+                .activo(company.getActivo())
+                .build();
+    }
+
+    private DashboardEmployeeSummary toEmployeeSummary(
+            veterinaria.vargasvet.dto.response.EmpleadoListResponse employee) {
+        return DashboardEmployeeSummary.builder()
+                .id(employee.getId())
+                .nombre(employee.getNombre())
+                .apellido(employee.getApellido())
+                .activo(employee.getActivo())
+                .tiposEmpleado(employee.getTiposEmpleado())
+                .especialidades(employee.getEspecialidades())
+                .build();
+    }
+
+    private DashboardGuardianSummary toGuardianSummary(
+            veterinaria.vargasvet.dto.response.ApoderadoListResponse guardian) {
+        return DashboardGuardianSummary.builder()
+                .id(guardian.getId())
+                .nombre(guardian.getNombre())
+                .apellido(guardian.getApellido())
+                .activo(guardian.getActivo())
+                .build();
+    }
+
+    private DashboardAppointmentSummary toAppointmentSummary(
+            veterinaria.vargasvet.dto.response.CitaResponse appointment) {
+        return DashboardAppointmentSummary.builder()
+                .id(appointment.getId())
+                .veterinarioId(appointment.getVeterinarioId())
+                .servicioNombre(appointment.getServicioNombre())
+                .fechaHoraInicio(appointment.getFechaHoraInicio())
+                .fechaHoraFin(appointment.getFechaHoraFin())
+                .estado(appointment.getEstado())
+                .build();
+    }
+
+    private DashboardPetSummary toPetSummary(
+            veterinaria.vargasvet.dto.response.MascotaResponse pet) {
+        return DashboardPetSummary.builder()
+                .id(pet.getId())
+                .nombreCompleto(pet.getNombreCompleto())
+                .especie(pet.getEspecie())
+                .raza(pet.getRaza())
+                .build();
+    }
+
+    private DashboardPaymentSummary toPaymentSummary(
+            veterinaria.vargasvet.dto.response.PagoListResponse payment) {
+        return DashboardPaymentSummary.builder()
+                .id(payment.getId())
+                .metodoPago(payment.getMetodoPago())
+                .monto(payment.getMonto())
+                .fechaPago(payment.getFechaPago())
+                .estado(payment.getEstado())
+                .mascotaNombre(payment.getMascotaNombre())
+                .servicioNombre(payment.getServicioNombre())
                 .build();
     }
 

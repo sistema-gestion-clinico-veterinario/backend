@@ -63,6 +63,7 @@ public class WebSecurityConfig {
                                 "/auth/google/start",
                                 "/auth/google/callback",
                                 "/auth/google/exchange",
+                                "/auth/google/reactivate",
                                 "/auth/refresh",
                                 "/auth/logout",
                                 "/auth/resend-verification",
@@ -214,6 +215,8 @@ public class WebSecurityConfig {
         if (strength < 10 || strength > 14) {
             throw new IllegalStateException("security.bcrypt-strength debe estar entre 10 y 14");
         }
+        org.slf4j.LoggerFactory.getLogger(WebSecurityConfig.class)
+                .info("Contraseñas protegidas con BCrypt, factor de costo {}", strength);
         return new BCryptPasswordEncoder(strength);
     }
 

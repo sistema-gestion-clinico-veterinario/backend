@@ -15,7 +15,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.GenericFilterBean;
-import veterinaria.vargasvet.repository.RefreshTokenRepository;
 import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
@@ -23,6 +22,7 @@ import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad;
 import veterinaria.vargasvet.service.ConsentimientoDatosService;
 import veterinaria.vargasvet.service.LegalDocumentService;
+import veterinaria.vargasvet.service.SessionActivityService;
 
 import java.io.IOException;
 
@@ -40,7 +40,7 @@ public class JWTFilter extends GenericFilterBean {
     private final UsuarioEmpresaCredencialRepository credencialRepository;
     private final ConsentimientoDatosService consentimientoDatosService;
     private final LegalDocumentService legalDocumentService;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final SessionActivityService sessionActivityService;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -72,7 +72,8 @@ public class JWTFilter extends GenericFilterBean {
                 }
 
                 var activeAssignment = usuarioPorRolRepository
-                        .findActiveAssignmentByUsuarioIdAndRoleId(principal.getId(), principal.getActiveRoleId())
+                        .findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(
+                                principal.getId(), principal.getActiveRoleId(), principal.getCompanyId())
                         .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException(
                                 "El rol de la sesión ya no está disponible"));
                 if (activeAssignment.getRol().getPermissionVersion() != principal.getPermissionVersion()) {
@@ -98,15 +99,23 @@ public class JWTFilter extends GenericFilterBean {
                 }
                 // Cerrar sesión (o que se revoque) invalida también el access token que ya circula:
                 // sin esto seguiría sirviendo hasta que venza. Los tokens anteriores a este campo no
-                // traen sesión y se aceptan hasta su vencimiento.
-                if (principal.getSessionId() != null
-                        && !refreshTokenRepository.existsByFamilyIdAndRevokedAtIsNull(principal.getSessionId())) {
-                    throw new org.springframework.security.authentication.CredentialsExpiredException(
-                            "La sesión fue cerrada");
+                // traen sesión y se aceptan hasta su vencimiento. La misma lectura mide la inactividad.
+                if (principal.getSessionId() != null) {
+                    switch (sessionActivityService.registrar(principal.getSessionId())) {
+                        case CERRADA -> throw new org.springframework.security.authentication.CredentialsExpiredException(
+                                "La sesión fue cerrada");
+                        case INACTIVA -> throw new org.springframework.security.authentication.CredentialsExpiredException(
+                                "La sesión expiró por inactividad");
+                        case ACTIVA -> { }
+                    }
                 }
+                veterinaria.vargasvet.domain.entity.Company empresaDeLaSesion = activeAssignment.getCompany() != null
+                        ? activeAssignment.getCompany()
+                        : activeAssignment.getRol().getCompany() != null
+                                ? activeAssignment.getRol().getCompany()
+                                : currentUser.getCompany();
                 boolean bloqueado = !currentUser.isActivo()
-                        || (!esSuperAdmin && currentUser.getCompany() != null
-                        && !currentUser.getCompany().isActivo());
+                        || (!esSuperAdmin && empresaDeLaSesion != null && !empresaDeLaSesion.isActivo());
 
                 if (bloqueado) {
                     SecurityContextHolder.clearContext();
@@ -140,11 +149,6 @@ public class JWTFilter extends GenericFilterBean {
 
                 String declaredSlug = SessionCookies.slugOf(httpRequest);
                 if (declaredSlug != null && principal.getCompanyId() != null) {
-                    veterinaria.vargasvet.domain.entity.Company empresaDeLaSesion = activeAssignment.getCompany() != null
-                            ? activeAssignment.getCompany()
-                            : activeAssignment.getRol().getCompany() != null
-                                    ? activeAssignment.getRol().getCompany()
-                                    : currentUser.getCompany();
                     if (empresaDeLaSesion != null
                             && !java.util.Objects.equals(declaredSlug, SessionCookies.sanitize(empresaDeLaSesion.getSlug()))) {
                         rejectCompanyMismatch((HttpServletResponse) response);

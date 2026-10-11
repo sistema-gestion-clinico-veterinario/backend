@@ -11,9 +11,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.domain.entity.AuditLog;
 import veterinaria.vargasvet.dto.ApiResponse;
+import veterinaria.vargasvet.repository.AuditLogRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.AuditLogService;
+import veterinaria.vargasvet.util.AppClock;
+
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.TreeSet;
 
 @RestController
 @RequestMapping("/admin/audit-logs")
@@ -21,7 +27,13 @@ import java.time.LocalDateTime;
 @PreAuthorize("@accesoValidator.can('VISTA_AUDITORIA_ADMIN', 'LEER')")
 public class AuditLogController {
 
+    private static final Set<String> CAMPOS_ORDENABLES =
+            Set.of("timestamp", "userEmail", "userRole", "companyName", "action", "module");
+    private static final Duration VENTANA_CONSULTA_AUDITADA = Duration.ofMinutes(10);
+    private static final String ACCION_CONSULTA = "CONSULTA_AUDITORIA";
+
     private final AuditLogService auditLogService;
+    private final AuditLogRepository auditLogRepository;
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<AuditLog>>> getLogs(
@@ -45,43 +57,53 @@ public class AuditLogController {
             }
         }
 
-        // Configurar paginación y ordenamiento
-        String[] sortParts = sort.split(",");
-        Sort sortOrder = Sort.by(sortParts[0]);
-        if (sortParts.length > 1 && "desc".equalsIgnoreCase(sortParts[1])) {
-            sortOrder = sortOrder.descending();
-        } else {
-            sortOrder = sortOrder.ascending();
-        }
+        Sort sortOrder = resolverOrden(sort);
 
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 100);
         Pageable pageable = PageRequest.of(safePage, safeSize, sortOrder);
 
-        // Práctica de Alta Seguridad: Auditar al Auditor.
-        // Solo se audita cuando el frontend envía initialLoad=true (únicamente en ngOnInit).
-        // Cambiar de página o aplicar filtros nunca envían este flag.
-        if (initialLoad) {
-            String currentUserEmail = SecurityUtils.getCurrentUserEmail();
-            Integer currentCompId = SecurityUtils.getCurrentCompanyId();
-            String userRole = SecurityUtils.getCurrentRoleNames().stream().findFirst().orElse("ROL_ACTIVO");
-            String details = String.format("El usuario %s consultó el historial de auditoría.", currentUserEmail);
-
-            auditLogService.log(
-                currentUserEmail,
-                userRole,
-                currentCompId,
-                null,
-                "CONSULTA_AUDITORIA",
-                "Seguridad",
-                details,
-                null
-            );
-        }
+        registrarConsultaSiCorresponde(initialLoad);
 
         Page<AuditLog> logs = auditLogService.getLogs(companyId, userEmail, action, module, startDate, endDate, pageable);
 
         return ResponseEntity.ok(new ApiResponse<>(true, "Logs de auditoría obtenidos correctamente", logs));
+    }
+
+    private Sort resolverOrden(String sort) {
+        String[] partes = sort.split(",");
+        String campo = partes[0].trim();
+        if (!CAMPOS_ORDENABLES.contains(campo)) {
+            throw new IllegalArgumentException(
+                    "No se puede ordenar por \"" + campo + "\". Campos permitidos: " + String.join(", ", new TreeSet<>(CAMPOS_ORDENABLES)));
+        }
+        Sort orden = Sort.by(campo);
+        return partes.length > 1 && "desc".equalsIgnoreCase(partes[1].trim()) ? orden.descending() : orden.ascending();
+    }
+
+    /**
+     * Auditar al auditor: la decisión es del servidor y no depende de lo que envíe el cliente.
+     * Se deja constancia de cada sesión de consulta (una por ventana de tiempo) para no inundar
+     * el historial al paginar o filtrar; {@code initialLoad} solo fuerza el registro.
+     */
+    private void registrarConsultaSiCorresponde(boolean initialLoad) {
+        String correo = SecurityUtils.getCurrentUserEmail();
+        boolean yaRegistrada = !initialLoad && correo != null
+                && auditLogRepository.existsByUserEmailAndActionAndTimestampAfter(
+                        correo, ACCION_CONSULTA, AppClock.now().minus(VENTANA_CONSULTA_AUDITADA));
+        if (yaRegistrada) {
+            return;
+        }
+        String rol = SecurityUtils.getCurrentRoleNames().stream().findFirst().orElse("ROL_ACTIVO");
+        auditLogService.log(
+                correo,
+                rol,
+                SecurityUtils.getCurrentCompanyId(),
+                null,
+                ACCION_CONSULTA,
+                "Seguridad",
+                String.format("El usuario %s consultó el historial de auditoría.", correo),
+                null);
     }
 
     private static final int EXPORT_MAX_RECORDS = 20000;

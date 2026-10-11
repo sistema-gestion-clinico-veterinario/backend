@@ -2,6 +2,9 @@ package veterinaria.vargasvet.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,6 +19,16 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(SessionInactivityException.class)
+    public ResponseEntity<java.util.Map<String, Object>> handleSessionInactivity(SessionInactivityException ex) {
+        java.util.Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("success", false);
+        body.put("message", ex.getMessage());
+        body.put("data", null);
+        body.put("code", SessionInactivityException.CODE);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadCredentials(BadCredentialsException ex,
@@ -63,7 +76,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RateLimitExceededException.class)
     public ResponseEntity<ApiResponse<Void>> handleRateLimitExceeded(RateLimitExceededException ex) {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                .header("Retry-After", "900")
+                .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
                 .body(new ApiResponse<>(false, ex.getMessage(), null));
     }
 
@@ -146,6 +159,24 @@ public class GlobalExceptionHandler {
                 .orElse("Error de validación");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ApiResponse<>(false, mensaje, null));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBodyNotReadable(HttpMessageNotReadableException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(false, "El cuerpo de la solicitud no tiene el formato esperado", null));
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMultipart(MultipartException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(false, "La solicitud debe incluir el archivo en formato multipart", null));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(false, "El valor del parámetro '" + ex.getName() + "' no es válido", null));
     }
 
     @ExceptionHandler(RuntimeException.class)

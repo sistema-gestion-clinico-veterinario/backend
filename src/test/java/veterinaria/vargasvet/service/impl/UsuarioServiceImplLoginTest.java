@@ -27,12 +27,15 @@ import veterinaria.vargasvet.service.MenuBuilderService;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -168,6 +171,32 @@ class UsuarioServiceImplLoginTest {
     }
 
     @Test
+    void losIntentosDeLaMismaIdentidadQuedanSeparadosPorEmpresa() {
+        Company primera = new Company();
+        primera.setId(7);
+        primera.setSlug("clinica-a");
+        Company segunda = new Company();
+        segunda.setId(8);
+        segunda.setSlug("clinica-b");
+        when(companyRepository.findBySlug("clinica-a")).thenReturn(Optional.of(primera));
+        when(companyRepository.findBySlug("clinica-b")).thenReturn(Optional.of(segunda));
+        when(usuarioRepository.findAllByUsernameIgnoreCase("ana.qa")).thenReturn(List.of());
+        when(usuarioRepository.findAllByEmailIgnoreCase("ana.qa")).thenReturn(List.of());
+
+        assertThatThrownBy(() -> service.login(loginConSlug("clinica-a")))
+                .isInstanceOf(BadCredentialsException.class);
+        assertThatThrownBy(() -> service.login(loginConSlug("clinica-b")))
+                .isInstanceOf(BadCredentialsException.class);
+
+        verify(sharedRateLimitService).enforce(
+                eq("login-account"), eq("company:7:ana.qa"), anyInt(), eq(Duration.ofMinutes(15)));
+        verify(sharedRateLimitService).enforce(
+                eq("login-account"), eq("company:8:ana.qa"), anyInt(), eq(Duration.ofMinutes(15)));
+        verify(accountLockoutService).assertNotLocked("company:7:ana.qa");
+        verify(accountLockoutService).assertNotLocked("company:8:ana.qa");
+    }
+
+    @Test
     void desambiguaEntreDosCandidatosConElMismoUsernameEnEmpresasDistintasPorMembresiaActiva() {
         // El username ya no es unico globalmente - puede existir "ana.qa" en dos
         // empresas sin relacion entre si. El login se queda con el que SI tiene
@@ -202,6 +231,8 @@ class UsuarioServiceImplLoginTest {
 
         assertThat(response.getCompanyId()).isEqualTo(7);
         assertThat(response.getCompanyName()).isEqualTo("Vargas Vet");
+        verify(sharedRateLimitService).enforce(
+                eq("login-account"), eq("company:7:account:10"), anyInt(), eq(Duration.ofMinutes(15)));
     }
 
     @Test
@@ -303,6 +334,8 @@ class UsuarioServiceImplLoginTest {
         assertThat(response.getRoles()).containsExactly("ROLE_VETERINARIO");
         assertThat(response.getAssignedRoles()).containsExactly("ROLE_VETERINARIO");
         assertThat(response.getCompanyId()).isEqualTo(7);
+        verify(sharedRateLimitService).enforce(
+                eq("login-account"), eq("company:7:account:10"), anyInt(), eq(Duration.ofMinutes(15)));
     }
 
     private void googleConRol(Usuario usuario, Company company, veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial) {

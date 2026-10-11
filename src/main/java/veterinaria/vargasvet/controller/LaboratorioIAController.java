@@ -26,7 +26,7 @@ public class LaboratorioIAController {
             @RequestParam(value = "especie", defaultValue = "Perro") String especie) {
 
         var autorizacion = autorizacionIaService.exigir(mascotaId);
-        LaboratorioIAResponse resultado = laboratorioIAService.analizarLaboratorio(archivo, especie);
+        LaboratorioIAResponse resultado = laboratorioIAService.analizarLaboratorio(archivo, especie, mascotaId);
         autorizacionIaService.registrarUso(mascotaId, "laboratorio", autorizacion);
         return ResponseEntity.ok(new ApiResponse<>(true, "Laboratorio analizado exitosamente", resultado));
     }
