@@ -235,9 +235,9 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
                 Usuario user = mascota.getApoderado().getUser();
                 if (user != null) {
                     response.setPropietarioNombre(user.getNombre() + " " + user.getApellido());
-                    if (user.getCompany() != null) {
-                        response.setCompanyId(user.getCompany().getId());
-                        response.setCompanyName(user.getCompany().getName());
+                    if (mascota.getApoderado().getCompany() != null) {
+                        response.setCompanyId(mascota.getApoderado().getCompany().getId());
+                        response.setCompanyName(mascota.getApoderado().getCompany().getName());
                     }
                 }
             }

@@ -249,10 +249,16 @@ public class E2eDataInitializer implements CommandLineRunner {
     }
 
     private void assignRole(Usuario user, Role role) {
-        if (usuarioPorRolRepository.existsByUsuarioIdAndRolId(user.getId(), role.getId())) return;
+        Company assignmentCompany = role.getScope() == veterinaria.vargasvet.domain.enums.RoleScope.PLATFORM
+                ? null
+                : user.getCompany();
+        Integer assignmentCompanyId = assignmentCompany != null ? assignmentCompany.getId() : null;
+        if (usuarioPorRolRepository.existsByUsuarioIdAndRolIdAndCompanyId(
+                user.getId(), role.getId(), assignmentCompanyId)) return;
         UsuarioPorRol assignment = new UsuarioPorRol();
         assignment.setUsuario(user);
         assignment.setRol(role);
+        assignment.setCompany(assignmentCompany);
         usuarioPorRolRepository.save(assignment);
     }
 
@@ -264,6 +270,9 @@ public class E2eDataInitializer implements CommandLineRunner {
         UsuarioPorRol assignment = new UsuarioPorRol();
         assignment.setUsuario(admin);
         assignment.setRol(role);
+        assignment.setCompany(role.getScope() == veterinaria.vargasvet.domain.enums.RoleScope.PLATFORM
+                ? null
+                : company);
         usuarioPorRolRepository.save(assignment);
         return admin;
     }

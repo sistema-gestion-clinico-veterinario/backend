@@ -11,7 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
-import veterinaria.vargasvet.repository.RefreshTokenRepository;
+import veterinaria.vargasvet.service.SessionActivityService;
 import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
@@ -30,7 +30,7 @@ class JWTFilterSessionCookieTest {
     @Mock UsuarioPorRolRepository usuarioPorRolRepository;
     @Mock UsuarioEmpresaCredencialRepository credencialRepository;
     @Mock LegalDocumentService legalDocumentService;
-    @Mock RefreshTokenRepository refreshTokenRepository;
+    @Mock SessionActivityService sessionActivityService;
     @Mock FilterChain chain;
 
     private JWTFilter filter;
@@ -39,7 +39,7 @@ class JWTFilterSessionCookieTest {
     void setUp() {
         filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, credencialRepository,
                 org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class),
-                legalDocumentService, refreshTokenRepository);
+                legalDocumentService, sessionActivityService);
         SecurityContextHolder.clearContext();
     }
 

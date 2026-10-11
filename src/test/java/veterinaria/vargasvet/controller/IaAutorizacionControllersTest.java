@@ -49,7 +49,7 @@ class IaAutorizacionControllersTest {
     void elLaboratorioConAutorizacionSeAnalizaYQuedaEnLaAuditoria() {
         when(autorizaciones.exigir(7L)).thenReturn(vigente);
         LaboratorioIAResponse resultado = new LaboratorioIAResponse();
-        when(laboratorio.analizarLaboratorio(archivo, "Gato")).thenReturn(resultado);
+        when(laboratorio.analizarLaboratorio(archivo, "Gato", 7L)).thenReturn(resultado);
 
         var respuesta = laboratorioController.analizarLaboratorio(archivo, 7L, "Gato");
 
@@ -71,7 +71,7 @@ class IaAutorizacionControllersTest {
     void laRadiografiaConAutorizacionSeAnalizaYQuedaEnLaAuditoria() {
         when(autorizaciones.exigir(7L)).thenReturn(vigente);
         RadiografiaPrediccionResponse resultado = new RadiografiaPrediccionResponse();
-        when(radiografia.analizarRadiografia(archivo)).thenReturn(resultado);
+        when(radiografia.analizarRadiografia(archivo, 7L)).thenReturn(resultado);
 
         var respuesta = radiografiaController.analizarRadiografia(archivo, 7L);
 

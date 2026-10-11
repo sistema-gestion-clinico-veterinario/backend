@@ -196,8 +196,7 @@ class UsuarioServiceImplPasswordRecoveryTest {
         assertThat(credencial.isPasswordChanged()).isTrue();
         verify(credencialRepository).save(credencial);
         verify(sessionSecurityService).invalidateSessionsForCredential(credencial);
-        verify(accountLockoutService).clearLockout("ana.perez");
-        verify(accountLockoutService).clearLockout("ana@example.test");
+        verify(accountLockoutService).clearLockout("company:7:account:10");
         verify(passwordResetTokenRepository).delete(token);
     }
 

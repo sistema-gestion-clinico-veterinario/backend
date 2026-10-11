@@ -24,8 +24,8 @@ public class MenuBuilderService {
     private final RolVistaPermisoRepository rolVistaPermisoRepository;
 
     @Transactional(readOnly = true)
-    public List<MenuItemDTO> construirMenu(Integer usuarioId, Integer roleId) {
-        EffectiveRoleAccess acceso = obtenerAccesoRol(usuarioId, roleId);
+    public List<MenuItemDTO> construirMenu(Integer usuarioId, Integer roleId, Integer assignmentCompanyId) {
+        EffectiveRoleAccess acceso = obtenerAccesoRol(usuarioId, roleId, assignmentCompanyId);
         Map<String, UsuarioPorRolPermiso> permisosPorVista = acceso.permisos();
         if (permisosPorVista.isEmpty()) return Collections.emptyList();
 
@@ -40,8 +40,9 @@ public class MenuBuilderService {
     }
 
     @Transactional(readOnly = true)
-    public List<MenuStructureDTO> construirMenuJerarquico(Integer usuarioId, Integer roleId) {
-        EffectiveRoleAccess acceso = obtenerAccesoRol(usuarioId, roleId);
+    public List<MenuStructureDTO> construirMenuJerarquico(
+            Integer usuarioId, Integer roleId, Integer assignmentCompanyId) {
+        EffectiveRoleAccess acceso = obtenerAccesoRol(usuarioId, roleId, assignmentCompanyId);
         Map<String, UsuarioPorRolPermiso> permisosPorVista = acceso.permisos();
         if (permisosPorVista.isEmpty()) return Collections.emptyList();
 
@@ -116,12 +117,14 @@ public class MenuBuilderService {
         return resultado;
     }
 
-    private EffectiveRoleAccess obtenerAccesoRol(Integer usuarioId, Integer roleId) {
+    private EffectiveRoleAccess obtenerAccesoRol(
+            Integer usuarioId, Integer roleId, Integer assignmentCompanyId) {
         if (roleId == null) {
             return EffectiveRoleAccess.empty();
         }
         UsuarioPorRol asignacion = usuarioPorRolRepository
-                .findActiveAssignmentByUsuarioIdAndRoleId(usuarioId, roleId)
+                .findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(
+                        usuarioId, roleId, assignmentCompanyId)
                 .orElse(null);
         if (asignacion == null) {
             return EffectiveRoleAccess.empty();
@@ -191,8 +194,10 @@ public class MenuBuilderService {
     }
 
     @Transactional(readOnly = true)
-    public List<String> construirPermissions(Integer usuarioId, Integer roleId) {
-        Map<String, UsuarioPorRolPermiso> permisos = obtenerAccesoRol(usuarioId, roleId).permisos();
+    public List<String> construirPermissions(
+            Integer usuarioId, Integer roleId, Integer assignmentCompanyId) {
+        Map<String, UsuarioPorRolPermiso> permisos =
+                obtenerAccesoRol(usuarioId, roleId, assignmentCompanyId).permisos();
         Set<String> resultado = new LinkedHashSet<>();
 
         for (Map.Entry<String, UsuarioPorRolPermiso> entry : permisos.entrySet()) {

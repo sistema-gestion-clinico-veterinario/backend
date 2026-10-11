@@ -240,7 +240,11 @@ public class PagoServiceImpl implements PagoService {
         veterinaria.vargasvet.domain.entity.Usuario user = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return purchaseRepository.findByApoderadoUserId(user.getId(), TipoPurchase.SERVICIO_CITA, pageable)
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        if (companyId == null) {
+            return Page.empty(pageable);
+        }
+        return purchaseRepository.findByApoderadoUserIdAndCompanyId(user.getId(), companyId, TipoPurchase.SERVICIO_CITA, pageable)
                 .map(this::toListResponse);
     }
 

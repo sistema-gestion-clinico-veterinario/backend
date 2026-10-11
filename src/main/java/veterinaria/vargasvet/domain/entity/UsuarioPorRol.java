@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -35,6 +36,22 @@ public class UsuarioPorRol {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id")
     private Company company;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "created_by_user_id", updatable = false)
+    private Integer createdByUserId;
+
+    @PrePersist
+    void initializeAuditFields() {
+        if (createdAt == null) {
+            createdAt = veterinaria.vargasvet.util.AppClock.now();
+        }
+        if (createdByUserId == null) {
+            createdByUserId = veterinaria.vargasvet.security.SecurityUtils.getCurrentUserId();
+        }
+    }
 
     @OneToMany(mappedBy = "usuarioPorRol", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<UsuarioPorRolPermiso> permisos;

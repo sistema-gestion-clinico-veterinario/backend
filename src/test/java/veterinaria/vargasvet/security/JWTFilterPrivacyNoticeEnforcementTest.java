@@ -19,7 +19,7 @@ import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.RoleScope;
-import veterinaria.vargasvet.repository.RefreshTokenRepository;
+import veterinaria.vargasvet.service.SessionActivityService;
 import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
@@ -48,7 +48,7 @@ class JWTFilterPrivacyNoticeEnforcementTest {
     @Mock private UsuarioEmpresaCredencialRepository credencialRepository;
     @Mock private ConsentimientoDatosService consentimientoDatosService;
     @Mock private LegalDocumentService legalDocumentService;
-    @Mock private RefreshTokenRepository refreshTokenRepository;
+    @Mock private SessionActivityService sessionActivityService;
     @Mock private FilterChain chain;
 
     private JWTFilter filter;
@@ -56,7 +56,7 @@ class JWTFilterPrivacyNoticeEnforcementTest {
     @BeforeEach
     void setUp() {
         filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, credencialRepository,
-                consentimientoDatosService, legalDocumentService, refreshTokenRepository);
+                consentimientoDatosService, legalDocumentService, sessionActivityService);
         SecurityContextHolder.clearContext();
         sesionValida();
     }
@@ -135,7 +135,7 @@ class JWTFilterPrivacyNoticeEnforcementTest {
 
         when(tokenProvider.getAuthentication(TOKEN)).thenReturn(
                 new UsernamePasswordAuthenticationToken(principal, null, List.of()));
-        when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleId(USUARIO_ID, 1))
+        when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(USUARIO_ID, 1, 7))
                 .thenReturn(Optional.of(assignment));
         when(usuarioRepository.findByIdWithCompany(USUARIO_ID)).thenReturn(Optional.of(usuario));
         when(credencialRepository.findByUsuarioIdAndCompanyId(USUARIO_ID, COMPANY_ID))

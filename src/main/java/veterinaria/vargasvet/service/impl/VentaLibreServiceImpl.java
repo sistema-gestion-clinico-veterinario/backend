@@ -20,6 +20,7 @@ import veterinaria.vargasvet.repository.ApoderadoRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.ProductoRepository;
 import veterinaria.vargasvet.repository.PurchaseRepository;
+import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.repository.VentaLibreDetalleRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.AuditLogService;
@@ -46,6 +47,7 @@ public class VentaLibreServiceImpl implements VentaLibreService {
     private final AuditLogService auditLogService;
     private final CajaService cajaService;
     private final InventarioStockService inventarioStockService;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     @Transactional
@@ -99,6 +101,11 @@ public class VentaLibreServiceImpl implements VentaLibreService {
 
         Purchase purchase = new Purchase();
         purchase.setCompany(company);
+        // Purchase.user identifica a quien registró la operación; el comprador se
+        // conserva por separado en Purchase.cliente o en los campos walk-in. Esta
+        // distinción permite aplicar de forma verificable el alcance OWN en reportes.
+        purchase.setUser(usuarioRepository.findById(SecurityUtils.getCurrentUserId())
+                .orElseThrow(() -> new IllegalStateException("No se encontró al usuario que registra la venta")));
         purchase.setCita(null);
         purchase.setTipoPurchase(TipoPurchase.TIENDA);
         purchase.setCliente(apoderado != null ? apoderado.getUser() : null);

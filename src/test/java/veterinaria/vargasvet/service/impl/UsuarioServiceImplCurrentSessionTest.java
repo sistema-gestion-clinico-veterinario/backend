@@ -122,7 +122,7 @@ class UsuarioServiceImplCurrentSessionTest {
 
     @Test
     void devuelveElRolActivoDelTokenConSusRolesDisponiblesYEmpresa() {
-        when(menuBuilderService.construirPermissions(10, 2)).thenReturn(List.of("VER_CITAS"));
+        when(menuBuilderService.construirPermissions(10, 2, COMPANY_ID)).thenReturn(List.of("VER_CITAS"));
 
         AuthResponse response = service.currentSession(10);
 

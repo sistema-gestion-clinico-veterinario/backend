@@ -22,9 +22,10 @@ public class RadiografiaIAClient {
     @Value("${ia.radiografia.url}")
     private String iaUrl;
 
-    public RadiografiaPrediccionResponse predict(MultipartFile file) throws IOException {
+    public RadiografiaPrediccionResponse predict(MultipartFile file, String accessToken) throws IOException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setBearerAuth(accessToken);
 
         ByteArrayResource fileResource = new ByteArrayResource(file.getBytes()) {
             @Override

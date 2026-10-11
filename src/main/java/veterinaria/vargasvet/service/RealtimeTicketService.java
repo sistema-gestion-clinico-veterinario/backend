@@ -64,7 +64,8 @@ public class RealtimeTicketService {
                 return Optional.empty();
             }
             var assignment = usuarioPorRolRepository
-                    .findActiveAssignmentByUsuarioIdAndRoleId(principal.getId(), principal.getActiveRoleId())
+                    .findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(
+                            principal.getId(), principal.getActiveRoleId(), principal.getCompanyId())
                     .orElse(null);
             if (assignment == null) {
                 log.warn("Ticket WebSocket con asignacion de rol inexistente (jti={}, usuario={}, roleId={})",

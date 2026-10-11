@@ -6,5 +6,6 @@ import lombok.Data;
 @Data
 public class AccountClosureRequest {
     @Size(max = 128, message = "La contraseña no es válida")
+    @lombok.ToString.Exclude
     private String password;
 }

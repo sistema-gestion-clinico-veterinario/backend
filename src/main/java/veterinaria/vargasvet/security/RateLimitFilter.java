@@ -17,10 +17,29 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Set;
 
 @Component
 @Profile("!e2e")
 public class RateLimitFilter extends OncePerRequestFilter {
+
+    private static final Set<String> AUTHENTICATION_POST_PATHS = Set.of(
+            "/auth/login",
+            "/auth/admin-login",
+            "/auth/google/intent",
+            "/auth/google/exchange",
+            "/auth/google/reactivate"
+    );
+
+    private static final Set<String> RECOVERY_POST_PATHS = Set.of(
+            "/auth/forgot-password",
+            "/auth/reset-password",
+            "/auth/validate-reset-token",
+            "/auth/resend-verification",
+            "/auth/resend-verification-by-token",
+            "/auth/account/reactivate",
+            "/auth/setup-account"
+    );
 
     private final SharedRateLimitService sharedRateLimitService;
     private final ClientIpResolver clientIpResolver;
@@ -30,7 +49,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         this.clientIpResolver = clientIpResolver;
     }
 
-    @Value("${app.rate-limit.login-per-minute:5}")
+    @Value("${app.rate-limit.login-per-minute:20}")
     private int loginPerMinute;
 
     @Value("${app.rate-limit.refresh-per-minute:10}")
@@ -77,8 +96,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 : null;
 
         boolean allowed;
+        Duration retryAfter = Duration.ofMinutes(1);
 
-        if (path.contains("/auth/login")) {
+        if ("POST".equalsIgnoreCase(method) && matchesAnySuffix(path, AUTHENTICATION_POST_PATHS)) {
             allowed = sharedRateLimitService.tryConsume(
                     "login-ip", ip, loginPerMinute, Duration.ofMinutes(1));
         } else if (path.contains("/auth/refresh")) {
@@ -86,11 +106,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
             // por lo que JWTFilter nunca autentica esta request: se limita por IP, no por usuario.
             allowed = sharedRateLimitService.tryConsume(
                     "refresh-ip", ip, refreshPerMinute, Duration.ofMinutes(1));
-        } else if (path.contains("/auth/forgot-password") || path.contains("/auth/reset-password")
-                || path.contains("/auth/email-change/")
-                || path.contains("/auth/resend-verification")) {
+        } else if (("POST".equalsIgnoreCase(method) && matchesAnySuffix(path, RECOVERY_POST_PATHS))
+                || ("GET".equalsIgnoreCase(method) && path.endsWith("/auth/validate-reset-token"))
+                || path.contains("/auth/email-change/")) {
+            retryAfter = Duration.ofMinutes(15);
             allowed = sharedRateLimitService.tryConsume(
-                    "account-recovery-ip", ip, passwordResetPerWindow, Duration.ofMinutes(15));
+                    "account-recovery-ip", ip, passwordResetPerWindow, retryAfter);
         } else if (path.contains("/auth/switch-role")) {
             String key = user != null ? "switch-role:" + user : "switch-role:" + ip;
             allowed = resolveBucket(key, switchRolePerMinute, Duration.ofMinutes(1)).tryConsume(1);
@@ -109,13 +130,23 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
 
         if (!allowed) {
-            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            response.setContentType("application/json");
-            response.setHeader("Retry-After", "60");
-            response.getWriter().write("{\"success\":false,\"message\":\"Demasiadas solicitudes. Intente nuevamente más tarde.\",\"data\":null}");
+            writeRateLimitResponse(response, retryAfter);
             return;
         }
 
         chain.doFilter(request, response);
+    }
+
+    private boolean matchesAnySuffix(String requestPath, Set<String> endpoints) {
+        return endpoints.stream().anyMatch(requestPath::endsWith);
+    }
+
+    private void writeRateLimitResponse(HttpServletResponse response, Duration retryAfter) throws IOException {
+        response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+        response.setCharacterEncoding(java.nio.charset.StandardCharsets.UTF_8.name());
+        response.setContentType("application/json");
+        response.setHeader("Retry-After", String.valueOf(Math.max(1, retryAfter.toSeconds())));
+        response.getWriter().write(
+                "{\"success\":false,\"message\":\"Demasiadas solicitudes. Intente nuevamente más tarde.\",\"data\":null}");
     }
 }

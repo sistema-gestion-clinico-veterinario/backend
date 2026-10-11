@@ -19,7 +19,7 @@ import veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.RoleScope;
-import veterinaria.vargasvet.repository.RefreshTokenRepository;
+import veterinaria.vargasvet.service.SessionActivityService;
 import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
@@ -48,7 +48,7 @@ class JWTFilterCompanyMismatchTest {
     @Mock UsuarioPorRolRepository usuarioPorRolRepository;
     @Mock UsuarioEmpresaCredencialRepository credencialRepository;
     @Mock LegalDocumentService legalDocumentService;
-    @Mock RefreshTokenRepository refreshTokenRepository;
+    @Mock SessionActivityService sessionActivityService;
     @Mock FilterChain chain;
 
     private JWTFilter filter;
@@ -57,7 +57,7 @@ class JWTFilterCompanyMismatchTest {
     void setUp() {
         filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, credencialRepository,
                 org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class),
-                legalDocumentService, refreshTokenRepository);
+                legalDocumentService, sessionActivityService);
         SecurityContextHolder.clearContext();
     }
 
@@ -105,7 +105,8 @@ class JWTFilterCompanyMismatchTest {
         credencial.setCredentialsVersion(0L);
         when(tokenProvider.getAuthentication(ACCESS_TOKEN))
                 .thenReturn(new UsernamePasswordAuthenticationToken(principal, null, List.of()));
-        when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleId(42, 1)).thenReturn(Optional.of(assignment));
+        when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(42, 1, companyId))
+                .thenReturn(Optional.of(assignment));
         when(usuarioRepository.findByIdWithCompany(42)).thenReturn(Optional.of(usuario));
         if (companyId == null) {
             when(credencialRepository.findByUsuarioIdAndCompanyIsNull(42)).thenReturn(Optional.of(credencial));

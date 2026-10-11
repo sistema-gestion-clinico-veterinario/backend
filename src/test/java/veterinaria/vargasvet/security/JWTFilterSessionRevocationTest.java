@@ -19,7 +19,7 @@ import veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.RoleScope;
-import veterinaria.vargasvet.repository.RefreshTokenRepository;
+import veterinaria.vargasvet.service.SessionActivityService;
 import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
@@ -46,7 +46,7 @@ class JWTFilterSessionRevocationTest {
     @Mock UsuarioPorRolRepository usuarioPorRolRepository;
     @Mock UsuarioEmpresaCredencialRepository credencialRepository;
     @Mock LegalDocumentService legalDocumentService;
-    @Mock RefreshTokenRepository refreshTokenRepository;
+    @Mock SessionActivityService sessionActivityService;
     @Mock FilterChain chain;
 
     private JWTFilter filter;
@@ -55,7 +55,7 @@ class JWTFilterSessionRevocationTest {
     void setUp() {
         filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, credencialRepository,
                 org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class),
-                legalDocumentService, refreshTokenRepository);
+                legalDocumentService, sessionActivityService);
         SecurityContextHolder.clearContext();
     }
 
@@ -97,7 +97,8 @@ class JWTFilterSessionRevocationTest {
 
         when(tokenProvider.getAuthentication(ACCESS_TOKEN))
                 .thenReturn(new UsernamePasswordAuthenticationToken(principal, null, List.of()));
-        when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleId(42, 1)).thenReturn(Optional.of(assignment));
+        when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(42, 1, 7))
+                .thenReturn(Optional.of(assignment));
         when(usuarioRepository.findByIdWithCompany(42)).thenReturn(Optional.of(usuario));
         when(credencialRepository.findByUsuarioIdAndCompanyId(42, 7)).thenReturn(Optional.of(credencial));
     }
@@ -105,7 +106,19 @@ class JWTFilterSessionRevocationTest {
     @Test
     void unAccessTokenDeUnaSesionCerradaYaNoAutentica() throws Exception {
         stubSession("sesion-cerrada");
-        when(refreshTokenRepository.existsByFamilyIdAndRevokedAtIsNull("sesion-cerrada")).thenReturn(false);
+        when(sessionActivityService.registrar("sesion-cerrada")).thenReturn(SessionActivityService.Estado.CERRADA);
+        HttpServletRequest request = request();
+
+        filter.doFilter(request, org.mockito.Mockito.mock(HttpServletResponse.class), chain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(chain).doFilter(any(), any());
+    }
+
+    @Test
+    void unAccessTokenDeUnaSesionInactivaYaNoAutentica() throws Exception {
+        stubSession("sesion-inactiva");
+        when(sessionActivityService.registrar("sesion-inactiva")).thenReturn(SessionActivityService.Estado.INACTIVA);
         HttpServletRequest request = request();
 
         filter.doFilter(request, org.mockito.Mockito.mock(HttpServletResponse.class), chain);
@@ -117,7 +130,7 @@ class JWTFilterSessionRevocationTest {
     @Test
     void unAccessTokenDeUnaSesionAbiertaAutentica() throws Exception {
         stubSession("sesion-abierta");
-        when(refreshTokenRepository.existsByFamilyIdAndRevokedAtIsNull("sesion-abierta")).thenReturn(true);
+        when(sessionActivityService.registrar("sesion-abierta")).thenReturn(SessionActivityService.Estado.ACTIVA);
         when(legalDocumentService.isPastGracePeriod(42)).thenReturn(false);
         HttpServletRequest request = request();
 
@@ -135,7 +148,7 @@ class JWTFilterSessionRevocationTest {
         filter.doFilter(request, org.mockito.Mockito.mock(HttpServletResponse.class), chain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
-        verifyNoInteractions(refreshTokenRepository);
+        verifyNoInteractions(sessionActivityService);
         verify(chain, never()).doFilter(any(), org.mockito.ArgumentMatchers.isNull());
     }
 }

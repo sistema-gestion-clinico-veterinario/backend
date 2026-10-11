@@ -80,6 +80,7 @@ class ConsultaServiceUnitTest {
 
     @Test
     void updateConsulta_lanzaExcepcionCuandoVersionNoCoincide() {
+        autenticarSuperAdmin();
         ConsultaServiceImpl service = service();
         Consulta consulta = consultaAbiertaCompleta();
         consulta.setVersion(2L);
@@ -199,6 +200,65 @@ class ConsultaServiceUnitTest {
                 consultaMapper,
                 auditLogService,
                 org.mockito.Mockito.mock(veterinaria.vargasvet.security.AccesoValidator.class)
+        );
+    }
+
+    @Test
+    void updateConsulta_rechazaAlAdministradorDeOtraEmpresa() {
+        autenticarAdministradorDeEmpresa(9);
+        ConsultaServiceImpl service = service();
+        Consulta consulta = consultaAbiertaCompleta();
+        ConsultaRequest request = new ConsultaRequest();
+        request.setVersion(1L);
+        request.setTipoConsulta(TipoConsulta.EMERGENCIA);
+        when(consultaRepository.findById(10L)).thenReturn(Optional.of(consulta));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> service.updateConsulta(10L, request));
+
+        assertEquals("No tienes permiso para modificar esta consulta", ex.getMessage());
+        assertEquals(TipoConsulta.CONTROL_RUTINA, consulta.getTipoConsulta());
+        verify(consultaRepository, never()).saveAndFlush(any(Consulta.class));
+    }
+
+    @Test
+    void cerrarConsulta_rechazaAlAdministradorDeOtraEmpresa() {
+        autenticarAdministradorDeEmpresa(9);
+        ConsultaServiceImpl service = service();
+        Consulta consulta = consultaAbiertaCompleta();
+        CerrarConsultaRequest request = new CerrarConsultaRequest();
+        request.setVersion(1L);
+        when(consultaRepository.findById(10L)).thenReturn(Optional.of(consulta));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> service.cerrarConsulta(10L, request));
+
+        assertEquals("No tienes permiso para cerrar esta consulta", ex.getMessage());
+        assertEquals(EstadoConsulta.ABIERTA, consulta.getEstado());
+        verify(consultaRepository, never()).saveAndFlush(any(Consulta.class));
+    }
+
+    @Test
+    void reabrirConsulta_rechazaAlAdministradorDeOtraEmpresa() {
+        autenticarAdministradorDeEmpresa(9);
+        ConsultaServiceImpl service = service();
+        Consulta consulta = consultaAbiertaCompleta();
+        consulta.setEstado(EstadoConsulta.CERRADA);
+        when(consultaRepository.findById(10L)).thenReturn(Optional.of(consulta));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> service.reabrirConsulta(10L));
+
+        assertEquals("No tienes permiso para reabrir esta consulta", ex.getMessage());
+        assertEquals(EstadoConsulta.CERRADA, consulta.getEstado());
+        verify(consultaRepository, never()).saveAndFlush(any(Consulta.class));
+    }
+
+    private void autenticarAdministradorDeEmpresa(int companyId) {
+        var authorities = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        var principal = new veterinaria.vargasvet.security.UsuarioPrincipal(
+                2, "admin@otra.test", "", authorities, companyId, 2,
+                veterinaria.vargasvet.domain.enums.RoleScope.STAFF,
+                veterinaria.vargasvet.domain.enums.RolePurpose.COMPANY_ADMIN, 0L);
+        SecurityContextHolder.getContext().setAuthentication(
+                new TestingAuthenticationToken(principal, null, authorities)
         );
     }
 

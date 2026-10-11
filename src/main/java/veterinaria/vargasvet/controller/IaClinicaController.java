@@ -17,6 +17,8 @@ import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.response.AutorizacionIaResponse;
 import veterinaria.vargasvet.integration.DiagnosticoIAClient;
 import veterinaria.vargasvet.integration.DiagnosticoIAClient.ArchivoParte;
+import veterinaria.vargasvet.security.AiServiceScope;
+import veterinaria.vargasvet.security.AiServiceTokenProvider;
 import veterinaria.vargasvet.service.AutorizacionIaService;
 
 import java.io.IOException;
@@ -38,6 +40,7 @@ public class IaClinicaController {
 
     private final AutorizacionIaService autorizacionIaService;
     private final DiagnosticoIAClient diagnosticoIAClient;
+    private final AiServiceTokenProvider aiServiceTokenProvider;
 
     @GetMapping("/autorizacion/mascotas/{mascotaId}")
     @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'LEER') or @accesoValidator.can('VISTA_LABORATORIO', 'LEER')")
@@ -46,7 +49,7 @@ public class IaClinicaController {
     }
 
     @PostMapping(value = "/diagnostico", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'LEER')")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'ESCRIBIR')")
     public ResponseEntity<StreamingResponseBody> diagnostico(
             @RequestParam("mascotaId") Long mascotaId,
             @RequestParam Map<String, String> campos,
@@ -65,11 +68,14 @@ public class IaClinicaController {
         agregar(archivos, "archivo_hemograma", hemogramas);
         agregar(archivos, "archivo_radiografia", radiografias);
 
+        // Se emite antes de iniciar el streaming porque este se ejecuta fuera del hilo autenticado.
+        String accessToken = aiServiceTokenProvider.issue(AiServiceScope.DIAGNOSTICO, mascotaId);
+
         autorizacionIaService.registrarUso(mascotaId, "diagnóstico", autorizacion);
 
         StreamingResponseBody cuerpo = salida -> {
             try {
-                diagnosticoIAClient.transmitir(permitidos, archivos, salida);
+                diagnosticoIAClient.transmitir(permitidos, archivos, accessToken, salida);
             } catch (RuntimeException ex) {
                 log.warn("El servicio de IA no pudo responder el diagnóstico: {}", ex.getMessage());
                 salida.write(("data: {\"type\":\"error\"}\n\n").getBytes(StandardCharsets.UTF_8));

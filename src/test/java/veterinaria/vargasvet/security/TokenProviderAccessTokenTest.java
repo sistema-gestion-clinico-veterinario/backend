@@ -36,6 +36,8 @@ class TokenProviderAccessTokenTest {
         ReflectionTestUtils.setField(provider, "publicKeyPath", "classpath:keys/e2e_public_key.pem");
         ReflectionTestUtils.setField(provider, "issuer", "systemvet-api");
         ReflectionTestUtils.setField(provider, "audience", "systemvet-web");
+        ReflectionTestUtils.setField(provider, "aiServiceAudience", "systemvet-ai");
+        ReflectionTestUtils.setField(provider, "aiServiceTokenValiditySeconds", 45L);
         provider.init();
     }
 
@@ -108,5 +110,21 @@ class TokenProviderAccessTokenTest {
         assertThat(payload(ticket.token())).doesNotContain("permissions").doesNotContain("VISTA_CAJA");
         assertThat(provider.getRealtimeTicketDetails(ticket.token()).authentication().getAuthorities())
                 .extracting(Object::toString).containsExactly("ROLE_ADMIN");
+    }
+
+    @Test
+    void laDelegacionDeIaEsBreveYQuedaLimitadaAEmpresaMascotaYOperacion() {
+        String token = provider.createAiServiceToken(7, 9, "diagnostico", 21L);
+
+        String payload = payload(token);
+        assertThat(payload)
+                .contains("\"aud\":[\"systemvet-ai\"]")
+                .contains("\"token_type\":\"ai_service\"")
+                .contains("\"operation\":\"diagnostico\"")
+                .contains("\"companyId\":9")
+                .contains("\"mascotaId\":21")
+                .doesNotContain("ana@vargasvet.test")
+                .doesNotContain("roles")
+                .doesNotContain("permissions");
     }
 }

@@ -54,8 +54,9 @@ public class PrescripcionServiceImpl implements PrescripcionService {
 
         Empleado veterinario = null;
         Integer userId = SecurityUtils.getCurrentUserId();
-        if (userId != null) {
-            veterinario = empleadoRepository.findActiveByUserId(userId).orElse(null);
+        Integer companyId = companyIdDe(consulta);
+        if (userId != null && companyId != null) {
+            veterinario = empleadoRepository.findByUserIdAndCompanyIdAndEstadoTrue(userId, companyId).orElse(null);
         }
         if (veterinario == null && consulta.getVeterinario() != null) {
             veterinario = consulta.getVeterinario();

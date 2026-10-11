@@ -13,13 +13,18 @@ import veterinaria.vargasvet.dto.response.LaboratorioIAResponse;
 import veterinaria.vargasvet.dto.response.RadiografiaPrediccionResponse;
 import veterinaria.vargasvet.integration.LaboratorioIAClient;
 import veterinaria.vargasvet.integration.RadiografiaIAClient;
+import veterinaria.vargasvet.security.AiServiceScope;
+import veterinaria.vargasvet.security.AiServiceTokenProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class IaServiceIntegrationTest {
 
@@ -31,14 +36,17 @@ class IaServiceIntegrationTest {
     void setUp() {
         RestTemplate restTemplate = new RestTemplate();
         server = MockRestServiceServer.createServer(restTemplate);
+        AiServiceTokenProvider tokens = mock(AiServiceTokenProvider.class);
+        when(tokens.issue(AiServiceScope.LABORATORIO, 7L)).thenReturn("token-laboratorio");
+        when(tokens.issue(AiServiceScope.RADIOGRAFIA, 7L)).thenReturn("token-radiografia");
 
         LaboratorioIAClient laboratorioClient = new LaboratorioIAClient(restTemplate);
         ReflectionTestUtils.setField(laboratorioClient, "iaUrl", "http://ia.test");
-        laboratorioService = new LaboratorioIAServiceImpl(laboratorioClient);
+        laboratorioService = new LaboratorioIAServiceImpl(laboratorioClient, tokens);
 
         RadiografiaIAClient radiografiaClient = new RadiografiaIAClient(restTemplate);
         ReflectionTestUtils.setField(radiografiaClient, "iaUrl", "http://ia.test");
-        radiografiaService = new RadiografiaIAServiceImpl(radiografiaClient);
+        radiografiaService = new RadiografiaIAServiceImpl(radiografiaClient, tokens);
     }
 
     @Test
@@ -46,6 +54,7 @@ class IaServiceIntegrationTest {
     void laboratorioIaEnviaArchivoYMapeaRespuestaExterna() {
         server.expect(requestTo("http://ia.test/ia/laboratorio"))
                 .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer token-laboratorio"))
                 .andRespond(withSuccess("""
                         {
                           "fuente": "mock",
@@ -59,7 +68,7 @@ class IaServiceIntegrationTest {
 
         LaboratorioIAResponse response = laboratorioService.analizarLaboratorio(
                 new MockMultipartFile("archivo", "hemograma.pdf", "application/pdf", "contenido".getBytes()),
-                "PERRO"
+                "PERRO", 7L
         );
 
         assertThat(response.getTipo()).isEqualTo("laboratorio");
@@ -72,11 +81,12 @@ class IaServiceIntegrationTest {
     void laboratorioIaPropagaErrorControladoSiServicioExternoFalla() {
         server.expect(requestTo("http://ia.test/ia/laboratorio"))
                 .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer token-laboratorio"))
                 .andRespond(withServerError());
 
         assertThatThrownBy(() -> laboratorioService.analizarLaboratorio(
                 new MockMultipartFile("archivo", "hemograma.pdf", "application/pdf", "contenido".getBytes()),
-                "PERRO"
+                "PERRO", 7L
         ))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Error al conectar con el servicio de an");
@@ -88,6 +98,7 @@ class IaServiceIntegrationTest {
     void radiografiaIaEnviaImagenYMapeaPrediccionExterna() {
         server.expect(requestTo("http://ia.test/predict/radiografia"))
                 .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer token-radiografia"))
                 .andRespond(withSuccess("""
                         {
                           "model": "rx-vet-test",
@@ -99,7 +110,7 @@ class IaServiceIntegrationTest {
                         """, MediaType.APPLICATION_JSON));
 
         RadiografiaPrediccionResponse response = radiografiaService.analizarRadiografia(
-                new MockMultipartFile("file", "torax.jpg", "image/jpeg", "imagen".getBytes())
+                new MockMultipartFile("file", "torax.jpg", "image/jpeg", "imagen".getBytes()), 7L
         );
 
         assertThat(response.getModel()).isEqualTo("rx-vet-test");

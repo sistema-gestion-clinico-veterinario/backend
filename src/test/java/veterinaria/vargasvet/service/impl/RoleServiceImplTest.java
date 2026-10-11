@@ -8,15 +8,12 @@ import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.entity.RolVistaPermiso;
 import veterinaria.vargasvet.domain.entity.Ventana;
 import veterinaria.vargasvet.domain.entity.Vista;
-import veterinaria.vargasvet.domain.enums.MenuItemType;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.ViewAudience;
 import veterinaria.vargasvet.repository.CompanyRepository;
-import veterinaria.vargasvet.repository.RolVentanaConfiguracionRepository;
 import veterinaria.vargasvet.repository.RolVentanaPermisoRepository;
 import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
-import veterinaria.vargasvet.repository.RolVistaConfiguracionRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.VentanaRepository;
@@ -40,8 +37,6 @@ class RoleServiceImplTest {
 
     private final RoleRepository roleRepository = mock(RoleRepository.class);
     private final RolVistaPermisoRepository rolVistaPermisoRepository = mock(RolVistaPermisoRepository.class);
-    private final RolVentanaConfiguracionRepository rolVentanaConfiguracionRepository = mock(RolVentanaConfiguracionRepository.class);
-    private final RolVistaConfiguracionRepository rolVistaConfiguracionRepository = mock(RolVistaConfiguracionRepository.class);
     private final RolVentanaPermisoRepository rolVentanaPermisoRepository = mock(RolVentanaPermisoRepository.class);
     private final UsuarioPorRolRepository usuarioPorRolRepository = mock(UsuarioPorRolRepository.class);
     private final AuditLogService auditLogService = mock(AuditLogService.class);
@@ -51,8 +46,6 @@ class RoleServiceImplTest {
             mock(VistaRepository.class),
             rolVistaPermisoRepository,
             mock(VentanaRepository.class),
-            rolVentanaConfiguracionRepository,
-            rolVistaConfiguracionRepository,
             rolVentanaPermisoRepository,
             usuarioPorRolRepository,
             auditLogService
@@ -128,52 +121,6 @@ class RoleServiceImplTest {
             var result = service.getAssignableRoles(7, RoleScope.STAFF);
 
             assertEquals(List.of(3), result.stream().map(dto -> dto.getId()).toList());
-        }
-    }
-
-    @Test
-    void getMenuOrderCombinesFlatViewsAndModulesUsingConfiguredHierarchy() {
-        Role role = role(10, null, RoleScope.PLATFORM, true);
-        Vista dashboard = vista(1, "VISTA_DASHBOARD", "Dashboard", 0, null);
-        Ventana clinic = new Ventana();
-        clinic.setId(5);
-        clinic.setCodigo("CLINICA");
-        clinic.setNombre("Clínica");
-        clinic.setOrden(1);
-        clinic.setActivo(true);
-        Vista patients = vista(2, "VISTA_PACIENTES", "Pacientes", 0, clinic);
-
-        when(roleRepository.findById(10)).thenReturn(java.util.Optional.of(role));
-        when(rolVistaPermisoRepository.findByRolIdWithVistaAndVentana(10))
-                .thenReturn(List.of(readablePermission(role, dashboard), readablePermission(role, patients)));
-        when(rolVentanaConfiguracionRepository.findByRolIdWithVentana(10)).thenReturn(List.of());
-        when(rolVistaConfiguracionRepository.findByRolIdWithVistaAndVentana(10)).thenReturn(List.of());
-
-        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
-            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
-
-            var result = service.getMenuOrder(10);
-
-            assertEquals(2, result.size());
-            assertEquals(MenuItemType.VIEW, result.get(0).getTipo());
-            assertEquals(MenuItemType.MODULE, result.get(1).getTipo());
-            assertEquals(List.of(2), result.get(1).getVistas().stream()
-                    .map(item -> item.getReferenciaId()).toList());
-        }
-    }
-
-    @Test
-    void saveMenuOrderRejectsAnIncompleteStructure() {
-        Role role = role(11, null, RoleScope.PLATFORM, true);
-        Vista dashboard = vista(1, "VISTA_DASHBOARD", "Dashboard", 0, null);
-        when(roleRepository.findById(11)).thenReturn(java.util.Optional.of(role));
-        when(rolVistaPermisoRepository.findByRolIdWithVistaAndVentana(11))
-                .thenReturn(List.of(readablePermission(role, dashboard)));
-
-        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
-            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
-
-            assertThrows(IllegalArgumentException.class, () -> service.saveMenuOrder(11, List.of()));
         }
     }
 
@@ -320,8 +267,6 @@ class RoleServiceImplTest {
             service.deleteRole(23);
         }
 
-        verify(rolVistaConfiguracionRepository).deleteByRolId(23);
-        verify(rolVentanaConfiguracionRepository).deleteByRolId(23);
         verify(rolVentanaPermisoRepository).deleteByRolId(23);
         verify(rolVistaPermisoRepository).deleteByRolId(23);
         verify(roleRepository).delete(role);

@@ -17,5 +17,6 @@ public class AdminLoginDTO {
 
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(max = 72, message = "La contrasena no debe superar 72 caracteres")
+    @lombok.ToString.Exclude
     private String password;
 }

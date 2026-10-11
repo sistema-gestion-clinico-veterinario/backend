@@ -191,6 +191,36 @@ class AuthControllerSessionCookiesTest {
     }
 
     @Test
+    void lasCookiesDeSesionSalenConLosTresAtributosDeSeguridadYLaVigenciaDeCadaToken() {
+        LoginDTO dto = login("clinica-a");
+        when(usuarioService.login(dto)).thenReturn(sesion("clinica-a"));
+        MockHttpServletResponse http = new MockHttpServletResponse();
+
+        controller.login(dto, http);
+
+        assertThat(http.getHeaders(HttpHeaders.SET_COOKIE)).allSatisfy(c ->
+                assertThat(c).contains("HttpOnly").contains("Secure").contains("SameSite=Lax"));
+        assertThat(http.getHeaders(HttpHeaders.SET_COOKIE))
+                .anySatisfy(c -> assertThat(c).startsWith("access_token__clinica-a=").contains("Max-Age=1800").contains("Path=/api/v1"))
+                .anySatisfy(c -> assertThat(c).startsWith("refresh_token__clinica-a=").contains("Path=/api/v1/auth"));
+    }
+
+    @Test
+    void cuandoLaSesionSeCierraPorInactividadSeBorranSusCookiesParaNoReintentar() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader(SessionCookies.SLUG_HEADER, "clinica-a");
+        request.setCookies(new Cookie("refresh_token__clinica-a", "refresco-a"));
+        when(usuarioService.refreshToken("refresco-a")).thenThrow(new veterinaria.vargasvet.exception.SessionInactivityException());
+        MockHttpServletResponse http = new MockHttpServletResponse();
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                veterinaria.vargasvet.exception.SessionInactivityException.class, () -> controller.refresh(request, http));
+
+        assertThat(nombresDeCookies(http)).containsExactlyInAnyOrder("access_token__clinica-a", "refresh_token__clinica-a");
+        assertThat(http.getHeaders(HttpHeaders.SET_COOKIE)).allSatisfy(c -> assertThat(c).contains("Max-Age=0"));
+    }
+
+    @Test
     void sinCookieNoSeIntentaRenovarConNada() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(SessionCookies.SLUG_HEADER, "clinica-a");

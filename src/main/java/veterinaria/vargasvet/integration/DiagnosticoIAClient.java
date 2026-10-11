@@ -39,7 +39,8 @@ public class DiagnosticoIAClient {
         this.iaUrl = iaUrl;
     }
 
-    public void transmitir(Map<String, String> campos, List<ArchivoParte> archivos, OutputStream salida) {
+    public void transmitir(Map<String, String> campos, List<ArchivoParte> archivos,
+                           String accessToken, OutputStream salida) {
         MultiValueMap<String, Object> cuerpo = new LinkedMultiValueMap<>();
         campos.forEach(cuerpo::add);
         for (ArchivoParte archivo : archivos) {
@@ -52,6 +53,7 @@ public class DiagnosticoIAClient {
         }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setBearerAuth(accessToken);
         restTemplate.execute(iaUrl + "/ia/diagnostico", HttpMethod.POST,
                 restTemplate.httpEntityCallback(new HttpEntity<>(cuerpo, headers)),
                 respuesta -> {

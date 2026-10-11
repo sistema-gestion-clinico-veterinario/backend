@@ -156,8 +156,8 @@ class MultiEmpresaIsolationTest {
         when(tokenProvider.getRefreshTokenDetails(any())).thenAnswer(invocation ->
                 new TokenProvider.RefreshTokenDetails("test@example.test", "jti-fake", "family-fake", null, null, 0L));
         MenuBuilderService menuBuilderService = mock(MenuBuilderService.class);
-        when(menuBuilderService.construirMenuJerarquico(any(), any())).thenReturn(List.of());
-        when(menuBuilderService.construirPermissions(any(), any())).thenReturn(List.of());
+        when(menuBuilderService.construirMenuJerarquico(any(), any(), any())).thenReturn(List.of());
+        when(menuBuilderService.construirPermissions(any(), any(), any())).thenReturn(List.of());
 
         veterinaria.vargasvet.service.impl.UsuarioContactoService contactoService =
                 new veterinaria.vargasvet.service.impl.UsuarioContactoService(contactoRepository, companyRepository);
@@ -172,12 +172,15 @@ class MultiEmpresaIsolationTest {
                 new PasswordPolicyService(), mock(LegalDocumentService.class), contactoService, mock(veterinaria.vargasvet.security.RealtimeSubscriptionGuard.class),
                 new veterinaria.vargasvet.service.AdministratorProtection(usuarioPorRolRepository, companyMembershipService, companyRepository),
                 accountClosureGuard,
-                org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class));
+                org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class),
+                mock(veterinaria.vargasvet.service.SessionActivityService.class));
 
         veterinaria.vargasvet.service.RoleAssignmentService roleAssignmentService =
                 new veterinaria.vargasvet.service.RoleAssignmentService(
                         usuarioPorRolRepository,
                         roleRepository,
+                        companyRepository,
+                        mock(veterinaria.vargasvet.repository.RoleAssignmentHistoryRepository.class),
                         mock(veterinaria.vargasvet.security.AccesoValidator.class),
                         new veterinaria.vargasvet.service.AdministratorProtection(
                                 usuarioPorRolRepository, companyMembershipService, companyRepository),

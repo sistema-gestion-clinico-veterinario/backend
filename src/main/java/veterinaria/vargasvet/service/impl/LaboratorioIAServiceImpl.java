@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import veterinaria.vargasvet.dto.response.LaboratorioIAResponse;
 import veterinaria.vargasvet.integration.LaboratorioIAClient;
+import veterinaria.vargasvet.security.AiServiceScope;
+import veterinaria.vargasvet.security.AiServiceTokenProvider;
 import veterinaria.vargasvet.service.LaboratorioIAService;
 
 @Service
@@ -12,13 +14,14 @@ import veterinaria.vargasvet.service.LaboratorioIAService;
 public class LaboratorioIAServiceImpl implements LaboratorioIAService {
 
     private final LaboratorioIAClient laboratorioIAClient;
+    private final AiServiceTokenProvider aiServiceTokenProvider;
 
     private static final java.util.Set<String> EXTENSIONES_VALIDAS = java.util.Set.of(
             ".pdf", ".jpg", ".jpeg", ".png", ".bmp", ".tiff"
     );
 
     @Override
-    public LaboratorioIAResponse analizarLaboratorio(MultipartFile archivo, String especie) {
+    public LaboratorioIAResponse analizarLaboratorio(MultipartFile archivo, String especie, Long mascotaId) {
         if (archivo == null || archivo.isEmpty()) {
             throw new IllegalArgumentException("El archivo no puede estar vacío.");
         }
@@ -34,7 +37,8 @@ public class LaboratorioIAServiceImpl implements LaboratorioIAService {
         }
 
         try {
-            return laboratorioIAClient.analizar(archivo, especie);
+            String token = aiServiceTokenProvider.issue(AiServiceScope.LABORATORIO, mascotaId);
+            return laboratorioIAClient.analizar(archivo, especie, token);
         } catch (Exception e) {
             throw new RuntimeException(
                     "Error al conectar con el servicio de análisis de laboratorio: " + e.getMessage());
