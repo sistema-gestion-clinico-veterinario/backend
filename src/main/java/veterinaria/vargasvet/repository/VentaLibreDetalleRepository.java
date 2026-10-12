@@ -13,7 +13,7 @@ public interface VentaLibreDetalleRepository extends JpaRepository<VentaLibreDet
 
     List<VentaLibreDetalle> findByPurchaseId(Long purchaseId);
 
-    @Query("SELECT d FROM VentaLibreDetalle d JOIN FETCH d.producto p LEFT JOIN FETCH p.categoria " +
+    @Query("SELECT d FROM VentaLibreDetalle d JOIN FETCH d.producto p LEFT JOIN FETCH p.categoria LEFT JOIN FETCH p.marcaProducto " +
            "WHERE d.purchase.id IN :purchaseIds")
     List<VentaLibreDetalle> findForReportByPurchaseIds(@Param("purchaseIds") List<Long> purchaseIds);
 }

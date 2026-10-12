@@ -14,7 +14,8 @@ requerir() {
 }
 
 requerir SUPABASE_S3_ENDPOINT SUPABASE_S3_ACCESS_KEY SUPABASE_S3_SECRET_KEY SUPABASE_BUCKET GPG_PUBLIC_KEY
-requerir BACKUP_S3_BUCKET BACKUP_S3_ENDPOINT AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
+. "$(dirname "${BASH_SOURCE[0]}")/lib-destino.sh"
+destino_requisitos
 
 TRABAJO="$(mktemp -d)"
 export GNUPGHOME="$TRABAJO/gnupg"
@@ -64,16 +65,15 @@ jq -n --arg archivo "$NOMBRE.tar.gz.gpg" --arg fecha "$FECHA" --arg sha256 "$SHA
   '{archivo:$archivo, fecha_utc:$fecha, tamano_bytes:$tamano, sha256:$sha256, archivos_incluidos:$cantidad, clave_de_cifrado:$huella}' \
   > "$TRABAJO/$NOMBRE.manifest.json"
 
-for carpeta in "archivos/semanal/$DIA"; do
-  aws s3 cp "$TRABAJO/$NOMBRE.tar.gz.gpg" "s3://$BACKUP_S3_BUCKET/$carpeta/$NOMBRE.tar.gz.gpg" --endpoint-url "$BACKUP_S3_ENDPOINT" --only-show-errors
-  aws s3 cp "$TRABAJO/$NOMBRE.manifest.json" "s3://$BACKUP_S3_BUCKET/$carpeta/$NOMBRE.manifest.json" --endpoint-url "$BACKUP_S3_ENDPOINT" --only-show-errors
-  remoto="$(aws s3api head-object --bucket "$BACKUP_S3_BUCKET" --key "$carpeta/$NOMBRE.tar.gz.gpg" \
-    --endpoint-url "$BACKUP_S3_ENDPOINT" --query ContentLength --output text)"
-  if [ "$remoto" != "$TAMANO" ]; then
-    echo "El tamaño subido ($remoto) no coincide con el local ($TAMANO)." >&2
-    exit 7
-  fi
-done
+carpeta="archivos/semanal/$DIA"
+destino_subir "$TRABAJO/$NOMBRE.tar.gz.gpg" "$carpeta/$NOMBRE.tar.gz.gpg"
+destino_subir "$TRABAJO/$NOMBRE.manifest.json" "$carpeta/$NOMBRE.manifest.json"
+remoto="$(destino_tamano "$carpeta/$NOMBRE.tar.gz.gpg")"
+if [ "$remoto" != "$TAMANO" ]; then
+  echo "El tamaño subido (${remoto:-ninguno}) no coincide con el local ($TAMANO)." >&2
+  exit 7
+fi
+destino_podar "archivos/semanal" 31
 
 avisar ""
 echo "Respaldo de archivos completado: $NOMBRE ($CANTIDAD archivos, $TAMANO bytes)"

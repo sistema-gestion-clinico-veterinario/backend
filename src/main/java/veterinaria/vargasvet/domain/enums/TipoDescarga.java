@@ -10,7 +10,9 @@ public enum TipoDescarga {
     HISTORIA_CLINICA_PDF("Historias Clínicas", "DESCARGAR_HISTORIA_CLINICA_PDF", "descargó la historia clínica completa en PDF"),
     NOTA_VENTA_PDF("Facturación", "DESCARGAR_NOTA_VENTA_PDF", "descargó la nota de venta de un pago"),
     REPORTE_CLINICO_PDF("Reportes", "DESCARGAR_REPORTE_PDF", "descargó el reporte clínico en PDF"),
-    REPORTE_CLINICO_EXCEL("Reportes", "DESCARGAR_REPORTE_EXCEL", "descargó el reporte clínico en Excel");
+    REPORTE_CLINICO_EXCEL("Reportes", "DESCARGAR_REPORTE_EXCEL", "descargó el reporte clínico en Excel"),
+    REPORTE_VENTAS_PRODUCTOS_PDF("Reportes", "DESCARGAR_REPORTE_VENTAS_PDF", "descargó el reporte de ventas y productos en PDF"),
+    REPORTE_VENTAS_PRODUCTOS_EXCEL("Reportes", "DESCARGAR_REPORTE_VENTAS_EXCEL", "descargó el reporte de ventas y productos en Excel");
 
     private final String modulo;
     private final String accion;

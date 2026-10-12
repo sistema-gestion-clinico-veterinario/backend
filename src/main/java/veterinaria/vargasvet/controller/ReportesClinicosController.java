@@ -10,6 +10,9 @@ import veterinaria.vargasvet.dto.response.ReportesClinicosDTO;
 import veterinaria.vargasvet.dto.response.ReportesComparativoEmpresasDTO;
 import veterinaria.vargasvet.dto.response.ReporteVentasProductosDTO;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
+import veterinaria.vargasvet.domain.enums.EstadoStockReporte;
+import veterinaria.vargasvet.domain.enums.MetodoPago;
+import veterinaria.vargasvet.dto.request.ReporteVentasProductosFiltro;
 import veterinaria.vargasvet.service.ReportesClinicosService;
 
 import java.time.LocalDate;
@@ -66,9 +69,23 @@ public class ReportesClinicosController {
     public ResponseEntity<ApiResponse<ReporteVentasProductosDTO>> obtenerVentasProductos(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(required = false) LocalDate fechaDesde,
-            @RequestParam(required = false) LocalDate fechaHasta) {
+            @RequestParam(required = false) LocalDate fechaHasta,
+            @RequestParam(required = false) MetodoPago metodoPago,
+            @RequestParam(required = false) Long categoriaId,
+            @RequestParam(required = false) Long productoId,
+            @RequestParam(required = false) Long marcaId,
+            @RequestParam(required = false) EstadoStockReporte estadoStock) {
         ReporteVentasProductosDTO resultado = reportesClinicosService.obtenerVentasProductos(
-                companyId, fechaDesde, fechaHasta);
+                ReporteVentasProductosFiltro.builder()
+                        .companyId(companyId)
+                        .fechaDesde(fechaDesde)
+                        .fechaHasta(fechaHasta)
+                        .metodoPago(metodoPago)
+                        .categoriaId(categoriaId)
+                        .productoId(productoId)
+                        .marcaId(marcaId)
+                        .estadoStock(estadoStock)
+                        .build());
         return ResponseEntity.ok(new ApiResponse<>(true, "Reporte de ventas y productos obtenido", resultado));
     }
 }

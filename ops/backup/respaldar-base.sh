@@ -14,8 +14,9 @@ requerir() {
 }
 
 requerir BACKUP_DB_URL GPG_PUBLIC_KEY
+. "$(dirname "${BASH_SOURCE[0]}")/lib-destino.sh"
 if [ "${BACKUP_SKIP_UPLOAD:-0}" != "1" ]; then
-  requerir BACKUP_S3_BUCKET BACKUP_S3_ENDPOINT AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
+  destino_requisitos
 fi
 
 TRABAJO="$(mktemp -d)"
@@ -136,23 +137,22 @@ jq -n \
 if [ "${BACKUP_SKIP_UPLOAD:-0}" = "1" ]; then
   echo "Subida omitida (BACKUP_SKIP_UPLOAD=1). Archivos en $SALIDA"
 else
-  subir() {
-    aws s3 cp "$1" "s3://$BACKUP_S3_BUCKET/$2" --endpoint-url "$BACKUP_S3_ENDPOINT" --only-show-errors
-  }
   destinos=("base/diario/$DIA")
   [ "$DIA_SEMANA" = "7" ] && destinos+=("base/semanal/$DIA")
   [ "$DIA_MES" = "01" ] && destinos+=("base/mensual/$DIA")
   for carpeta in "${destinos[@]}"; do
     echo "Subiendo a $carpeta ..."
-    subir "$SALIDA/$NOMBRE.dump.gpg" "$carpeta/$NOMBRE.dump.gpg"
-    subir "$SALIDA/$NOMBRE.manifest.json" "$carpeta/$NOMBRE.manifest.json"
-    remoto="$(aws s3api head-object --bucket "$BACKUP_S3_BUCKET" --key "$carpeta/$NOMBRE.dump.gpg" \
-      --endpoint-url "$BACKUP_S3_ENDPOINT" --query ContentLength --output text)"
+    destino_subir "$SALIDA/$NOMBRE.dump.gpg" "$carpeta/$NOMBRE.dump.gpg"
+    destino_subir "$SALIDA/$NOMBRE.manifest.json" "$carpeta/$NOMBRE.manifest.json"
+    remoto="$(destino_tamano "$carpeta/$NOMBRE.dump.gpg")"
     if [ "$remoto" != "$TAMANO" ]; then
-      echo "El tamaño subido ($remoto) no coincide con el local ($TAMANO)." >&2
+      echo "El tamaño subido (${remoto:-ninguno}) no coincide con el local ($TAMANO)." >&2
       exit 7
     fi
   done
+  destino_podar "base/diario" 8
+  destino_podar "base/semanal" 31
+  destino_podar "base/mensual" 190
 fi
 
 avisar ""
