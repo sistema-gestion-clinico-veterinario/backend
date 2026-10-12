@@ -43,6 +43,24 @@ Quién puede qué:
   Si tu proveedor no admite esa orden, configura las mismas reglas en su panel (borrar tras 8, 31 y 190 días según la carpeta).
 - Cloudflare R2 también funciona con los mismos scripts.
 
+### 1b. Alternativa gratuita: Google Drive (en lugar del bucket)
+Funciona con `rclone`. Es menos estable que un bucket: la autorización puede invalidarse (cambio de contraseña de Google,
+revocación de acceso) y entonces los respaldos fallan; el monitor de Healthchecks te avisa.
+
+- Usa una cuenta de Gmail **solo para respaldos**, con verificación en dos pasos y una contraseña única. No uses tu cuenta personal.
+  Tu PDP-03 recomienda cuenta corporativa; con Gmail personal documenta la excepción.
+- Instala rclone en tu equipo: `winget install Rclone.Rclone`.
+- Genera la autorización limitada a los archivos que crea el propio respaldo (alcance `drive.file`):
+  ```bash
+  rclone authorize "drive" "eyJzY29wZSI6ImRyaXZlLmZpbGUifQ=="
+  ```
+  Se abre el navegador, inicias sesión con el Gmail de respaldos y aceptas. rclone imprime un JSON entre
+  `--->` y `<---`: ese JSON es el secreto `RCLONE_DRIVE_TOKEN`.
+- En GitHub crea la **variable** (no secreto) `BACKUP_DESTINO` con el valor `drive`. Los secretos `BACKUP_S3_*` no hacen falta.
+- Las copias se guardan en la carpeta `softvet-respaldos` de ese Drive. Como Drive no tiene reglas de retención, el propio script
+  borra de forma permanente las copias vencidas (8, 31 y 190 días según la carpeta).
+- Para restaurar, descarga el `.gpg` y su manifiesto desde Drive y usa `restaurar.sh` igual que arriba.
+
 ### 2. Claves de cifrado (en un equipo de confianza)
 ```bash
 gpg --quick-generate-key "SoftVet Respaldos <correo-del-responsable>" default default never
@@ -68,8 +86,9 @@ los ejecutores de GitHub solo tienen IPv4 y la conexión directa de Supabase es 
 |---|---|
 | `BACKUP_DB_URL` | URL del paso 3 |
 | `BACKUP_GPG_PUBLIC_KEY` | contenido de `publica.asc` |
-| `BACKUP_S3_BUCKET`, `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION` | datos del bucket |
-| `BACKUP_S3_KEY_ID`, `BACKUP_S3_APPLICATION_KEY` | llave del bucket |
+| `BACKUP_S3_BUCKET`, `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION` | datos del bucket (no hacen falta si usas Drive) |
+| `BACKUP_S3_KEY_ID`, `BACKUP_S3_APPLICATION_KEY` | llave del bucket (no hacen falta si usas Drive) |
+| `RCLONE_DRIVE_TOKEN` | solo con Drive: el JSON del paso 1b |
 | `HEALTHCHECK_BASE_URL` | URL de un chequeo de Healthchecks.io (sin barra final); periodo 1 día, gracia 3 horas |
 | `SUPABASE_S3_ENDPOINT`, `SUPABASE_S3_ACCESS_KEY`, `SUPABASE_S3_SECRET_KEY`, `SUPABASE_S3_REGION`, `SUPABASE_BUCKET`, `HEALTHCHECK_ARCHIVOS_URL` | solo si quieres respaldar los archivos (Supabase → Storage → S3 Connection) |
 

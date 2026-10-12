@@ -42,6 +42,17 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     @Query("select max(r.lastActivityAt) from RefreshToken r where r.familyId = :familyId")
     Instant ultimaActividadDeLaSesion(@Param("familyId") String familyId);
 
+    interface ActividadDePersona {
+        Integer getUsuarioId();
+        Instant getUltimaActividad();
+    }
+
+    @Query("select r.usuario.id as usuarioId, max(r.lastActivityAt) as ultimaActividad "
+            + "from RefreshToken r where r.usuario.id in :usuarioIds and r.company.id = :companyId "
+            + "group by r.usuario.id")
+    List<ActividadDePersona> ultimaActividadPorPersona(
+            @Param("usuarioIds") java.util.Collection<Integer> usuarioIds, @Param("companyId") Integer companyId);
+
     @Modifying
     @Query("update RefreshToken r set r.lastActivityAt = :ahora where r.familyId = :familyId and r.revokedAt is null")
     int registrarActividad(@Param("familyId") String familyId, @Param("ahora") Instant ahora);

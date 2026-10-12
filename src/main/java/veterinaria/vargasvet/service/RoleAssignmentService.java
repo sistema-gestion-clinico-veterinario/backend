@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,6 +52,9 @@ public class RoleAssignmentService {
     private final AdministratorProtection administratorProtection;
     private final AuditLogService auditLogService;
 
+    @Value("${security.max-roles-per-company:3}")
+    private int maxRolesPerCompany = 3;
+
     @Transactional
     public void replaceStaffRoles(Usuario usuario, Company company, Set<Integer> requestedRoleIds) {
         replaceCompanyRoles(usuario, company, RoleScope.STAFF, requestedRoleIds, false);
@@ -96,6 +100,8 @@ public class RoleAssignmentService {
         if (!initialBaseClientRole) {
             accesoValidator.validarModificar(ROLES_VIEW);
         }
+
+        enforceRoleLimit(usuario, company, expectedScope, currentRoles.size(), requestedRoles.size());
 
         boolean removesCompanyAdmin = currentRoles.values().stream()
                 .anyMatch(role -> role.getPurpose() == RolePurpose.COMPANY_ADMIN)
@@ -152,6 +158,22 @@ public class RoleAssignmentService {
                 "MODIFICAR_ASIGNACIONES_ROL",
                 "Roles",
                 "Usuario " + usuario.getId() + ": roles " + previousNames + " -> " + requestedNames);
+    }
+
+    /**
+     * Una persona tiene como máximo {@code maxRolesPerCompany} roles en una misma empresa, sumando los de personal y los
+     * de cliente. Los roles de otra empresa no cuentan. Quien ya superaba el tope antes de esta regla puede conservar o
+     * reducir sus roles, pero no sumar más.
+     */
+    private void enforceRoleLimit(Usuario usuario, Company company, RoleScope scope, int currentOfScope, int requestedOfScope) {
+        long otherScopes = assignmentRepository.countByUsuarioIdAndCompanyIdAndRoleScopeNot(
+                usuario.getId(), company.getId(), scope);
+        long before = otherScopes + currentOfScope;
+        long after = otherScopes + requestedOfScope;
+        if (after > maxRolesPerCompany && after > before) {
+            throw new IllegalArgumentException(
+                    "Una persona puede tener como máximo " + maxRolesPerCompany + " roles en una misma empresa");
+        }
     }
 
     private List<Role> loadAndValidateRoles(Set<Integer> requestedIds,

@@ -16,7 +16,9 @@ import veterinaria.vargasvet.domain.enums.TipoPurchase;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
+import veterinaria.vargasvet.domain.enums.EstadoStockReporte;
 import veterinaria.vargasvet.domain.enums.TipoControlPreventivo;
+import veterinaria.vargasvet.dto.request.ReporteVentasProductosFiltro;
 import veterinaria.vargasvet.dto.response.PacientesInactivosPageDTO;
 import veterinaria.vargasvet.dto.response.ReportesClinicosDTO;
 import veterinaria.vargasvet.dto.response.ReportesComparativoEmpresasDTO;
@@ -256,11 +258,11 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
 
     @Override
     @Transactional(readOnly = true)
-    public ReporteVentasProductosDTO obtenerVentasProductos(Integer companyId, LocalDate fechaDesde, LocalDate fechaHasta) {
-        Integer targetCompanyId = resolveCompanyId(companyId);
+    public ReporteVentasProductosDTO obtenerVentasProductos(ReporteVentasProductosFiltro filtros) {
+        Integer targetCompanyId = resolveCompanyId(filtros.getCompanyId());
         LocalDate hoy = AppClock.today();
-        LocalDate desde = fechaDesde != null ? fechaDesde : hoy.withDayOfMonth(1);
-        LocalDate hasta = fechaHasta != null ? fechaHasta : hoy;
+        LocalDate desde = filtros.getFechaDesde() != null ? filtros.getFechaDesde() : hoy.withDayOfMonth(1);
+        LocalDate hasta = filtros.getFechaHasta() != null ? filtros.getFechaHasta() : hoy;
         if (hasta.isBefore(desde)) {
             throw new IllegalArgumentException("La fecha hasta no puede ser anterior a la fecha desde");
         }
@@ -273,32 +275,38 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
         boolean alcanceEmpresa = tieneAlcanceEmpresa();
         Integer registradoPorUsuarioId = alcanceEmpresa ? null : SecurityUtils.getCurrentUserId();
         if (targetCompanyId == null) {
+            ReporteVentasProductosDTO.Resumen resumenVacio = ReporteVentasProductosDTO.Resumen.builder()
+                    .ventas(0L).ingresos(BigDecimal.ZERO).unidadesVendidas(0L).ticketPromedio(BigDecimal.ZERO)
+                    .productosStockBajo(0L).productosSinStock(0L).build();
             return ReporteVentasProductosDTO.builder().fechaDesde(desde).fechaHasta(hasta)
-                    .resumen(ReporteVentasProductosDTO.Resumen.builder().ventas(0L).ingresos(BigDecimal.ZERO)
-                            .unidadesVendidas(0L).ticketPromedio(BigDecimal.ZERO)
-                            .productosStockBajo(0L).productosSinStock(0L).build())
+                    .resumen(resumenVacio).resumenAnterior(resumenVacio)
                     .ventasPorMetodo(List.of()).ventasPorDia(List.of())
                     .productosMasVendidos(List.of()).alertasStock(List.of()).build();
         }
 
-        List<Purchase> ventas = puedePagos
-                ? purchaseRepository.findForSalesReport(targetCompanyId, TipoPurchase.TIENDA, PaymentStatus.PAID,
-                        desde.atStartOfDay(), hasta.plusDays(1).atStartOfDay(), registradoPorUsuarioId)
-                : List.of();
-        List<VentaLibreDetalle> detalles = puedeProductos && !ventas.isEmpty()
-                ? ventaLibreDetalleRepository.findForReportByPurchaseIds(ventas.stream().map(Purchase::getId).toList())
-                : List.of();
+        long diasPeriodo = ChronoUnit.DAYS.between(desde, hasta) + 1;
+        LocalDate anteriorHasta = desde.minusDays(1);
+        LocalDate anteriorDesde = anteriorHasta.minusDays(diasPeriodo - 1);
+        PeriodoVentas actual = cargarPeriodoVentas(targetCompanyId, desde, hasta, registradoPorUsuarioId,
+                puedePagos, puedeProductos, filtros);
+        PeriodoVentas anterior = cargarPeriodoVentas(targetCompanyId, anteriorDesde, anteriorHasta,
+                registradoPorUsuarioId, puedePagos, puedeProductos, filtros);
+        List<Purchase> ventas = actual.ventas();
+        List<VentaLibreDetalle> detalles = actual.detalles();
         // El inventario es un recurso común de la clínica y no tiene "propietario" individual.
         // Solo se muestran sus métricas cuando el rol tiene alcance COMPANY.
         boolean puedeInventarioEmpresa = puedeProductos && alcanceEmpresa;
         List<Producto> productos = puedeInventarioEmpresa
-                ? productoRepository.findByCompanyIdAndActivoTrue(targetCompanyId) : List.of();
+                ? productoRepository.findByCompanyIdAndActivoTrue(targetCompanyId).stream()
+                        .filter(p -> coincideProducto(p, filtros))
+                        .filter(p -> coincideEstadoStock(p, filtros.getEstadoStock()))
+                        .toList()
+                : List.of();
 
-        BigDecimal ingresos = ventas.stream().map(Purchase::getTotal).filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        long unidades = detalles.stream().mapToLong(d -> d.getCantidad() == null ? 0 : d.getCantidad()).sum();
-        BigDecimal ticket = ventas.isEmpty() ? BigDecimal.ZERO
-                : ingresos.divide(BigDecimal.valueOf(ventas.size()), 2, RoundingMode.HALF_UP);
+        Map<Long, BigDecimal> montoPorVenta = montoPorVenta(ventas, detalles, tieneFiltroProducto(filtros));
+        BigDecimal ingresos = sumarMontos(montoPorVenta);
+        long unidades = sumarUnidades(detalles);
+        BigDecimal ticket = calcularTicket(ingresos, ventas.size());
         long sinStock = productos.stream().filter(p -> p.getStock() != null && p.getStock() <= 0).count();
         long stockBajo = productos.stream().filter(p -> p.getStock() != null && p.getStockMinimo() != null
                 && p.getStock() > 0 && p.getStock() <= p.getStockMinimo()).count();
@@ -307,14 +315,14 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                 v -> v.getMetodoPago() == null ? "SIN ESPECIFICAR" : v.getMetodoPago().name(), TreeMap::new, Collectors.toList()));
         List<ReporteVentasProductosDTO.ItemMonto> ventasPorMetodo = porMetodo.entrySet().stream().map(e ->
                 ReporteVentasProductosDTO.ItemMonto.builder().nombre(e.getKey()).cantidad((long) e.getValue().size())
-                        .monto(e.getValue().stream().map(Purchase::getTotal).filter(java.util.Objects::nonNull)
+                        .monto(e.getValue().stream().map(v -> montoPorVenta.getOrDefault(v.getId(), BigDecimal.ZERO))
                                 .reduce(BigDecimal.ZERO, BigDecimal::add)).build()).toList();
 
         Map<LocalDate, List<Purchase>> porDia = ventas.stream().collect(Collectors.groupingBy(
                 v -> v.getCreatedAt().toLocalDate(), TreeMap::new, Collectors.toList()));
         List<ReporteVentasProductosDTO.ItemMonto> ventasPorDia = porDia.entrySet().stream().map(e ->
                 ReporteVentasProductosDTO.ItemMonto.builder().nombre(e.getKey().toString()).cantidad((long) e.getValue().size())
-                        .monto(e.getValue().stream().map(Purchase::getTotal).filter(java.util.Objects::nonNull)
+                        .monto(e.getValue().stream().map(v -> montoPorVenta.getOrDefault(v.getId(), BigDecimal.ZERO))
                                 .reduce(BigDecimal.ZERO, BigDecimal::add)).build()).toList();
 
         Map<Long, List<VentaLibreDetalle>> porProducto = detalles.stream().collect(Collectors.groupingBy(
@@ -329,7 +337,8 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                 .limit(10).toList();
 
         List<ReporteVentasProductosDTO.AlertaStock> alertas = productos.stream()
-                .filter(p -> p.getStock() != null && p.getStockMinimo() != null && p.getStock() <= p.getStockMinimo())
+                .filter(p -> filtros.getEstadoStock() == EstadoStockReporte.NORMAL
+                        || (p.getStock() != null && p.getStockMinimo() != null && p.getStock() <= p.getStockMinimo()))
                 .sorted(Comparator.comparing(Producto::getStock))
                 .map(p -> ReporteVentasProductosDTO.AlertaStock.builder().sku(p.getSku()).nombre(p.getNombre())
                         .categoria(p.getCategoria() == null ? null : p.getCategoria().getNombre())
@@ -343,11 +352,94 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                         .ticketPromedio(puedePagos ? ticket : null)
                         .productosStockBajo(puedeInventarioEmpresa ? stockBajo : null)
                         .productosSinStock(puedeInventarioEmpresa ? sinStock : null).build())
+                .resumenAnterior(resumenVentas(anterior.ventas(), anterior.detalles(),
+                        tieneFiltroProducto(filtros), puedePagos, puedeProductos))
                 .ventasPorMetodo(puedePagos ? ventasPorMetodo : null)
                 .ventasPorDia(puedePagos ? ventasPorDia : null)
                 .productosMasVendidos(puedeProductos && puedePagos ? masVendidos : null)
                 .alertasStock(puedeInventarioEmpresa ? alertas : null).build();
     }
+
+    private PeriodoVentas cargarPeriodoVentas(Integer companyId, LocalDate desde, LocalDate hasta,
+                                               Integer registradoPorUsuarioId, boolean puedePagos,
+                                               boolean puedeProductos, ReporteVentasProductosFiltro filtros) {
+        if (!puedePagos) return new PeriodoVentas(List.of(), List.of());
+        List<Purchase> ventas = purchaseRepository.findForSalesReport(companyId, TipoPurchase.TIENDA,
+                        PaymentStatus.PAID, desde.atStartOfDay(), hasta.plusDays(1).atStartOfDay(), registradoPorUsuarioId)
+                .stream()
+                .filter(v -> filtros.getMetodoPago() == null || filtros.getMetodoPago() == v.getMetodoPago())
+                .toList();
+        List<VentaLibreDetalle> detalles = puedeProductos && !ventas.isEmpty()
+                ? ventaLibreDetalleRepository.findForReportByPurchaseIds(ventas.stream().map(Purchase::getId).toList())
+                        .stream().filter(d -> coincideProducto(d.getProducto(), filtros)).toList()
+                : List.of();
+        if (tieneFiltroProducto(filtros)) {
+            Set<Long> ventasCoincidentes = detalles.stream().map(d -> d.getPurchase().getId()).collect(Collectors.toSet());
+            ventas = ventas.stream().filter(v -> ventasCoincidentes.contains(v.getId())).toList();
+        }
+        return new PeriodoVentas(ventas, detalles);
+    }
+
+    private boolean tieneFiltroProducto(ReporteVentasProductosFiltro filtros) {
+        return filtros.getCategoriaId() != null || filtros.getProductoId() != null || filtros.getMarcaId() != null;
+    }
+
+    private boolean coincideProducto(Producto producto, ReporteVentasProductosFiltro filtros) {
+        if (producto == null) return false;
+        if (filtros.getProductoId() != null && !filtros.getProductoId().equals(producto.getId())) return false;
+        if (filtros.getCategoriaId() != null && (producto.getCategoria() == null
+                || !filtros.getCategoriaId().equals(producto.getCategoria().getId()))) return false;
+        return filtros.getMarcaId() == null || (producto.getMarcaProducto() != null
+                && filtros.getMarcaId().equals(producto.getMarcaProducto().getId()));
+    }
+
+    private boolean coincideEstadoStock(Producto producto, EstadoStockReporte estado) {
+        if (estado == null) return true;
+        int stock = producto.getStock() == null ? 0 : producto.getStock();
+        int minimo = producto.getStockMinimo() == null ? 0 : producto.getStockMinimo();
+        return switch (estado) {
+            case SIN_STOCK -> stock <= 0;
+            case BAJO -> stock > 0 && stock <= minimo;
+            case NORMAL -> stock > minimo;
+        };
+    }
+
+    private Map<Long, BigDecimal> montoPorVenta(List<Purchase> ventas, List<VentaLibreDetalle> detalles,
+                                                boolean filtraProducto) {
+        if (!filtraProducto) {
+            return ventas.stream().collect(Collectors.toMap(Purchase::getId,
+                    v -> v.getTotal() == null ? BigDecimal.ZERO : v.getTotal()));
+        }
+        return detalles.stream().collect(Collectors.groupingBy(d -> d.getPurchase().getId(), Collectors.reducing(
+                BigDecimal.ZERO, d -> d.getSubtotal() == null ? BigDecimal.ZERO : d.getSubtotal(), BigDecimal::add)));
+    }
+
+    private ReporteVentasProductosDTO.Resumen resumenVentas(List<Purchase> ventas, List<VentaLibreDetalle> detalles,
+                                                             boolean filtraProducto, boolean puedePagos,
+                                                             boolean puedeProductos) {
+        Map<Long, BigDecimal> montos = montoPorVenta(ventas, detalles, filtraProducto);
+        BigDecimal ingresos = sumarMontos(montos);
+        return ReporteVentasProductosDTO.Resumen.builder()
+                .ventas(puedePagos ? (long) ventas.size() : null)
+                .ingresos(puedePagos ? ingresos : null)
+                .unidadesVendidas(puedePagos && puedeProductos ? sumarUnidades(detalles) : null)
+                .ticketPromedio(puedePagos ? calcularTicket(ingresos, ventas.size()) : null)
+                .productosStockBajo(null).productosSinStock(null).build();
+    }
+
+    private BigDecimal sumarMontos(Map<Long, BigDecimal> montos) {
+        return montos.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private long sumarUnidades(List<VentaLibreDetalle> detalles) {
+        return detalles.stream().mapToLong(d -> d.getCantidad() == null ? 0 : d.getCantidad()).sum();
+    }
+
+    private BigDecimal calcularTicket(BigDecimal ingresos, int ventas) {
+        return ventas == 0 ? BigDecimal.ZERO : ingresos.divide(BigDecimal.valueOf(ventas), 2, RoundingMode.HALF_UP);
+    }
+
+    private record PeriodoVentas(List<Purchase> ventas, List<VentaLibreDetalle> detalles) {}
 
     private boolean tienePermiso(String vista) {
         return SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin() || accesoValidator.can(vista, "LEER");

@@ -17,6 +17,9 @@ public class ReporteVentasProductosDTO {
     private LocalDate fechaDesde;
     private LocalDate fechaHasta;
     private Resumen resumen;
+    /** Mismo número de días inmediatamente anterior. No incluye inventario porque no se
+     * conserva una fotografía histórica del stock. */
+    private Resumen resumenAnterior;
     private List<ItemMonto> ventasPorMetodo;
     private List<ItemMonto> ventasPorDia;
     private List<ProductoVendido> productosMasVendidos;

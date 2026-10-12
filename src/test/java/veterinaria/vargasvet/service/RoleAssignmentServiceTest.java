@@ -160,6 +160,86 @@ class RoleAssignmentServiceTest {
                 .hasMessageContaining("Solo la plataforma");
     }
 
+    private List<Role> rolesDePersonal(int desde, int cantidad) {
+        List<Role> roles = new java.util.ArrayList<>();
+        for (int id = desde; id < desde + cantidad; id++) {
+            roles.add(role(id, company, RoleScope.STAFF, RolePurpose.CUSTOM, true));
+        }
+        return roles;
+    }
+
+    private Set<Integer> idsDe(List<Role> roles) {
+        return roles.stream().map(Role::getId).collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
+    }
+
+    @Test
+    void permiteExactamenteTresRolesEnUnaEmpresa() {
+        List<Role> tres = rolesDePersonal(10, 3);
+        when(assignmentRepository.findByUsuarioIdAndCompanyIdAndRoleScope(20, 7, RoleScope.STAFF)).thenReturn(List.of());
+        when(roleRepository.findAllById(idsDe(tres))).thenReturn(tres);
+
+        withCompanyContext(7, () -> service.replaceStaffRoles(usuario, company, idsDe(tres)));
+
+        verify(assignmentRepository, org.mockito.Mockito.times(3)).save(org.mockito.ArgumentMatchers.any(UsuarioPorRol.class));
+    }
+
+    @Test
+    void rechazaUnCuartoRolEnLaMismaEmpresaSinTocarNada() {
+        List<Role> cuatro = rolesDePersonal(10, 4);
+        when(assignmentRepository.findByUsuarioIdAndCompanyIdAndRoleScope(20, 7, RoleScope.STAFF))
+                .thenReturn(cuatro.subList(0, 3).stream().map(this::assignment).toList());
+        when(roleRepository.findAllById(idsDe(cuatro))).thenReturn(cuatro);
+
+        assertThatThrownBy(() -> withCompanyContext(7, () -> service.replaceStaffRoles(usuario, company, idsDe(cuatro))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("como máximo 3 roles");
+
+        verify(assignmentRepository, never()).deleteAll(org.mockito.ArgumentMatchers.any());
+        verify(assignmentRepository, never()).save(org.mockito.ArgumentMatchers.any());
+        verifyNoInteractions(auditLogService, historyRepository);
+    }
+
+    @Test
+    void elRolDeClienteDeLaMismaEmpresaTambienCuenta() {
+        List<Role> tres = rolesDePersonal(10, 3);
+        when(assignmentRepository.findByUsuarioIdAndCompanyIdAndRoleScope(20, 7, RoleScope.STAFF)).thenReturn(List.of());
+        when(assignmentRepository.countByUsuarioIdAndCompanyIdAndRoleScopeNot(20, 7, RoleScope.STAFF)).thenReturn(1L);
+        when(roleRepository.findAllById(idsDe(tres))).thenReturn(tres);
+
+        assertThatThrownBy(() -> withCompanyContext(7, () -> service.replaceStaffRoles(usuario, company, idsDe(tres))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("como máximo 3 roles");
+    }
+
+    @Test
+    void elConteoSeHaceSoloDentroDeLaEmpresaDeLaAsignacion() {
+        List<Role> dos = rolesDePersonal(10, 2);
+        when(assignmentRepository.findByUsuarioIdAndCompanyIdAndRoleScope(20, 7, RoleScope.STAFF)).thenReturn(List.of());
+        when(roleRepository.findAllById(idsDe(dos))).thenReturn(dos);
+
+        withCompanyContext(7, () -> service.replaceStaffRoles(usuario, company, idsDe(dos)));
+
+        verify(assignmentRepository).countByUsuarioIdAndCompanyIdAndRoleScopeNot(20, 7, RoleScope.STAFF);
+    }
+
+    @Test
+    void quienYaSuperabaElTopePuedeReducirOCambiarPeroNoSumarMas() {
+        List<Role> cinco = rolesDePersonal(10, 5);
+        List<Role> seis = rolesDePersonal(10, 6);
+        List<Role> cuatro = cinco.subList(0, 4);
+        when(assignmentRepository.findByUsuarioIdAndCompanyIdAndRoleScope(20, 7, RoleScope.STAFF))
+                .thenReturn(cinco.stream().map(this::assignment).toList());
+        when(roleRepository.findAllById(idsDe(cuatro))).thenReturn(cuatro);
+        when(roleRepository.findAllById(idsDe(seis))).thenReturn(seis);
+
+        withCompanyContext(7, () -> service.replaceStaffRoles(usuario, company, idsDe(cuatro)));
+        verify(assignmentRepository).deleteAll(org.mockito.ArgumentMatchers.any());
+
+        assertThatThrownBy(() -> withCompanyContext(7, () -> service.replaceStaffRoles(usuario, company, idsDe(seis))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("como máximo 3 roles");
+    }
+
     private UsuarioPorRol assignment(Role role) {
         UsuarioPorRol assignment = new UsuarioPorRol();
         assignment.setUsuario(usuario);

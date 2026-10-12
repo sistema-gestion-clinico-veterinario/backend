@@ -30,7 +30,7 @@ public class PuntoCobroController {
     private final PuntoCobroService puntoCobroService;
 
     @GetMapping
-    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'LEER')")
+    @PreAuthorize("@accesoValidator.hasPurpose('COMPANY_ADMIN') or @accesoValidator.hasPurpose('PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<List<PuntoCobroResponse>>> listar(@RequestParam Integer companyId) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Puntos de cobro recuperados", puntoCobroService.listar(companyId)));
     }
@@ -42,14 +42,14 @@ public class PuntoCobroController {
     }
 
     @PostMapping
-    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'ESCRIBIR')")
+    @PreAuthorize("@accesoValidator.hasPurpose('COMPANY_ADMIN') or @accesoValidator.hasPurpose('PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<PuntoCobroResponse>> crear(@Valid @RequestBody PuntoCobroRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Punto de cobro creado",
                 puntoCobroService.crear(request.getCompanyId(), request.getNombre())));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'ESCRIBIR')")
+    @PreAuthorize("@accesoValidator.hasPurpose('COMPANY_ADMIN') or @accesoValidator.hasPurpose('PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<PuntoCobroResponse>> actualizar(@PathVariable Long id,
                                                                       @Valid @RequestBody PuntoCobroRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Punto de cobro actualizado",
@@ -57,7 +57,7 @@ public class PuntoCobroController {
     }
 
     @PostMapping("/{id}/vincular")
-    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'ESCRIBIR')")
+    @PreAuthorize("@accesoValidator.hasPurpose('COMPANY_ADMIN') or @accesoValidator.hasPurpose('PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<PuntoCobroResponse>> vincular(@PathVariable Long id, @RequestParam Integer companyId,
                                                                     HttpServletRequest request, HttpServletResponse response) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Este equipo quedó registrado como punto de cobro",
@@ -65,7 +65,7 @@ public class PuntoCobroController {
     }
 
     @PostMapping("/{id}/desvincular")
-    @PreAuthorize("@accesoValidator.can('VISTA_CAJA', 'ESCRIBIR')")
+    @PreAuthorize("@accesoValidator.hasPurpose('COMPANY_ADMIN') or @accesoValidator.hasPurpose('PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<PuntoCobroResponse>> desvincular(@PathVariable Long id, @RequestParam Integer companyId,
                                                                        HttpServletRequest request, HttpServletResponse response) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Se quitó el equipo del punto de cobro",

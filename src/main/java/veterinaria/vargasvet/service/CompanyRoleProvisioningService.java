@@ -181,7 +181,7 @@ public class CompanyRoleProvisioningService {
                     && CLIENT_WRITE_VIEWS.contains(vista.getCodigo());
             permission.setEscribir(companyAdmin || clientCanManage);
             permission.setModificar(companyAdmin || clientCanManage);
-            permission.setEliminar(companyAdmin || clientCanManage);
+            permission.setEliminar(companyAdmin);
             permission.setDataScope(companyAdmin
                     ? veterinaria.vargasvet.domain.enums.DataScope.COMPANY
                     : veterinaria.vargasvet.domain.enums.DataScope.OWN);

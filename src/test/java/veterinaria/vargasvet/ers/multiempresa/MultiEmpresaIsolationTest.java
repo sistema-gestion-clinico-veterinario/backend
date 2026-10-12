@@ -1552,4 +1552,41 @@ class MultiEmpresaIsolationTest {
         assertThat(puntos.resolver(sedeB.getId()).modo()).isEqualTo("DISPOSITIVO");
         assertThat(puntos.resolver(sedeB.getId()).caja().getId()).isEqualTo(cajaB);
     }
+
+    @Test
+    @DisplayName("[Escenario 21] Hasta 3 roles por empresa: el tope se cuenta dentro de cada empresa, no entre empresas")
+    void escenario21_elTopeDeRolesSeCuentaPorEmpresa() {
+        Company clinicaA = crearEmpresa("Clinica A", "clinica-a-21");
+        Company clinicaB = crearEmpresa("Clinica B", "clinica-b-21");
+        Usuario ana = crearIdentidad("ana21@example.test", "ana.veintiuno", "21212121");
+        crearCredencial(ana, clinicaA, "ClaveA123!");
+        crearCredencial(ana, clinicaB, "ClaveB123!");
+        java.util.List<Role> rolesA = java.util.stream.IntStream.rangeClosed(1, 4)
+                .mapToObj(n -> crearRol(clinicaA, "ROL_A_21_" + n)).toList();
+        java.util.List<Role> rolesB = java.util.stream.IntStream.rangeClosed(1, 4)
+                .mapToObj(n -> crearRol(clinicaB, "ROL_B_21_" + n)).toList();
+        veterinaria.vargasvet.service.RoleAssignmentService asignaciones = new veterinaria.vargasvet.service.RoleAssignmentService(
+                usuarioPorRolRepository, roleRepository, companyRepository,
+                mock(veterinaria.vargasvet.repository.RoleAssignmentHistoryRepository.class),
+                mock(veterinaria.vargasvet.security.AccesoValidator.class),
+                new veterinaria.vargasvet.service.AdministratorProtection(usuarioPorRolRepository,
+                        new CompanyMembershipServiceImpl(empleadoRepository, apoderadoRepository, usuarioMembresiaRepository,
+                                usuarioRepository, companyRepository), companyRepository),
+                mock(AuditLogService.class));
+        java.util.function.Function<java.util.List<Role>, java.util.Set<Integer>> ids = roles ->
+                roles.stream().map(Role::getId).collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
+
+        autenticarComoAdministrador(clinicaA.getId());
+        asignaciones.replaceStaffRoles(ana, clinicaA, ids.apply(rolesA.subList(0, 3)));
+        assertThatThrownBy(() -> asignaciones.replaceStaffRoles(ana, clinicaA, ids.apply(rolesA)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("como máximo 3 roles");
+
+        autenticarComoAdministrador(clinicaB.getId());
+        asignaciones.replaceStaffRoles(ana, clinicaB, ids.apply(rolesB.subList(0, 3)));
+
+        assertThat(usuarioPorRolRepository.findByUsuarioId(ana.getId())).hasSize(6);
+        assertThat(usuarioPorRolRepository.findByUsuarioIdAndCompanyIdAndRoleScope(ana.getId(), clinicaA.getId(), RoleScope.STAFF))
+                .hasSize(3);
+    }
 }
