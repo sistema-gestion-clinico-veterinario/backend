@@ -5,6 +5,7 @@ import veterinaria.vargasvet.dto.response.ReportesClinicosDTO;
 import veterinaria.vargasvet.dto.response.ReportesComparativoEmpresasDTO;
 import veterinaria.vargasvet.dto.response.ReporteVentasProductosDTO;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
+import veterinaria.vargasvet.dto.request.ReporteVentasProductosFiltro;
 
 import java.time.LocalDate;
 
@@ -20,5 +21,11 @@ public interface ReportesClinicosService {
      * en memoria solo para este panel. */
     PacientesInactivosPageDTO obtenerPacientesInactivos(Integer companyId, int page, int size);
 
-    ReporteVentasProductosDTO obtenerVentasProductos(Integer companyId, LocalDate fechaDesde, LocalDate fechaHasta);
+    ReporteVentasProductosDTO obtenerVentasProductos(ReporteVentasProductosFiltro filtros);
+
+    /** Compatibilidad para consumidores internos que todavía solo envían el periodo. */
+    default ReporteVentasProductosDTO obtenerVentasProductos(Integer companyId, LocalDate fechaDesde, LocalDate fechaHasta) {
+        return obtenerVentasProductos(ReporteVentasProductosFiltro.builder()
+                .companyId(companyId).fechaDesde(fechaDesde).fechaHasta(fechaHasta).build());
+    }
 }

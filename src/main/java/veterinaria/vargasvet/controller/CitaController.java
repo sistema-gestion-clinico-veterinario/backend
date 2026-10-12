@@ -144,7 +144,7 @@ public class CitaController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Cita eliminada con éxito", null));
     }
 
-    @DeleteMapping("/{id}/cancel")
+    @PatchMapping("/{id}/cancel")
     public ResponseEntity<ApiResponse<CitaResponse>> cancelarCita(@PathVariable Long id, @RequestParam(required = false) String motivo) {
         accesoValidator.validarModificar("VISTA_CITAS_AGENDA");
         String finalMotivo = (motivo == null || motivo.isBlank()) ? "Cancelado por el usuario" : motivo;

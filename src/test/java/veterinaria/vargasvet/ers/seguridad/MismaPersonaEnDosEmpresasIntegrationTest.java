@@ -204,7 +204,8 @@ class MismaPersonaEnDosEmpresasIntegrationTest {
                 .replaceAll("(Ana|Administrador)TK[PQ]", "$1")
                 .replaceAll("ApellidoTK[PQ]", "Apellido")
                 .replaceAll("(cliente1|admin)[.]tk[pq]@tk[pq][.]test", "$1@persona.test")
-                .replaceAll("\"userId\":[0-9]+", "\"userId\":0");
+                .replaceAll("\"(userId|usuarioId)\":[0-9]+", "\"$1\":0")
+                .replaceAll("\"lastActivity\":\"[^\"]*\"", "\"lastActivity\":\"-\"");
     }
 
     private boolean esVolatil(String ruta) {

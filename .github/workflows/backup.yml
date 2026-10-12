@@ -47,6 +47,10 @@ jobs:
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get install -y -qq postgresql-client-17
 
+      - name: Instalar rclone (solo si el destino es Google Drive)
+        if: vars.BACKUP_DESTINO == 'drive'
+        run: sudo apt-get install -y -qq rclone
+
       - name: Respaldar, verificar, cifrar y subir
         env:
           BACKUP_DB_URL: ${{ secrets.BACKUP_DB_URL }}
@@ -60,6 +64,10 @@ jobs:
           AWS_REQUEST_CHECKSUM_CALCULATION: when_required
           AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
           HEALTHCHECK_URL: ${{ secrets.HEALTHCHECK_BASE_URL }}
+          BACKUP_DESTINO: ${{ vars.BACKUP_DESTINO || 's3' }}
+          RCLONE_CONFIG_RESPALDO_TYPE: drive
+          RCLONE_CONFIG_RESPALDO_SCOPE: drive.file
+          RCLONE_CONFIG_RESPALDO_TOKEN: ${{ secrets.RCLONE_DRIVE_TOKEN }}
         run: bash ops/backup/respaldar-base.sh
 
   archivos:
@@ -89,6 +97,10 @@ jobs:
         if: steps.decidir.outputs.ejecutar == 'true'
         uses: actions/checkout@v4
 
+      - name: Instalar rclone (solo si el destino es Google Drive)
+        if: steps.decidir.outputs.ejecutar == 'true' && vars.BACKUP_DESTINO == 'drive'
+        run: sudo apt-get install -y -qq rclone
+
       - name: Respaldar, cifrar y subir los archivos
         if: steps.decidir.outputs.ejecutar == 'true'
         env:
@@ -106,4 +118,8 @@ jobs:
           AWS_REQUEST_CHECKSUM_CALCULATION: when_required
           AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
           HEALTHCHECK_ARCHIVOS_URL: ${{ secrets.HEALTHCHECK_ARCHIVOS_URL }}
+          BACKUP_DESTINO: ${{ vars.BACKUP_DESTINO || 's3' }}
+          RCLONE_CONFIG_RESPALDO_TYPE: drive
+          RCLONE_CONFIG_RESPALDO_SCOPE: drive.file
+          RCLONE_CONFIG_RESPALDO_TOKEN: ${{ secrets.RCLONE_DRIVE_TOKEN }}
         run: bash ops/backup/respaldar-archivos.sh

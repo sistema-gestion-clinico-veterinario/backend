@@ -121,8 +121,8 @@ public class ApoderadoPortalController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Appointment rescheduled successfully", apoderadoPortalService.reschedulePortalCita(id, request)));
     }
 
-    @DeleteMapping("/appointments/{id}/cancel")
-    @PreAuthorize("@accesoValidator.can('VISTA_MIS_CITAS', 'ELIMINAR')")
+    @PatchMapping("/appointments/{id}/cancel")
+    @PreAuthorize("@accesoValidator.can('VISTA_MIS_CITAS', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<Void>> cancelPortalCita(
             @PathVariable Long id,
             @RequestParam(required = false) String motivo) {

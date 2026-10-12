@@ -492,7 +492,7 @@ class ReportesClinicosServiceImplTest {
             comoUsuarioConAlcance(security, false);
             var reporte = service.obtenerVentasProductos(1, LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 31));
 
-            org.mockito.Mockito.verify(purchaseRepository).findForSalesReport(
+            org.mockito.Mockito.verify(purchaseRepository, org.mockito.Mockito.times(2)).findForSalesReport(
                     eq(1), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), eq(7));
             org.mockito.Mockito.verify(productoRepository, org.mockito.Mockito.never())
                     .findByCompanyIdAndActivoTrue(any());
@@ -508,11 +508,98 @@ class ReportesClinicosServiceImplTest {
             comoUsuarioConAlcance(security, true);
             var reporte = service.obtenerVentasProductos(1, LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 31));
 
-            org.mockito.Mockito.verify(purchaseRepository).findForSalesReport(
+            org.mockito.Mockito.verify(purchaseRepository, org.mockito.Mockito.times(2)).findForSalesReport(
                     eq(1), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), isNull());
             org.mockito.Mockito.verify(productoRepository).findByCompanyIdAndActivoTrue(1);
             assertThat(reporte.getAlertasStock()).isNotNull();
         }
+    }
+
+    @Test
+    void reporteOperativoFiltraLineasYComparaContraUnPeriodoDeIgualDuracion() {
+        var categoria = new veterinaria.vargasvet.domain.entity.CategoriaProducto();
+        categoria.setId(10L);
+        categoria.setNombre("Alimentos");
+        var producto = new veterinaria.vargasvet.domain.entity.Producto();
+        producto.setId(100L);
+        producto.setSku("ALI-100");
+        producto.setNombre("Alimento control");
+        producto.setCategoria(categoria);
+        producto.setStock(2);
+        producto.setStockMinimo(5);
+
+        var ventaActual = venta(1L, "100.00", veterinaria.vargasvet.domain.enums.MetodoPago.YAPE,
+                LocalDateTime.of(2026, 7, 10, 10, 0));
+        var ventaAnterior = venta(2L, "40.00", veterinaria.vargasvet.domain.enums.MetodoPago.YAPE,
+                LocalDateTime.of(2026, 6, 10, 10, 0));
+        var detalleActual = detalle(ventaActual, producto, 2, "30.00");
+        var detalleAnterior = detalle(ventaAnterior, producto, 1, "40.00");
+
+        when(purchaseRepository.findForSalesReport(eq(1), any(), any(), any(), any(), isNull()))
+                .thenReturn(List.of(ventaActual), List.of(ventaAnterior));
+        when(ventaLibreDetalleRepository.findForReportByPurchaseIds(anyList()))
+                .thenReturn(List.of(detalleActual), List.of(detalleAnterior));
+        when(productoRepository.findByCompanyIdAndActivoTrue(1)).thenReturn(List.of(producto));
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+            var reporte = service.obtenerVentasProductos(
+                    veterinaria.vargasvet.dto.request.ReporteVentasProductosFiltro.builder()
+                            .companyId(1)
+                            .fechaDesde(LocalDate.of(2026, 7, 1))
+                            .fechaHasta(LocalDate.of(2026, 7, 31))
+                            .metodoPago(veterinaria.vargasvet.domain.enums.MetodoPago.YAPE)
+                            .categoriaId(10L)
+                            .estadoStock(veterinaria.vargasvet.domain.enums.EstadoStockReporte.BAJO)
+                            .build());
+
+            assertThat(reporte.getResumen().getVentas()).isEqualTo(1);
+            assertThat(reporte.getResumen().getIngresos()).isEqualByComparingTo("30.00");
+            assertThat(reporte.getResumen().getUnidadesVendidas()).isEqualTo(2);
+            assertThat(reporte.getResumenAnterior().getIngresos()).isEqualByComparingTo("40.00");
+            assertThat(reporte.getResumen().getProductosStockBajo()).isEqualTo(1);
+        }
+    }
+
+    @Test
+    void reporteOperativoIgnoraUnaEmpresaManipuladaEnLaUrl() {
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            comoUsuarioConAlcance(security, true);
+            service.obtenerVentasProductos(
+                    veterinaria.vargasvet.dto.request.ReporteVentasProductosFiltro.builder()
+                            .companyId(999)
+                            .fechaDesde(LocalDate.of(2026, 7, 1))
+                            .fechaHasta(LocalDate.of(2026, 7, 31))
+                            .build());
+        }
+
+        org.mockito.Mockito.verify(purchaseRepository, org.mockito.Mockito.times(2)).findForSalesReport(
+                eq(1), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), isNull());
+        org.mockito.Mockito.verify(purchaseRepository, org.mockito.Mockito.never()).findForSalesReport(
+                eq(999), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), any());
+        org.mockito.Mockito.verify(productoRepository).findByCompanyIdAndActivoTrue(1);
+    }
+
+    private veterinaria.vargasvet.domain.entity.Purchase venta(
+            Long id, String total, veterinaria.vargasvet.domain.enums.MetodoPago metodo,
+            LocalDateTime fecha) {
+        var venta = new veterinaria.vargasvet.domain.entity.Purchase();
+        venta.setId(id);
+        venta.setTotal(new BigDecimal(total));
+        venta.setMetodoPago(metodo);
+        venta.setCreatedAt(fecha);
+        return venta;
+    }
+
+    private veterinaria.vargasvet.domain.entity.VentaLibreDetalle detalle(
+            veterinaria.vargasvet.domain.entity.Purchase venta,
+            veterinaria.vargasvet.domain.entity.Producto producto, int cantidad, String subtotal) {
+        var detalle = new veterinaria.vargasvet.domain.entity.VentaLibreDetalle();
+        detalle.setPurchase(venta);
+        detalle.setProducto(producto);
+        detalle.setCantidad(cantidad);
+        detalle.setSubtotal(new BigDecimal(subtotal));
+        return detalle;
     }
 
     private Cita cita(Long id, Mascota mascota, LocalDateTime fecha) {

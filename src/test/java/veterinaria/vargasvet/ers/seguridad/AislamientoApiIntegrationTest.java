@@ -71,7 +71,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 class AislamientoApiIntegrationTest {
 
     private static final int MAX_ID = 8;
-    private static final Pattern REGLA_DE_CLIENTE = Pattern.compile("VISTA_MIS_|VISTA_APODERADO|VISTA_PROFILE|isAuthenticated\\(\\)");
+    private static final Pattern REGLA_DE_CLIENTE = Pattern.compile("VISTA_MIS_|VISTA_MI_HISTORIAL|VISTA_APODERADO|VISTA_PROFILE|isAuthenticated\\(\\)");
 
     @Autowired private MockMvc mvc;
     @Autowired private JdbcTemplate jdbc;

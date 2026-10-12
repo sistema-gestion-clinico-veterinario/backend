@@ -30,6 +30,32 @@ public interface UsuarioPorRolRepository extends JpaRepository<UsuarioPorRol, In
             @Param("companyId") Integer companyId,
             @Param("scope") RoleScope scope);
 
+    @Query("""
+            SELECT upr
+            FROM UsuarioPorRol upr
+            JOIN FETCH upr.usuario u
+            JOIN FETCH upr.rol r
+            WHERE upr.company.id = :companyId
+              AND r.scope = :scope
+              AND r.activo = true
+            ORDER BY u.apellido, u.nombre, r.name
+            """)
+    List<UsuarioPorRol> findActiveAssignmentsByCompanyIdAndRoleScope(
+            @Param("companyId") Integer companyId,
+            @Param("scope") RoleScope scope);
+
+    @Query("""
+            SELECT COUNT(upr)
+            FROM UsuarioPorRol upr
+            WHERE upr.usuario.id = :usuarioId
+              AND upr.company.id = :companyId
+              AND upr.rol.scope <> :scope
+            """)
+    long countByUsuarioIdAndCompanyIdAndRoleScopeNot(
+            @Param("usuarioId") Integer usuarioId,
+            @Param("companyId") Integer companyId,
+            @Param("scope") RoleScope scope);
+
     @Modifying(flushAutomatically = true)
     @Query("DELETE FROM UsuarioPorRol upr WHERE upr.usuario.id = :usuarioId")
     void deleteByUsuarioId(@Param("usuarioId") Integer usuarioId);

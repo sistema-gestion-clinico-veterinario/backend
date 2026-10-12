@@ -5,64 +5,28 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8ef16273-d33e-4236-ac8a-9607d61e8aac" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.github/workflows/backup.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/backup.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/config/DataInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/config/DataInitializer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/config/WebSocketConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/config/WebSocketConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/AdminController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/AuditLogController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/AuditLogController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/NavigationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/NavigationController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/RoleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/RoleController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/UsuarioPorRolController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/UsuarioPorRolController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/RolVentanaConfiguracion.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/RolVistaConfiguracion.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/UsuarioPorRol.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/entity/UsuarioPorRol.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/request/VeterinarioRegistrationDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/request/VistaReorderDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/request/VistaReorderDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/RolMenuOrdenItemDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/RolVentanaConfiguracionDTO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/AuditLogRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/AuditLogRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/CierreCuentaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/CierreCuentaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/EntregaAvisoPrivacidadRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/EntregaAvisoPrivacidadRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/MascotaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/MascotaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/PurchaseRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/PurchaseRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/RolVentanaConfiguracionRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/RolVistaConfiguracionRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ops/backup/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/ops/backup/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ops/backup/respaldar-archivos.sh" beforeDir="false" afterPath="$PROJECT_DIR$/ops/backup/respaldar-archivos.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ops/backup/respaldar-base.sh" beforeDir="false" afterPath="$PROJECT_DIR$/ops/backup/respaldar-base.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/ApoderadoPortalController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/ApoderadoPortalController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/CitaController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/CitaController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/PuntoCobroController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/PuntoCobroController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/ReportesClinicosController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/controller/ReportesClinicosController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/enums/TipoDescarga.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/domain/enums/TipoDescarga.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/ReporteVentasProductosDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/dto/response/ReporteVentasProductosDTO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/UsuarioPorRolRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/UsuarioPorRolRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/AccesoValidator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/AccesoValidator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/JWTFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/JWTFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/RealtimeSubscriptionGuard.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/RealtimeSubscriptionGuard.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/RolePermissionEvaluator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/RolePermissionEvaluator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/SecurityUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/security/SecurityUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/VentaLibreDetalleRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/repository/VentaLibreDetalleRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/CompanyRoleProvisioningService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/CompanyRoleProvisioningService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/MenuBuilderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/MenuBuilderService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/RealtimeTicketService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/RealtimeTicketService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/ReportesClinicosService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/ReportesClinicosService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/RoleAssignmentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/RoleAssignmentService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/RoleService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/RoleService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/VentanaService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/VentanaService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/VeterinarioService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/VistaService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/VistaService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/ReportesClinicosServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/ReportesClinicosServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/RoleServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/RoleServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/UsuarioServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/UsuarioServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/VentaLibreServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/VentaLibreServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/veterinaria/vargasvet/service/impl/VeterinarioServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/e2e/E2eDataInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/e2e/E2eDataInitializer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/e2e/E2eTestConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/e2e/E2eTestConfiguration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/ers/multiempresa/MultiEmpresaIsolationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/ers/multiempresa/MultiEmpresaIsolationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/repository/UsuarioPorRolAsignacionActivaClinicaTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/repository/UsuarioPorRolAsignacionActivaClinicaTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/security/AccesoValidatorTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/security/AccesoValidatorTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/security/JWTFilterCompanyMismatchTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/security/JWTFilterCompanyMismatchTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/security/JWTFilterLegalEnforcementTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/security/JWTFilterLegalEnforcementTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/security/JWTFilterPrivacyNoticeEnforcementTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/security/JWTFilterPrivacyNoticeEnforcementTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/security/JWTFilterSessionRevocationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/security/JWTFilterSessionRevocationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/MenuBuilderServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/MenuBuilderServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/RealtimeTicketServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/RealtimeTicketServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/ers/seguridad/AislamientoApiIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/ers/seguridad/AislamientoApiIntegrationTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/RoleAssignmentServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/RoleAssignmentServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/CoreBusinessServiceUnitTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/CoreBusinessServiceUnitTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/ReportesClinicosServiceImplTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/ReportesClinicosServiceImplTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/RoleServiceImplTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/RoleServiceImplTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/UsuarioServiceImplCurrentSessionTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/UsuarioServiceImplCurrentSessionTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/VentaLibreServiceIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/veterinaria/vargasvet/service/impl/VentaLibreServiceIntegrationTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -284,6 +248,9 @@
       <workItem from="1791648828096" duration="2004000" />
       <workItem from="1791656317800" duration="199000" />
       <workItem from="1791662255937" duration="1226000" />
+      <workItem from="1791758913951" duration="1934000" />
+      <workItem from="1791779623344" duration="1500000" />
+      <workItem from="1791822748545" duration="720000" />
     </task>
     <servers />
   </component>
