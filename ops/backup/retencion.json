@@ -1,28 +1,22 @@
 {
   "Rules": [
     {
-      "ID": "base-diaria-8-dias",
+      "ID": "respaldo-diario-30-dias",
       "Status": "Enabled",
-      "Filter": { "Prefix": "base/diario/" },
-      "Expiration": { "Days": 8 }
+      "Filter": { "Prefix": "p01/" },
+      "Expiration": { "Days": 30 }
     },
     {
-      "ID": "base-semanal-31-dias",
+      "ID": "respaldo-semanal-180-dias",
       "Status": "Enabled",
-      "Filter": { "Prefix": "base/semanal/" },
-      "Expiration": { "Days": 31 }
+      "Filter": { "Prefix": "p02/" },
+      "Expiration": { "Days": 180 }
     },
     {
-      "ID": "base-mensual-190-dias",
+      "ID": "respaldo-mensual-365-dias",
       "Status": "Enabled",
-      "Filter": { "Prefix": "base/mensual/" },
-      "Expiration": { "Days": 190 }
-    },
-    {
-      "ID": "archivos-semanal-31-dias",
-      "Status": "Enabled",
-      "Filter": { "Prefix": "archivos/semanal/" },
-      "Expiration": { "Days": 31 }
+      "Filter": { "Prefix": "p03/" },
+      "Expiration": { "Days": 365 }
     }
   ]
 }

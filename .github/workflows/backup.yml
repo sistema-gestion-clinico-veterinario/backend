@@ -18,10 +18,33 @@ permissions:
   contents: read
 
 jobs:
+  preparar:
+    name: Preparar el punto de recuperación
+    runs-on: ubuntu-latest
+    outputs:
+      recovery_point_id: ${{ steps.plan.outputs.recovery_point_id }}
+      retention_policy: ${{ steps.plan.outputs.retention_policy }}
+    steps:
+      - name: Generar identificador y política
+        id: plan
+        shell: bash
+        run: |
+          recovery_point_id="$(cat /proc/sys/kernel/random/uuid)"
+          if [ "$(date -u +%d)" = "01" ]; then
+            retention_policy="p03"
+          elif [ "$(date -u +%u)" = "7" ]; then
+            retention_policy="p02"
+          else
+            retention_policy="p01"
+          fi
+          echo "recovery_point_id=$recovery_point_id" >> "$GITHUB_OUTPUT"
+          echo "retention_policy=$retention_policy" >> "$GITHUB_OUTPUT"
+
   base-de-datos:
     name: Respaldar la base de datos
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    needs: preparar
 
     services:
       verificacion:
@@ -56,6 +79,12 @@ jobs:
           BACKUP_DB_URL: ${{ secrets.BACKUP_DB_URL }}
           VERIFY_DB_URL: postgresql://postgres:verificacion@localhost:5432/postgres
           GPG_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_PUBLIC_KEY }}
+          GPG_EXPECTED_FINGERPRINT: ${{ secrets.BACKUP_GPG_EXPECTED_FINGERPRINT }}
+          GPG_SIGNING_PRIVATE_KEY: ${{ secrets.BACKUP_GPG_SIGNING_PRIVATE_KEY }}
+          GPG_EXPECTED_SIGNING_FINGERPRINT: ${{ secrets.BACKUP_GPG_SIGNING_FINGERPRINT }}
+          GPG_SIGNING_PASSPHRASE: ${{ secrets.BACKUP_GPG_SIGNING_PASSPHRASE }}
+          BACKUP_RECOVERY_POINT_ID: ${{ needs.preparar.outputs.recovery_point_id }}
+          BACKUP_RETENTION_POLICY: ${{ needs.preparar.outputs.retention_policy }}
           BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
           BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
           AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_KEY_ID }}
@@ -74,42 +103,32 @@ jobs:
     name: Respaldar los archivos
     runs-on: ubuntu-latest
     timeout-minutes: 120
-    needs: base-de-datos
-    env:
-      TIENE_ACCESO_A_STORAGE: ${{ secrets.SUPABASE_S3_ACCESS_KEY != '' }}
+    needs: [preparar, base-de-datos]
+    if: github.event_name == 'schedule' || inputs.incluir_archivos == true
 
     steps:
-      - name: Decidir si toca
-        id: decidir
-        run: |
-          if [ "${TIENE_ACCESO_A_STORAGE}" != "true" ]; then
-            echo "Sin credenciales de Supabase Storage: se omite."
-            echo "ejecutar=false" >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.incluir_archivos }}" = "true" ]; then
-            echo "ejecutar=true" >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.event_name }}" = "schedule" ] && [ "$(date -u +%u)" = "7" ]; then
-            echo "ejecutar=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ejecutar=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Descargar el código
-        if: steps.decidir.outputs.ejecutar == 'true'
         uses: actions/checkout@v4
 
       - name: Instalar rclone (solo si el destino es Google Drive)
-        if: steps.decidir.outputs.ejecutar == 'true' && vars.BACKUP_DESTINO == 'drive'
+        if: vars.BACKUP_DESTINO == 'drive'
         run: sudo apt-get install -y -qq rclone
 
       - name: Respaldar, cifrar y subir los archivos
-        if: steps.decidir.outputs.ejecutar == 'true'
         env:
           SUPABASE_S3_ENDPOINT: ${{ secrets.SUPABASE_S3_ENDPOINT }}
           SUPABASE_S3_ACCESS_KEY: ${{ secrets.SUPABASE_S3_ACCESS_KEY }}
           SUPABASE_S3_SECRET_KEY: ${{ secrets.SUPABASE_S3_SECRET_KEY }}
           SUPABASE_S3_REGION: ${{ secrets.SUPABASE_S3_REGION }}
           SUPABASE_BUCKET: ${{ secrets.SUPABASE_BUCKET }}
+          SUPABASE_BUCKETS: ${{ secrets.SUPABASE_BUCKETS }}
           GPG_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_PUBLIC_KEY }}
+          GPG_EXPECTED_FINGERPRINT: ${{ secrets.BACKUP_GPG_EXPECTED_FINGERPRINT }}
+          GPG_SIGNING_PRIVATE_KEY: ${{ secrets.BACKUP_GPG_SIGNING_PRIVATE_KEY }}
+          GPG_EXPECTED_SIGNING_FINGERPRINT: ${{ secrets.BACKUP_GPG_SIGNING_FINGERPRINT }}
+          GPG_SIGNING_PASSPHRASE: ${{ secrets.BACKUP_GPG_SIGNING_PASSPHRASE }}
+          BACKUP_RECOVERY_POINT_ID: ${{ needs.preparar.outputs.recovery_point_id }}
+          BACKUP_RETENTION_POLICY: ${{ needs.preparar.outputs.retention_policy }}
           BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
           BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
           AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_KEY_ID }}

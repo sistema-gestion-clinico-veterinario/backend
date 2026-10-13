@@ -151,6 +151,7 @@ class AuthControllerContractTest {
                         ((org.springframework.web.bind.annotation.PostMapping) annotation).value()))
                 .toList();
 
+        assertThat(rutas).isNotEmpty();
         assertThat(rutas).doesNotContain("/register");
         assertThat(java.util.Arrays.stream(UsuarioService.class.getDeclaredMethods()))
                 .isNotEmpty()
@@ -167,6 +168,7 @@ class AuthControllerContractTest {
                         ((org.springframework.web.bind.annotation.PutMapping) annotation).value()))
                 .toList();
 
+        assertThat(rutas).isNotEmpty();
         assertThat(rutas).doesNotContain("/suspend/{id}");
         assertThat(java.util.Arrays.stream(UsuarioService.class.getDeclaredMethods()))
                 .isNotEmpty()
