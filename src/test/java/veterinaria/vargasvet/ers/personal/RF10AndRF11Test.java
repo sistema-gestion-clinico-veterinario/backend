@@ -591,13 +591,14 @@ class RF10AndRF11Test {
     }
 
     @Test
-    @DisplayName("[CP-RF10-03b] Un cargo que permite especialidades exige colegiatura, sea cual sea su nombre")
-    void unCargoQuePermiteEspecialidadesExigeColegiatura() {
+    @DisplayName("[CP-RF10-03b] Un tipo marcado como veterinario exige colegiatura, sea cual sea su nombre")
+    void unTipoMarcadoComoVeterinarioExigeColegiatura() {
         EmpleadoRequest request = requestValido();
         request.setTiposEmpleado(Set.of("Médico clínico"));
         veterinaria.vargasvet.domain.entity.TipoEmpleado tipo = new veterinaria.vargasvet.domain.entity.TipoEmpleado();
         tipo.setNombre("Médico clínico");
         tipo.setPermiteEspecialidades(true);
+        tipo.setEsVeterinario(true);
         when(tipoEmpleadoRepository.findByNombreAndCompanyId("Médico clínico", 3)).thenReturn(Optional.of(tipo));
         conUsuarioGuardable();
 
@@ -638,6 +639,7 @@ class RF10AndRF11Test {
         veterinaria.vargasvet.domain.entity.TipoEmpleado tipoVet = new veterinaria.vargasvet.domain.entity.TipoEmpleado();
         tipoVet.setNombre("VETERINARIO");
         tipoVet.setPermiteEspecialidades(true);
+        tipoVet.setEsVeterinario(true);
         when(tipoEmpleadoRepository.findByNombreAndCompanyId("VETERINARIO", 3)).thenReturn(Optional.of(tipoVet));
         when(companyRepository.findById(3)).thenReturn(Optional.of(company));
         when(passwordEncoder.encode(any())).thenReturn("HASH");
@@ -671,6 +673,7 @@ class RF10AndRF11Test {
         veterinaria.vargasvet.domain.entity.TipoEmpleado tipoVet = new veterinaria.vargasvet.domain.entity.TipoEmpleado();
         tipoVet.setNombre("VETERINARIO");
         tipoVet.setPermiteEspecialidades(true);
+        tipoVet.setEsVeterinario(true);
         when(tipoEmpleadoRepository.findByNombreAndCompanyId("VETERINARIO", 3)).thenReturn(Optional.of(tipoVet));
         when(empleadoRepository.existsByNumeroColegiaturaAndCompanyIdAndEstadoTrueAndIdNot("CMVP-2222", 3, 30L)).thenReturn(true);
 
