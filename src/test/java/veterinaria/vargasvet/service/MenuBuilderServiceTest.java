@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -192,6 +193,39 @@ class MenuBuilderServiceTest {
 
         assertEquals(3, menu.size());
         assertTrue(menu.stream().allMatch(item -> item.getDataScope() == DataScope.COMPANY));
+    }
+
+    @Test
+    void platformAdministrationAlwaysCanWriteModifyAndDeleteWhatItCanSee() {
+        Role platform = new Role();
+        platform.setId(19);
+        platform.setScope(RoleScope.PLATFORM);
+        platform.setPurpose(RolePurpose.PLATFORM_ADMIN);
+        assign(platform, 10, null);
+        when(permissionRepository.findByRolIdWithVistaAndVentana(19)).thenReturn(List.of(
+                readable(platform, view(1, "VISTA_EMPLEADOS", ViewAudience.STAFF, null)),
+                permission(platform, view(2, "VISTA_ROLES", ViewAudience.STAFF, null), false, false)));
+
+        var menu = service.construirMenu(10, 19, null);
+
+        assertEquals(1, menu.size());
+        var empleados = menu.get(0);
+        assertTrue(empleados.isEscribir() && empleados.isModificar() && empleados.isEliminar());
+        assertTrue(service.construirPermissions(10, 19, null).containsAll(
+                List.of("VISTA_EMPLEADOS:ESCRIBIR", "VISTA_EMPLEADOS:MODIFICAR", "VISTA_EMPLEADOS:ELIMINAR")));
+    }
+
+    @Test
+    void aCompanyAdministratorStillDependsOnItsConfiguredPermissions() {
+        Role admin = staffRole(20, RolePurpose.COMPANY_ADMIN);
+        assign(admin, 10, 3);
+        when(permissionRepository.findByRolIdWithVistaAndVentana(20)).thenReturn(List.of(
+                readable(admin, view(1, "VISTA_EMPLEADOS", ViewAudience.STAFF, null))));
+
+        var menu = service.construirMenu(10, 20, 3);
+
+        assertEquals(1, menu.size());
+        assertFalse(menu.get(0).isEscribir());
     }
 
     @Test

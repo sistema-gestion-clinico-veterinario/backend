@@ -11,13 +11,15 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.Genero;
 import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
+import veterinaria.vargasvet.dto.ProtectedPersonalData;
+import veterinaria.vargasvet.util.DataMasking;
 import veterinaria.vargasvet.validation.MeaningfulText;
 
 import java.util.List;
 import java.util.Set;
 
 @Data
-public class EmpleadoRequest {
+public class EmpleadoRequest implements ProtectedPersonalData {
     private Long id;
 
     @NotBlank(message = "El nombre es obligatorio")
@@ -79,6 +81,18 @@ public class EmpleadoRequest {
     private Integer companyId;
     private Boolean avisoInformado;
     private List<@Valid HorarioEmpleadoRequest> horarios;
+
+    @Override
+    public String authorizingView() {
+        return "VISTA_EMPLEADOS";
+    }
+
+    @Override
+    public void maskSensitiveData() {
+        email = DataMasking.correo(email);
+        telefono = DataMasking.telefono(telefono);
+        numeroDocumento = DataMasking.documento(numeroDocumento);
+    }
 
     @AssertTrue(message = "El numero de documento no corresponde al tipo seleccionado")
     public boolean isNumeroDocumentoValido() {

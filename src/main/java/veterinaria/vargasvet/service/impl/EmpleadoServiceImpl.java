@@ -118,9 +118,17 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         Company companyToUse = companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
         businessValidator.checkCompanyActiva(companyIdToUse);
-        consentimientoDatosService.exigirAltaValida(companyIdToUse,
-                veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS,
-                dto.getAvisoInformado());
+        boolean registroSinAviso = false;
+        try {
+            consentimientoDatosService.exigirAltaValida(companyIdToUse,
+                    veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS,
+                    dto.getAvisoInformado());
+        } catch (IllegalStateException sinAvisoPublicado) {
+            if (!SecurityUtils.isSuperAdmin()) {
+                throw sinAvisoPublicado;
+            }
+            registroSinAviso = true;
+        }
 
         // Aislamiento total entre empresas: nunca se busca ni se reutiliza una identidad
         // de OTRA empresa, aunque coincida el DNI o el correo - cada empresa es una isla,
@@ -209,9 +217,11 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         companyMembershipService.syncLegacyCompanyField(savedUser);
         roleAssignmentService.replaceStaffRoles(savedUser, companyToUse, dto.getRoleIds());
         contactoService.crear(savedUser, companyToUse, dto.getTelefono(), dto.getDireccion());
-        consentimientoDatosService.registrarAlta(savedUser, companyIdToUse,
-                veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS,
-                null, SecurityUtils.getCurrentUserId());
+        if (!registroSinAviso) {
+            consentimientoDatosService.registrarAlta(savedUser, companyIdToUse,
+                    veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS,
+                    null, SecurityUtils.getCurrentUserId());
+        }
 
         if (dto.getHorarios() != null && !dto.getHorarios().isEmpty()) {
             guardarHorarios(savedEmpleado, dto.getHorarios());
@@ -224,6 +234,15 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             "Empleados",
             "Se registró al empleado " + dto.getNombre() + " " + dto.getApellido() + " con email " + dto.getEmail()
         );
+
+        if (registroSinAviso) {
+            auditLogService.log(
+                    companyIdToUse,
+                    "REGISTRAR_PERSONAL_SIN_AVISO",
+                    "Seguridad",
+                    "La plataforma registró a " + dto.getNombre() + " " + dto.getApellido()
+                            + " antes de que la empresa publicara su aviso de privacidad de trabajadores");
+        }
 
         UserProfileDTO profile = userMapper.toProfileDTO(savedUser);
         profile.setTelefono(contactoService.telefono(savedUser.getId(), companyIdToUse));
