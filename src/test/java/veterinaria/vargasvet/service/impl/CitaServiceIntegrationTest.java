@@ -766,6 +766,7 @@ class CitaServiceIntegrationTest {
         Usuario empleadoUser = usuario("vet", company);
         Empleado empleado = new Empleado();
         empleado.setUser(empleadoUser);
+        empleado.setCompany(company);
         empleado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
         empleado.setNumeroDocumentoIdentidad(uniqueDigits(8));
         empleado.setGenero(Genero.MASCULINO);
