@@ -69,6 +69,14 @@ jobs:
           sudo apt-get install -y -qq postgresql-common jq
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get install -y -qq postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+
+      - name: Verificar el cliente de PostgreSQL
+        run: |
+          pg_dump --version
+          pg_restore --version
+          psql --version
+          test "$(pg_dump --version | awk '{print $3}' | cut -d. -f1)" = "17"
 
       - name: Instalar rclone (solo si el destino es Google Drive)
         if: vars.BACKUP_DESTINO == 'drive'
