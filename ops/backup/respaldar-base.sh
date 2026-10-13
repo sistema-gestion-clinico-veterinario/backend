@@ -69,6 +69,18 @@ contar_filas() {
   done <<< "$tablas"
 }
 
+preparar_extensiones_verificacion() {
+  local extension
+  for extension in ${BACKUP_VERIFY_EXTENSIONS:-pg_trgm}; do
+    if [[ ! "$extension" =~ ^[a-zA-Z0-9_]+$ ]]; then
+      echo "Nombre de extensión no válido para la verificación: $extension" >&2
+      return 1
+    fi
+    psql --dbname="$VERIFY_DB_URL" --no-psqlrc -q -v ON_ERROR_STOP=1 \
+      -c "CREATE EXTENSION IF NOT EXISTS \"$extension\" WITH SCHEMA public;"
+  done
+}
+
 echo "Contando filas antes del volcado..."
 contar_filas "$BACKUP_DB_URL" > "$TRABAJO/antes.txt"
 [ -s "$TRABAJO/antes.txt" ] || { echo "La base no tiene tablas en el esquema public." >&2; exit 3; }
@@ -99,8 +111,26 @@ if [ -n "${VERIFY_DB_URL:-}" ]; then
   esac
   echo "Restaurando en una base de verificación..."
   psql --dbname="$VERIFY_DB_URL" --no-psqlrc -q -v ON_ERROR_STOP=1 -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;"
+  : > "$TRABAJO/restauracion.log"
   if ! pg_restore --dbname="$VERIFY_DB_URL" --clean --if-exists --exit-on-error --no-owner --no-acl \
-      "$VOLCADO" 2> "$TRABAJO/restauracion.log"; then
+      --section=pre-data "$VOLCADO" 2>> "$TRABAJO/restauracion.log"; then
+    echo "La restauración de la estructura falló." >&2
+    head -n 20 "$TRABAJO/restauracion.log" >&2
+    exit 5
+  fi
+  if ! preparar_extensiones_verificacion 2>> "$TRABAJO/restauracion.log"; then
+    echo "La preparación de extensiones para verificar la restauración falló." >&2
+    head -n 20 "$TRABAJO/restauracion.log" >&2
+    exit 5
+  fi
+  if ! pg_restore --dbname="$VERIFY_DB_URL" --exit-on-error --no-owner --no-acl \
+      --section=data "$VOLCADO" 2>> "$TRABAJO/restauracion.log"; then
+    echo "La restauración de los datos falló." >&2
+    head -n 20 "$TRABAJO/restauracion.log" >&2
+    exit 5
+  fi
+  if ! pg_restore --dbname="$VERIFY_DB_URL" --exit-on-error --no-owner --no-acl \
+      --section=post-data "$VOLCADO" 2>> "$TRABAJO/restauracion.log"; then
     echo "La restauración de verificación falló." >&2
     head -n 20 "$TRABAJO/restauracion.log" >&2
     exit 5
