@@ -15,8 +15,9 @@ destino_requisitos() {
 validar_artefacto_cifrado() {
   local archivo="$1"
   [ -f "$archivo" ] || return 1
-  gpg --batch --list-packets "$archivo" 2> /dev/null |
-    awk '/^:pubkey enc packet:/ { encontrado=1 } END { exit(encontrado ? 0 : 1) }'
+  # --list-packets intenta descifrar y retorna error cuando el runner no tiene
+  # la clave privada. --list-only valida el mensaje cifrado sin descifrarlo.
+  gpg --batch --list-only --decrypt "$archivo" > /dev/null 2>&1
 }
 
 destino_subir() {
