@@ -67,7 +67,7 @@ public class CompanyDTO {
      * empresas jamas comparten uno, sus flujos de login quedan separados. */
     @NotBlank(message = "El slug es obligatorio")
     @Size(max = 100, message = "El slug no debe superar 100 caracteres")
-    @Pattern(regexp = "^[a-z0-9]+(-[a-z0-9]+)*$", message = "El slug solo debe contener minusculas, numeros y guiones")
+    @Pattern(regexp = "^(?!-)(?!.*--)[a-z0-9-]+(?<!-)$", message = "El slug solo debe contener minusculas, numeros y guiones")
     private String slug;
 
     @Pattern(regexp = "^$|^#[0-9a-fA-F]{6}$", message = "El color primario debe ser un color hexadecimal, ej. #006BA8")

@@ -44,6 +44,13 @@ public class TipoEmpleado {
     @Column(name = "permite_especialidades", nullable = false)
     private Boolean permiteEspecialidades = false;
 
+    @Column(name = "es_veterinario", nullable = false)
+    private Boolean esVeterinario = false;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    public boolean ejerceComoVeterinario() {
+        return Boolean.TRUE.equals(esVeterinario);
+    }
 }

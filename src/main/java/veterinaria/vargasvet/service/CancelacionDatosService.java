@@ -460,7 +460,7 @@ public class CancelacionDatosService {
         int sumados = 0;
         while (sumados < dias) {
             fecha = fecha.plusDays(1);
-            if (fecha.getDayOfWeek() != DayOfWeek.SATURDAY && fecha.getDayOfWeek() != DayOfWeek.SUNDAY) {
+            if (fecha.getDayOfWeek().getValue() < DayOfWeek.SATURDAY.getValue()) {
                 sumados++;
             }
         }

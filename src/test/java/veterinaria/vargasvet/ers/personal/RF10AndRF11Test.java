@@ -580,12 +580,65 @@ class RF10AndRF11Test {
                 .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
     }
 
+    private void conUsuarioGuardable() {
+        when(companyRepository.findById(3)).thenReturn(Optional.of(company));
+        when(passwordEncoder.encode(any())).thenReturn("HASH");
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> {
+            Usuario user = invocation.getArgument(0);
+            user.setId(20);
+            return user;
+        });
+    }
+
+    @Test
+    @DisplayName("[CP-RF10-03b] Un cargo que permite especialidades exige colegiatura, sea cual sea su nombre")
+    void unCargoQuePermiteEspecialidadesExigeColegiatura() {
+        EmpleadoRequest request = requestValido();
+        request.setTiposEmpleado(Set.of("Médico clínico"));
+        veterinaria.vargasvet.domain.entity.TipoEmpleado tipo = new veterinaria.vargasvet.domain.entity.TipoEmpleado();
+        tipo.setNombre("Médico clínico");
+        tipo.setPermiteEspecialidades(true);
+        when(tipoEmpleadoRepository.findByNombreAndCompanyId("Médico clínico", 3)).thenReturn(Optional.of(tipo));
+        conUsuarioGuardable();
+
+        assertThatThrownBy(() -> service.registerEmpleado(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("El número de colegiatura es obligatorio para veterinarios");
+    }
+
+    @Test
+    @DisplayName("[CP-RF10-03c] Un cargo que no permite especialidades no exige colegiatura")
+    void unCargoSinLaMarcaNoExigeColegiatura() {
+        EmpleadoRequest request = requestValido();
+        request.setTiposEmpleado(Set.of("Recepcionista"));
+        veterinaria.vargasvet.domain.entity.TipoEmpleado tipo = new veterinaria.vargasvet.domain.entity.TipoEmpleado();
+        tipo.setNombre("Recepcionista");
+        when(tipoEmpleadoRepository.findByNombreAndCompanyId("Recepcionista", 3)).thenReturn(Optional.of(tipo));
+        conUsuarioGuardable();
+        when(empleadoRepository.saveAndFlush(any(Empleado.class))).thenAnswer(invocation -> {
+            Empleado empleado = invocation.getArgument(0);
+            empleado.setId(30L);
+            return empleado;
+        });
+        when(userMapper.toProfileDTO(any())).thenReturn(new UserProfileDTO());
+        when(emailService.createMail(any(), any(), any()))
+                .thenAnswer(invocation -> new Mail(null, invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)));
+
+        service.registerEmpleado(request);
+
+        verify(empleadoRepository).saveAndFlush(any(Empleado.class));
+    }
+
     @Test
     @DisplayName("[CP-RF10-03] Registrar un veterinario con una colegiatura que ya usa otra persona activa se rechaza")
     void registrarConLaColegiaturaDeOtraPersonaActivaSeRechaza() {
         EmpleadoRequest request = requestValido();
         request.setTiposEmpleado(Set.of("VETERINARIO"));
         request.setNumeroColegiatura("CMVP-1234");
+        veterinaria.vargasvet.domain.entity.TipoEmpleado tipoVet = new veterinaria.vargasvet.domain.entity.TipoEmpleado();
+        tipoVet.setNombre("VETERINARIO");
+        tipoVet.setPermiteEspecialidades(true);
+        when(tipoEmpleadoRepository.findByNombreAndCompanyId("VETERINARIO", 3)).thenReturn(Optional.of(tipoVet));
         when(companyRepository.findById(3)).thenReturn(Optional.of(company));
         when(passwordEncoder.encode(any())).thenReturn("HASH");
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> {
@@ -615,8 +668,10 @@ class RF10AndRF11Test {
         request.setTiposEmpleado(Set.of("VETERINARIO"));
         request.setNumeroColegiatura("CMVP-2222");
         when(empleadoRepository.findByIdAndCompanyId(30L, 3)).thenReturn(Optional.of(empleado));
-        when(tipoEmpleadoRepository.findByNombreAndCompanyId("VETERINARIO", 3))
-                .thenReturn(Optional.of(new veterinaria.vargasvet.domain.entity.TipoEmpleado()));
+        veterinaria.vargasvet.domain.entity.TipoEmpleado tipoVet = new veterinaria.vargasvet.domain.entity.TipoEmpleado();
+        tipoVet.setNombre("VETERINARIO");
+        tipoVet.setPermiteEspecialidades(true);
+        when(tipoEmpleadoRepository.findByNombreAndCompanyId("VETERINARIO", 3)).thenReturn(Optional.of(tipoVet));
         when(empleadoRepository.existsByNumeroColegiaturaAndCompanyIdAndEstadoTrueAndIdNot("CMVP-2222", 3, 30L)).thenReturn(true);
 
         assertThatThrownBy(() -> service.updateEmpleado(30L, request))

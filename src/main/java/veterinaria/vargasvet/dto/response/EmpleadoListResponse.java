@@ -19,7 +19,10 @@ public class EmpleadoListResponse implements ProtectedPersonalData {
     private Boolean cuentaPendiente;
     private veterinaria.vargasvet.domain.enums.TipoInactividad tipoInactividad;
     private List<String> tiposEmpleado;
+    private List<Long> tipoEmpleadoIds;
+    private boolean esVeterinario;
     private List<String> especialidades;
+    private List<Long> especialidadIds;
     private Integer userId;
 
     @Override

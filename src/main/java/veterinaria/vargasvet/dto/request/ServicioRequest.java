@@ -47,5 +47,7 @@ public class ServicioRequest {
 
     private Long tipoEmpleadoId;
 
+    private Long especialidadId;
+
     private TipoControlServicio tipoControlPreventivo = TipoControlServicio.NO_APLICA;
 }

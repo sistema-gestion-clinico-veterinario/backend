@@ -9,8 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import veterinaria.vargasvet.domain.entity.Especialidad;
 import veterinaria.vargasvet.dto.ApiResponse;
+import veterinaria.vargasvet.dto.request.EspecialidadRequest;
+import veterinaria.vargasvet.dto.response.EspecialidadResponse;
 import veterinaria.vargasvet.service.EspecialidadService;
 
 @RestController
@@ -22,25 +23,26 @@ public class EspecialidadController {
 
     @GetMapping
     @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'LEER')")
-    public ResponseEntity<ApiResponse<Page<Especialidad>>> getAll(
+    public ResponseEntity<ApiResponse<Page<EspecialidadResponse>>> getAll(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Especialidad> resultado = especialidadService.findAll(
-                companyId, PageRequest.of(page, size, Sort.by("nombre").ascending()));
+        Page<EspecialidadResponse> resultado = especialidadService.findAll(
+                companyId, PageRequest.of(page, size, Sort.by("nombre").ascending())).map(EspecialidadResponse::de);
         return ResponseEntity.ok(new ApiResponse<>(true, "Especialidades recuperadas con éxito", resultado));
     }
 
     @PostMapping
     @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'ESCRIBIR')")
-    public ResponseEntity<Especialidad> create(@Valid @RequestBody Especialidad especialidad) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(especialidadService.create(especialidad));
+    public ResponseEntity<EspecialidadResponse> create(@Valid @RequestBody EspecialidadRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(EspecialidadResponse.de(especialidadService.create(request.aEntidad())));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'MODIFICAR')")
-    public Especialidad update(@PathVariable Long id, @Valid @RequestBody Especialidad especialidad) {
-        return especialidadService.update(id, especialidad);
+    public EspecialidadResponse update(@PathVariable Long id, @Valid @RequestBody EspecialidadRequest request) {
+        return EspecialidadResponse.de(especialidadService.update(id, request.aEntidad()));
     }
 
     @DeleteMapping("/{id}")

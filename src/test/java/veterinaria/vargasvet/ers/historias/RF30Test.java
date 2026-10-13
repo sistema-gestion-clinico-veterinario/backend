@@ -233,12 +233,14 @@ class RF30Test {
         assertThatCode(() -> objectMapper.readValue("{\"frecuenciaCardiaca\":80}", ConsultaRequest.class))
                 .doesNotThrowAnyException();
         assertThatThrownBy(() -> objectMapper.readValue("{\"frecuenciaCardiaca\":80.5}", ConsultaRequest.class))
-                .as("RVA-044 exige rechazar un decimal en frecuencia cardíaca");
+                .as("RVA-044 exige rechazar un decimal en frecuencia cardíaca")
+                .isInstanceOf(com.fasterxml.jackson.core.JsonProcessingException.class);
 
         assertThatCode(() -> objectMapper.readValue("{\"frecuenciaRespiratoria\":30}", ConsultaRequest.class))
                 .doesNotThrowAnyException();
         assertThatThrownBy(() -> objectMapper.readValue("{\"frecuenciaRespiratoria\":30.5}", ConsultaRequest.class))
-                .as("RVA-047 exige rechazar un decimal en frecuencia respiratoria");
+                .as("RVA-047 exige rechazar un decimal en frecuencia respiratoria")
+                .isInstanceOf(com.fasterxml.jackson.core.JsonProcessingException.class);
     }
 
     @Test

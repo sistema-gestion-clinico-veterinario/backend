@@ -23,7 +23,26 @@ import java.util.Map;
 @Component
 public class DiagnosticoIAClient {
 
-    public record ArchivoParte(String campo, String nombre, byte[] contenido) {}
+    public record ArchivoParte(String campo, String nombre, byte[] contenido) {
+        @Override
+        public boolean equals(Object otro) {
+            return otro instanceof ArchivoParte parte
+                    && java.util.Objects.equals(campo, parte.campo)
+                    && java.util.Objects.equals(nombre, parte.nombre)
+                    && java.util.Arrays.equals(contenido, parte.contenido);
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * java.util.Objects.hash(campo, nombre) + java.util.Arrays.hashCode(contenido);
+        }
+
+        @Override
+        public String toString() {
+            return "ArchivoParte[campo=" + campo + ", nombre=" + nombre + ", bytes="
+                    + (contenido == null ? 0 : contenido.length) + "]";
+        }
+    }
 
     private final RestTemplate restTemplate;
     private final String iaUrl;

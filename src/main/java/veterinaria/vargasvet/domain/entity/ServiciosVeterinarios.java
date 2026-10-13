@@ -13,9 +13,6 @@ import veterinaria.vargasvet.domain.enums.TipoControlServicio;
 @Table(name = "servicios")
 public class ServiciosVeterinarios {
 
-    private static final String TIPO_GROOMING_1 = "GROMMER";
-    private static final String TIPO_GROOMING_2 = "GROOMER";
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -57,6 +54,10 @@ public class ServiciosVeterinarios {
     @JoinColumn(name = "tipo_empleado_id", nullable = true)
     private TipoEmpleado tipoEmpleado;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "especialidad_requerida_id")
+    private Especialidad especialidadRequerida;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -74,13 +75,9 @@ public class ServiciosVeterinarios {
         updatedAt = veterinaria.vargasvet.util.AppClock.now();
     }
 
-    /** Define el flujo por el tipo requerido por el servicio, no por los roles del empleado. */
+    /** Define el flujo por la capacidad del tipo requerido, nunca por su nombre. */
     @Transient
     public boolean requiereConsultaClinica() {
-        if (tipoEmpleado == null || tipoEmpleado.getNombre() == null) {
-            return true;
-        }
-        String tipo = tipoEmpleado.getNombre().trim().toUpperCase();
-        return !TIPO_GROOMING_1.equals(tipo) && !TIPO_GROOMING_2.equals(tipo);
+        return tipoEmpleado == null || tipoEmpleado.ejerceComoVeterinario();
     }
 }

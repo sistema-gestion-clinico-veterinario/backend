@@ -57,7 +57,10 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
             veterinaria.vargasvet.service.PetOwnershipService.Permiso.PAGOS;
 
     private boolean esPrincipal(Apoderado persona, Mascota mascota) {
-        return mascota.getApoderado() != null && persona.getId().equals(mascota.getApoderado().getId());
+        if (persona == null || persona.getId() == null || mascota == null || mascota.getApoderado() == null) {
+            return false;
+        }
+        return persona.getId().equals(mascota.getApoderado().getId());
     }
 
     private List<Long> idsDeMascotas(Apoderado persona, veterinaria.vargasvet.service.PetOwnershipService.Permiso... permisos) {
@@ -308,6 +311,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
                         r.setUserId(e.getUser().getId());
                     }
                     if (e.getTiposEmpleado() != null) {
+                        r.setEsVeterinario(e.getTiposEmpleado().stream().anyMatch(t -> t.ejerceComoVeterinario()));
                         r.setTiposEmpleado(e.getTiposEmpleado().stream()
                                 .map(t -> t.getNombre())
                                 .collect(Collectors.toList()));
