@@ -43,6 +43,10 @@ public class SharedRateLimitService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean tryConsume(String namespace, String identifier, int capacity, Duration period) {
+        return consume(namespace, identifier, capacity, period);
+    }
+
+    private boolean consume(String namespace, String identifier, int capacity, Duration period) {
         if (capacity < 1 || period.isZero() || period.isNegative()) {
             throw new IllegalArgumentException("La configuracion del rate limit no es valida");
         }
@@ -66,7 +70,7 @@ public class SharedRateLimitService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void enforce(String namespace, String identifier, int capacity, Duration period) {
-        if (!tryConsume(namespace, identifier, capacity, period)) {
+        if (!consume(namespace, identifier, capacity, period)) {
             throw new RateLimitExceededException(period);
         }
     }

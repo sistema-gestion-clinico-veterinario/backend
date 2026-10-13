@@ -428,7 +428,8 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             java.time.LocalDateTime puedeReenviarDesde = venceActual.minusHours(verificationTokenValidityHours)
                     .plusMinutes(INVITATION_RESEND_COOLDOWN_MINUTES);
             if (puedeReenviarDesde.isAfter(ahora)) {
-                long minutos = Math.max(1, (java.time.Duration.between(ahora, puedeReenviarDesde).getSeconds() + 59) / 60);
+                long minutos = Math.max(1, (java.time.Duration.between(ahora.atZone(veterinaria.vargasvet.util.AppClock.ZONE_ID),
+                        puedeReenviarDesde.atZone(veterinaria.vargasvet.util.AppClock.ZONE_ID)).getSeconds() + 59) / 60);
                 throw new IllegalArgumentException("La invitación se envió hace poco. Podrás reenviarla en "
                         + minutos + (minutos == 1 ? " minuto" : " minutos"));
             }

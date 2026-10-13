@@ -16,7 +16,9 @@ import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.service.ArchivoClinicoService;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/consultations/{consultationId}/files")
@@ -83,6 +85,21 @@ public class ArchivoClinicoController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition)
                 .contentType(MediaType.parseMediaType(contentType))
                 .body(resource);
+    }
+
+    @GetMapping("/{id}/content-url")
+    @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'LEER')")
+    public ResponseEntity<ApiResponse<Map<String, String>>> urlDelContenido(
+            @PathVariable("consultationId") Long consultaId,
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "false") boolean descargar) {
+        accesoValidator.validarLeer("VISTA_HISTORIAS");
+        ArchivoClinicoResponse meta = archivoClinicoService.obtenerPorId(id);
+        Map<String, String> data = new HashMap<>();
+        if (meta.getUrl() != null && meta.getUrl().startsWith("http")) {
+            data.put("url", storageService.createSignedUrl(meta.getUrl(), 30, descargar ? meta.getNombre() : null));
+        }
+        return ResponseEntity.ok(new ApiResponse<>(true, "Enlace temporal del archivo", data));
     }
 
     @DeleteMapping("/{id}")

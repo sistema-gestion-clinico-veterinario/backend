@@ -103,7 +103,7 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public String storeBytes(byte[] content, String extension, String mimeType, String originalFilename) {
-        String ext = extension != null ? extension.toLowerCase() : "";
+        String ext = extensionSegura(extension);
         String fileName = UUID.randomUUID().toString().replace("-", "") + ext;
         String effectiveMime = mimeType != null ? mimeType : "application/octet-stream";
 
@@ -116,6 +116,14 @@ public class StorageServiceImpl implements StorageService {
         recordStoredBytes("clinical", content.length);
 
         return supabaseUrl + "/storage/v1/object/public/" + bucketName + "/" + fileName;
+    }
+
+    private static String extensionSegura(String extension) {
+        if (extension == null) {
+            return "";
+        }
+        String limpia = extension.trim().toLowerCase(java.util.Locale.ROOT);
+        return limpia.matches("\\.?[a-z0-9]{1,10}") ? limpia : "";
     }
 
     @Override

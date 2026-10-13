@@ -103,12 +103,4 @@ public class EmpleadoRequest implements ProtectedPersonalData {
             case PASAPORTE -> numeroDocumento.matches("^[A-Za-z]\\d{8}$");
         };
     }
-
-    @AssertTrue(message = "El numero de colegiatura es obligatorio para veterinarios")
-    public boolean isColegiaturaValida() {
-        if (tiposEmpleado == null) return true;
-        boolean esVeterinario = tiposEmpleado.stream()
-                .anyMatch(tipo -> "VETERINARIO".equalsIgnoreCase(tipo));
-        return !esVeterinario || (numeroColegiatura != null && !numeroColegiatura.isBlank());
-    }
 }

@@ -134,6 +134,7 @@ public class CitaServiceImpl implements CitaService {
                 throw new IllegalArgumentException("No se puede reservar una cita con un servicio no disponible");
             }
         }
+        validarEmpleadoParaServicio(mascota, veterinario, servicio);
 
         int duracion = (servicio != null && servicio.getDuracionEstimada() != null)
                 ? servicio.getDuracionEstimada()
@@ -636,6 +637,7 @@ public class CitaServiceImpl implements CitaService {
             servicio = servicioRepository.findById(request.getServicioId())
                     .orElseThrow(() -> new ResourceNotFoundException("Servicio no encontrado"));
         }
+        validarEmpleadoParaServicio(mascota, veterinario, servicio);
 
         int duracion = (servicio != null && servicio.getDuracionEstimada() != null)
                 ? servicio.getDuracionEstimada()
@@ -768,6 +770,7 @@ public class CitaServiceImpl implements CitaService {
         }
 
         validarEmpleadoSegunAlcance(veterinario.getId());
+        validarEmpleadoParaServicio(cita.getMascota(), veterinario, cita.getServicio());
 
         LocalDateTime fechaInicio = request.getFechaHoraInicio();
         validarFechaCitaNoPasada(fechaInicio);
@@ -833,6 +836,7 @@ public class CitaServiceImpl implements CitaService {
         }
 
         validarEmpleadoSegunAlcance(veterinario.getId());
+        validarEmpleadoParaServicio(cita.getMascota(), veterinario, cita.getServicio());
 
         // Mantiene la misma fecha/hora - solo cambia quien atiende, no es una
         // reprogramacion. Reusa la validacion de disponibilidad para evitar choques
@@ -1420,5 +1424,43 @@ public class CitaServiceImpl implements CitaService {
                 "Citas",
                 "No se envió por correo la " + aviso + " de la cita de la mascota " + cita.getMascota().getNombreCompleto()
                         + " porque el cliente no tiene un correo verificado; se indicó avisarle por teléfono");
+    }
+
+    private void validarEmpleadoParaServicio(Mascota mascota, Empleado empleado,
+                                              ServiciosVeterinarios servicio) {
+        Integer companyId = mascota.getApoderado() != null && mascota.getApoderado().getCompany() != null
+                ? mascota.getApoderado().getCompany().getId()
+                : null;
+        Integer employeeCompanyId = empleado.getCompany() != null ? empleado.getCompany().getId() : null;
+        if (companyId == null || !companyId.equals(employeeCompanyId)) {
+            throw new IllegalArgumentException(
+                    "La mascota y el profesional deben pertenecer a la misma clínica");
+        }
+        if (servicio == null) {
+            return;
+        }
+        Integer serviceCompanyId = servicio.getCompany() != null ? servicio.getCompany().getId() : null;
+        if (!companyId.equals(serviceCompanyId)) {
+            throw new ResourceNotFoundException("Servicio no encontrado");
+        }
+        if (servicio.getTipoEmpleado() == null) {
+            return;
+        }
+        Long requiredTypeId = servicio.getTipoEmpleado().getId();
+        boolean employeeHasRequiredType = empleado.getTiposEmpleado().stream()
+                .anyMatch(tipo -> requiredTypeId.equals(tipo.getId()));
+        if (!employeeHasRequiredType) {
+            throw new IllegalArgumentException(
+                    "El empleado seleccionado no tiene un tipo habilitado para este servicio");
+        }
+        if (servicio.getEspecialidadRequerida() != null) {
+            Long requiredSpecialtyId = servicio.getEspecialidadRequerida().getId();
+            boolean employeeHasRequiredSpecialty = empleado.getEspecialidades().stream()
+                    .anyMatch(especialidad -> requiredSpecialtyId.equals(especialidad.getId()));
+            if (!employeeHasRequiredSpecialty) {
+                throw new IllegalArgumentException(
+                        "El empleado seleccionado no tiene la especialidad requerida por este servicio");
+            }
+        }
     }
 }

@@ -7,20 +7,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ServiciosVeterinariosTest {
 
     @Test
-    void groomingNoRequiereConsultaClinica() {
+    void unTipoNoClinicoNoRequiereConsultaClinicaSinImportarSuNombre() {
         ServiciosVeterinarios servicio = new ServiciosVeterinarios();
         TipoEmpleado tipo = new TipoEmpleado();
-        tipo.setNombre("Grommer");
+        tipo.setNombre("Área de bienestar");
+        tipo.setEsVeterinario(false);
         servicio.setTipoEmpleado(tipo);
 
         assertThat(servicio.requiereConsultaClinica()).isFalse();
     }
 
     @Test
-    void servicioVeterinarioSiRequiereConsultaClinica() {
+    void unTipoVeterinarioRequiereConsultaClinicaSinImportarSuNombre() {
         ServiciosVeterinarios servicio = new ServiciosVeterinarios();
         TipoEmpleado tipo = new TipoEmpleado();
-        tipo.setNombre("Veterinario");
+        tipo.setNombre("Profesional clínico");
+        tipo.setEsVeterinario(true);
         servicio.setTipoEmpleado(tipo);
 
         assertThat(servicio.requiereConsultaClinica()).isTrue();

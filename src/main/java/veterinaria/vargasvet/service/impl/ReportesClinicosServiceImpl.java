@@ -587,7 +587,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                 .map(cp -> cp.getMascota().getId())
                 .collect(Collectors.toCollection(HashSet::new));
 
-        long alDia = mascotasConControl.size() - mascotasAtrasadas.size();
+        long alDia = (long) mascotasConControl.size() - mascotasAtrasadas.size();
         long atrasados = mascotasAtrasadas.size();
 
         List<ReportesClinicosDTO.ItemCount> result = new ArrayList<>();

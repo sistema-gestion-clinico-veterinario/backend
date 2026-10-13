@@ -14,4 +14,5 @@ public interface TipoEmpleadoRepository extends JpaRepository<TipoEmpleado, Long
     java.util.List<TipoEmpleado> findByCompanyId(Integer companyId);
     Page<TipoEmpleado> findByCompanyId(Integer companyId, Pageable pageable);
     Optional<TipoEmpleado> findByNombreAndCompanyId(String nombre, Integer companyId);
+    Optional<TipoEmpleado> findByIdAndCompanyId(Long id, Integer companyId);
 }

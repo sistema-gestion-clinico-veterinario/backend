@@ -53,7 +53,7 @@ public class AccessReviewService {
 
     private static final String ROLES_VIEW = "VISTA_ROLES";
     private static final Set<String> ADMIN_VIEWS = Set.of(
-            "VISTA_ROLES", "VISTA_EMPLEADOS", "VISTA_COMPANY", "VISTA_AUDITORIA_ADMIN", "VISTA_VENTANAS");
+            ROLES_VIEW, "VISTA_EMPLEADOS", "VISTA_COMPANY", "VISTA_AUDITORIA_ADMIN", "VISTA_VENTANAS");
     private static final int HISTORY_SIZE = 20;
     private static final int MAX_REASONS_LENGTH = 600;
     private static final ZoneId LIMA = ZoneId.of("America/Lima");

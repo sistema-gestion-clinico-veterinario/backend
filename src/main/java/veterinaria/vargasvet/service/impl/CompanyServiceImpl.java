@@ -242,7 +242,7 @@ public class CompanyServiceImpl implements CompanyService {
                 .replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u")
                 .replace("ñ", "n");
         base = base.replaceAll("[^a-z0-9]+", "-");
-        base = base.replaceAll("^-+|-+$", "");
+        base = base.replaceAll("(?:^-+)|(?:-+$)", "");
         return base;
     }
 

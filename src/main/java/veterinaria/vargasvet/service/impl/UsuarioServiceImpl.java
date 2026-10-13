@@ -293,7 +293,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         // Respuesta uniforme: no revelar si la cuenta existe o ya fue activada.
         if (usuario == null) {
-            passwordEncoder.matches("verification-probe", hashSenuelo());
+            passwordEncoder.matches(java.util.UUID.randomUUID().toString(), hashSenuelo());
             return;
         }
 

@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -40,10 +43,11 @@ class RoleServiceImplTest {
     private final RolVentanaPermisoRepository rolVentanaPermisoRepository = mock(RolVentanaPermisoRepository.class);
     private final UsuarioPorRolRepository usuarioPorRolRepository = mock(UsuarioPorRolRepository.class);
     private final AuditLogService auditLogService = mock(AuditLogService.class);
+    private final VistaRepository vistaRepository = mock(VistaRepository.class);
     private final RoleServiceImpl service = new RoleServiceImpl(
             roleRepository,
             mock(CompanyRepository.class),
-            mock(VistaRepository.class),
+            vistaRepository,
             rolVistaPermisoRepository,
             mock(VentanaRepository.class),
             rolVentanaPermisoRepository,
@@ -278,6 +282,94 @@ class RoleServiceImplTest {
         Company company = new Company();
         company.setId(id);
         return company;
+    }
+
+    private Role rolBaseDeAdministrador(int id) {
+        Role role = role(id, null, RoleScope.STAFF, true);
+        role.setPurpose(RolePurpose.COMPANY_ADMIN);
+        role.setSystemManaged(true);
+        role.setProtectedRole(true);
+        return role;
+    }
+
+    private veterinaria.vargasvet.dto.response.RolVistaPermisoDTO permisoDe(int vistaId, boolean leer, boolean modificar) {
+        var dto = new veterinaria.vargasvet.dto.response.RolVistaPermisoDTO();
+        dto.setVistaId(vistaId);
+        dto.setLeer(leer);
+        dto.setModificar(modificar);
+        return dto;
+    }
+
+    private void conVistasEsenciales() {
+        for (var par : java.util.Map.of(1, "VISTA_COMPANY", 2, "VISTA_ROLES", 3, "VISTA_EMPLEADOS").entrySet()) {
+            Vista vista = vista(par.getKey(), par.getValue(), par.getValue(), par.getKey(), null);
+            vista.setAudience(ViewAudience.STAFF);
+            when(vistaRepository.findById(par.getKey())).thenReturn(Optional.of(vista));
+        }
+    }
+
+    @Test
+    void platformAdministrationCanChangeThePermissionsOfABaseRoleAndItIsAuditedAsSharedByEveryCompany() {
+        Role role = rolBaseDeAdministrador(30);
+        when(roleRepository.findByIdForPermissionUpdate(30)).thenReturn(Optional.of(role));
+        when(roleRepository.findById(30)).thenReturn(Optional.of(role));
+        conVistasEsenciales();
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            service.saveVistasByRole(30, 0L, List.of(permisoDe(1, true, false), permisoDe(2, true, true), permisoDe(3, true, true)));
+
+            verify(rolVistaPermisoRepository).deleteByRolId(30);
+            verify(auditLogService).log(eq((Integer) null), eq("MODIFICAR_PERMISOS_ROL_BASE"), eq("Roles"), any());
+        }
+    }
+
+    @Test
+    void theAdministratorRoleCannotLoseAccessToTheViewsThatKeepAClinicGovernable() {
+        Role role = rolBaseDeAdministrador(31);
+        when(roleRepository.findByIdForPermissionUpdate(31)).thenReturn(Optional.of(role));
+        conVistasEsenciales();
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            var error = assertThrows(IllegalArgumentException.class,
+                    () -> service.saveVistasByRole(31, 0L, List.of(permisoDe(1, true, false), permisoDe(3, true, true))));
+
+            assertTrue(error.getMessage().contains("VISTA_ROLES"));
+            verify(rolVistaPermisoRepository, never()).deleteByRolId(31);
+        }
+    }
+
+    @Test
+    void thePlatformAdministrationRoleItselfStaysImmutable() {
+        Role role = rolBaseDeAdministrador(32);
+        role.setPurpose(RolePurpose.PLATFORM_ADMIN);
+        role.setScope(RoleScope.PLATFORM);
+        when(roleRepository.findByIdForPermissionUpdate(32)).thenReturn(Optional.of(role));
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.saveVistasByRole(32, 0L, List.of()));
+            verify(rolVistaPermisoRepository, never()).deleteByRolId(32);
+        }
+    }
+
+    @Test
+    void aCompanyAdministratorCannotChangeABaseRole() {
+        Role role = rolBaseDeAdministrador(33);
+        when(roleRepository.findByIdForPermissionUpdate(33)).thenReturn(Optional.of(role));
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(false);
+            security.when(SecurityUtils::getCurrentCompanyId).thenReturn(7);
+
+            assertThrows(AccessDeniedException.class, () -> service.saveVistasByRole(33, 0L, List.of()));
+            verify(rolVistaPermisoRepository, never()).deleteByRolId(33);
+        }
     }
 
     private Role role(int id, Company company, RoleScope scope, boolean active) {

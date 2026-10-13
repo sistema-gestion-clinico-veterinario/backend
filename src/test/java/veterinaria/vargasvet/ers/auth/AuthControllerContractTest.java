@@ -153,6 +153,7 @@ class AuthControllerContractTest {
 
         assertThat(rutas).doesNotContain("/register");
         assertThat(java.util.Arrays.stream(UsuarioService.class.getDeclaredMethods()))
+                .isNotEmpty()
                 .noneMatch(method -> method.getName().equals("register"));
     }
 
@@ -168,6 +169,7 @@ class AuthControllerContractTest {
 
         assertThat(rutas).doesNotContain("/suspend/{id}");
         assertThat(java.util.Arrays.stream(UsuarioService.class.getDeclaredMethods()))
+                .isNotEmpty()
                 .noneMatch(method -> method.getName().equals("suspendAccount"));
     }
 

@@ -339,7 +339,7 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     @Query("SELECT DISTINCT c FROM Cita c JOIN c.servicio s JOIN s.tipoEmpleado t " +
            "WHERE c.mascota.id = :mascotaId AND c.eliminada = false " +
-           "AND UPPER(t.nombre) IN ('GROMMER', 'GROOMER') " +
+           "AND t.esVeterinario = false " +
            "ORDER BY c.fechaHoraInicio DESC")
     java.util.List<Cita> findServiciosNoMedicosParaMascota(@Param("mascotaId") Long mascotaId);
 
