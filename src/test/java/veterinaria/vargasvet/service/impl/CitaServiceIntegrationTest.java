@@ -295,6 +295,7 @@ class CitaServiceIntegrationTest {
         Company company = cita.getEmpleado().getUser().getCompany();
         Empleado otroVeterinario = new Empleado();
         otroVeterinario.setUser(usuario("vet2", company));
+        otroVeterinario.setCompany(company);
         otroVeterinario.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
         otroVeterinario.setNumeroDocumentoIdentidad(uniqueDigits(8));
         otroVeterinario.setGenero(Genero.FEMENINO);
