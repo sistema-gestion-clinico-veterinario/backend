@@ -55,6 +55,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -161,6 +162,55 @@ class RF10AndRF11Test {
         assertThat(saved.getVerificationToken()).isEqualTo(SecurityTokenUtils.hash(rawToken));
         assertThat(modelCaptor.getValue()).doesNotContainKeys("password", "tempPassword", "contraseña");
         verify(emailService).sendEmailWithRetry(any(Mail.class), eq("email/welcome-template"));
+    }
+
+    @Test
+    @DisplayName("[CP-RF10-01b] El administrador de la clínica no registra personal si la clínica no publicó su aviso")
+    void elAdministradorDeLaClinicaNoRegistraSinAvisoPublicado() {
+        when(companyRepository.findById(3)).thenReturn(Optional.of(company));
+        doThrow(new IllegalStateException("La clínica aún no publicó su aviso"))
+                .when(consentimientoDatosService).exigirAltaValida(eq(3), any(), any());
+
+        assertThatThrownBy(() -> service.registerEmpleado(requestValido()))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(usuarioRepository, never()).save(any());
+        verify(consentimientoDatosService, never()).registrarAlta(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("[CP-RF10-01c] La plataforma registra personal aunque la clínica no haya publicado su aviso y queda en auditoría")
+    void laPlataformaRegistraSinAvisoPublicadoYQuedaAuditado() {
+        UsuarioPrincipal plataforma = new UsuarioPrincipal(
+                1, "plataforma@softvet.test", "", List.of(), 1,
+                1, RoleScope.PLATFORM, RolePurpose.PLATFORM_ADMIN, 1L);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(plataforma, null, plataforma.getAuthorities()));
+        EmpleadoRequest request = requestValido();
+        request.setCompanyId(3);
+        when(companyRepository.findById(3)).thenReturn(Optional.of(company));
+        doThrow(new IllegalStateException("La clínica aún no publicó su aviso"))
+                .when(consentimientoDatosService).exigirAltaValida(eq(3), any(), any());
+        when(passwordEncoder.encode(any())).thenReturn("HASH");
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> {
+            Usuario user = invocation.getArgument(0);
+            user.setId(20);
+            return user;
+        });
+        when(empleadoRepository.saveAndFlush(any(Empleado.class))).thenAnswer(invocation -> {
+            Empleado empleado = invocation.getArgument(0);
+            empleado.setId(30L);
+            return empleado;
+        });
+        when(userMapper.toProfileDTO(any())).thenReturn(new UserProfileDTO());
+        when(emailService.createMail(any(), any(), any()))
+                .thenAnswer(invocation -> new Mail(null, invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)));
+
+        service.registerEmpleado(request);
+
+        verify(empleadoRepository).saveAndFlush(any(Empleado.class));
+        verify(consentimientoDatosService, never()).registrarAlta(any(), any(), any(), any(), any());
+        verify(auditLogService).log(eq(3), eq("REGISTRAR_PERSONAL_SIN_AVISO"), eq("Seguridad"), any());
     }
 
     @Test

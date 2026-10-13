@@ -133,6 +133,8 @@ public class MenuBuilderService {
         Map<String, UsuarioPorRolPermiso> permisosPorVista = new HashMap<>();
         Map<Integer, DataScope> dataScopes = new HashMap<>();
 
+        boolean plataforma = asignacion.getRol().getPurpose()
+                == veterinaria.vargasvet.domain.enums.RolePurpose.PLATFORM_ADMIN;
         List<RolVistaPermiso> rolPermisos = rolVistaPermisoRepository
                 .findByRolIdWithVistaAndVentana(asignacion.getRol().getId());
         for (RolVistaPermiso rp : rolPermisos) {
@@ -141,10 +143,11 @@ public class MenuBuilderService {
             }
             UsuarioPorRolPermiso synthetic = new UsuarioPorRolPermiso();
             synthetic.setVista(rp.getVista());
+            boolean acceso = plataforma && rp.isLeer();
             synthetic.setLeer(rp.isLeer());
-            synthetic.setEscribir(rp.isEscribir());
-            synthetic.setModificar(rp.isModificar());
-            synthetic.setEliminar(rp.isEliminar());
+            synthetic.setEscribir(acceso || rp.isEscribir());
+            synthetic.setModificar(acceso || rp.isModificar());
+            synthetic.setEliminar(acceso || rp.isEliminar());
             permisosPorVista.put(rp.getVista().getCodigo(), synthetic);
             boolean administrativeScope = asignacion.getRol().getPurpose()
                     == veterinaria.vargasvet.domain.enums.RolePurpose.PLATFORM_ADMIN
