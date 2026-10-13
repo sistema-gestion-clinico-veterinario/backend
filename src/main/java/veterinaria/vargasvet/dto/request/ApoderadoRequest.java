@@ -9,12 +9,14 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.Genero;
 import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
+import veterinaria.vargasvet.dto.ProtectedPersonalData;
+import veterinaria.vargasvet.util.DataMasking;
 import veterinaria.vargasvet.validation.MeaningfulText;
 
 import java.util.Set;
 
 @Data
-public class ApoderadoRequest {
+public class ApoderadoRequest implements ProtectedPersonalData {
     private Long id;
     @NotBlank
     @Size(min = 2, max = 80, message = "El nombre debe tener entre 2 y 80 caracteres")
@@ -59,6 +61,18 @@ public class ApoderadoRequest {
     private Set<Integer> roleIds;
     private Boolean avisoInformado;
     private Boolean consentimientoRecordatorios;
+
+    @Override
+    public String authorizingView() {
+        return "VISTA_CLIENTES";
+    }
+
+    @Override
+    public void maskSensitiveData() {
+        email = DataMasking.correo(email);
+        telefono = DataMasking.telefono(telefono);
+        numeroDocumento = DataMasking.documento(numeroDocumento);
+    }
 
     @AssertTrue(message = "El numero de documento no corresponde al tipo seleccionado")
     public boolean isNumeroDocumentoValido() {

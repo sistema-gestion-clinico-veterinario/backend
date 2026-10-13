@@ -2,12 +2,14 @@ package veterinaria.vargasvet.dto.response;
 
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.TipoRelacionMascota;
+import veterinaria.vargasvet.dto.ProtectedPersonalData;
+import veterinaria.vargasvet.util.DataMasking;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
-public class MascotaRelacionResponse {
+public class MascotaRelacionResponse implements ProtectedPersonalData {
     private String uuid;
     private String mascotaUuid;
     private String mascotaNombre;
@@ -29,4 +31,14 @@ public class MascotaRelacionResponse {
     private LocalDateTime updatedAt;
     private String updatedBy;
     private String avisoMascota;
+
+    @Override
+    public String authorizingView() {
+        return "VISTA_CLIENTES";
+    }
+
+    @Override
+    public void maskSensitiveData() {
+        numeroDocumento = DataMasking.documento(numeroDocumento);
+    }
 }

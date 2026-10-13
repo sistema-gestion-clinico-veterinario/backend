@@ -1,10 +1,13 @@
 package veterinaria.vargasvet.dto.response;
 
 import lombok.Data;
+import veterinaria.vargasvet.dto.ProtectedPersonalData;
+import veterinaria.vargasvet.util.DataMasking;
+
 import java.util.List;
 
 @Data
-public class EmpleadoListResponse {
+public class EmpleadoListResponse implements ProtectedPersonalData {
     private Long id;
     private String nombre;
     private String apellido;
@@ -18,4 +21,15 @@ public class EmpleadoListResponse {
     private List<String> tiposEmpleado;
     private List<String> especialidades;
     private Integer userId;
+
+    @Override
+    public String authorizingView() {
+        return "VISTA_EMPLEADOS";
+    }
+
+    @Override
+    public void maskSensitiveData() {
+        email = DataMasking.correo(email);
+        telefono = DataMasking.telefono(telefono);
+    }
 }
