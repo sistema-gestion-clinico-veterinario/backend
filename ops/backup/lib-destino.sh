@@ -12,6 +12,13 @@ destino_requisitos() {
   esac
 }
 
+validar_artefacto_cifrado() {
+  local archivo="$1"
+  [ -f "$archivo" ] || return 1
+  gpg --batch --list-packets "$archivo" 2> /dev/null |
+    awk '/^:pubkey enc packet:/ { encontrado=1 } END { exit(encontrado ? 0 : 1) }'
+}
+
 destino_subir() {
   local archivo="$1" ruta="$2"
   [ -f "$archivo" ] || { echo "No existe el archivo que se intentó subir: $archivo" >&2; return 8; }
@@ -22,7 +29,7 @@ destino_subir() {
       return 8
       ;;
   esac
-  if ! gpg --batch --list-packets "$archivo" 2> /dev/null | grep -q '^:pubkey enc packet:'; then
+  if ! validar_artefacto_cifrado "$archivo"; then
     echo "Subida rechazada: el archivo no contiene un paquete OpenPGP cifrado válido." >&2
     return 8
   fi

@@ -77,6 +77,9 @@ verificar "no deja el volcado sin cifrar" bash -c "! ls '$SALIDA' | grep -q '\.d
 verificar "no deja manifiestos legibles" bash -c "! ls '$SALIDA' | grep -qE '\.manifest\.json$'"
 verificar "el archivo cifrado no contiene datos legibles" bash -c "! grep -a -q 'Peña' '$CIFRADO' && ! grep -a -q 'PGDMP' '$CIFRADO'"
 verificar "el manifiesto cifrado no revela su estructura" bash -c "! grep -a -q 'filas_por_tabla' '$MANIFIESTO'"
+verificar "reconoce los artefactos OpenPGP bajo pipefail" bash -c \
+  'set -o pipefail; source "$1/lib-destino.sh"; validar_artefacto_cifrado "$2" && validar_artefacto_cifrado "$3"' \
+  _ "$AQUI" "$CIFRADO" "$MANIFIESTO"
 MANIFIESTO_LEGIBLE="$T/manifest.json"
 gpg --batch --yes --quiet --decrypt --output "$MANIFIESTO_LEGIBLE" "$MANIFIESTO"
 echo "Manifiesto"
