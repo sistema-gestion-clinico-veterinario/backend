@@ -9,8 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import veterinaria.vargasvet.domain.entity.TipoEmpleado;
 import veterinaria.vargasvet.dto.ApiResponse;
+import veterinaria.vargasvet.dto.request.TipoEmpleadoRequest;
+import veterinaria.vargasvet.dto.response.TipoEmpleadoResponse;
 import veterinaria.vargasvet.service.TipoEmpleadoService;
 
 @RestController
@@ -22,26 +23,26 @@ public class TipoEmpleadoController {
 
     @GetMapping
     @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'LEER')")
-    public ResponseEntity<ApiResponse<Page<TipoEmpleado>>> getAll(
+    public ResponseEntity<ApiResponse<Page<TipoEmpleadoResponse>>> getAll(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<TipoEmpleado> resultado = tipoEmpleadoService.findAll(
-                companyId, PageRequest.of(page, size, Sort.by("nombre").ascending()));
+        Page<TipoEmpleadoResponse> resultado = tipoEmpleadoService.findAll(
+                companyId, PageRequest.of(page, size, Sort.by("nombre").ascending())).map(TipoEmpleadoResponse::de);
         return ResponseEntity.ok(new ApiResponse<>(true, "Tipos de empleado recuperados con éxito", resultado));
     }
 
     @PostMapping
     @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'ESCRIBIR')")
-    public ResponseEntity<ApiResponse<TipoEmpleado>> create(@Valid @RequestBody TipoEmpleado tipo) {
-        TipoEmpleado created = tipoEmpleadoService.create(tipo);
+    public ResponseEntity<ApiResponse<TipoEmpleadoResponse>> create(@Valid @RequestBody TipoEmpleadoRequest request) {
+        TipoEmpleadoResponse created = TipoEmpleadoResponse.de(tipoEmpleadoService.create(request.aEntidad()));
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(true, "Tipo de empleado creado", created));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'MODIFICAR')")
-    public ResponseEntity<ApiResponse<TipoEmpleado>> update(@PathVariable Long id, @Valid @RequestBody TipoEmpleado tipo) {
-        TipoEmpleado updated = tipoEmpleadoService.update(id, tipo);
+    public ResponseEntity<ApiResponse<TipoEmpleadoResponse>> update(@PathVariable Long id, @Valid @RequestBody TipoEmpleadoRequest request) {
+        TipoEmpleadoResponse updated = TipoEmpleadoResponse.de(tipoEmpleadoService.update(id, request.aEntidad()));
         return ResponseEntity.ok(new ApiResponse<>(true, "Tipo de empleado actualizado", updated));
     }
 

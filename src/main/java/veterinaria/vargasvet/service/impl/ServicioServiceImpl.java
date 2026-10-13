@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Company;
+import veterinaria.vargasvet.domain.entity.Especialidad;
 import veterinaria.vargasvet.domain.entity.ServiciosVeterinarios;
 import veterinaria.vargasvet.domain.entity.TipoEmpleado;
 import veterinaria.vargasvet.dto.request.ServicioRequest;
@@ -14,6 +15,7 @@ import veterinaria.vargasvet.dto.response.ServicioResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CitaRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
+import veterinaria.vargasvet.repository.EspecialidadRepository;
 import veterinaria.vargasvet.repository.ServiciosVeterinariosRepository;
 import veterinaria.vargasvet.repository.TipoEmpleadoRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
@@ -29,6 +31,7 @@ public class ServicioServiceImpl implements ServicioService {
     private final ServiciosVeterinariosRepository servicioRepository;
     private final CompanyRepository companyRepository;
     private final TipoEmpleadoRepository tipoEmpleadoRepository;
+    private final EspecialidadRepository especialidadRepository;
     private final CitaRepository citaRepository;
 
     @Override
@@ -78,10 +81,11 @@ public class ServicioServiceImpl implements ServicioService {
                 ? request.getTipoControlPreventivo() : veterinaria.vargasvet.domain.enums.TipoControlServicio.NO_APLICA);
 
         if (request.getTipoEmpleadoId() != null) {
-            TipoEmpleado tipo = tipoEmpleadoRepository.findById(request.getTipoEmpleadoId())
+            TipoEmpleado tipo = tipoEmpleadoRepository.findByIdAndCompanyId(request.getTipoEmpleadoId(), resolvedCompanyId)
                     .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado con ID: " + request.getTipoEmpleadoId()));
             servicio.setTipoEmpleado(tipo);
         }
+        configurarEspecialidadRequerida(servicio, request.getEspecialidadId(), resolvedCompanyId);
 
         return toResponse(servicioRepository.save(servicio));
     }
@@ -109,12 +113,14 @@ public class ServicioServiceImpl implements ServicioService {
                 ? request.getTipoControlPreventivo() : veterinaria.vargasvet.domain.enums.TipoControlServicio.NO_APLICA);
 
         if (request.getTipoEmpleadoId() != null) {
-            TipoEmpleado tipo = tipoEmpleadoRepository.findById(request.getTipoEmpleadoId())
+            Integer companyId = servicio.getCompany().getId();
+            TipoEmpleado tipo = tipoEmpleadoRepository.findByIdAndCompanyId(request.getTipoEmpleadoId(), companyId)
                     .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado con ID: " + request.getTipoEmpleadoId()));
             servicio.setTipoEmpleado(tipo);
         } else {
             servicio.setTipoEmpleado(null);
         }
+        configurarEspecialidadRequerida(servicio, request.getEspecialidadId(), servicio.getCompany().getId());
 
         return toResponse(servicioRepository.save(servicio));
     }
@@ -161,7 +167,27 @@ public class ServicioServiceImpl implements ServicioService {
             r.setTipoEmpleadoId(s.getTipoEmpleado().getId());
             r.setTipoEmpleadoNombre(s.getTipoEmpleado().getNombre());
         }
+        if (s.getEspecialidadRequerida() != null) {
+            r.setEspecialidadId(s.getEspecialidadRequerida().getId());
+            r.setEspecialidadNombre(s.getEspecialidadRequerida().getNombre());
+        }
         return r;
+    }
+
+    private void configurarEspecialidadRequerida(ServiciosVeterinarios servicio, Long especialidadId,
+                                                  Integer companyId) {
+        if (especialidadId == null) {
+            servicio.setEspecialidadRequerida(null);
+            return;
+        }
+        TipoEmpleado tipo = servicio.getTipoEmpleado();
+        if (tipo == null || !Boolean.TRUE.equals(tipo.getPermiteEspecialidades())) {
+            throw new IllegalArgumentException(
+                    "Para exigir una especialidad debe seleccionar un tipo de empleado que permita especialidades");
+        }
+        Especialidad especialidad = especialidadRepository.findByIdAndCompanyId(especialidadId, companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada"));
+        servicio.setEspecialidadRequerida(especialidad);
     }
 
     private Integer resolverCompanyId(Integer companyIdParam) {

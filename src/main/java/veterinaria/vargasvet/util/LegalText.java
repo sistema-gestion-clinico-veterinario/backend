@@ -20,7 +20,7 @@ public final class LegalText {
     private static final Pattern BORRADOR = Pattern.compile(
             "borrador\\s+(provisional|preliminar|inicial|no\\s+definitivo)|pendiente\\s+de\\s+(validaci[oó]n|revisi[oó]n)"
                     + "|\\b(draft|sin\\s+valor\\s+legal)\\b",
-            Pattern.CASE_INSENSITIVE);
+            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     private LegalText() {
     }

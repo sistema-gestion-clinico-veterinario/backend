@@ -251,7 +251,8 @@ public class PuntoCobroService {
     private void registrarUso(Caja caja) {
         LocalDateTime ahora = AppClock.now();
         if (caja.getDispositivoUltimoUsoAt() == null
-                || Duration.between(caja.getDispositivoUltimoUsoAt(), ahora).compareTo(USO_MINIMO_ENTRE_REGISTROS) > 0) {
+                || Duration.between(caja.getDispositivoUltimoUsoAt().atZone(AppClock.ZONE_ID), ahora.atZone(AppClock.ZONE_ID))
+                        .compareTo(USO_MINIMO_ENTRE_REGISTROS) > 0) {
             caja.setDispositivoUltimoUsoAt(ahora);
             cajaRepository.save(caja);
         }

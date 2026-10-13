@@ -82,7 +82,6 @@ public class AvisoPrivacidadEntregaService {
                         error == null && Boolean.TRUE.equals(enviado)));
     }
 
-    @Transactional
     public void actualizarResultado(Long entregaId, boolean enviado) {
         entregaRepository.findById(entregaId).ifPresent(entrega -> {
             entrega.setEstado(enviado ? EstadoEntregaAviso.ENVIADO : EstadoEntregaAviso.FALLIDO);

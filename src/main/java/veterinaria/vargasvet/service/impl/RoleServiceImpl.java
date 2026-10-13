@@ -33,6 +33,9 @@ import veterinaria.vargasvet.security.SecurityUtils;
 @RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
 
+    private static final List<String> VISTAS_ESENCIALES_DEL_ADMINISTRADOR =
+            List.of("VISTA_COMPANY", "VISTA_ROLES", "VISTA_EMPLEADOS");
+
     /** Vistas cuya regla de negocio define de forma verificable qué significa "propio". */
     private static final Set<String> DATA_SCOPE_CAPABLE_VIEWS = Set.of(
             "VISTA_CITAS_AGENDA",
@@ -301,10 +304,12 @@ public class RoleServiceImpl implements RoleService {
 
         incrementarVersionPermisos(role);
 
+        boolean rolBase = role.isSystemManaged() || role.isProtectedRole();
         auditLogService.log(
                 role.getCompany() != null ? role.getCompany().getId() : null,
-                "MODIFICAR_PERMISOS_ROL", "Roles",
-                "Se modificaron los permisos del rol " + role.getName() + " (" + permisos.size() + " vistas configuradas)");
+                rolBase ? "MODIFICAR_PERMISOS_ROL_BASE" : "MODIFICAR_PERMISOS_ROL", "Roles",
+                "Se modificaron los permisos del rol " + role.getName() + " (" + permisos.size() + " vistas configuradas)"
+                        + (rolBase && role.getCompany() == null ? ". El cambio alcanza a todas las empresas que usan este rol" : ""));
 
         return getVistasByRole(roleId);
     }
@@ -348,6 +353,7 @@ public class RoleServiceImpl implements RoleService {
             throw new IllegalArgumentException("Debe enviar la matriz de permisos");
         }
         Set<Integer> vistasRecibidas = new HashSet<>();
+        Set<String> vistasConAcceso = new HashSet<>();
         for (RolVistaPermisoDTO dto : permisos) {
             if (dto.getVistaId() == null || !vistasRecibidas.add(dto.getVistaId())) {
                 throw new IllegalArgumentException("La matriz contiene vistas duplicadas o inválidas");
@@ -356,6 +362,17 @@ public class RoleServiceImpl implements RoleService {
                     .orElseThrow(() -> new ResourceNotFoundException("Vista no encontrada: " + dto.getVistaId()));
             if (!vista.isActivo() || !isAudienceCompatible(role.getScope(), vista.getAudience())) {
                 throw new AccessDeniedException("La vista no es asignable al alcance del rol: " + vista.getCodigo());
+            }
+            if (dto.isLeer() || dto.isEscribir() || dto.isModificar() || dto.isEliminar()) {
+                vistasConAcceso.add(vista.getCodigo());
+            }
+        }
+        if (role.getPurpose() == RolePurpose.COMPANY_ADMIN) {
+            List<String> faltantes = VISTAS_ESENCIALES_DEL_ADMINISTRADOR.stream()
+                    .filter(codigo -> !vistasConAcceso.contains(codigo)).toList();
+            if (!faltantes.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "El rol administrador de empresa debe conservar el acceso a: " + String.join(", ", faltantes));
             }
         }
     }
@@ -458,8 +475,15 @@ public class RoleServiceImpl implements RoleService {
     }
 
     private void assertRoleConfigurationEditable(Role role) {
-        if (role.isSystemManaged() || role.isProtectedRole()) {
-            throw new IllegalArgumentException("La configuración de un rol base del sistema es inmutable");
+        if (!role.isSystemManaged() && !role.isProtectedRole()) {
+            return;
+        }
+        if (role.getPurpose() == RolePurpose.PLATFORM_ADMIN) {
+            throw new IllegalArgumentException("La configuración del rol de administración de plataforma es inmutable");
+        }
+        if (!SecurityUtils.isSuperAdmin()) {
+            throw new IllegalArgumentException(
+                    "La configuración de un rol base del sistema solo puede cambiarla la administración de plataforma");
         }
     }
 

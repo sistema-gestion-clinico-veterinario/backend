@@ -69,6 +69,9 @@ public class TipoEmpleadoServiceImpl implements TipoEmpleadoService {
         existing.setNombre(tipo.getNombre());
         if (tipo.getDescripcion() != null) existing.setDescripcion(tipo.getDescripcion());
         existing.setPermiteEspecialidades(tipo.getPermiteEspecialidades() != null ? tipo.getPermiteEspecialidades() : existing.getPermiteEspecialidades());
+        existing.setEsVeterinario(tipo.getEsVeterinario() != null
+                ? tipo.getEsVeterinario()
+                : existing.getEsVeterinario());
         existing.setUpdatedAt(veterinaria.vargasvet.util.AppClock.now());
         return tipoEmpleadoRepository.save(existing);
     }

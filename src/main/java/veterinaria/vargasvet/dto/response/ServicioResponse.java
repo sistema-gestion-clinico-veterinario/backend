@@ -19,5 +19,7 @@ public class ServicioResponse {
     private Boolean permiteEmergencia;
     private Long tipoEmpleadoId;
     private String tipoEmpleadoNombre;
+    private Long especialidadId;
+    private String especialidadNombre;
     private TipoControlServicio tipoControlPreventivo;
 }

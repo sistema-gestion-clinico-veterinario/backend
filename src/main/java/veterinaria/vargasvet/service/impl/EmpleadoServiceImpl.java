@@ -187,7 +187,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         empleado.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
 
     
-        boolean isVeterinario = isVeterinario(dto);
+        boolean isVeterinario = isVeterinario(dto, companyIdToUse);
+        boolean permiteEspecialidades = permiteEspecialidades(dto, companyIdToUse);
         if (isVeterinario) {
             if (dto.getNumeroColegiatura() == null || dto.getNumeroColegiatura().isBlank()) {
                 throw new IllegalArgumentException("El número de colegiatura es obligatorio para veterinarios");
@@ -197,12 +198,14 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             }
             empleado.setNumeroColegiatura(dto.getNumeroColegiatura());
 
-            if (dto.getEspecialidades() != null) {
-                empleado.setEspecialidades(dto.getEspecialidades().stream()
-                        .map(nombre -> especialidadRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
-                                .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada: " + nombre + " para la empresa")))
-                        .collect(Collectors.toSet()));
-            }
+        }
+
+        validarEspecialidadesPermitidas(dto.getEspecialidades(), permiteEspecialidades);
+        if (permiteEspecialidades && dto.getEspecialidades() != null) {
+            empleado.setEspecialidades(dto.getEspecialidades().stream()
+                    .map(nombre -> especialidadRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
+                            .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada: " + nombre + " para la empresa")))
+                    .collect(Collectors.toSet()));
         }
 
   
@@ -313,8 +316,14 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             empleado.getTiposEmpleado().retainAll(newTipos);
             empleado.getTiposEmpleado().addAll(newTipos);
         }
-        boolean isVeterinario = isVeterinario(dto);
+        boolean isVeterinario = isVeterinario(dto, companyIdToUse);
+        boolean permiteEspecialidades = permiteEspecialidades(dto, companyIdToUse);
         if (isVeterinario) {
+            boolean sinColegiatura = (dto.getNumeroColegiatura() == null || dto.getNumeroColegiatura().isBlank())
+                    && (empleado.getNumeroColegiatura() == null || empleado.getNumeroColegiatura().isBlank());
+            if (sinColegiatura) {
+                throw new IllegalArgumentException("El número de colegiatura es obligatorio para veterinarios");
+            }
             if (dto.getNumeroColegiatura() != null) {
                 if (!dto.getNumeroColegiatura().equals(empleado.getNumeroColegiatura())
                         && empleadoRepository.existsByNumeroColegiaturaAndCompanyIdAndEstadoTrueAndIdNot(
@@ -324,7 +333,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 empleado.setNumeroColegiatura(dto.getNumeroColegiatura());
             }
         }
-        if (isVeterinario && dto.getEspecialidades() != null) {
+        validarEspecialidadesPermitidas(dto.getEspecialidades(), permiteEspecialidades);
+        if (permiteEspecialidades && dto.getEspecialidades() != null) {
             java.util.Set<Especialidad> newEspecialidades = new java.util.HashSet<>();
             for (String nombre : dto.getEspecialidades()) {
                 Especialidad esp = especialidadRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
@@ -333,6 +343,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             }
             empleado.getEspecialidades().retainAll(newEspecialidades);
             empleado.getEspecialidades().addAll(newEspecialidades);
+        } else if (dto.getTiposEmpleado() != null && !permiteEspecialidades) {
+            empleado.getEspecialidades().clear();
         }
 
         empleado.setUpdatedAt(veterinaria.vargasvet.util.AppClock.now());
@@ -381,7 +393,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             java.time.LocalDateTime puedeReenviarDesde = venceActual.minusHours(verificationTokenValidityHours)
                     .plusMinutes(INVITATION_RESEND_COOLDOWN_MINUTES);
             if (puedeReenviarDesde.isAfter(ahora)) {
-                long minutos = Math.max(1, (java.time.Duration.between(ahora, puedeReenviarDesde).getSeconds() + 59) / 60);
+                long minutos = Math.max(1, (java.time.Duration.between(ahora.atZone(veterinaria.vargasvet.util.AppClock.ZONE_ID),
+                        puedeReenviarDesde.atZone(veterinaria.vargasvet.util.AppClock.ZONE_ID)).getSeconds() + 59) / 60);
                 throw new IllegalArgumentException("La invitación se envió hace poco. Podrás reenviarla en "
                         + minutos + (minutos == 1 ? " minuto" : " minutos"));
             }
@@ -974,8 +987,15 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         response.setTiposEmpleado(empleado.getTiposEmpleado().stream()
                 .map(t -> t.getNombre())
                 .toList());
+        response.setTipoEmpleadoIds(empleado.getTiposEmpleado().stream()
+                .map(TipoEmpleado::getId)
+                .toList());
+        response.setEsVeterinario(empleado.getTiposEmpleado().stream().anyMatch(TipoEmpleado::ejerceComoVeterinario));
         response.setEspecialidades(empleado.getEspecialidades().stream()
                 .map(e -> e.getNombre())
+                .toList());
+        response.setEspecialidadIds(empleado.getEspecialidades().stream()
+                .map(Especialidad::getId)
                 .toList());
         return response;
     }
@@ -1352,8 +1372,31 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Empleado no encontrado"));
     }
 
-    private boolean isVeterinario(EmpleadoRequest dto) {
-        return dto.getTiposEmpleado() != null && dto.getTiposEmpleado().stream()
-                .anyMatch(tipo -> "VETERINARIO".equalsIgnoreCase(tipo));
+    private boolean isVeterinario(EmpleadoRequest dto, Integer companyId) {
+        if (dto.getTiposEmpleado() == null) {
+            return false;
+        }
+        return dto.getTiposEmpleado().stream().anyMatch(nombre ->
+                tipoEmpleadoRepository.findByNombreAndCompanyId(nombre, companyId)
+                        .map(TipoEmpleado::ejerceComoVeterinario)
+                        .orElse(false));
+    }
+
+    private boolean permiteEspecialidades(EmpleadoRequest dto, Integer companyId) {
+        if (dto.getTiposEmpleado() == null) {
+            return false;
+        }
+        return dto.getTiposEmpleado().stream().anyMatch(nombre ->
+                tipoEmpleadoRepository.findByNombreAndCompanyId(nombre, companyId)
+                        .map(tipo -> Boolean.TRUE.equals(tipo.getPermiteEspecialidades()))
+                        .orElse(false));
+    }
+
+    private void validarEspecialidadesPermitidas(java.util.Set<String> especialidades,
+                                                  boolean permiteEspecialidades) {
+        if (especialidades != null && !especialidades.isEmpty() && !permiteEspecialidades) {
+            throw new IllegalArgumentException(
+                    "Los tipos de empleado seleccionados no permiten asignar especialidades");
+        }
     }
 }

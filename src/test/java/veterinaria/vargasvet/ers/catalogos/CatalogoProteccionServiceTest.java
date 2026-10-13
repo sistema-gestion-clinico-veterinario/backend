@@ -143,7 +143,13 @@ class CatalogoProteccionServiceTest {
     }
 
     private ServicioServiceImpl servicioService() {
-        return new ServicioServiceImpl(servicioRepository, companyRepository, tipoEmpleadoRepository, citaRepository);
+        return new ServicioServiceImpl(
+                servicioRepository,
+                companyRepository,
+                tipoEmpleadoRepository,
+                especialidadRepository,
+                citaRepository
+        );
     }
 
     private TipoEmpleadoServiceImpl tipoEmpleadoService() {
