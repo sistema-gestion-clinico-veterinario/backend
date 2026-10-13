@@ -4,7 +4,7 @@ umask 077
 
 uso() {
   cat >&2 <<'TEXTO'
-Uso: restaurar.sh --archivo RESPALDO.dump.gpg --destino URL_DE_LA_BASE --confirmo [--manifiesto RESPALDO.manifest.json]
+Uso: restaurar.sh --archivo data-01.gpg --manifiesto meta-01.gpg --destino URL_DE_LA_BASE --confirmo
 
 Descifra el respaldo con la clave privada que esté en tu llavero de GPG y lo restaura en la base indicada.
 La restauración BORRA el esquema public del destino. Úsala sobre una base nueva o de pruebas.
@@ -24,23 +24,53 @@ while [ "$#" -gt 0 ]; do
 done
 [ -n "$ARCHIVO" ] && [ -n "$DESTINO" ] || uso
 [ -f "$ARCHIVO" ] || { echo "No existe el archivo $ARCHIVO" >&2; exit 2; }
+: "${GPG_EXPECTED_SIGNING_FINGERPRINT:?Falta GPG_EXPECTED_SIGNING_FINGERPRINT}"
+. "$(dirname "${BASH_SOURCE[0]}")/lib-cifrado.sh"
+firma_verificacion_preparar
+
+TRABAJO="$(mktemp -d)"
+trap 'rm -rf "$TRABAJO"' EXIT
+VOLCADO="$TRABAJO/restaurar.dump"
+MANIFIESTO_LEGIBLE=""
 
 if [ -z "$MANIFIESTO" ]; then
-  candidato="${ARCHIVO%.dump.gpg}.manifest.json"
-  [ -f "$candidato" ] && MANIFIESTO="$candidato"
+  candidato_cifrado="$(dirname "$ARCHIVO")/meta-01.gpg"
+  candidato_heredado="${ARCHIVO%.dump.gpg}.manifest.json"
+  if [ -f "$candidato_cifrado" ]; then
+    MANIFIESTO="$candidato_cifrado"
+  elif [ -f "$candidato_heredado" ]; then
+    MANIFIESTO="$candidato_heredado"
+  fi
 fi
 
-if [ -n "$MANIFIESTO" ]; then
-  esperado="$(jq -r '.sha256' "$MANIFIESTO" | tr -d '\r')"
-  real="$(sha256sum "$ARCHIVO" | cut -d' ' -f1)"
-  if [ "$esperado" != "$real" ]; then
-    echo "La suma de verificación no coincide: el archivo está dañado o fue modificado." >&2
-    exit 3
-  fi
-  echo "Suma de verificación correcta."
-else
-  echo "Aviso: sin manifiesto no se puede comprobar la integridad del archivo antes de descifrarlo." >&2
+[ -n "$MANIFIESTO" ] || {
+  echo "El manifiesto es obligatorio; no se restaurará un respaldo cuya integridad no pueda comprobarse." >&2
+  exit 2
+}
+
+[ -f "$MANIFIESTO" ] || { echo "No existe el manifiesto $MANIFIESTO" >&2; exit 2; }
+case "$MANIFIESTO" in
+  *.gpg)
+    MANIFIESTO_LEGIBLE="$TRABAJO/manifest.json"
+    descifrar_y_verificar_firma "$MANIFIESTO" "$MANIFIESTO_LEGIBLE" \
+      "$TRABAJO/firma.status" "$TRABAJO/firma.error"
+    ;;
+  *)
+    [ "${ALLOW_LEGACY_UNSIGNED_MANIFEST:-0}" = "1" ] || {
+      echo "El manifiesto no está firmado. Solo se admite con ALLOW_LEGACY_UNSIGNED_MANIFEST=1 para una recuperación histórica controlada." >&2
+      exit 6
+    }
+    MANIFIESTO_LEGIBLE="$MANIFIESTO"
+    echo "Aviso: recuperación excepcional de un manifiesto histórico sin firma." >&2
+    ;;
+esac
+esperado="$(jq -er '.sha256' "$MANIFIESTO_LEGIBLE" | tr -d '\r')"
+real="$(sha256sum "$ARCHIVO" | cut -d' ' -f1)"
+if [ "$esperado" != "$real" ]; then
+  echo "La suma de verificación no coincide: el archivo está dañado o fue modificado." >&2
+  exit 3
 fi
+echo "Suma de verificación correcta."
 
 destino_legible="$(printf '%s' "$DESTINO" | sed -E 's#^[a-z]+://[^@]*@##; s#\?.*$##')"
 echo "Destino: $destino_legible"
@@ -49,34 +79,31 @@ if [ "$CONFIRMO" != "si" ]; then
   exit 2
 fi
 
-TRABAJO="$(mktemp -d)"
-trap 'rm -rf "$TRABAJO"' EXIT
-VOLCADO="$TRABAJO/restaurar.dump"
-
 echo "Descifrando..."
 gpg --batch --yes --quiet --decrypt --output "$VOLCADO" "$ARCHIVO"
 pg_restore --list "$VOLCADO" > /dev/null
 
 echo "Restaurando..."
 psql --dbname="$DESTINO" --no-psqlrc -q -v ON_ERROR_STOP=1 -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;"
-pg_restore --dbname="$DESTINO" --clean --if-exists --no-owner --no-acl "$VOLCADO" 2> "$TRABAJO/restauracion.log" || true
+if ! pg_restore --dbname="$DESTINO" --clean --if-exists --exit-on-error --no-owner --no-acl \
+    "$VOLCADO" 2> "$TRABAJO/restauracion.log"; then
+  echo "La restauración falló; no se declarará el respaldo como recuperado." >&2
+  head -n 20 "$TRABAJO/restauracion.log" >&2
+  exit 5
+fi
 
-if [ -n "$MANIFIESTO" ]; then
-  echo "Comparando con el manifiesto..."
-  fallas=0
-  while IFS=$'\t' read -r tabla esperadas; do
-    obtenidas="$(psql --dbname="$DESTINO" --no-psqlrc -At -c "SELECT count(*) FROM public.\"$tabla\"" 2>/dev/null | tr -d '\r')"
-    [ -n "$obtenidas" ] || obtenidas="ausente"
-    if [ "$obtenidas" = "ausente" ]; then
-      echo "Falta la tabla $tabla" >&2; fallas=$((fallas + 1))
-    elif [ "$obtenidas" -lt "$((esperadas * 99 / 100))" ] || [ "$obtenidas" -gt "$((esperadas * 101 / 100 + 5))" ]; then
-      echo "Tabla $tabla: $obtenidas filas, el manifiesto registra $esperadas" >&2; fallas=$((fallas + 1))
-    fi
-  done < <(jq -r '.filas_por_tabla | to_entries[] | "\(.key)\t\(.value)"' "$MANIFIESTO" | tr -d '\r')
-  if [ "$fallas" -gt 0 ]; then
-    echo "La restauración no coincide con el manifiesto en $fallas tablas. Revisa $TRABAJO/restauracion.log" >&2
-    cp "$TRABAJO/restauracion.log" "./restauracion-error.log" 2>/dev/null || true
-    exit 5
+echo "Comparando exactamente con el manifiesto..."
+fallas=0
+while IFS=$'\t' read -r tabla esperadas; do
+  obtenidas="$(psql --dbname="$DESTINO" --no-psqlrc -At -c "SELECT count(*) FROM public.\"$tabla\"" 2>/dev/null | tr -d '\r')"
+  [ -n "$obtenidas" ] || obtenidas="ausente"
+  if [ "$obtenidas" != "$esperadas" ]; then
+    echo "Tabla $tabla: ${obtenidas} filas; el manifiesto exige $esperadas." >&2
+    fallas=$((fallas + 1))
   fi
+done < <(jq -er '.filas_por_tabla | to_entries[] | "\(.key)\t\(.value)"' "$MANIFIESTO_LEGIBLE" | tr -d '\r')
+if [ "$fallas" -gt 0 ]; then
+  echo "La restauración no coincide exactamente con el manifiesto en $fallas tablas." >&2
+  exit 5
 fi
 echo "Restauración completada."

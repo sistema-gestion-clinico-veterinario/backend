@@ -72,7 +72,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     /** Quien no es el propietario principal no recibe los datos personales de este. */
     private MascotaResponse paraLaPersona(Apoderado persona, Mascota mascota) {
         MascotaResponse response = mascotaMapper.toResponse(mascota);
-        if (!esPrincipal(persona, mascota)) {
+        if (response != null && !esPrincipal(persona, mascota)) {
             response.setApoderadoId(null);
             response.setApoderadoNombreCompleto(null);
         }

@@ -12,8 +12,28 @@ destino_requisitos() {
   esac
 }
 
+validar_artefacto_cifrado() {
+  local archivo="$1"
+  [ -f "$archivo" ] || return 1
+  # --list-packets intenta descifrar y retorna error cuando el runner no tiene
+  # la clave privada. --list-only valida el mensaje cifrado sin descifrarlo.
+  gpg --batch --list-only --decrypt "$archivo" > /dev/null 2>&1
+}
+
 destino_subir() {
   local archivo="$1" ruta="$2"
+  [ -f "$archivo" ] || { echo "No existe el archivo que se intentó subir: $archivo" >&2; return 8; }
+  case "$archivo:$ruta" in
+    *.gpg:*.gpg) ;;
+    *)
+      echo "Subida rechazada: SoftVet solo permite publicar artefactos cifrados con extensión .gpg." >&2
+      return 8
+      ;;
+  esac
+  if ! validar_artefacto_cifrado "$archivo"; then
+    echo "Subida rechazada: el archivo no contiene un paquete OpenPGP cifrado válido." >&2
+    return 8
+  fi
   case "$DESTINO_TIPO" in
     s3) aws s3 cp "$archivo" "s3://$BACKUP_S3_BUCKET/$ruta" --endpoint-url "$BACKUP_S3_ENDPOINT" --only-show-errors ;;
     drive) rclone copyto "$archivo" "$DESTINO_REMOTO:$DESTINO_CARPETA/$ruta" --drive-use-trash=false --quiet ;;
@@ -27,6 +47,33 @@ destino_tamano() {
           --query ContentLength --output text ;;
     drive) rclone lsjson "$DESTINO_REMOTO:$DESTINO_CARPETA/$ruta" --files-only 2> /dev/null | jq -r '.[0].Size // empty' | tr -d '\r' ;;
   esac
+}
+
+destino_sha256() {
+  local ruta="$1"
+  case "$DESTINO_TIPO" in
+    s3) aws s3 cp "s3://$BACKUP_S3_BUCKET/$ruta" - --endpoint-url "$BACKUP_S3_ENDPOINT" --only-show-errors |
+          sha256sum | cut -d' ' -f1 ;;
+    drive) rclone cat "$DESTINO_REMOTO:$DESTINO_CARPETA/$ruta" 2> /dev/null |
+             sha256sum | cut -d' ' -f1 ;;
+  esac
+}
+
+destino_verificar() {
+  local archivo="$1" ruta="$2" tamano_local tamano_remoto hash_local hash_remoto
+  tamano_local="$(wc -c < "$archivo" | tr -d ' ')"
+  tamano_remoto="$(destino_tamano "$ruta")"
+  [ "$tamano_local" = "$tamano_remoto" ] || {
+    echo "El tamaño remoto de $ruta (${tamano_remoto:-ninguno}) no coincide con el local ($tamano_local)." >&2
+    return 7
+  }
+
+  hash_local="$(sha256sum "$archivo" | cut -d' ' -f1)"
+  hash_remoto="$(destino_sha256 "$ruta")"
+  [ "$hash_local" = "$hash_remoto" ] || {
+    echo "El SHA-256 remoto de $ruta no coincide con el archivo local." >&2
+    return 7
+  }
 }
 
 destino_podar() {
