@@ -20,7 +20,7 @@ permissions:
 jobs:
   preparar:
     name: Preparar el punto de recuperación
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       recovery_point_id: ${{ steps.plan.outputs.recovery_point_id }}
       retention_policy: ${{ steps.plan.outputs.retention_policy }}
@@ -42,9 +42,14 @@ jobs:
 
   base-de-datos:
     name: Respaldar la base de datos
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     needs: preparar
+    env:
+      SUPABASE_MANAGEMENT_ACCESS_TOKEN: ${{ secrets.SUPABASE_MANAGEMENT_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_ALLOWED_CIDRS_BASE: ${{ vars.SUPABASE_DB_ALLOWED_CIDRS_BASE }}
+      SUPABASE_DB_ALLOWED_CIDRS_V6_BASE: ${{ vars.SUPABASE_DB_ALLOWED_CIDRS_V6_BASE || '[]' }}
 
     services:
       verificacion:
@@ -61,7 +66,7 @@ jobs:
 
     steps:
       - name: Descargar el código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Instalar el cliente de PostgreSQL 17
         run: |
@@ -77,6 +82,9 @@ jobs:
           pg_restore --version
           psql --version
           test "$(pg_dump --version | awk '{print $3}' | cut -d. -f1)" = "17"
+
+      - name: Autorizar temporalmente la IP del runner en Supabase
+        run: bash ops/backup/acceso-temporal-supabase.sh autorizar
 
       - name: Instalar rclone (solo si el destino es Google Drive)
         if: vars.BACKUP_DESTINO == 'drive'
@@ -107,16 +115,43 @@ jobs:
           RCLONE_CONFIG_RESPALDO_TOKEN: ${{ secrets.RCLONE_DRIVE_TOKEN }}
         run: bash ops/backup/respaldar-base.sh
 
-  archivos:
-    name: Respaldar los archivos
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    needs: [preparar, base-de-datos]
-    if: github.event_name == 'schedule' || inputs.incluir_archivos == true
+  restaurar-restricciones:
+    name: Cerrar el acceso temporal a la base
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    needs: base-de-datos
+    if: ${{ always() }}
+    env:
+      SUPABASE_MANAGEMENT_ACCESS_TOKEN: ${{ secrets.SUPABASE_MANAGEMENT_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_ALLOWED_CIDRS_BASE: ${{ vars.SUPABASE_DB_ALLOWED_CIDRS_BASE }}
+      SUPABASE_DB_ALLOWED_CIDRS_V6_BASE: ${{ vars.SUPABASE_DB_ALLOWED_CIDRS_V6_BASE || '[]' }}
 
     steps:
       - name: Descargar el código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Instalar dependencia JSON
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq jq
+
+      - name: Restaurar las restricciones permanentes de Supabase
+        run: bash ops/backup/acceso-temporal-supabase.sh restaurar
+
+  archivos:
+    name: Respaldar los archivos
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    needs: [preparar, base-de-datos, restaurar-restricciones]
+    if: >-
+      needs.base-de-datos.result == 'success' &&
+      needs.restaurar-restricciones.result == 'success' &&
+      (github.event_name == 'schedule' || inputs.incluir_archivos == true)
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v6
 
       - name: Instalar rclone (solo si el destino es Google Drive)
         if: vars.BACKUP_DESTINO == 'drive'
