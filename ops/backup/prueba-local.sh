@@ -45,6 +45,8 @@ psql --dbname="$(url origen)" --no-psqlrc -q -v ON_ERROR_STOP=1 <<'SQL'
 CREATE TABLE company (id serial PRIMARY KEY, name text NOT NULL);
 CREATE TABLE usuario (id serial PRIMARY KEY, nombre text NOT NULL, company_id int REFERENCES company(id));
 CREATE TABLE historia (id serial PRIMARY KEY, usuario_id int REFERENCES usuario(id), nota text, imagen bytea);
+CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
+CREATE INDEX idx_usuario_nombre_trgm ON usuario USING gin (lower(nombre) public.gin_trgm_ops);
 INSERT INTO company(name) SELECT 'Clínica ' || g FROM generate_series(1, 3) g;
 INSERT INTO usuario(nombre, company_id) SELECT 'Peña Núñez ' || g, 1 + g % 3 FROM generate_series(1, 250) g;
 INSERT INTO historia(usuario_id, nota, imagen) SELECT 1 + g % 250, 'Control ñandú ' || g, decode(md5(g::text), 'hex') FROM generate_series(1, 1000) g;
@@ -101,23 +103,39 @@ verificar "  - mismas filas en historia" iguales 'select count(*) from historia'
 verificar "  - mismo texto con acentos" iguales "select nombre from usuario where id = 7"
 verificar "  - mismos datos binarios" iguales "$IMAGENES"
 verificar "  - mismas relaciones entre tablas" iguales 'select count(*) from usuario u join company c on c.id = u.company_id'
+verificar "  - índice trigram restaurado después de preparar pg_trgm" iguales \
+  "select coalesce(to_regclass('public.idx_usuario_nombre_trgm')::text, '')"
 
 echo "Respaldo y restauración de Storage"
 MOCK_STORAGE_RESTORE="$T/storage-restaurado"
-export MOCK_STORAGE_RESTORE
+MOCK_S3_ROOT="$T/mock-s3"
+mkdir -p "$MOCK_STORAGE_RESTORE" "$MOCK_S3_ROOT/documentos/subdirectorio" "$MOCK_S3_ROOT/imagenes/subdirectorio"
+printf 'documento original\n' > "$MOCK_S3_ROOT/documentos/subdirectorio/archivo.txt"
+printf 'imagen original\n' > "$MOCK_S3_ROOT/imagenes/subdirectorio/archivo.txt"
+export MOCK_STORAGE_RESTORE MOCK_S3_ROOT
 aws() {
   if [ "${1:-} ${2:-}" = "s3 sync" ]; then
     if [[ "${3:-}" = s3://* ]]; then
-      mkdir -p "$4/subdirectorio"
-      printf 'contenido de %s\n' "$3" > "$4/subdirectorio/archivo.txt"
+      local bucket="${3#s3://}"
+      mkdir -p "$4"
+      cp -R "$MOCK_S3_ROOT/$bucket"/. "$4"/
+      if [ "${MOCK_CORRUPT_REMOTE:-0}" = "1" ] && [[ "$bucket" = alterado-* ]]; then
+        printf 'alterado durante la verificación\n' >> "$4/subdirectorio/archivo.txt"
+      fi
     else
-      mkdir -p "$MOCK_STORAGE_RESTORE/$(basename "$4")"
-      cp -R "$3"/. "$MOCK_STORAGE_RESTORE/$(basename "$4")/"
+      local bucket="${4#s3://}"
+      mkdir -p "$MOCK_S3_ROOT/$bucket" "$MOCK_STORAGE_RESTORE/$bucket"
+      cp -R "$3"/. "$MOCK_S3_ROOT/$bucket"/
+      cp -R "$3"/. "$MOCK_STORAGE_RESTORE/$bucket"/
     fi
     return 0
   fi
   if [ "${1:-} ${2:-}" = "s3api head-bucket" ]; then return 0; fi
-  if [ "${1:-} ${2:-}" = "s3 ls" ]; then return 0; fi
+  if [ "${1:-} ${2:-}" = "s3 ls" ]; then
+    local bucket="${3#s3://}"
+    [ -d "$MOCK_S3_ROOT/$bucket" ] && find "$MOCK_S3_ROOT/$bucket" -type f -print -quit
+    return 0
+  fi
   echo "Invocación aws no simulada: $*" >&2
   return 1
 }
@@ -145,6 +163,12 @@ verificar "restaura Storage en buckets separados de recuperación" env \
   bash "$AQUI/restaurar-archivos.sh" --archivo "$SALIDA_STORAGE/data-02.gpg" \
   --manifiesto "$SALIDA_STORAGE/meta-02.gpg" --confirmo
 verificar "recupera exactamente dos archivos" test "$(find "$MOCK_STORAGE_RESTORE" -type f | wc -l | tr -d ' ')" = "2"
+debe_fallar "detecta contenido remoto diferente después de restaurar Storage" env \
+  MOCK_CORRUPT_REMOTE=1 SUPABASE_S3_ENDPOINT="https://storage.test" \
+  SUPABASE_S3_ACCESS_KEY="prueba" SUPABASE_S3_SECRET_KEY="prueba" \
+  GPG_SIGNING_PUBLIC_KEY="$CLAVE_FIRMA_PUBLICA" GPG_EXPECTED_SIGNING_FINGERPRINT="$HUELLA_FIRMA" \
+  bash "$AQUI/restaurar-archivos.sh" --archivo "$SALIDA_STORAGE/data-02.gpg" \
+  --manifiesto "$SALIDA_STORAGE/meta-02.gpg" --prefijo-destino alterado- --confirmo
 
 echo "Casos que deben fallar"
 cp "$CIFRADO" "$T/dañado.dump.gpg"
@@ -190,8 +214,8 @@ debe_fallar "rechaza una huella de cifrado distinta" env \
   GPG_SIGNING_PASSPHRASE="$FRASE_FIRMA" \
   BACKUP_SKIP_UPLOAD=1 BACKUP_OUT_DIR="$T/huella-incorrecta" bash "$AQUI/respaldar-base.sh"
 
-GNUPGHOME="$T/otro-llavero" bash -c 'mkdir "$GNUPGHOME"; gpg --batch --quiet --pinentry-mode loopback --passphrase "" --quick-generate-key "Otra <otra@x.test>" default default never' > /dev/null 2>&1
-debe_fallar "sin la clave privada correcta no se puede descifrar" env GNUPGHOME="$T/otro-llavero" \
+mkdir "$T/llavero-sin-clave-de-descifrado"
+debe_fallar "sin la clave privada correcta no se puede descifrar" env GNUPGHOME="$T/llavero-sin-clave-de-descifrado" \
   GPG_SIGNING_PUBLIC_KEY="$CLAVE_FIRMA_PUBLICA" GPG_EXPECTED_SIGNING_FINGERPRINT="$HUELLA_FIRMA" \
   bash "$AQUI/restaurar.sh" --archivo "$CIFRADO" --manifiesto "$MANIFIESTO" --destino "$(url restaurada)" --confirmo
 

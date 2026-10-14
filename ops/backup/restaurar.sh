@@ -26,6 +26,9 @@ done
 [ -f "$ARCHIVO" ] || { echo "No existe el archivo $ARCHIVO" >&2; exit 2; }
 : "${GPG_EXPECTED_SIGNING_FINGERPRINT:?Falta GPG_EXPECTED_SIGNING_FINGERPRINT}"
 . "$(dirname "${BASH_SOURCE[0]}")/lib-cifrado.sh"
+for comando in gpg jq pg_restore psql sha256sum; do
+  command -v "$comando" >/dev/null || { echo "Falta la herramienta obligatoria: $comando" >&2; exit 2; }
+done
 firma_verificacion_preparar
 
 TRABAJO="$(mktemp -d)"
@@ -64,6 +67,17 @@ case "$MANIFIESTO" in
     echo "Aviso: recuperación excepcional de un manifiesto histórico sin firma." >&2
     ;;
 esac
+if ! jq -e '
+  (.componente == "BASE_DATOS") and
+  (.archivo == "data-01.gpg") and
+  (.sha256 | type == "string" and test("^[0-9a-fA-F]{64}$")) and
+  (.filas_por_tabla | type == "object") and
+  (all(.filas_por_tabla | to_entries[]; (.key | type == "string" and test("^[A-Za-z_][A-Za-z0-9_]*$")) and
+    (.value | type == "number" and . >= 0 and floor == .)))
+' "$MANIFIESTO_LEGIBLE" >/dev/null; then
+  echo "El manifiesto de base de datos no tiene la estructura esperada." >&2
+  exit 3
+fi
 esperado="$(jq -er '.sha256' "$MANIFIESTO_LEGIBLE" | tr -d '\r')"
 real="$(sha256sum "$ARCHIVO" | cut -d' ' -f1)"
 if [ "$esperado" != "$real" ]; then
@@ -83,11 +97,57 @@ echo "Descifrando..."
 gpg --batch --yes --quiet --decrypt --output "$VOLCADO" "$ARCHIVO"
 pg_restore --list "$VOLCADO" > /dev/null
 
-echo "Restaurando..."
-psql --dbname="$DESTINO" --no-psqlrc -q -v ON_ERROR_STOP=1 -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;"
-if ! pg_restore --dbname="$DESTINO" --clean --if-exists --exit-on-error --no-owner --no-acl \
-    "$VOLCADO" 2> "$TRABAJO/restauracion.log"; then
-  echo "La restauración falló; no se declarará el respaldo como recuperado." >&2
+restaurar_seccion() {
+  local seccion="$1" descripcion="$2"
+  if ! pg_restore --dbname="$DESTINO" --exit-on-error --single-transaction --no-owner --no-acl \
+      --section="$seccion" "$VOLCADO" 2>> "$TRABAJO/restauracion.log"; then
+    echo "Falló la restauración de $descripcion; no se declarará el respaldo como recuperado." >&2
+    head -n 30 "$TRABAJO/restauracion.log" >&2
+    exit 5
+  fi
+}
+
+preparar_extensiones() {
+  local extension
+  for extension in ${RESTORE_EXTENSIONS:-pg_trgm}; do
+    [[ "$extension" =~ ^[A-Za-z0-9_]+$ ]] || {
+      echo "Nombre de extensión no válido: $extension" >&2
+      exit 2
+    }
+    psql --dbname="$DESTINO" --no-psqlrc -q -v ON_ERROR_STOP=1 \
+      -c "CREATE EXTENSION IF NOT EXISTS \"$extension\" WITH SCHEMA public;" \
+      2>> "$TRABAJO/restauracion.log" || {
+        echo "No se pudo preparar la extensión $extension." >&2
+        head -n 30 "$TRABAJO/restauracion.log" >&2
+        exit 5
+      }
+  done
+}
+
+echo "Restaurando la estructura..."
+: > "$TRABAJO/restauracion.log"
+psql --dbname="$DESTINO" --no-psqlrc -q -v ON_ERROR_STOP=1 \
+  -c "DROP SCHEMA IF EXISTS public CASCADE;" 2>> "$TRABAJO/restauracion.log"
+restaurar_seccion pre-data "la estructura"
+if [ "$(psql --dbname="$DESTINO" --no-psqlrc -At -v ON_ERROR_STOP=1 -c "SELECT to_regnamespace('public') IS NOT NULL" | tr -d '\r')" != "t" ]; then
+  echo "El volcado no restauró el esquema public esperado." >&2
+  exit 5
+fi
+preparar_extensiones
+
+echo "Restaurando los datos..."
+restaurar_seccion data "los datos"
+
+echo "Restaurando índices y restricciones..."
+restaurar_seccion post-data "los índices y las restricciones"
+
+mapfile -t tablas_manifiesto < <(jq -er '.filas_por_tabla | keys[]' "$MANIFIESTO_LEGIBLE" | tr -d '\r')
+mapfile -t tablas_restauradas < <(psql --dbname="$DESTINO" --no-psqlrc -At -v ON_ERROR_STOP=1 -c \
+  "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' ORDER BY 1" | tr -d '\r')
+if [ "$(printf '%s\n' "${tablas_manifiesto[@]}" | LC_ALL=C sort)" != "$(printf '%s\n' "${tablas_restauradas[@]}" | LC_ALL=C sort)" ]; then
+  echo "El conjunto de tablas restauradas no coincide exactamente con el manifiesto." >&2
+  echo "Esperadas: ${tablas_manifiesto[*]:-(ninguna)}" >&2
+  echo "Restauradas: ${tablas_restauradas[*]:-(ninguna)}" >&2
   head -n 20 "$TRABAJO/restauracion.log" >&2
   exit 5
 fi
@@ -95,7 +155,11 @@ fi
 echo "Comparando exactamente con el manifiesto..."
 fallas=0
 while IFS=$'\t' read -r tabla esperadas; do
-  obtenidas="$(psql --dbname="$DESTINO" --no-psqlrc -At -c "SELECT count(*) FROM public.\"$tabla\"" 2>/dev/null | tr -d '\r')"
+  obtenidas="$(psql --dbname="$DESTINO" --no-psqlrc -At -v ON_ERROR_STOP=1 \
+    --set=tabla="$tabla" 2>/dev/null <<'SQL' | tr -d '\r'
+SELECT count(*) FROM public.:"tabla";
+SQL
+)"
   [ -n "$obtenidas" ] || obtenidas="ausente"
   if [ "$obtenidas" != "$esperadas" ]; then
     echo "Tabla $tabla: ${obtenidas} filas; el manifiesto exige $esperadas." >&2

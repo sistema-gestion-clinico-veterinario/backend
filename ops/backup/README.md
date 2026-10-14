@@ -43,3 +43,11 @@ Tras cada ejecución se debe comprobar que:
 - el paso final confirmó `Restricciones permanentes restauradas`;
 - no quedó la IP temporal del runner en Supabase;
 - el destino contiene los componentes cifrados del mismo punto de recuperación.
+
+## Recuperación verificada
+
+`restaurar.sh` exige un manifiesto firmado, valida el SHA-256 antes de modificar el destino y restaura PostgreSQL por etapas. Primero recupera `pre-data`, luego prepara las extensiones declaradas en `RESTORE_EXTENSIONS` (por defecto `pg_trgm`), después carga `data` y finalmente `post-data`. Cada etapa falla de forma cerrada y dentro de su propia transacción. Al terminar compara exactamente el conjunto de tablas y la cantidad de filas con el manifiesto.
+
+`restaurar-archivos.sh` solo acepta paquetes TAR con directorios y archivos regulares, rechaza rutas absolutas, recorridos `..`, enlaces y entradas duplicadas. Antes de escribir valida que todos los buckets de recuperación existan y estén vacíos. Después de cada sincronización vuelve a descargar el bucket y compara rutas, tamaños y SHA-256 archivo por archivo. Una diferencia impide declarar la recuperación como satisfactoria.
+
+Las restauraciones deben realizarse siempre sobre destinos aislados. Los scripts no crean buckets ni aceptan sobrescribir contenido existente.
