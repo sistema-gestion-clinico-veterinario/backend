@@ -53,6 +53,9 @@ ARCHIVO_CIFRADO="$SALIDA/data-02.gpg"
 MANIFIESTO_CIFRADO="$SALIDA/meta-02.gpg"
 MARCADOR_COMPLETO="$SALIDA/meta.gpg"
 CARPETA_REMOTA="$POLITICA/$RECOVERY_POINT_ID"
+
+# Validar claves y huellas antes de descargar Storage o crear el paquete.
+cifrado_preparar
 avisar "/start"
 
 mkdir "$TRABAJO/archivos"
@@ -77,7 +80,6 @@ CANTIDAD="$(find "$TRABAJO/archivos" -type f | wc -l | tr -d ' ')"
 echo "Archivos descargados: $CANTIDAD"
 
 tar -C "$TRABAJO/archivos" -czf "$TRABAJO/$NOMBRE.tar.gz" .
-cifrado_preparar
 cifrar_archivo "$TRABAJO/$NOMBRE.tar.gz" "$ARCHIVO_CIFRADO"
 rm -f "$TRABAJO/$NOMBRE.tar.gz"
 

@@ -39,3 +39,29 @@ jobs:
 
       - name: Ejecutar pruebas y generar JAR
         run: mvn --batch-mode --no-transfer-progress clean verify
+
+  backup-recovery:
+    name: Verificar respaldo y recuperación
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Instalar PostgreSQL 17 y utilidades
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common jq gnupg
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-17 postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+
+      - name: Validar sintaxis de los scripts
+        shell: bash
+        run: bash -n ops/backup/*.sh
+
+      - name: Ejecutar prueba integral aislada
+        shell: bash
+        run: bash ops/backup/prueba-local.sh
