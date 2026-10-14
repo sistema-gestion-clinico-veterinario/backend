@@ -52,6 +52,9 @@ ARCHIVO_CIFRADO="$SALIDA/data-01.gpg"
 MANIFIESTO_CIFRADO="$SALIDA/meta-01.gpg"
 CARPETA_REMOTA="$POLITICA/$RECOVERY_POINT_ID"
 
+# Validar claves y huellas antes de conectarse a la base o generar un volcado costoso.
+cifrado_preparar
+
 if [ "${BACKUP_SKIP_UPLOAD:-0}" != "1" ] && [ -z "${VERIFY_DB_URL:-}" ]; then
   echo "VERIFY_DB_URL es obligatorio antes de publicar un respaldo." >&2
   exit 2
@@ -147,7 +150,6 @@ if [ -n "${VERIFY_DB_URL:-}" ]; then
 fi
 
 echo "Cifrando..."
-cifrado_preparar
 cifrar_archivo "$VOLCADO" "$ARCHIVO_CIFRADO"
 rm -f "$VOLCADO"
 
