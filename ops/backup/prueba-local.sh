@@ -38,7 +38,15 @@ url() { echo "postgresql://postgres@localhost:$PUERTO/$1"; }
 
 echo "Preparando un PostgreSQL temporal en el puerto $PUERTO..."
 initdb -D "$PG" -U postgres --auth=trust -E UTF8 --locale=C > /dev/null
-pg_ctl -D "$PG" -o "-p $PUERTO" -l "$T/pg.log" -w start > /dev/null
+SOCKET_DIR="$T"
+case "$(uname -s)" in
+  MINGW*|MSYS*) SOCKET_DIR="$(cygpath -m "$T")" ;;
+esac
+if ! pg_ctl -D "$PG" -o "-p $PUERTO -h 127.0.0.1 -k $SOCKET_DIR" -l "$T/pg.log" -w start > /dev/null; then
+  echo "PostgreSQL temporal no pudo iniciar. Log:" >&2
+  sed 's/^/  /' "$T/pg.log" >&2
+  exit 1
+fi
 for base in origen verificacion restaurada; do createdb -h localhost -p "$PUERTO" -U postgres "$base"; done
 
 psql --dbname="$(url origen)" --no-psqlrc -q -v ON_ERROR_STOP=1 <<'SQL'
