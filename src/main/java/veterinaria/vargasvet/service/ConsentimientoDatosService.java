@@ -47,6 +47,7 @@ public class ConsentimientoDatosService {
     private final AuditLogService auditLogService;
     private final CompanyMembershipService companyMembershipService;
     private final AvisoPrivacidadEntregaService entregaAvisoService;
+    private final CompanyComplianceService complianceService;
 
     @Transactional(readOnly = true)
     public boolean hayAvisoPublicado(Integer companyId) {
@@ -70,6 +71,8 @@ public class ConsentimientoDatosService {
         if (usuarioId == null || companyId == null || audiencia == null) {
             return false;
         }
+        if (!complianceService.gestionadoPorSoftvet(companyId,
+                veterinaria.vargasvet.domain.enums.ControlCumplimientoClinica.AVISO_PRIVACIDAD)) return false;
         return avisoRepository.findByCompanyIdAndAudienciaAndActivoTrue(companyId, audiencia)
                 .map(aviso -> !consentimientoRepository
                         .existsByUsuarioIdAndCompanyIdAndFinalidadAndAvisoIdAndCanalIn(
@@ -84,6 +87,8 @@ public class ConsentimientoDatosService {
 
     @Transactional(readOnly = true)
     public void exigirAltaValida(Integer companyId, AudienciaAvisoPrivacidad audiencia, Boolean informada) {
+        if (!complianceService.gestionadoPorSoftvet(companyId,
+                veterinaria.vargasvet.domain.enums.ControlCumplimientoClinica.AVISO_PRIVACIDAD)) return;
         if (avisoRepository.findByCompanyIdAndAudienciaAndActivoTrue(companyId, audiencia).isEmpty()) {
             throw new IllegalStateException(MENSAJE_SIN_AVISO);
         }
@@ -102,6 +107,8 @@ public class ConsentimientoDatosService {
     @Transactional
     public void registrarAlta(Usuario usuario, Integer companyId, AudienciaAvisoPrivacidad audiencia,
                               Boolean recordatorios, Integer registradoPorId) {
+        if (!complianceService.gestionadoPorSoftvet(companyId,
+                veterinaria.vargasvet.domain.enums.ControlCumplimientoClinica.AVISO_PRIVACIDAD)) return;
         AvisoPrivacidad aviso = avisoVigente(companyId, audiencia);
         registrarEnterado(usuario, aviso, CanalConsentimiento.PRESENCIAL, registradoPorId, null, null);
         entregaAvisoService.programarCorreo(usuario, aviso);
@@ -146,6 +153,12 @@ public class ConsentimientoDatosService {
         if (!finalidad.isOpcional()) {
             throw new IllegalArgumentException("Esa finalidad no admite consentimiento");
         }
+        var control = finalidad == FinalidadDatos.USO_IA_CLINICA
+                ? veterinaria.vargasvet.domain.enums.ControlCumplimientoClinica.USO_IA
+                : veterinaria.vargasvet.domain.enums.ControlCumplimientoClinica.RECORDATORIOS_CORREO;
+        if (!complianceService.gestionadoPorSoftvet(companyId, control)) {
+            throw new IllegalStateException("Esta finalidad no es gestionada por SoftVet para la clínica");
+        }
         if (audiencia != AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS) {
             throw new IllegalArgumentException("Esta finalidad corresponde al aviso de propietarios y personas autorizadas");
         }
@@ -178,6 +191,10 @@ public class ConsentimientoDatosService {
         List<ConsentimientoEstadoResponse.Finalidad> finalidades = Arrays.stream(FinalidadDatos.values())
                 .filter(FinalidadDatos::isOpcional)
                 .filter(finalidad -> audiencia == AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS)
+                .filter(finalidad -> complianceService.gestionadoPorSoftvet(companyId,
+                        finalidad == FinalidadDatos.USO_IA_CLINICA
+                                ? veterinaria.vargasvet.domain.enums.ControlCumplimientoClinica.USO_IA
+                                : veterinaria.vargasvet.domain.enums.ControlCumplimientoClinica.RECORDATORIOS_CORREO))
                 .map(finalidad -> {
                     ConsentimientoDatos ultima = ultimas.get(finalidad);
                     return new ConsentimientoEstadoResponse.Finalidad(finalidad.name(), finalidad.getDescripcion(),

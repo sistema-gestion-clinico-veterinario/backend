@@ -121,7 +121,8 @@ class RecordatorioPreventivoPersistenceIntegrationTest {
                 new veterinaria.vargasvet.service.PetOwnershipService(mascotaRepository, relacionRepository,
                         mock(veterinaria.vargasvet.repository.CitaRepository.class),
                         mock(veterinaria.vargasvet.service.AuditLogService.class)),
-                consentimiento);
+                consentimiento,
+                veterinaria.vargasvet.testutil.CompanyComplianceTestFixture.controlesSoftvetHabilitados());
 
         service.procesarRecordatorios();
         recordatorioRepository.flush();

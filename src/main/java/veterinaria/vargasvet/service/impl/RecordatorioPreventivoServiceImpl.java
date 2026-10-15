@@ -32,6 +32,7 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
     private final veterinaria.vargasvet.service.OwnerContactPolicy ownerContactPolicy;
     private final veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
     private final veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
+    private final veterinaria.vargasvet.service.CompanyComplianceService complianceService;
 
     @Override
     @Transactional
@@ -62,7 +63,10 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
                                 apoderado -> apoderado.getUser().getId(),
                                 java.util.stream.Collectors.toSet())))
                 .forEach((companyId, usuarioIds) -> consentimientoDatosService
-                        .usuariosQueAutorizaron(usuarioIds, companyId,
+                        .usuariosQueAutorizaron(
+                                complianceService.gestionadoPorSoftvet(companyId,
+                                        veterinaria.vargasvet.domain.enums.ControlCumplimientoClinica.RECORDATORIOS_CORREO)
+                                        ? usuarioIds : java.util.Set.of(), companyId,
                                 veterinaria.vargasvet.domain.enums.FinalidadDatos.RECORDATORIOS_PREVENTIVOS)
                         .forEach(usuarioId -> autorizaronRecibirlos.add(new ConsentKey(usuarioId, companyId))));
 

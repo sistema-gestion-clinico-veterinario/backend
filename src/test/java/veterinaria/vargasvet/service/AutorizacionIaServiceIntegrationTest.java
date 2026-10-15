@@ -68,13 +68,15 @@ class AutorizacionIaServiceIntegrationTest {
     @BeforeEach
     void setUp() {
         auditLogService = mock(AuditLogService.class);
+        CompanyComplianceService compliance = veterinaria.vargasvet.testutil.CompanyComplianceTestFixture
+                .controlesSoftvetHabilitados();
         CompanyMembershipService membership = mock(CompanyMembershipService.class);
         when(membership.hasAnyMembership(anyInt(), anyInt())).thenAnswer(invocation ->
                 apoderadoRepository.existsByUserIdAndCompanyId(invocation.getArgument(0), invocation.getArgument(1)));
         consentimientos = new ConsentimientoDatosService(consentimientoRepository, avisoRepository, usuarioRepository,
                 apoderadoRepository, mock(AuditLogService.class), membership,
-                mock(AvisoPrivacidadEntregaService.class));
-        service = new AutorizacionIaService(mascotaRepository, consentimientoRepository, auditLogService);
+                mock(AvisoPrivacidadEntregaService.class), compliance);
+        service = new AutorizacionIaService(mascotaRepository, consentimientoRepository, auditLogService, compliance);
 
         clinicaA = empresa("Clínica A");
         clinicaB = empresa("Clínica B");
@@ -110,7 +112,8 @@ class AutorizacionIaServiceIntegrationTest {
 
     private void publicarAviso(Company empresa) {
         AvisoPrivacidadService avisoService = new AvisoPrivacidadService(avisoRepository, companyRepository,
-                mock(AuditLogService.class), new ObjectMapper());
+                mock(AuditLogService.class), new ObjectMapper(),
+                veterinaria.vargasvet.testutil.CompanyComplianceTestFixture.controlesSoftvetHabilitados());
         PublicarAvisoPrivacidadRequest request = new PublicarAvisoPrivacidadRequest();
         request.setCampos(new CamposAvisoPrivacidad("Clínica S.A.C.", "20123456789", "Av. Los Olivos 123",
                 "privacidad@clinica.test", null, null, List.of("Atender a su mascota"), List.of("Nombres y apellidos"),
