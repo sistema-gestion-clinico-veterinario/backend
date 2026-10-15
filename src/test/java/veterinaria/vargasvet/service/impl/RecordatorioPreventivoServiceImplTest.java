@@ -41,7 +41,7 @@ class RecordatorioPreventivoServiceImplTest {
                         mock(veterinaria.vargasvet.repository.CitaRepository.class),
                         mock(veterinaria.vargasvet.service.AuditLogService.class)),
                 consentimientoDatosService,
-                veterinaria.vargasvet.testutil.CompanyComplianceTestFixture.controlesSoftvetHabilitados());
+                veterinaria.vargasvet.testutil.CompanyComplianceTestFixture.controlesGestionadosPorSoftvet());
         lenient().when(consentimientoDatosService.usuariosQueAutorizaron(anyCollection(), anyInt(), any()))
                 .thenAnswer(invocation -> Set.copyOf(invocation.getArgument(0)));
     }
