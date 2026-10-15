@@ -49,7 +49,10 @@ class ConsentimientoDatosServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        avisoService = new AvisoPrivacidadService(avisoRepository, companyRepository, mock(AuditLogService.class), new ObjectMapper());
+        CompanyComplianceService compliance = veterinaria.vargasvet.testutil.CompanyComplianceTestFixture
+                .controlesSoftvetHabilitados();
+        avisoService = new AvisoPrivacidadService(avisoRepository, companyRepository, mock(AuditLogService.class),
+                new ObjectMapper(), compliance);
         CompanyMembershipService membership = mock(CompanyMembershipService.class);
         when(membership.hasAnyMembership(anyInt(), anyInt())).thenAnswer(invocation -> {
             Integer usuarioId = invocation.getArgument(0);
@@ -60,7 +63,7 @@ class ConsentimientoDatosServiceIntegrationTest {
         });
         service = new ConsentimientoDatosService(consentimientoRepository, avisoRepository, usuarioRepository,
                 apoderadoRepository, mock(AuditLogService.class), membership,
-                mock(AvisoPrivacidadEntregaService.class));
+                mock(AvisoPrivacidadEntregaService.class), compliance);
         clinica = empresa("Clínica Patitas");
         otraClinica = empresa("Clínica Garras");
         ana = persona("ana", clinica);

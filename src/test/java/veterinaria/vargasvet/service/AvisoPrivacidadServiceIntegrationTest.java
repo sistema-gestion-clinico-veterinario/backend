@@ -36,7 +36,8 @@ class AvisoPrivacidadServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        service = new AvisoPrivacidadService(avisoRepository, companyRepository, mock(AuditLogService.class), new ObjectMapper());
+        service = new AvisoPrivacidadService(avisoRepository, companyRepository, mock(AuditLogService.class), new ObjectMapper(),
+                veterinaria.vargasvet.testutil.CompanyComplianceTestFixture.controlesSoftvetHabilitados());
         clinica = empresa("Clínica Patitas", true);
         otraClinica = empresa("Clínica Garras", true);
     }
@@ -203,7 +204,8 @@ class AvisoPrivacidadServiceIntegrationTest {
     @Test
     void laAuditoriaDeLaPublicacionTambienNombraElDispositivo() {
         AuditLogService auditoria = mock(AuditLogService.class);
-        AvisoPrivacidadService conAuditoria = new AvisoPrivacidadService(avisoRepository, companyRepository, auditoria, new ObjectMapper());
+        AvisoPrivacidadService conAuditoria = new AvisoPrivacidadService(avisoRepository, companyRepository, auditoria, new ObjectMapper(),
+                veterinaria.vargasvet.testutil.CompanyComplianceTestFixture.controlesSoftvetHabilitados());
 
         conAuditoria.publicar(clinica.getId(), peticion(campos("Av. Los Olivos 123, Lima")), "190.40.10.5", CHROME_WINDOWS);
 

@@ -13,6 +13,10 @@ import java.util.Optional;
 public interface ConsultaRepository extends JpaRepository<Consulta, Long> {
     Optional<Consulta> findByCitaId(Long citaId);
 
+    @Query("SELECT c FROM Consulta c JOIN FETCH c.historiaClinica h JOIN FETCH h.mascota m " +
+           "WHERE c.id = :id AND m.apoderado.company.id = :companyId")
+    Optional<Consulta> findByIdAndCompanyId(@Param("id") Long id, @Param("companyId") Integer companyId);
+
     @Query("SELECT c.historiaClinica.id, MAX(c.fechaConsulta) FROM Consulta c WHERE c.historiaClinica.id IN :ids GROUP BY c.historiaClinica.id")
     List<Object[]> findUltimasFechasConsulta(@Param("ids") List<Long> ids);
 
