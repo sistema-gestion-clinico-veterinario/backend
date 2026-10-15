@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.AvisoPrivacidad;
 import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad;
+import veterinaria.vargasvet.domain.enums.ControlCumplimientoClinica;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.dto.request.CamposAvisoPrivacidad;
 import veterinaria.vargasvet.dto.request.PublicarAvisoPrivacidadRequest;
@@ -41,6 +42,7 @@ public class AvisoPrivacidadService {
     private final CompanyRepository companyRepository;
     private final AuditLogService auditLogService;
     private final ObjectMapper objectMapper;
+    private final CompanyComplianceService complianceService;
     @Autowired(required = false)
     private UsuarioPorRolRepository usuarioPorRolRepository;
     @Autowired(required = false)
@@ -118,6 +120,7 @@ public class AvisoPrivacidadService {
 
     @Transactional(readOnly = true)
     public CamposAvisoPrivacidad plantilla(Integer companyId, AudienciaAvisoPrivacidad audiencia) {
+        exigirGestionInterna(companyId);
         Integer id = requerirEmpresa(companyId);
         Optional<AvisoPrivacidad> vigente = avisoRepository.findByCompanyIdAndAudienciaAndActivoTrue(id, audiencia);
         if (vigente.isPresent()) {
@@ -164,6 +167,7 @@ public class AvisoPrivacidadService {
 
     @Transactional(readOnly = true)
     public VistaPreviaAvisoResponse vistaPrevia(Integer companyId, VistaPreviaAvisoRequest request) {
+        exigirGestionInterna(companyId);
         Integer id = requerirEmpresa(companyId);
         AudienciaAvisoPrivacidad audiencia = request.getAudiencia();
         CamposAvisoPrivacidad campos = AvisoPrivacidadTexto.limpiar(request.getCampos());
@@ -196,6 +200,7 @@ public class AvisoPrivacidadService {
     @Transactional
     public AvisoPrivacidadResponse publicar(Integer companyId, PublicarAvisoPrivacidadRequest request,
                                             String ip, String userAgent) {
+        exigirGestionInterna(companyId);
         Integer id = requerirEmpresa(companyId);
         companyRepository.lockById(id).orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
         AudienciaAvisoPrivacidad audiencia = request.getAudiencia();
@@ -254,6 +259,13 @@ public class AvisoPrivacidadService {
                     .forEach(usuario -> entregaAvisoService.programarCorreo(usuario, guardado));
         }
         return aRespuesta(guardado);
+    }
+
+    private void exigirGestionInterna(Integer companyId) {
+        if (!complianceService.gestionadoPorSoftvet(companyId, ControlCumplimientoClinica.AVISO_PRIVACIDAD)) {
+            throw new IllegalStateException(
+                    "El aviso de privacidad de esta clínica no se gestiona en SoftVet. Solicita el cambio al administrador de plataforma");
+        }
     }
 
     private List<veterinaria.vargasvet.domain.entity.Usuario> usuariosDeLaAudiencia(

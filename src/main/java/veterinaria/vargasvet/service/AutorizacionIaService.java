@@ -14,6 +14,8 @@ import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.ConsentimientoDatosRepository;
 import veterinaria.vargasvet.repository.MascotaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.domain.enums.ControlCumplimientoClinica;
+import veterinaria.vargasvet.domain.enums.ModoGestionCumplimiento;
 
 import java.util.Optional;
 
@@ -29,12 +31,22 @@ public class AutorizacionIaService {
     private final MascotaRepository mascotaRepository;
     private final ConsentimientoDatosRepository consentimientoRepository;
     private final AuditLogService auditLogService;
+    private final CompanyComplianceService complianceService;
 
     @Transactional(readOnly = true)
     public AutorizacionIaResponse estado(Long mascotaId) {
         Integer companyId = companyIdActual();
+        var configuracion = complianceService.resolver(companyId, ControlCumplimientoClinica.USO_IA);
+        if (!configuracion.habilitado()) {
+            throw new IllegalStateException("La inteligencia artificial no está habilitada para esta clínica");
+        }
         Mascota mascota = mascotaRepository.findByIdAndCompanyId(mascotaId, companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Mascota no encontrada"));
+        if (configuracion.modo() == ModoGestionCumplimiento.EXTERNO) {
+            var titular = mascota.getApoderado().getUser();
+            return new AutorizacionIaResponse(true, mascota.getApoderado().getId(),
+                    (titular.getNombre() + " " + titular.getApellido()).strip(), null, null);
+        }
         return estadoDe(mascota, companyId);
     }
 
@@ -48,10 +60,12 @@ public class AutorizacionIaService {
     }
 
     public void registrarUso(Long mascotaId, String funcion, AutorizacionIaResponse autorizacion) {
+        boolean externa = autorizacion.canal() == null;
         auditLogService.log("USAR_IA_CLINICA", "Inteligencia artificial",
                 "Se enviaron datos clínicos de la mascota con ID " + mascotaId + " al servicio de IA (" + funcion
-                        + "), con autorización vigente de " + autorizacion.titular() + " registrada el "
-                        + autorizacion.fecha() + " por canal " + autorizacion.canal() + ".");
+                        + (externa ? "), con control documental gestionado externamente por la clínica."
+                        : "), con autorización vigente de " + autorizacion.titular() + " registrada el "
+                        + autorizacion.fecha() + " por canal " + autorizacion.canal() + "."));
     }
 
     private AutorizacionIaResponse estadoDe(Mascota mascota, Integer companyId) {

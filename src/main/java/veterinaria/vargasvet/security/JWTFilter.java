@@ -269,6 +269,10 @@ public class JWTFilter extends GenericFilterBean {
                 // Sin esta excepción un usuario con términos vencidos no podría consultar ni
                 // reconocer el aviso y el frontend entraría directamente a /legal/accept.
                 || path.startsWith("/privacidad/")
+                // El ejercicio de derechos y una decisión clínica no pueden quedar bloqueados
+                // por la aceptación pendiente de otro documento legal.
+                || path.startsWith("/me/privacidad/")
+                || path.startsWith("/me/consentimientos-veterinarios")
                 || path.equals("/auth/logout")
                 || path.equals("/auth/refresh");
     }
@@ -279,6 +283,8 @@ public class JWTFilter extends GenericFilterBean {
         return ("GET".equalsIgnoreCase(method) && path.equals("/privacidad/aviso-vigente"))
                 || ("GET".equalsIgnoreCase(method) && path.equals("/privacidad/mi-estado"))
                 || ("POST".equalsIgnoreCase(method) && path.equals("/privacidad/enterado"))
+                || path.startsWith("/me/privacidad/")
+                || path.startsWith("/me/consentimientos-veterinarios")
                 || path.equals("/auth/logout")
                 || path.equals("/auth/refresh");
     }

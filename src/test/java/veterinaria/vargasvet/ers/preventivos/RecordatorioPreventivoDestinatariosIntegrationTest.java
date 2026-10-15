@@ -75,6 +75,8 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
     @BeforeEach
     void setUp() {
         emailService = mock(EmailService.class);
+        veterinaria.vargasvet.service.CompanyComplianceService compliance =
+                veterinaria.vargasvet.testutil.CompanyComplianceTestFixture.controlesSoftvetHabilitados();
         when(emailService.createMail(anyString(), anyString(), anyMap())).thenReturn(new Mail());
         when(emailService.sendEmail(any(), eq("email/recordatorio-preventivo-template")))
                 .thenReturn(CompletableFuture.completedFuture(true));
@@ -90,11 +92,11 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
                         invocation.getArgument(0), invocation.getArgument(1)));
         consentimientos = new veterinaria.vargasvet.service.ConsentimientoDatosService(consentimientoRepository, avisoRepository,
                 usuarioRepository, apoderadoRepository, mock(AuditLogService.class), membershipService,
-                mock(veterinaria.vargasvet.service.AvisoPrivacidadEntregaService.class));
+                mock(veterinaria.vargasvet.service.AvisoPrivacidadEntregaService.class), compliance);
         service = new RecordatorioPreventivoServiceImpl(controlRepository, recordatorioRepository, emailService,
                 new OwnerContactPolicy(mock(UsuarioContactoService.class)),
                 new PetOwnershipService(mascotaRepository, relacionRepository, mock(CitaRepository.class), mock(AuditLogService.class)),
-                consentimientos);
+                consentimientos, compliance);
         publicarAviso();
     }
 
@@ -236,7 +238,9 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
         request.setCampos(campos);
         request.setConfirmoRevisionLegal(true);
         new veterinaria.vargasvet.service.AvisoPrivacidadService(avisoRepository, companyRepository, mock(AuditLogService.class),
-                new com.fasterxml.jackson.databind.ObjectMapper()).publicar(clinica.getId(), request);
+                new com.fasterxml.jackson.databind.ObjectMapper(),
+                veterinaria.vargasvet.testutil.CompanyComplianceTestFixture.controlesSoftvetHabilitados())
+                .publicar(clinica.getId(), request);
     }
 
     private void decidirRecordatorios(Apoderado persona, boolean acepta) {
