@@ -24,4 +24,11 @@ public final class CompanyComplianceTestFixture {
         });
         return service;
     }
+
+    /** Fixture mínimo para servicios que solo consultan si SoftVet gestiona un control. */
+    public static CompanyComplianceService controlesGestionadosPorSoftvet() {
+        CompanyComplianceService service = mock(CompanyComplianceService.class);
+        when(service.gestionadoPorSoftvet(anyInt(), any())).thenReturn(true);
+        return service;
+    }
 }

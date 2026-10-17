@@ -108,7 +108,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .schedules(canRead("VISTA_HORARIOS")
                         ? empleadoService.getSchedulesReportForDate(targetCompanyId, today) : List.of())
                 .payments(canRead("VISTA_PAGOS")
-                        ? pagoService.listarHistorialPorEmpresa(0, 5, targetCompanyId, null, null, null, null, null)
+                        ? pagoService.listarHistorialPorEmpresa(0, 5, targetCompanyId, null, null, null, null, null, null)
                                 .getContent().stream().map(this::toPaymentSummary).toList() : List.of())
                 .companies(companies)
                 .build();
