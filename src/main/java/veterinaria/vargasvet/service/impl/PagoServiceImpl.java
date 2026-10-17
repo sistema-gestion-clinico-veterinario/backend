@@ -146,7 +146,7 @@ public class PagoServiceImpl implements PagoService {
     public Page<PagoListResponse> listarHistorialPorEmpresa(int page, int size, Integer companyId,
                                                               Integer clienteId, Long mascotaId,
                                                               java.time.LocalDate fechaDesde, java.time.LocalDate fechaHasta,
-                                                              PaymentStatus estado) {
+                                                              PaymentStatus estado, MetodoPago metodoPago) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Integer resolvedCompanyId = resolverCompanyId(companyId);
 
@@ -155,7 +155,7 @@ public class PagoServiceImpl implements PagoService {
 
         return purchaseRepository.buscarHistorialPorEmpresa(
                         resolvedCompanyId, TipoPurchase.SERVICIO_CITA,
-                        clienteId, mascotaId, desde, hasta, estado, pageable)
+                        clienteId, mascotaId, desde, hasta, estado, metodoPago, pageable)
                 .map(this::toListResponse);
     }
 
