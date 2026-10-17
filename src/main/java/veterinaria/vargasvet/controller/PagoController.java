@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.domain.enums.PaymentStatus;
+import veterinaria.vargasvet.domain.enums.MetodoPago;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.PagoRequest;
 import veterinaria.vargasvet.dto.response.PagoListResponse;
@@ -69,9 +70,10 @@ public class PagoController {
             @RequestParam(required = false) Long mascotaId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
-            @RequestParam(required = false) PaymentStatus estado) {
+            @RequestParam(required = false) PaymentStatus estado,
+            @RequestParam(required = false) MetodoPago metodoPago) {
         accesoValidator.validarLeer("VISTA_PAGOS");
         return ResponseEntity.ok(new ApiResponse<>(true, "Historial de pagos recuperado con éxito",
-                pagoService.listarHistorialPorEmpresa(page, size, companyId, clienteId, mascotaId, fechaDesde, fechaHasta, estado)));
+                pagoService.listarHistorialPorEmpresa(page, size, companyId, clienteId, mascotaId, fechaDesde, fechaHasta, estado, metodoPago)));
     }
 }

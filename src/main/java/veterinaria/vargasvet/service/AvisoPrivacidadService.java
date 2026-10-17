@@ -120,8 +120,8 @@ public class AvisoPrivacidadService {
 
     @Transactional(readOnly = true)
     public CamposAvisoPrivacidad plantilla(Integer companyId, AudienciaAvisoPrivacidad audiencia) {
-        exigirGestionInterna(companyId);
         Integer id = requerirEmpresa(companyId);
+        exigirGestionInterna(id);
         Optional<AvisoPrivacidad> vigente = avisoRepository.findByCompanyIdAndAudienciaAndActivoTrue(id, audiencia);
         if (vigente.isPresent()) {
             return leerCampos(vigente.get());
@@ -167,8 +167,8 @@ public class AvisoPrivacidadService {
 
     @Transactional(readOnly = true)
     public VistaPreviaAvisoResponse vistaPrevia(Integer companyId, VistaPreviaAvisoRequest request) {
-        exigirGestionInterna(companyId);
         Integer id = requerirEmpresa(companyId);
+        exigirGestionInterna(id);
         AudienciaAvisoPrivacidad audiencia = request.getAudiencia();
         CamposAvisoPrivacidad campos = AvisoPrivacidadTexto.limpiar(request.getCampos());
         Optional<AvisoPrivacidad> vigente = avisoRepository.findByCompanyIdAndAudienciaAndActivoTrue(id, audiencia);
@@ -200,8 +200,8 @@ public class AvisoPrivacidadService {
     @Transactional
     public AvisoPrivacidadResponse publicar(Integer companyId, PublicarAvisoPrivacidadRequest request,
                                             String ip, String userAgent) {
-        exigirGestionInterna(companyId);
         Integer id = requerirEmpresa(companyId);
+        exigirGestionInterna(id);
         companyRepository.lockById(id).orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
         AudienciaAvisoPrivacidad audiencia = request.getAudiencia();
 

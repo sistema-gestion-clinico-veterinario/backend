@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.Purchase;
 import veterinaria.vargasvet.domain.enums.PaymentStatus;
+import veterinaria.vargasvet.domain.enums.MetodoPago;
 import veterinaria.vargasvet.domain.enums.TipoPurchase;
 
 import java.time.LocalDateTime;
@@ -43,6 +44,7 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
             + "AND (CAST(:fechaDesde AS timestamp) IS NULL OR p.createdAt >= :fechaDesde) "
             + "AND (CAST(:fechaHasta AS timestamp) IS NULL OR p.createdAt <= :fechaHasta) "
             + "AND (:estado IS NULL OR p.paymentStatus = :estado) "
+            + "AND (:metodoPago IS NULL OR p.metodoPago = :metodoPago) "
             + "ORDER BY p.createdAt DESC")
     Page<Purchase> buscarHistorialPorEmpresa(
             @Param("companyId") Integer companyId,
@@ -52,6 +54,7 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
             @Param("fechaDesde") LocalDateTime fechaDesde,
             @Param("fechaHasta") LocalDateTime fechaHasta,
             @Param("estado") PaymentStatus estado,
+            @Param("metodoPago") MetodoPago metodoPago,
             Pageable pageable);
 
     @Query("SELECT p FROM Purchase p WHERE p.user.company.id = :companyId ORDER BY p.createdAt DESC")

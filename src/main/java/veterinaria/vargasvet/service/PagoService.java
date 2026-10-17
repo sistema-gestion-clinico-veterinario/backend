@@ -2,6 +2,7 @@ package veterinaria.vargasvet.service;
 
 import org.springframework.data.domain.Page;
 import veterinaria.vargasvet.domain.enums.PaymentStatus;
+import veterinaria.vargasvet.domain.enums.MetodoPago;
 import veterinaria.vargasvet.dto.request.PagoRequest;
 import veterinaria.vargasvet.dto.response.PagoListResponse;
 import veterinaria.vargasvet.dto.response.PagoResponse;
@@ -16,5 +17,5 @@ public interface PagoService {
     Page<PagoListResponse> listarHistorialPorEmpresa(int page, int size, Integer companyId,
                                                       Integer clienteId, Long mascotaId,
                                                       LocalDate fechaDesde, LocalDate fechaHasta,
-                                                      PaymentStatus estado);
+                                                      PaymentStatus estado, MetodoPago metodoPago);
 }

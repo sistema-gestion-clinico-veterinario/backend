@@ -209,6 +209,23 @@ class PagoServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("El historial filtra estado y método de pago antes de paginar")
+    void listarHistorialFiltraEstadoYMetodoEnBaseDeDatos() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
+        Integer companyId = cita.getMascota().getApoderado().getCompany().getId();
+        pagoService.registrar(pagoYape(cita.getId()));
+
+        Page<PagoListResponse> coincidencias = pagoService.listarHistorialPorEmpresa(
+                0, 10, companyId, null, null, null, null, PaymentStatus.PAID, MetodoPago.YAPE);
+        Page<PagoListResponse> otroMetodo = pagoService.listarHistorialPorEmpresa(
+                0, 10, companyId, null, null, null, null, PaymentStatus.PAID, MetodoPago.EFECTIVO);
+
+        assertThat(coincidencias.getTotalElements()).isEqualTo(1);
+        assertThat(coincidencias.getContent().get(0).getMetodoPago()).isEqualTo(MetodoPago.YAPE);
+        assertThat(otroMetodo).isEmpty();
+    }
+
+    @Test
     @DisplayName("[BUG] SuperAdmin sin empresa seleccionada no recibe pagos de todas las empresas mezclados")
     void listarTodosRechazaSuperAdminSinCompanySeleccionadaEnLugarDeMezclarEmpresas() {
         Cita citaEmpresaA = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
@@ -249,12 +266,12 @@ class PagoServiceIntegrationTest {
         setSuperAdminContext();
 
         assertThatThrownBy(() -> pagoService.listarHistorialPorEmpresa(
-                0, 10, null, null, null, null, null, null))
+                0, 10, null, null, null, null, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("companyId");
 
         Page<PagoListResponse> pagosEmpresaA = pagoService.listarHistorialPorEmpresa(
-                0, 10, companyAId, null, null, null, null, null);
+                0, 10, companyAId, null, null, null, null, null, null);
         assertThat(pagosEmpresaA.getContent())
                 .extracting(PagoListResponse::getCitaId)
                 .containsExactly(citaEmpresaA.getId());
