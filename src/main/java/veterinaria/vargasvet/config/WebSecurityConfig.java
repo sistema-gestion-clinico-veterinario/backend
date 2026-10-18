@@ -23,6 +23,7 @@ import veterinaria.vargasvet.security.JWTFilter;
 import veterinaria.vargasvet.security.SessionCookies;
 import veterinaria.vargasvet.security.JwtAuthenticationEntryPoint;
 import veterinaria.vargasvet.security.CookieSecurityFilter;
+import veterinaria.vargasvet.security.BackupReportTokenFilter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +39,7 @@ public class WebSecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final veterinaria.vargasvet.security.RateLimitFilter rateLimitFilter;
     private final CookieSecurityFilter cookieSecurityFilter;
+    private final BackupReportTokenFilter backupReportTokenFilter;
 
     @Value("${cors.allowed-origins:https://systemvetfrontend.vercel.app,http://localhost:4200}")
     private String allowedOriginsRaw;
@@ -140,6 +142,10 @@ public class WebSecurityConfig {
         // Validar el origen de las cookies antes de procesar la autenticación.
         http.addFilterBefore(cookieSecurityFilter, JWTFilter.class);
 
+        // Autenticar primero el canal máquina-a-máquina de GitHub Actions. Se registra después del filtro
+        // de cookies porque Spring solo conoce el orden de un filtro personalizado una vez añadido.
+        http.addFilterBefore(backupReportTokenFilter, CookieSecurityFilter.class);
+
         // Rate Limit Filter (despues de JWT, para poder limitar por usuario autenticado)
         http.addFilterAfter(
                 rateLimitFilter,
@@ -195,6 +201,12 @@ public class WebSecurityConfig {
     @Bean
     public FilterRegistrationBean<CookieSecurityFilter> cookieSecurityFilterRegistration(
             CookieSecurityFilter filter) {
+        return securityFilterRegistration(filter);
+    }
+
+    @Bean
+    public FilterRegistrationBean<BackupReportTokenFilter> backupReportTokenFilterRegistration(
+            BackupReportTokenFilter filter) {
         return securityFilterRegistration(filter);
     }
 

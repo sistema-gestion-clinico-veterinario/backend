@@ -41,7 +41,8 @@ class TodosLosEndpointsExigenAutorizacionTest {
             if (endpoint.regla() != null) {
                 assertThat(endpoint.regla()).as("%s tiene una regla vacía o abierta", endpoint.clave())
                         .isNotBlank().doesNotContain("permitAll");
-            } else if (endpoint.controlador() != CONTROLADOR_IMPERATIVO && !endpoint.esPublico() && !endpoint.esAutoservicio()) {
+            } else if (endpoint.controlador() != CONTROLADOR_IMPERATIVO && !endpoint.esPublico()
+                    && !endpoint.esAutoservicio() && !endpoint.esInternoConToken()) {
                 sinJustificar.add(endpoint.descripcion());
             }
         }
@@ -49,7 +50,9 @@ class TodosLosEndpointsExigenAutorizacionTest {
         assertThat(sinJustificar).as("Endpoints sin @PreAuthorize y sin justificar").isEmpty();
         Set<String> existentes = endpoints.stream().map(CatalogoEndpoints.Endpoint::clave).collect(Collectors.toSet());
         assertThat(existentes).as("Las listas de justificados no deben tener entradas que ya no existen")
-                .containsAll(CatalogoEndpoints.PUBLICOS).containsAll(CatalogoEndpoints.AUTOSERVICIO);
+                .containsAll(CatalogoEndpoints.PUBLICOS)
+                .containsAll(CatalogoEndpoints.AUTOSERVICIO)
+                .containsAll(CatalogoEndpoints.INTERNOS_CON_TOKEN);
     }
 
     @Test
