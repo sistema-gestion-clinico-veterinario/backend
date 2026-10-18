@@ -42,12 +42,16 @@ final class CatalogoEndpoints {
             "POST /auth/email-change/request", "POST /auth/switch-role", "POST /legal/accept", "POST /privacidad/enterado",
             "POST /realtime/ticket", "PUT /privacidad/finalidades/{finalidad}", "PUT /profile");
 
+    /** Canales máquina-a-máquina autenticados por un filtro antes de resolver el controlador. */
+    static final Set<String> INTERNOS_CON_TOKEN = Set.of("POST /internal/backups/events");
+
     private static final Pattern VARIABLE = Pattern.compile("\\{([^}:]+)(?::[^}]*)?}");
 
     record Endpoint(String verbo, String ruta, Class<?> controlador, Method metodo, String regla) {
         String clave() { return verbo + " " + ruta; }
         boolean esPublico() { return PUBLICOS.contains(clave()); }
         boolean esAutoservicio() { return AUTOSERVICIO.contains(clave()); }
+        boolean esInternoConToken() { return INTERNOS_CON_TOKEN.contains(clave()); }
         boolean tieneVariables() { return ruta.contains("{"); }
         String descripcion() { return clave() + "  [" + controlador.getSimpleName() + "." + metodo.getName() + "]"; }
 
