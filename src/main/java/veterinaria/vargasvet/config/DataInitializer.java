@@ -121,6 +121,7 @@ public class DataInitializer implements CommandLineRunner {
         seed("VISTA_VENTANAS",        "Gestión de Vistas", "/ventanas",       "ADMIN", 4, administracion, null);
         seed("VISTA_COMPLEMENTARIO",  "Complementario",    "/complementario", "ADMIN", 5, administracion, null);
         seed("VISTA_REPORTES",        "Reportes",          "/reportes",       "ADMIN", 6, administracion, null);
+        seed("VISTA_RESPALDOS",       "Respaldos",         "/admin/respaldos", "ADMIN", 7, administracion, null);
 
         seed("VISTA_EMPLEADOS",  "Empleados",  "/empleados",          "RRHH", 1, personal, null);
         seed("VISTA_HORARIOS",   "Horarios",   "/empleados/horarios", "RRHH", 2, personal, null);
@@ -231,6 +232,9 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private ViewAudience resolveAudience(String codigo) {
+        if ("VISTA_RESPALDOS".equals(codigo)) {
+            return ViewAudience.PLATFORM;
+        }
         if ("VISTA_PROFILE".equals(codigo)) {
             return ViewAudience.SHARED;
         }
