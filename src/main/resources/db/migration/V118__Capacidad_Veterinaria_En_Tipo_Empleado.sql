@@ -14,4 +14,3 @@ ALTER TABLE tipo_empleado
 
 COMMENT ON COLUMN tipo_empleado.es_veterinario IS
     'Indica si el tipo de empleado puede ejercer funciones clínicas veterinarias';
-y 

@@ -1,4 +1,4 @@
-CREATE TABLE company_compliance_policy (
+CREATE TABLE IF NOT EXISTS company_compliance_policy (
     id BIGSERIAL PRIMARY KEY,
     company_id INTEGER NOT NULL REFERENCES company(id),
     control_code VARCHAR(40) NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE company_compliance_policy (
     )
 );
 
-CREATE INDEX idx_company_compliance_current
+CREATE INDEX IF NOT EXISTS idx_company_compliance_current
     ON company_compliance_policy(company_id, control_code, vigente_desde DESC, version DESC);
 
 COMMENT ON TABLE company_compliance_policy IS

@@ -21,11 +21,13 @@ ALTER TABLE aviso_privacidad
 ALTER TABLE aviso_privacidad
     DROP CONSTRAINT IF EXISTS uq_aviso_privacidad_company_version;
 ALTER TABLE aviso_privacidad
+    DROP CONSTRAINT IF EXISTS uq_aviso_privacidad_company_audiencia_version;
+ALTER TABLE aviso_privacidad
     ADD CONSTRAINT uq_aviso_privacidad_company_audiencia_version
         UNIQUE (company_id, audiencia, version);
 
 DROP INDEX IF EXISTS ux_aviso_privacidad_vigente;
-CREATE UNIQUE INDEX ux_aviso_privacidad_vigente_audiencia
+CREATE UNIQUE INDEX IF NOT EXISTS ux_aviso_privacidad_vigente_audiencia
     ON aviso_privacidad (company_id, audiencia)
     WHERE activo;
 
