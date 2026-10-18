@@ -24,6 +24,7 @@ jobs:
     outputs:
       recovery_point_id: ${{ steps.plan.outputs.recovery_point_id }}
       retention_policy: ${{ steps.plan.outputs.retention_policy }}
+      started_at: ${{ steps.plan.outputs.started_at }}
     steps:
       - name: Generar identificador y política
         id: plan
@@ -37,8 +38,45 @@ jobs:
           else
             retention_policy="p01"
           fi
+          started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           echo "recovery_point_id=$recovery_point_id" >> "$GITHUB_OUTPUT"
           echo "retention_policy=$retention_policy" >> "$GITHUB_OUTPUT"
+          echo "started_at=$started_at" >> "$GITHUB_OUTPUT"
+
+      - name: Registrar el inicio para monitoreo
+        continue-on-error: true
+        env:
+          BACKUP_REPORT_URL: ${{ vars.BACKUP_REPORT_URL }}
+          BACKUP_REPORT_TOKEN: ${{ secrets.BACKUP_REPORT_TOKEN }}
+          RECOVERY_POINT_ID: ${{ steps.plan.outputs.recovery_point_id }}
+          RETENTION_POLICY: ${{ steps.plan.outputs.retention_policy }}
+          STARTED_AT: ${{ steps.plan.outputs.started_at }}
+          TRIGGER_TYPE: ${{ github.event_name == 'schedule' && 'SCHEDULED' || 'MANUAL' }}
+          WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          if [ -z "$BACKUP_REPORT_URL" ] || [ -z "$BACKUP_REPORT_TOKEN" ]; then
+            echo "Monitoreo interno no configurado; el respaldo continuará."
+            exit 0
+          fi
+          payload="$(jq -n \
+            --arg runId "${{ github.run_id }}" \
+            --argjson runAttempt "${{ github.run_attempt }}" \
+            --arg recoveryPointId "$RECOVERY_POINT_ID" \
+            --arg retentionPolicy "$RETENTION_POLICY" \
+            --arg triggerType "$TRIGGER_TYPE" \
+            --arg startedAt "$STARTED_AT" \
+            --arg commitSha "${{ github.sha }}" \
+            --arg workflowUrl "$WORKFLOW_URL" \
+            '{runId:$runId,runAttempt:$runAttempt,recoveryPointId:$recoveryPointId,
+              retentionPolicy:$retentionPolicy,triggerType:$triggerType,phase:"STARTED",
+              status:"IN_PROGRESS",databaseStatus:"PENDING",restrictionsStatus:"PENDING",
+              storageStatus:"PENDING",startedAt:$startedAt,finishedAt:null,
+              commitSha:$commitSha,workflowUrl:$workflowUrl}')"
+          curl --fail-with-body --silent --show-error --max-time 20 \
+            -H "Content-Type: application/json" \
+            -H "X-Backup-Report-Token: $BACKUP_REPORT_TOKEN" \
+            --data "$payload" "$BACKUP_REPORT_URL/internal/backups/events"
 
   base-de-datos:
     name: Respaldar la base de datos
@@ -185,3 +223,73 @@ jobs:
           RCLONE_CONFIG_RESPALDO_SCOPE: drive.file
           RCLONE_CONFIG_RESPALDO_TOKEN: ${{ secrets.RCLONE_DRIVE_TOKEN }}
         run: bash ops/backup/respaldar-archivos.sh
+
+  registrar-resultado:
+    name: Registrar el resultado operativo
+    runs-on: ubuntu-24.04
+    needs: [preparar, base-de-datos, restaurar-restricciones, archivos]
+    if: ${{ always() && needs.preparar.result == 'success' }}
+    steps:
+      - name: Publicar resumen sanitizado
+        continue-on-error: true
+        env:
+          BACKUP_REPORT_URL: ${{ vars.BACKUP_REPORT_URL }}
+          BACKUP_REPORT_TOKEN: ${{ secrets.BACKUP_REPORT_TOKEN }}
+          RECOVERY_POINT_ID: ${{ needs.preparar.outputs.recovery_point_id }}
+          RETENTION_POLICY: ${{ needs.preparar.outputs.retention_policy }}
+          STARTED_AT: ${{ needs.preparar.outputs.started_at }}
+          DATABASE_RESULT: ${{ needs.base-de-datos.result }}
+          RESTRICTIONS_RESULT: ${{ needs.restaurar-restricciones.result }}
+          STORAGE_RESULT: ${{ needs.archivos.result }}
+          TRIGGER_TYPE: ${{ github.event_name == 'schedule' && 'SCHEDULED' || 'MANUAL' }}
+          WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          if [ -z "$BACKUP_REPORT_URL" ] || [ -z "$BACKUP_REPORT_TOKEN" ]; then
+            echo "Monitoreo interno no configurado; el resultado permanece en GitHub Actions."
+            exit 0
+          fi
+
+          component_status() {
+            case "$1" in
+              success) echo "SUCCESS" ;;
+              skipped) echo "SKIPPED" ;;
+              *) echo "FAILED" ;;
+            esac
+          }
+
+          database_status="$(component_status "$DATABASE_RESULT")"
+          restrictions_status="$(component_status "$RESTRICTIONS_RESULT")"
+          storage_status="$(component_status "$STORAGE_RESULT")"
+          if [ "$database_status" != "SUCCESS" ] || [ "$restrictions_status" != "SUCCESS" ] || [ "$storage_status" = "FAILED" ]; then
+            overall_status="FAILED"
+          elif [ "$storage_status" = "SKIPPED" ]; then
+            overall_status="PARTIAL"
+          else
+            overall_status="SUCCESS"
+          fi
+          finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          payload="$(jq -n \
+            --arg runId "${{ github.run_id }}" \
+            --argjson runAttempt "${{ github.run_attempt }}" \
+            --arg recoveryPointId "$RECOVERY_POINT_ID" \
+            --arg retentionPolicy "$RETENTION_POLICY" \
+            --arg triggerType "$TRIGGER_TYPE" \
+            --arg status "$overall_status" \
+            --arg databaseStatus "$database_status" \
+            --arg restrictionsStatus "$restrictions_status" \
+            --arg storageStatus "$storage_status" \
+            --arg startedAt "$STARTED_AT" \
+            --arg finishedAt "$finished_at" \
+            --arg commitSha "${{ github.sha }}" \
+            --arg workflowUrl "$WORKFLOW_URL" \
+            '{runId:$runId,runAttempt:$runAttempt,recoveryPointId:$recoveryPointId,
+              retentionPolicy:$retentionPolicy,triggerType:$triggerType,phase:"COMPLETED",
+              status:$status,databaseStatus:$databaseStatus,restrictionsStatus:$restrictionsStatus,
+              storageStatus:$storageStatus,startedAt:$startedAt,finishedAt:$finishedAt,
+              commitSha:$commitSha,workflowUrl:$workflowUrl}')"
+          curl --fail-with-body --silent --show-error --max-time 20 \
+            -H "Content-Type: application/json" \
+            -H "X-Backup-Report-Token: $BACKUP_REPORT_TOKEN" \
+            --data "$payload" "$BACKUP_REPORT_URL/internal/backups/events"
