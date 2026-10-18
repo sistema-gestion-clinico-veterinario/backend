@@ -76,6 +76,7 @@ public class WebSecurityConfig {
                                 "/auth/validate-reset-token",
                                 "/legal/current",
                                 "/health",
+                                "/internal/backups/events",
                                 "/setup/**",
                                 "/auth/setup-account",
                                 "/v3/api-docs/**",

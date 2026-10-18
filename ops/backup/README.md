@@ -44,6 +44,25 @@ Tras cada ejecución se debe comprobar que:
 - no quedó la IP temporal del runner en Supabase;
 - el destino contiene los componentes cifrados del mismo punto de recuperación.
 
+## Monitoreo en SoftVet
+
+El workflow puede publicar un resumen operativo sanitizado en el panel **Respaldo y recuperación**. Esta integración no transmite archivos, credenciales, hashes, nombres de buckets ni claves GPG.
+
+Configurar en GitHub Actions:
+
+| Tipo | Nombre | Contenido |
+| --- | --- | --- |
+| Variable | `BACKUP_REPORT_URL` | URL base del backend con su contexto, por ejemplo `https://backend.example.com/api/v1`. |
+| Secreto | `BACKUP_REPORT_TOKEN` | Valor aleatorio de 32 bytes o más, exclusivo para reportar respaldos. |
+
+Configurar exactamente el mismo secreto en el entorno del backend:
+
+| Nombre | Contenido |
+| --- | --- |
+| `BACKUP_REPORT_TOKEN` | El mismo valor aleatorio guardado en GitHub Actions. |
+
+El endpoint de reporte solo acepta HTTPS desde el workflow, compara el token en tiempo constante y registra cada combinación de `run_id` y `run_attempt` una sola vez. Una ejecución finalizada es inmutable. El token de reporte no concede acceso para consultar datos, descargar respaldos ni ejecutar restauraciones.
+
 ## Recuperación verificada
 
 `restaurar.sh` exige un manifiesto firmado, valida el SHA-256 antes de modificar el destino y restaura PostgreSQL por etapas. Primero recupera `pre-data`, luego prepara las extensiones declaradas en `RESTORE_EXTENSIONS` (por defecto `pg_trgm`), después carga `data` y finalmente `post-data`. Cada etapa falla de forma cerrada y dentro de su propia transacción. Al terminar compara exactamente el conjunto de tablas y la cantidad de filas con el manifiesto.
