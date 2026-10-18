@@ -1,5 +1,3 @@
-BEGIN;
-
 ALTER TABLE user_consent
     ADD COLUMN IF NOT EXISTS tipo_constancia VARCHAR(25);
 
@@ -38,5 +36,3 @@ $$;
 
 COMMENT ON COLUMN user_consent.tipo_constancia IS
     'ACEPTACION para términos contractuales; CONSTANCIA_LECTURA para documentos informativos';
-
-COMMIT;

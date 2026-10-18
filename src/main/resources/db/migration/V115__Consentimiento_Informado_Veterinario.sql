@@ -1,6 +1,6 @@
 -- Documento clinico inmutable por version. La decision queda vinculada al texto
 -- exacto mediante SHA-256 y a una persona autorizada para esa mascota.
-CREATE TABLE consentimiento_informado_veterinario (
+CREATE TABLE IF NOT EXISTS consentimiento_informado_veterinario (
     id BIGSERIAL PRIMARY KEY,
     uuid VARCHAR(36) NOT NULL UNIQUE,
     company_id INTEGER NOT NULL REFERENCES company(id),
@@ -40,11 +40,11 @@ CREATE TABLE consentimiento_informado_veterinario (
     CONSTRAINT uq_consentimiento_vet_version UNIQUE (company_id, mascota_id, procedimiento, version)
 );
 
-CREATE INDEX idx_consentimiento_vet_company_mascota
+CREATE INDEX IF NOT EXISTS idx_consentimiento_vet_company_mascota
     ON consentimiento_informado_veterinario(company_id, mascota_id, creado_at DESC);
-CREATE INDEX idx_consentimiento_vet_apoderado_estado
+CREATE INDEX IF NOT EXISTS idx_consentimiento_vet_apoderado_estado
     ON consentimiento_informado_veterinario(apoderado_id, estado, creado_at DESC);
-CREATE UNIQUE INDEX uq_consentimiento_vet_pendiente
+CREATE UNIQUE INDEX IF NOT EXISTS uq_consentimiento_vet_pendiente
     ON consentimiento_informado_veterinario(company_id, mascota_id, procedimiento)
     WHERE estado = 'PENDIENTE';
 

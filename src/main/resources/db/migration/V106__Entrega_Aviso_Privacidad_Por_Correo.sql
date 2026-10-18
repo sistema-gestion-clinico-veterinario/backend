@@ -1,4 +1,4 @@
-CREATE TABLE entrega_aviso_privacidad (
+CREATE TABLE IF NOT EXISTS entrega_aviso_privacidad (
     id             BIGSERIAL PRIMARY KEY,
     company_id     INTEGER      NOT NULL REFERENCES company (id),
     usuario_id     INTEGER      NOT NULL REFERENCES usuario (id),
@@ -14,7 +14,7 @@ CREATE TABLE entrega_aviso_privacidad (
     CONSTRAINT uq_entrega_aviso_usuario_version_canal UNIQUE (usuario_id, aviso_id, canal)
 );
 
-CREATE INDEX ix_entrega_aviso_company_estado
+CREATE INDEX IF NOT EXISTS ix_entrega_aviso_company_estado
     ON entrega_aviso_privacidad (company_id, estado, solicitado_en DESC);
 
 COMMENT ON TABLE entrega_aviso_privacidad IS
