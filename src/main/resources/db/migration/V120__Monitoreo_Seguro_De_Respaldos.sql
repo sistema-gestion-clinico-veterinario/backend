@@ -1,4 +1,4 @@
-CREATE TABLE backup_execution (
+CREATE TABLE IF NOT EXISTS backup_execution (
     id BIGSERIAL PRIMARY KEY,
     run_id VARCHAR(20) NOT NULL,
     run_attempt INTEGER NOT NULL,
@@ -28,4 +28,4 @@ CREATE TABLE backup_execution (
     )
 );
 
-CREATE INDEX idx_backup_execution_started_at ON backup_execution (started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_backup_execution_started_at ON backup_execution (started_at DESC);

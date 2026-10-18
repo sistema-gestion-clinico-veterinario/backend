@@ -1,6 +1,6 @@
 -- Solicitudes de acceso, rectificacion, oposicion y portabilidad. La cancelacion
 -- conserva su flujo especializado porque ejecuta anonimizacion y cierre de cuenta.
-CREATE TABLE solicitud_derecho_datos (
+CREATE TABLE IF NOT EXISTS solicitud_derecho_datos (
     id BIGSERIAL PRIMARY KEY,
     company_id INTEGER NOT NULL REFERENCES company(id),
     usuario_id INTEGER NOT NULL REFERENCES usuario(id),
@@ -27,11 +27,11 @@ CREATE TABLE solicitud_derecho_datos (
     )
 );
 
-CREATE INDEX idx_solicitud_derecho_company_estado
+CREATE INDEX IF NOT EXISTS idx_solicitud_derecho_company_estado
     ON solicitud_derecho_datos(company_id, estado, creada_at DESC);
-CREATE INDEX idx_solicitud_derecho_usuario
+CREATE INDEX IF NOT EXISTS idx_solicitud_derecho_usuario
     ON solicitud_derecho_datos(usuario_id, company_id, creada_at DESC);
-CREATE UNIQUE INDEX uq_solicitud_derecho_abierta
+CREATE UNIQUE INDEX IF NOT EXISTS uq_solicitud_derecho_abierta
     ON solicitud_derecho_datos(usuario_id, company_id, tipo)
     WHERE estado IN ('RECIBIDA', 'EN_REVISION', 'REQUIERE_INFORMACION');
 
