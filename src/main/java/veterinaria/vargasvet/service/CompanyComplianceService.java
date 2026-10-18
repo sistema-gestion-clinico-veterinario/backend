@@ -30,6 +30,10 @@ public class CompanyComplianceService {
 
     @Transactional(readOnly = true)
     public ConfiguracionCumplimientoResponse resolver(Integer companyId, ControlCumplimientoClinica control) {
+        return vigente(companyId, control);
+    }
+
+    private ConfiguracionCumplimientoResponse vigente(Integer companyId, ControlCumplimientoClinica control) {
         if (companyId == null) return porDefecto(control);
         return repository.vigente(companyId, control, AppClock.now()).map(this::response).orElseGet(() -> porDefecto(control));
     }
@@ -37,7 +41,7 @@ public class CompanyComplianceService {
     @Transactional(readOnly = true)
     public List<ConfiguracionCumplimientoResponse> actuales(Integer companyId) {
         companyRepository.findById(companyId).orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
-        return Arrays.stream(ControlCumplimientoClinica.values()).map(c -> resolver(companyId, c)).toList();
+        return Arrays.stream(ControlCumplimientoClinica.values()).map(c -> vigente(companyId, c)).toList();
     }
 
     @Transactional(readOnly = true)
@@ -75,8 +79,9 @@ public class CompanyComplianceService {
         return response(policy);
     }
 
+    @Transactional(readOnly = true)
     public boolean gestionadoPorSoftvet(Integer companyId, ControlCumplimientoClinica control) {
-        return resolver(companyId, control).gestionadoPorSoftvet();
+        return vigente(companyId, control).gestionadoPorSoftvet();
     }
 
     private void validar(ControlCumplimientoClinica control, ConfigurarCumplimientoClinicaRequest r) {

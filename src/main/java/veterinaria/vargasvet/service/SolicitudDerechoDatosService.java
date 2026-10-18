@@ -138,7 +138,7 @@ public class SolicitudDerechoDatosService {
         int agregados = 0;
         while (agregados < cantidad) {
             fecha = fecha.plusDays(1);
-            if (fecha.getDayOfWeek() != DayOfWeek.SATURDAY && fecha.getDayOfWeek() != DayOfWeek.SUNDAY) {
+            if (fecha.getDayOfWeek().getValue() < DayOfWeek.SATURDAY.getValue()) {
                 agregados++;
             }
         }
