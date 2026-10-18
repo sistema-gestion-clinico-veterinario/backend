@@ -126,7 +126,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<ControlPreventivoResponse> listarControles(Long mascotaId) {
         obtenerMascotaAutorizada(mascotaId);
         return listarControlesAutorizados(mascotaId);
@@ -134,7 +134,6 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
 
     private List<ControlPreventivoResponse> listarControlesAutorizados(Long mascotaId) {
         List<ControlPreventivo> controles = controlRepository.findByMascotaIdOrderByFechaRecomendadaDesc(mascotaId);
-        controles.forEach(this::actualizarEstadoPorFecha);
         return controles.stream().map(this::toControlResponse).toList();
     }
 
@@ -172,7 +171,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public CartillaDetalleResponse obtenerDetalleCartilla(Long mascotaId) {
         Mascota mascota = obtenerMascotaAutorizada(mascotaId);
         return CartillaDetalleResponse.builder()
@@ -332,15 +331,22 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     }
 
     private void actualizarEstadoPorFecha(ControlPreventivo control) {
+        EstadoControlPreventivo nuevo = estadoVigente(control);
+        if (control.getEstado() != nuevo) cambiarEstado(control, nuevo, "SYSTEM");
+    }
+
+    /** Calcula el estado visible sin ensuciar la entidad durante una consulta GET. */
+    private EstadoControlPreventivo estadoVigente(ControlPreventivo control) {
         if (!EnumSet.of(EstadoControlPreventivo.PROGRAMADO, EstadoControlPreventivo.PROXIMO,
-                EstadoControlPreventivo.PENDIENTE, EstadoControlPreventivo.ATRASADO).contains(control.getEstado())) return;
+                EstadoControlPreventivo.PENDIENTE, EstadoControlPreventivo.ATRASADO).contains(control.getEstado())) {
+            return control.getEstado();
+        }
         LocalDate hoy = AppClock.today();
-        EstadoControlPreventivo nuevo = control.getFechaRecomendada().isBefore(hoy)
+        return control.getFechaRecomendada().isBefore(hoy)
                 ? EstadoControlPreventivo.ATRASADO
                 : control.getFechaRecomendada().isEqual(hoy) ? EstadoControlPreventivo.PENDIENTE
                 : !control.getFechaRecomendada().isAfter(hoy.plusDays(7)) ? EstadoControlPreventivo.PROXIMO
                 : EstadoControlPreventivo.PROGRAMADO;
-        if (control.getEstado() != nuevo) cambiarEstado(control, nuevo, "SYSTEM");
     }
 
     private void cambiarEstado(ControlPreventivo control, EstadoControlPreventivo estado, String actor) {
@@ -612,7 +618,7 @@ public class ControlPreventivoServiceImpl implements ControlPreventivoService {
     private ControlPreventivoResponse toControlResponse(ControlPreventivo c) {
         return ControlPreventivoResponse.builder().id(c.getId()).mascotaId(c.getMascota().getId()).tipo(c.getTipo())
                 .tipoVacunaId(c.getTipoVacuna() == null ? null : c.getTipoVacuna().getId())
-                .nombreControl(c.getNombreControl()).fechaRecomendada(c.getFechaRecomendada()).estado(c.getEstado())
+                .nombreControl(c.getNombreControl()).fechaRecomendada(c.getFechaRecomendada()).estado(estadoVigente(c))
                 .citaSuspendeId(c.getCitaSuspende() == null ? null : c.getCitaSuspende().getId()).build();
     }
 }
