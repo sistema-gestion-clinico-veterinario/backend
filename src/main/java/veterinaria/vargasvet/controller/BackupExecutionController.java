@@ -8,8 +8,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.response.BackupExecutionResponse;
+import veterinaria.vargasvet.dto.response.BackupSummaryResponse;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.BackupExecutionService;
+import veterinaria.vargasvet.service.BackupSummaryService;
 
 @RestController
 @RequestMapping("/admin/backups")
@@ -17,6 +19,7 @@ import veterinaria.vargasvet.service.BackupExecutionService;
 public class BackupExecutionController {
 
     private final BackupExecutionService service;
+    private final BackupSummaryService summaryService;
 
     @GetMapping
     @PreAuthorize("@accesoValidator.can('VISTA_RESPALDOS', 'LEER')")
@@ -27,5 +30,14 @@ public class BackupExecutionController {
             throw new AccessDeniedException("Solo la administración de plataforma puede consultar respaldos");
         }
         return ResponseEntity.ok(new ApiResponse<>(true, "Ejecuciones de respaldo obtenidas", service.list(page, size)));
+    }
+
+    @GetMapping("/summary")
+    @PreAuthorize("@accesoValidator.can('VISTA_RESPALDOS', 'LEER')")
+    public ResponseEntity<ApiResponse<BackupSummaryResponse>> summary() {
+        if (!SecurityUtils.isSuperAdmin()) {
+            throw new AccessDeniedException("Solo la administración de plataforma puede consultar respaldos");
+        }
+        return ResponseEntity.ok(new ApiResponse<>(true, "Resumen de respaldos obtenido", summaryService.summary()));
     }
 }
