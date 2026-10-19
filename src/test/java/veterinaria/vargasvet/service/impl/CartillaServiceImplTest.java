@@ -268,6 +268,37 @@ class CartillaServiceImplTest {
     }
 
     @Test
+    @DisplayName("[CP-RF33-03] Rechaza registrar dos veces la misma vacuna el mismo día sin crear cobro ni registro")
+    void rechazaVacunaDuplicadaDelMismoDia() {
+        when(mascotaRepository.findByIdForUpdate(20L)).thenReturn(Optional.of(mascota));
+        when(empleadoRepository.findActiveByUserId(11)).thenReturn(Optional.of(veterinario));
+        when(serviciosRepository.findById(40L)).thenReturn(Optional.of(servicio));
+        when(tipoVacunaRepository.findById(50L)).thenReturn(Optional.of(vacuna));
+        when(vacunaRepository.existsByHistoriaClinicaMascotaIdAndTipoVacunaIdAndFechaAplicacionAndActivoTrue(
+                20L, 50L, AppClock.today())).thenReturn(true);
+
+        CartillaAplicacionRequest request = new CartillaAplicacionRequest();
+        request.setMascotaId(20L);
+        request.setServicioId(40L);
+        request.setTipoVacunaId(50L);
+        request.setFechaAplicacion(AppClock.today());
+        request.setIntervaloCantidad(21);
+        request.setIntervaloUnidad(IntervaloUnidad.DIAS);
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+            security.when(SecurityUtils::getCurrentUserId).thenReturn(11);
+            security.when(SecurityUtils::getCurrentUserEmail).thenReturn("vet@example.com");
+            assertThatThrownBy(() -> service.registrarVacunacion(request))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("misma fecha de aplicacion");
+        }
+
+        verify(citaRepository, never()).save(any());
+        verify(vacunaRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("[CP-RF33-02] Registra desparasitación separada y genera el próximo control")
     void registrarDesparasitacionCierraControlYCreaSiguiente() {
         servicio.setNombre("Desparasitación");

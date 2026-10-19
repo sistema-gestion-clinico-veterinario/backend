@@ -76,7 +76,6 @@ public class ServicioServiceImpl implements ServicioService {
         servicio.setDisponible(request.getDisponible() != null ? request.getDisponible() : true);
         servicio.setActivo(true);
         servicio.setDuracionEstimada(request.getDuracionEstimada());
-        servicio.setPermiteEmergencia(request.getPermiteEmergencia() != null ? request.getPermiteEmergencia() : Boolean.FALSE);
         servicio.setTipoControlPreventivo(request.getTipoControlPreventivo() != null
                 ? request.getTipoControlPreventivo() : veterinaria.vargasvet.domain.enums.TipoControlServicio.NO_APLICA);
 
@@ -85,6 +84,7 @@ public class ServicioServiceImpl implements ServicioService {
                     .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado con ID: " + request.getTipoEmpleadoId()));
             servicio.setTipoEmpleado(tipo);
         }
+        configurarEmergencia(servicio, request.getPermiteEmergencia());
         configurarEspecialidadRequerida(servicio, request.getEspecialidadId(), resolvedCompanyId);
 
         return toResponse(servicioRepository.save(servicio));
@@ -108,7 +108,6 @@ public class ServicioServiceImpl implements ServicioService {
             servicio.setDisponible(request.getDisponible());
         }
         servicio.setDuracionEstimada(request.getDuracionEstimada());
-        servicio.setPermiteEmergencia(request.getPermiteEmergencia() != null ? request.getPermiteEmergencia() : Boolean.FALSE);
         servicio.setTipoControlPreventivo(request.getTipoControlPreventivo() != null
                 ? request.getTipoControlPreventivo() : veterinaria.vargasvet.domain.enums.TipoControlServicio.NO_APLICA);
 
@@ -120,9 +119,20 @@ public class ServicioServiceImpl implements ServicioService {
         } else {
             servicio.setTipoEmpleado(null);
         }
+        configurarEmergencia(servicio, request.getPermiteEmergencia());
         configurarEspecialidadRequerida(servicio, request.getEspecialidadId(), servicio.getCompany().getId());
 
         return toResponse(servicioRepository.save(servicio));
+    }
+
+    private void configurarEmergencia(ServiciosVeterinarios servicio, Boolean permiteEmergencia) {
+        boolean habilitada = Boolean.TRUE.equals(permiteEmergencia);
+        if (habilitada && (servicio.getTipoEmpleado() == null
+                || !servicio.getTipoEmpleado().ejerceComoVeterinario())) {
+            throw new IllegalArgumentException(
+                    "La atención de emergencia solo puede habilitarse para servicios asignados a un cargo veterinario");
+        }
+        servicio.setPermiteEmergencia(habilitada);
     }
 
     @Override

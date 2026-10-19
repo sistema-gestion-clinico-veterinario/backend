@@ -651,6 +651,24 @@ class CitaServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("Una cita de emergencia rechaza servicios no habilitados, como grooming")
+    void crearEmergenciaRechazaServicioNoHabilitado() {
+        Cita plantilla = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusDays(2));
+        CitaRequest request = requestDesde(plantilla, LocalDateTime.now().plusMinutes(2));
+        ServiciosVeterinarios servicio = plantilla.getServicio();
+        citaRepository.delete(plantilla);
+        citaRepository.flush();
+        servicio.setNombre("Baño y Spa");
+        servicio.setPermiteEmergencia(false);
+        serviciosVeterinariosRepository.saveAndFlush(servicio);
+
+        assertThatThrownBy(() -> citaService.createCita(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no admite atención de emergencia");
+        assertThat(citaRepository.findAll()).isEmpty();
+    }
+
+    @Test
     @DisplayName("[CP-RF26-02] Rechaza reprogramar cuando falta una hora o menos")
     void reprogramarCitaDentroDeUnaHoraEsRechazado() {
         Cita cita = crearCita(EstadoCita.PROGRAMADA, LocalDateTime.now().plusMinutes(30));
@@ -782,7 +800,7 @@ class CitaServiceIntegrationTest {
         servicio.setDisponible(true);
         servicio.setActivo(true);
         servicio.setDuracionEstimada(30);
-        servicio.setPermiteEmergencia(false);
+        servicio.setPermiteEmergencia(true);
         servicio = serviciosVeterinariosRepository.save(servicio);
 
         Cita cita = new Cita();

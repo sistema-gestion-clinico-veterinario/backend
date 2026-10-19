@@ -20,6 +20,9 @@ public interface RegistroVacunaRepository extends JpaRepository<RegistroVacuna, 
 
     Optional<RegistroVacuna> findFirstByHistoriaClinicaMascotaIdOrderByFechaAplicacionDesc(Long mascotaId);
 
+    boolean existsByHistoriaClinicaMascotaIdAndTipoVacunaIdAndFechaAplicacionAndActivoTrue(
+            Long mascotaId, Long tipoVacunaId, LocalDate fechaAplicacion);
+
     @Query("SELECT h.mascota.id AS mascotaId, MAX(r.fechaAplicacion) AS fecha " +
            "FROM RegistroVacuna r JOIN r.historiaClinica h " +
            "WHERE h.mascota.id IN :mascotaIds GROUP BY h.mascota.id")

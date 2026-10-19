@@ -136,6 +136,9 @@ public class CitaServiceImpl implements CitaService {
         }
         validarEmpleadoParaServicio(mascota, veterinario, servicio);
 
+        boolean esEmergencia = Boolean.TRUE.equals(request.getEsEmergencia());
+        validarServicioPermiteEmergencia(servicio, esEmergencia);
+
         int duracion = (servicio != null && servicio.getDuracionEstimada() != null)
                 ? servicio.getDuracionEstimada()
                 : DURACION_ESTIMADA_MINUTOS;
@@ -149,7 +152,6 @@ public class CitaServiceImpl implements CitaService {
         LocalTime horaFinCita = fechaFin.toLocalTime();
 
         // Validación contra el horario de la clínica (solo si NO es emergencia)
-        boolean esEmergencia = Boolean.TRUE.equals(request.getEsEmergencia());
         Company company = veterinario.getCompany();
         
         if (!esEmergencia && company != null) {
@@ -639,6 +641,9 @@ public class CitaServiceImpl implements CitaService {
         }
         validarEmpleadoParaServicio(mascota, veterinario, servicio);
 
+        boolean esEmergencia = Boolean.TRUE.equals(request.getEsEmergencia());
+        validarServicioPermiteEmergencia(servicio, esEmergencia);
+
         int duracion = (servicio != null && servicio.getDuracionEstimada() != null)
                 ? servicio.getDuracionEstimada()
                 : DURACION_ESTIMADA_MINUTOS;
@@ -647,7 +652,7 @@ public class CitaServiceImpl implements CitaService {
         validarFechaCitaNoPasada(fechaInicio);
         LocalDateTime fechaFin = fechaInicio.plusMinutes(duracion);
 
-        validarDisponibilidadCita(mascota, veterinario, fechaInicio, fechaFin, Boolean.TRUE.equals(request.getEsEmergencia()), id);
+        validarDisponibilidadCita(mascota, veterinario, fechaInicio, fechaFin, esEmergencia, id);
 
         cita.setMascota(mascota);
         cita.setEmpleado(veterinario);
@@ -656,7 +661,7 @@ public class CitaServiceImpl implements CitaService {
         cita.setDuracionMinutos(duracion);
         cita.setMotivoCita(request.getMotivoCita());
         cita.setNotas(request.getNotas());
-        cita.setEsEmergencia(Boolean.TRUE.equals(request.getEsEmergencia()));
+        cita.setEsEmergencia(esEmergencia);
 
         if (servicio != null) {
             cita.setServicio(servicio);
@@ -991,6 +996,12 @@ public class CitaServiceImpl implements CitaService {
         }
     }
 
+    private void validarServicioPermiteEmergencia(ServiciosVeterinarios servicio, boolean esEmergencia) {
+        if (esEmergencia && (servicio == null || !Boolean.TRUE.equals(servicio.getPermiteEmergencia()))) {
+            throw new IllegalArgumentException("El servicio seleccionado no admite atención de emergencia");
+        }
+    }
+
     /** Envía el aviso a cada persona que debe recibirlo (el propietario principal y quienes tengan un vínculo vigente con
      * permiso de recibir información). Devuelve true si la clínica debe avisar por teléfono: el principal no tiene un
      * correo confirmado o, si el principal ya no es destinatario, nadie puede recibir el correo. */
@@ -1144,6 +1155,8 @@ public class CitaServiceImpl implements CitaService {
 
         ServiciosVeterinarios servicio = servicioRepository.findById(servicioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Servicio no encontrado"));
+
+        validarServicioPermiteEmergencia(servicio, Boolean.TRUE.equals(esEmergencia));
 
         if (empleado.getCompany() == null) {
             throw new IllegalStateException("El empleado no tiene una empresa asignada");
