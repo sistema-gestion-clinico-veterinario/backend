@@ -148,6 +148,7 @@ public class CartillaServiceImpl implements CartillaService {
         LocalDate aplicacion = request.getFechaAplicacion();
         LocalDate proxima = calcularProxima(aplicacion, request);
         validarFechas(mascota, aplicacion, proxima);
+        validarSinDuplicado(mascota, tipo, tipoVacuna, tipoDesparasitante, aplicacion);
 
         BigDecimal total = tipo == TipoControlPreventivo.VACUNACION
                 ? tipoVacuna.getPrecio() : tipoDesparasitante.getPrecio();
@@ -363,6 +364,20 @@ public class CartillaServiceImpl implements CartillaService {
         }
         if (proxima != null && !proxima.isAfter(aplicacion)) {
             throw new IllegalArgumentException("La proxima aplicacion debe ser posterior");
+        }
+    }
+
+    private void validarSinDuplicado(Mascota mascota, TipoControlPreventivo tipo, TipoVacuna vacuna,
+                                     TipoDesparasitante desparasitante, LocalDate aplicacion) {
+        boolean duplicado = tipo == TipoControlPreventivo.VACUNACION
+                ? vacunaRepository.existsByHistoriaClinicaMascotaIdAndTipoVacunaIdAndFechaAplicacionAndActivoTrue(
+                        mascota.getId(), vacuna.getId(), aplicacion)
+                : desparasitacionRepository.existsByHistoriaClinicaMascotaIdAndTipoDesparasitanteIdAndFechaAplicacionAndActivoTrue(
+                        mascota.getId(), desparasitante.getId(), aplicacion);
+        if (duplicado) {
+            throw new IllegalArgumentException("Ya existe un registro de "
+                    + (tipo == TipoControlPreventivo.VACUNACION ? vacuna.getNombre() : desparasitante.getNombre())
+                    + " para esta mascota con la misma fecha de aplicacion");
         }
     }
 

@@ -10,6 +10,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import veterinaria.vargasvet.domain.entity.Empleado;
+import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Especialidad;
 import veterinaria.vargasvet.domain.entity.ServiciosVeterinarios;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
@@ -25,7 +26,9 @@ import veterinaria.vargasvet.service.impl.EspecialidadServiceImpl;
 import veterinaria.vargasvet.service.impl.ServicioServiceImpl;
 import veterinaria.vargasvet.service.impl.TipoEmpleadoServiceImpl;
 import veterinaria.vargasvet.domain.entity.TipoEmpleado;
+import veterinaria.vargasvet.dto.request.ServicioRequest;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -118,6 +121,37 @@ class CatalogoProteccionServiceTest {
         );
 
         assertEquals("No se puede eliminar el servicio porque ya ha sido utilizado en citas", error.getMessage());
+        verify(servicioRepository, never()).save(any(ServiciosVeterinarios.class));
+    }
+
+    @Test
+    void servicioDeGroomingNoPuedeHabilitarEmergenciasMedicas() {
+        Company company = new Company();
+        company.setId(1);
+        TipoEmpleado groomer = new TipoEmpleado();
+        groomer.setId(50L);
+        groomer.setNombre("Groomer");
+        groomer.setEsVeterinario(false);
+
+        ServicioRequest request = new ServicioRequest();
+        request.setCompanyId(1);
+        request.setNombre("Baño y Spa");
+        request.setDescripcion("Servicio de baño y cuidado estético");
+        request.setPrecio(new BigDecimal("80.00"));
+        request.setDuracionEstimada(60);
+        request.setTipoEmpleadoId(50L);
+        request.setPermiteEmergencia(true);
+
+        when(companyRepository.findById(1)).thenReturn(Optional.of(company));
+        when(tipoEmpleadoRepository.findByIdAndCompanyId(50L, 1)).thenReturn(Optional.of(groomer));
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> servicioService().crear(request)
+        );
+
+        assertEquals("La atención de emergencia solo puede habilitarse para servicios asignados a un cargo veterinario",
+                error.getMessage());
         verify(servicioRepository, never()).save(any(ServiciosVeterinarios.class));
     }
 
