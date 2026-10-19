@@ -20,6 +20,9 @@ public interface RegistroDesparasitacionRepository extends JpaRepository<Registr
 
     Optional<RegistroDesparasitacion> findFirstByHistoriaClinicaMascotaIdOrderByFechaAplicacionDesc(Long mascotaId);
 
+    boolean existsByHistoriaClinicaMascotaIdAndTipoDesparasitanteIdAndFechaAplicacionAndActivoTrue(
+            Long mascotaId, Long tipoDesparasitanteId, LocalDate fechaAplicacion);
+
     @Query("SELECT h.mascota.id AS mascotaId, MAX(r.fechaAplicacion) AS fecha " +
            "FROM RegistroDesparasitacion r JOIN r.historiaClinica h " +
            "WHERE h.mascota.id IN :mascotaIds GROUP BY h.mascota.id")
