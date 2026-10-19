@@ -65,7 +65,7 @@ public class EmpleadoRequest implements ProtectedPersonalData {
     private Set<Integer> roleIds;
 
     private Set<String> tiposEmpleado;
-    @Size(max = 30, message = "El numero de colegiatura no debe superar 30 caracteres")
+    @Size(max = 15, message = "El numero de colegiatura no debe superar 15 caracteres")
     @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*$", message = "El numero de colegiatura contiene caracteres no permitidos")
     @MeaningfulText(requireLetter = false, message = "El numero de colegiatura no puede estar compuesto solo por simbolos")
     private String numeroColegiatura;

@@ -252,14 +252,14 @@ class AuthControllerGoogleTest {
     }
 
     @Test
-    void cadaMotivoDeRechazoLlevaASuMensaje() {
+    void losRechazosDeAccesoNoRevelanElEstadoDeLaCuenta() {
         record Caso(RuntimeException error, String codigo) {}
         var casos = java.util.List.of(
-                new Caso(new GoogleClinicAccessException(), "google_sin_acceso_clinica"),
-                new Caso(new GoogleAccountSuspendedException(), "google_cuenta_suspendida"),
+                new Caso(new GoogleClinicAccessException(), "google_acceso_no_disponible"),
+                new Caso(new GoogleAccountSuspendedException(), "google_acceso_no_disponible"),
                 new Caso(new veterinaria.vargasvet.exception.GoogleAccountClosedException(), "google_cuenta_cerrada"),
-                new Caso(new veterinaria.vargasvet.exception.GoogleAccountDeactivatedException(), "google_cuenta_dada_de_baja"),
-                new Caso(new DisabledException("sin rol"), "google_cuenta_no_habilitada"),
+                new Caso(new veterinaria.vargasvet.exception.GoogleAccountDeactivatedException(), "google_acceso_no_disponible"),
+                new Caso(new DisabledException("sin rol"), "google_acceso_no_disponible"),
                 new Caso(new GoogleEmailMismatchException(), "google_fallo"),
                 new Caso(new IllegalStateException("inesperado"), "google_fallo"));
         for (Caso caso : casos) {

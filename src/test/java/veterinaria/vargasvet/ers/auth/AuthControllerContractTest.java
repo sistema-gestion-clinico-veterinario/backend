@@ -91,7 +91,7 @@ class AuthControllerContractTest {
 
         verify(usuarioService).forgotPassword(request);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getMessage()).contains("Si el correo existe");
+        assertThat(response.getBody().getMessage()).contains("Si el correo se encuentra registrado");
     }
 
     @Test
