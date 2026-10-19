@@ -81,4 +81,16 @@ class JWTFilterSessionCookieTest {
         verify(tokenProvider, never()).getAuthentication(anyString());
         verify(chain).doFilter(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
+
+    @Test
+    void documentosLegalesPublicosNoIntentanAutenticarCookiesExistentes() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/public/legal/clinica-a");
+        request.setServletPath("/public/legal/clinica-a");
+        request.setCookies(new Cookie("access_token__clinica-a", "token-a"));
+
+        filter.doFilter(request, new MockHttpServletResponse(), chain);
+
+        verify(tokenProvider, never()).getAuthentication(anyString());
+        verify(chain).doFilter(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
 }

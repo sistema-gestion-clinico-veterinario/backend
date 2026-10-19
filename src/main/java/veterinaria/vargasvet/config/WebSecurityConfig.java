@@ -98,8 +98,8 @@ public class WebSecurityConfig {
                         // Buscador de clinica para el login sin slug - mismo motivo que branding.
                         .requestMatchers(HttpMethod.GET, "/company/search").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/public/privacidad/*").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/public/legal/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/public/privacidad/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/public/legal/**").permitAll()
 
                         .requestMatchers("/actuator/**").denyAll()
 
