@@ -259,7 +259,10 @@ public class JWTFilter extends GenericFilterBean {
                 || path.startsWith("/ws/")
                 || path.equals("/error")
                 || ("GET".equalsIgnoreCase(method) && path.startsWith("/media/"))
-                || ("GET".equalsIgnoreCase(method) && path.startsWith("/company/branding/"));
+                || ("GET".equalsIgnoreCase(method) && path.startsWith("/company/branding/"))
+                || ("GET".equalsIgnoreCase(method) && path.equals("/company/search"))
+                || ("GET".equalsIgnoreCase(method) && path.startsWith("/public/privacidad/"))
+                || ("GET".equalsIgnoreCase(method) && path.startsWith("/public/legal/"));
     }
 
     private boolean isLegalExemptEndpoint(HttpServletRequest request) {
