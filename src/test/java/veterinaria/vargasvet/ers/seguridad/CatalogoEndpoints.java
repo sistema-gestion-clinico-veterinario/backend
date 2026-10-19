@@ -26,7 +26,7 @@ final class CatalogoEndpoints {
     static final Set<String> PUBLICOS = Set.of(
             "GET /auth/google/callback", "GET /auth/google/start", "GET /auth/validate-reset-token",
             "GET /company/branding/{slug}", "GET /company/search", "GET /health", "GET /legal/current",
-            "GET /media/{filename:.+}", "GET /public/privacidad/{slug}", "GET /public/privacidad/{slug}/version/{version}",
+            "GET /media/{filename:.+}", "GET /public/legal/{slug}", "GET /public/privacidad/{slug}", "GET /public/privacidad/{slug}/version/{version}",
             "POST /auth/account/reactivate", "POST /auth/admin-login", "POST /auth/email-change/cancel",
             "POST /auth/email-change/confirm-current", "POST /auth/email-change/confirm-new", "POST /auth/forgot-password",
             "POST /auth/google/exchange", "POST /auth/google/intent", "POST /auth/google/reactivate", "POST /auth/login",
