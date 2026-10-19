@@ -17,12 +17,16 @@ import veterinaria.vargasvet.dto.request.PublicarAvisoPrivacidadRequest;
 import veterinaria.vargasvet.dto.request.VistaPreviaAvisoRequest;
 import veterinaria.vargasvet.dto.response.AvisoPrivacidadResponse;
 import veterinaria.vargasvet.dto.response.AvisoPublicoResponse;
+import veterinaria.vargasvet.dto.response.CentroLegalPublicoResponse;
 import veterinaria.vargasvet.dto.response.ConsentimientoEstadoResponse;
+import veterinaria.vargasvet.dto.response.DocumentoCentroLegalResponse;
+import veterinaria.vargasvet.dto.response.LegalDocumentDTO;
 import veterinaria.vargasvet.dto.response.VistaPreviaAvisoResponse;
 import veterinaria.vargasvet.security.ClientIpResolver;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.AvisoPrivacidadService;
 import veterinaria.vargasvet.service.ConsentimientoDatosService;
+import veterinaria.vargasvet.service.LegalDocumentService;
 
 import java.util.List;
 
@@ -33,6 +37,7 @@ public class PrivacidadController {
     private final AvisoPrivacidadService avisoService;
     private final ConsentimientoDatosService consentimientoService;
     private final ClientIpResolver clientIpResolver;
+    private final LegalDocumentService legalDocumentService;
 
     @GetMapping("/public/privacidad/{slug}")
     public ResponseEntity<ApiResponse<AvisoPublicoResponse>> avisoPublico(
@@ -48,6 +53,31 @@ public class PrivacidadController {
             @RequestParam(defaultValue = "PROPIETARIOS_Y_AUTORIZADOS") AudienciaAvisoPrivacidad audiencia) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Aviso de privacidad",
                 avisoService.publico(slug, audiencia, version)));
+    }
+
+    @GetMapping("/public/legal/{slug}")
+    public ResponseEntity<ApiResponse<CentroLegalPublicoResponse>> centroLegalPublico(
+            @PathVariable String slug,
+            @RequestParam(defaultValue = "PROPIETARIOS_Y_AUTORIZADOS") AudienciaAvisoPrivacidad audiencia,
+            @RequestParam(required = false) Integer version) {
+        AvisoPublicoResponse aviso = version == null
+                ? avisoService.publico(slug, audiencia)
+                : avisoService.publico(slug, audiencia, version);
+
+        List<DocumentoCentroLegalResponse> documentos = new java.util.ArrayList<>();
+        documentos.add(new DocumentoCentroLegalResponse(
+                "AVISO_PRIVACIDAD",
+                audiencia == AudienciaAvisoPrivacidad.TRABAJADORES_Y_USUARIOS
+                        ? "Aviso de privacidad para trabajadores"
+                        : "Aviso de privacidad",
+                String.valueOf(aviso.version()), aviso.vigenteDesde(), aviso.contenido()));
+        documentos.addAll(legalDocumentService.getActiveDocuments().stream()
+                .map(this::documentoPublico)
+                .toList());
+
+        CentroLegalPublicoResponse centro = new CentroLegalPublicoResponse(
+                aviso.clinica(), aviso.logoUrl(), aviso.colorPrimario(), List.copyOf(documentos));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Documentos legales vigentes", centro));
     }
 
     @GetMapping("/privacidad/aviso-vigente")
@@ -95,6 +125,15 @@ public class PrivacidadController {
     public ResponseEntity<ApiResponse<ConsentimientoEstadoResponse>> miEstado() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Estado de tu privacidad",
                 consentimientoService.estado(SecurityUtils.getCurrentUserId(), SecurityUtils.getCurrentCompanyId(), audienciaActual())));
+    }
+
+    private DocumentoCentroLegalResponse documentoPublico(LegalDocumentDTO documento) {
+        String titulo = switch (documento.getTipo()) {
+            case TERMINOS_Y_CONDICIONES -> "Términos y condiciones de SoftVet";
+            case POLITICA_PRIVACIDAD -> "Política de privacidad de SoftVet";
+        };
+        return new DocumentoCentroLegalResponse(documento.getTipo().name(), titulo,
+                documento.getVersion(), documento.getVigenteDesde(), documento.getContenido());
     }
 
     @PostMapping("/privacidad/enterado")

@@ -99,6 +99,7 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/company/search").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/public/privacidad/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/public/legal/*").permitAll()
 
                         .requestMatchers("/actuator/**").denyAll()
 

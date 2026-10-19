@@ -195,9 +195,9 @@ public class AuthController {
                         ? frontendVerifyUrl(activationToken, "google_correo_no_coincide")
                         : frontendLoginUrl(slug, "google_fallo");
             } catch (veterinaria.vargasvet.exception.GoogleClinicAccessException ex) {
-                redirectTarget = frontendLoginUrl(slug, "google_sin_acceso_clinica");
+                redirectTarget = frontendLoginUrl(slug, "google_acceso_no_disponible");
             } catch (veterinaria.vargasvet.exception.GoogleAccountSuspendedException ex) {
-                redirectTarget = frontendLoginUrl(slug, "google_cuenta_suspendida");
+                redirectTarget = frontendLoginUrl(slug, "google_acceso_no_disponible");
             } catch (veterinaria.vargasvet.exception.GoogleAccountClosedException ex) {
                 redirectTarget = frontendLoginUrl(slug, "google_cuenta_cerrada");
                 if (ex.getUsuarioId() != null) {
@@ -206,11 +206,11 @@ public class AuthController {
                     redirectTarget += "#reactivar=" + java.net.URLEncoder.encode(ticket, java.nio.charset.StandardCharsets.UTF_8);
                 }
             } catch (veterinaria.vargasvet.exception.GoogleAccountDeactivatedException ex) {
-                redirectTarget = frontendLoginUrl(slug, "google_cuenta_dada_de_baja");
+                redirectTarget = frontendLoginUrl(slug, "google_acceso_no_disponible");
             } catch (org.springframework.security.authentication.DisabledException ex) {
                 redirectTarget = isActivation
                         ? frontendVerifyUrl(activationToken, "google_cuenta_no_habilitada")
-                        : frontendLoginUrl(slug, "google_cuenta_no_habilitada");
+                        : frontendLoginUrl(slug, "google_acceso_no_disponible");
             } catch (Exception ex) {
                 redirectTarget = isActivation
                         ? frontendVerifyUrl(activationToken, "google_fallo")
@@ -448,7 +448,8 @@ public class AuthController {
         long startedAt = System.nanoTime();
         usuarioService.forgotPassword(request);
         padResponseTime(startedAt);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Si el correo existe, se han enviado las instrucciones para restablecer la contraseña.", null));
+        return ResponseEntity.ok(new ApiResponse<>(true,
+                "Si el correo se encuentra registrado, recibirás las instrucciones para restablecer la contraseña.", null));
     }
 
     @PostMapping("/validate-reset-token")
