@@ -5,7 +5,11 @@
 UPDATE legal_document
 SET activo = FALSE
 WHERE tipo = 'TERMINOS_Y_CONDICIONES'
-  AND activo = TRUE;
+  AND activo = TRUE
+  AND NOT EXISTS (
+      SELECT 1 FROM legal_document
+      WHERE tipo = 'TERMINOS_Y_CONDICIONES' AND version = '2.0'
+  );
 
 WITH documento(contenido) AS (
     VALUES ($terminos$
@@ -203,5 +207,8 @@ SELECT
     CURRENT_TIMESTAMP,
     TRUE,
     CURRENT_TIMESTAMP
-FROM documento;
-
+FROM documento
+WHERE NOT EXISTS (
+    SELECT 1 FROM legal_document
+    WHERE tipo = 'TERMINOS_Y_CONDICIONES' AND version = '2.0'
+);

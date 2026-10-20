@@ -5,7 +5,11 @@
 UPDATE legal_document
 SET activo = FALSE
 WHERE tipo = 'POLITICA_PRIVACIDAD'
-  AND activo = TRUE;
+  AND activo = TRUE
+  AND NOT EXISTS (
+      SELECT 1 FROM legal_document
+      WHERE tipo = 'POLITICA_PRIVACIDAD' AND version = '2.0'
+  );
 
 WITH documento(contenido) AS (
     VALUES ($politica$
@@ -136,5 +140,8 @@ SELECT
     CURRENT_TIMESTAMP,
     TRUE,
     CURRENT_TIMESTAMP
-FROM documento;
-
+FROM documento
+WHERE NOT EXISTS (
+    SELECT 1 FROM legal_document
+    WHERE tipo = 'POLITICA_PRIVACIDAD' AND version = '2.0'
+);
