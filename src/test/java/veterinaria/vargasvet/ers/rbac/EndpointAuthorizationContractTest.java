@@ -25,6 +25,8 @@ class EndpointAuthorizationContractTest {
                 expected(ApoderadoController.class, "listar", "VISTA_CLIENTES", "LEER"),
                 expected(ApoderadoController.class, "findById", "VISTA_CLIENTES", "LEER"),
                 expected(ApoderadoController.class, "registerApoderado", "VISTA_CLIENTES", "ESCRIBIR"),
+                expected(ApoderadoController.class, "onboarding", "VISTA_CLIENTES", "ESCRIBIR"),
+                expected(ApoderadoController.class, "onboarding", "VISTA_MASCOTAS", "ESCRIBIR"),
                 expected(ApoderadoController.class, "updateApoderado", "VISTA_CLIENTES", "MODIFICAR"),
                 expected(ApoderadoController.class, "eliminar", "VISTA_CLIENTES", "ELIMINAR"),
                 expected(ApoderadoController.class, "cambiarEstado", "VISTA_CLIENTES", "MODIFICAR"),

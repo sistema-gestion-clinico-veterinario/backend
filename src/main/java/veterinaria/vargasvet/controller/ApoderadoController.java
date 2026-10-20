@@ -12,12 +12,15 @@ import veterinaria.vargasvet.domain.enums.TipoInactividad;
 import veterinaria.vargasvet.dto.request.AccountStatusRequest;
 import veterinaria.vargasvet.dto.response.ApoderadoEstadoResponse;
 import veterinaria.vargasvet.dto.request.ApoderadoRequest;
+import veterinaria.vargasvet.dto.request.AltaClienteRequest;
 import veterinaria.vargasvet.dto.response.ApoderadoListResponse;
+import veterinaria.vargasvet.dto.response.AltaClienteResponse;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.dto.response.CitaResponse;
 import veterinaria.vargasvet.service.ApoderadoService;
 import veterinaria.vargasvet.service.CitaService;
 import veterinaria.vargasvet.service.AuditLogService;
+import veterinaria.vargasvet.service.ClientOnboardingService;
 
 import java.util.List;
 
@@ -29,6 +32,7 @@ public class ApoderadoController {
     private final ApoderadoService apoderadoService;
     private final CitaService citaService;
     private final AuditLogService auditLogService;
+    private final ClientOnboardingService clientOnboardingService;
 
     @GetMapping
     @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'LEER') or @accesoValidator.can('VISTA_CAJA', 'LEER')")
@@ -58,6 +62,14 @@ public class ApoderadoController {
         UserProfileDTO profile = apoderadoService.registerApoderado(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Dueño registrado exitosamente", profile));
+    }
+
+    @PostMapping("/onboarding")
+    @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'ESCRIBIR') and @accesoValidator.can('VISTA_MASCOTAS', 'ESCRIBIR')")
+    public ResponseEntity<ApiResponse<AltaClienteResponse>> onboarding(@Valid @RequestBody AltaClienteRequest request) {
+        AltaClienteResponse response = clientOnboardingService.registrar(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, "Cliente y primera mascota registrados exitosamente", response));
     }
 
     @PutMapping("/{id}")

@@ -315,10 +315,6 @@ class AislamientoApiIntegrationTest {
                 "{\"productoId\":" + e.productoId() + ",\"numeroLote\":\"CTL-" + m + "\",\"fechaVencimiento\":\"2027-12-01\",\"cantidad\":5}",
                 "{\"productoId\":" + e.productoId() + ",\"numeroLote\":\"INTRUSO\",\"fechaVencimiento\":\"2027-12-01\",\"cantidad\":999}",
                 "lote", null, dueno, intrusosStaff));
-        intentos.add(new Intento("editar el servicio ajeno", "PUT", "/services/" + e.servicioId(),
-                "{\"nombre\":\"Consulta " + m + "\",\"descripcion\":\"Control\",\"precio\":100.00,\"duracionEstimada\":30}",
-                "{\"nombre\":\"Intruso\",\"descripcion\":\"Intruso\",\"precio\":101.00,\"duracionEstimada\":30}",
-                "servicios", e.servicioId(), dueno, intrusosStaff));
         intentos.add(new Intento("editar la empresa ajena", "PUT", "/admin/company/" + e.companyId(),
                 "{\"name\":\"Clinica " + m + "\",\"phone\":\"999888777\",\"email\":\"contacto@" + m.toLowerCase() + ".test\",\"ruc\":\"" + jdbc.queryForObject("SELECT ruc FROM company WHERE id = ?", String.class, e.companyId())
                         + "\",\"address\":\"Control 123\",\"slug\":\"" + e.slug() + "\"}",
@@ -334,6 +330,10 @@ class AislamientoApiIntegrationTest {
                 "{\"mascotaId\":" + e.mascota1Id() + ",\"veterinarioId\":" + e.empleadoId() + ",\"servicioId\":" + e.servicioId()
                         + ",\"motivoCita\":\"Intruso\",\"fechaHoraInicio\":\"" + futuro2 + "\",\"esEmergencia\":true}",
                 "citas", null, dueno, intrusosStaff));
+        intentos.add(new Intento("editar el servicio ajeno", "PUT", "/services/" + e.servicioId(),
+                "{\"nombre\":\"Consulta " + m + "\",\"descripcion\":\"Control\",\"precio\":100.00,\"duracionEstimada\":30}",
+                "{\"nombre\":\"Intruso\",\"descripcion\":\"Intruso\",\"precio\":101.00,\"duracionEstimada\":30}",
+                "servicios", e.servicioId(), dueno, intrusosStaff));
         intentos.add(new Intento("reprogramar la cita ajena", "PATCH", "/appointments/" + e.citaFuturaId() + "/reschedule",
                 "{\"veterinarioId\":" + e.empleadoId() + ",\"fechaHoraInicio\":\"" + futuro.replace("T10:00", "T15:00") + "\",\"motivoReprogramacion\":\"Control de la propia clínica\"}",
                 "{\"veterinarioId\":" + e.empleadoId() + ",\"fechaHoraInicio\":\"" + futuro2.replace("T11:00", "T16:00") + "\",\"motivoReprogramacion\":\"Intruso de otra clínica\"}",
