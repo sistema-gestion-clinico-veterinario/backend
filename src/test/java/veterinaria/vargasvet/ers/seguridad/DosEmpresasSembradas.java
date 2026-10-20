@@ -340,7 +340,7 @@ class DosEmpresasSembradas {
         servicio.setDisponible(true);
         servicio.setActivo(true);
         servicio.setDuracionEstimada(30);
-        servicio.setPermiteEmergencia(false);
+        servicio.setPermiteEmergencia(true);
         return g(servicios.save(servicio));
     }
 
