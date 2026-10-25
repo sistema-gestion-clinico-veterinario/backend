@@ -108,8 +108,8 @@
                       Primer acceso</p>
                     <p
                       style="margin:8px 0 0;font-family:'Barlow',Arial,sans-serif;font-size:13px;color:#555555;line-height:1.8;">
-                      Tu usuario de acceso es este correo electrónico. Ya tienes todo listo para ingresar al portal y
-                      gestionar el cuidado de tus mascotas.</p>
+                      Tu usuario de acceso es este correo electrónico. Para ingresar al portal primero debes activar tu
+                      cuenta y definir tu contraseña.</p>
                   </td>
                 </tr>
               </table>
@@ -134,12 +134,13 @@
                       <tr>
                         <td style="background-color:#0d9488;">
                           <a th:href="${verificationLink}"
-                            style="display:inline-block;padding:12px 28px;font-family:'Barlow',Arial,sans-serif;font-size:13px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.5px;">Acceder
-                            al portal</a>
+                            style="display:inline-block;padding:12px 28px;font-family:'Barlow',Arial,sans-serif;font-size:13px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.5px;">Activar
+                            mi cuenta</a>
                         </td>
                       </tr>
                     </table>
                     <p th:if="${avisoPrivacidadLink != null}" style="margin:14px 0 0;font-family:'Barlow',Arial,sans-serif;font-size:11px;color:#999999;">Puedes leer el <a th:href="${avisoPrivacidadLink}" style="color:#4f46e5;">aviso de privacidad</a> de <span th:text="${companyName}">la clínica</span> antes de entrar.</p>
+                    <p th:if="${validityHours != null}" style="margin:14px 0 0;font-family:'Barlow',Arial,sans-serif;font-size:11px;color:#999999;">Por seguridad, este enlace expira en <span th:text="${validityHours}">24</span> horas y solo puede usarse una vez.</p>
                   </td>
                 </tr>
               </table>
