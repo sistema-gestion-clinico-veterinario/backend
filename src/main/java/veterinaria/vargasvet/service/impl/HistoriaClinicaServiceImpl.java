@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Consulta;
@@ -133,7 +134,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
     @Transactional(readOnly = true)
     public HistoriaClinicaDetalleResponse getPorMascota(Long mascotaId) {
         HistoriaClinica hc = historiaClinicaRepository.findByMascotaId(mascotaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada para la mascota con ID: " + mascotaId));
+                .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada"));
 
         verificarAccesoHistoria(hc);
 
@@ -144,7 +145,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
     @Transactional(readOnly = true)
     public HistoriaClinicaDetalleResponse getPorNumeroHc(String numeroHc) {
         HistoriaClinica hc = historiaClinicaRepository.findByNumeroHc(numeroHc)
-                .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada: " + numeroHc));
+                .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada"));
 
         verificarAccesoHistoria(hc);
 
@@ -155,7 +156,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
     @Transactional(readOnly = true)
     public HistoriaClinicaDetalleResponse getDetalle(Long id) {
         HistoriaClinica hc = historiaClinicaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada"));
 
         verificarAccesoHistoria(hc);
 
@@ -166,7 +167,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
     @Transactional
     public HistoriaClinicaDetalleResponse actualizarAntecedentes(Long id, AntecedentesRequest request) {
         HistoriaClinica hc = historiaClinicaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Historia clínica no encontrada"));
 
         verificarAccesoHistoria(hc);
         accesoValidator.validarModificar("VISTA_HISTORIAS");
@@ -188,7 +189,7 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         Integer companyId = SecurityUtils.getCurrentCompanyId();
         if (hc.getMascota().getApoderado().getCompany() == null ||
             !hc.getMascota().getApoderado().getCompany().getId().equals(companyId)) {
-            throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");
+            throw new ResourceNotFoundException("Historia clínica no encontrada");
         }
         if (SecurityUtils.getCurrentRoleScope() == veterinaria.vargasvet.domain.enums.RoleScope.CLIENT) {
             // El portal de apoderados ya valida la pertenencia mascota-apoderado antes de llegar aquí
@@ -208,13 +209,13 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
                         SecurityUtils.getCurrentUserId(), companyId).orElse(null)
                 : null;
         if (propio == null) {
-            throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");
+            throw new AccessDeniedException("No tienes permiso para ver esta historia clínica");
         }
         boolean asignada = hc.getConsultas() != null && hc.getConsultas().stream()
                 .anyMatch(consulta -> consulta.getVeterinario() != null
                         && propio.getId().equals(consulta.getVeterinario().getId()));
         if (!asignada) {
-            throw new IllegalArgumentException("No tienes permiso para ver esta historia clínica");
+            throw new AccessDeniedException("No tienes permiso para ver esta historia clínica");
         }
     }
 
