@@ -14,4 +14,6 @@ public interface ServiciosVeterinariosRepository extends JpaRepository<Servicios
     Page<ServiciosVeterinarios> findByCompanyId(Integer companyId, Pageable pageable);
 
     List<ServiciosVeterinarios> findByCompanyIdAndDisponibleTrueAndActivoTrue(Integer companyId);
+
+    long countByEspecialidadRequeridaId(Long especialidadId);
 }

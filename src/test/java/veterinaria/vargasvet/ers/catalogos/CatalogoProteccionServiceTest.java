@@ -109,6 +109,23 @@ class CatalogoProteccionServiceTest {
     }
 
     @Test
+    void cpRf3702_bloqueaEliminarEspecialidadAsignadaAUnServicio() {
+        Especialidad enUso = new Especialidad();
+        enUso.setId(10L);
+        when(especialidadRepository.findById(10L)).thenReturn(Optional.of(enUso));
+        when(empleadoRepository.countByEspecialidadesId(10L)).thenReturn(0L);
+        when(servicioRepository.countByEspecialidadRequeridaId(10L)).thenReturn(1L);
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> especialidadService().delete(10L)
+        );
+
+        assertEquals("No se puede eliminar la especialidad porque está asignada a servicios", error.getMessage());
+        verify(especialidadRepository, never()).delete(any(Especialidad.class));
+    }
+
+    @Test
     void cpRf4301_bloqueaEliminarServicioUtilizadoEnCitas() {
         ServiciosVeterinarios servicio = new ServiciosVeterinarios();
         servicio.setId(30L);
@@ -173,7 +190,8 @@ class CatalogoProteccionServiceTest {
     }
 
     private EspecialidadServiceImpl especialidadService() {
-        return new EspecialidadServiceImpl(especialidadRepository, companyRepository, empleadoRepository);
+        return new EspecialidadServiceImpl(
+                especialidadRepository, companyRepository, empleadoRepository, servicioRepository);
     }
 
     private ServicioServiceImpl servicioService() {

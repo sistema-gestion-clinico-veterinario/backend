@@ -22,7 +22,7 @@ public class BackupExecutionController {
     private final BackupSummaryService summaryService;
 
     @GetMapping
-    @PreAuthorize("@accesoValidator.can('VISTA_RESPALDOS', 'LEER')")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_RESPALDOS', 'LEER')")
     public ResponseEntity<ApiResponse<Page<BackupExecutionResponse>>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -33,7 +33,7 @@ public class BackupExecutionController {
     }
 
     @GetMapping("/summary")
-    @PreAuthorize("@accesoValidator.can('VISTA_RESPALDOS', 'LEER')")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_RESPALDOS', 'LEER')")
     public ResponseEntity<ApiResponse<BackupSummaryResponse>> summary() {
         if (!SecurityUtils.isSuperAdmin()) {
             throw new AccessDeniedException("Solo la administración de plataforma puede consultar respaldos");
