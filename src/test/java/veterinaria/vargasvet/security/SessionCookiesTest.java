@@ -87,20 +87,22 @@ class SessionCookiesTest {
     }
 
     @Test
-    void sinSlugDeclaradoSoloSeUsaUnaCookieConSufijoSiNoHayAmbiguedad() {
+    void sinSlugDeclaradoNuncaSeConsumeUnaSesionDeClinica() {
         Cookie a = new Cookie("access_token__clinica-a", "token-a");
         Cookie b = new Cookie("access_token__clinica-b", "token-b");
 
-        assertThat(SessionCookies.readAccess(solicitud(null, a))).contains("token-a");
+        assertThat(SessionCookies.readAccess(solicitud(null, a))).isEmpty();
         assertThat(SessionCookies.readAccess(solicitud(null, a, b))).isEmpty();
     }
 
     @Test
-    void elSlugMalFormadoSeIgnoraYNoElige() {
+    void elSlugMalFormadoNoEligeNingunaSesion() {
         Cookie a = new Cookie("access_token__clinica-a", "token-a");
+        Cookie plataforma = new Cookie("access_token", "token-plataforma");
 
-        assertThat(SessionCookies.readAccess(solicitud("clinica-a;x", a))).contains("token-a");
+        assertThat(SessionCookies.readAccess(solicitud("clinica-a;x", a))).isEmpty();
         assertThat(SessionCookies.readAccess(solicitud("clinica-a;x", a, new Cookie("access_token__otra", "t")))).isEmpty();
+        assertThat(SessionCookies.readAccess(solicitud("clinica-a;x", plataforma))).isEmpty();
     }
 
     @Test

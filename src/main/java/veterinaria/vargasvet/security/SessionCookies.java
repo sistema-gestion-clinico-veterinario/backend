@@ -59,33 +59,24 @@ public final class SessionCookies {
     }
 
     /**
-     * Si la solicitud declara una clínica, solo cuenta la cookie de esa clínica: la sin sufijo es de la cuenta de
-     * plataforma y nunca se usa para una pestaña de clínica. Sin clínica declarada se usa la sin sufijo y, si no existe,
-     * la única cookie con sufijo que haya, solo cuando no hay ambigüedad.
+     * Si la solicitud declara una clínica, solo cuenta la cookie de esa clínica. Si no declara una clínica, solo
+     * cuenta la cookie sin sufijo de la plataforma. Nunca se infiere el contexto a partir de las cookies disponibles:
+     * hacerlo permitiría que la pantalla de plataforma consumiera por accidente una sesión de clínica.
      */
     private static Optional<String> read(HttpServletRequest request, String base) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
             return Optional.empty();
         }
-        String slug = slugOf(request);
-        if (slug != null) {
+        String declaredSlug = request.getHeader(SLUG_HEADER);
+        if (declaredSlug != null) {
+            String slug = sanitize(declaredSlug);
+            if (slug == null) {
+                return Optional.empty();
+            }
             return valueOf(cookies, base + SEPARATOR + slug);
         }
-        Optional<String> sinSufijo = valueOf(cookies, base);
-        if (sinSufijo.isPresent()) {
-            return sinSufijo;
-        }
-        Optional<String> unica = Optional.empty();
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().startsWith(base + SEPARATOR) && hasValue(cookie)) {
-                if (unica.isPresent()) {
-                    return Optional.empty();
-                }
-                unica = Optional.of(cookie.getValue());
-            }
-        }
-        return unica;
+        return valueOf(cookies, base);
     }
 
     private static Optional<String> valueOf(Cookie[] cookies, String name) {
