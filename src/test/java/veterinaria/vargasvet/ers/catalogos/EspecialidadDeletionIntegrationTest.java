@@ -18,6 +18,7 @@ import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.EspecialidadRepository;
+import veterinaria.vargasvet.repository.ServiciosVeterinariosRepository;
 import veterinaria.vargasvet.security.UsuarioPrincipal;
 import veterinaria.vargasvet.service.impl.EspecialidadServiceImpl;
 import veterinaria.vargasvet.util.AppClock;
@@ -32,6 +33,7 @@ class EspecialidadDeletionIntegrationTest {
     @Autowired private CompanyRepository companyRepository;
     @Autowired private EspecialidadRepository especialidadRepository;
     @Autowired private EmpleadoRepository empleadoRepository;
+    @Autowired private ServiciosVeterinariosRepository serviciosVeterinariosRepository;
 
     @BeforeEach
     void authenticateSuperAdmin() {
@@ -71,7 +73,8 @@ class EspecialidadDeletionIntegrationTest {
         empleado.getEspecialidades().add(especialidad);
         empleadoRepository.saveAndFlush(empleado);
 
-        EspecialidadServiceImpl service = new EspecialidadServiceImpl(especialidadRepository, companyRepository, empleadoRepository);
+        EspecialidadServiceImpl service = new EspecialidadServiceImpl(
+                especialidadRepository, companyRepository, empleadoRepository, serviciosVeterinariosRepository);
         Long especialidadId = especialidad.getId();
 
         assertThatThrownBy(() -> service.delete(especialidadId))

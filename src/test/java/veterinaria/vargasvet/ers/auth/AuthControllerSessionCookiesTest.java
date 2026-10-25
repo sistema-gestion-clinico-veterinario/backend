@@ -152,6 +152,22 @@ class AuthControllerSessionCookiesTest {
     }
 
     @Test
+    void renovarPlataformaSinSuCookieNoConsumeLaSesionDeUnaClinica() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setCookies(new Cookie("refresh_token__clinica-a", "refresco-a"));
+        when(usuarioService.refreshToken(null))
+                .thenThrow(new org.springframework.security.authentication.BadCredentialsException("sin sesión"));
+        MockHttpServletResponse http = new MockHttpServletResponse();
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                org.springframework.security.authentication.BadCredentialsException.class,
+                () -> controller.refresh(request, http));
+
+        verify(usuarioService, never()).refreshToken("refresco-a");
+        assertThat(http.getHeaders(HttpHeaders.SET_COOKIE)).isEmpty();
+    }
+
+    @Test
     void cerrarSesionEnUnaClinicaSinSuCookieNoRevocaLaSesionDePlataforma() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(SessionCookies.SLUG_HEADER, "clinica-a");
@@ -218,6 +234,25 @@ class AuthControllerSessionCookiesTest {
 
         assertThat(nombresDeCookies(http)).containsExactlyInAnyOrder("access_token__clinica-a", "refresh_token__clinica-a");
         assertThat(http.getHeaders(HttpHeaders.SET_COOKIE)).allSatisfy(c -> assertThat(c).contains("Max-Age=0"));
+    }
+
+    @Test
+    void cuandoSeDetectaReutilizacionSeBorranSusCookiesParaNoReintentar() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader(SessionCookies.SLUG_HEADER, "clinica-a");
+        request.setCookies(new Cookie("refresh_token__clinica-a", "refresco-reutilizado"));
+        when(usuarioService.refreshToken("refresco-reutilizado"))
+                .thenThrow(new veterinaria.vargasvet.exception.RefreshTokenReuseException());
+        MockHttpServletResponse http = new MockHttpServletResponse();
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                veterinaria.vargasvet.exception.RefreshTokenReuseException.class,
+                () -> controller.refresh(request, http));
+
+        assertThat(nombresDeCookies(http))
+                .containsExactlyInAnyOrder("access_token__clinica-a", "refresh_token__clinica-a");
+        assertThat(http.getHeaders(HttpHeaders.SET_COOKIE))
+                .allSatisfy(c -> assertThat(c).contains("Max-Age=0"));
     }
 
     @Test

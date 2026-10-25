@@ -9,5 +9,6 @@ public interface EspecialidadService {
     Especialidad findById(Long id);
     Especialidad create(Especialidad especialidad);
     Especialidad update(Long id, Especialidad especialidad);
+    boolean canDelete(Long id);
     void delete(Long id);
 }

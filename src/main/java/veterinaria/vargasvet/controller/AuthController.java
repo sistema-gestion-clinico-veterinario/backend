@@ -412,7 +412,8 @@ public class AuthController {
         try {
             response = usuarioService.refreshToken(
                     veterinaria.vargasvet.security.SessionCookies.readRefresh(request).orElse(null));
-        } catch (veterinaria.vargasvet.exception.SessionInactivityException ex) {
+        } catch (veterinaria.vargasvet.exception.SessionInactivityException
+                 | veterinaria.vargasvet.exception.RefreshTokenReuseException ex) {
             clearAuthCookies(httpResponse, veterinaria.vargasvet.security.SessionCookies.slugOf(request));
             throw ex;
         }

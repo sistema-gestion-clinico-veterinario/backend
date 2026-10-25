@@ -28,7 +28,8 @@ public class EspecialidadController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Page<EspecialidadResponse> resultado = especialidadService.findAll(
-                companyId, PageRequest.of(page, size, Sort.by("nombre").ascending())).map(EspecialidadResponse::de);
+                companyId, PageRequest.of(page, size, Sort.by("nombre").ascending()))
+                .map(especialidad -> EspecialidadResponse.de(especialidad, especialidadService.canDelete(especialidad.getId())));
         return ResponseEntity.ok(new ApiResponse<>(true, "Especialidades recuperadas con éxito", resultado));
     }
 
@@ -42,7 +43,8 @@ public class EspecialidadController {
     @PutMapping("/{id}")
     @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'MODIFICAR')")
     public EspecialidadResponse update(@PathVariable Long id, @Valid @RequestBody EspecialidadRequest request) {
-        return EspecialidadResponse.de(especialidadService.update(id, request.aEntidad()));
+        var especialidad = especialidadService.update(id, request.aEntidad());
+        return EspecialidadResponse.de(especialidad, especialidadService.canDelete(especialidad.getId()));
     }
 
     @DeleteMapping("/{id}")
