@@ -255,7 +255,7 @@ class InvitacionActivacionReenvioTest {
         assertThat(usuario.getVerificationToken()).isNotEqualTo("hash-anterior");
         assertThat((String) model.getValue().get("verificationLink")).contains("vargas-vet")
                 .contains("/auth/verify?audiencia=PROPIETARIOS_Y_AUTORIZADOS#token=");
-        verify(emailService).sendEmailWithRetry(any(), eq("email/welcome-template"));
+        verify(emailService).sendEmailWithRetry(any(), eq("email/welcome-apoderado-template"));
         verify(auditLogService).log(eq(3), eq("REENVIAR_INVITACION_CLIENTE"), eq("Clientes"),
                 eq("Se reenvió la invitación de activación a Ana Pérez (ana@empresa.test)"));
     }
@@ -293,7 +293,7 @@ class InvitacionActivacionReenvioTest {
 
         apoderadoService.reenviarInvitacion(40L);
 
-        verify(emailService).sendEmailWithRetry(any(), eq("email/welcome-template"));
+        verify(emailService).sendEmailWithRetry(any(), eq("email/welcome-apoderado-template"));
     }
 
     @Test

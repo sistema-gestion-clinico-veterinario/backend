@@ -217,7 +217,7 @@ class RF17To21Test {
 
         assertThat(owner.getUser().getVerificationToken()).isNotBlank();
         assertThat(owner.getUser().getVerificationTokenExpiresAt()).isNotNull();
-        verify(emailService).sendEmailWithRetry(any(Mail.class), eq("email/welcome-template"));
+        verify(emailService).sendEmailWithRetry(any(Mail.class), eq("email/welcome-apoderado-template"));
     }
 
     @Test
