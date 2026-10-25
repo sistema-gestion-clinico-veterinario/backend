@@ -117,13 +117,13 @@ public class ConsultaServiceImpl implements ConsultaService {
     @Transactional(readOnly = true)
     public ConsultaResponse getConsultaById(Long id) {
         Consulta consulta = consultaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta no encontrada"));
 
         if (!SecurityUtils.isSuperAdmin()) {
             Integer currentCompanyId = SecurityUtils.getCurrentCompanyId();
             if (consulta.getHistoriaClinica().getMascota().getApoderado().getCompany() == null ||
                 !consulta.getHistoriaClinica().getMascota().getApoderado().getCompany().getId().equals(currentCompanyId)) {
-                throw new IllegalArgumentException("No tienes permiso para ver esta consulta");
+                throw new ResourceNotFoundException("Consulta no encontrada");
             }
         }
 

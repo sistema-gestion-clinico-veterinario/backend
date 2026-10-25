@@ -1,5 +1,7 @@
 package veterinaria.vargasvet.ers.historias;
 
+import org.springframework.security.access.AccessDeniedException;
+import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -83,8 +85,8 @@ class RF29Test {
         when(historiaRepository.findById(100L)).thenReturn(Optional.of(historia(9)));
 
         assertThatThrownBy(() -> service().getDetalle(100L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("No tienes permiso para ver esta historia clínica");
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Historia clínica no encontrada");
 
         verify(historiaRepository).findById(100L);
     }
@@ -127,7 +129,7 @@ class RF29Test {
         when(historiaRepository.findById(100L)).thenReturn(Optional.of(historia));
 
         assertThatThrownBy(() -> service().getDetalle(100L))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("No tienes permiso para ver esta historia clínica");
     }
 
