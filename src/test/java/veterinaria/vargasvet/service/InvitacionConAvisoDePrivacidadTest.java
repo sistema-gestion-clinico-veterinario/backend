@@ -63,4 +63,12 @@ class InvitacionConAvisoDePrivacidadTest {
         assertThat(render("welcome-template", modelo(null))).doesNotContain("aviso de privacidad");
         assertThat(render("welcome-apoderado-template", modelo(null))).doesNotContain("aviso de privacidad");
     }
+
+    @Test
+    void laInvitacionDelClienteNoSeLlamaNuevoEmpleadoYIndicaLaVigenciaDelEnlace() {
+        String html = render("welcome-apoderado-template", modelo(null));
+
+        assertThat(html).doesNotContainIgnoringCase("empleado").doesNotContainIgnoringCase("equipo de")
+                .contains("Activar").contains("expira en").contains("24");
+    }
 }

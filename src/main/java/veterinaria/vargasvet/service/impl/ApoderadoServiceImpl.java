@@ -293,6 +293,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             model.put("companyEmail", resolvedEmail);
             model.put("companyPhone", resolvedPhone);
             model.put("companyAddress", resolvedAddress);
+            model.put("validityHours", verificationTokenValidityHours);
             model.put("verificationLink", appUrl + veterinaria.vargasvet.util.EmailLinkUtils.withSlug(
                     "/auth/verify?audiencia=PROPIETARIOS_Y_AUTORIZADOS#token=" + verificationToken,
                     company != null ? company.getSlug() : null));
@@ -304,7 +305,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
                     model
             );
 
-            return emailService.sendEmailWithRetry(mail, "email/welcome-template");
+            return emailService.sendEmailWithRetry(mail, "email/welcome-apoderado-template");
         } catch (Exception e) {
             System.err.println("[WARNING] No se pudo enviar el correo de verificación al apoderado " + usuario.getEmail() + ": " + e.getMessage());
             return java.util.concurrent.CompletableFuture.completedFuture(false);
