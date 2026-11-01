@@ -34,6 +34,9 @@ public class Caja {
     @Column(name = "dispositivo_info", length = 120)
     private String dispositivoInfo;
 
+    @Column(name = "dispositivo_nombre", length = 80)
+    private String dispositivoNombre;
+
     @Column(name = "dispositivo_vinculado_at")
     private LocalDateTime dispositivoVinculadoAt;
 

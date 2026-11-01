@@ -73,22 +73,51 @@ PY
 
 aplicar_restricciones() {
   local cidrs_v4="$1" cidrs_v6="$2" respuesta codigo cuerpo
+  local intento salida_curl espera
+  local -r max_intentos=5
   respuesta="$(mktemp)"
-  codigo="$(curl --silent --show-error --output "$respuesta" --write-out '%{http_code}' \
-    --request POST \
-    --header "Authorization: Bearer $SUPABASE_MANAGEMENT_ACCESS_TOKEN" \
-    --header 'Content-Type: application/json' \
-    --data "$(jq -cn --argjson v4 "$cidrs_v4" --argjson v6 "$cidrs_v6" \
-      '{dbAllowedCidrs: $v4, dbAllowedCidrsV6: $v6}')" \
-    "$API_SUPABASE/projects/$SUPABASE_PROJECT_REF/network-restrictions/apply")"
 
-  if [ "$codigo" != "201" ]; then
+  for ((intento = 1; intento <= max_intentos; intento++)); do
+    : >"$respuesta"
+    salida_curl=0
+    codigo="$(curl --silent --show-error --connect-timeout 10 --max-time 25 \
+      --output "$respuesta" --write-out '%{http_code}' \
+      --request POST \
+      --header "Authorization: Bearer $SUPABASE_MANAGEMENT_ACCESS_TOKEN" \
+      --header 'Content-Type: application/json' \
+      --data "$(jq -cn --argjson v4 "$cidrs_v4" --argjson v6 "$cidrs_v6" \
+        '{dbAllowedCidrs: $v4, dbAllowedCidrsV6: $v6}')" \
+      "$API_SUPABASE/projects/$SUPABASE_PROJECT_REF/network-restrictions/apply")" || salida_curl=$?
+
+    if [ "$salida_curl" -eq 0 ] && [ "$codigo" = "201" ]; then
+      rm -f -- "$respuesta"
+      return 0
+    fi
+
+    # La operación reemplaza la configuración completa y es idempotente. Es seguro
+    # repetirla cuando el gateway falla o limita temporalmente las solicitudes.
+    if [ "$salida_curl" -ne 0 ] || [ "$codigo" = "429" ] || [[ "$codigo" =~ ^5[0-9][0-9]$ ]]; then
+      if [ "$intento" -lt "$max_intentos" ]; then
+        espera=$((2 ** intento))
+        if [ "$salida_curl" -ne 0 ]; then
+          echo "No se pudo contactar la API de Supabase. Reintento $((intento + 1))/$max_intentos en ${espera}s..." >&2
+        else
+          echo "Supabase respondió HTTP $codigo. Reintento $((intento + 1))/$max_intentos en ${espera}s..." >&2
+        fi
+        sleep "$espera"
+        continue
+      fi
+    fi
+
     cuerpo="$(jq -c '{message, error, statusCode}' "$respuesta" 2>/dev/null || printf '%s' 'respuesta no JSON')"
     rm -f -- "$respuesta"
-    echo "Supabase rechazó la actualización de restricciones (HTTP $codigo): $cuerpo" >&2
+    if [ "$salida_curl" -ne 0 ]; then
+      echo "No se pudo contactar la API de Supabase después de $intento intentos (curl $salida_curl)." >&2
+    else
+      echo "Supabase rechazó la actualización de restricciones (HTTP $codigo): $cuerpo" >&2
+    fi
     return 3
-  fi
-  rm -f -- "$respuesta"
+  done
 }
 
 esperar_restricciones() {

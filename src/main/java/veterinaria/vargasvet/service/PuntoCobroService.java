@@ -68,10 +68,6 @@ public class PuntoCobroService {
             registrarUso(delEquipo.get());
             return new Resolucion(MODO_DISPOSITIVO, delEquipo.get());
         }
-        List<Caja> activas = cajaRepository.findByCompanyIdAndActivaTrueOrderByNombreAsc(companyId);
-        if (activas.size() == 1 && activas.get(0).getDispositivoTokenHash() == null) {
-            return new Resolucion(MODO_SENCILLO, activas.get(0));
-        }
         return new Resolucion(MODO_NO_REGISTRADO, null);
     }
 
@@ -90,10 +86,12 @@ public class PuntoCobroService {
         Resolucion resolucion = resolver(companyId);
         return switch (resolucion.modo()) {
             case MODO_DISPOSITIVO -> new EstadoEquipoResponse(MODO_DISPOSITIVO, resolucion.caja().getNombre(),
-                    "Este equipo es el punto de cobro «" + resolucion.caja().getNombre() + "».");
-            case MODO_SENCILLO -> new EstadoEquipoResponse(MODO_SENCILLO, resolucion.caja().getNombre(),
+                    resolucion.caja().getDispositivoNombre(),
+                    "«" + resolucion.caja().getDispositivoNombre() + "» opera en el punto de cobro «"
+                            + resolucion.caja().getNombre() + "».");
+            case MODO_SENCILLO -> new EstadoEquipoResponse(MODO_SENCILLO, resolucion.caja().getNombre(), null,
                     "Esta sede tiene un solo punto de cobro y cualquier equipo puede usarlo.");
-            default -> new EstadoEquipoResponse(MODO_NO_REGISTRADO, null,
+            default -> new EstadoEquipoResponse(MODO_NO_REGISTRADO, null, null,
                     "Este equipo no está registrado como punto de cobro. Pide a un administrador que lo registre.");
         };
     }
@@ -113,7 +111,7 @@ public class PuntoCobroService {
                     sesion.getAbiertaPorUsuarioId() == null ? -1 : sesion.getAbiertaPorUsuarioId(),
                     id -> nombreDe(sesion));
             return new PuntoCobroResponse(caja.getId(), caja.getNombre(), caja.isActiva(),
-                    caja.getDispositivoTokenHash() != null, caja.getDispositivoInfo(),
+                    caja.getDispositivoTokenHash() != null, caja.getDispositivoNombre(), caja.getDispositivoInfo(),
                     caja.getDispositivoVinculadoAt(), caja.getDispositivoUltimoUsoAt(),
                     caja.getDispositivoTokenHash() != null && hashDeEsteEquipo.filter(caja.getDispositivoTokenHash()::equals).isPresent(),
                     sesion != null, quien == null || quien.isEmpty() ? (sesion == null ? null : sesion.getAbiertaPor()) : quien);
@@ -158,6 +156,7 @@ public class PuntoCobroService {
             }
             caja.setActiva(false);
             caja.setDispositivoTokenHash(null);
+            caja.setDispositivoNombre(null);
             caja.setDispositivoInfo(null);
             caja.setDispositivoVinculadoAt(null);
         } else if (activa != null && !caja.isActiva() && activa) {
@@ -173,7 +172,8 @@ public class PuntoCobroService {
 
     /** Registra este equipo como el punto de cobro indicado; la persona que lo pida debe ser administradora. */
     @Transactional
-    public PuntoCobroResponse vincular(Integer companyId, Long id, HttpServletRequest request, HttpServletResponse response) {
+    public PuntoCobroResponse vincular(Integer companyId, Long id, String nombreEquipo,
+                                       HttpServletRequest request, HttpServletResponse response) {
         validarEmpresa(companyId);
         asegurarAdministrador();
         Caja caja = buscar(companyId, id);
@@ -183,6 +183,7 @@ public class PuntoCobroService {
         if (tieneSesionAbierta(caja)) {
             throw new IllegalArgumentException("Cierra la caja de este punto de cobro antes de cambiar su equipo");
         }
+        String nombreEquipoLimpio = normalizarNombreEquipo(nombreEquipo);
         String slug = slugDe(companyId);
         dispositivoCookie.leer(request, slug)
                 .flatMap(token -> cajaRepository.findByDispositivoTokenHashAndCompanyId(SecurityTokenUtils.hash(token), companyId))
@@ -193,6 +194,7 @@ public class PuntoCobroService {
                                 + "» y tiene la caja abierta. Ciérrala antes de cambiarlo.");
                     }
                     otra.setDispositivoTokenHash(null);
+                    otra.setDispositivoNombre(null);
                     otra.setDispositivoInfo(null);
                     otra.setDispositivoVinculadoAt(null);
                     cajaRepository.save(otra);
@@ -200,14 +202,17 @@ public class PuntoCobroService {
         String token = SecurityTokenUtils.generate();
         LocalDateTime ahora = AppClock.now();
         caja.setDispositivoTokenHash(SecurityTokenUtils.hash(token));
+        caja.setDispositivoNombre(nombreEquipoLimpio);
         caja.setDispositivoInfo(DispositivoInfo.describir(request.getHeader("User-Agent")));
         caja.setDispositivoVinculadoAt(ahora);
         caja.setDispositivoUltimoUsoAt(ahora);
         Caja guardada = cajaRepository.save(caja);
         dispositivoCookie.fijar(response, token, slug);
         auditLogService.log(companyId, "VINCULAR_PUNTO_COBRO", "Caja",
-                "Registró un equipo (" + guardada.getDispositivoInfo() + ") como el punto de cobro «" + guardada.getNombre() + "»");
-        return new PuntoCobroResponse(guardada.getId(), guardada.getNombre(), true, true, guardada.getDispositivoInfo(),
+                "Registró el equipo «" + guardada.getDispositivoNombre() + "» (" + guardada.getDispositivoInfo()
+                        + ") en el punto de cobro «" + guardada.getNombre() + "»");
+        return new PuntoCobroResponse(guardada.getId(), guardada.getNombre(), true, true,
+                guardada.getDispositivoNombre(), guardada.getDispositivoInfo(),
                 ahora, ahora, true, false, null);
     }
 
@@ -223,6 +228,7 @@ public class PuntoCobroService {
         boolean eraEsteEquipo = caja.getDispositivoTokenHash() != null && dispositivoCookie.leer(request, slug)
                 .map(SecurityTokenUtils::hash).filter(caja.getDispositivoTokenHash()::equals).isPresent();
         caja.setDispositivoTokenHash(null);
+        caja.setDispositivoNombre(null);
         caja.setDispositivoInfo(null);
         caja.setDispositivoVinculadoAt(null);
         Caja guardada = cajaRepository.save(caja);
@@ -275,9 +281,17 @@ public class PuntoCobroService {
         return limpio;
     }
 
+    private String normalizarNombreEquipo(String nombre) {
+        String limpio = nombre == null ? "" : nombre.trim().replaceAll("\\s+", " ");
+        if (limpio.length() < 2 || limpio.length() > 80) {
+            throw new IllegalArgumentException("El nombre del equipo debe tener entre 2 y 80 caracteres");
+        }
+        return limpio;
+    }
+
     private PuntoCobroResponse respuestaSimple(Caja caja) {
         return new PuntoCobroResponse(caja.getId(), caja.getNombre(), caja.isActiva(), caja.getDispositivoTokenHash() != null,
-                caja.getDispositivoInfo(), caja.getDispositivoVinculadoAt(), caja.getDispositivoUltimoUsoAt(),
+                caja.getDispositivoNombre(), caja.getDispositivoInfo(), caja.getDispositivoVinculadoAt(), caja.getDispositivoUltimoUsoAt(),
                 false, tieneSesionAbierta(caja), null);
     }
 

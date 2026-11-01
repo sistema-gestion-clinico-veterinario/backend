@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.PuntoCobroRequest;
+import veterinaria.vargasvet.dto.request.VincularPuntoCobroRequest;
 import veterinaria.vargasvet.dto.response.EstadoEquipoResponse;
 import veterinaria.vargasvet.dto.response.PuntoCobroResponse;
 import veterinaria.vargasvet.service.PuntoCobroService;
@@ -59,9 +60,10 @@ public class PuntoCobroController {
     @PostMapping("/{id}/vincular")
     @PreAuthorize("@accesoValidator.hasPurpose('COMPANY_ADMIN') or @accesoValidator.hasPurpose('PLATFORM_ADMIN')")
     public ResponseEntity<ApiResponse<PuntoCobroResponse>> vincular(@PathVariable Long id, @RequestParam Integer companyId,
+                                                                    @Valid @RequestBody VincularPuntoCobroRequest body,
                                                                     HttpServletRequest request, HttpServletResponse response) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Este equipo quedó registrado como punto de cobro",
-                puntoCobroService.vincular(companyId, id, request, response)));
+                puntoCobroService.vincular(companyId, id, body.nombreEquipo(), request, response)));
     }
 
     @PostMapping("/{id}/desvincular")
