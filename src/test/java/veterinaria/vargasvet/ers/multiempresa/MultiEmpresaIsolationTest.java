@@ -839,9 +839,9 @@ class MultiEmpresaIsolationTest {
         Long uno = puntos.crear(sedeA.getId(), "Mostrador 1").id();
         Long dos = puntos.crear(sedeA.getId(), "Mostrador 2").id();
         org.springframework.mock.web.MockHttpServletResponse respuestaUno = new org.springframework.mock.web.MockHttpServletResponse();
-        puntos.vincular(sedeA.getId(), uno, new org.springframework.mock.web.MockHttpServletRequest(), respuestaUno);
+        puntos.vincular(sedeA.getId(), uno, "PC recepción 1", new org.springframework.mock.web.MockHttpServletRequest(), respuestaUno);
         org.springframework.mock.web.MockHttpServletResponse respuestaDos = new org.springframework.mock.web.MockHttpServletResponse();
-        puntos.vincular(sedeA.getId(), dos, new org.springframework.mock.web.MockHttpServletRequest(), respuestaDos);
+        puntos.vincular(sedeA.getId(), dos, "PC recepción 2", new org.springframework.mock.web.MockHttpServletRequest(), respuestaDos);
         String equipoUno = tokenDe(respuestaUno);
         String equipoDos = tokenDe(respuestaDos);
         assertThat(equipoUno).isNotEqualTo(equipoDos);
@@ -885,10 +885,10 @@ class MultiEmpresaIsolationTest {
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("no está registrado como punto de cobro");
         assertThat(cajaService.obtenerSesionActual(sedeA.getId())).isNull();
 
-        // El equipo de una sede no opera en otra: la otra sede usa su propia caja principal
+        // El equipo de una sede no opera en otra: la otra sede no lo reconoce, aunque tenga una sola caja
         comoPersonaConEquipo(admin, sedeB, RolePurpose.COMPANY_ADMIN, equipoUno);
-        assertThat(puntos.resolver(sedeB.getId()).caja().getCompanyId()).isEqualTo(sedeB.getId());
-        assertThat(puntos.resolver(sedeB.getId()).modo()).isEqualTo("SENCILLO");
+        assertThat(puntos.resolver(sedeB.getId()).modo()).isEqualTo("NO_REGISTRADO");
+        assertThat(puntos.resolver(sedeB.getId()).caja()).isNull();
         assertThat(puntos.listar(sedeB.getId())).extracting(PuntoCobroResponse::nombre).containsExactly("Caja principal");
 
         // Un administrador cierra la caja que dejó abierta otra persona; la demás sigue abierta
@@ -1516,7 +1516,7 @@ class MultiEmpresaIsolationTest {
         comoPersonaConEquipo(adminA, sedeA, RolePurpose.COMPANY_ADMIN, null);
         Long cajaA = puntos.listar(sedeA.getId()).get(0).id();
         org.springframework.mock.web.MockHttpServletResponse respuestaA = new org.springframework.mock.web.MockHttpServletResponse();
-        puntos.vincular(sedeA.getId(), cajaA, new org.springframework.mock.web.MockHttpServletRequest(), respuestaA);
+        puntos.vincular(sedeA.getId(), cajaA, "PC sede A", new org.springframework.mock.web.MockHttpServletRequest(), respuestaA);
         String tokenA = tokenDe(respuestaA);
         assertThat(respuestaA.getHeader("Set-Cookie"))
                 .startsWith(veterinaria.vargasvet.security.CajaDispositivoCookie.nombre("sede-a-24") + "=")
@@ -1528,7 +1528,7 @@ class MultiEmpresaIsolationTest {
         navegador.setCookies(new jakarta.servlet.http.Cookie(
                 veterinaria.vargasvet.security.CajaDispositivoCookie.nombre("sede-a-24"), tokenA));
         org.springframework.mock.web.MockHttpServletResponse respuestaB = new org.springframework.mock.web.MockHttpServletResponse();
-        puntos.vincular(sedeB.getId(), cajaB, navegador, respuestaB);
+        puntos.vincular(sedeB.getId(), cajaB, "PC sede B", navegador, respuestaB);
         String tokenB = tokenDe(respuestaB);
 
         assertThat(respuestaB.getHeader("Set-Cookie"))

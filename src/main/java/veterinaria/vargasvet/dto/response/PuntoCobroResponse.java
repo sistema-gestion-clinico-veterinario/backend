@@ -7,6 +7,7 @@ public record PuntoCobroResponse(
         String nombre,
         boolean activa,
         boolean vinculada,
+        String dispositivoNombre,
         String dispositivoInfo,
         LocalDateTime vinculadaAt,
         LocalDateTime ultimoUsoAt,

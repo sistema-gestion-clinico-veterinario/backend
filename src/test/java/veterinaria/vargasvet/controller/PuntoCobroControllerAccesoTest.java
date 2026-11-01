@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.prepost.PreAuthorize;
 import veterinaria.vargasvet.dto.request.PuntoCobroRequest;
+import veterinaria.vargasvet.dto.request.VincularPuntoCobroRequest;
 
 import java.lang.reflect.Method;
 
@@ -27,7 +28,7 @@ class PuntoCobroControllerAccesoTest {
         assertSoloAdministradores(regla("listar", Integer.class));
         assertSoloAdministradores(regla("crear", PuntoCobroRequest.class));
         assertSoloAdministradores(regla("actualizar", Long.class, PuntoCobroRequest.class));
-        assertSoloAdministradores(regla("vincular", Long.class, Integer.class,
+        assertSoloAdministradores(regla("vincular", Long.class, Integer.class, VincularPuntoCobroRequest.class,
                 HttpServletRequest.class, HttpServletResponse.class));
         assertSoloAdministradores(regla("desvincular", Long.class, Integer.class,
                 HttpServletRequest.class, HttpServletResponse.class));

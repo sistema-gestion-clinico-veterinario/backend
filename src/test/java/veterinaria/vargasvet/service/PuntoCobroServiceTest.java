@@ -100,13 +100,13 @@ class PuntoCobroServiceTest {
     // ---- a qué caja corresponde cada equipo
 
     @Test
-    void conUnaSolaCajaSinEquipoCualquierNavegadorLaUsa() {
+    void inclusoConUnaSolaCajaElEquipoDebeEstarIdentificado() {
         cajas(caja(1, "Caja principal", true, null));
 
         PuntoCobroService.Resolucion resolucion = service.resolver(7);
 
-        assertThat(resolucion.modo()).isEqualTo("SENCILLO");
-        assertThat(resolucion.caja().getNombre()).isEqualTo("Caja principal");
+        assertThat(resolucion.modo()).isEqualTo("NO_REGISTRADO");
+        assertThat(resolucion.caja()).isNull();
     }
 
     @Test
@@ -149,8 +149,8 @@ class PuntoCobroServiceTest {
 
         PuntoCobroService.Resolucion resolucion = service.resolver(7);
 
-        assertThat(resolucion.caja().getId()).isEqualTo(1L);
-        assertThat(resolucion.modo()).isEqualTo("SENCILLO");
+        assertThat(resolucion.caja()).isNull();
+        assertThat(resolucion.modo()).isEqualTo("NO_REGISTRADO");
     }
 
     @Test
@@ -202,7 +202,7 @@ class PuntoCobroServiceTest {
 
         assertThatThrownBy(() -> service.crear(7, "Mostrador 3")).isInstanceOf(AccessDeniedException.class);
         assertThatThrownBy(() -> service.actualizar(7, 1L, "X", null)).isInstanceOf(AccessDeniedException.class);
-        assertThatThrownBy(() -> service.vincular(7, 1L, new MockHttpServletRequest(), new MockHttpServletResponse()))
+        assertThatThrownBy(() -> service.vincular(7, 1L, "PC recepción", new MockHttpServletRequest(), new MockHttpServletResponse()))
                 .isInstanceOf(AccessDeniedException.class);
         assertThatThrownBy(() -> service.desvincular(7, 1L, new MockHttpServletRequest(), new MockHttpServletResponse()))
                 .isInstanceOf(AccessDeniedException.class);
@@ -254,7 +254,7 @@ class PuntoCobroServiceTest {
     void unPuntoDeOtraSedeSeTrataComoInexistente() {
         when(cajaRepository.findByIdAndCompanyId(99L, 7)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.vincular(7, 99L, new MockHttpServletRequest(), new MockHttpServletResponse()))
+        assertThatThrownBy(() -> service.vincular(7, 99L, "PC recepción", new MockHttpServletRequest(), new MockHttpServletResponse()))
                 .isInstanceOf(veterinaria.vargasvet.exception.ResourceNotFoundException.class);
     }
 
@@ -266,7 +266,7 @@ class PuntoCobroServiceTest {
         request.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        PuntoCobroResponse resultado = service.vincular(7, 1L, request, response);
+        PuntoCobroResponse resultado = service.vincular(7, 1L, "  PC   Recepción 01 ", request, response);
 
         ArgumentCaptor<String> token = ArgumentCaptor.forClass(String.class);
         verify(dispositivoCookie).fijar(eq(response), token.capture(), eq(SLUG));
@@ -274,6 +274,8 @@ class PuntoCobroServiceTest {
                 .isNotEqualTo(token.getValue());
         assertThat(token.getValue()).hasSizeGreaterThanOrEqualTo(43);
         assertThat(uno.getDispositivoInfo()).isEqualTo("Chrome en Windows");
+        assertThat(uno.getDispositivoNombre()).isEqualTo("PC Recepción 01");
+        assertThat(resultado.dispositivoNombre()).isEqualTo("PC Recepción 01");
         assertThat(resultado.esEsteEquipo()).isTrue();
         verify(auditLogService).log(eq(7), eq("VINCULAR_PUNTO_COBRO"), eq("Caja"), anyString());
     }
@@ -287,7 +289,7 @@ class PuntoCobroServiceTest {
         when(dispositivoCookie.leer(request, SLUG)).thenReturn(Optional.of("token-viejo"));
         when(cajaRepository.findByDispositivoTokenHashAndCompanyId(SecurityTokenUtils.hash("token-viejo"), 7)).thenReturn(Optional.of(uno));
 
-        service.vincular(7, 2L, request, new MockHttpServletResponse());
+        service.vincular(7, 2L, "Laptop caja", request, new MockHttpServletResponse());
 
         assertThat(uno.getDispositivoTokenHash()).isNull();
         assertThat(dos.getDispositivoTokenHash()).isNotNull();
@@ -299,7 +301,7 @@ class PuntoCobroServiceTest {
         when(cajaRepository.findByIdAndCompanyId(1L, 7)).thenReturn(Optional.of(uno));
         when(sesionCajaRepository.findFirstByCajaIdAndEstado(1L, EstadoSesionCaja.ABIERTA)).thenReturn(Optional.of(new SesionCaja()));
 
-        assertThatThrownBy(() -> service.vincular(7, 1L, new MockHttpServletRequest(), new MockHttpServletResponse()))
+        assertThatThrownBy(() -> service.vincular(7, 1L, "PC recepción", new MockHttpServletRequest(), new MockHttpServletResponse()))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Cierra la caja");
         assertThatThrownBy(() -> service.desvincular(7, 1L, new MockHttpServletRequest(), new MockHttpServletResponse()))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Cierra la caja");

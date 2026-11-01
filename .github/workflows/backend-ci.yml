@@ -26,6 +26,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    # Base desechable para las pruebas de migraciones (FlywayConEsquemaExistenteTest): se crea y se destruye
+    # con el trabajo, no contiene datos y no es accesible desde fuera de este ejecutor.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: prueba-ci
+          POSTGRES_DB: prueba_flyway
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d prueba_flyway"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
     steps:
       - name: Descargar código
         uses: actions/checkout@v4
@@ -38,6 +54,10 @@ jobs:
           cache: maven
 
       - name: Ejecutar pruebas y generar JAR
+        env:
+          FLYWAY_TEST_URL: jdbc:postgresql://localhost:5432/prueba_flyway
+          FLYWAY_TEST_USER: postgres
+          FLYWAY_TEST_PASSWORD: prueba-ci
         run: mvn --batch-mode --no-transfer-progress clean verify
 
   backup-recovery:
