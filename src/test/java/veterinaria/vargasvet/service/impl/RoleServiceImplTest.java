@@ -2,10 +2,12 @@ package veterinaria.vargasvet.service.impl;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.mockito.ArgumentCaptor;
 import org.springframework.security.access.AccessDeniedException;
 import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.entity.RolVistaPermiso;
+import veterinaria.vargasvet.domain.entity.RolVentanaPermiso;
 import veterinaria.vargasvet.domain.entity.Ventana;
 import veterinaria.vargasvet.domain.entity.Vista;
 import veterinaria.vargasvet.domain.enums.RoleScope;
@@ -20,6 +22,7 @@ import veterinaria.vargasvet.repository.VentanaRepository;
 import veterinaria.vargasvet.repository.VistaRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.exception.StalePermissionConfigurationException;
+import veterinaria.vargasvet.dto.response.RolDTO;
 import veterinaria.vargasvet.service.AuditLogService;
 
 import java.util.List;
@@ -27,6 +30,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -276,6 +280,73 @@ class RoleServiceImplTest {
         verify(roleRepository).delete(role);
         verify(auditLogService).log(7, "ELIMINAR_ROL", "Roles",
                 "Se eliminó el rol sin asignaciones ROLE_23");
+    }
+
+    @Test
+    void duplicateRoleCopiesPermissionsButDoesNotCopyAssignments() {
+        Company company = company(7);
+        Role source = role(24, company, RoleScope.STAFF, true);
+        source.setName("ROLE_VETERINARIO");
+        Vista vista = vista(30, "VISTA_HISTORIAS", "Historias", 1, null);
+        RolVistaPermiso viewPermission = readablePermission(source, vista);
+        viewPermission.setModificar(true);
+        viewPermission.setDataScope(veterinaria.vargasvet.domain.enums.DataScope.COMPANY);
+        Ventana window = new Ventana();
+        window.setId(40);
+        RolVentanaPermiso windowPermission = new RolVentanaPermiso();
+        windowPermission.setRol(source);
+        windowPermission.setVentana(window);
+        windowPermission.setLeer(true);
+
+        when(roleRepository.findById(24)).thenReturn(Optional.of(source));
+        when(roleRepository.save(any(Role.class))).thenAnswer(invocation -> {
+            Role saved = invocation.getArgument(0);
+            saved.setId(25);
+            return saved;
+        });
+        when(rolVistaPermisoRepository.findByRolId(24)).thenReturn(List.of(viewPermission));
+        when(rolVentanaPermisoRepository.findByRolId(24)).thenReturn(List.of(windowPermission));
+        when(rolVistaPermisoRepository.findByRolId(25)).thenReturn(List.of(viewPermission));
+        when(usuarioPorRolRepository.existsByRolId(25)).thenReturn(false);
+
+        RolDTO result;
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(false);
+            security.when(SecurityUtils::getCurrentCompanyId).thenReturn(7);
+
+            result = service.duplicateRole(24, "Veterinario encargado", "Acceso clínico ampliado");
+        }
+
+        ArgumentCaptor<RolVistaPermiso> viewCaptor = ArgumentCaptor.forClass(RolVistaPermiso.class);
+        verify(rolVistaPermisoRepository).save(viewCaptor.capture());
+        RolVistaPermiso copiedView = viewCaptor.getValue();
+        assertEquals(25, copiedView.getRol().getId());
+        assertEquals(vista, copiedView.getVista());
+        assertTrue(copiedView.isLeer());
+        assertTrue(copiedView.isModificar());
+        assertEquals(veterinaria.vargasvet.domain.enums.DataScope.COMPANY, copiedView.getDataScope());
+        assertEquals("ROLE_VETERINARIO_ENCARGADO", result.getName());
+        assertEquals(7, result.getCompanyId());
+        assertEquals(RolePurpose.CUSTOM, result.getPurpose());
+        assertFalse(result.isSystemManaged());
+        verify(usuarioPorRolRepository, never()).save(any());
+        verify(auditLogService).log(eq(7), eq("DUPLICAR_ROL"), eq("Roles"), any());
+    }
+
+    @Test
+    void duplicateRoleRejectsGlobalSystemRoles() {
+        Role source = role(26, null, RoleScope.STAFF, true);
+        source.setSystemManaged(true);
+        when(roleRepository.findById(26)).thenReturn(Optional.of(source));
+
+        try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
+            security.when(SecurityUtils::isSuperAdmin).thenReturn(true);
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> service.duplicateRole(26, "Copia", null));
+        }
+
+        verify(rolVistaPermisoRepository, never()).save(any());
     }
 
     private Company company(int id) {

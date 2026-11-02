@@ -8,6 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.RoleRequest;
+import veterinaria.vargasvet.dto.request.DuplicateRoleRequest;
 import veterinaria.vargasvet.dto.response.RolDTO;
 import veterinaria.vargasvet.dto.response.RolVistaPermisoDTO;
 import veterinaria.vargasvet.domain.enums.RoleScope;
@@ -82,6 +83,16 @@ public class RoleController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Rol creado",
                         roleService.createRole(nombre, descripcion, companyId, body.getScope())));
+    }
+
+    @PostMapping("/{id}/duplicate")
+    @PreAuthorize("@accesoValidator.can('VISTA_ROLES', 'ESCRIBIR')")
+    public ResponseEntity<ApiResponse<RolDTO>> duplicateRole(
+            @PathVariable Integer id,
+            @Valid @RequestBody DuplicateRoleRequest body) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, "Rol duplicado",
+                        roleService.duplicateRole(id, body.getName(), body.getDescripcion())));
     }
 
     @PutMapping("/{id}")

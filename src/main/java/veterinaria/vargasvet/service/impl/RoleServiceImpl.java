@@ -141,6 +141,66 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
+    public RolDTO duplicateRole(Integer sourceRoleId, String nombre, String descripcion) {
+        Role source = roleRepository.findById(sourceRoleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
+        assertCanManageRole(source);
+
+        if (source.getCompany() == null || source.getScope() == RoleScope.PLATFORM) {
+            throw new IllegalArgumentException("Solo se pueden duplicar roles de una empresa");
+        }
+
+        Integer companyId = source.getCompany().getId();
+        String normalizedName = normalizarNombreRol(nombre);
+        validarDuplicado(normalizedName, companyId);
+
+        Role duplicate = new Role();
+        duplicate.setName(normalizedName);
+        duplicate.setDescripcion(normalizarDescripcion(descripcion));
+        duplicate.setActivo(true);
+        duplicate.setScope(source.getScope());
+        duplicate.setPurpose(RolePurpose.CUSTOM);
+        duplicate.setSystemManaged(false);
+        duplicate.setProtectedRole(false);
+        duplicate.setPermissionVersion(0L);
+        duplicate.setCompany(source.getCompany());
+        Role saved = roleRepository.save(duplicate);
+
+        List<RolVistaPermiso> sourceViewPermissions = rolVistaPermisoRepository.findByRolId(sourceRoleId);
+        for (RolVistaPermiso sourcePermission : sourceViewPermissions) {
+            RolVistaPermiso copiedPermission = new RolVistaPermiso();
+            copiedPermission.setRol(saved);
+            copiedPermission.setVista(sourcePermission.getVista());
+            copiedPermission.setLeer(sourcePermission.isLeer());
+            copiedPermission.setEscribir(sourcePermission.isEscribir());
+            copiedPermission.setModificar(sourcePermission.isModificar());
+            copiedPermission.setEliminar(sourcePermission.isEliminar());
+            copiedPermission.setDataScope(sourcePermission.getDataScope());
+            rolVistaPermisoRepository.save(copiedPermission);
+        }
+
+        List<veterinaria.vargasvet.domain.entity.RolVentanaPermiso> sourceWindowPermissions =
+                rolVentanaPermisoRepository.findByRolId(sourceRoleId);
+        for (veterinaria.vargasvet.domain.entity.RolVentanaPermiso sourcePermission : sourceWindowPermissions) {
+            veterinaria.vargasvet.domain.entity.RolVentanaPermiso copiedPermission =
+                    new veterinaria.vargasvet.domain.entity.RolVentanaPermiso();
+            copiedPermission.setRol(saved);
+            copiedPermission.setVentana(sourcePermission.getVentana());
+            copiedPermission.setLeer(sourcePermission.isLeer());
+            copiedPermission.setEscribir(sourcePermission.isEscribir());
+            copiedPermission.setModificar(sourcePermission.isModificar());
+            copiedPermission.setEliminar(sourcePermission.isEliminar());
+            rolVentanaPermisoRepository.save(copiedPermission);
+        }
+
+        auditRole(saved, "DUPLICAR_ROL",
+                "Se duplicó el rol " + source.getName() + " como " + saved.getName()
+                        + " (" + sourceViewPermissions.size() + " permisos copiados; sin usuarios asignados)");
+        return toDTO(saved);
+    }
+
+    @Override
+    @Transactional
     public RolDTO updateRole(Integer id, String nombre, String descripcion, RoleScope requestedScope) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
