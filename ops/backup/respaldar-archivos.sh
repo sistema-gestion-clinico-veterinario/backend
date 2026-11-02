@@ -30,6 +30,58 @@ mkdir -p "$SALIDA"
 export GNUPGHOME="$TRABAJO/gnupg"
 mkdir "$GNUPGHOME"
 
+descargar_bucket() {
+  local bucket="$1"
+  local destino="$2"
+  local max_intentos="${BACKUP_STORAGE_MAX_ATTEMPTS:-4}"
+  local espera_base="${BACKUP_STORAGE_RETRY_DELAY_SECONDS:-15}"
+  local intento=1
+  local espera
+  local log_error="$TRABAJO/storage-download-error.log"
+
+  printf '%s' "$max_intentos" | grep -Eq '^[1-9][0-9]*$' || {
+    echo "BACKUP_STORAGE_MAX_ATTEMPTS debe ser un entero mayor que cero." >&2
+    return 2
+  }
+  printf '%s' "$espera_base" | grep -Eq '^[0-9]+$' || {
+    echo "BACKUP_STORAGE_RETRY_DELAY_SECONDS debe ser un entero no negativo." >&2
+    return 2
+  }
+
+  while [ "$intento" -le "$max_intentos" ]; do
+    rm -rf "$destino"
+    mkdir -p "$destino"
+    : > "$log_error"
+
+    if AWS_ACCESS_KEY_ID="$SUPABASE_S3_ACCESS_KEY" \
+      AWS_SECRET_ACCESS_KEY="$SUPABASE_S3_SECRET_KEY" \
+      AWS_DEFAULT_REGION="${SUPABASE_S3_REGION:-us-east-1}" \
+      AWS_RETRY_MODE="${AWS_RETRY_MODE:-standard}" \
+      AWS_MAX_ATTEMPTS="${AWS_MAX_ATTEMPTS:-10}" \
+      AWS_EC2_METADATA_DISABLED=true \
+      aws s3 sync "s3://$bucket" "$destino" \
+        --endpoint-url "$SUPABASE_S3_ENDPOINT" \
+        --cli-connect-timeout "${BACKUP_STORAGE_CONNECT_TIMEOUT_SECONDS:-30}" \
+        --cli-read-timeout "${BACKUP_STORAGE_READ_TIMEOUT_SECONDS:-120}" \
+        --only-show-errors 2> "$log_error"; then
+      rm -f "$log_error"
+      return 0
+    fi
+
+    echo "La descarga de archivos falló en el intento $intento de $max_intentos." >&2
+    if [ "$intento" -lt "$max_intentos" ]; then
+      espera=$((espera_base * intento))
+      echo "Se reintentará la descarga completa en ${espera} segundos." >&2
+      sleep "$espera"
+    fi
+    intento=$((intento + 1))
+  done
+
+  echo "Supabase Storage no permitió completar la descarga después de $max_intentos intentos." >&2
+  tail -n 25 "$log_error" >&2 || true
+  return 1
+}
+
 avisar() {
   [ -n "${HEALTHCHECK_ARCHIVOS_URL:-}" ] || return 0
   curl -fsS -m 15 --retry 3 -o /dev/null "${HEALTHCHECK_ARCHIVOS_URL}${1:-}" || true
@@ -70,9 +122,7 @@ for bucket_solicitado in "${BUCKETS_SOLICITADOS[@]}"; do
   }
   BUCKETS+=("$bucket")
   echo "Descargando los archivos del bucket configurado..."
-  mkdir "$TRABAJO/archivos/$bucket"
-  AWS_ACCESS_KEY_ID="$SUPABASE_S3_ACCESS_KEY" AWS_SECRET_ACCESS_KEY="$SUPABASE_S3_SECRET_KEY" AWS_DEFAULT_REGION="${SUPABASE_S3_REGION:-us-east-1}" \
-    aws s3 sync "s3://$bucket" "$TRABAJO/archivos/$bucket" --endpoint-url "$SUPABASE_S3_ENDPOINT" --only-show-errors
+  descargar_bucket "$bucket" "$TRABAJO/archivos/$bucket"
 done
 [ "${#BUCKETS[@]}" -gt 0 ] || { echo "No se configuró ningún bucket válido." >&2; exit 2; }
 
@@ -131,4 +181,8 @@ else
 fi
 
 avisar ""
+if [ -n "${GITHUB_OUTPUT:-}" ]; then
+  echo "protected_size_bytes=$TAMANO" >> "$GITHUB_OUTPUT"
+  echo "protected_file_count=$CANTIDAD" >> "$GITHUB_OUTPUT"
+fi
 echo "Punto de recuperación completado: $RECOVERY_POINT_ID/$POLITICA ($CANTIDAD archivos, $TAMANO bytes)"

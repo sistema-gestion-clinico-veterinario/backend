@@ -20,6 +20,12 @@ public record BackupExecutionEventRequest(
         @NotNull Instant startedAt,
         Instant finishedAt,
         @Pattern(regexp = "^[0-9a-f]{40}$") String commitSha,
-        @NotBlank @Size(max = 500) @Pattern(regexp = "^https://github\\.com/.*$") String workflowUrl
+        @NotBlank @Size(max = 500) @Pattern(regexp = "^https://github\\.com/.*$") String workflowUrl,
+        @PositiveOrZero Long protectedSizeBytes,
+        @PositiveOrZero Long protectedFileCount,
+        @Size(max = 100) String compressionAlgorithm,
+        @Size(max = 50) String encryptionAlgorithm,
+        Boolean databaseRestoreVerified,
+        @PositiveOrZero Long databaseRestoreDurationSeconds
 ) {
 }

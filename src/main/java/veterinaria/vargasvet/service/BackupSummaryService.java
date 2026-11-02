@@ -32,6 +32,8 @@ public class BackupSummaryService {
     static final int HORAS_SIN_EXITO_PARA_CRITICO = 72;
     private static final LocalTime HORA_PROGRAMADA_UTC = LocalTime.of(7, 17);
     private static final int DIAS_DE_RESUMEN = 30;
+    static final int RPO_OBJETIVO_HORAS = 24;
+    static final int RTO_OBJETIVO_MINUTOS = 240;
 
     private final BackupExecutionRepository repository;
     private final BackupReportTokenVerifier tokenVerifier;
@@ -44,8 +46,8 @@ public class BackupSummaryService {
     @Transactional(readOnly = true)
     public BackupSummaryResponse summary(Instant now) {
         Optional<BackupExecution> latest = repository.findFirstByOrderByStartedAtDesc();
-        Instant lastSuccess = repository.findFirstByStatusOrderByStartedAtDesc(BackupRunStatus.SUCCESS)
-                .map(BackupSummaryService::finishedOrStarted).orElse(null);
+        Optional<BackupExecution> latestSuccess = repository.findFirstByStatusOrderByStartedAtDesc(BackupRunStatus.SUCCESS);
+        Instant lastSuccess = latestSuccess.map(BackupSummaryService::finishedOrStarted).orElse(null);
         Instant lastFailure = Stream.of(BackupRunStatus.FAILED, BackupRunStatus.PARTIAL)
                 .map(repository::findFirstByStatusOrderByStartedAtDesc)
                 .flatMap(Optional::stream)
@@ -56,6 +58,15 @@ public class BackupSummaryService {
         long successes = repository.countByStatusAndStartedAtAfter(BackupRunStatus.SUCCESS, since);
         long problems = repository.countByStatusAndStartedAtAfter(BackupRunStatus.FAILED, since)
                 + repository.countByStatusAndStartedAtAfter(BackupRunStatus.PARTIAL, since);
+        Long rpoObservedMinutes = latestSuccess
+                .map(execution -> Math.max(0L, Duration.between(execution.getStartedAt(), now).toMinutes()))
+                .orElse(null);
+        Boolean rpoCompliant = rpoObservedMinutes == null ? null
+                : rpoObservedMinutes <= Duration.ofHours(RPO_OBJETIVO_HORAS).toMinutes();
+        Long latestDatabaseRestoreDuration = latestSuccess
+                .filter(BackupExecution::isDatabaseRestoreVerified)
+                .map(BackupExecution::getDatabaseRestoreDurationSeconds)
+                .orElse(null);
 
         return new BackupSummaryResponse(
                 health(latest.orElse(null), lastSuccess, now),
@@ -66,7 +77,13 @@ public class BackupSummaryService {
                 successes,
                 problems,
                 nextScheduledAfter(now),
-                HORAS_SIN_EXITO_PARA_ATENCION);
+                HORAS_SIN_EXITO_PARA_ATENCION,
+                RPO_OBJETIVO_HORAS,
+                rpoObservedMinutes,
+                rpoCompliant,
+                RTO_OBJETIVO_MINUTOS,
+                latestDatabaseRestoreDuration,
+                false);
     }
 
     static String health(BackupExecution latest, Instant lastSuccess, Instant now) {

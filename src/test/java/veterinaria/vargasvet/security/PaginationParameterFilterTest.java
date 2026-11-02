@@ -36,6 +36,19 @@ class PaginationParameterFilterTest {
     }
 
     @Test
+    void neverAllowsMoreThanOneHundredEvenWhenConfiguredHigher() throws Exception {
+        PaginationParameterFilter filterWithUnsafeConfiguration = new PaginationParameterFilter(1000);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        filterWithUnsafeConfiguration.doFilter(request("0", "101"), response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(response.getContentAsString()).contains("entre 1 y 100");
+        assertThat(chain.getRequest()).isNull();
+    }
+
+    @Test
     void rejectsNonNumericParameters() throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
 

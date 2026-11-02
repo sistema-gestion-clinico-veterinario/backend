@@ -65,6 +65,24 @@ public class BackupExecution {
     @Column(name = "workflow_url", nullable = false, length = 500)
     private String workflowUrl;
 
+    @Column(name = "protected_size_bytes")
+    private Long protectedSizeBytes;
+
+    @Column(name = "protected_file_count")
+    private Long protectedFileCount;
+
+    @Column(name = "compression_algorithm", length = 100)
+    private String compressionAlgorithm;
+
+    @Column(name = "encryption_algorithm", length = 50)
+    private String encryptionAlgorithm;
+
+    @Column(name = "database_restore_verified", nullable = false)
+    private boolean databaseRestoreVerified;
+
+    @Column(name = "database_restore_duration_seconds")
+    private Long databaseRestoreDurationSeconds;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 }
