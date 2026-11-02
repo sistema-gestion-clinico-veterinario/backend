@@ -95,6 +95,9 @@ pg_restore --list "$VOLCADO" > /dev/null
 contar_filas "$BACKUP_DB_URL" > "$TRABAJO/despues.txt"
 
 RESULTADO_RESTAURACION="no ejecutada"
+RESTAURACION_VERIFICADA="false"
+RESTAURACION_INICIO_EPOCH=""
+RESTAURACION_DURACION_SEGUNDOS=""
 if [ -n "${VERIFY_DB_URL:-}" ]; then
   destino="$(printf '%s' "$VERIFY_DB_URL" | sed -E 's#^[a-z]+://[^@]*@##; s#\?.*$##')"
   origen="$(printf '%s' "$BACKUP_DB_URL" | sed -E 's#^[a-z]+://[^@]*@##; s#\?.*$##')"
@@ -113,6 +116,7 @@ if [ -n "${VERIFY_DB_URL:-}" ]; then
       ;;
   esac
   echo "Restaurando en una base de verificación..."
+  RESTAURACION_INICIO_EPOCH="$(date +%s)"
   psql --dbname="$VERIFY_DB_URL" --no-psqlrc -q -v ON_ERROR_STOP=1 -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;"
   : > "$TRABAJO/restauracion.log"
   if ! pg_restore --dbname="$VERIFY_DB_URL" --clean --if-exists --exit-on-error --no-owner --no-acl \
@@ -147,6 +151,8 @@ if [ -n "${VERIFY_DB_URL:-}" ]; then
     exit 5
   fi
   RESULTADO_RESTAURACION="correcta"
+  RESTAURACION_VERIFICADA="true"
+  RESTAURACION_DURACION_SEGUNDOS="$(( $(date +%s) - RESTAURACION_INICIO_EPOCH ))"
 fi
 
 echo "Cifrando..."
@@ -196,4 +202,9 @@ else
 fi
 
 avisar ""
+if [ -n "${GITHUB_OUTPUT:-}" ]; then
+  echo "protected_size_bytes=$TAMANO" >> "$GITHUB_OUTPUT"
+  echo "database_restore_verified=$RESTAURACION_VERIFICADA" >> "$GITHUB_OUTPUT"
+  echo "database_restore_duration_seconds=$RESTAURACION_DURACION_SEGUNDOS" >> "$GITHUB_OUTPUT"
+fi
 echo "Respaldo completado: $RECOVERY_POINT_ID/$POLITICA ($TAMANO bytes, restauración de verificación: $RESULTADO_RESTAURACION)"

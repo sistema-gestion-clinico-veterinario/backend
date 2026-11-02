@@ -63,6 +63,9 @@ class BackupSummaryServiceTest {
 
         assertThat(resumen.health()).isEqualTo("AL_DIA");
         assertThat(resumen.lastSuccessAt()).isEqualTo(Instant.parse("2026-10-18T07:20:00Z"));
+        assertThat(resumen.rpoObservedMinutes()).isEqualTo(463L);
+        assertThat(resumen.rpoCompliant()).isTrue();
+        assertThat(resumen.integralRecoveryTestAvailable()).isFalse();
     }
 
     @Test

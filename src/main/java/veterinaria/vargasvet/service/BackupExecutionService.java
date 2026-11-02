@@ -6,7 +6,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.BackupExecution;
-import veterinaria.vargasvet.domain.enums.BackupComponentStatus;
 import veterinaria.vargasvet.domain.enums.BackupEventPhase;
 import veterinaria.vargasvet.domain.enums.BackupRunStatus;
 import veterinaria.vargasvet.dto.request.BackupExecutionEventRequest;
@@ -55,6 +54,12 @@ public class BackupExecutionService {
         execution.setFinishedAt(request.finishedAt());
         execution.setCommitSha(request.commitSha());
         execution.setWorkflowUrl(request.workflowUrl());
+        execution.setProtectedSizeBytes(request.protectedSizeBytes());
+        execution.setProtectedFileCount(request.protectedFileCount());
+        execution.setCompressionAlgorithm(request.compressionAlgorithm());
+        execution.setEncryptionAlgorithm(request.encryptionAlgorithm());
+        execution.setDatabaseRestoreVerified(Boolean.TRUE.equals(request.databaseRestoreVerified()));
+        execution.setDatabaseRestoreDurationSeconds(request.databaseRestoreDurationSeconds());
         execution.setUpdatedAt(AppClock.instantNow());
         repository.save(execution);
     }
@@ -62,7 +67,7 @@ public class BackupExecutionService {
     @Transactional(readOnly = true)
     public Page<BackupExecutionResponse> list(int page, int size) {
         int safePage = Math.max(page, 0);
-        int safeSize = Math.min(Math.max(size, 1), 50);
+        int safeSize = Math.min(Math.max(size, 1), 100);
         return repository.findAllByOrderByStartedAtDesc(PageRequest.of(safePage, safeSize)).map(this::toResponse);
     }
 
@@ -71,7 +76,10 @@ public class BackupExecutionService {
                 execution.getId(), execution.getRunId(), execution.getRunAttempt(), execution.getRecoveryPointId(),
                 execution.getRetentionPolicy(), execution.getTriggerType(), execution.getStatus(),
                 execution.getDatabaseStatus(), execution.getRestrictionsStatus(), execution.getStorageStatus(),
-                execution.getDatabaseStatus() == BackupComponentStatus.SUCCESS,
+                execution.getProtectedSizeBytes() == null ? 0L : execution.getProtectedSizeBytes(),
+                execution.getProtectedFileCount() == null ? 0L : execution.getProtectedFileCount(),
+                execution.getCompressionAlgorithm(), execution.getEncryptionAlgorithm(),
+                execution.isDatabaseRestoreVerified(), execution.getDatabaseRestoreDurationSeconds(),
                 execution.getStartedAt(), execution.getFinishedAt(), execution.getCommitSha(), execution.getWorkflowUrl());
     }
 }

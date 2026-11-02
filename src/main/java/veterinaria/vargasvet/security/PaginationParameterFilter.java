@@ -22,13 +22,15 @@ import java.io.IOException;
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
 public class PaginationParameterFilter extends OncePerRequestFilter {
 
+    private static final int ABSOLUTE_MAX_PAGE_SIZE = 100;
+
     private final int maxPageSize;
 
-    public PaginationParameterFilter(@Value("${api.pagination.max-size:1000}") int maxPageSize) {
+    public PaginationParameterFilter(@Value("${api.pagination.max-size:100}") int maxPageSize) {
         if (maxPageSize < 1) {
             throw new IllegalArgumentException("api.pagination.max-size debe ser mayor a cero");
         }
-        this.maxPageSize = maxPageSize;
+        this.maxPageSize = Math.min(maxPageSize, ABSOLUTE_MAX_PAGE_SIZE);
     }
 
     @Override
