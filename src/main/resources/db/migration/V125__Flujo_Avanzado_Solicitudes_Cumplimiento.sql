@@ -21,6 +21,7 @@ ALTER TABLE solicitud_cambio_cumplimiento
     );
 
 DROP INDEX IF EXISTS uq_solicitud_cumplimiento_pendiente;
+DROP INDEX IF EXISTS uq_solicitud_cumplimiento_activa;
 CREATE UNIQUE INDEX uq_solicitud_cumplimiento_activa
     ON solicitud_cambio_cumplimiento(company_id, control_code)
     WHERE estado IN ('PENDIENTE', 'EN_REVISION');
