@@ -6,6 +6,7 @@ import org.mockito.MockedStatic;
 import veterinaria.vargasvet.controller.RoleController;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.dto.request.RoleRequest;
+import veterinaria.vargasvet.dto.request.DuplicateRoleRequest;
 import veterinaria.vargasvet.dto.response.RolDTO;
 import veterinaria.vargasvet.dto.response.RolVistaPermisoDTO;
 import veterinaria.vargasvet.security.SecurityUtils;
@@ -82,6 +83,21 @@ class RoleControllerContractTest {
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().isSuccess()).isFalse();
         }
+    }
+
+    @Test
+    @DisplayName("[CP-RF06-01] Duplicar un rol transmite únicamente el origen y los datos del duplicado")
+    void duplicarRolNoPermiteCambiarLaEmpresaNiElAmbito() {
+        DuplicateRoleRequest request = new DuplicateRoleRequest();
+        request.setName("Veterinario encargado");
+        request.setDescripcion("Acceso clínico ampliado");
+        when(roleService.duplicateRole(12, request.getName(), request.getDescripcion()))
+                .thenReturn(new RolDTO());
+
+        var response = controller.duplicateRole(12, request);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(201);
+        verify(roleService).duplicateRole(12, "Veterinario encargado", "Acceso clínico ampliado");
     }
 
     private RoleRequest roleRequest(int companyId) {

@@ -12,6 +12,7 @@ public interface RoleService {
     List<RolDTO> getAssignableRoles(Integer companyId, RoleScope scope);
     List<RolDTO> getSystemRoles();
     RolDTO createRole(String nombre, String descripcion, Integer companyId, RoleScope scope);
+    RolDTO duplicateRole(Integer sourceRoleId, String nombre, String descripcion);
     RolDTO updateRole(Integer id, String nombre, String descripcion, RoleScope scope);
     RolDTO toggleActivo(Integer id);
     void deleteRole(Integer id);
