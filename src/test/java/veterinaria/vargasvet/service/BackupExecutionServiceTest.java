@@ -76,6 +76,24 @@ class BackupExecutionServiceTest {
                 .hasMessageContaining("finishedAt");
     }
 
+    @Test
+    void conservaLasMetricasOperativasReportadasPorElPipeline() {
+        BackupExecutionRepository repository = mock(BackupExecutionRepository.class);
+        when(repository.findByRunIdAndRunAttempt("123", 1)).thenReturn(Optional.empty());
+
+        new BackupExecutionService(repository).record(request(
+                BackupEventPhase.COMPLETED, BackupRunStatus.SUCCESS,
+                Instant.parse("2026-10-18T07:17:00Z"), Instant.parse("2026-10-18T07:21:00Z")));
+
+        var captor = org.mockito.ArgumentCaptor.forClass(BackupExecution.class);
+        verify(repository).save(captor.capture());
+        assertThat(captor.getValue().getProtectedSizeBytes()).isEqualTo(2048L);
+        assertThat(captor.getValue().getProtectedFileCount()).isEqualTo(12L);
+        assertThat(captor.getValue().getEncryptionAlgorithm()).isEqualTo("OpenPGP");
+        assertThat(captor.getValue().isDatabaseRestoreVerified()).isTrue();
+        assertThat(captor.getValue().getDatabaseRestoreDurationSeconds()).isEqualTo(45L);
+    }
+
     private BackupExecutionEventRequest request(BackupEventPhase phase, BackupRunStatus status,
                                                 Instant startedAt, Instant finishedAt) {
         return new BackupExecutionEventRequest(
@@ -85,6 +103,12 @@ class BackupExecutionServiceTest {
                 phase == BackupEventPhase.STARTED ? BackupComponentStatus.PENDING : BackupComponentStatus.SUCCESS,
                 phase == BackupEventPhase.STARTED ? BackupComponentStatus.PENDING : BackupComponentStatus.SUCCESS,
                 startedAt, finishedAt, "c423a72000000000000000000000000000000000",
-                "https://github.com/softvet/backend/actions/runs/123");
+                "https://github.com/softvet/backend/actions/runs/123",
+                phase == BackupEventPhase.COMPLETED ? 2048L : null,
+                phase == BackupEventPhase.COMPLETED ? 12L : null,
+                phase == BackupEventPhase.COMPLETED ? "PostgreSQL custom nivel 9 y gzip" : null,
+                phase == BackupEventPhase.COMPLETED ? "OpenPGP" : null,
+                phase == BackupEventPhase.COMPLETED,
+                phase == BackupEventPhase.COMPLETED ? 45L : null);
     }
 }

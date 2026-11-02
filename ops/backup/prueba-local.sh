@@ -124,6 +124,11 @@ export MOCK_STORAGE_RESTORE MOCK_S3_ROOT
 aws() {
   if [ "${1:-} ${2:-}" = "s3 sync" ]; then
     if [[ "${3:-}" = s3://* ]]; then
+      if [ -n "${MOCK_STORAGE_FAIL_ONCE_FILE:-}" ] && [ ! -f "$MOCK_STORAGE_FAIL_ONCE_FILE" ]; then
+        touch "$MOCK_STORAGE_FAIL_ONCE_FILE"
+        echo "Falla temporal simulada de Storage" >&2
+        return 1
+      fi
       local bucket="${3#s3://}"
       mkdir -p "$4"
       cp -R "$MOCK_S3_ROOT/$bucket"/. "$4"/
@@ -165,6 +170,21 @@ verificar "registra los dos buckets sin exponerlos en el nombre remoto" test "$(
 verificar "valida la firma del marcador de punto completo" env \
   GPG_SIGNING_PUBLIC_KEY="$CLAVE_FIRMA_PUBLICA" GPG_EXPECTED_SIGNING_FINGERPRINT="$HUELLA_FIRMA" \
   bash "$AQUI/verificar-punto.sh" "$SALIDA_STORAGE/meta.gpg"
+
+SALIDA_STORAGE_REINTENTO="$T/salida-storage-reintento"
+verificar "reintenta una descarga temporalmente fallida sin aceptar archivos parciales" env \
+  MOCK_STORAGE_FAIL_ONCE_FILE="$T/storage-fallo-simulado" BACKUP_STORAGE_RETRY_DELAY_SECONDS=0 \
+  SUPABASE_S3_ENDPOINT="https://storage.test" SUPABASE_S3_ACCESS_KEY="prueba" SUPABASE_S3_SECRET_KEY="prueba" \
+  SUPABASE_BUCKETS="documentos,imagenes" GPG_PUBLIC_KEY="$CLAVE_PUBLICA" \
+  GPG_EXPECTED_FINGERPRINT="$HUELLA_ESPERADA" BACKUP_SKIP_UPLOAD=1 BACKUP_OUT_DIR="$SALIDA_STORAGE_REINTENTO" \
+  GPG_SIGNING_PRIVATE_KEY="$CLAVE_FIRMA_PRIVADA" GPG_EXPECTED_SIGNING_FINGERPRINT="$HUELLA_FIRMA" \
+  GPG_SIGNING_PASSPHRASE="$FRASE_FIRMA" \
+  bash "$AQUI/respaldar-archivos.sh"
+verificar "el reintento genera los tres artefactos cifrados" test \
+  -s "$SALIDA_STORAGE_REINTENTO/data-02.gpg" -a \
+  -s "$SALIDA_STORAGE_REINTENTO/meta-02.gpg" -a \
+  -s "$SALIDA_STORAGE_REINTENTO/meta.gpg"
+
 verificar "restaura Storage en buckets separados de recuperación" env \
   SUPABASE_S3_ENDPOINT="https://storage.test" SUPABASE_S3_ACCESS_KEY="prueba" SUPABASE_S3_SECRET_KEY="prueba" \
   GPG_SIGNING_PUBLIC_KEY="$CLAVE_FIRMA_PUBLICA" GPG_EXPECTED_SIGNING_FINGERPRINT="$HUELLA_FIRMA" \
