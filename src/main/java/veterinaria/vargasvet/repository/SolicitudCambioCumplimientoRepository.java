@@ -36,8 +36,8 @@ public interface SolicitudCambioCumplimientoRepository extends JpaRepository<Sol
             "(:companyId IS NULL OR s.company.id = :companyId) AND " +
             "(:control IS NULL OR s.control = :control) AND " +
             "(:estado IS NULL OR s.estado = :estado) AND " +
-            "(:desde IS NULL OR s.solicitadaAt >= :desde) AND " +
-            "(:hasta IS NULL OR s.solicitadaAt < :hasta)")
+            "s.solicitadaAt >= :desde AND " +
+            "s.solicitadaAt < :hasta")
     Page<SolicitudCambioCumplimiento> buscarGlobal(@Param("companyId") Integer companyId,
                                                     @Param("control") ControlCumplimientoClinica control,
                                                     @Param("estado") EstadoSolicitudCambioCumplimiento estado,
