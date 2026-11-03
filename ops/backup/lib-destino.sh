@@ -40,6 +40,23 @@ destino_subir() {
   esac
 }
 
+destino_descargar() {
+  local ruta="$1" archivo="$2"
+  case "$ruta:$archivo" in
+    *.gpg:*.gpg) ;;
+    *)
+      echo "Descarga rechazada: solo se admiten artefactos OpenPGP con extensión .gpg." >&2
+      return 8
+      ;;
+  esac
+  mkdir -p "$(dirname "$archivo")"
+  case "$DESTINO_TIPO" in
+    s3) aws s3 cp "s3://$BACKUP_S3_BUCKET/$ruta" "$archivo" --endpoint-url "$BACKUP_S3_ENDPOINT" --only-show-errors ;;
+    drive) rclone copyto "$DESTINO_REMOTO:$DESTINO_CARPETA/$ruta" "$archivo" --quiet ;;
+  esac
+  [ -s "$archivo" ] || { echo "El artefacto descargado está vacío: $ruta" >&2; return 8; }
+}
+
 destino_tamano() {
   local ruta="$1"
   case "$DESTINO_TIPO" in

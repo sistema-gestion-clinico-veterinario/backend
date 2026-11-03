@@ -90,7 +90,7 @@ public class CompanyComplianceController {
     }
 
     @GetMapping("/platform/compliance/requests")
-    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN')")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_SOLICITUDES_CUMPLIMIENTO', 'LEER')")
     public ResponseEntity<ApiResponse<Page<SolicitudCambioCumplimientoResponse>>> bandejaGlobal(
             @RequestParam(required = false) Integer companyId,
             @RequestParam(required = false) ControlCumplimientoClinica control,
@@ -104,21 +104,21 @@ public class CompanyComplianceController {
     }
 
     @GetMapping("/platform/compliance/requests/pending-count")
-    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN')")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_SOLICITUDES_CUMPLIMIENTO', 'LEER')")
     public ResponseEntity<ApiResponse<Long>> solicitudesActivas() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Solicitudes pendientes de decisión",
                 solicitudes.contarActivas()));
     }
 
     @PutMapping("/platform/compliance/requests/{id}/review")
-    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN')")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_SOLICITUDES_CUMPLIMIENTO', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<SolicitudCambioCumplimientoResponse>> iniciarRevision(@PathVariable Long id) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Solicitud en revisión",
                 solicitudes.iniciarRevision(id)));
     }
 
     @PutMapping("/platform/compliance/requests/{id}")
-    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN')")
+    @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_SOLICITUDES_CUMPLIMIENTO', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<SolicitudCambioCumplimientoResponse>> resolverSolicitud(
             @PathVariable Long id, @Valid @RequestBody ResolverCambioCumplimientoRequest request) {
         return ResponseEntity.ok(new ApiResponse<>(true,

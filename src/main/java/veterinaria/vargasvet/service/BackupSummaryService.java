@@ -67,6 +67,13 @@ public class BackupSummaryService {
                 .filter(BackupExecution::isDatabaseRestoreVerified)
                 .map(BackupExecution::getDatabaseRestoreDurationSeconds)
                 .orElse(null);
+        Optional<BackupExecution> latestIntegralRecovery =
+                repository.findFirstByIntegralRecoveryVerifiedTrueOrderByIntegralRecoveryTestedAtDesc();
+        Long integralDuration = latestIntegralRecovery
+                .map(BackupExecution::getIntegralRecoveryDurationSeconds)
+                .orElse(null);
+        Boolean rtoCompliant = integralDuration == null ? null
+                : integralDuration <= Duration.ofMinutes(RTO_OBJETIVO_MINUTOS).toSeconds();
 
         return new BackupSummaryResponse(
                 health(latest.orElse(null), lastSuccess, now),
@@ -83,7 +90,10 @@ public class BackupSummaryService {
                 rpoCompliant,
                 RTO_OBJETIVO_MINUTOS,
                 latestDatabaseRestoreDuration,
-                false);
+                latestIntegralRecovery.isPresent(),
+                integralDuration,
+                latestIntegralRecovery.map(BackupExecution::getIntegralRecoveryTestedAt).orElse(null),
+                rtoCompliant);
     }
 
     static String health(BackupExecution latest, Instant lastSuccess, Instant now) {

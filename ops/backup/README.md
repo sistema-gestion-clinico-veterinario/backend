@@ -30,6 +30,7 @@ Crear las variables de Actions:
 | `SUPABASE_PROJECT_REF` | `abcdefghijklmnopqrst` | Referencia del proyecto de Supabase. |
 | `SUPABASE_DB_ALLOWED_CIDRS_BASE` | `["203.0.113.10/32"]` | Lista JSON de IPv4 que deben permanecer autorizadas. |
 | `SUPABASE_DB_ALLOWED_CIDRS_V6_BASE` | `[]` | Lista JSON de IPv6 permanentes. |
+| `BACKUP_ENABLE_INTEGRAL_RECOVERY_TEST` | `true` | Descarga y restaura el punto recién publicado para medir el RTO real. |
 
 La configuración base debe contener al menos un CIDR entre ambas listas. El script rechaza listas inválidas y reglas `/0`. Deben copiarse todas las reglas permanentes existentes, incluidas las necesarias para los servicios que conectan directamente a PostgreSQL.
 
@@ -70,3 +71,28 @@ El endpoint de reporte solo acepta HTTPS desde el workflow, compara el token en 
 `restaurar-archivos.sh` solo acepta paquetes TAR con directorios y archivos regulares, rechaza rutas absolutas, recorridos `..`, enlaces y entradas duplicadas. Antes de escribir valida que todos los buckets de recuperación existan y estén vacíos. Después de cada sincronización vuelve a descargar el bucket y compara rutas, tamaños y SHA-256 archivo por archivo. Una diferencia impide declarar la recuperación como satisfactoria.
 
 Las restauraciones deben realizarse siempre sobre destinos aislados. Los scripts no crean buckets ni aceptan sobrescribir contenido existente.
+
+## Prueba integral real y RTO
+
+Cuando `BACKUP_ENABLE_INTEGRAL_RECOVERY_TEST` vale `true`, el workflow no reutiliza el volcado local con el que creó el respaldo. El trabajo `recuperacion-integral`:
+
+1. descarga del repositorio remoto los cinco objetos del punto recién publicado;
+2. comprueba las firmas, huellas, tamaños y SHA-256 contra los manifiestos firmados;
+3. descifra los artefactos descargados;
+4. restaura PostgreSQL en una instancia aislada y compara exactamente tablas y filas;
+5. extrae el paquete de Storage en un directorio aislado, rechazando rutas inseguras, enlaces, archivos especiales y duplicados;
+6. compara la cantidad de archivos con el manifiesto y registra la duración completa.
+
+La duración medida desde el inicio de la descarga hasta terminar todas las validaciones se registra como RTO observado. El panel solo muestra `Verificada` si todo el recorrido terminó correctamente. Esta prueba no modifica la base de producción ni los buckets operativos.
+
+Crear el entorno protegido de GitHub Actions `backup-recovery` y guardar allí estos secretos:
+
+| Secreto | Archivo o valor del kit |
+| --- | --- |
+| `BACKUP_GPG_PRIVATE_KEY` | Contenido de `cifrado-privada.asc`. |
+| `BACKUP_GPG_PRIVATE_KEY_PASSPHRASE` | Contraseña de la clave privada de descifrado. |
+| `BACKUP_GPG_SIGNING_PUBLIC_KEY` | Contenido de `firma-publica.asc`. |
+
+El entorno debe limitar quién puede ejecutar o modificar este trabajo. Si la organización exige aprobación manual, configura revisores obligatorios; en ese caso una ejecución programada quedará esperando aprobación y no se declarará verificada hasta completarse. La clave privada no debe almacenarse en variables, archivos del repositorio, logs ni artefactos.
+
+Si la variable está desactivada, el respaldo puede completarse, pero el panel mostrará que aún no existe una prueba integral. No se calcula ni se presenta un RTO inventado.

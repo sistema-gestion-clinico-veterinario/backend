@@ -71,7 +71,8 @@ jobs:
             '{runId:$runId,runAttempt:$runAttempt,recoveryPointId:$recoveryPointId,
               retentionPolicy:$retentionPolicy,triggerType:$triggerType,phase:"STARTED",
               status:"IN_PROGRESS",databaseStatus:"PENDING",restrictionsStatus:"PENDING",
-              storageStatus:"PENDING",startedAt:$startedAt,finishedAt:null,
+              storageStatus:"PENDING",recoveryStatus:"PENDING",startedAt:$startedAt,finishedAt:null,
+              integralRecoveryVerified:false,integralRecoveryDurationSeconds:null,
               commitSha:$commitSha,workflowUrl:$workflowUrl}')"
           curl --fail-with-body --silent --show-error --max-time 20 \
             -H "Content-Type: application/json" \
@@ -239,10 +240,76 @@ jobs:
           RCLONE_CONFIG_RESPALDO_TOKEN: ${{ secrets.RCLONE_DRIVE_TOKEN }}
         run: bash ops/backup/respaldar-archivos.sh
 
+  recuperacion-integral:
+    name: Probar recuperación integral desde el repositorio
+    runs-on: ubuntu-24.04
+    environment: backup-recovery
+    timeout-minutes: 120
+    needs: [preparar, archivos]
+    if: >-
+      needs.archivos.result == 'success' &&
+      vars.BACKUP_ENABLE_INTEGRAL_RECOVERY_TEST == 'true'
+    outputs:
+      integral_recovery_verified: ${{ steps.recovery_test.outputs.integral_recovery_verified }}
+      integral_recovery_duration_seconds: ${{ steps.recovery_test.outputs.integral_recovery_duration_seconds }}
+
+    services:
+      recuperacion:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: recuperacion
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v6
+
+      - name: Instalar herramientas de recuperación
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common jq
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+
+      - name: Instalar rclone (solo si el destino es Google Drive)
+        if: vars.BACKUP_DESTINO == 'drive'
+        run: sudo apt-get install -y -qq rclone
+
+      - name: Descargar, descifrar y restaurar el punto publicado
+        id: recovery_test
+        env:
+          VERIFY_DB_URL: postgresql://postgres:recuperacion@localhost:5432/postgres
+          BACKUP_RECOVERY_POINT_ID: ${{ needs.preparar.outputs.recovery_point_id }}
+          BACKUP_RETENTION_POLICY: ${{ needs.preparar.outputs.retention_policy }}
+          GPG_DECRYPTION_PRIVATE_KEY: ${{ secrets.BACKUP_GPG_PRIVATE_KEY }}
+          GPG_DECRYPTION_PASSPHRASE: ${{ secrets.BACKUP_GPG_PRIVATE_KEY_PASSPHRASE }}
+          GPG_EXPECTED_FINGERPRINT: ${{ secrets.BACKUP_GPG_EXPECTED_FINGERPRINT }}
+          GPG_SIGNING_PUBLIC_KEY: ${{ secrets.BACKUP_GPG_SIGNING_PUBLIC_KEY }}
+          GPG_EXPECTED_SIGNING_FINGERPRINT: ${{ secrets.BACKUP_GPG_SIGNING_FINGERPRINT }}
+          BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+          BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_APPLICATION_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.BACKUP_S3_REGION }}
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+          BACKUP_DESTINO: ${{ vars.BACKUP_DESTINO || 's3' }}
+          RCLONE_CONFIG_RESPALDO_TYPE: drive
+          RCLONE_CONFIG_RESPALDO_SCOPE: drive.file
+          RCLONE_CONFIG_RESPALDO_TOKEN: ${{ secrets.RCLONE_DRIVE_TOKEN }}
+        run: bash ops/backup/probar-recuperacion-integral.sh
+
   registrar-resultado:
     name: Registrar el resultado operativo
     runs-on: ubuntu-24.04
-    needs: [preparar, base-de-datos, restaurar-restricciones, archivos]
+    needs: [preparar, base-de-datos, restaurar-restricciones, archivos, recuperacion-integral]
     if: ${{ always() && needs.preparar.result == 'success' }}
     steps:
       - name: Publicar resumen sanitizado
@@ -256,11 +323,14 @@ jobs:
           DATABASE_RESULT: ${{ needs.base-de-datos.result }}
           RESTRICTIONS_RESULT: ${{ needs.restaurar-restricciones.result }}
           STORAGE_RESULT: ${{ needs.archivos.result }}
+          RECOVERY_RESULT: ${{ needs.recuperacion-integral.result }}
           DATABASE_SIZE_BYTES: ${{ needs.base-de-datos.outputs.protected_size_bytes }}
           STORAGE_SIZE_BYTES: ${{ needs.archivos.outputs.protected_size_bytes }}
           PROTECTED_FILE_COUNT: ${{ needs.archivos.outputs.protected_file_count }}
           DATABASE_RESTORE_VERIFIED: ${{ needs.base-de-datos.outputs.database_restore_verified }}
           DATABASE_RESTORE_DURATION_SECONDS: ${{ needs.base-de-datos.outputs.database_restore_duration_seconds }}
+          INTEGRAL_RECOVERY_VERIFIED: ${{ needs.recuperacion-integral.outputs.integral_recovery_verified }}
+          INTEGRAL_RECOVERY_DURATION_SECONDS: ${{ needs.recuperacion-integral.outputs.integral_recovery_duration_seconds }}
           TRIGGER_TYPE: ${{ github.event_name == 'schedule' && 'SCHEDULED' || 'MANUAL' }}
           WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         shell: bash
@@ -281,7 +351,8 @@ jobs:
           database_status="$(component_status "$DATABASE_RESULT")"
           restrictions_status="$(component_status "$RESTRICTIONS_RESULT")"
           storage_status="$(component_status "$STORAGE_RESULT")"
-          if [ "$database_status" != "SUCCESS" ] || [ "$restrictions_status" != "SUCCESS" ] || [ "$storage_status" = "FAILED" ]; then
+          recovery_status="$(component_status "$RECOVERY_RESULT")"
+          if [ "$database_status" != "SUCCESS" ] || [ "$restrictions_status" != "SUCCESS" ] || [ "$storage_status" = "FAILED" ] || [ "$recovery_status" = "FAILED" ]; then
             overall_status="FAILED"
           elif [ "$storage_status" = "SKIPPED" ]; then
             overall_status="PARTIAL"
@@ -298,6 +369,12 @@ jobs:
           protected_file_count="$(numeric_or_zero "$PROTECTED_FILE_COUNT")"
           database_restore_duration_seconds="$(numeric_or_zero "$DATABASE_RESTORE_DURATION_SECONDS")"
           [ "$DATABASE_RESTORE_VERIFIED" = "true" ] || DATABASE_RESTORE_VERIFIED="false"
+          [ "$INTEGRAL_RECOVERY_VERIFIED" = "true" ] || INTEGRAL_RECOVERY_VERIFIED="false"
+          if [ "$INTEGRAL_RECOVERY_VERIFIED" = "true" ]; then
+            integral_recovery_duration_seconds="$(numeric_or_zero "$INTEGRAL_RECOVERY_DURATION_SECONDS")"
+          else
+            integral_recovery_duration_seconds="null"
+          fi
           if [ "$storage_status" = "SUCCESS" ]; then
             compression_algorithm="PostgreSQL custom nivel 9 y gzip"
           else
@@ -314,6 +391,7 @@ jobs:
             --arg databaseStatus "$database_status" \
             --arg restrictionsStatus "$restrictions_status" \
             --arg storageStatus "$storage_status" \
+            --arg recoveryStatus "$recovery_status" \
             --arg startedAt "$STARTED_AT" \
             --arg finishedAt "$finished_at" \
             --arg commitSha "${{ github.sha }}" \
@@ -324,14 +402,19 @@ jobs:
             --arg encryptionAlgorithm "OpenPGP" \
             --argjson databaseRestoreVerified "$DATABASE_RESTORE_VERIFIED" \
             --argjson databaseRestoreDurationSeconds "$database_restore_duration_seconds" \
+            --argjson integralRecoveryVerified "$INTEGRAL_RECOVERY_VERIFIED" \
+            --argjson integralRecoveryDurationSeconds "$integral_recovery_duration_seconds" \
             '{runId:$runId,runAttempt:$runAttempt,recoveryPointId:$recoveryPointId,
               retentionPolicy:$retentionPolicy,triggerType:$triggerType,phase:"COMPLETED",
               status:$status,databaseStatus:$databaseStatus,restrictionsStatus:$restrictionsStatus,
-              storageStatus:$storageStatus,startedAt:$startedAt,finishedAt:$finishedAt,
+              storageStatus:$storageStatus,recoveryStatus:$recoveryStatus,
+              startedAt:$startedAt,finishedAt:$finishedAt,
               commitSha:$commitSha,workflowUrl:$workflowUrl,protectedSizeBytes:$protectedSizeBytes,
               protectedFileCount:$protectedFileCount,compressionAlgorithm:$compressionAlgorithm,
               encryptionAlgorithm:$encryptionAlgorithm,databaseRestoreVerified:$databaseRestoreVerified,
-              databaseRestoreDurationSeconds:$databaseRestoreDurationSeconds}')"
+              databaseRestoreDurationSeconds:$databaseRestoreDurationSeconds,
+              integralRecoveryVerified:$integralRecoveryVerified,
+              integralRecoveryDurationSeconds:$integralRecoveryDurationSeconds}')"
           curl --fail-with-body --silent --show-error --max-time 20 \
             -H "Content-Type: application/json" \
             -H "X-Backup-Report-Token: $BACKUP_REPORT_TOKEN" \

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.BackupExecution;
 import veterinaria.vargasvet.domain.enums.BackupEventPhase;
+import veterinaria.vargasvet.domain.enums.BackupComponentStatus;
 import veterinaria.vargasvet.domain.enums.BackupRunStatus;
 import veterinaria.vargasvet.dto.request.BackupExecutionEventRequest;
 import veterinaria.vargasvet.dto.response.BackupExecutionResponse;
@@ -60,6 +61,23 @@ public class BackupExecutionService {
         execution.setEncryptionAlgorithm(request.encryptionAlgorithm());
         execution.setDatabaseRestoreVerified(Boolean.TRUE.equals(request.databaseRestoreVerified()));
         execution.setDatabaseRestoreDurationSeconds(request.databaseRestoreDurationSeconds());
+        BackupComponentStatus recoveryStatus = request.recoveryStatus() == null
+                ? (request.phase() == BackupEventPhase.STARTED
+                    ? BackupComponentStatus.PENDING : BackupComponentStatus.SKIPPED)
+                : request.recoveryStatus();
+        boolean integralVerified = Boolean.TRUE.equals(request.integralRecoveryVerified());
+        if (integralVerified && recoveryStatus != BackupComponentStatus.SUCCESS) {
+            throw new IllegalArgumentException("Una recuperación integral verificada requiere estado SUCCESS");
+        }
+        if (integralVerified && request.integralRecoveryDurationSeconds() == null) {
+            throw new IllegalArgumentException("Una recuperación integral verificada requiere duración");
+        }
+        execution.setRecoveryStatus(recoveryStatus);
+        execution.setIntegralRecoveryVerified(integralVerified);
+        execution.setIntegralRecoveryDurationSeconds(request.integralRecoveryDurationSeconds());
+        execution.setIntegralRecoveryTestedAt(
+                recoveryStatus == BackupComponentStatus.SUCCESS || recoveryStatus == BackupComponentStatus.FAILED
+                        ? request.finishedAt() : null);
         execution.setUpdatedAt(AppClock.instantNow());
         repository.save(execution);
     }
@@ -80,6 +98,8 @@ public class BackupExecutionService {
                 execution.getProtectedFileCount() == null ? 0L : execution.getProtectedFileCount(),
                 execution.getCompressionAlgorithm(), execution.getEncryptionAlgorithm(),
                 execution.isDatabaseRestoreVerified(), execution.getDatabaseRestoreDurationSeconds(),
+                execution.getRecoveryStatus(), execution.isIntegralRecoveryVerified(),
+                execution.getIntegralRecoveryDurationSeconds(), execution.getIntegralRecoveryTestedAt(),
                 execution.getStartedAt(), execution.getFinishedAt(), execution.getCommitSha(), execution.getWorkflowUrl());
     }
 }
