@@ -29,6 +29,8 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class SolicitudCambioCumplimientoService {
+    private static final LocalDateTime INICIO_FILTRO = LocalDateTime.of(1900, 1, 1, 0, 0);
+    private static final LocalDateTime FIN_FILTRO = LocalDateTime.of(9999, 12, 31, 23, 59, 59);
     private static final List<EstadoSolicitudCambioCumplimiento> ACTIVAS = List.of(
             EstadoSolicitudCambioCumplimiento.PENDIENTE,
             EstadoSolicitudCambioCumplimiento.EN_REVISION);
@@ -60,8 +62,8 @@ public class SolicitudCambioCumplimientoService {
             LocalDate desde, LocalDate hasta, int page, int size) {
         int safePage = Math.max(0, page);
         int safeSize = Math.min(Math.max(size, 1), 100);
-        LocalDateTime fechaDesde = desde == null ? null : desde.atStartOfDay();
-        LocalDateTime fechaHasta = hasta == null ? null : hasta.plusDays(1).atStartOfDay();
+        LocalDateTime fechaDesde = desde == null ? INICIO_FILTRO : desde.atStartOfDay();
+        LocalDateTime fechaHasta = hasta == null ? FIN_FILTRO : hasta.plusDays(1).atStartOfDay();
         return repository.buscarGlobal(companyId, control, estado, fechaDesde, fechaHasta,
                         PageRequest.of(safePage, safeSize, Sort.by("solicitadaAt").descending()))
                 .map(this::response);
