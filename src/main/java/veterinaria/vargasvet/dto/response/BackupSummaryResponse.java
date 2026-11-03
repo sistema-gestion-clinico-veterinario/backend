@@ -17,6 +17,9 @@ public record BackupSummaryResponse(
         Boolean rpoCompliant,
         int rtoTargetMinutes,
         Long latestDatabaseRestoreDurationSeconds,
-        boolean integralRecoveryTestAvailable
+        boolean integralRecoveryTestAvailable,
+        Long latestIntegralRecoveryDurationSeconds,
+        Instant integralRecoveryTestedAt,
+        Boolean rtoCompliant
 ) {
 }

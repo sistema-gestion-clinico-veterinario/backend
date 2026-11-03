@@ -26,6 +26,9 @@ public record BackupExecutionEventRequest(
         @Size(max = 100) String compressionAlgorithm,
         @Size(max = 50) String encryptionAlgorithm,
         Boolean databaseRestoreVerified,
-        @PositiveOrZero Long databaseRestoreDurationSeconds
+        @PositiveOrZero Long databaseRestoreDurationSeconds,
+        BackupComponentStatus recoveryStatus,
+        Boolean integralRecoveryVerified,
+        @PositiveOrZero Long integralRecoveryDurationSeconds
 ) {
 }
