@@ -14,7 +14,7 @@ requerir() {
 }
 
 requerir BACKUP_RECOVERY_POINT_ID BACKUP_RETENTION_POLICY VERIFY_DB_URL \
-  GPG_DECRYPTION_PRIVATE_KEY GPG_EXPECTED_FINGERPRINT \
+  GPG_DECRYPTION_PRIVATE_KEY GPG_DECRYPTION_PASSPHRASE GPG_EXPECTED_FINGERPRINT \
   GPG_SIGNING_PUBLIC_KEY GPG_EXPECTED_SIGNING_FINGERPRINT
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib-destino.sh"
@@ -86,13 +86,38 @@ descifrar_manifesto_firmado() {
   if [ -n "${GPG_DECRYPTION_PASSPHRASE:-}" ]; then
     gpg --batch --yes --pinentry-mode loopback --passphrase-fd 4 --status-fd 3 \
       --output "$destino" --decrypt "$origen" 3> "$estado" 2> "$errores" \
-      4<<< "$GPG_DECRYPTION_PASSPHRASE" || return 1
+      4<<< "$GPG_DECRYPTION_PASSPHRASE" || {
+        if grep -Eq 'BAD_PASSPHRASE' "$estado" || grep -Eqi 'bad passphrase|incorrect passphrase' "$errores"; then
+          echo "No se pudo descifrar $(basename "$origen"): la contraseña de la clave privada no es correcta." >&2
+        elif grep -Eq 'NO_SECKEY' "$estado" || grep -Eqi 'no secret key' "$errores"; then
+          echo "No se pudo descifrar $(basename "$origen"): no está disponible la clave privada requerida." >&2
+        elif grep -Eq 'NODATA' "$estado"; then
+          echo "No se pudo leer $(basename "$origen"): el artefacto cifrado está vacío o dañado." >&2
+        else
+          echo "No se pudo descifrar $(basename "$origen"). Revisa la clave privada, su contraseña y la integridad del respaldo." >&2
+        fi
+        return 1
+      }
   else
     gpg --batch --yes --status-fd 3 --output "$destino" --decrypt "$origen" \
-      3> "$estado" 2> "$errores" || return 1
+      3> "$estado" 2> "$errores" || {
+        if grep -Eq 'NO_SECKEY' "$estado" || grep -Eqi 'no secret key' "$errores"; then
+          echo "No se pudo descifrar $(basename "$origen"): no está disponible la clave privada requerida." >&2
+        else
+          echo "No se pudo descifrar $(basename "$origen"). La clave puede requerir una contraseña o el artefacto puede estar dañado." >&2
+        fi
+        return 1
+      }
   fi
-  awk '$1 == "[GNUPG:]" && $2 == "VALIDSIG" {print toupper($3)}' "$estado" |
-    grep -Fxq "$HUELLA_FIRMA"
+  if grep -Eq '\[GNUPG:\] (BADSIG|ERRSIG|NO_PUBKEY)' "$estado"; then
+    echo "La firma criptográfica de $(basename "$origen") no es válida o no puede verificarse." >&2
+    return 1
+  fi
+  if ! awk '$1 == "[GNUPG:]" && $2 == "VALIDSIG" {print toupper($3)}' "$estado" |
+      grep -Fxq "$HUELLA_FIRMA"; then
+    echo "$(basename "$origen") fue firmado con una clave distinta de la autorizada." >&2
+    return 1
+  fi
 }
 
 for nombre in data-01.gpg meta-01.gpg data-02.gpg meta-02.gpg meta.gpg; do
@@ -101,7 +126,7 @@ for nombre in data-01.gpg meta-01.gpg data-02.gpg meta-02.gpg meta.gpg; do
 done
 
 descifrar_manifesto_firmado "$TRABAJO/cifrados/meta.gpg" "$TRABAJO/punto.json" || {
-  echo "El marcador del punto de recuperación no tiene una firma válida." >&2; exit 6;
+  echo "No se pudo validar el marcador del punto de recuperación." >&2; exit 6;
 }
 jq -e --arg punto "$BACKUP_RECOVERY_POINT_ID" \
   '.recovery_point_id == $punto and .estado == "COMPLETO" and
@@ -111,10 +136,10 @@ jq -e --arg punto "$BACKUP_RECOVERY_POINT_ID" \
 }
 
 descifrar_manifesto_firmado "$TRABAJO/cifrados/meta-01.gpg" "$TRABAJO/base.json" || {
-  echo "El manifiesto de base de datos no tiene una firma válida." >&2; exit 6;
+  echo "No se pudo validar el manifiesto de base de datos." >&2; exit 6;
 }
 descifrar_manifesto_firmado "$TRABAJO/cifrados/meta-02.gpg" "$TRABAJO/archivos.json" || {
-  echo "El manifiesto de archivos no tiene una firma válida." >&2; exit 6;
+  echo "No se pudo validar el manifiesto de archivos." >&2; exit 6;
 }
 
 validar_componente() {
