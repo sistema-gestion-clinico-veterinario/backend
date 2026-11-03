@@ -83,6 +83,19 @@ public class BackupExecution {
     @Column(name = "database_restore_duration_seconds")
     private Long databaseRestoreDurationSeconds;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "recovery_status", nullable = false, length = 16)
+    private BackupComponentStatus recoveryStatus = BackupComponentStatus.SKIPPED;
+
+    @Column(name = "integral_recovery_verified", nullable = false)
+    private boolean integralRecoveryVerified;
+
+    @Column(name = "integral_recovery_duration_seconds")
+    private Long integralRecoveryDurationSeconds;
+
+    @Column(name = "integral_recovery_tested_at")
+    private Instant integralRecoveryTestedAt;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 }

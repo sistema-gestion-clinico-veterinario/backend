@@ -69,6 +69,25 @@ class BackupSummaryServiceTest {
     }
 
     @Test
+    void informaElRtoSoloDesdeUnaRecuperacionIntegralVerificada() {
+        BackupExecution exito = ejecucion(BackupRunStatus.SUCCESS, "2026-10-18T07:17:00Z", "2026-10-18T07:20:00Z");
+        exito.setIntegralRecoveryVerified(true);
+        exito.setIntegralRecoveryDurationSeconds(900L);
+        exito.setIntegralRecoveryTestedAt(Instant.parse("2026-10-18T07:32:00Z"));
+        conUltima(exito);
+        conExito(exito);
+        when(repository.findFirstByIntegralRecoveryVerifiedTrueOrderByIntegralRecoveryTestedAtDesc())
+                .thenReturn(Optional.of(exito));
+
+        var resumen = service.summary(AHORA);
+
+        assertThat(resumen.integralRecoveryTestAvailable()).isTrue();
+        assertThat(resumen.latestIntegralRecoveryDurationSeconds()).isEqualTo(900L);
+        assertThat(resumen.integralRecoveryTestedAt()).isEqualTo(Instant.parse("2026-10-18T07:32:00Z"));
+        assertThat(resumen.rtoCompliant()).isTrue();
+    }
+
+    @Test
     void sinExitoDesdeHaceMasDe36HorasPideAtencionYDe72EsCritico() {
         BackupExecution viejo = ejecucion(BackupRunStatus.SUCCESS, "2026-10-16T07:17:00Z", "2026-10-16T07:20:00Z");
         conUltima(viejo);

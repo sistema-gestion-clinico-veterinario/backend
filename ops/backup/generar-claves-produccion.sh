@@ -86,10 +86,15 @@ KIT DE RECUPERACIÓN DE SOFTVET
 2. Conserva cifrado-privada.asc y firma-privada.asc en dos medios físicos cifrados.
 3. GitHub Actions utiliza:
    - cifrado-publica.asc como BACKUP_GPG_PUBLIC_KEY.
+   - cifrado-privada.asc como BACKUP_GPG_PRIVATE_KEY únicamente si se habilita
+     la prueba integral automática de recuperación.
+   - La contraseña de descifrado como BACKUP_GPG_PRIVATE_KEY_PASSPHRASE.
    - firma-privada.asc como BACKUP_GPG_SIGNING_PRIVATE_KEY.
+   - firma-publica.asc como BACKUP_GPG_SIGNING_PUBLIC_KEY.
    - La contraseña de firma como BACKUP_GPG_SIGNING_PASSPHRASE.
    - Las huellas incluidas en huellas.txt.
-4. La clave privada de descifrado y su contraseña nunca se cargan en GitHub.
+4. Si no habilitas la prueba integral automática, conserva la clave privada de
+   descifrado y su contraseña únicamente en el kit externo.
 5. La clave pública de firma se usa al verificar o restaurar un respaldo.
 6. Estas claves caducan en tres años: planifica su rotación antes del vencimiento.
 7. Realiza una prueba de restauración antes de habilitar la programación automática.

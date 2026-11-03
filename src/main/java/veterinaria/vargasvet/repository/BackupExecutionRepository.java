@@ -15,5 +15,6 @@ public interface BackupExecutionRepository extends JpaRepository<BackupExecution
     Page<BackupExecution> findAllByOrderByStartedAtDesc(Pageable pageable);
     Optional<BackupExecution> findFirstByOrderByStartedAtDesc();
     Optional<BackupExecution> findFirstByStatusOrderByStartedAtDesc(BackupRunStatus status);
+    Optional<BackupExecution> findFirstByIntegralRecoveryVerifiedTrueOrderByIntegralRecoveryTestedAtDesc();
     long countByStatusAndStartedAtAfter(BackupRunStatus status, Instant since);
 }

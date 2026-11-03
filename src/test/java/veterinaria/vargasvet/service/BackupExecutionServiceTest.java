@@ -92,6 +92,9 @@ class BackupExecutionServiceTest {
         assertThat(captor.getValue().getEncryptionAlgorithm()).isEqualTo("OpenPGP");
         assertThat(captor.getValue().isDatabaseRestoreVerified()).isTrue();
         assertThat(captor.getValue().getDatabaseRestoreDurationSeconds()).isEqualTo(45L);
+        assertThat(captor.getValue().getRecoveryStatus()).isEqualTo(BackupComponentStatus.SUCCESS);
+        assertThat(captor.getValue().isIntegralRecoveryVerified()).isTrue();
+        assertThat(captor.getValue().getIntegralRecoveryDurationSeconds()).isEqualTo(83L);
     }
 
     private BackupExecutionEventRequest request(BackupEventPhase phase, BackupRunStatus status,
@@ -109,6 +112,9 @@ class BackupExecutionServiceTest {
                 phase == BackupEventPhase.COMPLETED ? "PostgreSQL custom nivel 9 y gzip" : null,
                 phase == BackupEventPhase.COMPLETED ? "OpenPGP" : null,
                 phase == BackupEventPhase.COMPLETED,
-                phase == BackupEventPhase.COMPLETED ? 45L : null);
+                phase == BackupEventPhase.COMPLETED ? 45L : null,
+                phase == BackupEventPhase.COMPLETED ? BackupComponentStatus.SUCCESS : BackupComponentStatus.PENDING,
+                phase == BackupEventPhase.COMPLETED,
+                phase == BackupEventPhase.COMPLETED ? 83L : null);
     }
 }
