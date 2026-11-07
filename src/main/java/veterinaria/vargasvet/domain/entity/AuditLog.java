@@ -52,4 +52,11 @@ public class AuditLog {
 
     @Column(name = "dispositivo", length = 120)
     private String dispositivo;
+
+    @Column(name = "correlation_id", length = 100)
+    private String correlationId;
+
+    @Column(name = "outcome", nullable = false, length = 16)
+    @Builder.Default
+    private String outcome = "SUCCESS";
 }

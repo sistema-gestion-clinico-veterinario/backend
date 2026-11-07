@@ -151,7 +151,7 @@ jq -n --arg recoveryPointId "$RECOVERY_POINT_ID" --arg politica "$POLITICA" --ar
   --arg huellaFirma "$GPG_SIGNING_FINGERPRINT" \
   '{recovery_point_id:$recoveryPointId, politica_retencion:$politica, fecha_finalizacion_utc:$fecha,
     estado:"COMPLETO", clave_de_firma:$huellaFirma,
-    componentes:["data-01.gpg","meta-01.gpg","data-02.gpg","meta-02.gpg"]}' \
+    componentes:["data-01.gpg","meta-01.gpg","data-02.gpg","meta-02.gpg","data-03.gpg","meta-03.gpg"]}' \
   > "$TRABAJO/punto-recuperacion.json"
 cifrar_y_firmar_archivo "$TRABAJO/punto-recuperacion.json" "$MARCADOR_COMPLETO"
 rm -f "$TRABAJO/punto-recuperacion.json"
@@ -162,9 +162,13 @@ else
   if [ "${BACKUP_REQUIRE_DATABASE_COMPONENT:-1}" = "1" ]; then
     TAMANO_BASE="$(destino_tamano "$CARPETA_REMOTA/data-01.gpg" 2> /dev/null || true)"
     TAMANO_META_BASE="$(destino_tamano "$CARPETA_REMOTA/meta-01.gpg" 2> /dev/null || true)"
+    TAMANO_LOGS="$(destino_tamano "$CARPETA_REMOTA/data-03.gpg" 2> /dev/null || true)"
+    TAMANO_META_LOGS="$(destino_tamano "$CARPETA_REMOTA/meta-03.gpg" 2> /dev/null || true)"
     printf '%s' "$TAMANO_BASE" | grep -Eq '^[1-9][0-9]*$' &&
-      printf '%s' "$TAMANO_META_BASE" | grep -Eq '^[1-9][0-9]*$' || {
-        echo "No se publicará un punto completo sin su componente de base de datos." >&2
+      printf '%s' "$TAMANO_META_BASE" | grep -Eq '^[1-9][0-9]*$' &&
+      printf '%s' "$TAMANO_LOGS" | grep -Eq '^[1-9][0-9]*$' &&
+      printf '%s' "$TAMANO_META_LOGS" | grep -Eq '^[1-9][0-9]*$' || {
+        echo "No se publicará un punto completo sin sus componentes de base de datos y logs." >&2
         exit 7
       }
   fi
@@ -172,7 +176,7 @@ else
   destino_subir "$MANIFIESTO_CIFRADO" "$CARPETA_REMOTA/meta-02.gpg"
   destino_verificar "$ARCHIVO_CIFRADO" "$CARPETA_REMOTA/data-02.gpg"
   destino_verificar "$MANIFIESTO_CIFRADO" "$CARPETA_REMOTA/meta-02.gpg"
-  # Este marcador se publica al final: su presencia indica que ambos componentes terminaron.
+  # Este marcador se publica al final: su presencia indica que los tres componentes terminaron.
   destino_subir "$MARCADOR_COMPLETO" "$CARPETA_REMOTA/meta.gpg"
   destino_verificar "$MARCADOR_COMPLETO" "$CARPETA_REMOTA/meta.gpg"
   destino_podar "p01" 30

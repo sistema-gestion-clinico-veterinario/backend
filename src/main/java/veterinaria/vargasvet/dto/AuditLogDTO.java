@@ -21,4 +21,6 @@ public class AuditLogDTO {
     private String details;
     private String ipAddress;
     private String dispositivo;
+    private String correlationId;
+    private String outcome;
 }

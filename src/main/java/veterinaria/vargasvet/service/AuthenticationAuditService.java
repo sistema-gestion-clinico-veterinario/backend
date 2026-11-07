@@ -2,6 +2,7 @@ package veterinaria.vargasvet.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -69,6 +70,8 @@ public class AuthenticationAuditService {
                 .details(details)
                 .ipAddress(clientIpResolver.resolve(request))
                 .dispositivo(request == null ? null : veterinaria.vargasvet.util.DispositivoInfo.describir(request.getHeader("User-Agent")))
+                .correlationId(MDC.get("correlationId"))
+                .outcome(action != null && action.contains("FALLIDO") ? "FAILED" : "SUCCESS")
                 .build());
         auditRealtimePublisher.publishAfterCommit(saved);
     }

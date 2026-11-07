@@ -70,6 +70,8 @@ public class CitaServiceImpl implements CitaService {
     private final veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
     private final veterinaria.vargasvet.service.OwnerContactPolicy ownerContactPolicy;
     @org.springframework.beans.factory.annotation.Autowired
+    private veterinaria.vargasvet.service.ClinicalTemplateService clinicalTemplateService;
+    @org.springframework.beans.factory.annotation.Autowired
     private ControlPreventivoRepository controlPreventivoRepository;
 
     private static final int DURACION_ESTIMADA_MINUTOS = 20;
@@ -326,6 +328,9 @@ public class CitaServiceImpl implements CitaService {
         consulta.setMotivoConsulta(cita.getMotivoCita());
         consulta.setTipoConsulta(TipoConsulta.CONTROL_RUTINA);
         consulta.setEstado(EstadoConsulta.ABIERTA);
+        if (clinicalTemplateService != null) {
+            clinicalTemplateService.assignPublishedTemplate(consulta, getCitaCompanyId(cita));
+        }
         
         Consulta savedConsulta = consultaRepository.save(consulta);
         broadcastCitaEvent("INICIAR_ATENCION", cita, citaMapper.toResponse(cita));

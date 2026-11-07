@@ -14,6 +14,9 @@ import veterinaria.vargasvet.domain.enums.TipoConsulta;
 import veterinaria.vargasvet.validation.MeaningfulText;
 import veterinaria.vargasvet.validation.StrictIntegerDeserializer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 public class ConsultaRequest {
 
@@ -95,4 +98,6 @@ public class ConsultaRequest {
     @MeaningfulText(message = "Las indicaciones deben contener texto real, no solo numeros o simbolos")
     @Pattern(regexp = "^$|(?=.*[\\p{L}\\p{N}])(?=\\S)(?!.*[{}\\[\\]<>*|\\\\^~`=@]).*\\S$", message = "Las indicaciones contienen caracteres no permitidos")
     private String indicacionesReceta;
+
+    private List<ClinicalFieldAnswerRequest> customAnswers = new ArrayList<>();
 }

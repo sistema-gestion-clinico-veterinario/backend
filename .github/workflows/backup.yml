@@ -1,4 +1,4 @@
-name: "Respaldo · Base de datos y archivos"
+name: "Respaldo · Base de datos, logs y archivos"
 
 on:
   schedule:
@@ -88,6 +88,8 @@ jobs:
       protected_size_bytes: ${{ steps.database_backup.outputs.protected_size_bytes }}
       database_restore_verified: ${{ steps.database_backup.outputs.database_restore_verified }}
       database_restore_duration_seconds: ${{ steps.database_backup.outputs.database_restore_duration_seconds }}
+      logs_protected_size_bytes: ${{ steps.database_backup.outputs.logs_protected_size_bytes }}
+      protected_log_count: ${{ steps.database_backup.outputs.protected_log_count }}
     env:
       SUPABASE_MANAGEMENT_ACCESS_TOKEN: ${{ secrets.SUPABASE_MANAGEMENT_ACCESS_TOKEN }}
       SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
@@ -157,7 +159,9 @@ jobs:
           RCLONE_CONFIG_RESPALDO_TYPE: drive
           RCLONE_CONFIG_RESPALDO_SCOPE: drive.file
           RCLONE_CONFIG_RESPALDO_TOKEN: ${{ secrets.RCLONE_DRIVE_TOKEN }}
-        run: bash ops/backup/respaldar-base.sh
+        run: |
+          bash ops/backup/respaldar-base.sh
+          bash ops/backup/respaldar-logs.sh
 
   restaurar-restricciones:
     name: Cerrar el acceso temporal a la base
@@ -325,6 +329,7 @@ jobs:
           STORAGE_RESULT: ${{ needs.archivos.result }}
           RECOVERY_RESULT: ${{ needs.recuperacion-integral.result }}
           DATABASE_SIZE_BYTES: ${{ needs.base-de-datos.outputs.protected_size_bytes }}
+          LOGS_SIZE_BYTES: ${{ needs.base-de-datos.outputs.logs_protected_size_bytes }}
           STORAGE_SIZE_BYTES: ${{ needs.archivos.outputs.protected_size_bytes }}
           PROTECTED_FILE_COUNT: ${{ needs.archivos.outputs.protected_file_count }}
           DATABASE_RESTORE_VERIFIED: ${{ needs.base-de-datos.outputs.database_restore_verified }}
@@ -364,8 +369,9 @@ jobs:
             printf '%s' "$1" | grep -Eq '^[0-9]+$' && printf '%s' "$1" || printf '0'
           }
           database_size_bytes="$(numeric_or_zero "$DATABASE_SIZE_BYTES")"
+          logs_size_bytes="$(numeric_or_zero "$LOGS_SIZE_BYTES")"
           storage_size_bytes="$(numeric_or_zero "$STORAGE_SIZE_BYTES")"
-          protected_size_bytes="$((database_size_bytes + storage_size_bytes))"
+          protected_size_bytes="$((database_size_bytes + logs_size_bytes + storage_size_bytes))"
           protected_file_count="$(numeric_or_zero "$PROTECTED_FILE_COUNT")"
           database_restore_duration_seconds="$(numeric_or_zero "$DATABASE_RESTORE_DURATION_SECONDS")"
           [ "$DATABASE_RESTORE_VERIFIED" = "true" ] || DATABASE_RESTORE_VERIFIED="false"
@@ -376,9 +382,9 @@ jobs:
             integral_recovery_duration_seconds="null"
           fi
           if [ "$storage_status" = "SUCCESS" ]; then
-            compression_algorithm="PostgreSQL custom nivel 9 y gzip"
+            compression_algorithm="PostgreSQL custom nivel 9 y gzip (archivos y logs)"
           else
-            compression_algorithm="PostgreSQL custom nivel 9"
+            compression_algorithm="PostgreSQL custom nivel 9 y gzip (logs)"
           fi
 
           payload="$(jq -n \
