@@ -22,7 +22,11 @@ jq -e --arg huellaFirma "$GPG_SIGNING_FINGERPRINT" '
   (.clave_de_firma == $huellaFirma) and
   (.recovery_point_id | type == "string") and
   (.politica_retencion | IN("p01", "p02", "p03")) and
-  (.componentes == ["data-01.gpg", "meta-01.gpg", "data-02.gpg", "meta-02.gpg"])
+  (.componentes == [
+    "data-01.gpg", "meta-01.gpg",
+    "data-02.gpg", "meta-02.gpg",
+    "data-03.gpg", "meta-03.gpg"
+  ])
 ' "$TRABAJO/punto.json" > /dev/null || {
   echo "El marcador firmado no describe un punto de recuperación completo válido." >&2
   exit 6

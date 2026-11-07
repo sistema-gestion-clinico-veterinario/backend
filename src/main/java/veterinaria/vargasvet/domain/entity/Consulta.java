@@ -40,6 +40,10 @@ public class Consulta {
     @JoinColumn(name = "veterinario_id")
     private Empleado veterinario;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "clinical_template_id")
+    private ClinicalTemplate clinicalTemplate;
+
     @Column(name = "fecha_consulta", nullable = false)
     private LocalDateTime fechaConsulta;
 

@@ -24,6 +24,17 @@ class PaginationParameterFilterTest {
     }
 
     @Test
+    void acceptsTheExactMaximumPageSize() throws Exception {
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(request("0", "100"), response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        assertThat(chain.getRequest()).isNotNull();
+    }
+
+    @Test
     void rejectsOversizedPage() throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain chain = new MockFilterChain();

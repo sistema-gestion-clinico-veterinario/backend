@@ -35,6 +35,8 @@ public class ConsultaServiceImpl implements ConsultaService {
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
     private final AccesoValidator accesoValidator;
     @org.springframework.beans.factory.annotation.Autowired
+    private veterinaria.vargasvet.service.ClinicalTemplateService clinicalTemplateService;
+    @org.springframework.beans.factory.annotation.Autowired
     private veterinaria.vargasvet.repository.ControlPreventivoRepository controlPreventivoRepository;
     @org.springframework.beans.factory.annotation.Autowired
     private veterinaria.vargasvet.service.ControlPreventivoService controlPreventivoService;
@@ -70,6 +72,9 @@ public class ConsultaServiceImpl implements ConsultaService {
         actualizarDatosClinicos(consulta, request);
 
         Consulta savedConsulta = consultaRepository.saveAndFlush(consulta);
+        if (clinicalTemplateService != null) {
+            clinicalTemplateService.saveAnswers(savedConsulta, request.getCustomAnswers(), false);
+        }
 
         auditLogService.log(
             "ACTUALIZAR_CONSULTA",
@@ -77,7 +82,7 @@ public class ConsultaServiceImpl implements ConsultaService {
             "Se actualizaron los datos clínicos de la consulta de la mascota " + consulta.getHistoriaClinica().getMascota().getNombreCompleto() + " atendida por " + (consulta.getVeterinario().getUser() != null ? (consulta.getVeterinario().getUser().getNombre() + " " + consulta.getVeterinario().getUser().getApellido()) : "sin usuario") + " el " + consulta.getFechaConsulta()
         );
 
-        return consultaMapper.toResponse(savedConsulta);
+        return toResponseWithClinicalData(savedConsulta);
     }
 
     private void actualizarDatosClinicos(Consulta consulta, ConsultaRequest request) {
@@ -127,7 +132,7 @@ public class ConsultaServiceImpl implements ConsultaService {
             }
         }
 
-        return consultaMapper.toResponse(consulta);
+        return toResponseWithClinicalData(consulta);
     }
 
     private void exigirMismaEmpresa(Consulta consulta, String mensaje) {
@@ -170,6 +175,9 @@ public class ConsultaServiceImpl implements ConsultaService {
 
         actualizarDatosClinicos(consulta, request);
         validarCamposObligatorios(consulta);
+        if (clinicalTemplateService != null) {
+            clinicalTemplateService.saveAnswers(consulta, request.getCustomAnswers(), true);
+        }
         registrarAplicacionesPreventivas(id, consulta, request);
 
         consulta.setEstado(EstadoConsulta.CERRADA);
@@ -191,7 +199,7 @@ public class ConsultaServiceImpl implements ConsultaService {
             "Se cerró la consulta de la mascota " + consulta.getHistoriaClinica().getMascota().getNombreCompleto() + " por el veterinario " + consulta.getCerradoPor()
         );
 
-        return consultaMapper.toResponse(savedConsulta);
+        return toResponseWithClinicalData(savedConsulta);
     }
 
     @Override
@@ -220,7 +228,19 @@ public class ConsultaServiceImpl implements ConsultaService {
                 + " (cerrada previamente por " + consulta.getCerradoPor() + ") — reabierta por " + SecurityUtils.getCurrentUserEmail()
         );
 
-        return consultaMapper.toResponse(savedConsulta);
+        return toResponseWithClinicalData(savedConsulta);
+    }
+
+    private ConsultaResponse toResponseWithClinicalData(Consulta consulta) {
+        ConsultaResponse response = consultaMapper.toResponse(consulta);
+        if (consulta.getClinicalTemplate() != null) {
+            response.setClinicalTemplateId(consulta.getClinicalTemplate().getId());
+            response.setClinicalTemplateVersion(consulta.getClinicalTemplate().getVersion());
+        }
+        response.setCustomAnswers(clinicalTemplateService == null
+                ? java.util.List.of()
+                : clinicalTemplateService.answers(consulta.getId()));
+        return response;
     }
 
     private void validarCamposObligatorios(Consulta consulta) {
