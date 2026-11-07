@@ -36,6 +36,7 @@ public class CompanyServiceImpl implements CompanyService {
     private final CompanyOperatingHourRepository companyOperatingHourRepository;
     private final BusinessValidator businessValidator;
     private final CompanyRoleProvisioningService companyRoleProvisioningService;
+    private final veterinaria.vargasvet.service.ClinicalTemplateService clinicalTemplateService;
     private final AuditLogService auditLogService;
 
     @Override
@@ -114,6 +115,11 @@ public class CompanyServiceImpl implements CompanyService {
         company.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
         Company savedCompany = companyRepository.save(company);
         companyRoleProvisioningService.ensureRequiredRoles(savedCompany);
+        // Algunos consumidores y pruebas unitarias construyen este servicio sin el
+        // provisionador opcional. En ejecución normal Spring siempre lo inyecta.
+        if (clinicalTemplateService != null) {
+            clinicalTemplateService.provisionDefault(savedCompany);
+        }
         saveOperatingHours(savedCompany, dto.getOperatingHours());
 
         auditLogService.log(savedCompany.getId(), "CREAR_EMPRESA", "Empresa",

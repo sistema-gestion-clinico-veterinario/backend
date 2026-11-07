@@ -24,6 +24,8 @@ import veterinaria.vargasvet.security.SessionCookies;
 import veterinaria.vargasvet.security.JwtAuthenticationEntryPoint;
 import veterinaria.vargasvet.security.CookieSecurityFilter;
 import veterinaria.vargasvet.security.BackupReportTokenFilter;
+import veterinaria.vargasvet.security.RequestTraceFilter;
+import veterinaria.vargasvet.security.RateLimitFilter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +42,7 @@ public class WebSecurityConfig {
     private final veterinaria.vargasvet.security.RateLimitFilter rateLimitFilter;
     private final CookieSecurityFilter cookieSecurityFilter;
     private final BackupReportTokenFilter backupReportTokenFilter;
+    private final RequestTraceFilter requestTraceFilter;
 
     @Value("${cors.allowed-origins:https://systemvetfrontend.vercel.app,http://localhost:4200}")
     private String allowedOriginsRaw;
@@ -147,11 +150,14 @@ public class WebSecurityConfig {
         // de cookies porque Spring solo conoce el orden de un filtro personalizado una vez añadido.
         http.addFilterBefore(backupReportTokenFilter, CookieSecurityFilter.class);
 
-        // Rate Limit Filter (despues de JWT, para poder limitar por usuario autenticado)
+        // Correlacionar después de JWT permite asociar empresa y usuario autenticado.
         http.addFilterAfter(
-                rateLimitFilter,
+                requestTraceFilter,
                 JWTFilter.class
         );
+
+        // Rate limit queda dentro de la traza para registrar también sus rechazos.
+        http.addFilterAfter(rateLimitFilter, RequestTraceFilter.class);
 
         return http.build();
     }
@@ -183,7 +189,10 @@ public class WebSecurityConfig {
                 "Authorization",
                 "X-Requested-With",
                 JWTFilter.COMPANY_HEADER,
-                SessionCookies.SLUG_HEADER));
+                SessionCookies.SLUG_HEADER,
+                RequestTraceFilter.HEADER));
+
+        config.setExposedHeaders(List.of(RequestTraceFilter.HEADER));
 
         config.setAllowCredentials(true);
 
@@ -214,6 +223,11 @@ public class WebSecurityConfig {
     @Bean
     public FilterRegistrationBean<veterinaria.vargasvet.security.RateLimitFilter> rateLimitFilterRegistration(
             veterinaria.vargasvet.security.RateLimitFilter filter) {
+        return securityFilterRegistration(filter);
+    }
+
+    @Bean
+    public FilterRegistrationBean<RequestTraceFilter> requestTraceFilterRegistration(RequestTraceFilter filter) {
         return securityFilterRegistration(filter);
     }
 

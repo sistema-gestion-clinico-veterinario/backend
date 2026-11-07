@@ -63,4 +63,7 @@ public class ConsultaResponse {
     private String cerradoPor;
     private String indicacionesReceta;
     private List<PrescripcionResumenResponse> prescripciones;
+    private Long clinicalTemplateId;
+    private Integer clinicalTemplateVersion;
+    private List<ClinicalFieldAnswerResponse> customAnswers;
 }

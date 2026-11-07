@@ -42,7 +42,7 @@ esac
 
 TRABAJO="$(mktemp -d)"
 export GNUPGHOME="$TRABAJO/gnupg"
-mkdir -p "$GNUPGHOME" "$TRABAJO/cifrados" "$TRABAJO/restaurado/archivos"
+mkdir -p "$GNUPGHOME" "$TRABAJO/cifrados" "$TRABAJO/restaurado/archivos" "$TRABAJO/restaurado/logs"
 INICIO_EPOCH="$(date +%s)"
 CARPETA_REMOTA="$BACKUP_RETENTION_POLICY/$BACKUP_RECOVERY_POINT_ID"
 
@@ -120,7 +120,7 @@ descifrar_manifesto_firmado() {
   fi
 }
 
-for nombre in data-01.gpg meta-01.gpg data-02.gpg meta-02.gpg meta.gpg; do
+for nombre in data-01.gpg meta-01.gpg data-02.gpg meta-02.gpg data-03.gpg meta-03.gpg meta.gpg; do
   echo "Descargando $nombre del punto de recuperación..."
   destino_descargar "$CARPETA_REMOTA/$nombre" "$TRABAJO/cifrados/$nombre"
 done
@@ -130,7 +130,7 @@ descifrar_manifesto_firmado "$TRABAJO/cifrados/meta.gpg" "$TRABAJO/punto.json" |
 }
 jq -e --arg punto "$BACKUP_RECOVERY_POINT_ID" \
   '.recovery_point_id == $punto and .estado == "COMPLETO" and
-   ((.componentes | sort) == (["data-01.gpg","data-02.gpg","meta-01.gpg","meta-02.gpg"] | sort))' \
+   ((.componentes | sort) == (["data-01.gpg","data-02.gpg","data-03.gpg","meta-01.gpg","meta-02.gpg","meta-03.gpg"] | sort))' \
   "$TRABAJO/punto.json" > /dev/null || {
   echo "El punto almacenado no está completo o no corresponde a la ejecución." >&2; exit 7;
 }
@@ -140,6 +140,9 @@ descifrar_manifesto_firmado "$TRABAJO/cifrados/meta-01.gpg" "$TRABAJO/base.json"
 }
 descifrar_manifesto_firmado "$TRABAJO/cifrados/meta-02.gpg" "$TRABAJO/archivos.json" || {
   echo "No se pudo validar el manifiesto de archivos." >&2; exit 6;
+}
+descifrar_manifesto_firmado "$TRABAJO/cifrados/meta-03.gpg" "$TRABAJO/logs.json" || {
+  echo "No se pudo validar el manifiesto de logs." >&2; exit 6;
 }
 
 validar_componente() {
@@ -158,9 +161,13 @@ validar_componente "$TRABAJO/base.json" BASE_DATOS "$TRABAJO/cifrados/data-01.gp
 validar_componente "$TRABAJO/archivos.json" STORAGE "$TRABAJO/cifrados/data-02.gpg" || {
   echo "El respaldo cifrado de archivos no coincide con su manifiesto firmado." >&2; exit 7;
 }
+validar_componente "$TRABAJO/logs.json" LOGS "$TRABAJO/cifrados/data-03.gpg" || {
+  echo "El respaldo cifrado de logs no coincide con su manifiesto firmado." >&2; exit 7;
+}
 
 descifrar "$TRABAJO/cifrados/data-01.gpg" "$TRABAJO/restaurado/base.dump"
 descifrar "$TRABAJO/cifrados/data-02.gpg" "$TRABAJO/restaurado/archivos.tar.gz"
+descifrar "$TRABAJO/cifrados/data-03.gpg" "$TRABAJO/restaurado/logs.tar.gz"
 pg_restore --list "$TRABAJO/restaurado/base.dump" > /dev/null
 
 echo "Restaurando la base descargada en PostgreSQL aislado..."
@@ -251,9 +258,30 @@ if [ "$(printf '%s\n' "${BUCKETS_MANIFIESTO[@]}" | LC_ALL=C sort)" != \
   exit 5
 fi
 
+echo "Verificando el respaldo independiente de logs..."
+mapfile -t ENTRADAS_LOGS < <(tar -tzf "$TRABAJO/restaurado/logs.tar.gz" | sed 's#^\./##' | LC_ALL=C sort)
+[ "$(printf '%s\n' "${ENTRADAS_LOGS[@]}")" = $'audit_logs.jsonl\nsystem_logs.jsonl' ] || {
+  echo "El paquete de logs contiene rutas o archivos no autorizados." >&2; exit 5;
+}
+tar -C "$TRABAJO/restaurado/logs" -xzf "$TRABAJO/restaurado/logs.tar.gz" \
+  --no-same-owner --no-same-permissions
+for nombre in audit_logs.jsonl system_logs.jsonl; do
+  [ -f "$TRABAJO/restaurado/logs/$nombre" ] || {
+    echo "Falta $nombre en el respaldo de logs." >&2; exit 5;
+  }
+  esperado_hash="$(jq -r --arg nombre "$nombre" '.archivos[$nombre]' "$TRABAJO/logs.json")"
+  [ "$(sha256sum "$TRABAJO/restaurado/logs/$nombre" | cut -d' ' -f1)" = "$esperado_hash" ] || {
+    echo "La integridad de $nombre no coincide con el manifiesto." >&2; exit 5;
+  }
+done
+AUDIT_LOGS_RESTAURADOS="$(wc -l < "$TRABAJO/restaurado/logs/audit_logs.jsonl" | tr -d ' ')"
+SYSTEM_LOGS_RESTAURADOS="$(wc -l < "$TRABAJO/restaurado/logs/system_logs.jsonl" | tr -d ' ')"
+[ "$AUDIT_LOGS_RESTAURADOS" = "$(jq -r '.registros.audit_logs' "$TRABAJO/logs.json")" ] || exit 5
+[ "$SYSTEM_LOGS_RESTAURADOS" = "$(jq -r '.registros.system_logs' "$TRABAJO/logs.json")" ] || exit 5
+
 DURACION="$(( $(date +%s) - INICIO_EPOCH ))"
 if [ -n "${GITHUB_OUTPUT:-}" ]; then
   echo "integral_recovery_verified=true" >> "$GITHUB_OUTPUT"
   echo "integral_recovery_duration_seconds=$DURACION" >> "$GITHUB_OUTPUT"
 fi
-echo "Recuperación integral verificada desde el repositorio remoto: base y $RESTAURADOS archivos en ${DURACION}s."
+echo "Recuperación integral verificada: base, $RESTAURADOS archivos y $((AUDIT_LOGS_RESTAURADOS + SYSTEM_LOGS_RESTAURADOS)) logs en ${DURACION}s."

@@ -3,6 +3,7 @@ package veterinaria.vargasvet.service;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -103,5 +104,28 @@ class AuditoriaConDispositivoTest {
         ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
         verify(auditoria).save(captor.capture());
         assertThat(captor.getValue().getDispositivo()).isEqualTo("Chrome en Windows");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void unLoginFallidoConservaLaCorrelacionYElResultadoReal() {
+        AuditLogRepository auditoria = mock(AuditLogRepository.class);
+        when(auditoria.save(any(AuditLog.class))).thenAnswer(i -> i.getArgument(0));
+        ObjectProvider<HttpServletRequest> proveedor = mock(ObjectProvider.class);
+        when(proveedor.getIfAvailable()).thenReturn(new MockHttpServletRequest());
+        AuthenticationAuditService servicioDeInicio = new AuthenticationAuditService(auditoria,
+                mock(AuditRealtimePublisher.class), proveedor, mock(ClientIpResolver.class), mock(AccountLockoutService.class));
+
+        MDC.put("correlationId", "login-prueba-0001");
+        try {
+            servicioDeInicio.recordLoginFailure(null, "desconocido", "credenciales inválidas");
+        } finally {
+            MDC.remove("correlationId");
+        }
+
+        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
+        verify(auditoria).save(captor.capture());
+        assertThat(captor.getValue().getCorrelationId()).isEqualTo("login-prueba-0001");
+        assertThat(captor.getValue().getOutcome()).isEqualTo("FAILED");
     }
 }

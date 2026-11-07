@@ -31,6 +31,8 @@ public class AuditRealtimePublisher {
                         .details(saved.getDetails())
                         .ipAddress(saved.getIpAddress())
                         .dispositivo(saved.getDispositivo())
+                        .correlationId(saved.getCorrelationId())
+                        .outcome(saved.getOutcome())
                         .build();
 
                 messagingTemplate.convertAndSend("/topic/audit-logs", dto);

@@ -53,11 +53,54 @@ psql --dbname="$(url origen)" --no-psqlrc -q -v ON_ERROR_STOP=1 <<'SQL'
 CREATE TABLE company (id serial PRIMARY KEY, name text NOT NULL);
 CREATE TABLE usuario (id serial PRIMARY KEY, nombre text NOT NULL, company_id int REFERENCES company(id));
 CREATE TABLE historia (id serial PRIMARY KEY, usuario_id int REFERENCES usuario(id), nota text, imagen bytea);
+CREATE TABLE audit_logs (
+  id bigserial PRIMARY KEY,
+  timestamp timestamp NOT NULL,
+  correlation_id varchar(100),
+  outcome varchar(16) NOT NULL,
+  user_email varchar(255),
+  user_role varchar(100),
+  company_id bigint,
+  company_name varchar(255),
+  action varchar(100),
+  module varchar(100),
+  details text,
+  ip_address varchar(64),
+  dispositivo varchar(255)
+);
+CREATE TABLE system_logs (
+  id bigserial PRIMARY KEY,
+  timestamp timestamp NOT NULL,
+  correlation_id varchar(100) NOT NULL,
+  category varchar(50) NOT NULL,
+  event varchar(100) NOT NULL,
+  outcome varchar(16) NOT NULL,
+  http_method varchar(10),
+  request_path varchar(500),
+  status_code int,
+  duration_ms bigint,
+  user_email varchar(255),
+  company_id bigint,
+  ip_address varchar(64),
+  dispositivo varchar(255),
+  error_type varchar(255)
+);
 CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
 CREATE INDEX idx_usuario_nombre_trgm ON usuario USING gin (lower(nombre) public.gin_trgm_ops);
 INSERT INTO company(name) SELECT 'Clínica ' || g FROM generate_series(1, 3) g;
 INSERT INTO usuario(nombre, company_id) SELECT 'Peña Núñez ' || g, 1 + g % 3 FROM generate_series(1, 250) g;
 INSERT INTO historia(usuario_id, nota, imagen) SELECT 1 + g % 250, 'Control ñandú ' || g, decode(md5(g::text), 'hex') FROM generate_series(1, 1000) g;
+INSERT INTO audit_logs(timestamp, correlation_id, outcome, user_email, user_role, company_id,
+                       company_name, action, module, details, ip_address, dispositivo)
+VALUES (CURRENT_TIMESTAMP, 'prueba-auditoria-0001', 'SUCCESS', 'operador@softvet.test',
+        'ROLE_ADMIN', 1, 'Clínica 1', 'REGISTRAR_PAGO', 'Caja',
+        'Pago de prueba registrado', '127.0.0.1', 'Navegador de prueba');
+INSERT INTO system_logs(timestamp, correlation_id, category, event, outcome, http_method,
+                        request_path, status_code, duration_ms, user_email, company_id,
+                        ip_address, dispositivo)
+VALUES (CURRENT_TIMESTAMP, 'prueba-auditoria-0001', 'HTTP', 'HTTP_REQUEST', 'SUCCESS', 'POST',
+        '/api/v1/pagos', 201, 42, 'operador@softvet.test', 1, '127.0.0.1',
+        'Navegador de prueba');
 SQL
 
 echo "Generando una clave de prueba..."
@@ -71,6 +114,7 @@ HUELLA_FIRMA="$(gpg --batch --with-colons --list-keys firma@softvet.test | awk -
 CLAVE_FIRMA_PUBLICA="$(gpg --armor --export firma@softvet.test)"
 CLAVE_FIRMA_PRIVADA="$(gpg --batch --pinentry-mode loopback --passphrase "$FRASE_FIRMA" --armor --export-secret-keys firma@softvet.test)"
 SALIDA="$T/salida"
+RECOVERY_POINT_ID="11111111-2222-4333-8444-555555555555"
 
 echo "Respaldo completo"
 verificar "respalda, restaura en la base de verificación y cifra" env \
@@ -78,6 +122,7 @@ verificar "respalda, restaura en la base de verificación y cifra" env \
   GPG_EXPECTED_FINGERPRINT="$HUELLA_ESPERADA" \
   GPG_SIGNING_PRIVATE_KEY="$CLAVE_FIRMA_PRIVADA" GPG_EXPECTED_SIGNING_FINGERPRINT="$HUELLA_FIRMA" \
   GPG_SIGNING_PASSPHRASE="$FRASE_FIRMA" \
+  BACKUP_RECOVERY_POINT_ID="$RECOVERY_POINT_ID" BACKUP_RETENTION_POLICY="p01" \
   BACKUP_SKIP_UPLOAD=1 BACKUP_OUT_DIR="$SALIDA" bash "$AQUI/respaldar-base.sh"
 
 CIFRADO="$SALIDA/data-01.gpg"
@@ -154,16 +199,31 @@ aws() {
 }
 export -f aws
 
-SALIDA_STORAGE="$T/salida-storage"
+echo "Respaldo cifrado de logs"
+verificar "exporta y cifra la auditoría funcional y técnica" env \
+  BACKUP_DB_URL="$(url origen)" GPG_PUBLIC_KEY="$CLAVE_PUBLICA" \
+  GPG_EXPECTED_FINGERPRINT="$HUELLA_ESPERADA" \
+  GPG_SIGNING_PRIVATE_KEY="$CLAVE_FIRMA_PRIVADA" GPG_EXPECTED_SIGNING_FINGERPRINT="$HUELLA_FIRMA" \
+  GPG_SIGNING_PASSPHRASE="$FRASE_FIRMA" \
+  BACKUP_RECOVERY_POINT_ID="$RECOVERY_POINT_ID" BACKUP_RETENTION_POLICY="p01" \
+  BACKUP_SKIP_UPLOAD=1 BACKUP_OUT_DIR="$SALIDA" bash "$AQUI/respaldar-logs.sh"
+verificar "genera datos y manifiesto cifrados para logs" test \
+  -s "$SALIDA/data-03.gpg" -a -s "$SALIDA/meta-03.gpg"
+
+SALIDA_STORAGE="$SALIDA"
 verificar "cifra dos buckets y genera un punto de recuperación" env \
   SUPABASE_S3_ENDPOINT="https://storage.test" SUPABASE_S3_ACCESS_KEY="prueba" SUPABASE_S3_SECRET_KEY="prueba" \
   SUPABASE_BUCKETS="documentos,imagenes" GPG_PUBLIC_KEY="$CLAVE_PUBLICA" \
   GPG_EXPECTED_FINGERPRINT="$HUELLA_ESPERADA" BACKUP_SKIP_UPLOAD=1 BACKUP_OUT_DIR="$SALIDA_STORAGE" \
   GPG_SIGNING_PRIVATE_KEY="$CLAVE_FIRMA_PRIVADA" GPG_EXPECTED_SIGNING_FINGERPRINT="$HUELLA_FIRMA" \
   GPG_SIGNING_PASSPHRASE="$FRASE_FIRMA" \
+  BACKUP_RECOVERY_POINT_ID="$RECOVERY_POINT_ID" BACKUP_RETENTION_POLICY="p01" \
   bash "$AQUI/respaldar-archivos.sh"
-verificar "genera datos, manifiesto y marcador cifrados" test \
-  -s "$SALIDA_STORAGE/data-02.gpg" -a -s "$SALIDA_STORAGE/meta-02.gpg" -a -s "$SALIDA_STORAGE/meta.gpg"
+verificar "genera los seis componentes y el marcador cifrado" test \
+  -s "$SALIDA_STORAGE/data-01.gpg" -a -s "$SALIDA_STORAGE/meta-01.gpg" -a \
+  -s "$SALIDA_STORAGE/data-02.gpg" -a -s "$SALIDA_STORAGE/meta-02.gpg" -a \
+  -s "$SALIDA_STORAGE/data-03.gpg" -a -s "$SALIDA_STORAGE/meta-03.gpg" -a \
+  -s "$SALIDA_STORAGE/meta.gpg"
 MANIFIESTO_STORAGE="$T/manifest-storage.json"
 gpg --batch --yes --quiet --decrypt --output "$MANIFIESTO_STORAGE" "$SALIDA_STORAGE/meta-02.gpg"
 verificar "registra los dos buckets sin exponerlos en el nombre remoto" test "$(jq '.buckets | length' "$MANIFIESTO_STORAGE")" = "2"

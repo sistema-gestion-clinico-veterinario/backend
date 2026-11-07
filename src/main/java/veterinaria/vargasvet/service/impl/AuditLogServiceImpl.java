@@ -18,6 +18,7 @@ import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.AuditRealtimePublisher;
 import java.time.LocalDateTime;
+import org.slf4j.MDC;
 
 @Service
 @RequiredArgsConstructor
@@ -124,6 +125,8 @@ public class AuditLogServiceImpl implements AuditLogService {
                 .details(details)
                 .ipAddress(ipAddress != null ? ipAddress : getClientIp())
                 .dispositivo(getDispositivo())
+                .correlationId(MDC.get("correlationId"))
+                .outcome("SUCCESS")
                 .build();
 
         AuditLog saved = auditLogRepository.save(auditLog);
