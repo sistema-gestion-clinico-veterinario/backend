@@ -10,6 +10,7 @@ import lombok.ToString;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import veterinaria.vargasvet.domain.enums.ModoAccesoPropietario;
 
 @Data
 @Entity
@@ -54,6 +55,10 @@ public class Company {
 
     @Column(name = "activo", nullable = false)
     private boolean activo = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "modo_acceso_propietario", nullable = false, length = 32)
+    private ModoAccesoPropietario modoAccesoPropietario = ModoAccesoPropietario.PORTAL_POR_DEFECTO;
 
     @JsonIgnore
     @ToString.Exclude

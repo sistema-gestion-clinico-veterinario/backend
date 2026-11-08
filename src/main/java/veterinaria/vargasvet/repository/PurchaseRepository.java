@@ -18,6 +18,10 @@ import java.util.List;
 @Repository
 public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
 
+    Optional<Purchase> findByCompanyIdAndIdempotencyKey(Integer companyId, String idempotencyKey);
+
+    Optional<Purchase> findByIdAndCompanyId(Long id, Integer companyId);
+
     Optional<Purchase> findTopByCitaIdAndTipoPurchaseOrderByCreatedAtDesc(Long citaId, TipoPurchase tipoPurchase);
 
     List<Purchase> findByCitaIdAndTipoPurchaseAndPaymentStatusNot(

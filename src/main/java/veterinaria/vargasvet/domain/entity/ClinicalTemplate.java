@@ -8,7 +8,9 @@ import veterinaria.vargasvet.domain.enums.ClinicalTemplateStatus;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -28,6 +30,18 @@ public class ClinicalTemplate {
 
     @Column(name = "name", nullable = false, length = 160)
     private String name;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "applicable_species", length = 300)
+    private String applicableSpecies;
+
+    @Column(name = "is_default", nullable = false)
+    private boolean defaultTemplate;
+
+    @Column(name = "active", nullable = false)
+    private boolean active = true;
 
     @Column(name = "version", nullable = false)
     private Integer version;
@@ -56,6 +70,13 @@ public class ClinicalTemplate {
     @OrderBy("displayOrder ASC")
     @BatchSize(size = 32)
     private List<ClinicalTemplateSection> sections = new ArrayList<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "clinical_template_service",
+            joinColumns = @JoinColumn(name = "template_id"),
+            inverseJoinColumns = @JoinColumn(name = "service_id"))
+    @OrderBy("nombre ASC")
+    private Set<ServiciosVeterinarios> services = new LinkedHashSet<>();
 
     @PrePersist
     void onCreate() {

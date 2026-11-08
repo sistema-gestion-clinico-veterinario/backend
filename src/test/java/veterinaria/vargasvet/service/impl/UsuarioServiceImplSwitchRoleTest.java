@@ -22,6 +22,7 @@ import veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.RoleScope;
+import veterinaria.vargasvet.domain.enums.EstadoAccesoPortalPropietario;
 import veterinaria.vargasvet.dto.response.AuthResponse;
 import veterinaria.vargasvet.repository.ApoderadoRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
@@ -254,6 +255,8 @@ class UsuarioServiceImplSwitchRoleTest {
         when(apoderadoRepository.existsByUserIdAndCompanyId(10, COMPANY_ID)).thenReturn(true);
         when(empleadoRepository.existsByUserIdAndCompanyIdAndEstadoTrue(10, COMPANY_ID)).thenReturn(false);
         when(apoderadoRepository.existsByUserIdAndCompanyIdAndEstadoTrue(10, COMPANY_ID)).thenReturn(true);
+        when(apoderadoRepository.existsByUserIdAndCompanyIdAndEstadoTrueAndEstadoAccesoPortal(
+                10, COMPANY_ID, EstadoAccesoPortalPropietario.ACTIVO)).thenReturn(true);
 
         AuthResponse response = service.switchRole(10, 3);
 

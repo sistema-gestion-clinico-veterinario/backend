@@ -38,6 +38,7 @@ public class CompanyServiceImpl implements CompanyService {
     private final CompanyRoleProvisioningService companyRoleProvisioningService;
     private final veterinaria.vargasvet.service.ClinicalTemplateService clinicalTemplateService;
     private final AuditLogService auditLogService;
+    private final veterinaria.vargasvet.service.PortalPropietarioPolicyService portalPropietarioPolicyService;
 
     @Override
     public CompanyDTO getCompanyInfo() {
@@ -137,6 +138,8 @@ public class CompanyServiceImpl implements CompanyService {
         if (!company.isActivo() && !SecurityUtils.isSuperAdmin()) {
             throw new IllegalStateException("La empresa está inactiva. Solo un super administrador puede modificarla.");
         }
+        veterinaria.vargasvet.domain.enums.ModoAccesoPropietario modoAnterior =
+                company.getModoAccesoPropietario();
         updateEntityFromDTO(company, dto);
         if (dto.getSlug() != null && !dto.getSlug().isBlank()
                 && !slugify(dto.getSlug()).equals(company.getSlug())) {
@@ -149,10 +152,15 @@ public class CompanyServiceImpl implements CompanyService {
         company.setUpdatedAt(LocalDateTime.now());
         company.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
         Company savedCompany = companyRepository.save(company);
+        int accesosRevocados = portalPropietarioPolicyService.aplicarCambio(
+                savedCompany, modoAnterior, savedCompany.getModoAccesoPropietario());
         saveOperatingHours(savedCompany, dto.getOperatingHours());
 
         auditLogService.log(savedCompany.getId(), "ACTUALIZAR_EMPRESA", "Empresa",
-                "Se actualizó la configuración de la empresa " + savedCompany.getName());
+                "Se actualizó la configuración de la empresa " + savedCompany.getName()
+                        + (accesosRevocados > 0
+                            ? ". Accesos de propietarios revocados: " + accesosRevocados
+                            : ""));
 
         return mapToDTO(savedCompany);
     }
@@ -214,6 +222,9 @@ public class CompanyServiceImpl implements CompanyService {
         company.setWebsite(dto.getWebsite());
         company.setDescription(dto.getDescription());
         company.setBusinessHours(dto.getBusinessHours());
+        if (dto.getModoAccesoPropietario() != null) {
+            company.setModoAccesoPropietario(dto.getModoAccesoPropietario());
+        }
         if (dto.getColorPrimario() != null && !dto.getColorPrimario().isBlank()) {
             company.setColorPrimario(dto.getColorPrimario());
         }
@@ -300,6 +311,7 @@ public class CompanyServiceImpl implements CompanyService {
         dto.setBusinessHours(company.getBusinessHours());
         dto.setSlug(company.getSlug());
         dto.setColorPrimario(company.getColorPrimario());
+        dto.setModoAccesoPropietario(company.getModoAccesoPropietario());
         dto.setCreatedAt(company.getCreatedAt());
         dto.setUpdatedAt(company.getUpdatedAt());
         dto.setCreatedBy(company.getCreatedBy());

@@ -10,7 +10,9 @@ import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.domain.enums.MetodoPago;
 import veterinaria.vargasvet.domain.enums.PaymentStatus;
 import veterinaria.vargasvet.domain.enums.TipoPurchase;
+import veterinaria.vargasvet.domain.enums.ReceiptStatus;
 import veterinaria.vargasvet.dto.request.PagoRequest;
+import veterinaria.vargasvet.dto.request.ReceiptResultRequest;
 import veterinaria.vargasvet.dto.response.PagoResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CitaRepository;
@@ -41,8 +43,20 @@ public class PagoServiceImpl implements PagoService {
 
     @Override
     @Transactional
-    public PagoResponse registrar(PagoRequest request) {
+    public PagoResponse registrar(PagoRequest request, String idempotencyKey) {
         Cita cita = findAccessibleCita(request.getCitaId(), true);
+        Integer companyId = getCitaCompanyId(cita);
+        String normalizedKey = normalizeIdempotencyKey(idempotencyKey);
+        if (normalizedKey != null) {
+            Purchase existing = purchaseRepository.findByCompanyIdAndIdempotencyKey(companyId, normalizedKey)
+                    .orElse(null);
+            if (existing != null) {
+                if (existing.getCita() == null || !existing.getCita().getId().equals(cita.getId())) {
+                    throw new IllegalArgumentException("La clave de operación ya fue utilizada para otro pago");
+                }
+                return toResponse(existing, calculateChange(existing));
+            }
+        }
 
         if (cita.getEstado() == EstadoCita.CANCELADA || cita.getEstado() == EstadoCita.NO_ASISTIO) {
             throw new IllegalArgumentException("No se puede registrar un pago para una cita con estado: " + cita.getEstado());
@@ -97,22 +111,61 @@ public class PagoServiceImpl implements PagoService {
         pago.setMercadoPagoId(mercadoPagoId);
         pago.setMpStatus(mpStatus);
         pago.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
+        pago.setCompany(cita.getMascota().getApoderado().getCompany());
+        usuarioRepository.findById(SecurityUtils.getCurrentUserId()).ifPresent(pago::setUser);
+        pago.setIdempotencyKey(normalizedKey);
+        pago.setBusinessTraceId(cita.getBusinessTraceId());
+        pago.setReceiptStatus(ReceiptStatus.PENDING);
+        pago.setReceiptAttempts(0);
 
         Purchase savedPago = purchaseRepository.save(pago);
 
         cita.setMontoPagado(pagadoActual.add(montoAplicado));
         citaRepository.save(cita);
 
-        auditLogService.log(
-            "REGISTRAR_PAGO",
-            "Facturación",
-            "Se registró un pago de S/ " + montoAplicado + " para la cita de la mascota " + cita.getMascota().getNombreCompleto() + " con método de pago: " + request.getMetodoPago()
-        );
+        auditLogService.logBusiness(companyId, "REGISTRAR_PAGO", "Facturación",
+                "Se registró el pago " + savedPago.getId() + " por S/ " + montoAplicado
+                        + " para la cita " + cita.getNumeroCita() + " mediante " + request.getMetodoPago(),
+                cita.getBusinessTraceId(), "PAGO", savedPago.getId().toString(),
+                "PENDIENTE", estado.name());
 
-        Integer companyId = getCitaCompanyId(cita);
         cajaService.registrarIngresoPorCita(cita, companyId, montoAplicado, request.getMetodoPago());
 
         return toResponse(savedPago, cambio);
+    }
+
+    @Override
+    @Transactional
+    public PagoResponse reportarComprobante(Long pagoId, ReceiptResultRequest request) {
+        Integer companyId = SecurityUtils.getCurrentCompanyId();
+        Purchase pago = SecurityUtils.isSuperAdmin()
+                ? purchaseRepository.findById(pagoId).orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado"))
+                : purchaseRepository.findByIdAndCompanyId(pagoId, companyId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado"));
+
+        ReceiptStatus previous = pago.getReceiptStatus();
+        pago.setReceiptAttempts((pago.getReceiptAttempts() == null ? 0 : pago.getReceiptAttempts()) + 1);
+        if (Boolean.TRUE.equals(request.getGenerated())) {
+            pago.setReceiptStatus(ReceiptStatus.GENERATED);
+            pago.setReceiptGeneratedAt(veterinaria.vargasvet.util.AppClock.now());
+            pago.setReceiptError(null);
+        } else {
+            // El pago permanece confirmado. El comprobante queda pendiente para reintento.
+            pago.setReceiptStatus(ReceiptStatus.PENDING);
+            pago.setReceiptError(request.getError() == null || request.getError().isBlank()
+                    ? "No se pudo generar el comprobante"
+                    : request.getError().trim());
+        }
+        Purchase saved = purchaseRepository.save(pago);
+        auditLogService.logBusiness(saved.getCompany() != null ? saved.getCompany().getId() : companyId,
+                Boolean.TRUE.equals(request.getGenerated()) ? "GENERAR_COMPROBANTE" : "COMPROBANTE_PENDIENTE",
+                "Facturación",
+                Boolean.TRUE.equals(request.getGenerated())
+                        ? "Se generó el comprobante del pago " + saved.getId()
+                        : "El comprobante del pago " + saved.getId() + " quedó pendiente de reintento",
+                saved.getBusinessTraceId(), "COMPROBANTE", saved.getId().toString(),
+                previous != null ? previous.name() : null, saved.getReceiptStatus().name());
+        return toResponse(saved, calculateChange(saved));
     }
 
     @Override
@@ -302,11 +355,27 @@ public class PagoServiceImpl implements PagoService {
     private Integer getCitaCompanyId(Cita cita) {
         try {
             if (cita.getMascota() != null && cita.getMascota().getApoderado() != null
-                    && cita.getMascota().getApoderado().getUser() != null
                     && cita.getMascota().getApoderado().getCompany() != null) {
                 return cita.getMascota().getApoderado().getCompany().getId();
             }
         } catch (Exception ignored) {}
+        return null;
+    }
+
+    private String normalizeIdempotencyKey(String key) {
+        if (key == null || key.isBlank()) return null;
+        String normalized = key.trim();
+        if (normalized.length() > 100 || !normalized.matches("[A-Za-z0-9._:-]+")) {
+            throw new IllegalArgumentException("La clave de idempotencia no es válida");
+        }
+        return normalized;
+    }
+
+    private BigDecimal calculateChange(Purchase pago) {
+        if (pago.getMontoRecibido() != null && pago.getTotal() != null
+                && pago.getMontoRecibido().compareTo(pago.getTotal()) > 0) {
+            return pago.getMontoRecibido().subtract(pago.getTotal());
+        }
         return null;
     }
 
@@ -358,6 +427,10 @@ public class PagoServiceImpl implements PagoService {
         response.setEstado(pago.getPaymentStatus());
         response.setMercadoPagoId(pago.getMercadoPagoId());
         response.setMpStatus(pago.getMpStatus());
+        response.setBusinessTraceId(pago.getBusinessTraceId());
+        response.setReceiptStatus(pago.getReceiptStatus());
+        response.setReceiptAttempts(pago.getReceiptAttempts());
+        response.setReceiptError(pago.getReceiptError());
         return response;
     }
 }

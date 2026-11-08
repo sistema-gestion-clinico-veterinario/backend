@@ -14,6 +14,7 @@ import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.CompanyRoleProvisioningService;
+import veterinaria.vargasvet.service.PortalPropietarioPolicyService;
 import veterinaria.vargasvet.util.BusinessValidator;
 
 import java.util.Optional;
@@ -38,6 +39,7 @@ class CompanyServiceImplTest {
     @Mock BusinessValidator businessValidator;
     @Mock CompanyRoleProvisioningService companyRoleProvisioningService;
     @Mock AuditLogService auditLogService;
+    @Mock PortalPropietarioPolicyService portalPropietarioPolicyService;
 
     @InjectMocks CompanyServiceImpl service;
 

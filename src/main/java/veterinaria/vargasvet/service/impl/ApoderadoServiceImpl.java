@@ -12,6 +12,9 @@ import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.enums.RoleScope;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.ModoAccesoPropietario;
+import veterinaria.vargasvet.domain.enums.EstadoAccesoPortalPropietario;
 import veterinaria.vargasvet.dto.request.ApoderadoRequest;
 import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
@@ -66,6 +69,8 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     private final veterinaria.vargasvet.service.CompanyMembershipService companyMembershipService;
     private final veterinaria.vargasvet.repository.CitaRepository citaRepository;
     private final veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
+    private final veterinaria.vargasvet.repository.UsuarioPorRolRepository usuarioPorRolRepository;
+    private final veterinaria.vargasvet.repository.PasswordResetTokenRepository passwordResetTokenRepository;
     private final UsuarioContactoService contactoService;
     private final veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
     private final veterinaria.vargasvet.service.AccountClosureGuard accountClosureGuard;
@@ -117,6 +122,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         businessValidator.checkCompanyActiva(companyIdToUse);
         Company companyToUse = companyRepository.findById(companyIdToUse)
                 .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
+        boolean habilitarPortal = debeHabilitarPortal(companyToUse, dto.getHabilitarAccesoPortal());
         consentimientoDatosService.exigirAltaValida(companyIdToUse,
                 veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS,
                 dto.getAvisoInformado());
@@ -133,7 +139,10 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         if (esUsuarioNuevo) {
             String username = dto.getUsername() == null ? null : dto.getUsername().trim().toLowerCase(java.util.Locale.ROOT);
             if (username == null || username.isBlank()) {
-                throw new IllegalArgumentException("El usuario es obligatorio para una persona nueva");
+                if (habilitarPortal) {
+                    throw new IllegalArgumentException("El usuario es obligatorio cuando se habilita el acceso al portal");
+                }
+                username = "contacto-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
             }
             if (usuarioRepository.existsByUsernameIgnoreCaseAndCompanyId(username, companyIdToUse)) {
                 throw new IllegalArgumentException("El usuario ya está en uso en esta empresa");
@@ -158,7 +167,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         }
 
         Set<Integer> requestedRoleIds = dto.getRoleIds();
-        if (requestedRoleIds == null || requestedRoleIds.isEmpty()) {
+        if (habilitarPortal && (requestedRoleIds == null || requestedRoleIds.isEmpty())) {
             Role defaultClientRole = companyRoleProvisioningService
                     .ensureRequiredRoles(companyToUse)
                     .clientPortal();
@@ -184,7 +193,7 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         // esta es su primera vez como cliente aqui, se le avisa por correo - de otro
         // modo no tiene forma de saber que ahora tambien tiene acceso como cliente, con
         // el mismo usuario y contraseña que ya usa en esta empresa.
-        if (!credencialRepository.existsByUsuarioIdAndCompanyId(savedUser.getId(), companyIdToUse)) {
+        if (habilitarPortal && !credencialRepository.existsByUsuarioIdAndCompanyId(savedUser.getId(), companyIdToUse)) {
             // Cada empresa tiene su propia credencial - aunque savedUser ya exista, su
             // primera relación con ESTA empresa recibe una contraseña temporal propia,
             // nunca la que ya usa en otra empresa.
@@ -206,11 +215,18 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         apoderado.setReferencias(dto.getReferencias());
         apoderado.setObservaciones(dto.getObservaciones());
         apoderado.setEstado(true);
+        apoderado.setEstadoAccesoPortal(habilitarPortal
+                ? estadoInicialAcceso(savedUser, companyToUse)
+                : EstadoAccesoPortalPropietario.SIN_ACCESO);
+        apoderado.setAccesoPortalModificadoEn(veterinaria.vargasvet.util.AppClock.now());
+        apoderado.setAccesoPortalModificadoPor(SecurityUtils.getCurrentUserEmail());
         apoderado.setFechaIngreso(veterinaria.vargasvet.util.AppClock.today());
 
         Apoderado savedApoderado = apoderadoRepository.save(apoderado);
         companyMembershipService.syncLegacyCompanyField(savedUser);
-        roleAssignmentService.replaceClientRoles(savedUser, companyToUse, requestedRoleIds);
+        if (habilitarPortal) {
+            roleAssignmentService.replaceClientRoles(savedUser, companyToUse, requestedRoleIds);
+        }
         contactoService.actualizar(savedUser, companyToUse, dto.getTelefono(), dto.getDireccion());
         consentimientoDatosService.registrarAlta(savedUser, companyIdToUse,
                 veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad.PROPIETARIOS_Y_AUTORIZADOS,
@@ -239,7 +255,8 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         Apoderado apoderado = apoderadoRepository.findById(apoderadoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Propietario no encontrado"));
 
-        if (!Boolean.TRUE.equals(apoderado.getEstado())
+        if (!tieneAccesoPortal(apoderado)
+                || !Boolean.TRUE.equals(apoderado.getEstado())
                 || !mascotaRepository.existsByApoderadoIdAndActivoTrue(apoderadoId)) {
             return;
         }
@@ -250,6 +267,9 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     @Transactional
     public void invitarAcceso(Long apoderadoId) {
         Apoderado apoderado = findAccessibleClient(apoderadoId);
+        if (!tieneAccesoPortal(apoderado)) {
+            throw new IllegalArgumentException("Esta persona no tiene habilitado el acceso al portal");
+        }
         if (!Boolean.TRUE.equals(apoderado.getEstado())) {
             throw new IllegalArgumentException("No se puede invitar a una persona inactiva");
         }
@@ -257,12 +277,19 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     }
 
     private void enviarInvitacion(Apoderado apoderado) {
+        if (!tieneAccesoPortal(apoderado)) {
+            throw new IllegalStateException("El acceso al portal no está habilitado para esta persona");
+        }
         Usuario usuario = apoderado.getUser();
         if (usuario == null) {
             throw new IllegalStateException("El propietario no tiene una cuenta asociada");
         }
 
         Company company = apoderado.getCompany();
+        apoderado.setEstadoAccesoPortal(EstadoAccesoPortalPropietario.INVITACION_PENDIENTE);
+        apoderado.setAccesoPortalModificadoEn(veterinaria.vargasvet.util.AppClock.now());
+        apoderado.setAccesoPortalModificadoPor(SecurityUtils.getCurrentUserEmail());
+        apoderadoRepository.save(apoderado);
         if (!usuario.isActivo() || !usuario.isEmailVerified()) {
             String verificationToken = SecurityTokenUtils.generate();
             usuario.setVerificationToken(SecurityTokenUtils.hash(verificationToken));
@@ -402,6 +429,9 @@ public class ApoderadoServiceImpl implements ApoderadoService {
     @Transactional
     public void reenviarInvitacion(Long id) {
         Apoderado apoderado = findAccessibleClient(id);
+        if (!tieneAccesoPortal(apoderado)) {
+            throw new IllegalArgumentException("Esta persona no tiene habilitado el acceso al portal");
+        }
         Usuario usuario = apoderado.getUser();
         if (!Boolean.TRUE.equals(apoderado.getEstado())) {
             throw new IllegalArgumentException("No se puede reenviar la invitación a un cliente inactivo");
@@ -451,6 +481,69 @@ public class ApoderadoServiceImpl implements ApoderadoService {
         Integer companyId = apoderado.getCompany() != null ? apoderado.getCompany().getId() : null;
         auditLogService.log(companyId, "REENVIAR_INVITACION_CLIENTE", "Clientes",
                 "Se reenvió la invitación de activación a " + nombreCompleto + " (" + usuario.getEmail() + ")");
+    }
+
+    @Override
+    @Transactional
+    public void habilitarAccesoPortal(Long id) {
+        Apoderado apoderado = findAccessibleClient(id);
+        entityManager.lock(apoderado, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        Company company = apoderado.getCompany();
+        if (company.getModoAccesoPropietario() == ModoAccesoPropietario.SOLO_GESTION_INTERNA) {
+            throw new IllegalStateException("La clínica utiliza solo gestión interna. Habilita primero el portal de propietarios en la configuración de la empresa");
+        }
+        if (!Boolean.TRUE.equals(apoderado.getEstado())) {
+            throw new IllegalStateException("No se puede habilitar el portal para un cliente inactivo");
+        }
+
+        Usuario usuario = apoderado.getUser();
+        Role clientRole = companyRoleProvisioningService.ensureRequiredRoles(company).clientPortal();
+        if (!usuarioPorRolRepository.existsByUsuarioIdAndRolIdAndCompanyId(
+                usuario.getId(), clientRole.getId(), company.getId())) {
+            roleAssignmentService.replaceClientRoles(usuario, company, Set.of(clientRole.getId()));
+        }
+        asegurarCredencial(usuario, company);
+        apoderado.setEstadoAccesoPortal(estadoInicialAcceso(usuario, company));
+        apoderado.setAccesoPortalModificadoEn(veterinaria.vargasvet.util.AppClock.now());
+        apoderado.setAccesoPortalModificadoPor(SecurityUtils.getCurrentUserEmail());
+        apoderadoRepository.save(apoderado);
+
+        auditLogService.log(company.getId(), "HABILITAR_PORTAL_PROPIETARIO", "Clientes",
+                "Se habilitó el acceso al portal para " + usuario.getEmail());
+
+        if (apoderado.getEstadoAccesoPortal() == EstadoAccesoPortalPropietario.INVITACION_PENDIENTE
+                && (mascotaRepository.existsByApoderadoIdAndActivoTrue(apoderado.getId())
+                    || petOwnershipService.tieneVinculoVigente(apoderado))) {
+            enviarInvitacion(apoderado);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void revocarAccesoPortal(Long id, String motivo) {
+        Apoderado apoderado = findAccessibleClient(id);
+        entityManager.lock(apoderado, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        Usuario usuario = apoderado.getUser();
+        Company company = apoderado.getCompany();
+
+        apoderado.setEstadoAccesoPortal(EstadoAccesoPortalPropietario.REVOCADO);
+        apoderado.setAccesoPortalModificadoEn(veterinaria.vargasvet.util.AppClock.now());
+        apoderado.setAccesoPortalModificadoPor(SecurityUtils.getCurrentUserEmail());
+        apoderadoRepository.save(apoderado);
+        sessionSecurityService.invalidateSessionsForCompany(usuario, company);
+        passwordResetTokenRepository.deleteByUsuarioAndCompany(usuario, company);
+
+        boolean conservaAccesoLaboral = usuarioPorRolRepository.existsActiveRoleScope(
+                usuario.getId(), company.getId(), RoleScope.STAFF);
+        if (!conservaAccesoLaboral) {
+            usuario.setVerificationToken(null);
+            usuario.setVerificationTokenExpiresAt(null);
+            usuarioRepository.save(usuario);
+        }
+
+        auditLogService.log(company.getId(), "REVOCAR_PORTAL_PROPIETARIO", "Clientes",
+                "Se revocó el acceso al portal de " + usuario.getEmail()
+                        + veterinaria.vargasvet.util.AuditDetails.reasonSuffix(motivo));
     }
 
     @Override
@@ -656,12 +749,64 @@ public class ApoderadoServiceImpl implements ApoderadoService {
             response.setTelefono(contactoService.telefono(apoderado.getUser().getId(), listCompanyId));
             response.setActivo(apoderado.getEstado());
             response.setTipoInactividad(apoderado.getTipoInactividad());
-            boolean pendiente = Boolean.TRUE.equals(apoderado.getEstado())
+            response.setEstadoAccesoPortal(apoderado.getEstadoAccesoPortal());
+            boolean pendiente = tieneAccesoPortal(apoderado)
+                    && Boolean.TRUE.equals(apoderado.getEstado())
                     && veterinaria.vargasvet.util.CuentaPendiente.es(apoderado.getUser(), conContrasena.contains(apoderado.getUser().getId()));
             response.setCuentaPendiente(pendiente);
-            response.setPuedeReenviarInvitacion(pendiente && conMascota.contains(apoderado.getId()));
+            response.setPuedeReenviarInvitacion(tieneAccesoPortal(apoderado)
+                    && pendiente && conMascota.contains(apoderado.getId()));
             response.setAvisoInformado(informados.contains(apoderado.getUser().getId()));
         }
         return response;
+    }
+
+    private boolean debeHabilitarPortal(Company company, Boolean solicitud) {
+        ModoAccesoPropietario modo = company.getModoAccesoPropietario() == null
+                ? ModoAccesoPropietario.PORTAL_POR_DEFECTO
+                : company.getModoAccesoPropietario();
+        return switch (modo) {
+            case SOLO_GESTION_INTERNA -> false;
+            case PORTAL_OPCIONAL -> Boolean.TRUE.equals(solicitud);
+            case PORTAL_POR_DEFECTO -> solicitud == null || Boolean.TRUE.equals(solicitud);
+        };
+    }
+
+    private boolean tieneAccesoPortal(Apoderado apoderado) {
+        if (apoderado == null || apoderado.getCompany() == null || apoderado.getUser() == null
+                || apoderado.getCompany().getModoAccesoPropietario() == ModoAccesoPropietario.SOLO_GESTION_INTERNA
+                || apoderado.getEstadoAccesoPortal() == EstadoAccesoPortalPropietario.SIN_ACCESO
+                || apoderado.getEstadoAccesoPortal() == EstadoAccesoPortalPropietario.REVOCADO
+                || apoderado.getEstadoAccesoPortal() == EstadoAccesoPortalPropietario.SUSPENDIDO) {
+            return false;
+        }
+        Integer companyId = apoderado.getCompany().getId();
+        return apoderado.getUser().getUsuariosPorRol().stream()
+                .anyMatch(asignacion -> asignacion.getCompany() != null
+                        && companyId.equals(asignacion.getCompany().getId())
+                        && asignacion.getRol() != null
+                        && asignacion.getRol().getPurpose() == RolePurpose.CLIENT_PORTAL);
+    }
+
+    private EstadoAccesoPortalPropietario estadoInicialAcceso(Usuario usuario, Company company) {
+        return credencialRepository.findByUsuarioIdAndCompanyId(usuario.getId(), company.getId())
+                .filter(c -> usuario.isEmailVerified() && (c.isPasswordChanged() || c.isActivatedWithGoogle()))
+                .map(c -> EstadoAccesoPortalPropietario.ACTIVO)
+                .orElse(EstadoAccesoPortalPropietario.INVITACION_PENDIENTE);
+    }
+
+    private void asegurarCredencial(Usuario usuario, Company company) {
+        if (credencialRepository.existsByUsuarioIdAndCompanyId(usuario.getId(), company.getId())) {
+            return;
+        }
+        String temporal = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                new veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial();
+        credencial.setUsuario(usuario);
+        credencial.setCompany(company);
+        credencial.setPassword(passwordEncoder.encode(temporal));
+        credencial.setPasswordChanged(false);
+        credencial.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
+        credencialRepository.save(credencial);
     }
 }

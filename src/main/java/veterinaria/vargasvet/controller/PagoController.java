@@ -12,6 +12,7 @@ import veterinaria.vargasvet.domain.enums.PaymentStatus;
 import veterinaria.vargasvet.domain.enums.MetodoPago;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.PagoRequest;
+import veterinaria.vargasvet.dto.request.ReceiptResultRequest;
 import veterinaria.vargasvet.dto.response.PagoListResponse;
 import veterinaria.vargasvet.dto.response.PagoResponse;
 import veterinaria.vargasvet.security.AccesoValidator;
@@ -29,10 +30,21 @@ public class PagoController {
 
     @PostMapping
     @PreAuthorize("@accesoValidator.can('VISTA_PAGOS', 'ESCRIBIR')")
-    public ResponseEntity<ApiResponse<PagoResponse>> registrar(@Valid @RequestBody PagoRequest request) {
-        PagoResponse response = pagoService.registrar(request);
+    public ResponseEntity<ApiResponse<PagoResponse>> registrar(
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+            @Valid @RequestBody PagoRequest request) {
+        PagoResponse response = pagoService.registrar(request, idempotencyKey);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Pago registrado exitosamente", response));
+    }
+
+    @PostMapping("/{pagoId}/receipt-result")
+    @PreAuthorize("@accesoValidator.can('VISTA_PAGOS', 'ESCRIBIR')")
+    public ResponseEntity<ApiResponse<PagoResponse>> reportarComprobante(
+            @PathVariable Long pagoId,
+            @Valid @RequestBody ReceiptResultRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Estado del comprobante actualizado",
+                pagoService.reportarComprobante(pagoId, request)));
     }
 
     @GetMapping("/appointment/{appointmentId}")

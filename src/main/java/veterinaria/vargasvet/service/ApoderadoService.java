@@ -18,6 +18,8 @@ public interface ApoderadoService {
 
     /** Genera un enlace de activación nuevo y lo envía al correo del cliente con cuenta pendiente. */
     void reenviarInvitacion(Long id);
+    void habilitarAccesoPortal(Long id);
+    void revocarAccesoPortal(Long id, String motivo);
     ApoderadoEstadoResponse eliminar(Long id);
     Page<ApoderadoListResponse> listar(Integer companyId, String nombre, String numeroDocumento, int page, int size);
     ApoderadoRequest findById(Long id);

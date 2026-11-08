@@ -6,6 +6,7 @@ import veterinaria.vargasvet.domain.enums.MetodoPago;
 import veterinaria.vargasvet.domain.enums.PaymentStatus;
 import veterinaria.vargasvet.domain.enums.TipoDocumentoVenta;
 import veterinaria.vargasvet.domain.enums.TipoPurchase;
+import veterinaria.vargasvet.domain.enums.ReceiptStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -88,5 +89,24 @@ public class Purchase {
     /** Estado retornado por MercadoPago: "approved", "rejected", etc. */
     @Column(name = "mp_status")
     private String mpStatus;
+
+    @Column(name = "idempotency_key", length = 100)
+    private String idempotencyKey;
+
+    @Column(name = "business_trace_id", length = 50)
+    private String businessTraceId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "receipt_status", nullable = false, length = 16)
+    private ReceiptStatus receiptStatus = ReceiptStatus.PENDING;
+
+    @Column(name = "receipt_attempts", nullable = false)
+    private Integer receiptAttempts = 0;
+
+    @Column(name = "receipt_error", length = 500)
+    private String receiptError;
+
+    @Column(name = "receipt_generated_at")
+    private LocalDateTime receiptGeneratedAt;
 
 }

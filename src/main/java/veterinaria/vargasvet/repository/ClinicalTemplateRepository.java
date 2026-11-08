@@ -15,5 +15,8 @@ public interface ClinicalTemplateRepository extends JpaRepository<ClinicalTempla
 
     List<ClinicalTemplate> findByCompanyIdOrderByTemplateKeyAscVersionDesc(Integer companyId);
 
+    List<ClinicalTemplate> findByCompanyIdAndStatusOrderByDefaultTemplateDescNameAsc(
+            Integer companyId, ClinicalTemplateStatus status);
+
     int countByCompanyIdAndTemplateKey(Integer companyId, String templateKey);
 }

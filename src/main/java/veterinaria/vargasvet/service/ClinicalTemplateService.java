@@ -11,6 +11,7 @@ import veterinaria.vargasvet.domain.enums.*;
 import veterinaria.vargasvet.dto.request.ClinicalConceptRequest;
 import veterinaria.vargasvet.dto.request.ClinicalFieldAnswerRequest;
 import veterinaria.vargasvet.dto.request.ClinicalTemplateDraftRequest;
+import veterinaria.vargasvet.dto.request.ClinicalTemplateCreateRequest;
 import veterinaria.vargasvet.dto.response.*;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.*;
@@ -32,13 +33,19 @@ public class ClinicalTemplateService {
     private final ClinicalTemplateSectionRepository sectionRepository;
     private final ConsultationFieldAnswerRepository answerRepository;
     private final CompanyRepository companyRepository;
+    private final ServiciosVeterinariosRepository serviceRepository;
     private final ObjectMapper objectMapper;
     private final AuditLogService auditLogService;
 
     @Transactional(readOnly = true)
-    public ClinicalTemplateResponse current(String species) {
-        ClinicalTemplate template = publishedEntity(requiredCompanyId());
+    public ClinicalTemplateResponse current(String species, Long serviceId) {
+        ClinicalTemplate template = resolvePublishedTemplate(requiredCompanyId(), normalizeSpecies(species), serviceId);
         return toResponse(template, normalizeSpecies(species));
+    }
+
+    @Transactional(readOnly = true)
+    public ClinicalTemplateResponse current(String species) {
+        return current(species, null);
     }
 
     @Transactional(readOnly = true)
@@ -94,16 +101,24 @@ public class ClinicalTemplateService {
 
     @Transactional
     public ClinicalTemplateResponse createDraft() {
+        return createDraft(publishedEntity(requiredCompanyId()).getId());
+    }
+
+    @Transactional
+    public ClinicalTemplateResponse createDraft(Long sourceId) {
         Integer companyId = requiredCompanyId();
-        ClinicalTemplate published = publishedEntity(companyId);
+        ClinicalTemplate published = templateRepository.findByIdAndCompanyId(sourceId, companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ficha clínica no encontrada"));
+        if (published.getStatus() == ClinicalTemplateStatus.DRAFT) return toResponse(published, null);
         Optional<ClinicalTemplate> existingDraft = templateRepository
-                .findFirstByCompanyIdAndTemplateKeyAndStatus(companyId, GENERAL_TEMPLATE_KEY, ClinicalTemplateStatus.DRAFT);
+                .findFirstByCompanyIdAndTemplateKeyAndStatus(companyId, published.getTemplateKey(), ClinicalTemplateStatus.DRAFT);
         if (existingDraft.isPresent()) return toResponse(existingDraft.get(), null);
 
         ClinicalTemplate draft = new ClinicalTemplate();
         draft.setCompany(published.getCompany());
         draft.setTemplateKey(published.getTemplateKey());
         draft.setName(published.getName());
+        copyTemplateMetadata(published, draft);
         draft.setVersion(templateRepository.countByCompanyIdAndTemplateKey(companyId, published.getTemplateKey()) + 1);
         draft.setStatus(ClinicalTemplateStatus.DRAFT);
         draft.setBasedOn(published);
@@ -111,6 +126,56 @@ public class ClinicalTemplateService {
         copySections(published, draft);
         ClinicalTemplate saved = templateRepository.save(draft);
         return toResponse(saved, null);
+    }
+
+    @Transactional
+    public ClinicalTemplateResponse createTemplate(ClinicalTemplateCreateRequest request) {
+        Integer companyId = requiredCompanyId();
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
+        ClinicalTemplate source = request.getCopyFromTemplateId() == null
+                ? publishedEntity(companyId)
+                : templateRepository.findByIdAndCompanyId(request.getCopyFromTemplateId(), companyId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Ficha de origen no encontrada"));
+
+        ClinicalTemplate draft = new ClinicalTemplate();
+        draft.setCompany(company);
+        draft.setTemplateKey(uniqueTemplateKey(companyId, request.getName()));
+        draft.setName(request.getName().trim());
+        draft.setDescription(trimToNull(request.getDescription()));
+        draft.setApplicableSpecies(joinSpecies(request.getSpecies()));
+        draft.setDefaultTemplate(false);
+        draft.setActive(true);
+        draft.setVersion(1);
+        draft.setStatus(ClinicalTemplateStatus.DRAFT);
+        draft.setBasedOn(source);
+        draft.setCreatedBy(SecurityUtils.getCurrentUserEmail());
+        draft.getServices().addAll(resolveServices(companyId, request.getServiceIds()));
+        copySections(source, draft);
+        ClinicalTemplate saved = templateRepository.saveAndFlush(draft);
+        auditLogService.log(companyId, "CREAR_FICHA_CLINICA", "Historias Clínicas",
+                "Se creó la ficha clínica " + saved.getName());
+        return toResponse(saved, null);
+    }
+
+    @Transactional
+    public ClinicalTemplateResponse makeDefault(Long id) {
+        Integer companyId = requiredCompanyId();
+        ClinicalTemplate selected = templateRepository.findByIdAndCompanyId(id, companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ficha clínica no encontrada"));
+        if (selected.getStatus() != ClinicalTemplateStatus.PUBLISHED || !selected.isActive()) {
+            throw new IllegalArgumentException("Solo una ficha publicada y activa puede ser predeterminada");
+        }
+        List<ClinicalTemplate> templates = templateRepository.findByCompanyIdOrderByTemplateKeyAscVersionDesc(companyId);
+        templates.forEach(template -> template.setDefaultTemplate(false));
+        templateRepository.saveAllAndFlush(templates);
+        templates.stream()
+                .filter(template -> Objects.equals(template.getTemplateKey(), selected.getTemplateKey()))
+                .forEach(template -> template.setDefaultTemplate(true));
+        templateRepository.saveAllAndFlush(templates);
+        auditLogService.log(companyId, "DEFINIR_FICHA_PREDETERMINADA", "Historias Clínicas",
+                "Se estableció como predeterminada la ficha " + selected.getName());
+        return toResponse(selected, null);
     }
 
     @Transactional
@@ -122,6 +187,10 @@ public class ClinicalTemplateService {
         validateUniqueOrders(request);
 
         draft.setName(request.getName().trim());
+        draft.setDescription(trimToNull(request.getDescription()));
+        draft.setApplicableSpecies(joinSpecies(request.getSpecies()));
+        draft.getServices().clear();
+        draft.getServices().addAll(resolveServices(companyId, request.getServiceIds()));
         draft.getSections().clear();
         for (ClinicalTemplateDraftRequest.Section sectionRequest : request.getSections()) {
             ClinicalTemplateSection section = new ClinicalTemplateSection();
@@ -169,7 +238,10 @@ public class ClinicalTemplateService {
 
         templateRepository.findFirstByCompanyIdAndTemplateKeyAndStatus(
                         companyId, draft.getTemplateKey(), ClinicalTemplateStatus.PUBLISHED)
-                .ifPresent(current -> current.setStatus(ClinicalTemplateStatus.ARCHIVED));
+                .ifPresent(current -> {
+                    current.setStatus(ClinicalTemplateStatus.ARCHIVED);
+                    templateRepository.saveAndFlush(current);
+                });
         draft.setStatus(ClinicalTemplateStatus.PUBLISHED);
         draft.setPublishedAt(veterinaria.vargasvet.util.AppClock.now());
         draft.setPublishedBy(SecurityUtils.getCurrentUserEmail());
@@ -187,6 +259,9 @@ public class ClinicalTemplateService {
         template.setCompany(company);
         template.setTemplateKey(GENERAL_TEMPLATE_KEY);
         template.setName("Ficha clínica general");
+        template.setDescription("Ficha general utilizada cuando no existe una configuración más específica.");
+        template.setDefaultTemplate(true);
+        template.setActive(true);
         template.setVersion(1);
         template.setStatus(ClinicalTemplateStatus.PUBLISHED);
         template.setPublishedAt(veterinaria.vargasvet.util.AppClock.now());
@@ -211,14 +286,24 @@ public class ClinicalTemplateService {
 
     @Transactional(readOnly = true)
     public ClinicalTemplate publishedEntity(Integer companyId) {
-        return templateRepository.findFirstByCompanyIdAndTemplateKeyAndStatus(
-                        companyId, GENERAL_TEMPLATE_KEY, ClinicalTemplateStatus.PUBLISHED)
-                .orElseThrow(() -> new ResourceNotFoundException("La empresa no tiene una ficha clínica publicada"));
+        return templateRepository.findByCompanyIdAndStatusOrderByDefaultTemplateDescNameAsc(
+                        companyId, ClinicalTemplateStatus.PUBLISHED).stream()
+                .filter(ClinicalTemplate::isActive)
+                .filter(ClinicalTemplate::isDefaultTemplate)
+                .findFirst()
+                .orElseGet(() -> templateRepository.findFirstByCompanyIdAndTemplateKeyAndStatus(
+                                companyId, GENERAL_TEMPLATE_KEY, ClinicalTemplateStatus.PUBLISHED)
+                        .orElseThrow(() -> new ResourceNotFoundException("La empresa no tiene una ficha clínica publicada")));
     }
 
     public void assignPublishedTemplate(Consulta consultation, Integer companyId) {
         if (consultation.getClinicalTemplate() == null) {
-            consultation.setClinicalTemplate(publishedEntity(companyId));
+            String species = consultation.getHistoriaClinica() == null || consultation.getHistoriaClinica().getMascota() == null
+                    || consultation.getHistoriaClinica().getMascota().getEspecie() == null
+                    ? null : consultation.getHistoriaClinica().getMascota().getEspecie().name();
+            Long serviceId = consultation.getCita() == null || consultation.getCita().getServicio() == null
+                    ? null : consultation.getCita().getServicio().getId();
+            consultation.setClinicalTemplate(resolvePublishedTemplate(companyId, normalizeSpecies(species), serviceId));
         }
     }
 
@@ -354,6 +439,12 @@ public class ClinicalTemplateService {
                 .version(template.getVersion())
                 .status(template.getStatus())
                 .publishedAt(template.getPublishedAt())
+                .description(template.getDescription())
+                .defaultTemplate(template.isDefaultTemplate())
+                .active(template.isActive())
+                .species(splitSpecies(template.getApplicableSpecies()))
+                .serviceIds(template.getServices().stream().map(ServiciosVeterinarios::getId).toList())
+                .serviceNames(template.getServices().stream().map(ServiciosVeterinarios::getNombre).toList())
                 .sections(sections)
                 .build();
     }
@@ -386,6 +477,12 @@ public class ClinicalTemplateService {
                 .version(template.getVersion())
                 .status(template.getStatus())
                 .publishedAt(template.getPublishedAt())
+                .description(template.getDescription())
+                .defaultTemplate(template.isDefaultTemplate())
+                .active(template.isActive())
+                .species(splitSpecies(template.getApplicableSpecies()))
+                .serviceIds(template.getServices().stream().map(ServiciosVeterinarios::getId).toList())
+                .serviceNames(template.getServices().stream().map(ServiciosVeterinarios::getNombre).toList())
                 .build();
     }
 
@@ -425,6 +522,14 @@ public class ClinicalTemplateService {
             }
             target.getSections().add(section);
         }
+    }
+
+    private void copyTemplateMetadata(ClinicalTemplate source, ClinicalTemplate target) {
+        target.setDescription(source.getDescription());
+        target.setApplicableSpecies(source.getApplicableSpecies());
+        target.setDefaultTemplate(source.isDefaultTemplate());
+        target.setActive(source.isActive());
+        target.getServices().addAll(source.getServices());
     }
 
     private void addDefaultSection(ClinicalTemplate template, String title, int order, List<DefaultField> defaults) {
@@ -525,6 +630,54 @@ public class ClinicalTemplateService {
 
     private String normalizeSpecies(String species) {
         return species == null || species.isBlank() ? null : species.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private ClinicalTemplate resolvePublishedTemplate(Integer companyId, String species, Long serviceId) {
+        List<ClinicalTemplate> candidates = templateRepository
+                .findByCompanyIdAndStatusOrderByDefaultTemplateDescNameAsc(companyId, ClinicalTemplateStatus.PUBLISHED)
+                .stream()
+                .filter(ClinicalTemplate::isActive)
+                .filter(template -> appliesToSpecies(template, species))
+                .toList();
+
+        if (serviceId != null) {
+            Optional<ClinicalTemplate> exact = candidates.stream()
+                    .filter(template -> template.getServices().stream().anyMatch(service -> service.getId().equals(serviceId)))
+                    .findFirst();
+            if (exact.isPresent()) return exact.get();
+        }
+
+        return candidates.stream()
+                .filter(template -> template.getServices().isEmpty())
+                .findFirst()
+                .orElseGet(() -> candidates.stream().findFirst().orElseGet(() -> publishedEntity(companyId)));
+    }
+
+    private boolean appliesToSpecies(ClinicalTemplate template, String species) {
+        if (species == null || template.getApplicableSpecies() == null || template.getApplicableSpecies().isBlank()) return true;
+        return splitSpecies(template.getApplicableSpecies()).contains(species);
+    }
+
+    private Set<ServiciosVeterinarios> resolveServices(Integer companyId, List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return new LinkedHashSet<>();
+        Set<Long> requested = new LinkedHashSet<>(ids);
+        List<ServiciosVeterinarios> services = serviceRepository.findAllById(requested).stream()
+                .filter(service -> service.getCompany() != null && companyId.equals(service.getCompany().getId()))
+                .toList();
+        if (services.size() != requested.size()) {
+            throw new IllegalArgumentException("Uno o más servicios no pertenecen a la empresa");
+        }
+        return new LinkedHashSet<>(services);
+    }
+
+    private String uniqueTemplateKey(Integer companyId, String name) {
+        String base = slug(name).toUpperCase(Locale.ROOT);
+        String key = base;
+        int suffix = 2;
+        while (templateRepository.countByCompanyIdAndTemplateKey(companyId, key) > 0) {
+            key = base.substring(0, Math.min(base.length(), 70)) + "_" + suffix++;
+        }
+        return key;
     }
 
     private boolean appliesToSpecies(ClinicalTemplateField field, String species) {

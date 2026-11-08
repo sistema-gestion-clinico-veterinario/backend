@@ -56,6 +56,21 @@ public class AuditLog {
     @Column(name = "correlation_id", length = 100)
     private String correlationId;
 
+    @Column(name = "business_trace_id", length = 50)
+    private String businessTraceId;
+
+    @Column(name = "entity_type", length = 60)
+    private String entityType;
+
+    @Column(name = "entity_id", length = 80)
+    private String entityId;
+
+    @Column(name = "previous_value", length = 120)
+    private String previousValue;
+
+    @Column(name = "new_value", length = 120)
+    private String newValue;
+
     @Column(name = "outcome", nullable = false, length = 16)
     @Builder.Default
     private String outcome = "SUCCESS";

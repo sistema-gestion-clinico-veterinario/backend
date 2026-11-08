@@ -3,6 +3,7 @@ package veterinaria.vargasvet.dto.response;
 import lombok.Data;
 import veterinaria.vargasvet.domain.enums.MetodoPago;
 import veterinaria.vargasvet.domain.enums.PaymentStatus;
+import veterinaria.vargasvet.domain.enums.ReceiptStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,4 +22,8 @@ public class PagoResponse {
     private PaymentStatus estado;
     private String mercadoPagoId;
     private String mpStatus;
+    private String businessTraceId;
+    private ReceiptStatus receiptStatus;
+    private Integer receiptAttempts;
+    private String receiptError;
 }

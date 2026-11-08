@@ -133,6 +133,8 @@ class ReactivacionConcurrenciaTest {
                     mock(veterinaria.vargasvet.service.SessionSecurityService.class),
                     mock(veterinaria.vargasvet.service.CompanyMembershipService.class), citaRepository,
                     mock(veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository.class),
+                    mock(veterinaria.vargasvet.repository.UsuarioPorRolRepository.class),
+                    mock(veterinaria.vargasvet.repository.PasswordResetTokenRepository.class),
                     mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class), pets,
                     mock(veterinaria.vargasvet.service.AccountClosureGuard.class),
                     mock(veterinaria.vargasvet.service.AdministratorProtection.class),

@@ -27,6 +27,9 @@ public class Cita {
     @Column(name = "numero_cita", unique = true, length = 24)
     private String numeroCita;
 
+    @Column(name = "business_trace_id", nullable = false, unique = true, length = 50)
+    private String businessTraceId;
+
     @Version
     private Long version;
 
@@ -117,6 +120,9 @@ public class Cita {
         if (numeroCita == null || numeroCita.isBlank()) {
             String fecha = veterinaria.vargasvet.util.AppClock.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
             numeroCita = "CIT-" + fecha + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        }
+        if (businessTraceId == null || businessTraceId.isBlank()) {
+            businessTraceId = "ATT-" + UUID.randomUUID().toString().replace("-", "").substring(0, 24).toUpperCase();
         }
         createdAt = veterinaria.vargasvet.util.AppClock.now();
         updatedAt = veterinaria.vargasvet.util.AppClock.now();
