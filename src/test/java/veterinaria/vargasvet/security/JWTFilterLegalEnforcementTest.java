@@ -19,6 +19,8 @@ import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
+import veterinaria.vargasvet.repository.ApoderadoRepository;
+import veterinaria.vargasvet.domain.enums.EstadoAccesoPortalPropietario;
 import veterinaria.vargasvet.service.LegalDocumentService;
 
 import java.io.PrintWriter;
@@ -63,6 +65,9 @@ class JWTFilterLegalEnforcementTest {
     private UsuarioEmpresaCredencialRepository credencialRepository;
 
     @Mock
+    private ApoderadoRepository apoderadoRepository;
+
+    @Mock
     private veterinaria.vargasvet.service.SessionActivityService sessionActivityService;
 
     @Mock
@@ -73,8 +78,14 @@ class JWTFilterLegalEnforcementTest {
     @BeforeEach
     void setUp() {
         filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, credencialRepository,
+                apoderadoRepository,
                 org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class),
                 legalDocumentService, sessionActivityService);
+        org.mockito.Mockito.lenient().when(apoderadoRepository
+                        .existsByUserIdAndCompanyIdAndEstadoTrueAndEstadoAccesoPortal(
+                                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt(),
+                                org.mockito.ArgumentMatchers.eq(EstadoAccesoPortalPropietario.ACTIVO)))
+                .thenReturn(true);
         SecurityContextHolder.clearContext();
     }
 
@@ -109,6 +120,7 @@ class JWTFilterLegalEnforcementTest {
         usuario.setEmail(EMAIL);
         usuario.setActivo(true);
         Company company = new Company();
+        company.setId(7);
         company.setActivo(true);
         usuario.setCompany(company);
 

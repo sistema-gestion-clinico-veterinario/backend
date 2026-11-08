@@ -46,6 +46,8 @@ import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.SessionSecurityService;
 import veterinaria.vargasvet.service.AuthenticationAuditService;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.ModoAccesoPropietario;
+import veterinaria.vargasvet.domain.enums.EstadoAccesoPortalPropietario;
 
 @Service
 @RequiredArgsConstructor
@@ -197,6 +199,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         usuario.setVerificationToken(null);
         usuario.setVerificationTokenExpiresAt(null);
         usuarioRepository.save(usuario);
+        activarPortalPropietarioSiCorresponde(usuario, credencial.getCompany());
         authenticationAuditService.record(usuario, "CONFIGURAR_CREDENCIALES",
                 "El usuario estableció su contraseña inicial y activó la cuenta.");
     }
@@ -252,6 +255,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         credencial.setActivatedWithGoogle(true);
         credencial.setUltimoAcceso(veterinaria.vargasvet.util.AppClock.now());
         credencialRepository.save(credencial);
+        activarPortalPropietarioSiCorresponde(usuario, credencial.getCompany());
         authenticationAuditService.record(usuario, "ACTIVAR_CUENTA_GOOGLE",
                 "El usuario activó su cuenta con Google, sin crear contraseña.");
 
@@ -548,6 +552,8 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         return usuario.getUsuariosPorRol().stream()
                 .filter(upr -> upr.getCompany() != null && upr.getCompany().getId().equals(company.getId()))
                 .filter(upr -> isRoleOperable(usuario.getId(), upr))
+                .filter(upr -> company.getModoAccesoPropietario() != ModoAccesoPropietario.SOLO_GESTION_INTERNA
+                        || upr.getRol().getPurpose() != RolePurpose.CLIENT_PORTAL)
                 .map(upr -> upr.getRol().getName())
                 .collect(Collectors.toList());
     }
@@ -583,8 +589,18 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         }
 
         UsuarioPorRol activeAssignment = resolveActiveAssignment(usuario, null, null, company.getId());
+        if (company.getModoAccesoPropietario()
+                == veterinaria.vargasvet.domain.enums.ModoAccesoPropietario.SOLO_GESTION_INTERNA
+                && activeAssignment != null
+                && activeAssignment.getRol().getPurpose() == RolePurpose.CLIENT_PORTAL) {
+            activeAssignment = usuario.getUsuariosPorRol().stream()
+                    .filter(upr -> upr.getCompany() != null && company.getId().equals(upr.getCompany().getId()))
+                    .filter(upr -> upr.getRol().getPurpose() != RolePurpose.CLIENT_PORTAL)
+                    .filter(upr -> isRoleOperable(usuario.getId(), upr))
+                    .findFirst().orElse(null);
+        }
         if (activeAssignment == null) {
-            throw new DisabledException("Tu rol activo se encuentra desactivado. Contacta al administrador.");
+            throw new DisabledException("No tienes un acceso habilitado para esta clínica. Contacta al administrador.");
         }
         String activeRole = activeAssignment.getRol().getName();
 
@@ -774,6 +790,13 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         List<String> activeRolesList = java.util.Collections.singletonList(roleName);
         Company company = companyId != null ? companyRepository.findById(companyId).orElse(null) : null;
+        if (company != null
+                && company.getModoAccesoPropietario()
+                        == veterinaria.vargasvet.domain.enums.ModoAccesoPropietario.SOLO_GESTION_INTERNA
+                && activeAssignment.getRol().getPurpose() == RolePurpose.CLIENT_PORTAL) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "El portal de propietarios no está habilitado para esta clínica");
+        }
 
         UsuarioEmpresaCredencial credencial =
                 resolveCredencial(usuario.getId(), companyId).orElseThrow(
@@ -1521,9 +1544,26 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             return empleadoActivo;
         }
         if (scope == veterinaria.vargasvet.domain.enums.RoleScope.CLIENT) {
-            return apoderadoActivo;
+            return apoderadoActivo && apoderadoRepository
+                    .existsByUserIdAndCompanyIdAndEstadoTrueAndEstadoAccesoPortal(
+                            userId, companyId, EstadoAccesoPortalPropietario.ACTIVO);
         }
         return empleadoActivo || apoderadoActivo;
+    }
+
+    private void activarPortalPropietarioSiCorresponde(Usuario usuario, Company company) {
+        if (company == null || company.getModoAccesoPropietario() == ModoAccesoPropietario.SOLO_GESTION_INTERNA) {
+            return;
+        }
+        apoderadoRepository.findByUserIdAndCompanyId(usuario.getId(), company.getId())
+                .filter(apoderado -> apoderado.getEstadoAccesoPortal()
+                        == EstadoAccesoPortalPropietario.INVITACION_PENDIENTE)
+                .ifPresent(apoderado -> {
+                    apoderado.setEstadoAccesoPortal(EstadoAccesoPortalPropietario.ACTIVO);
+                    apoderado.setAccesoPortalModificadoEn(veterinaria.vargasvet.util.AppClock.now());
+                    apoderado.setAccesoPortalModificadoPor(usuario.getEmail());
+                    apoderadoRepository.save(apoderado);
+                });
     }
 
     /** Cada empresa tiene su propia credencial (contraseña, password_changed,
@@ -1607,11 +1647,19 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
      * de la OTRA empresa mientras estaba en esta - el cambio de rol lo rechazaba
      * igual, pero ya mostrar la opcion filtraba que esa persona tiene cuenta ahi. */
     private List<AssignedRoleResponse> toAvailableRoles(Usuario usuario, Integer companyId) {
+        boolean portalPropietariosDeshabilitado = companyId != null
+                && companyRepository.findById(companyId)
+                        .map(company -> company.getModoAccesoPropietario()
+                                == ModoAccesoPropietario.SOLO_GESTION_INTERNA)
+                        .orElse(false);
+
         return usuario.getUsuariosPorRol().stream()
                 .filter(upr -> companyId == null
                         ? upr.getCompany() == null
                         : upr.getCompany() != null && companyId.equals(upr.getCompany().getId()))
                 .filter(upr -> companyId == null || isRoleOperable(usuario.getId(), upr))
+                .filter(upr -> !portalPropietariosDeshabilitado
+                        || upr.getRol().getPurpose() != RolePurpose.CLIENT_PORTAL)
                 .map(UsuarioPorRol::getRol)
                 .filter(veterinaria.vargasvet.domain.entity.Role::isActivo)
                 .sorted(Comparator.comparing(veterinaria.vargasvet.domain.entity.Role::getName))

@@ -16,6 +16,12 @@ public class ClinicalTemplateDraftRequest {
     @Size(max = 160, message = "El nombre no debe superar 160 caracteres")
     private String name;
 
+    @Size(max = 500, message = "La descripción no debe superar 500 caracteres")
+    private String description;
+
+    private List<String> species = new ArrayList<>();
+    private List<Long> serviceIds = new ArrayList<>();
+
     @Valid
     @NotEmpty(message = "La plantilla debe tener al menos una sección")
     private List<Section> sections = new ArrayList<>();

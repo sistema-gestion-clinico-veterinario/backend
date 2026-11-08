@@ -20,6 +20,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin/audit-logs")
@@ -34,6 +35,31 @@ public class AuditLogController {
 
     private final AuditLogService auditLogService;
     private final AuditLogRepository auditLogRepository;
+
+    @GetMapping("/trace/{businessTraceId}")
+    public ResponseEntity<ApiResponse<List<AuditLog>>> getTrace(
+            @PathVariable String businessTraceId) {
+        String trace = businessTraceId == null ? "" : businessTraceId.trim();
+        if (!trace.matches("ATT-[A-Z0-9]{24}")) {
+            throw new IllegalArgumentException("El identificador de seguimiento no es válido");
+        }
+
+        List<AuditLog> logs;
+        if (SecurityUtils.isSuperAdmin()) {
+            logs = auditLogRepository.findByBusinessTraceIdOrderByTimestampAsc(trace);
+        } else {
+            Integer companyId = SecurityUtils.getCurrentCompanyId();
+            if (companyId == null) {
+                return ResponseEntity.status(403).body(new ApiResponse<>(false,
+                        "Acceso denegado: No tienes un ID de empresa asignado", null));
+            }
+            logs = auditLogRepository.findByBusinessTraceIdAndCompanyIdOrderByTimestampAsc(trace, companyId);
+        }
+
+        registrarConsultaSiCorresponde(false);
+        return ResponseEntity.ok(new ApiResponse<>(true,
+                "Trazabilidad de la atención obtenida correctamente", logs));
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<AuditLog>>> getLogs(

@@ -76,11 +76,9 @@ public class ConsultaServiceImpl implements ConsultaService {
             clinicalTemplateService.saveAnswers(savedConsulta, request.getCustomAnswers(), false);
         }
 
-        auditLogService.log(
-            "ACTUALIZAR_CONSULTA",
-            "Consultas",
-            "Se actualizaron los datos clínicos de la consulta de la mascota " + consulta.getHistoriaClinica().getMascota().getNombreCompleto() + " atendida por " + (consulta.getVeterinario().getUser() != null ? (consulta.getVeterinario().getUser().getNombre() + " " + consulta.getVeterinario().getUser().getApellido()) : "sin usuario") + " el " + consulta.getFechaConsulta()
-        );
+        registrarAuditoriaConsulta(savedConsulta, "ACTUALIZAR_CONSULTA",
+                "Se actualizaron los datos clínicos de la consulta " + savedConsulta.getId(),
+                "VERSION_" + request.getVersion(), "VERSION_" + savedConsulta.getVersion());
 
         return toResponseWithClinicalData(savedConsulta);
     }
@@ -193,11 +191,9 @@ public class ConsultaServiceImpl implements ConsultaService {
 
         Consulta savedConsulta = consultaRepository.saveAndFlush(consulta);
 
-        auditLogService.log(
-            "CERRAR_CONSULTA",
-            "Consultas",
-            "Se cerró la consulta de la mascota " + consulta.getHistoriaClinica().getMascota().getNombreCompleto() + " por el veterinario " + consulta.getCerradoPor()
-        );
+        registrarAuditoriaConsulta(savedConsulta, "CERRAR_CONSULTA",
+                "Se cerró la consulta " + savedConsulta.getId() + " por " + consulta.getCerradoPor(),
+                EstadoConsulta.ABIERTA.name(), EstadoConsulta.CERRADA.name());
 
         return toResponseWithClinicalData(savedConsulta);
     }
@@ -221,12 +217,9 @@ public class ConsultaServiceImpl implements ConsultaService {
 
         Consulta savedConsulta = consultaRepository.saveAndFlush(consulta);
 
-        auditLogService.log(
-            "REABRIR_CONSULTA",
-            "Consultas",
-            "Se reabrió para edición la consulta de la mascota " + consulta.getHistoriaClinica().getMascota().getNombreCompleto()
-                + " (cerrada previamente por " + consulta.getCerradoPor() + ") — reabierta por " + SecurityUtils.getCurrentUserEmail()
-        );
+        registrarAuditoriaConsulta(savedConsulta, "REABRIR_CONSULTA",
+                "Se reabrió la consulta " + savedConsulta.getId() + " por " + SecurityUtils.getCurrentUserEmail(),
+                EstadoConsulta.CERRADA.name(), EstadoConsulta.ABIERTA.name());
 
         return toResponseWithClinicalData(savedConsulta);
     }
@@ -241,6 +234,15 @@ public class ConsultaServiceImpl implements ConsultaService {
                 ? java.util.List.of()
                 : clinicalTemplateService.answers(consulta.getId()));
         return response;
+    }
+
+    private void registrarAuditoriaConsulta(Consulta consulta, String accion, String detalle,
+                                            String valorAnterior, String valorNuevo) {
+        Cita cita = consulta.getCita();
+        Integer companyId = consulta.getHistoriaClinica().getMascota().getApoderado().getCompany().getId();
+        auditLogService.logBusiness(companyId, accion, "Consultas", detalle,
+                cita != null ? cita.getBusinessTraceId() : null,
+                "CONSULTA", consulta.getId().toString(), valorAnterior, valorNuevo);
     }
 
     private void validarCamposObligatorios(Consulta consulta) {

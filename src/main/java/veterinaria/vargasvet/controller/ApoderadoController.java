@@ -108,6 +108,24 @@ public class ApoderadoController {
         return ResponseEntity.ok(new ApiResponse<>(true, "Invitación reenviada exitosamente", null));
     }
 
+    @PostMapping("/{id}/portal-access")
+    @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'MODIFICAR')")
+    public ResponseEntity<ApiResponse<Void>> habilitarAccesoPortal(@PathVariable Long id) {
+        apoderadoService.habilitarAccesoPortal(id);
+        return ResponseEntity.ok(new ApiResponse<>(true,
+                "Acceso al portal habilitado. Si corresponde, se envió una invitación nueva.", null));
+    }
+
+    @DeleteMapping("/{id}/portal-access")
+    @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'MODIFICAR')")
+    public ResponseEntity<ApiResponse<Void>> revocarAccesoPortal(
+            @PathVariable Long id,
+            @RequestBody(required = false) java.util.Map<String, String> request) {
+        apoderadoService.revocarAccesoPortal(id, request != null ? request.get("reason") : null);
+        return ResponseEntity.ok(new ApiResponse<>(true,
+                "Acceso al portal revocado. Los datos y antecedentes del propietario se conservaron.", null));
+    }
+
     @GetMapping("/{id}/conflicting-appointments")
     @PreAuthorize("@accesoValidator.can('VISTA_CLIENTES', 'LEER')")
     public ResponseEntity<ApiResponse<List<CitaResponse>>> citasConflictivas(@PathVariable Long id) {

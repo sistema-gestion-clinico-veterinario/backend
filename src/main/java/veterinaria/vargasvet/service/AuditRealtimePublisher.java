@@ -32,6 +32,11 @@ public class AuditRealtimePublisher {
                         .ipAddress(saved.getIpAddress())
                         .dispositivo(saved.getDispositivo())
                         .correlationId(saved.getCorrelationId())
+                        .businessTraceId(saved.getBusinessTraceId())
+                        .entityType(saved.getEntityType())
+                        .entityId(saved.getEntityId())
+                        .previousValue(saved.getPreviousValue())
+                        .newValue(saved.getNewValue())
                         .outcome(saved.getOutcome())
                         .build();
 

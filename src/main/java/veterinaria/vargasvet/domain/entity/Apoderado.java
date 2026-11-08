@@ -6,6 +6,7 @@ import lombok.Data;
 import veterinaria.vargasvet.domain.enums.Genero;
 import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
 import veterinaria.vargasvet.domain.enums.TipoInactividad;
+import veterinaria.vargasvet.domain.enums.EstadoAccesoPortalPropietario;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -46,6 +47,18 @@ public class Apoderado {
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_inactividad", length = 16)
     private TipoInactividad tipoInactividad;
+
+    /** Controla únicamente el acceso al portal. Nunca se usa para borrar al
+     * responsable ni sus relaciones históricas con mascotas, citas o pagos. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_acceso_portal", nullable = false, length = 32)
+    private EstadoAccesoPortalPropietario estadoAccesoPortal = EstadoAccesoPortalPropietario.SIN_ACCESO;
+
+    @Column(name = "acceso_portal_modificado_en")
+    private LocalDateTime accesoPortalModificadoEn;
+
+    @Column(name = "acceso_portal_modificado_por", length = 160)
+    private String accesoPortalModificadoPor;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_documento_identidad", nullable = false)

@@ -18,6 +18,14 @@ public interface AuditLogService {
     void log(Integer companyId, String action, String module, String details);
 
     /**
+     * Registra un cambio funcional asociado a una atención que puede abarcar
+     * varias solicitudes y varios días. No debe recibir contenido clínico.
+     */
+    void logBusiness(Integer companyId, String action, String module, String details,
+                     String businessTraceId, String entityType, String entityId,
+                     String previousValue, String newValue);
+
+    /**
      * Registra un log de auditoría con datos explícitos (útil para login/logout o procesos externos).
      */
     void log(String email, String role, Integer companyId, String companyName, String action, String module, String details, String ipAddress);

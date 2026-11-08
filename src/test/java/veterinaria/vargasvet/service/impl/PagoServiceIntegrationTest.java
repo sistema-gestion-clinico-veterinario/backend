@@ -23,9 +23,11 @@ import veterinaria.vargasvet.domain.enums.Genero;
 import veterinaria.vargasvet.domain.enums.MetodoPago;
 import veterinaria.vargasvet.domain.enums.PaymentStatus;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.ReceiptStatus;
 import veterinaria.vargasvet.domain.enums.TipoDocumentoIdentidad;
 import veterinaria.vargasvet.domain.enums.TipoPurchase;
 import veterinaria.vargasvet.dto.request.PagoRequest;
+import veterinaria.vargasvet.dto.request.ReceiptResultRequest;
 import veterinaria.vargasvet.dto.response.PagoListResponse;
 import veterinaria.vargasvet.dto.response.PagoResponse;
 import org.springframework.data.domain.Page;
@@ -119,6 +121,39 @@ class PagoServiceIntegrationTest {
         assertThat(persisted.get().getPaymentStatus()).isEqualTo(PaymentStatus.PAID);
         assertThat(persisted.get().getMetodoPago()).isEqualTo(MetodoPago.EFECTIVO);
         assertThat(citaActualizada.getMontoPagado()).isEqualByComparingTo("100.00");
+    }
+
+    @Test
+    @DisplayName("[SEGURIDAD] Reintentar la misma operación no genera un segundo cobro")
+    void registrarPagoEsIdempotentePorEmpresaYClave() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
+        PagoRequest request = pagoEfectivo(cita.getId(), new BigDecimal("120.00"));
+
+        PagoResponse primero = pagoService.registrar(request, "payment:test:retry-001");
+        PagoResponse reintento = pagoService.registrar(request, "payment:test:retry-001");
+
+        assertThat(reintento.getId()).isEqualTo(primero.getId());
+        assertThat(purchaseRepository.count()).isEqualTo(1);
+        assertThat(citaRepository.findById(cita.getId()).orElseThrow().getMontoPagado())
+                .isEqualByComparingTo("100.00");
+    }
+
+    @Test
+    @DisplayName("[RESILIENCIA] Un fallo del comprobante no revierte el pago confirmado")
+    void falloDeComprobanteConservaPagoYPermiteReintento() {
+        Cita cita = crearCita(EstadoCita.PROGRAMADA, BigDecimal.ZERO);
+        PagoResponse registrado = pagoService.registrar(
+                pagoEfectivo(cita.getId(), new BigDecimal("120.00")), "payment:test:receipt-001");
+        ReceiptResultRequest result = new ReceiptResultRequest();
+        result.setGenerated(false);
+        result.setError("Generador PDF temporalmente no disponible");
+
+        PagoResponse response = pagoService.reportarComprobante(registrado.getId(), result);
+
+        assertThat(response.getEstado()).isEqualTo(PaymentStatus.PAID);
+        assertThat(response.getReceiptStatus()).isEqualTo(ReceiptStatus.PENDING);
+        assertThat(response.getReceiptAttempts()).isEqualTo(1);
+        assertThat(purchaseRepository.count()).isEqualTo(1);
     }
 
     @Test

@@ -56,6 +56,7 @@ class JWTFilterCompanyMismatchTest {
     @BeforeEach
     void setUp() {
         filter = new JWTFilter(tokenProvider, usuarioRepository, usuarioPorRolRepository, credencialRepository,
+                org.mockito.Mockito.mock(veterinaria.vargasvet.repository.ApoderadoRepository.class),
                 org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class),
                 legalDocumentService, sessionActivityService);
         SecurityContextHolder.clearContext();
