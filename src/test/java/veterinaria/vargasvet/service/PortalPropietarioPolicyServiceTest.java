@@ -93,6 +93,27 @@ class PortalPropietarioPolicyServiceTest {
                 usuarioRepository, sessionSecurityService);
     }
 
+    @Test
+    void gestionInternaTambienRevocaPropietariosSinCuentaDeUsuario() {
+        Company company = company();
+        Apoderado apoderado = new Apoderado();
+        apoderado.setId(25L);
+        apoderado.setCompany(company);
+        apoderado.setEstado(true);
+        apoderado.setEstadoAccesoPortal(EstadoAccesoPortalPropietario.SIN_ACCESO);
+        when(apoderadoRepository.findByCompanyId(3)).thenReturn(List.of(apoderado));
+
+        int afectados = service.aplicarCambio(company, ModoAccesoPropietario.PORTAL_POR_DEFECTO,
+                ModoAccesoPropietario.SOLO_GESTION_INTERNA);
+
+        assertThat(afectados).isEqualTo(1);
+        assertThat(apoderado.getEstadoAccesoPortal()).isEqualTo(EstadoAccesoPortalPropietario.REVOCADO);
+        assertThat(apoderado.getEstado()).isTrue();
+        verify(apoderadoRepository).save(apoderado);
+        verifyNoInteractions(passwordResetTokenRepository, usuarioPorRolRepository,
+                usuarioRepository, sessionSecurityService);
+    }
+
     private Company company() {
         Company company = new Company();
         company.setId(3);

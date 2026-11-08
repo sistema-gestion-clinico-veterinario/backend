@@ -239,10 +239,25 @@ public class ConsultaServiceImpl implements ConsultaService {
     private void registrarAuditoriaConsulta(Consulta consulta, String accion, String detalle,
                                             String valorAnterior, String valorNuevo) {
         Cita cita = consulta.getCita();
-        Integer companyId = consulta.getHistoriaClinica().getMascota().getApoderado().getCompany().getId();
+        Integer companyId = resolverCompanyId(consulta);
         auditLogService.logBusiness(companyId, accion, "Consultas", detalle,
                 cita != null ? cita.getBusinessTraceId() : null,
                 "CONSULTA", consulta.getId().toString(), valorAnterior, valorNuevo);
+    }
+
+    /**
+     * Obtiene la empresa sin asumir que todos los objetos históricos o fixtures
+     * tengan cargada la relación propietario-empresa. La auditoría no debe hacer
+     * fallar el cierre de una consulta por una relación opcional no inicializada.
+     */
+    private Integer resolverCompanyId(Consulta consulta) {
+        if (consulta == null || consulta.getHistoriaClinica() == null
+                || consulta.getHistoriaClinica().getMascota() == null
+                || consulta.getHistoriaClinica().getMascota().getApoderado() == null
+                || consulta.getHistoriaClinica().getMascota().getApoderado().getCompany() == null) {
+            return SecurityUtils.getCurrentCompanyId();
+        }
+        return consulta.getHistoriaClinica().getMascota().getApoderado().getCompany().getId();
     }
 
     private void validarCamposObligatorios(Consulta consulta) {

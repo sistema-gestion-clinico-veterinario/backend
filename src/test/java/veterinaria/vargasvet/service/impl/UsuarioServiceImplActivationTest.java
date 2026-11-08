@@ -12,6 +12,7 @@ import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.CompanyRepository;
+import veterinaria.vargasvet.repository.ApoderadoRepository;
 import veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
@@ -54,6 +55,7 @@ class UsuarioServiceImplActivationTest {
     @Mock PasswordPolicyService passwordPolicyService;
     @Mock UsuarioEmpresaCredencialRepository credencialRepository;
     @Mock UsuarioPorRolRepository usuarioPorRolRepository;
+    @Mock ApoderadoRepository apoderadoRepository;
     @Mock veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
 
     @InjectMocks UsuarioServiceImpl service;

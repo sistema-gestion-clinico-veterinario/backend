@@ -18,8 +18,11 @@ import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Empleado;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial;
+import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
+import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.RoleScope;
+import veterinaria.vargasvet.domain.enums.EstadoAccesoPortalPropietario;
 import veterinaria.vargasvet.dto.Mail;
 import veterinaria.vargasvet.exception.MailDeliveryException;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
@@ -126,6 +129,15 @@ class InvitacionActivacionReenvioTest {
         apoderado.setUser(usuario);
         apoderado.setCompany(company);
         apoderado.setEstado(estado);
+        apoderado.setEstadoAccesoPortal(EstadoAccesoPortalPropietario.INVITACION_PENDIENTE);
+        Role portal = new Role();
+        portal.setPurpose(RolePurpose.CLIENT_PORTAL);
+        portal.setScope(RoleScope.CLIENT);
+        UsuarioPorRol asignacion = new UsuarioPorRol();
+        asignacion.setUsuario(usuario);
+        asignacion.setCompany(company);
+        asignacion.setRol(portal);
+        usuario.getUsuariosPorRol().add(asignacion);
         return apoderado;
     }
 

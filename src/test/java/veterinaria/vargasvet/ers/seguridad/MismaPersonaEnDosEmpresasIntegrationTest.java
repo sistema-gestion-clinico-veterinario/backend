@@ -247,8 +247,8 @@ class MismaPersonaEnDosEmpresasIntegrationTest {
 
     private void sembrarPagos(DosEmpresasSembradas.Empresa clinica) {
         Integer usuario = jdbc.queryForObject("SELECT a.user_id FROM apoderado a WHERE a.id = ?", Integer.class, clinica.apoderado1Id());
-        jdbc.update("INSERT INTO purchases (total, created_at, payment_status, user_id, cita_id, tipo_purchase, metodo_pago) "
-                + "VALUES (100.00, CURRENT_TIMESTAMP, 'PAID', ?, ?, 'SERVICIO_CITA', 'EFECTIVO')", usuario, clinica.citaId());
+        jdbc.update("INSERT INTO purchases (total, created_at, payment_status, user_id, cita_id, tipo_purchase, metodo_pago, receipt_status, receipt_attempts) "
+                + "VALUES (100.00, CURRENT_TIMESTAMP, 'PAID', ?, ?, 'SERVICIO_CITA', 'EFECTIVO', 'NOT_TRACKED', 0)", usuario, clinica.citaId());
     }
 
     private void unir(String usuarioQueSeQueda, String usuarioQueSeFusiona) {
