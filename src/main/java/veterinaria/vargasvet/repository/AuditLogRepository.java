@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.AuditLog;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
@@ -30,6 +31,11 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
             Pageable pageable);
 
     boolean existsByUserEmailAndActionAndTimestampAfter(String userEmail, String action, LocalDateTime desde);
+
+    List<AuditLog> findByBusinessTraceIdOrderByTimestampAsc(String businessTraceId);
+
+    List<AuditLog> findByBusinessTraceIdAndCompanyIdOrderByTimestampAsc(
+            String businessTraceId, Integer companyId);
 
     @Modifying(flushAutomatically = true)
     @Query("UPDATE AuditLog a SET a.userEmail = :nuevo "

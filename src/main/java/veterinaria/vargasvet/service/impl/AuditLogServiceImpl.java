@@ -134,6 +134,45 @@ public class AuditLogServiceImpl implements AuditLogService {
     }
 
     @Override
+    @Transactional
+    public void logBusiness(Integer companyId, String action, String module, String details,
+                            String businessTraceId, String entityType, String entityId,
+                            String previousValue, String newValue) {
+        String email = SecurityUtils.getCurrentUserEmail();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String role = auth == null ? null : auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .filter(authority -> authority.startsWith("ROLE_"))
+                .findFirst()
+                .orElse(null);
+        Integer resolvedCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId();
+        String companyName = resolvedCompanyId == null ? null : companyRepository.findById(resolvedCompanyId)
+                .map(Company::getName)
+                .orElse(null);
+
+        AuditLog saved = auditLogRepository.save(AuditLog.builder()
+                .timestamp(veterinaria.vargasvet.util.AppClock.now())
+                .userEmail(email)
+                .userRole(role)
+                .companyId(resolvedCompanyId)
+                .companyName(companyName)
+                .action(action)
+                .module(module)
+                .details(details)
+                .ipAddress(getClientIp())
+                .dispositivo(getDispositivo())
+                .correlationId(MDC.get("correlationId"))
+                .businessTraceId(businessTraceId)
+                .entityType(entityType)
+                .entityId(entityId)
+                .previousValue(previousValue)
+                .newValue(newValue)
+                .outcome("SUCCESS")
+                .build());
+        auditRealtimePublisher.publishAfterCommit(saved);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<AuditLog> getLogs(Integer companyId, String userEmail, String action, String module, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
         Integer resolvedCompanyId = SecurityUtils.isSuperAdmin()

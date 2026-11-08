@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import veterinaria.vargasvet.dto.ApiResponse;
 import veterinaria.vargasvet.dto.request.ClinicalConceptRequest;
 import veterinaria.vargasvet.dto.request.ClinicalTemplateDraftRequest;
+import veterinaria.vargasvet.dto.request.ClinicalTemplateCreateRequest;
 import veterinaria.vargasvet.dto.response.*;
 import veterinaria.vargasvet.service.ClinicalTemplateService;
 
@@ -22,8 +23,9 @@ public class ClinicalTemplateController {
     @GetMapping("/current")
     @PreAuthorize("@accesoValidator.can('VISTA_HISTORIAS', 'LEER')")
     public ResponseEntity<ApiResponse<ClinicalTemplateResponse>> current(
-            @RequestParam(required = false) String species) {
-        return ResponseEntity.ok(new ApiResponse<>(true, "Ficha clínica vigente", service.current(species)));
+            @RequestParam(required = false) String species,
+            @RequestParam(required = false) Long serviceId) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Ficha clínica vigente", service.current(species, serviceId)));
     }
 
     @GetMapping
@@ -55,6 +57,25 @@ public class ClinicalTemplateController {
     @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'MODIFICAR')")
     public ResponseEntity<ApiResponse<ClinicalTemplateResponse>> createDraft() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Borrador preparado", service.createDraft()));
+    }
+
+    @PostMapping
+    @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'ESCRIBIR')")
+    public ResponseEntity<ApiResponse<ClinicalTemplateResponse>> create(
+            @Valid @RequestBody ClinicalTemplateCreateRequest request) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Ficha clínica creada", service.createTemplate(request)));
+    }
+
+    @PostMapping("/{id}/drafts")
+    @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'MODIFICAR')")
+    public ResponseEntity<ApiResponse<ClinicalTemplateResponse>> createDraftFrom(@PathVariable Long id) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Borrador preparado", service.createDraft(id)));
+    }
+
+    @PostMapping("/{id}/default")
+    @PreAuthorize("@accesoValidator.can('VISTA_COMPLEMENTARIO', 'MODIFICAR')")
+    public ResponseEntity<ApiResponse<ClinicalTemplateResponse>> makeDefault(@PathVariable Long id) {
+        return ResponseEntity.ok(new ApiResponse<>(true, "Ficha predeterminada actualizada", service.makeDefault(id)));
     }
 
     @PutMapping("/drafts/{id}")

@@ -20,6 +20,8 @@ import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
 import veterinaria.vargasvet.domain.enums.AudienciaAvisoPrivacidad;
+import veterinaria.vargasvet.domain.enums.ModoAccesoPropietario;
+import veterinaria.vargasvet.domain.enums.EstadoAccesoPortalPropietario;
 import veterinaria.vargasvet.service.ConsentimientoDatosService;
 import veterinaria.vargasvet.service.LegalDocumentService;
 import veterinaria.vargasvet.service.SessionActivityService;
@@ -38,6 +40,7 @@ public class JWTFilter extends GenericFilterBean {
     private final UsuarioRepository usuarioRepository;
     private final UsuarioPorRolRepository usuarioPorRolRepository;
     private final UsuarioEmpresaCredencialRepository credencialRepository;
+    private final veterinaria.vargasvet.repository.ApoderadoRepository apoderadoRepository;
     private final ConsentimientoDatosService consentimientoDatosService;
     private final LegalDocumentService legalDocumentService;
     private final SessionActivityService sessionActivityService;
@@ -115,14 +118,21 @@ public class JWTFilter extends GenericFilterBean {
                                 ? activeAssignment.getRol().getCompany()
                                 : currentUser.getCompany();
                 boolean bloqueado = !currentUser.isActivo()
-                        || (!esSuperAdmin && empresaDeLaSesion != null && !empresaDeLaSesion.isActivo());
+                        || (!esSuperAdmin && empresaDeLaSesion != null && !empresaDeLaSesion.isActivo())
+                        || (activeAssignment.getRol().getPurpose() == RolePurpose.CLIENT_PORTAL
+                                && empresaDeLaSesion != null
+                                && (empresaDeLaSesion.getModoAccesoPropietario() == ModoAccesoPropietario.SOLO_GESTION_INTERNA
+                                    || !apoderadoRepository
+                                        .existsByUserIdAndCompanyIdAndEstadoTrueAndEstadoAccesoPortal(
+                                                currentUser.getId(), empresaDeLaSesion.getId(),
+                                                EstadoAccesoPortalPropietario.ACTIVO)));
 
                 if (bloqueado) {
                     SecurityContextHolder.clearContext();
                     HttpServletResponse httpResponse = (HttpServletResponse) response;
                     httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     httpResponse.setContentType("application/json");
-                    httpResponse.getWriter().write("{\"error\":\"Acceso denegado. La empresa o el usuario está inactivo.\"}");
+                    httpResponse.getWriter().write("{\"error\":\"Acceso denegado. La cuenta, la empresa o el portal de propietarios no está habilitado.\"}");
                     return;
                 }
 

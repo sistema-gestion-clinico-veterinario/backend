@@ -391,6 +391,8 @@ class RF17To21Test {
                 mock(veterinaria.vargasvet.service.CompanyMembershipService.class),
                 mock(CitaRepository.class),
                 mock(veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository.class),
+                mock(veterinaria.vargasvet.repository.UsuarioPorRolRepository.class),
+                mock(veterinaria.vargasvet.repository.PasswordResetTokenRepository.class),
                 mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class),
                 petOwnershipService,
                 mock(veterinaria.vargasvet.service.AccountClosureGuard.class),

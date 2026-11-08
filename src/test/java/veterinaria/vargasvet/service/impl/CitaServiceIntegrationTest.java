@@ -468,6 +468,8 @@ class CitaServiceIntegrationTest {
                         mock(AuditLogService.class), mock(veterinaria.vargasvet.service.CompanyRoleProvisioningService.class),
                         sesiones, mock(veterinaria.vargasvet.service.CompanyMembershipService.class), citaRepository,
                         mock(veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository.class),
+                        mock(veterinaria.vargasvet.repository.UsuarioPorRolRepository.class),
+                        mock(veterinaria.vargasvet.repository.PasswordResetTokenRepository.class),
                         mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class), petOwnershipService,
                         mock(veterinaria.vargasvet.service.AccountClosureGuard.class),
                         mock(veterinaria.vargasvet.service.AdministratorProtection.class),

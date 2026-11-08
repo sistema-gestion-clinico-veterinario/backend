@@ -225,12 +225,11 @@ public class CitaServiceImpl implements CitaService {
         Cita savedCita = citaRepository.save(cita);
         vincularControlesPreventivos(savedCita, servicio, request.getControlPreventivoIds());
 
-        auditLogService.log(
-            getCitaCompanyId(savedCita),
-            "CREAR_CITA",
-            "Citas",
-            "Se agendó una nueva cita para la mascota " + mascota.getNombreCompleto() + " con el veterinario " + (veterinario.getUser() != null ? (veterinario.getUser().getNombre() + " " + veterinario.getUser().getApellido()) : "sin usuario") + " el " + cita.getFechaHoraInicio()
-        );
+        auditLogService.logBusiness(getCitaCompanyId(savedCita), "CREAR_CITA", "Citas",
+                "Se agendó la cita " + savedCita.getNumeroCita() + " para la mascota ID " + mascota.getId()
+                        + " el " + cita.getFechaHoraInicio(),
+                savedCita.getBusinessTraceId(), "CITA", savedCita.getId().toString(),
+                null, EstadoCita.PROGRAMADA.name());
 
         boolean confirmacionPorCorreo = enviarEmailConfirmacionCita(savedCita, mascota, veterinario, servicio, company);
 
@@ -296,15 +295,15 @@ public class CitaServiceImpl implements CitaService {
 
         boolean esServicioNoMedico = !requiereConsultaClinica(cita);
 
+        EstadoCita estadoAnterior = cita.getEstado();
         cita.setEstado(EstadoCita.EN_PROCESO);
         citaRepository.save(cita);
 
-        auditLogService.log(
-            getCitaCompanyId(cita),
-            "INICIAR_ATENCION",
-            "Citas",
-            "Se inició la atención " + (esServicioNoMedico ? "de servicio" : "médica") + " de la mascota " + cita.getMascota().getNombreCompleto() + " con el empleado " + (cita.getEmpleado().getUser() != null ? (cita.getEmpleado().getUser().getNombre() + " " + cita.getEmpleado().getUser().getApellido()) : "sin usuario") + " el " + cita.getFechaHoraInicio()
-        );
+        auditLogService.logBusiness(getCitaCompanyId(cita), "INICIAR_ATENCION", "Citas",
+                "Se inició la atención " + (esServicioNoMedico ? "de servicio" : "médica")
+                        + " de la cita " + cita.getNumeroCita(),
+                cita.getBusinessTraceId(), "CITA", cita.getId().toString(),
+                estadoAnterior.name(), EstadoCita.EN_PROCESO.name());
 
         if (esServicioNoMedico) {
             broadcastCitaEvent("INICIAR_ATENCION", cita, citaMapper.toResponse(cita));
@@ -366,16 +365,15 @@ public class CitaServiceImpl implements CitaService {
             }
             cita.setNotas(notasLimpias);
         }
+        EstadoCita estadoAnterior = cita.getEstado();
         cita.setEstado(EstadoCita.COMPLETADA);
         Cita saved = citaRepository.save(cita);
         CitaResponse response = citaMapper.toResponse(saved);
 
-        auditLogService.log(
-                getCitaCompanyId(saved),
-                "FINALIZAR_SERVICIO",
-                "Citas",
-                "Se finalizó el servicio " + (saved.getServicio() != null ? saved.getServicio().getNombre() : "no médico")
-                        + " de la mascota " + saved.getMascota().getNombreCompleto());
+        auditLogService.logBusiness(getCitaCompanyId(saved), "FINALIZAR_SERVICIO", "Citas",
+                "Se finalizó el servicio de la cita " + saved.getNumeroCita(),
+                saved.getBusinessTraceId(), "CITA", saved.getId().toString(),
+                estadoAnterior.name(), EstadoCita.COMPLETADA.name());
         broadcastCitaEvent("FINALIZAR_SERVICIO", saved, response);
         return response;
     }
@@ -498,6 +496,7 @@ public class CitaServiceImpl implements CitaService {
             throw new IllegalArgumentException("No se puede cancelar la cita faltando menos de " + hoursLimit + " horas para su inicio");
         }
 
+        EstadoCita estadoAnterior = cita.getEstado();
         cita.setEstado(EstadoCita.CANCELADA);
         cita.setMotivoCancelacion(motivo);
         liberarControlesPreventivos(cita);
@@ -505,12 +504,10 @@ public class CitaServiceImpl implements CitaService {
 
         broadcastCitaEvent("CANCELAR_CITA", cita, citaMapper.toResponse(cita));
 
-        auditLogService.log(
-            getCitaCompanyId(cita),
-            "CANCELAR_CITA",
-            "Citas",
-            "Se canceló la cita de la mascota " + cita.getMascota().getNombreCompleto() + " programada para el " + cita.getFechaHoraInicio() + ". Motivo: " + motivo
-        );
+        auditLogService.logBusiness(getCitaCompanyId(cita), "CANCELAR_CITA", "Citas",
+                "Se canceló la cita " + cita.getNumeroCita() + ". Motivo: " + motivo,
+                cita.getBusinessTraceId(), "CITA", cita.getId().toString(),
+                estadoAnterior.name(), EstadoCita.CANCELADA.name());
 
         // Envío de correo electrónico al apoderado
         boolean avisoManualPendiente = avisarPorCorreo(cita,

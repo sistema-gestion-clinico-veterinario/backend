@@ -19,6 +19,7 @@ public class ApoderadoListResponse implements ProtectedPersonalData {
     private Boolean cuentaPendiente;
     private Boolean puedeReenviarInvitacion;
     private Boolean avisoInformado;
+    private veterinaria.vargasvet.domain.enums.EstadoAccesoPortalPropietario estadoAccesoPortal;
     private veterinaria.vargasvet.domain.enums.TipoInactividad tipoInactividad;
 
     @Override

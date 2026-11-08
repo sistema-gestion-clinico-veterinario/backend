@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import veterinaria.vargasvet.validation.MeaningfulText;
+import veterinaria.vargasvet.domain.enums.ModoAccesoPropietario;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -72,6 +73,8 @@ public class CompanyDTO {
 
     @Pattern(regexp = "^$|^#[0-9a-fA-F]{6}$", message = "El color primario debe ser un color hexadecimal, ej. #006BA8")
     private String colorPrimario;
+
+    private ModoAccesoPropietario modoAccesoPropietario = ModoAccesoPropietario.PORTAL_POR_DEFECTO;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -30,6 +30,8 @@ mkdir "$GNUPGHOME"
 trap 'codigo=$?; rm -rf "$TRABAJO"; exit "$codigo"' EXIT
 
 FECHA="$(date -u +%Y-%m-%dT%H%M%SZ)"
+PERIODO_HASTA="${BACKUP_LOGS_TO:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
+PERIODO_DESDE="${BACKUP_LOGS_FROM:-1970-01-01T00:00:00Z}"
 resolver_plan_recuperacion
 NOMBRE="softvet-logs-$FECHA"
 ARCHIVO_CIFRADO="$SALIDA/data-03.gpg"
@@ -43,19 +45,28 @@ SYSTEM_FILE="$TRABAJO/logs/system_logs.jsonl"
 
 echo "Exportando auditoría funcional sin credenciales ni cuerpos de solicitudes..."
 psql --dbname="$BACKUP_DB_URL" --no-psqlrc -v ON_ERROR_STOP=1 -qAt \
+  -v periodo_desde="$PERIODO_DESDE" -v periodo_hasta="$PERIODO_HASTA" \
   --output="$AUDIT_FILE" -c "SELECT row_to_json(registro) FROM (
     SELECT id, timestamp, correlation_id, outcome, user_email, user_role,
-           company_id, company_name, action, module, details, ip_address, dispositivo
-    FROM audit_logs ORDER BY id
+           company_id, company_name, action, module, details, ip_address, dispositivo,
+           business_trace_id, entity_type, entity_id, previous_value, new_value
+    FROM audit_logs
+    WHERE timestamp >= :'periodo_desde'::timestamptz
+      AND timestamp < :'periodo_hasta'::timestamptz
+    ORDER BY id
   ) registro"
 
 echo "Exportando trazabilidad técnica sanitizada..."
 psql --dbname="$BACKUP_DB_URL" --no-psqlrc -v ON_ERROR_STOP=1 -qAt \
+  -v periodo_desde="$PERIODO_DESDE" -v periodo_hasta="$PERIODO_HASTA" \
   --output="$SYSTEM_FILE" -c "SELECT row_to_json(registro) FROM (
     SELECT id, timestamp, correlation_id, category, event, outcome, http_method,
            request_path, status_code, duration_ms, user_email, company_id,
            ip_address, dispositivo, error_type
-    FROM system_logs ORDER BY id
+    FROM system_logs
+    WHERE timestamp >= :'periodo_desde'::timestamptz
+      AND timestamp < :'periodo_hasta'::timestamptz
+    ORDER BY id
   ) registro"
 
 AUDIT_COUNT="$(wc -l < "$AUDIT_FILE" | tr -d ' ')"
@@ -72,12 +83,14 @@ SHA256="$(sha256sum "$ARCHIVO_CIFRADO" | cut -d' ' -f1)"
 jq -n \
   --arg recoveryPointId "$RECOVERY_POINT_ID" --arg politica "$POLITICA" \
   --arg componente "LOGS" --arg archivo "data-03.gpg" --arg fecha "$FECHA" \
+  --arg periodoDesde "$PERIODO_DESDE" --arg periodoHasta "$PERIODO_HASTA" \
   --arg sha256 "$SHA256" --argjson tamano "$TAMANO" \
   --argjson auditCount "$AUDIT_COUNT" --argjson systemCount "$SYSTEM_COUNT" \
   --arg auditSha "$AUDIT_SHA" --arg systemSha "$SYSTEM_SHA" \
   --arg huella "$GPG_RECIPIENT_FINGERPRINT" --arg huellaFirma "$GPG_SIGNING_FINGERPRINT" \
   '{recovery_point_id:$recoveryPointId,politica_retencion:$politica,componente:$componente,
     archivo:$archivo,fecha_utc:$fecha,tamano_bytes:$tamano,sha256:$sha256,
+    periodo:{desde_inclusivo:$periodoDesde,hasta_exclusivo:$periodoHasta},
     formato:"JSON Lines UTF-8 dentro de tar.gz",registros:{audit_logs:$auditCount,system_logs:$systemCount},
     archivos:{"audit_logs.jsonl":$auditSha,"system_logs.jsonl":$systemSha},
     clave_de_cifrado:$huella,clave_de_firma:$huellaFirma}' \

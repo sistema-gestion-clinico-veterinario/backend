@@ -17,6 +17,12 @@ public class ClinicalTemplateResponse {
     Integer version;
     ClinicalTemplateStatus status;
     LocalDateTime publishedAt;
+    String description;
+    boolean defaultTemplate;
+    boolean active;
+    List<String> species;
+    List<Long> serviceIds;
+    List<String> serviceNames;
     List<Section> sections;
 
     @Value

@@ -11,6 +11,7 @@ import java.util.List;
 public class CitaResponse {
     private Long id;
     private String numeroCita;
+    private String businessTraceId;
     private Long version;
     private Long mascotaId;
     private String mascotaNombre;

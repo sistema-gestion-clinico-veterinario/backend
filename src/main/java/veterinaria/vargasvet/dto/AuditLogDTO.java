@@ -22,5 +22,10 @@ public class AuditLogDTO {
     private String ipAddress;
     private String dispositivo;
     private String correlationId;
+    private String businessTraceId;
+    private String entityType;
+    private String entityId;
+    private String previousValue;
+    private String newValue;
     private String outcome;
 }
