@@ -66,7 +66,12 @@ CREATE TABLE audit_logs (
   module varchar(100),
   details text,
   ip_address varchar(64),
-  dispositivo varchar(255)
+  dispositivo varchar(255),
+  business_trace_id varchar(50),
+  entity_type varchar(60),
+  entity_id varchar(80),
+  previous_value varchar(120),
+  new_value varchar(120)
 );
 CREATE TABLE system_logs (
   id bigserial PRIMARY KEY,
@@ -91,10 +96,12 @@ INSERT INTO company(name) SELECT 'Clínica ' || g FROM generate_series(1, 3) g;
 INSERT INTO usuario(nombre, company_id) SELECT 'Peña Núñez ' || g, 1 + g % 3 FROM generate_series(1, 250) g;
 INSERT INTO historia(usuario_id, nota, imagen) SELECT 1 + g % 250, 'Control ñandú ' || g, decode(md5(g::text), 'hex') FROM generate_series(1, 1000) g;
 INSERT INTO audit_logs(timestamp, correlation_id, outcome, user_email, user_role, company_id,
-                       company_name, action, module, details, ip_address, dispositivo)
+                       company_name, action, module, details, ip_address, dispositivo,
+                       business_trace_id, entity_type, entity_id, previous_value, new_value)
 VALUES (CURRENT_TIMESTAMP, 'prueba-auditoria-0001', 'SUCCESS', 'operador@softvet.test',
         'ROLE_ADMIN', 1, 'Clínica 1', 'REGISTRAR_PAGO', 'Caja',
-        'Pago de prueba registrado', '127.0.0.1', 'Navegador de prueba');
+        'Pago de prueba registrado', '127.0.0.1', 'Navegador de prueba',
+        'trz-prueba-0001', 'PAGO', '1', NULL, 'REGISTRADO');
 INSERT INTO system_logs(timestamp, correlation_id, category, event, outcome, http_method,
                         request_path, status_code, duration_ms, user_email, company_id,
                         ip_address, dispositivo)
@@ -140,7 +147,7 @@ gpg --batch --yes --quiet --decrypt --output "$MANIFIESTO_LEGIBLE" "$MANIFIESTO"
 echo "Manifiesto"
 manifiesto_dice() { test "$(jq -r "$1" "$MANIFIESTO_LEGIBLE" | tr -d '\r')" = "$2"; }
 verificar "  - restauración de verificación correcta" manifiesto_dice .restauracion_de_verificacion correcta
-verificar "  - 3 tablas registradas" manifiesto_dice '.filas_por_tabla | length' 3
+verificar "  - 5 tablas registradas" manifiesto_dice '.filas_por_tabla | length' 5
 verificar "  - 1000 filas en historia" manifiesto_dice .filas_por_tabla.historia 1000
 
 echo "Restauración desde el archivo cifrado"

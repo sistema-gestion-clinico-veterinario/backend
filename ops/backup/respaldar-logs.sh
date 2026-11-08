@@ -46,7 +46,8 @@ SYSTEM_FILE="$TRABAJO/logs/system_logs.jsonl"
 echo "Exportando auditoría funcional sin credenciales ni cuerpos de solicitudes..."
 psql --dbname="$BACKUP_DB_URL" --no-psqlrc -v ON_ERROR_STOP=1 -qAt \
   -v periodo_desde="$PERIODO_DESDE" -v periodo_hasta="$PERIODO_HASTA" \
-  --output="$AUDIT_FILE" -c "SELECT row_to_json(registro) FROM (
+  --output="$AUDIT_FILE" <<'SQL'
+SELECT row_to_json(registro) FROM (
     SELECT id, timestamp, correlation_id, outcome, user_email, user_role,
            company_id, company_name, action, module, details, ip_address, dispositivo,
            business_trace_id, entity_type, entity_id, previous_value, new_value
@@ -54,12 +55,14 @@ psql --dbname="$BACKUP_DB_URL" --no-psqlrc -v ON_ERROR_STOP=1 -qAt \
     WHERE timestamp >= :'periodo_desde'::timestamptz
       AND timestamp < :'periodo_hasta'::timestamptz
     ORDER BY id
-  ) registro"
+  ) registro;
+SQL
 
 echo "Exportando trazabilidad técnica sanitizada..."
 psql --dbname="$BACKUP_DB_URL" --no-psqlrc -v ON_ERROR_STOP=1 -qAt \
   -v periodo_desde="$PERIODO_DESDE" -v periodo_hasta="$PERIODO_HASTA" \
-  --output="$SYSTEM_FILE" -c "SELECT row_to_json(registro) FROM (
+  --output="$SYSTEM_FILE" <<'SQL'
+SELECT row_to_json(registro) FROM (
     SELECT id, timestamp, correlation_id, category, event, outcome, http_method,
            request_path, status_code, duration_ms, user_email, company_id,
            ip_address, dispositivo, error_type
@@ -67,7 +70,8 @@ psql --dbname="$BACKUP_DB_URL" --no-psqlrc -v ON_ERROR_STOP=1 -qAt \
     WHERE timestamp >= :'periodo_desde'::timestamptz
       AND timestamp < :'periodo_hasta'::timestamptz
     ORDER BY id
-  ) registro"
+  ) registro;
+SQL
 
 AUDIT_COUNT="$(wc -l < "$AUDIT_FILE" | tr -d ' ')"
 SYSTEM_COUNT="$(wc -l < "$SYSTEM_FILE" | tr -d ' ')"
