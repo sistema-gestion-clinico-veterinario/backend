@@ -9,7 +9,7 @@ SET estado_acceso_portal = CASE
     WHEN EXISTS (
         SELECT 1
         FROM usuario_por_rol upr
-        JOIN rol r ON r.id = upr.rol_id
+        JOIN roles r ON r.id = upr.rol_id
         WHERE upr.usuario_id = a.user_id
           AND upr.company_id = a.company_id
           AND r.purpose = 'CLIENT_PORTAL'
@@ -24,7 +24,7 @@ SET estado_acceso_portal = CASE
     WHEN EXISTS (
         SELECT 1
         FROM usuario_por_rol upr
-        JOIN rol r ON r.id = upr.rol_id
+        JOIN roles r ON r.id = upr.rol_id
         WHERE upr.usuario_id = a.user_id
           AND upr.company_id = a.company_id
           AND r.purpose = 'CLIENT_PORTAL'
