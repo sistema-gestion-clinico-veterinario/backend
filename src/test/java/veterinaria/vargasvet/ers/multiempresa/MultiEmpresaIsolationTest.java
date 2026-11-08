@@ -299,6 +299,8 @@ class MultiEmpresaIsolationTest {
         a.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
         a.setNumeroDocumento(usuario.getDni());
         a.setGenero(Genero.MASCULINO);
+        a.setEstadoAccesoPortal(
+                veterinaria.vargasvet.domain.enums.EstadoAccesoPortalPropietario.ACTIVO);
         return apoderadoRepository.save(a);
     }
 

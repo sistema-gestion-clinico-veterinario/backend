@@ -44,10 +44,20 @@ public class PortalPropietarioPolicyService {
             apoderadoRepository.save(apoderado);
 
             var usuario = apoderado.getUser();
+            // Los propietarios creados para gestión interna o provenientes de
+            // registros anteriores pueden no tener una cuenta de usuario. El
+            // cambio de política debe seguir guardándose: en ese caso basta con
+            // dejar revocado el acceso del apoderado, pues no existen sesiones,
+            // invitaciones ni tokens que invalidar.
+            if (usuario == null) {
+                revocados++;
+                continue;
+            }
             sessionSecurityService.invalidateSessionsForCompany(usuario, company);
             passwordResetTokenRepository.deleteByUsuarioAndCompany(usuario, company);
-            boolean conservaAccesoLaboral = usuarioPorRolRepository.existsActiveRoleScope(
-                    usuario.getId(), company.getId(), RoleScope.STAFF);
+            boolean conservaAccesoLaboral = usuario.getId() != null
+                    && usuarioPorRolRepository.existsActiveRoleScope(
+                            usuario.getId(), company.getId(), RoleScope.STAFF);
             if (!conservaAccesoLaboral) {
                 usuario.setVerificationToken(null);
                 usuario.setVerificationTokenExpiresAt(null);

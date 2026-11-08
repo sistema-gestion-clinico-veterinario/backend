@@ -308,6 +308,8 @@ class DosEmpresasSembradas {
         apoderado.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
         apoderado.setNumeroDocumento(usuario.getDni());
         apoderado.setGenero(Genero.FEMENINO);
+        apoderado.setEstadoAccesoPortal(
+                veterinaria.vargasvet.domain.enums.EstadoAccesoPortalPropietario.ACTIVO);
         return g(apoderados.save(apoderado));
     }
 

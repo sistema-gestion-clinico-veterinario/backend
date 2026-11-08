@@ -17,6 +17,8 @@ import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.entity.Raza;
 import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.entity.Usuario;
+import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
+import veterinaria.vargasvet.domain.enums.EstadoAccesoPortalPropietario;
 import veterinaria.vargasvet.domain.enums.EspecieMascota;
 import veterinaria.vargasvet.domain.enums.Genero;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
@@ -207,6 +209,13 @@ class RF17To21Test {
         owner.getUser().setEmail("ana.qa@example.test");
         owner.getUser().setCompany(company);
         owner.setCompany(company);
+        owner.setEstadoAccesoPortal(EstadoAccesoPortalPropietario.INVITACION_PENDIENTE);
+        Role clientRole = roleCliente(20, company);
+        UsuarioPorRol assignment = new UsuarioPorRol();
+        assignment.setUsuario(owner.getUser());
+        assignment.setRol(clientRole);
+        assignment.setCompany(company);
+        owner.getUser().getUsuariosPorRol().add(assignment);
 
         when(apoderadoRepository.findById(40L)).thenReturn(Optional.of(owner));
         when(mascotaRepository.existsByApoderadoIdAndActivoTrue(40L)).thenReturn(true);
