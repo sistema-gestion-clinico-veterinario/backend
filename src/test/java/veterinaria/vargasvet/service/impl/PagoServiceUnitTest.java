@@ -174,7 +174,9 @@ class PagoServiceUnitTest {
         assertEquals(TipoPurchase.SERVICIO_CITA, saved.getTipoPurchase());
         assertEquals(new BigDecimal("20.00"), response.getCambio());
         assertEquals(new BigDecimal("100.00"), cita.getMontoPagado());
-        verify(auditLogService).log(eq("REGISTRAR_PAGO"), eq("Facturación"), any(String.class));
+        verify(auditLogService).logBusiness(
+                any(), eq("REGISTRAR_PAGO"), eq("Facturación"), any(String.class),
+                any(), eq("PAGO"), eq("88"), eq("PENDIENTE"), eq("PAID"));
     }
 
     @Test
