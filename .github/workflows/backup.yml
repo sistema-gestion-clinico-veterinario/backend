@@ -3,6 +3,8 @@ name: "Respaldo · Base de datos, logs y archivos"
 on:
   schedule:
     - cron: "17 7 * * *"
+    - cron: "17 15 * * *"
+    - cron: "17 23 * * *"
   workflow_dispatch:
     inputs:
       incluir_archivos:
@@ -29,14 +31,18 @@ jobs:
       - name: Generar identificador y política
         id: plan
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
         run: |
           recovery_point_id="$(cat /proc/sys/kernel/random/uuid)"
-          if [ "$(date -u +%d)" = "01" ]; then
-            retention_policy="p03"
-          elif [ "$(date -u +%u)" = "7" ]; then
-            retention_policy="p02"
-          else
-            retention_policy="p01"
+          retention_policy="p01"
+          if [ "$EVENT_NAME" = "schedule" ] && [ "$SCHEDULE" = "17 7 * * *" ]; then
+            if [ "$(date -u +%d)" = "01" ]; then
+              retention_policy="p03"
+            elif [ "$(date -u +%u)" = "7" ]; then
+              retention_policy="p02"
+            fi
           fi
           started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           echo "recovery_point_id=$recovery_point_id" >> "$GITHUB_OUTPUT"
