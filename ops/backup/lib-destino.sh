@@ -35,7 +35,12 @@ destino_subir() {
     return 8
   fi
   case "$DESTINO_TIPO" in
-    s3) aws s3 cp "$archivo" "s3://$BACKUP_S3_BUCKET/$ruta" --endpoint-url "$BACKUP_S3_ENDPOINT" --only-show-errors ;;
+    s3)
+      local md5
+      md5="$(openssl md5 -binary "$archivo" | base64 | tr -d '\n')" || return 8
+      aws s3api put-object --bucket "$BACKUP_S3_BUCKET" --key "$ruta" --body "$archivo" \
+        --content-md5 "$md5" --endpoint-url "$BACKUP_S3_ENDPOINT" > /dev/null
+      ;;
     drive) rclone copyto "$archivo" "$DESTINO_REMOTO:$DESTINO_CARPETA/$ruta" --drive-use-trash=false --quiet ;;
   esac
 }
