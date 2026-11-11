@@ -137,11 +137,17 @@ class PerfilYVentanasIntegrationTest {
         String codigo = jdbc.queryForObject("SELECT codigo FROM ventanas WHERE id = ?", String.class, id);
         String nombre = jdbc.queryForObject("SELECT nombre FROM ventanas WHERE id = ?", String.class, id);
         Integer orden = jdbc.queryForObject("SELECT orden FROM ventanas WHERE id = ?", Integer.class, id);
+        String grupo = jdbc.queryForObject("SELECT grupo FROM ventanas WHERE id = ?", String.class, id);
+        java.util.Map<String, Object> datos = new java.util.HashMap<>();
+        datos.put("codigo", codigo);
+        datos.put("nombre", nombre);
+        datos.put("orden", orden);
+        datos.put("grupo", grupo);
+        datos.put("activo", true);
 
         MvcResult respuesta = mvc.perform(peticion(HttpMethod.PUT, "/admin/windows/" + id, plataforma, null)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(java.util.Map.of(
-                        "codigo", codigo, "nombre", nombre, "orden", orden, "activo", true)))).andReturn();
+                .content(json.writeValueAsString(datos))).andReturn();
 
         assertThat(respuesta.getResponse().getStatus()).as(cuerpo(respuesta)).isEqualTo(200);
         JsonNode modulo = json.readTree(cuerpo(respuesta)).path("data");
@@ -150,6 +156,7 @@ class PerfilYVentanasIntegrationTest {
         assertThat(modulo.path("codigo").asText()).isEqualTo(codigo);
         assertThat(modulo.path("nombre").asText()).isEqualTo(nombre);
         assertThat(modulo.path("vistas").size()).isGreaterThanOrEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT grupo FROM ventanas WHERE id = ?", String.class, id)).isEqualTo(grupo);
     }
 
     private List<String> campos(JsonNode nodo) {
