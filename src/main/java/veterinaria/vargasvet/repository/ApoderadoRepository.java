@@ -43,6 +43,10 @@ public interface ApoderadoRepository extends JpaRepository<Apoderado, Long> {
     @Query("SELECT a FROM Apoderado a WHERE a.company.id = :companyId")
     java.util.List<Apoderado> findByCompanyId(@Param("companyId") Integer companyId);
 
+    java.util.Optional<Apoderado> findFirstByCompany_IdOrderByIdAsc(Integer companyId);
+
+    java.util.Optional<Apoderado> findFirstByOrderByIdAsc();
+
     boolean existsByUserId(Integer userId);
     boolean existsByUserIdAndEstadoTrue(Integer userId);
     boolean existsByUserIdAndCompanyId(Integer userId, Integer companyId);
