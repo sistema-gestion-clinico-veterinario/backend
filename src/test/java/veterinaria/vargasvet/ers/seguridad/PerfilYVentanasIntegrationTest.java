@@ -108,6 +108,27 @@ class PerfilYVentanasIntegrationTest {
         assertThat(campos(modulo)).containsExactlyElementsOf(CAMPOS_DE_VENTANA);
         assertThat(modulo.path("id").asInt()).isEqualTo(id);
         assertThat(modulo.path("vistas").size()).isGreaterThanOrEqualTo(1);
+        for (JsonNode vista : modulo.path("vistas")) {
+            assertThat(campos(vista)).containsExactlyElementsOf(CAMPOS_DE_VISTA);
+        }
+    }
+
+    @Test
+    void registrarUnModuloRespondeConElModuloCreado() throws Exception {
+        MvcResult respuesta = mvc.perform(peticion(HttpMethod.POST, "/admin/windows", plataforma, null)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(java.util.Map.of(
+                        "codigo", "modulo prueba", "nombre", "Módulo de prueba", "orden", 90, "activo", true)))).andReturn();
+
+        assertThat(respuesta.getResponse().getStatus()).as(cuerpo(respuesta)).isEqualTo(201);
+        JsonNode modulo = json.readTree(cuerpo(respuesta)).path("data");
+        assertThat(campos(modulo)).containsExactlyElementsOf(CAMPOS_DE_VENTANA);
+        assertThat(modulo.path("id").asInt()).isPositive();
+        assertThat(modulo.path("codigo").asText()).isEqualTo("MODULO_PRUEBA");
+        assertThat(modulo.path("nombre").asText()).isEqualTo("Módulo de prueba");
+        assertThat(modulo.path("orden").asInt()).isEqualTo(90);
+        assertThat(modulo.path("vistas").isNull()).isTrue();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM ventanas WHERE codigo = 'MODULO_PRUEBA'", Integer.class)).isEqualTo(1);
     }
 
     @Test
@@ -124,8 +145,11 @@ class PerfilYVentanasIntegrationTest {
 
         assertThat(respuesta.getResponse().getStatus()).as(cuerpo(respuesta)).isEqualTo(200);
         JsonNode modulo = json.readTree(cuerpo(respuesta)).path("data");
+        assertThat(campos(modulo)).containsExactlyElementsOf(CAMPOS_DE_VENTANA);
         assertThat(modulo.path("id").asInt()).isEqualTo(id);
         assertThat(modulo.path("codigo").asText()).isEqualTo(codigo);
+        assertThat(modulo.path("nombre").asText()).isEqualTo(nombre);
+        assertThat(modulo.path("vistas").size()).isGreaterThanOrEqualTo(1);
     }
 
     private List<String> campos(JsonNode nodo) {
