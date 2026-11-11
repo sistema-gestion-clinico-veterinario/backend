@@ -34,4 +34,6 @@ public interface AuditLogService {
      * Obtiene los logs filtrados de forma paginada.
      */
     Page<AuditLog> getLogs(Integer companyId, String userEmail, String action, String module, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+
+    java.util.List<AuditLog> exportLogs(Integer companyId, String userEmail, String action, String module, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 }

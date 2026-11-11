@@ -186,6 +186,19 @@ public class AuditLogServiceImpl implements AuditLogService {
                 startDate, endDate, pageable);
     }
 
+    @Override
+    public java.util.List<AuditLog> exportLogs(Integer companyId, String userEmail, String action, String module, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        Integer resolvedCompanyId = SecurityUtils.isSuperAdmin()
+                ? companyId
+                : SecurityUtils.getCurrentCompanyId();
+        if (!SecurityUtils.isSuperAdmin() && resolvedCompanyId == null) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "El usuario autenticado no tiene una empresa asignada");
+        }
+        return auditLogRepository.exportarLogs(resolvedCompanyId, userEmail, action, module,
+                startDate, endDate, pageable).getContent();
+    }
+
     private String getDispositivo() {
         if (httpServletRequest == null) return null;
         try {

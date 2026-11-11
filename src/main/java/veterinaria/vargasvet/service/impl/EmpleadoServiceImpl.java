@@ -36,6 +36,7 @@ import veterinaria.vargasvet.dto.response.EmpleadoListResponse;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -202,16 +203,22 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         validarEspecialidadesPermitidas(dto.getEspecialidades(), permiteEspecialidades);
         if (permiteEspecialidades && dto.getEspecialidades() != null) {
+            Map<String, Especialidad> especialidadesPorNombre = new HashMap<>();
+            especialidadRepository.findByNombreInAndCompanyId(dto.getEspecialidades(), companyIdToUse)
+                    .forEach(especialidad -> especialidadesPorNombre.put(especialidad.getNombre(), especialidad));
             empleado.setEspecialidades(dto.getEspecialidades().stream()
-                    .map(nombre -> especialidadRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
+                    .map(nombre -> Optional.ofNullable(especialidadesPorNombre.get(nombre))
                             .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada: " + nombre + " para la empresa")))
                     .collect(Collectors.toSet()));
         }
 
   
         if (dto.getTiposEmpleado() != null) {
+            Map<String, TipoEmpleado> tiposPorNombre = new HashMap<>();
+            tipoEmpleadoRepository.findByNombreInAndCompanyId(dto.getTiposEmpleado(), companyIdToUse)
+                    .forEach(tipo -> tiposPorNombre.put(tipo.getNombre(), tipo));
             empleado.setTiposEmpleado(dto.getTiposEmpleado().stream()
-                    .map(nombre -> tipoEmpleadoRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
+                    .map(nombre -> Optional.ofNullable(tiposPorNombre.get(nombre))
                             .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado: " + nombre + " para la empresa")))
                     .collect(Collectors.toSet()));
         }
@@ -308,9 +315,14 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         if (dto.getTiposEmpleado() != null) {
             java.util.Set<TipoEmpleado> newTipos = new java.util.HashSet<>();
+            Map<String, TipoEmpleado> tiposPorNombre = new HashMap<>();
+            tipoEmpleadoRepository.findByNombreInAndCompanyId(dto.getTiposEmpleado(), companyIdToUse)
+                    .forEach(tipo -> tiposPorNombre.put(tipo.getNombre(), tipo));
             for (String nombre : dto.getTiposEmpleado()) {
-                TipoEmpleado tipo = tipoEmpleadoRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
-                        .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado: " + nombre + " para la empresa"));
+                TipoEmpleado tipo = tiposPorNombre.get(nombre);
+                if (tipo == null) {
+                    throw new ResourceNotFoundException("Tipo de empleado no encontrado: " + nombre + " para la empresa");
+                }
                 newTipos.add(tipo);
             }
             empleado.getTiposEmpleado().retainAll(newTipos);
@@ -336,9 +348,14 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         validarEspecialidadesPermitidas(dto.getEspecialidades(), permiteEspecialidades);
         if (permiteEspecialidades && dto.getEspecialidades() != null) {
             java.util.Set<Especialidad> newEspecialidades = new java.util.HashSet<>();
+            Map<String, Especialidad> especialidadesPorNombre = new HashMap<>();
+            especialidadRepository.findByNombreInAndCompanyId(dto.getEspecialidades(), companyIdToUse)
+                    .forEach(especialidad -> especialidadesPorNombre.put(especialidad.getNombre(), especialidad));
             for (String nombre : dto.getEspecialidades()) {
-                Especialidad esp = especialidadRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
-                        .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada: " + nombre + " para la empresa"));
+                Especialidad esp = especialidadesPorNombre.get(nombre);
+                if (esp == null) {
+                    throw new ResourceNotFoundException("Especialidad no encontrada: " + nombre + " para la empresa");
+                }
                 newEspecialidades.add(esp);
             }
             empleado.getEspecialidades().retainAll(newEspecialidades);

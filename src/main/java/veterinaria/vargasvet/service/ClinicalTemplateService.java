@@ -537,9 +537,14 @@ public class ClinicalTemplateService {
         section.setTemplate(template);
         section.setTitle(title);
         section.setDisplayOrder(order);
+        Map<String, ClinicalConcept> conceptosBase = new HashMap<>();
+        conceptRepository.findByCompanyIsNullAndCodeIn(defaults.stream().map(DefaultField::code).distinct().toList())
+                .forEach(concepto -> conceptosBase.put(concepto.getCode(), concepto));
         for (DefaultField item : defaults) {
-            ClinicalConcept concept = conceptRepository.findByCompanyIsNullAndCode(item.code())
-                    .orElseThrow(() -> new IllegalStateException("No existe el concepto clínico base " + item.code()));
+            ClinicalConcept concept = conceptosBase.get(item.code());
+            if (concept == null) {
+                throw new IllegalStateException("No existe el concepto clínico base " + item.code());
+            }
             ClinicalTemplateField field = new ClinicalTemplateField();
             field.setSection(section);
             field.setConcept(concept);

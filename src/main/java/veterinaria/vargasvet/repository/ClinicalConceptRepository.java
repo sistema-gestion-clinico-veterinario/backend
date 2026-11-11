@@ -18,4 +18,6 @@ public interface ClinicalConceptRepository extends JpaRepository<ClinicalConcept
     boolean existsByCompanyIdAndCodeIgnoreCase(Integer companyId, String code);
 
     Optional<ClinicalConcept> findByCompanyIsNullAndCode(String code);
+
+    List<ClinicalConcept> findByCompanyIsNullAndCodeIn(java.util.Collection<String> codes);
 }

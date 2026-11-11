@@ -14,5 +14,6 @@ public interface EspecialidadRepository extends JpaRepository<Especialidad, Long
     java.util.List<Especialidad> findByCompanyId(Integer companyId);
     Page<Especialidad> findByCompanyId(Integer companyId, Pageable pageable);
     Optional<Especialidad> findByNombreAndCompanyId(String nombre, Integer companyId);
+    java.util.List<Especialidad> findByNombreInAndCompanyId(java.util.Collection<String> nombres, Integer companyId);
     Optional<Especialidad> findByIdAndCompanyId(Long id, Integer companyId);
 }

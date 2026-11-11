@@ -151,7 +151,7 @@ public class AuditLogController {
         }
 
         Pageable pageable = PageRequest.of(0, EXPORT_MAX_RECORDS, Sort.by("timestamp").descending());
-        Page<AuditLog> logs = auditLogService.getLogs(companyId, userEmail, action, module, startDate, endDate, pageable);
+        List<AuditLog> logs = auditLogService.exportLogs(companyId, userEmail, action, module, startDate, endDate, pageable);
 
         boolean filtrosAplicados = userEmail != null || action != null || module != null
                 || startDate != null || endDate != null || (SecurityUtils.isSuperAdmin() && companyId != null);
@@ -161,9 +161,9 @@ public class AuditLogController {
                 "Seguridad",
                 "El usuario " + currentUserEmail + " exportó el historial de auditoría ("
                         + (filtrosAplicados ? "con filtros aplicados, " : "completo, ")
-                        + logs.getContent().size() + " registros)."
+                        + logs.size() + " registros)."
         );
 
-        return ResponseEntity.ok(new ApiResponse<>(true, "Logs de auditoría exportados correctamente", logs.getContent()));
+        return ResponseEntity.ok(new ApiResponse<>(true, "Logs de auditoría exportados correctamente", logs));
     }
 }
