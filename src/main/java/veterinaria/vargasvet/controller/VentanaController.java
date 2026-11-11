@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import veterinaria.vargasvet.domain.entity.Ventana;
 import veterinaria.vargasvet.dto.ApiResponse;
+import veterinaria.vargasvet.dto.response.VentanaResponse;
 import veterinaria.vargasvet.service.VentanaService;
 
 import java.util.List;
@@ -22,7 +23,7 @@ public class VentanaController {
 
     @GetMapping
     @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'LEER')")
-    public ResponseEntity<ApiResponse<List<Ventana>>> listar() {
+    public ResponseEntity<ApiResponse<List<VentanaResponse>>> listar() {
         return ResponseEntity.ok(new ApiResponse<>(true, "Ventanas obtenidas", ventanaService.listarTodas()));
     }
 

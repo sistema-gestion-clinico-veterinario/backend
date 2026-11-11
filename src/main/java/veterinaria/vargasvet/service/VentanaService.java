@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Ventana;
+import veterinaria.vargasvet.dto.response.VentanaResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.VentanaRepository;
 
@@ -21,8 +22,8 @@ public class VentanaService {
     private final AuditLogService auditLogService;
 
     @Transactional(readOnly = true)
-    public List<Ventana> listarTodas() {
-        return ventanaRepository.findByActivoTrueOrderByOrdenAsc();
+    public List<VentanaResponse> listarTodas() {
+        return ventanaRepository.findByActivoTrueOrderByOrdenAsc().stream().map(VentanaResponse::de).toList();
     }
 
     @Transactional(readOnly = true)
