@@ -44,7 +44,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     public void log(Integer companyId, String action, String module, String details) {
         String email = SecurityUtils.getCurrentUserEmail();
         
-        // Extraer rol activo de las authorities del SecurityContext
+
         String role = null;
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null) {

@@ -61,7 +61,6 @@ public class ApoderadoRequest implements ProtectedPersonalData {
     private Set<Integer> roleIds;
     private Boolean avisoInformado;
     private Boolean consentimientoRecordatorios;
-    /** Solo se usa cuando la empresa permite decidir el acceso por propietario. */
     private Boolean habilitarAccesoPortal;
 
     @Override

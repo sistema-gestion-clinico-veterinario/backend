@@ -15,9 +15,7 @@ import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.util.AppClock;
 
-/** Aplica el efecto de seguridad de una política empresarial sin borrar datos
- * personales, clínicos ni administrativos. Volver a habilitar el portal no
- * reactiva personas automáticamente: cada acceso requiere una acción explícita. */
+
 @Service
 @RequiredArgsConstructor
 public class PortalPropietarioPolicyService {
@@ -44,11 +42,6 @@ public class PortalPropietarioPolicyService {
             apoderadoRepository.save(apoderado);
 
             var usuario = apoderado.getUser();
-            // Los propietarios creados para gestión interna o provenientes de
-            // registros anteriores pueden no tener una cuenta de usuario. El
-            // cambio de política debe seguir guardándose: en ese caso basta con
-            // dejar revocado el acceso del apoderado, pues no existen sesiones,
-            // invitaciones ni tokens que invalidar.
             if (usuario == null) {
                 revocados++;
                 continue;

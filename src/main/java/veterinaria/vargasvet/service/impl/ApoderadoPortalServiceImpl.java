@@ -69,7 +69,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         return ids.isEmpty() ? List.of(-1L) : ids;
     }
 
-    /** Quien no es el propietario principal no recibe los datos personales de este. */
+
     private MascotaResponse paraLaPersona(Apoderado persona, Mascota mascota) {
         MascotaResponse response = mascotaMapper.toResponse(mascota);
         if (response != null && !esPrincipal(persona, mascota)) {
@@ -91,8 +91,6 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
     }
 
     private Apoderado getAuthenticatedApoderado() {
-        // Por id, no por email: el correo ya no identifica de forma unica a la
-        // sesion actual (puede repetirse entre usuarios distintos).
         Usuario user = usuarioRepository.findById(SecurityUtils.getCurrentUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         
@@ -100,10 +98,6 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         if (apoderadoOpt.isPresent()) {
             return apoderadoOpt.get();
         }
-
-        // Vista previa segura para Super Admin y Admin:
-        // Si el usuario autenticado es un administrador, le permitimos visualizar el portal
-        // con la información del primer apoderado registrado EN SU SEDE/CLÍNICA activa.
         if (SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin()) {
             Integer companyId = SecurityUtils.getCurrentCompanyId();
             java.util.Optional<Apoderado> vistaPrevia = companyId != null
@@ -139,8 +133,6 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
             response.setCompanyId(company.getId());
             response.setCompanyName(company.getName());
             response.setCompanyPhone(company.getPhone());
-
-            // Check if company is currently open
             java.time.DayOfWeek today = java.time.LocalDate.now().getDayOfWeek();
             veterinaria.vargasvet.domain.enums.DiaSemana diaSemana = switch (today) {
                 case MONDAY    -> veterinaria.vargasvet.domain.enums.DiaSemana.LUNES;
