@@ -372,11 +372,13 @@ class RoleServiceImplTest {
     }
 
     private void conVistasEsenciales() {
+        List<Vista> vistas = new java.util.ArrayList<>();
         for (var par : java.util.Map.of(1, "VISTA_COMPANY", 2, "VISTA_ROLES", 3, "VISTA_EMPLEADOS").entrySet()) {
             Vista vista = vista(par.getKey(), par.getValue(), par.getValue(), par.getKey(), null);
             vista.setAudience(ViewAudience.STAFF);
-            when(vistaRepository.findById(par.getKey())).thenReturn(Optional.of(vista));
+            vistas.add(vista);
         }
+        when(vistaRepository.findAllById(any())).thenReturn(vistas);
     }
 
     @Test

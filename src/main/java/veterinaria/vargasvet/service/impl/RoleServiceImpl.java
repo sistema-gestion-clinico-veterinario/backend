@@ -339,14 +339,13 @@ public class RoleServiceImpl implements RoleService {
             throw new IllegalArgumentException("No se pueden asignar permisos a un rol inactivo");
         }
 
-        validarPermisosSolicitados(role, permisos);
+        Map<Integer, Vista> vistasPorId = validarPermisosSolicitados(role, permisos);
 
         rolVistaPermisoRepository.deleteByRolId(roleId);
         rolVistaPermisoRepository.flush();
 
         for (RolVistaPermisoDTO dto : permisos) {
-            Vista vista = vistaRepository.findById(dto.getVistaId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Vista no encontrada: " + dto.getVistaId()));
+            Vista vista = vistasPorId.get(dto.getVistaId());
             RolVistaPermiso rvp = new RolVistaPermiso();
             rvp.setRol(role);
             rvp.setVista(vista);
@@ -408,18 +407,23 @@ public class RoleServiceImpl implements RoleService {
         return role;
     }
 
-    private void validarPermisosSolicitados(Role role, List<RolVistaPermisoDTO> permisos) {
+    private Map<Integer, Vista> validarPermisosSolicitados(Role role, List<RolVistaPermisoDTO> permisos) {
         if (permisos == null) {
             throw new IllegalArgumentException("Debe enviar la matriz de permisos");
         }
+        Map<Integer, Vista> vistasPorId = new java.util.HashMap<>();
+        vistaRepository.findAllById(permisos.stream().map(RolVistaPermisoDTO::getVistaId).filter(java.util.Objects::nonNull).distinct().toList())
+                .forEach(vista -> vistasPorId.put(vista.getId(), vista));
         Set<Integer> vistasRecibidas = new HashSet<>();
         Set<String> vistasConAcceso = new HashSet<>();
         for (RolVistaPermisoDTO dto : permisos) {
             if (dto.getVistaId() == null || !vistasRecibidas.add(dto.getVistaId())) {
                 throw new IllegalArgumentException("La matriz contiene vistas duplicadas o inválidas");
             }
-            Vista vista = vistaRepository.findById(dto.getVistaId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Vista no encontrada: " + dto.getVistaId()));
+            Vista vista = vistasPorId.get(dto.getVistaId());
+            if (vista == null) {
+                throw new ResourceNotFoundException("Vista no encontrada: " + dto.getVistaId());
+            }
             if (!vista.isActivo() || !isAudienceCompatible(role.getScope(), vista.getAudience())) {
                 throw new AccessDeniedException("La vista no es asignable al alcance del rol: " + vista.getCodigo());
             }
@@ -435,6 +439,7 @@ public class RoleServiceImpl implements RoleService {
                         "El rol administrador de empresa debe conservar el acceso a: " + String.join(", ", faltantes));
             }
         }
+        return vistasPorId;
     }
 
     private boolean isAudienceCompatible(RoleScope scope, ViewAudience audience) {

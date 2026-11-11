@@ -153,12 +153,18 @@ public class VistaService {
         }
 
         Set<Integer> idsRecibidos = new HashSet<>();
+        Map<Integer, Vista> existentes = new HashMap<>();
+        vistaRepository.findAllById(reorders.stream().map(VistaReorderDTO::getId).filter(Objects::nonNull).distinct().toList())
+                .forEach(vista -> existentes.put(vista.getId(), vista));
         Map<Integer, Vista> vistas = new HashMap<>();
         Map<Integer, Ventana> modulos = new HashMap<>();
         for (VistaReorderDTO cambio : reorders) {
             validar(cambio, idsRecibidos);
-            vistas.put(cambio.getId(), vistaRepository.findById(cambio.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Vista no encontrada: " + cambio.getId())));
+            Vista encontrada = existentes.get(cambio.getId());
+            if (encontrada == null) {
+                throw new ResourceNotFoundException("Vista no encontrada: " + cambio.getId());
+            }
+            vistas.put(cambio.getId(), encontrada);
             if (cambio.getVentanaId() != null && !modulos.containsKey(cambio.getVentanaId())) {
                 modulos.put(cambio.getVentanaId(), resolveVentana(cambio.getVentanaId()));
             }

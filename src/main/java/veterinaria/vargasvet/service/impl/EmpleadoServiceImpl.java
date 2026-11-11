@@ -1047,13 +1047,16 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         //      (antes de borrar nada, para fallar rápido si algo es inválido)
         long daysDiff = java.time.temporal.ChronoUnit.DAYS.between(sourceStart, targetStart);
         List<String> warnings = new java.util.ArrayList<>();
+        Map<LocalDate, java.util.Optional<veterinaria.vargasvet.domain.entity.CompanyException>> excepcionesPorFecha = new HashMap<>();
+        Map<DiaSemana, java.util.Optional<CompanyOperatingHour>> horariosPorDia = new HashMap<>();
 
         for (HorarioEmpleado source : sourceShifts) {
             LocalDate targetDay = source.getFecha().plusDays(daysDiff);
             DiaSemana dia       = toDiaSemana(targetDay.getDayOfWeek());
 
             // 4a. Verificar cierre especial / feriado en la fecha destino exacta
-            var exception = companyExceptionRepository.findByCompanyIdAndDate(companyId, targetDay);
+            var exception = excepcionesPorFecha.computeIfAbsent(targetDay,
+                    fecha -> companyExceptionRepository.findByCompanyIdAndDate(companyId, fecha));
             if (exception.isPresent() && Boolean.FALSE.equals(exception.get().getIsOpen())) {
                 throw new IllegalArgumentException(
                     "No se puede clonar el turno al " + targetDay + ": la clínica está cerrada ese día (" +
@@ -1061,7 +1064,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             }
 
             // 4b. Verificar horario operativo del día destino
-            var opHourOpt = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, dia);
+            var opHourOpt = horariosPorDia.computeIfAbsent(dia,
+                    d -> companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, d));
             if (opHourOpt.isPresent()) {
                 CompanyOperatingHour opHour = opHourOpt.get();
 
@@ -1096,11 +1100,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             DiaSemana dia       = toDiaSemana(targetDay.getDayOfWeek());
 
             // Omitir días cerrados (ya detectados en el pre-check de arriba)
-            var opHourOpt = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, dia);
+            var opHourOpt = horariosPorDia.computeIfAbsent(dia,
+                    d -> companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, d));
             if (opHourOpt.isPresent() && Boolean.FALSE.equals(opHourOpt.get().getIsOpen())) {
                 continue;
             }
-            var exception = companyExceptionRepository.findByCompanyIdAndDate(companyId, targetDay);
+            var exception = excepcionesPorFecha.computeIfAbsent(targetDay,
+                    fecha -> companyExceptionRepository.findByCompanyIdAndDate(companyId, fecha));
             if (exception.isPresent() && Boolean.FALSE.equals(exception.get().getIsOpen())) {
                 continue;
             }

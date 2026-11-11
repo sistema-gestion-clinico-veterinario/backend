@@ -49,8 +49,7 @@ public class CompanyServiceImpl implements CompanyService {
             company = companyRepository.findById(companyId)
                     .orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada con ID: " + companyId));
         } else if (SecurityUtils.isSuperAdmin()) {
-            company = companyRepository.findAll().stream()
-                    .findFirst()
+            company = companyRepository.findFirstByOrderByIdAsc()
                     .orElseThrow(() -> new ResourceNotFoundException("No se ha configurado ninguna empresa aún"));
         } else {
             throw new AccessDeniedException("El usuario no tiene una empresa asignada");
@@ -70,7 +69,7 @@ public class CompanyServiceImpl implements CompanyService {
             if (!SecurityUtils.isSuperAdmin()) {
                 throw new AccessDeniedException("El usuario no tiene una empresa asignada");
             }
-            return companyRepository.findAll().stream().findFirst()
+            return companyRepository.findFirstByOrderByIdAsc()
                     .map(c -> update(c.getId(), dto)).orElseGet(() -> save(dto));
         }
         return update(id, dto);
