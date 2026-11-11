@@ -27,13 +27,13 @@ public class VentanaService {
     }
 
     @Transactional(readOnly = true)
-    public Ventana obtenerPorId(Integer id) {
-        return ventanaRepository.findById(id)
+    public VentanaResponse obtenerPorId(Integer id) {
+        return ventanaRepository.findById(id).map(VentanaResponse::de)
                 .orElseThrow(() -> new ResourceNotFoundException("Ventana no encontrada"));
     }
 
     @Transactional
-    public Ventana crear(Ventana ventana) {
+    public VentanaResponse crear(Ventana ventana) {
         ventana.setCodigo(normalizarCodigo(ventana.getCodigo()));
         ventana.setGrupo(normalizarTexto(ventana.getGrupo()));
         if (ventanaRepository.findByCodigo(ventana.getCodigo()) != null) {
@@ -42,11 +42,11 @@ public class VentanaService {
         Ventana guardada = ventanaRepository.save(ventana);
         auditLogService.log("REGISTRAR_MODULO", MODULO_AUDITORIA,
                 "Se registró el módulo " + guardada.getCodigo() + " \"" + guardada.getNombre() + "\"");
-        return guardada;
+        return VentanaResponse.de(guardada);
     }
 
     @Transactional
-    public Ventana actualizar(Integer id, Ventana datos) {
+    public VentanaResponse actualizar(Integer id, Ventana datos) {
         Ventana ventana = ventanaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ventana no encontrada"));
 
@@ -74,7 +74,7 @@ public class VentanaService {
             auditLogService.log("MODIFICAR_MODULO", MODULO_AUDITORIA,
                     "Se modificó el módulo " + guardada.getCodigo() + ": " + String.join("; ", cambios));
         }
-        return guardada;
+        return VentanaResponse.de(guardada);
     }
 
     @Transactional

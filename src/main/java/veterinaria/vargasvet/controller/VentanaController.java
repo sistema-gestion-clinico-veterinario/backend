@@ -29,21 +29,21 @@ public class VentanaController {
 
     @GetMapping("/{id}")
     @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'LEER')")
-    public ResponseEntity<ApiResponse<Ventana>> obtener(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<VentanaResponse>> obtener(@PathVariable Integer id) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Ventana obtenida", ventanaService.obtenerPorId(id)));
     }
 
     @PostMapping
     @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'ESCRIBIR')")
-    public ResponseEntity<ApiResponse<Ventana>> crear(@Valid @RequestBody Ventana ventana) {
-        Ventana creada = ventanaService.crear(ventana);
+    public ResponseEntity<ApiResponse<VentanaResponse>> crear(@Valid @RequestBody Ventana ventana) {
+        VentanaResponse creada = ventanaService.crear(ventana);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Ventana creada exitosamente", creada));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("@accesoValidator.hasPurpose('PLATFORM_ADMIN') and @accesoValidator.can('VISTA_VENTANAS', 'MODIFICAR')")
-    public ResponseEntity<ApiResponse<Ventana>> actualizar(@PathVariable Integer id, @Valid @RequestBody Ventana ventana) {
+    public ResponseEntity<ApiResponse<VentanaResponse>> actualizar(@PathVariable Integer id, @Valid @RequestBody Ventana ventana) {
         return ResponseEntity.ok(new ApiResponse<>(true, "Ventana actualizada", ventanaService.actualizar(id, ventana)));
     }
 
