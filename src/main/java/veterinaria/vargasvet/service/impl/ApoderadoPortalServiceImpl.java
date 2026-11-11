@@ -106,16 +106,11 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
         // con la información del primer apoderado registrado EN SU SEDE/CLÍNICA activa.
         if (SecurityUtils.isSuperAdmin() || SecurityUtils.isAdmin()) {
             Integer companyId = SecurityUtils.getCurrentCompanyId();
-            if (companyId != null) {
-                List<Apoderado> companyApoderados = apoderadoRepository.findByCompanyId(companyId);
-                if (!companyApoderados.isEmpty()) {
-                    return companyApoderados.get(0);
-                }
-            } else {
-                List<Apoderado> allApoderados = apoderadoRepository.findAll();
-                if (!allApoderados.isEmpty()) {
-                    return allApoderados.get(0);
-                }
+            java.util.Optional<Apoderado> vistaPrevia = companyId != null
+                    ? apoderadoRepository.findFirstByCompany_IdOrderByIdAsc(companyId)
+                    : apoderadoRepository.findFirstByOrderByIdAsc();
+            if (vistaPrevia.isPresent()) {
+                return vistaPrevia.get();
             }
         }
 

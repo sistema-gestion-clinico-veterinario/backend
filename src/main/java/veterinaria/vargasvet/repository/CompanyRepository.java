@@ -19,6 +19,8 @@ public interface CompanyRepository extends JpaRepository<Company, Integer> {
     @org.springframework.data.jpa.repository.Query("SELECT c FROM Company c WHERE c.id = :id")
     Optional<Company> lockById(@org.springframework.data.repository.query.Param("id") Integer id);
 
+    Optional<Company> findFirstByOrderByIdAsc();
+
     boolean existsBySlug(String slug);
 
     boolean existsBySlugAndIdNot(String slug, Integer id);
