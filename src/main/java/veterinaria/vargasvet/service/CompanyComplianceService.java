@@ -40,7 +40,9 @@ public class CompanyComplianceService {
 
     @Transactional(readOnly = true)
     public List<ConfiguracionCumplimientoResponse> actuales(Integer companyId) {
-        companyRepository.findById(companyId).orElseThrow(() -> new ResourceNotFoundException("Empresa no encontrada"));
+        if (companyId != null && !companyRepository.existsById(companyId)) {
+            throw new ResourceNotFoundException("Empresa no encontrada");
+        }
         return Arrays.stream(ControlCumplimientoClinica.values()).map(c -> vigente(companyId, c)).toList();
     }
 
