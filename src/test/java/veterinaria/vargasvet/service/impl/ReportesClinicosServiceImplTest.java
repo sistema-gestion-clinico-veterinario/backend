@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
@@ -499,8 +500,8 @@ class ReportesClinicosServiceImplTest {
             comoUsuarioConAlcance(security, false);
             var reporte = service.obtenerVentasProductos(1, LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 31));
 
-            org.mockito.Mockito.verify(purchaseRepository, org.mockito.Mockito.times(2)).findForSalesReport(
-                    eq(1), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), eq(7));
+            org.mockito.Mockito.verify(purchaseRepository, org.mockito.Mockito.times(2)).resumirVentas(
+                    eq(1), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), eq(7), isNull());
             org.mockito.Mockito.verify(productoRepository, org.mockito.Mockito.never())
                     .findByCompanyIdAndActivoTrue(any());
             assertThat(reporte.getAlertasStock()).isNull();
@@ -515,8 +516,8 @@ class ReportesClinicosServiceImplTest {
             comoUsuarioConAlcance(security, true);
             var reporte = service.obtenerVentasProductos(1, LocalDate.of(2026, 7, 1), LocalDate.of(2026, 7, 31));
 
-            org.mockito.Mockito.verify(purchaseRepository, org.mockito.Mockito.times(2)).findForSalesReport(
-                    eq(1), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), isNull());
+            org.mockito.Mockito.verify(purchaseRepository, org.mockito.Mockito.times(2)).resumirVentas(
+                    eq(1), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), isNull(), isNull());
             org.mockito.Mockito.verify(productoRepository).findByCompanyIdAndActivoTrue(1);
             assertThat(reporte.getAlertasStock()).isNotNull();
         }
@@ -535,17 +536,18 @@ class ReportesClinicosServiceImplTest {
         producto.setStock(2);
         producto.setStockMinimo(5);
 
-        var ventaActual = venta(1L, "100.00", veterinaria.vargasvet.domain.enums.MetodoPago.YAPE,
-                LocalDateTime.of(2026, 7, 10, 10, 0));
-        var ventaAnterior = venta(2L, "40.00", veterinaria.vargasvet.domain.enums.MetodoPago.YAPE,
-                LocalDateTime.of(2026, 6, 10, 10, 0));
-        var detalleActual = detalle(ventaActual, producto, 2, "30.00");
-        var detalleAnterior = detalle(ventaAnterior, producto, 1, "40.00");
+        var yape = veterinaria.vargasvet.domain.enums.MetodoPago.YAPE;
+        var ventasActuales = List.of(ventaAgrupada(yape, LocalDate.of(2026, 7, 10), 1, "30.00"));
+        var ventasAnteriores = List.of(ventaAgrupada(yape, LocalDate.of(2026, 6, 10), 1, "40.00"));
+        var productosActuales = List.of(productoVendido(100L, "ALI-100", "Alimento control", 2, "30.00"));
+        var productosAnteriores = List.of(productoVendido(100L, "ALI-100", "Alimento control", 1, "40.00"));
 
-        when(purchaseRepository.findForSalesReport(eq(1), any(), any(), any(), any(), isNull()))
-                .thenReturn(List.of(ventaActual), List.of(ventaAnterior));
-        when(ventaLibreDetalleRepository.findForReportByPurchaseIds(anyList()))
-                .thenReturn(List.of(detalleActual), List.of(detalleAnterior));
+        when(ventaLibreDetalleRepository.resumirVentasConProductos(
+                eq(1), any(), any(), any(), any(), isNull(), eq(yape), isNull(), eq(10L), isNull()))
+                .thenReturn(ventasActuales, ventasAnteriores);
+        when(ventaLibreDetalleRepository.resumirProductosVendidos(
+                eq(1), any(), any(), any(), any(), isNull(), eq(yape), isNull(), eq(10L), isNull()))
+                .thenReturn(productosActuales, productosAnteriores);
         when(productoRepository.findByCompanyIdAndActivoTrue(1)).thenReturn(List.of(producto));
 
         try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
@@ -580,33 +582,33 @@ class ReportesClinicosServiceImplTest {
                             .build());
         }
 
-        org.mockito.Mockito.verify(purchaseRepository, org.mockito.Mockito.times(2)).findForSalesReport(
-                eq(1), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), isNull());
-        org.mockito.Mockito.verify(purchaseRepository, org.mockito.Mockito.never()).findForSalesReport(
-                eq(999), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), any());
+        org.mockito.Mockito.verify(purchaseRepository, org.mockito.Mockito.times(2)).resumirVentas(
+                eq(1), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), isNull(), isNull());
+        org.mockito.Mockito.verify(purchaseRepository, org.mockito.Mockito.never()).resumirVentas(
+                eq(999), any(), any(), any(LocalDateTime.class), any(LocalDateTime.class), any(), any());
         org.mockito.Mockito.verify(productoRepository).findByCompanyIdAndActivoTrue(1);
     }
 
-    private veterinaria.vargasvet.domain.entity.Purchase venta(
-            Long id, String total, veterinaria.vargasvet.domain.enums.MetodoPago metodo,
-            LocalDateTime fecha) {
-        var venta = new veterinaria.vargasvet.domain.entity.Purchase();
-        venta.setId(id);
-        venta.setTotal(new BigDecimal(total));
-        venta.setMetodoPago(metodo);
-        venta.setCreatedAt(fecha);
-        return venta;
+    private veterinaria.vargasvet.repository.PurchaseRepository.VentaAgrupada ventaAgrupada(
+            veterinaria.vargasvet.domain.enums.MetodoPago metodo, LocalDate dia, long ventas, String monto) {
+        var fila = org.mockito.Mockito.mock(veterinaria.vargasvet.repository.PurchaseRepository.VentaAgrupada.class);
+        lenient().when(fila.getMetodoPago()).thenReturn(metodo);
+        lenient().when(fila.getDia()).thenReturn(dia);
+        lenient().when(fila.getVentas()).thenReturn(ventas);
+        lenient().when(fila.getMonto()).thenReturn(new BigDecimal(monto));
+        return fila;
     }
 
-    private veterinaria.vargasvet.domain.entity.VentaLibreDetalle detalle(
-            veterinaria.vargasvet.domain.entity.Purchase venta,
-            veterinaria.vargasvet.domain.entity.Producto producto, int cantidad, String subtotal) {
-        var detalle = new veterinaria.vargasvet.domain.entity.VentaLibreDetalle();
-        detalle.setPurchase(venta);
-        detalle.setProducto(producto);
-        detalle.setCantidad(cantidad);
-        detalle.setSubtotal(new BigDecimal(subtotal));
-        return detalle;
+    private veterinaria.vargasvet.repository.VentaLibreDetalleRepository.ProductoVendidoEnElPeriodo productoVendido(
+            Long id, String sku, String nombre, long cantidad, String monto) {
+        var fila = org.mockito.Mockito.mock(
+                veterinaria.vargasvet.repository.VentaLibreDetalleRepository.ProductoVendidoEnElPeriodo.class);
+        lenient().when(fila.getProductoId()).thenReturn(id);
+        lenient().when(fila.getSku()).thenReturn(sku);
+        lenient().when(fila.getNombre()).thenReturn(nombre);
+        lenient().when(fila.getCantidad()).thenReturn(cantidad);
+        lenient().when(fila.getMonto()).thenReturn(new BigDecimal(monto));
+        return fila;
     }
 
     private Cita cita(Long id, Mascota mascota, LocalDateTime fecha) {

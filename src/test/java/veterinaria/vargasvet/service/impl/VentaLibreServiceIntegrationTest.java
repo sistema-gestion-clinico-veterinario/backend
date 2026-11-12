@@ -195,24 +195,27 @@ class VentaLibreServiceIntegrationTest {
         Company company = crearCompany();
         Producto producto = crearProducto(company, "Juguete", "25.00", 10);
         Usuario ana = setCompanyContext(company.getId(), "ana@vargasvet.test");
-        Long ventaDeAna = ventaLibreService.registrar(ventaDe(company, producto)).getId();
+        ventaLibreService.registrar(ventaDe(company, producto));
         Usuario beto = setCompanyContext(company.getId(), "beto@vargasvet.test");
-        Long ventaDeBeto = ventaLibreService.registrar(ventaDe(company, producto)).getId();
+        ventaLibreService.registrar(ventaDe(company, producto));
         entityManager.flush();
         entityManager.clear();
         LocalDateTime desde = LocalDateTime.now().minusDays(1);
         LocalDateTime hasta = LocalDateTime.now().plusDays(1);
 
-        List<Long> soloAna = purchaseRepository.findForSalesReport(company.getId(), TipoPurchase.TIENDA,
-                PaymentStatus.PAID, desde, hasta, ana.getId()).stream().map(Purchase::getId).toList();
-        List<Long> soloBeto = purchaseRepository.findForSalesReport(company.getId(), TipoPurchase.TIENDA,
-                PaymentStatus.PAID, desde, hasta, beto.getId()).stream().map(Purchase::getId).toList();
-        List<Long> todas = purchaseRepository.findForSalesReport(company.getId(), TipoPurchase.TIENDA,
-                PaymentStatus.PAID, desde, hasta, null).stream().map(Purchase::getId).toList();
+        long soloAna = ventasRegistradas(company.getId(), desde, hasta, ana.getId());
+        long soloBeto = ventasRegistradas(company.getId(), desde, hasta, beto.getId());
+        long todas = ventasRegistradas(company.getId(), desde, hasta, null);
 
-        assertThat(soloAna).containsExactly(ventaDeAna);
-        assertThat(soloBeto).containsExactly(ventaDeBeto);
-        assertThat(todas).containsExactlyInAnyOrder(ventaDeAna, ventaDeBeto);
+        assertThat(soloAna).isEqualTo(1);
+        assertThat(soloBeto).isEqualTo(1);
+        assertThat(todas).isEqualTo(2);
+    }
+
+    private long ventasRegistradas(Integer companyId, LocalDateTime desde, LocalDateTime hasta, Integer registradoPorUsuarioId) {
+        return purchaseRepository.resumirVentas(companyId, TipoPurchase.TIENDA, PaymentStatus.PAID,
+                        desde, hasta, registradoPorUsuarioId, null).stream()
+                .mapToLong(PurchaseRepository.VentaAgrupada::getVentas).sum();
     }
 
     private VentaLibreItemRequest item(Long productoId, int cantidad) {

@@ -3,8 +3,6 @@ package veterinaria.vargasvet.service.reportes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import veterinaria.vargasvet.domain.entity.Producto;
-import veterinaria.vargasvet.domain.entity.Purchase;
-import veterinaria.vargasvet.domain.entity.VentaLibreDetalle;
 import veterinaria.vargasvet.domain.enums.EstadoStockReporte;
 import veterinaria.vargasvet.domain.enums.PaymentStatus;
 import veterinaria.vargasvet.domain.enums.TipoPurchase;
@@ -12,18 +10,17 @@ import veterinaria.vargasvet.dto.request.ReporteVentasProductosFiltro;
 import veterinaria.vargasvet.dto.response.ReporteVentasProductosDTO;
 import veterinaria.vargasvet.repository.ProductoRepository;
 import veterinaria.vargasvet.repository.PurchaseRepository;
+import veterinaria.vargasvet.repository.PurchaseRepository.VentaAgrupada;
 import veterinaria.vargasvet.repository.VentaLibreDetalleRepository;
+import veterinaria.vargasvet.repository.VentaLibreDetalleRepository.ProductoVendidoEnElPeriodo;
 import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.util.AppClock;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -40,7 +37,23 @@ public class ReporteVentasProductos {
     private final ProductoRepository productoRepository;
     private final AlcanceReportes alcance;
 
-    private record PeriodoVentas(List<Purchase> ventas, List<VentaLibreDetalle> detalles) {}
+    private record PeriodoVentas(List<VentaAgrupada> ventas, List<ProductoVendidoEnElPeriodo> productos) {
+
+        static final PeriodoVentas SIN_VENTAS = new PeriodoVentas(List.of(), List.of());
+
+        long cantidadDeVentas() {
+            return ventas.stream().mapToLong(VentaAgrupada::getVentas).sum();
+        }
+
+        BigDecimal ingresos() {
+            return ventas.stream().map(VentaAgrupada::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add)
+                    .setScale(2, RoundingMode.HALF_UP);
+        }
+
+        long unidades() {
+            return productos.stream().mapToLong(ProductoVendidoEnElPeriodo::getCantidad).sum();
+        }
+    }
 
     public ReporteVentasProductosDTO obtener(ReporteVentasProductosFiltro filtros) {
         Integer empresa = alcance.resolverEmpresa(filtros.getCompanyId());
@@ -54,12 +67,8 @@ public class ReporteVentasProductos {
             return reporteVacio(rango);
         }
 
-        RangoDeReporte anterior = rango.anterior();
         PeriodoVentas actual = cargarPeriodo(empresa, rango, registradoPorUsuarioId, puedePagos, puedeProductos, filtros);
-        PeriodoVentas previo = cargarPeriodo(empresa, anterior, registradoPorUsuarioId, puedePagos, puedeProductos, filtros);
-        List<Purchase> ventas = actual.ventas();
-        List<VentaLibreDetalle> detalles = actual.detalles();
-        boolean filtraProducto = tieneFiltroProducto(filtros);
+        PeriodoVentas previo = cargarPeriodo(empresa, rango.anterior(), registradoPorUsuarioId, puedePagos, puedeProductos, filtros);
         // El inventario es un recurso común de la clínica y no tiene "propietario" individual.
         // Solo se muestran sus métricas cuando el rol tiene alcance COMPANY.
         boolean puedeInventarioEmpresa = puedeProductos && alcanceEmpresa;
@@ -70,25 +79,23 @@ public class ReporteVentasProductos {
                         .toList()
                 : List.of();
 
-        Map<Long, BigDecimal> montoPorVenta = montoPorVenta(ventas, detalles, filtraProducto);
-        BigDecimal ingresos = sumarMontos(montoPorVenta);
         long sinStock = productos.stream().filter(p -> p.getStock() != null && p.getStock() <= 0).count();
         long stockBajo = productos.stream().filter(p -> p.getStock() != null && p.getStockMinimo() != null
                 && p.getStock() > 0 && p.getStock() <= p.getStockMinimo()).count();
 
         return ReporteVentasProductosDTO.builder().fechaDesde(rango.desde()).fechaHasta(rango.hasta())
                 .resumen(ReporteVentasProductosDTO.Resumen.builder()
-                        .ventas(puedePagos ? (long) ventas.size() : null)
-                        .ingresos(puedePagos ? ingresos : null)
-                        .unidadesVendidas(puedeProductos && puedePagos ? sumarUnidades(detalles) : null)
-                        .ticketPromedio(puedePagos ? calcularTicket(ingresos, ventas.size()) : null)
+                        .ventas(puedePagos ? actual.cantidadDeVentas() : null)
+                        .ingresos(puedePagos ? actual.ingresos() : null)
+                        .unidadesVendidas(puedeProductos && puedePagos ? actual.unidades() : null)
+                        .ticketPromedio(puedePagos ? calcularTicket(actual.ingresos(), actual.cantidadDeVentas()) : null)
                         .productosStockBajo(puedeInventarioEmpresa ? stockBajo : null)
                         .productosSinStock(puedeInventarioEmpresa ? sinStock : null).build())
-                .resumenAnterior(resumen(previo, filtraProducto, puedePagos, puedeProductos))
-                .ventasPorMetodo(puedePagos ? agruparVentas(ventas,
-                        v -> v.getMetodoPago() == null ? VENTA_SIN_METODO : v.getMetodoPago().name(), montoPorVenta) : null)
-                .ventasPorDia(puedePagos ? agruparVentas(ventas, v -> v.getCreatedAt().toLocalDate(), montoPorVenta) : null)
-                .productosMasVendidos(puedeProductos && puedePagos ? productosMasVendidos(detalles) : null)
+                .resumenAnterior(resumen(previo, puedePagos, puedeProductos))
+                .ventasPorMetodo(puedePagos ? agruparVentas(actual.ventas(),
+                        v -> v.getMetodoPago() == null ? VENTA_SIN_METODO : v.getMetodoPago().name()) : null)
+                .ventasPorDia(puedePagos ? agruparVentas(actual.ventas(), VentaAgrupada::getDia) : null)
+                .productosMasVendidos(puedeProductos && puedePagos ? productosMasVendidos(actual.productos()) : null)
                 .alertasStock(puedeInventarioEmpresa ? alertasDeStock(productos, filtros.getEstadoStock()) : null).build();
     }
 
@@ -105,57 +112,56 @@ public class ReporteVentasProductos {
     private PeriodoVentas cargarPeriodo(Integer companyId, RangoDeReporte rango, Integer registradoPorUsuarioId,
                                         boolean puedePagos, boolean puedeProductos,
                                         ReporteVentasProductosFiltro filtros) {
-        if (!puedePagos) return new PeriodoVentas(List.of(), List.of());
-        List<Purchase> ventas = purchaseRepository.findForSalesReport(companyId, TipoPurchase.TIENDA,
-                        PaymentStatus.PAID, rango.inicio(), rango.finExclusivo(), registradoPorUsuarioId)
-                .stream()
-                .filter(v -> filtros.getMetodoPago() == null || filtros.getMetodoPago() == v.getMetodoPago())
-                .toList();
-        List<VentaLibreDetalle> detalles = puedeProductos && !ventas.isEmpty()
-                ? ventaLibreDetalleRepository.findForReportByPurchaseIds(ventas.stream().map(Purchase::getId).toList())
-                        .stream().filter(d -> coincideProducto(d.getProducto(), filtros)).toList()
-                : List.of();
-        if (tieneFiltroProducto(filtros)) {
-            Set<Long> ventasCoincidentes = detalles.stream().map(d -> d.getPurchase().getId()).collect(Collectors.toSet());
-            ventas = ventas.stream().filter(v -> ventasCoincidentes.contains(v.getId())).toList();
+        if (!puedePagos) return PeriodoVentas.SIN_VENTAS;
+        boolean filtraProducto = tieneFiltroProducto(filtros);
+        if (filtraProducto && !puedeProductos) return PeriodoVentas.SIN_VENTAS;
+
+        List<VentaAgrupada> ventas = filtraProducto
+                ? ventaLibreDetalleRepository.resumirVentasConProductos(companyId, TipoPurchase.TIENDA, PaymentStatus.PAID,
+                        rango.inicio(), rango.finExclusivo(), registradoPorUsuarioId, filtros.getMetodoPago(),
+                        filtros.getProductoId(), filtros.getCategoriaId(), filtros.getMarcaId())
+                : purchaseRepository.resumirVentas(companyId, TipoPurchase.TIENDA, PaymentStatus.PAID,
+                        rango.inicio(), rango.finExclusivo(), registradoPorUsuarioId, filtros.getMetodoPago());
+        if (ventas.isEmpty() || !puedeProductos) {
+            return new PeriodoVentas(ventas, List.of());
         }
-        return new PeriodoVentas(ventas, detalles);
+        List<ProductoVendidoEnElPeriodo> productos = ventaLibreDetalleRepository.resumirProductosVendidos(
+                companyId, TipoPurchase.TIENDA, PaymentStatus.PAID, rango.inicio(), rango.finExclusivo(),
+                registradoPorUsuarioId, filtros.getMetodoPago(),
+                filtros.getProductoId(), filtros.getCategoriaId(), filtros.getMarcaId());
+        return new PeriodoVentas(ventas, productos);
     }
 
-    private ReporteVentasProductosDTO.Resumen resumen(PeriodoVentas periodo, boolean filtraProducto,
-                                                      boolean puedePagos, boolean puedeProductos) {
-        Map<Long, BigDecimal> montos = montoPorVenta(periodo.ventas(), periodo.detalles(), filtraProducto);
-        BigDecimal ingresos = sumarMontos(montos);
+    private ReporteVentasProductosDTO.Resumen resumen(PeriodoVentas periodo, boolean puedePagos, boolean puedeProductos) {
+        BigDecimal ingresos = periodo.ingresos();
         return ReporteVentasProductosDTO.Resumen.builder()
-                .ventas(puedePagos ? (long) periodo.ventas().size() : null)
+                .ventas(puedePagos ? periodo.cantidadDeVentas() : null)
                 .ingresos(puedePagos ? ingresos : null)
-                .unidadesVendidas(puedePagos && puedeProductos ? sumarUnidades(periodo.detalles()) : null)
-                .ticketPromedio(puedePagos ? calcularTicket(ingresos, periodo.ventas().size()) : null)
+                .unidadesVendidas(puedePagos && puedeProductos ? periodo.unidades() : null)
+                .ticketPromedio(puedePagos ? calcularTicket(ingresos, periodo.cantidadDeVentas()) : null)
                 .productosStockBajo(null).productosSinStock(null).build();
     }
 
     private <K extends Comparable<? super K>> List<ReporteVentasProductosDTO.ItemMonto> agruparVentas(
-            List<Purchase> ventas, Function<Purchase, K> clave, Map<Long, BigDecimal> montoPorVenta) {
-        Map<K, List<Purchase>> agrupadas = ventas.stream()
+            List<VentaAgrupada> filas, Function<VentaAgrupada, K> clave) {
+        Map<K, List<VentaAgrupada>> agrupadas = filas.stream()
                 .collect(Collectors.groupingBy(clave, TreeMap::new, Collectors.toList()));
         return agrupadas.entrySet().stream().map(e ->
                 ReporteVentasProductosDTO.ItemMonto.builder().nombre(String.valueOf(e.getKey()))
-                        .cantidad((long) e.getValue().size())
-                        .monto(e.getValue().stream().map(v -> montoPorVenta.getOrDefault(v.getId(), BigDecimal.ZERO))
+                        .cantidad(e.getValue().stream().mapToLong(VentaAgrupada::getVentas).sum())
+                        .monto(e.getValue().stream().map(VentaAgrupada::getMonto)
                                 .reduce(BigDecimal.ZERO, BigDecimal::add)).build()).toList();
     }
 
-    private List<ReporteVentasProductosDTO.ProductoVendido> productosMasVendidos(List<VentaLibreDetalle> detalles) {
-        Map<Long, List<VentaLibreDetalle>> porProducto = detalles.stream().collect(Collectors.groupingBy(
-                d -> d.getProducto().getId()));
-        return porProducto.values().stream().map(lista -> {
-            Producto p = lista.get(0).getProducto();
-            return ReporteVentasProductosDTO.ProductoVendido.builder().sku(p.getSku()).nombre(p.getNombre())
-                    .cantidad(lista.stream().mapToLong(d -> d.getCantidad() == null ? 0 : d.getCantidad()).sum())
-                    .monto(lista.stream().map(VentaLibreDetalle::getSubtotal).filter(Objects::nonNull)
-                            .reduce(BigDecimal.ZERO, BigDecimal::add)).build();
-        }).sorted(Comparator.comparing(ReporteVentasProductosDTO.ProductoVendido::getCantidad).reversed())
-                .limit(MAXIMO_PRODUCTOS_MAS_VENDIDOS).toList();
+    private List<ReporteVentasProductosDTO.ProductoVendido> productosMasVendidos(List<ProductoVendidoEnElPeriodo> filas) {
+        return filas.stream()
+                .sorted(Comparator.comparing(ProductoVendidoEnElPeriodo::getCantidad).reversed()
+                        .thenComparing(ProductoVendidoEnElPeriodo::getProductoId))
+                .limit(MAXIMO_PRODUCTOS_MAS_VENDIDOS)
+                .map(fila -> ReporteVentasProductosDTO.ProductoVendido.builder()
+                        .sku(fila.getSku()).nombre(fila.getNombre())
+                        .cantidad(fila.getCantidad()).monto(fila.getMonto()).build())
+                .toList();
     }
 
     private List<ReporteVentasProductosDTO.AlertaStock> alertasDeStock(List<Producto> productos,
@@ -193,25 +199,7 @@ public class ReporteVentasProductos {
         };
     }
 
-    private Map<Long, BigDecimal> montoPorVenta(List<Purchase> ventas, List<VentaLibreDetalle> detalles,
-                                                boolean filtraProducto) {
-        if (!filtraProducto) {
-            return ventas.stream().collect(Collectors.toMap(Purchase::getId,
-                    v -> v.getTotal() == null ? BigDecimal.ZERO : v.getTotal()));
-        }
-        return detalles.stream().collect(Collectors.groupingBy(d -> d.getPurchase().getId(), Collectors.reducing(
-                BigDecimal.ZERO, d -> d.getSubtotal() == null ? BigDecimal.ZERO : d.getSubtotal(), BigDecimal::add)));
-    }
-
-    private BigDecimal sumarMontos(Map<Long, BigDecimal> montos) {
-        return montos.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private long sumarUnidades(List<VentaLibreDetalle> detalles) {
-        return detalles.stream().mapToLong(d -> d.getCantidad() == null ? 0 : d.getCantidad()).sum();
-    }
-
-    private BigDecimal calcularTicket(BigDecimal ingresos, int ventas) {
+    private BigDecimal calcularTicket(BigDecimal ingresos, long ventas) {
         return ventas == 0 ? BigDecimal.ZERO : ingresos.divide(BigDecimal.valueOf(ventas), 2, RoundingMode.HALF_UP);
     }
 }
