@@ -70,7 +70,7 @@ class ReportesClinicosServiceImplTest {
                 new ReportePreventivos(registroVacunaRepository, registroDesparasitacionRepository, controlPreventivoRepository),
                 new ReportePacientesInactivos(mascotaRepository, citaRepository, alcance),
                 new ReporteVentasProductos(purchaseRepository, ventaLibreDetalleRepository, productoRepository, alcance),
-                new ReporteComparativoEmpresas(companyRepository, citaRepository, actividad));
+                new ReporteComparativoEmpresas(companyRepository, citaRepository));
     }
 
     @Test
@@ -364,17 +364,18 @@ class ReportesClinicosServiceImplTest {
 
         when(companyRepository.findAll()).thenReturn(List.of(empresaUno, empresaDos, empresaInactiva));
 
-        Mascota mascota = new Mascota();
-        mascota.setId(1L);
-        mascota.setEspecie(EspecieMascota.PERRO);
+        CitaRepository.ResumenPorEmpresa resumenEmpresaUno = org.mockito.Mockito.mock(CitaRepository.ResumenPorEmpresa.class);
+        when(resumenEmpresaUno.getCompanyId()).thenReturn(1);
+        when(resumenEmpresaUno.getConsultas()).thenReturn(1L);
+        when(resumenEmpresaUno.getPacientesAtendidos()).thenReturn(1L);
+        when(resumenEmpresaUno.getIngresos()).thenReturn(java.math.BigDecimal.ZERO);
+        when(resumenEmpresaUno.getNuevosPacientes()).thenReturn(0L);
+        when(resumenEmpresaUno.getCompletadas()).thenReturn(1L);
+        when(resumenEmpresaUno.getCerradas()).thenReturn(1L);
+        when(resumenEmpresaUno.getNoAsistieron()).thenReturn(0L);
 
-        Cita citaEmpresaUno = cita(1L, mascota, LocalDateTime.of(2026, 7, 10, 9, 0));
-        citaEmpresaUno.setEstado(EstadoCita.COMPLETADA);
-
-        when(citaRepository.findForClinicalReport(eq(1), any(LocalDateTime.class), any(LocalDateTime.class), isNull(), isNull()))
-                .thenReturn(List.of(citaEmpresaUno));
-        when(citaRepository.findForClinicalReport(eq(2), any(LocalDateTime.class), any(LocalDateTime.class), isNull(), isNull()))
-                .thenReturn(List.of());
+        when(citaRepository.resumirPorEmpresa(eq(List.of(1, 2)), any(LocalDateTime.class), any(LocalDateTime.class), isNull()))
+                .thenReturn(List.of(resumenEmpresaUno));
 
         veterinaria.vargasvet.dto.response.ReportesComparativoEmpresasDTO comparativo;
         try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {

@@ -81,7 +81,6 @@ public class ReporteActividadClinica {
                         || c.getEstado() == EstadoCita.NO_ASISTIO)
                 .count();
         long completadas = citas.stream().filter(c -> c.getEstado() == EstadoCita.COMPLETADA).count();
-        double porcentaje = cerradas == 0 ? 0 : (completadas * 100.0 / cerradas);
         long noAsistieron = citas.stream().filter(c -> c.getEstado() == EstadoCita.NO_ASISTIO).count();
 
         return ReportesClinicosDTO.Resumen.builder()
@@ -90,9 +89,14 @@ public class ReporteActividadClinica {
                 .ingresos(puedePagos ? ingresos.setScale(2, RoundingMode.HALF_UP) : null)
                 .nuevosPacientes(nuevosPacientes)
                 .tiempoPromedioAtencionMinutos(promedio)
-                .porcentajeCitasCompletadas(Math.round(porcentaje * 10.0) / 10.0)
+                .porcentajeCitasCompletadas(porcentajeDeCompletadas(completadas, cerradas))
                 .noAsistieron(noAsistieron)
                 .build();
+    }
+
+    public static double porcentajeDeCompletadas(long completadas, long cerradas) {
+        double porcentaje = cerradas == 0 ? 0 : (completadas * 100.0 / cerradas);
+        return Math.round(porcentaje * 10.0) / 10.0;
     }
 
     public List<ReportesClinicosDTO.ItemCount> consultasPorTipo(List<Cita> citas) {
