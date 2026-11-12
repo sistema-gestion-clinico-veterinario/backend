@@ -32,6 +32,20 @@ public final class ReglasHorarioEmpresa {
         return horario == null || !Boolean.FALSE.equals(horario.getIsOpen());
     }
 
+    public void validarTurnoSemanal(DiaSemana dia, LocalTime inicio, LocalTime fin) {
+        if (!inicio.isBefore(fin)) {
+            throw new IllegalArgumentException("La hora de inicio debe ser anterior a la de fin");
+        }
+        CompanyOperatingHour horario = horarios.get(dia);
+        if (horario == null) {
+            return;
+        }
+        if (Boolean.FALSE.equals(horario.getIsOpen())) {
+            throw new IllegalArgumentException("La clínica no abre los días " + dia);
+        }
+        validarDentroDelHorario(horario, inicio, fin);
+    }
+
     public void validarTurno(LocalDate fecha, LocalTime inicio, LocalTime fin) {
         DiaSemana dia = DiaSemana.desde(fecha.getDayOfWeek());
 
@@ -52,6 +66,10 @@ public final class ReglasHorarioEmpresa {
             throw new IllegalArgumentException("La hora de inicio debe ser anterior a la de fin (no se permiten turnos de duración cero o que crucen la medianoche)");
         }
 
+        validarDentroDelHorario(horario, inicio, fin);
+    }
+
+    private void validarDentroDelHorario(CompanyOperatingHour horario, LocalTime inicio, LocalTime fin) {
         LocalTime apertura = horario.getOpeningTime();
         LocalTime cierre = horario.getClosingTime();
         if (inicio.isBefore(apertura) || fin.isAfter(cierre)) {

@@ -3,6 +3,7 @@ package veterinaria.vargasvet.service.impl;
 import lombok.RequiredArgsConstructor;
 import veterinaria.vargasvet.mapper.HorarioEmpleadoMapper;
 import veterinaria.vargasvet.service.horarios.AsignacionMasivaDeHorarios;
+import veterinaria.vargasvet.service.horarios.GuardadoDeHorariosDelEmpleado;
 import veterinaria.vargasvet.service.horarios.InformeDeHorarios;
 import veterinaria.vargasvet.service.horarios.ReglasHorarioEmpresa;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +21,7 @@ import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.mapper.UserMapper;
 import veterinaria.vargasvet.repository.*;
+import veterinaria.vargasvet.repository.HorarioEmpleadoLoteRepository.NuevoHorario;
 
 import java.time.LocalTime;
 import java.util.List;
@@ -66,6 +68,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final CompanyExceptionRepository companyExceptionRepository;
     private final CitaRepository citaRepository;
     private final AsignacionMasivaDeHorarios asignacionMasiva;
+    private final GuardadoDeHorariosDelEmpleado guardadoDeHorarios;
     private final InformeDeHorarios informeDeHorarios;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
@@ -240,7 +243,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
 
         if (dto.getHorarios() != null && !dto.getHorarios().isEmpty()) {
-            guardarHorarios(savedEmpleado, dto.getHorarios());
+            guardadoDeHorarios.agregar(savedEmpleado.getId(), savedEmpleado.getCompany().getId(),
+                    dto.getHorarios(), SecurityUtils.getCurrentUserEmail());
         }
 
         sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
@@ -374,9 +378,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         empleadoRepository.save(empleado);
 
         if (dto.getHorarios() != null) {
-            empleado.getHorarios().clear();
-            empleadoRepository.saveAndFlush(empleado);
-            guardarHorarios(empleado, dto.getHorarios());
+            guardadoDeHorarios.reemplazar(empleado.getId(), empleado.getCompany().getId(),
+                    dto.getHorarios(), SecurityUtils.getCurrentUserEmail());
         }
 
         auditLogService.log(
@@ -554,57 +557,6 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                     "Solo un administrador puede eliminar a un empleado");
         }
         return cambiarEstado(empleadoId, false, TipoInactividad.BAJA, "Eliminado por el administrador");
-    }
-
-    private void guardarHorarios(Empleado empleado, List<HorarioEmpleadoRequest> horariosRequest) {
-        String adminEmail = SecurityUtils.getCurrentUserEmail();
-        Integer companyId = empleado.getCompany().getId();
-
-        for (HorarioEmpleadoRequest h : horariosRequest) {
-            if (h.getHoraInicio() == null || h.getHoraFin() == null) continue;
-
-            LocalDate fecha = h.getFecha();
-            DiaSemana dia;
-
-            if (fecha != null) {
-                dia = toDiaSemana(fecha.getDayOfWeek());
-                validarHorarioContraEmpresa(companyId, fecha, h.getHoraInicio(), h.getHoraFin());
-            } else {
-                dia = h.getDiaSemana();
-                if (dia == null) continue;
-                validarHorarioPorDia(companyId, dia, h.getHoraInicio(), h.getHoraFin());
-            }
-
-            HorarioEmpleado horario = new HorarioEmpleado();
-            horario.setEmpleado(empleado);
-            horario.setFecha(fecha);
-            horario.setDiaSemana(dia);
-            horario.setHoraInicio(h.getHoraInicio());
-            horario.setHoraFin(h.getHoraFin());
-            horario.setActivo(h.getActivo() != null ? h.getActivo() : true);
-            horario.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
-            horario.setCreatedBy(adminEmail);
-            horarioEmpleadoRepository.save(horario);
-        }
-    }
-
-    private void validarHorarioPorDia(Integer companyId, DiaSemana dia, LocalTime inicio, LocalTime fin) {
-        if (!inicio.isBefore(fin)) {
-            throw new IllegalArgumentException("La hora de inicio debe ser anterior a la de fin");
-        }
-        var opHourOpt = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, dia);
-        if (opHourOpt.isEmpty()) return;
-        CompanyOperatingHour opHour = opHourOpt.get();
-        if (Boolean.FALSE.equals(opHour.getIsOpen())) {
-            throw new IllegalArgumentException("La clínica no abre los días " + dia);
-        }
-        LocalTime opening = opHour.getOpeningTime();
-        LocalTime closing = opHour.getClosingTime();
-        if (inicio.isBefore(opening) || fin.isAfter(closing)) {
-            throw new IllegalArgumentException(String.format(
-                "El horario (%s - %s) está fuera del horario de atención de la clínica (%s - %s)",
-                inicio, fin, opening, closing));
-        }
     }
 
     private void validarHorarioContraEmpresa(Integer companyId, LocalDate fecha, LocalTime inicio, LocalTime fin) {
@@ -963,15 +915,15 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
 
         // ── 5. Limpiar SOLO si todas las validaciones pasaron ────────────────────────
-        empleado.getHorarios().removeIf(h -> !h.getFecha().isBefore(targetStart) && !h.getFecha().isAfter(targetEnd));
-        empleadoRepository.saveAndFlush(empleado);
+        horarioEmpleadoRepository.eliminarTurnosEntre(empleadoId, targetStart, targetEnd);
 
         // ── 6. Clonar día por día, respetando días cerrados ──────────────────────────
+        LocalDateTime creadoEn = veterinaria.vargasvet.util.AppClock.now();
+        List<NuevoHorario> nuevos = new java.util.ArrayList<>();
         for (HorarioEmpleado source : sourceShifts) {
             LocalDate targetDay = source.getFecha().plusDays(daysDiff);
             DiaSemana dia       = toDiaSemana(targetDay.getDayOfWeek());
 
-            // Omitir días cerrados (ya detectados en el pre-check de arriba)
             var opHourOpt = horariosPorDia.computeIfAbsent(dia,
                     d -> companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, d));
             if (opHourOpt.isPresent() && Boolean.FALSE.equals(opHourOpt.get().getIsOpen())) {
@@ -983,21 +935,9 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 continue;
             }
 
-            HorarioEmpleado target = new HorarioEmpleado();
-            target.setEmpleado(empleado);
-            target.setFecha(targetDay);
-            target.setDiaSemana(dia);
-            target.setHoraInicio(source.getHoraInicio());
-            target.setHoraFin(source.getHoraFin());
-            target.setActivo(true);
-            target.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
-            target.setCreatedBy(adminEmail);
-            if (empleado.getHorarios() == null) {
-                empleado.setHorarios(new java.util.ArrayList<>());
-            }
-            empleado.getHorarios().add(target);
-            horarioEmpleadoRepository.save(target);
+            nuevos.add(new NuevoHorario(empleadoId, targetDay, dia, source.getHoraInicio(), source.getHoraFin(), creadoEn, adminEmail));
         }
+        horarioEmpleadoRepository.insertarEnLote(nuevos);
 
         auditLogService.log(
             "CLONAR_HORARIOS_SEMANA",
@@ -1084,26 +1024,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
 
         // 5. Limpiar horarios previos del día destino
-        empleado.getHorarios().removeIf(h -> h.getFecha().equals(targetDate));
-        empleadoRepository.saveAndFlush(empleado);
+        horarioEmpleadoRepository.eliminarTurnosEntre(empleadoId, targetDate, targetDate);
 
-        // 6. Clonar día por día
-        for (HorarioEmpleado source : sourceShifts) {
-            HorarioEmpleado target = new HorarioEmpleado();
-            target.setEmpleado(empleado);
-            target.setFecha(targetDate);
-            target.setDiaSemana(diaDestino);
-            target.setHoraInicio(source.getHoraInicio());
-            target.setHoraFin(source.getHoraFin());
-            target.setActivo(true);
-            target.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
-            target.setCreatedBy(adminEmail);
-            if (empleado.getHorarios() == null) {
-                empleado.setHorarios(new java.util.ArrayList<>());
-            }
-            empleado.getHorarios().add(target);
-            horarioEmpleadoRepository.save(target);
-        }
+        // 6. Clonar el día
+        LocalDateTime creadoEn = veterinaria.vargasvet.util.AppClock.now();
+        horarioEmpleadoRepository.insertarEnLote(sourceShifts.stream()
+                .map(source -> new NuevoHorario(empleadoId, targetDate, diaDestino, source.getHoraInicio(), source.getHoraFin(), creadoEn, adminEmail))
+                .toList());
 
         auditLogService.log(
             "CLONAR_HORARIOS_DIA",

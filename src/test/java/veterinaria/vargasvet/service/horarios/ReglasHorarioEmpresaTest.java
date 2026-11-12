@@ -99,6 +99,47 @@ class ReglasHorarioEmpresaTest {
         assertThat(reglas.estaAbierta(LUNES)).isFalse();
     }
 
+    @Test
+    void unTurnoSemanalDentroDelHorarioDeAtencionEsValido() {
+        ReglasHorarioEmpresa reglas = new ReglasHorarioEmpresa(List.of(), List.of(horario(DiaSemana.LUNES, true)));
+
+        assertThatCode(() -> reglas.validarTurnoSemanal(DiaSemana.LUNES, hora("08:00"), hora("20:00"))).doesNotThrowAnyException();
+    }
+
+    @Test
+    void unTurnoSemanalEnUnDiaSinConfiguracionSeAcepta() {
+        ReglasHorarioEmpresa reglas = new ReglasHorarioEmpresa(List.of(), List.of());
+
+        assertThatCode(() -> reglas.validarTurnoSemanal(DiaSemana.LUNES, hora("03:00"), hora("23:00"))).doesNotThrowAnyException();
+    }
+
+    @Test
+    void rechazaUnTurnoSemanalEnUnDiaCerrado() {
+        ReglasHorarioEmpresa reglas = new ReglasHorarioEmpresa(List.of(), List.of(horario(DiaSemana.DOMINGO, false)));
+
+        assertThatThrownBy(() -> reglas.validarTurnoSemanal(DiaSemana.DOMINGO, hora("09:00"), hora("10:00")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("La clínica no abre los días DOMINGO");
+    }
+
+    @Test
+    void rechazaUnTurnoSemanalFueraDelHorarioDeAtencion() {
+        ReglasHorarioEmpresa reglas = new ReglasHorarioEmpresa(List.of(), List.of(horario(DiaSemana.LUNES, true)));
+
+        assertThatThrownBy(() -> reglas.validarTurnoSemanal(DiaSemana.LUNES, hora("07:00"), hora("10:00")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("El horario (07:00 - 10:00) está fuera del horario de atención de la clínica (08:00 - 20:00)");
+    }
+
+    @Test
+    void rechazaUnTurnoSemanalCuyoInicioNoEsAnteriorAlFinAunqueNoHayaHorarioConfigurado() {
+        ReglasHorarioEmpresa reglas = new ReglasHorarioEmpresa(List.of(), List.of());
+
+        assertThatThrownBy(() -> reglas.validarTurnoSemanal(DiaSemana.LUNES, hora("10:00"), hora("10:00")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("La hora de inicio debe ser anterior a la de fin");
+    }
+
     private CompanyOperatingHour horario(DiaSemana dia, boolean abierto) {
         CompanyOperatingHour horario = new CompanyOperatingHour();
         horario.setDiaSemana(dia);

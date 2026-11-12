@@ -143,6 +143,95 @@ class HorarioEmpleadoLoteRepositoryTest {
                 .containsExactlyInAnyOrder(LUNES + " 15:00", LUNES.plusDays(1) + " 09:00");
     }
 
+    @Test
+    void insertaUnaFilaDePlantillaSemanalConFechaNulaYRespetaElEstadoActivo() {
+        horarioEmpleadoRepository.insertarEnLote(List.of(
+                new NuevoHorario(empleado.getId(), null, DiaSemana.MARTES, LocalTime.of(9, 0), LocalTime.of(13, 0),
+                        false, creadoEn, "admin@empresa.test")));
+        entityManager.clear();
+
+        HorarioEmpleado plantilla = horarioEmpleadoRepository.findByEmpleadoId(empleado.getId()).getFirst();
+
+        assertThat(plantilla.getFecha()).isNull();
+        assertThat(plantilla.getDiaSemana()).isEqualTo(DiaSemana.MARTES);
+        assertThat(plantilla.getActivo()).isFalse();
+    }
+
+    @Test
+    void eliminarTurnosEntreBorraElRangoInclusivoYNoTocaLaPlantillaNiOtrasFechas() {
+        horarioEmpleadoRepository.insertarEnLote(List.of(
+                nuevo(LUNES.minusDays(1), "09:00", "13:00"),
+                nuevo(LUNES, "09:00", "13:00"),
+                nuevo(LUNES, "15:00", "19:00"),
+                nuevo(LUNES.plusDays(2), "09:00", "13:00"),
+                nuevo(LUNES.plusDays(3), "09:00", "13:00"),
+                new NuevoHorario(empleado.getId(), null, DiaSemana.LUNES, LocalTime.of(9, 0), LocalTime.of(13, 0),
+                        creadoEn, "admin@empresa.test")));
+
+        horarioEmpleadoRepository.eliminarTurnosEntre(empleado.getId(), LUNES, LUNES.plusDays(2));
+        entityManager.clear();
+
+        assertThat(horarioEmpleadoRepository.findByEmpleadoId(empleado.getId()))
+                .extracting(h -> h.getFecha() + " " + h.getHoraInicio())
+                .containsExactlyInAnyOrder(LUNES.minusDays(1) + " 09:00", LUNES.plusDays(3) + " 09:00", "null 09:00");
+    }
+
+    @Test
+    void eliminarTurnosEntreNoTocaLosTurnosDeOtroEmpleado() {
+        Empleado otro = otroEmpleado();
+        horarioEmpleadoRepository.insertarEnLote(List.of(
+                nuevo(LUNES, "09:00", "13:00"),
+                new NuevoHorario(otro.getId(), LUNES, DiaSemana.LUNES, LocalTime.of(9, 0), LocalTime.of(13, 0),
+                        creadoEn, "admin@empresa.test")));
+
+        horarioEmpleadoRepository.eliminarTurnosEntre(empleado.getId(), LUNES, LUNES);
+        entityManager.clear();
+
+        assertThat(horarioEmpleadoRepository.findByEmpleadoId(empleado.getId())).isEmpty();
+        assertThat(horarioEmpleadoRepository.findByEmpleadoId(otro.getId())).hasSize(1);
+    }
+
+    @Test
+    void eliminarLaPlantillaSemanalBorraSoloLasFilasSinFechaDeEseEmpleado() {
+        Empleado otro = otroEmpleado();
+        horarioEmpleadoRepository.insertarEnLote(List.of(
+                new NuevoHorario(empleado.getId(), null, DiaSemana.LUNES, LocalTime.of(9, 0), LocalTime.of(13, 0), creadoEn, "admin@empresa.test"),
+                new NuevoHorario(empleado.getId(), null, DiaSemana.MARTES, LocalTime.of(9, 0), LocalTime.of(13, 0), creadoEn, "admin@empresa.test"),
+                nuevo(LUNES, "09:00", "13:00"),
+                new NuevoHorario(otro.getId(), null, DiaSemana.LUNES, LocalTime.of(9, 0), LocalTime.of(13, 0), creadoEn, "admin@empresa.test")));
+
+        horarioEmpleadoRepository.eliminarPlantillaSemanal(empleado.getId());
+        entityManager.clear();
+
+        assertThat(horarioEmpleadoRepository.findByEmpleadoId(empleado.getId()))
+                .extracting(HorarioEmpleado::getFecha).containsExactly(LUNES);
+        assertThat(horarioEmpleadoRepository.findByEmpleadoId(otro.getId())).hasSize(1);
+    }
+
+    private Empleado otroEmpleado() {
+        Usuario usuario = new Usuario();
+        usuario.setEmail("otro-" + UUID.randomUUID() + "@patitas.test");
+        usuario.setUsername("otro-" + UUID.randomUUID());
+        usuario.setNombre("Otro");
+        usuario.setApellido("Test");
+        usuario.setDni(String.valueOf(Math.abs(UUID.randomUUID().getMostSignificantBits())).substring(0, 8));
+        usuario.setActivo(true);
+        usuario.setEmailVerified(true);
+        usuario.setCompany(empleado.getCompany());
+        usuario = usuarioRepository.save(usuario);
+
+        Empleado otro = new Empleado();
+        otro.setUser(usuario);
+        otro.setCompany(empleado.getCompany());
+        otro.setTipoDocumentoIdentidad(TipoDocumentoIdentidad.DNI);
+        otro.setNumeroDocumentoIdentidad(usuario.getDni());
+        otro.setGenero(Genero.MASCULINO);
+        otro.setEstado(true);
+        otro = empleadoRepository.save(otro);
+        entityManager.flush();
+        return otro;
+    }
+
     private NuevoHorario nuevo(LocalDate fecha, String inicio, String fin) {
         return new NuevoHorario(empleado.getId(), fecha, DiaSemana.desde(fecha.getDayOfWeek()),
                 LocalTime.parse(inicio), LocalTime.parse(fin), creadoEn, "admin@empresa.test");
