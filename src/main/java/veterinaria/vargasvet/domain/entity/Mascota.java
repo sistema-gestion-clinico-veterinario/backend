@@ -70,10 +70,6 @@ public class Mascota {
     @JsonIgnore
     private Apoderado apoderado;
 
-    @OneToOne(mappedBy = "mascota", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
-    private HistoriaClinica historiaClinica;
-
     @Column(unique = true, nullable = false, length = 36)
     private String uuid;
 
