@@ -212,7 +212,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
         }
         int pageSize = Math.max(1, Math.min(size, 100));
         LocalDate hoy = AppClock.today();
-        LocalDateTime umbral = hoy.minusMonths(3).atStartOfDay();
+        LocalDateTime umbral = umbralDeInactividad(hoy);
         Long veterinarioId = tieneAlcanceEmpresa() ? null : resolveVeterinarioId(null);
 
         org.springframework.data.domain.Page<veterinaria.vargasvet.domain.entity.Mascota> paginaMascotas =
@@ -230,21 +230,14 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
                                 CitaRepository.UltimaVisitaPorMascota::getFecha));
 
         List<ReportesClinicosDTO.PacienteInactivo> content = paginaMascotas.getContent().stream()
-                .map(m -> {
-                    LocalDateTime ultima = ultimaVisitaPorMascota.get(m.getId());
-                    LocalDate ultimaFecha = ultima != null ? ultima.toLocalDate() : null;
-                    LocalDate referencia = ultimaFecha != null ? ultimaFecha
-                            : (m.getCreatedAt() != null ? m.getCreatedAt().toLocalDate() : hoy);
-                    long dias = ChronoUnit.DAYS.between(referencia, hoy);
-                    return ReportesClinicosDTO.PacienteInactivo.builder()
-                            .mascota(m.getNombreCompleto())
-                            .apoderado(m.getApoderado() != null && m.getApoderado().getUser() != null
-                                    ? m.getApoderado().getUser().getNombre() + " " + m.getApoderado().getUser().getApellido()
-                                    : "Sin propietario")
-                            .ultimaVisita(ultimaFecha != null ? ultimaFecha.toString() : "Nunca visitó")
-                            .diasSinVisitar(dias)
-                            .build();
-                })
+                .map(m -> construirPacienteInactivo(
+                        m.getNombreCompleto(),
+                        m.getApoderado() != null && m.getApoderado().getUser() != null
+                                ? m.getApoderado().getUser().getNombre() + " " + m.getApoderado().getUser().getApellido()
+                                : "Sin propietario",
+                        ultimaVisitaPorMascota.get(m.getId()),
+                        m.getCreatedAt(),
+                        hoy))
                 .toList();
 
         return PacientesInactivosPageDTO.builder()
@@ -776,6 +769,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
     }
 
     private static final int TOP_N_DEFAULT = 10;
+    private static final int MESES_SIN_VISITA_PARA_INACTIVIDAD = 3;
 
     private List<ReportesClinicosDTO.ItemCount> calcularPacientesFrecuentes(List<Cita> citas) {
         return citas.stream()
@@ -817,37 +811,32 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
      * COMPLETADA, sin importar que rango este seleccionado. Una mascota que nunca
      * tuvo una cita completada tambien cuenta como inactiva. */
     private List<ReportesClinicosDTO.PacienteInactivo> calcularPacientesInactivos(Integer companyId, LocalDate hoy) {
-        LocalDate umbral = hoy.minusMonths(3);
-        Map<Long, LocalDateTime> ultimaVisitaPorMascota = citaRepository.findUltimaVisitaCompletadaPorCompany(companyId)
-                .stream()
-                .collect(Collectors.toMap(
-                        CitaRepository.UltimaVisitaPorMascota::getMascotaId,
-                        CitaRepository.UltimaVisitaPorMascota::getFecha));
-
-        return mascotaRepository.findActiveByCompanyId(companyId).stream()
-                .map(m -> {
-                    LocalDateTime ultima = ultimaVisitaPorMascota.get(m.getId());
-                    LocalDate ultimaFecha = ultima != null ? ultima.toLocalDate() : null;
-                    boolean inactiva = ultimaFecha == null || ultimaFecha.isBefore(umbral);
-                    if (!inactiva) return null;
-                    // Si nunca visitó, se cuentan los días desde que se registró la mascota
-                    // (referencia más significativa que un valor arbitrario), y ese mismo
-                    // número ordena la lista de más a menos urgente.
-                    LocalDate referencia = ultimaFecha != null ? ultimaFecha
-                            : (m.getCreatedAt() != null ? m.getCreatedAt().toLocalDate() : hoy);
-                    long dias = ChronoUnit.DAYS.between(referencia, hoy);
-                    return ReportesClinicosDTO.PacienteInactivo.builder()
-                            .mascota(m.getNombreCompleto())
-                            .apoderado(m.getApoderado() != null && m.getApoderado().getUser() != null
-                                    ? m.getApoderado().getUser().getNombre() + " " + m.getApoderado().getUser().getApellido()
-                                    : "Sin propietario")
-                            .ultimaVisita(ultimaFecha != null ? ultimaFecha.toString() : "Nunca visitó")
-                            .diasSinVisitar(dias)
-                            .build();
-                })
-                .filter(java.util.Objects::nonNull)
+        return mascotaRepository.findInactivasParaReporte(companyId, umbralDeInactividad(hoy)).stream()
+                .map(fila -> construirPacienteInactivo(
+                        fila.getMascota(),
+                        fila.getNombreApoderado() + " " + fila.getApellidoApoderado(),
+                        fila.getUltimaVisita(),
+                        fila.getCreadoEn(),
+                        hoy))
                 .sorted(Comparator.comparingLong(ReportesClinicosDTO.PacienteInactivo::getDiasSinVisitar).reversed())
                 .toList();
+    }
+
+    private LocalDateTime umbralDeInactividad(LocalDate hoy) {
+        return hoy.minusMonths(MESES_SIN_VISITA_PARA_INACTIVIDAD).atStartOfDay();
+    }
+
+    private ReportesClinicosDTO.PacienteInactivo construirPacienteInactivo(
+            String mascota, String apoderado, LocalDateTime ultimaVisita, LocalDateTime registradaEn, LocalDate hoy) {
+        LocalDate ultimaFecha = ultimaVisita != null ? ultimaVisita.toLocalDate() : null;
+        LocalDate referencia = ultimaFecha != null ? ultimaFecha
+                : (registradaEn != null ? registradaEn.toLocalDate() : hoy);
+        return ReportesClinicosDTO.PacienteInactivo.builder()
+                .mascota(mascota)
+                .apoderado(apoderado)
+                .ultimaVisita(ultimaFecha != null ? ultimaFecha.toString() : "Nunca visitó")
+                .diasSinVisitar(ChronoUnit.DAYS.between(referencia, hoy))
+                .build();
     }
 
     private ReportesClinicosDTO emptyReport(LocalDate desde, LocalDate hasta) {

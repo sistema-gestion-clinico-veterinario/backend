@@ -25,13 +25,6 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     }
 
     @Query("SELECT c.mascota.id AS mascotaId, MAX(c.fechaHoraInicio) AS fecha FROM Cita c " +
-            "WHERE c.mascota.apoderado.company.id = :companyId AND c.estado = 'COMPLETADA' AND c.eliminada = false " +
-            "GROUP BY c.mascota.id")
-    List<UltimaVisitaPorMascota> findUltimaVisitaCompletadaPorCompany(@Param("companyId") Integer companyId);
-
-    /** Igual que {@link #findUltimaVisitaCompletadaPorCompany}, acotada a un conjunto de mascotas
-     * (una página del listado de pacientes inactivos), para no recalcular sobre toda la empresa. */
-    @Query("SELECT c.mascota.id AS mascotaId, MAX(c.fechaHoraInicio) AS fecha FROM Cita c " +
             "WHERE c.mascota.id IN :mascotaIds AND c.estado = 'COMPLETADA' AND c.eliminada = false " +
             "GROUP BY c.mascota.id")
     List<UltimaVisitaPorMascota> findUltimaVisitaCompletadaByMascotaIds(@Param("mascotaIds") List<Long> mascotaIds);
