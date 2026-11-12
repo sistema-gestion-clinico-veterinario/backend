@@ -30,6 +30,7 @@ import veterinaria.vargasvet.repository.CompanyOperatingHourRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.EspecialidadRepository;
+import veterinaria.vargasvet.repository.HorarioDeEmpleado;
 import veterinaria.vargasvet.repository.HorarioEmpleadoRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.TipoEmpleadoRepository;
@@ -55,6 +56,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -116,18 +118,20 @@ class RF12To14Test {
     }
 
     @Test
-    @DisplayName("[CP-RF12-01] Devuelve turnos ordenados con fecha y horas")
+    @DisplayName("[CP-RF12-01] Devuelve los turnos con fecha, día y horas en el orden de la consulta")
     void consultaHorarioOrdenado() {
-        HorarioEmpleado tarde = horario(2L, LocalTime.of(14, 0), LocalTime.of(18, 0));
-        HorarioEmpleado manana = horario(1L, LocalTime.of(8, 0), LocalTime.of(12, 0));
-        when(horarioEmpleadoRepository.findByEmpleadoId(7L)).thenReturn(List.of(tarde, manana));
+        HorarioDeEmpleado manana = horarioDeEmpleado(1L, LocalTime.of(8, 0), LocalTime.of(12, 0));
+        HorarioDeEmpleado tarde = horarioDeEmpleado(2L, LocalTime.of(14, 0), LocalTime.of(18, 0));
+        when(horarioEmpleadoRepository.findHorarioDelEmpleado(7L)).thenReturn(List.of(manana, tarde));
 
         var response = service.getHorario(7L);
 
         assertThat(response).extracting("id").containsExactly(1L, 2L);
         assertThat(response.getFirst().getFecha()).isEqualTo(fecha);
+        assertThat(response.getFirst().getDiaSemana()).isEqualTo("JUEVES");
         assertThat(response.getFirst().getHoraInicio()).isEqualTo(LocalTime.of(8, 0));
         assertThat(response.getFirst().getHoraFin()).isEqualTo(LocalTime.of(12, 0));
+        assertThat(response.getFirst().getActivo()).isTrue();
     }
 
     @Test
@@ -225,6 +229,10 @@ class RF12To14Test {
         horario.setHoraFin(fin);
         horario.setActivo(true);
         return horario;
+    }
+
+    private HorarioDeEmpleado horarioDeEmpleado(Long id, LocalTime inicio, LocalTime fin) {
+        return new HorarioDeEmpleado(id, fecha, DiaSemana.JUEVES, inicio, fin, true);
     }
 
     private HorarioEmpleadoRequest turno(LocalTime inicio, LocalTime fin) {

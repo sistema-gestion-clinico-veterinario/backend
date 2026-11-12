@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import veterinaria.vargasvet.mapper.HorarioEmpleadoMapper;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -326,21 +327,7 @@ public class ApoderadoPortalServiceImpl implements ApoderadoPortalService {
             throw new AccessDeniedException("No tienes permiso para consultar el horario de este profesional");
         }
 
-        return horarioEmpleadoRepository.findByEmpleadoId(empleadoId).stream()
-                .filter(h -> Boolean.TRUE.equals(h.getActivo()))
-                .sorted(java.util.Comparator.comparing(HorarioEmpleado::getFecha, java.util.Comparator.nullsFirst(LocalDate::compareTo))
-                        .thenComparing(HorarioEmpleado::getHoraInicio))
-                .map(h -> {
-                    HorarioEmpleadoResponse r = new HorarioEmpleadoResponse();
-                    r.setId(h.getId());
-                    r.setFecha(h.getFecha());
-                    r.setDiaSemana(h.getDiaSemana().name());
-                    r.setHoraInicio(h.getHoraInicio());
-                    r.setHoraFin(h.getHoraFin());
-                    r.setActivo(h.getActivo());
-                    return r;
-                })
-                .collect(Collectors.toList());
+        return HorarioEmpleadoMapper.aRespuestas(horarioEmpleadoRepository.findHorarioActivoDelEmpleado(empleadoId));
     }
 
     @Override

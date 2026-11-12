@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.HorarioEmpleado;
+import veterinaria.vargasvet.domain.enums.DiaSemana;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
@@ -23,6 +24,18 @@ public interface HorarioEmpleadoRepository extends JpaRepository<HorarioEmpleado
             @Param("companyId") Integer companyId,
             @Param("fecha") LocalDate fecha);
     
+    String HORARIO_DEL_EMPLEADO = "SELECT new veterinaria.vargasvet.repository.HorarioDeEmpleado(" +
+           "h.id, h.fecha, h.diaSemana, h.horaInicio, h.horaFin, h.activo) " +
+           "FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId ";
+
+    String ORDEN_CRONOLOGICO = "ORDER BY h.fecha ASC NULLS FIRST, h.horaInicio ASC";
+
+    @Query(HORARIO_DEL_EMPLEADO + ORDEN_CRONOLOGICO)
+    List<HorarioDeEmpleado> findHorarioDelEmpleado(@Param("empleadoId") Long empleadoId);
+
+    @Query(HORARIO_DEL_EMPLEADO + "AND h.activo = true " + ORDEN_CRONOLOGICO)
+    List<HorarioDeEmpleado> findHorarioActivoDelEmpleado(@Param("empleadoId") Long empleadoId);
+
     interface TurnoOcupado {
         LocalDate getFecha();
         LocalTime getHoraInicio();

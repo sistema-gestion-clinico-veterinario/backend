@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import veterinaria.vargasvet.mapper.HorarioEmpleadoMapper;
 import veterinaria.vargasvet.service.horarios.AsignacionMasivaDeHorarios;
 import veterinaria.vargasvet.service.horarios.ReglasHorarioEmpresa;
 import org.springframework.beans.factory.annotation.Value;
@@ -730,11 +731,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
     @Transactional(readOnly = true)
     public List<HorarioEmpleadoResponse> getHorario(Long empleadoId) {
-        return horarioEmpleadoRepository.findByEmpleadoId(empleadoId).stream()
-                .sorted(java.util.Comparator.comparing(HorarioEmpleado::getFecha, java.util.Comparator.nullsFirst(LocalDate::compareTo))
-                        .thenComparing(HorarioEmpleado::getHoraInicio))
-                .map(this::toHorarioResponse)
-                .toList();
+        return HorarioEmpleadoMapper.aRespuestas(horarioEmpleadoRepository.findHorarioDelEmpleado(empleadoId));
     }
 
     private java.util.concurrent.CompletableFuture<Boolean> sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken) {
