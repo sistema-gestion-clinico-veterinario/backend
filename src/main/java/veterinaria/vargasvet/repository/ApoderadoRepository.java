@@ -3,10 +3,14 @@ package veterinaria.vargasvet.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.Apoderado;
+import veterinaria.vargasvet.domain.enums.EstadoAccesoPortalPropietario;
+
+import java.time.LocalDateTime;
 
 @Repository
 public interface ApoderadoRepository extends JpaRepository<Apoderado, Long> {
@@ -42,6 +46,20 @@ public interface ApoderadoRepository extends JpaRepository<Apoderado, Long> {
 
     @Query("SELECT a FROM Apoderado a WHERE a.company.id = :companyId")
     java.util.List<Apoderado> findByCompanyId(@Param("companyId") Integer companyId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            UPDATE Apoderado a
+            SET a.estadoAccesoPortal = :estado,
+                a.accesoPortalModificadoEn = :cuando,
+                a.accesoPortalModificadoPor = :quien,
+                a.updatedAt = :cuando
+            WHERE a.company.id = :companyId
+            """)
+    int cambiarEstadoAccesoPortalDeLaEmpresa(@Param("companyId") Integer companyId,
+                                             @Param("estado") EstadoAccesoPortalPropietario estado,
+                                             @Param("cuando") LocalDateTime cuando,
+                                             @Param("quien") String quien);
 
     java.util.Optional<Apoderado> findFirstByCompany_IdOrderByIdAsc(Integer companyId);
 
