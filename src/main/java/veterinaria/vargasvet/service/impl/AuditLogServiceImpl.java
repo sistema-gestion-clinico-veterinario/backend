@@ -9,6 +9,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 import veterinaria.vargasvet.domain.entity.AuditLog;
 import veterinaria.vargasvet.repository.AuditLogRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
@@ -18,12 +20,15 @@ import veterinaria.vargasvet.security.SecurityUtils;
 import veterinaria.vargasvet.service.AuditLogService;
 import veterinaria.vargasvet.service.AuditRealtimePublisher;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import org.slf4j.MDC;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuditLogServiceImpl implements AuditLogService {
+
+    private static final String ATRIBUTO_NOMBRE_EMPRESA = AuditLogServiceImpl.class.getName() + ".nombreEmpresa.";
 
     private final AuditLogRepository auditLogRepository;
     private final AuditRealtimePublisher auditRealtimePublisher;
@@ -66,9 +71,7 @@ public class AuditLogServiceImpl implements AuditLogService {
 
         if (finalCompanyId != null) {
             try {
-                companyName = companyRepository.findById(finalCompanyId)
-                        .map(Company::getName)
-                        .orElse(null);
+                companyName = nombreDeLaEmpresa(finalCompanyId);
             } catch (Exception e) {
                 log.warn("No se pudo resolver el nombre de empresa para auditoría (companyId={})", finalCompanyId);
             }
@@ -146,9 +149,7 @@ public class AuditLogServiceImpl implements AuditLogService {
                 .findFirst()
                 .orElse(null);
         Integer resolvedCompanyId = companyId != null ? companyId : SecurityUtils.getCurrentCompanyId();
-        String companyName = resolvedCompanyId == null ? null : companyRepository.findById(resolvedCompanyId)
-                .map(Company::getName)
-                .orElse(null);
+        String companyName = resolvedCompanyId == null ? null : nombreDeLaEmpresa(resolvedCompanyId);
 
         AuditLog saved = auditLogRepository.save(AuditLog.builder()
                 .timestamp(veterinaria.vargasvet.util.AppClock.now())
@@ -197,6 +198,19 @@ public class AuditLogServiceImpl implements AuditLogService {
         }
         return auditLogRepository.exportarLogs(resolvedCompanyId, userEmail, action, module,
                 startDate, endDate, pageable).getContent();
+    }
+
+    private String nombreDeLaEmpresa(Integer companyId) {
+        RequestAttributes solicitud = RequestContextHolder.getRequestAttributes();
+        String atributo = ATRIBUTO_NOMBRE_EMPRESA + companyId;
+        if (solicitud != null && solicitud.getAttribute(atributo, RequestAttributes.SCOPE_REQUEST) instanceof Optional<?> guardado) {
+            return (String) guardado.orElse(null);
+        }
+        String nombre = companyRepository.findById(companyId).map(Company::getName).orElse(null);
+        if (solicitud != null) {
+            solicitud.setAttribute(atributo, Optional.ofNullable(nombre), RequestAttributes.SCOPE_REQUEST);
+        }
+        return nombre;
     }
 
     private String getDispositivo() {
