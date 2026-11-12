@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Lote;
@@ -19,6 +20,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class InventarioStockServiceImpl implements InventarioStockService {
+    private static final int LOTES_POR_LECTURA = 5;
+
     private final ProductoRepository productoRepository;
     private final LoteRepository loteRepository;
     private final SalidaLoteRepository salidaLoteRepository;
@@ -33,16 +36,25 @@ public class InventarioStockServiceImpl implements InventarioStockService {
             return;
         }
 
-        List<Lote> lotes = loteRepository.findDisponiblesFefoForUpdate(producto.getId(), LocalDate.now());
-        int disponible = lotes.stream().mapToInt(Lote::getCantidad).sum();
-        if (disponible < cantidad) {
-            throw new IllegalArgumentException("Stock por lotes insuficiente para «" + producto.getNombre() + "»");
-        }
-
         int pendiente = cantidad;
+        while (pendiente > 0) {
+            List<Lote> lotes = loteRepository.findDisponiblesFefoForUpdate(
+                    producto.getId(), LocalDate.now(), PageRequest.of(0, LOTES_POR_LECTURA));
+            if (lotes.isEmpty()) {
+                throw new IllegalArgumentException("Stock por lotes insuficiente para «" + producto.getNombre() + "»");
+            }
+            pendiente -= consumir(producto, lotes, pendiente, referenciaTipo, referenciaId);
+            if (pendiente > 0) {
+                loteRepository.flush();
+            }
+        }
+    }
+
+    private int consumir(Producto producto, List<Lote> lotes, int pendiente, String referenciaTipo, Long referenciaId) {
+        int consumido = 0;
         for (Lote lote : lotes) {
-            if (pendiente == 0) break;
-            int tomado = Math.min(lote.getCantidad(), pendiente);
+            if (consumido == pendiente) break;
+            int tomado = Math.min(lote.getCantidad(), pendiente - consumido);
             lote.setCantidad(lote.getCantidad() - tomado);
             lote.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
             loteRepository.save(lote);
@@ -58,8 +70,9 @@ public class InventarioStockServiceImpl implements InventarioStockService {
             salida.setCreatedBy(SecurityUtils.getCurrentUserEmail());
             salida.setUpdatedBy(SecurityUtils.getCurrentUserEmail());
             salidaLoteRepository.save(salida);
-            pendiente -= tomado;
+            consumido += tomado;
         }
+        return consumido;
     }
 
     @Override
