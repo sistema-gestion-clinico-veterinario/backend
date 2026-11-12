@@ -3,6 +3,7 @@ package veterinaria.vargasvet.service.impl;
 import lombok.RequiredArgsConstructor;
 import veterinaria.vargasvet.mapper.HorarioEmpleadoMapper;
 import veterinaria.vargasvet.service.horarios.AsignacionMasivaDeHorarios;
+import veterinaria.vargasvet.service.horarios.InformeDeHorarios;
 import veterinaria.vargasvet.service.horarios.ReglasHorarioEmpresa;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -65,6 +66,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final CompanyExceptionRepository companyExceptionRepository;
     private final CitaRepository citaRepository;
     private final AsignacionMasivaDeHorarios asignacionMasiva;
+    private final InformeDeHorarios informeDeHorarios;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final EmailService emailService;
@@ -1175,18 +1177,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Override
     @Transactional(readOnly = true)
     public List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse> getSchedulesReport(Integer companyId) {
-        Integer resolvedId = resolverCompanyId(companyId);
-        List<Empleado> empleados = empleadoRepository.findAllByCompanyId(resolvedId);
-        
-        return empleados.stream().map(emp -> {
-            List<HorarioEmpleadoResponse> horarios = getHorario(emp.getId());
-            return veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse.builder()
-                    .empleadoId(emp.getId())
-                    .nombreCompleto(emp.getUser().getNombre() + " " + emp.getUser().getApellido())
-                    .cargo(emp.getTiposEmpleado().isEmpty() ? "Personal" : emp.getTiposEmpleado().iterator().next().getNombre())
-                    .horarios(horarios)
-                    .build();
-        }).collect(Collectors.toList());
+        return informeDeHorarios.completo(resolverCompanyId(companyId));
     }
 
     @Override

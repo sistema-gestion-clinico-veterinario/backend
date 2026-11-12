@@ -15,7 +15,7 @@ class HorarioEmpleadoMapperTest {
 
     @Test
     void copiaTodosLosCamposYConvierteElDiaDeLaSemanaATexto() {
-        HorarioDeEmpleado horario = new HorarioDeEmpleado(5L, LocalDate.of(2026, 12, 7), DiaSemana.LUNES,
+        HorarioDeEmpleado horario = new HorarioDeEmpleado(5L, 3L, LocalDate.of(2026, 12, 7), DiaSemana.LUNES,
                 LocalTime.of(9, 0), LocalTime.of(13, 0), true);
 
         HorarioEmpleadoResponse respuesta = HorarioEmpleadoMapper.aRespuesta(horario);
@@ -30,7 +30,7 @@ class HorarioEmpleadoMapperTest {
 
     @Test
     void unTurnoSinFechaConservaLaFechaNula() {
-        HorarioDeEmpleado recurrente = new HorarioDeEmpleado(6L, null, DiaSemana.MARTES,
+        HorarioDeEmpleado recurrente = new HorarioDeEmpleado(6L, 3L, null, DiaSemana.MARTES,
                 LocalTime.of(10, 0), LocalTime.of(12, 0), false);
 
         HorarioEmpleadoResponse respuesta = HorarioEmpleadoMapper.aRespuesta(recurrente);
@@ -42,8 +42,8 @@ class HorarioEmpleadoMapperTest {
     @Test
     void laListaConservaElOrdenRecibido() {
         List<HorarioDeEmpleado> horarios = List.of(
-                new HorarioDeEmpleado(2L, null, DiaSemana.LUNES, LocalTime.of(8, 0), LocalTime.of(9, 0), true),
-                new HorarioDeEmpleado(1L, null, DiaSemana.LUNES, LocalTime.of(7, 0), LocalTime.of(8, 0), true));
+                new HorarioDeEmpleado(2L, 3L, null, DiaSemana.LUNES, LocalTime.of(8, 0), LocalTime.of(9, 0), true),
+                new HorarioDeEmpleado(1L, 3L, null, DiaSemana.LUNES, LocalTime.of(7, 0), LocalTime.of(8, 0), true));
 
         assertThat(HorarioEmpleadoMapper.aRespuestas(horarios)).extracting(HorarioEmpleadoResponse::getId)
                 .containsExactly(2L, 1L);

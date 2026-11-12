@@ -2,6 +2,7 @@ package veterinaria.vargasvet.service.impl;
 
 import jakarta.persistence.EntityManager;
 import veterinaria.vargasvet.service.horarios.AsignacionMasivaDeHorarios;
+import veterinaria.vargasvet.service.horarios.InformeDeHorarios;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -137,7 +138,8 @@ class InvitacionReenvioConcurrenciaTest {
                 usuarioRepository, empleadoRepository, especialidadRepository, tipoEmpleadoRepository,
                 companyRepository, horarioEmpleadoRepository, companyOperatingHourRepository, companyExceptionRepository,
                 citaRepository,
-                new AsignacionMasivaDeHorarios(horarioEmpleadoRepository, companyOperatingHourRepository, companyExceptionRepository), new BCryptPasswordEncoder(), new UserMapper(new ModelMapper()), emailService,
+                new AsignacionMasivaDeHorarios(horarioEmpleadoRepository, companyOperatingHourRepository, companyExceptionRepository),
+                new InformeDeHorarios(empleadoRepository, horarioEmpleadoRepository), new BCryptPasswordEncoder(), new UserMapper(new ModelMapper()), emailService,
                 mock(BusinessValidator.class), mock(AuditLogService.class), mock(veterinaria.vargasvet.service.RoleAssignmentService.class),
                 mock(SessionSecurityService.class), membership, credencialRepository, mock(UsuarioContactoService.class),
                 mock(AdministratorProtection.class), mock(AccountClosureGuard.class),

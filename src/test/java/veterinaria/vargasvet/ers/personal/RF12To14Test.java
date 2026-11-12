@@ -232,7 +232,7 @@ class RF12To14Test {
     }
 
     private HorarioDeEmpleado horarioDeEmpleado(Long id, LocalTime inicio, LocalTime fin) {
-        return new HorarioDeEmpleado(id, fecha, DiaSemana.JUEVES, inicio, fin, true);
+        return new HorarioDeEmpleado(id, 7L, fecha, DiaSemana.JUEVES, inicio, fin, true);
     }
 
     private HorarioEmpleadoRequest turno(LocalTime inicio, LocalTime fin) {

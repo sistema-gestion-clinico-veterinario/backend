@@ -24,17 +24,20 @@ public interface HorarioEmpleadoRepository extends JpaRepository<HorarioEmpleado
             @Param("companyId") Integer companyId,
             @Param("fecha") LocalDate fecha);
     
-    String HORARIO_DEL_EMPLEADO = "SELECT new veterinaria.vargasvet.repository.HorarioDeEmpleado(" +
-           "h.id, h.fecha, h.diaSemana, h.horaInicio, h.horaFin, h.activo) " +
-           "FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId ";
+    String SELECCION_DE_HORARIO = "SELECT new veterinaria.vargasvet.repository.HorarioDeEmpleado(" +
+           "h.id, h.empleado.id, h.fecha, h.diaSemana, h.horaInicio, h.horaFin, h.activo) " +
+           "FROM HorarioEmpleado h ";
 
-    String ORDEN_CRONOLOGICO = "ORDER BY h.fecha ASC NULLS FIRST, h.horaInicio ASC";
+    String ORDEN_CRONOLOGICO = "h.fecha ASC NULLS FIRST, h.horaInicio ASC";
 
-    @Query(HORARIO_DEL_EMPLEADO + ORDEN_CRONOLOGICO)
+    @Query(SELECCION_DE_HORARIO + "WHERE h.empleado.id = :empleadoId ORDER BY " + ORDEN_CRONOLOGICO)
     List<HorarioDeEmpleado> findHorarioDelEmpleado(@Param("empleadoId") Long empleadoId);
 
-    @Query(HORARIO_DEL_EMPLEADO + "AND h.activo = true " + ORDEN_CRONOLOGICO)
+    @Query(SELECCION_DE_HORARIO + "WHERE h.empleado.id = :empleadoId AND h.activo = true ORDER BY " + ORDEN_CRONOLOGICO)
     List<HorarioDeEmpleado> findHorarioActivoDelEmpleado(@Param("empleadoId") Long empleadoId);
+
+    @Query(SELECCION_DE_HORARIO + "WHERE h.empleado.company.id = :companyId ORDER BY h.empleado.id ASC, " + ORDEN_CRONOLOGICO)
+    List<HorarioDeEmpleado> findHorariosDeLaEmpresa(@Param("companyId") Integer companyId);
 
     interface TurnoOcupado {
         LocalDate getFecha();
