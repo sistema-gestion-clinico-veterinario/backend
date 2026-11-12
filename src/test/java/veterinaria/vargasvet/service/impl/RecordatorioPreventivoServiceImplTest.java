@@ -26,6 +26,7 @@ import static org.mockito.Mockito.*;
 class RecordatorioPreventivoServiceImplTest {
     @Mock ControlPreventivoRepository controlRepository;
     @Mock RecordatorioPreventivoRepository recordatorioRepository;
+    @Mock veterinaria.vargasvet.repository.ApoderadoRepository apoderadoRepository;
     @Mock EmailService emailService;
     @Mock veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
 
@@ -33,7 +34,8 @@ class RecordatorioPreventivoServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new RecordatorioPreventivoServiceImpl(controlRepository, recordatorioRepository, emailService,
+        service = veterinaria.vargasvet.testutil.RecordatoriosTestFixture.servicio(controlRepository, recordatorioRepository,
+                apoderadoRepository, emailService,
                 new veterinaria.vargasvet.service.OwnerContactPolicy(mock(UsuarioContactoService.class)),
                 new veterinaria.vargasvet.service.PetOwnershipService(
                         mock(veterinaria.vargasvet.repository.MascotaRepository.class),
