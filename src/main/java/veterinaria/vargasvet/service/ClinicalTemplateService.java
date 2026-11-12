@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.text.Normalizer;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -185,6 +186,7 @@ public class ClinicalTemplateService {
                 .orElseThrow(() -> new ResourceNotFoundException("Plantilla clínica no encontrada"));
         requireDraft(draft);
         validateUniqueOrders(request);
+        Map<Long, ClinicalConcept> accessibleConcepts = accessibleConcepts(request, companyId);
 
         draft.setName(request.getName().trim());
         draft.setDescription(trimToNull(request.getDescription()));
@@ -203,8 +205,10 @@ public class ClinicalTemplateService {
                 if (!conceptsInSection.add(fieldRequest.getConceptId())) {
                     throw new IllegalArgumentException("Un concepto no puede repetirse dentro de la misma sección");
                 }
-                ClinicalConcept concept = conceptRepository.findAccessibleById(fieldRequest.getConceptId(), companyId)
-                        .orElseThrow(() -> new IllegalArgumentException("El campo clínico seleccionado no pertenece a la empresa"));
+                ClinicalConcept concept = accessibleConcepts.get(fieldRequest.getConceptId());
+                if (concept == null) {
+                    throw new IllegalArgumentException("El campo clínico seleccionado no pertenece a la empresa");
+                }
                 validateJsonObject(fieldRequest.getVisibilityRules(), "Las reglas de visibilidad no son válidas");
                 ClinicalTemplateField field = new ClinicalTemplateField();
                 field.setSection(section);
@@ -343,8 +347,7 @@ public class ClinicalTemplateService {
         for (ClinicalFieldAnswerRequest request : incoming.values()) {
             ClinicalTemplateField field = fields.get(request.getFieldId());
             if (isCoreField(field)) continue;
-            ConsultationFieldAnswer answer = answerRepository
-                    .findByConsultationIdAndTemplateFieldId(consultation.getId(), field.getId())
+            ConsultationFieldAnswer answer = Optional.ofNullable(savedAnswers.get(field.getId()))
                     .orElseGet(ConsultationFieldAnswer::new);
             answer.setConsultation(consultation);
             answer.setTemplateField(field);
@@ -562,6 +565,19 @@ public class ClinicalTemplateService {
     }
 
     private record DefaultField(String code, String label, boolean required, int order) {}
+
+    private Map<Long, ClinicalConcept> accessibleConcepts(ClinicalTemplateDraftRequest request, Integer companyId) {
+        Set<Long> conceptIds = request.getSections().stream()
+                .flatMap(section -> section.getFields().stream())
+                .map(ClinicalTemplateDraftRequest.Field::getConceptId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (conceptIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return conceptRepository.findAccessibleByIds(conceptIds, companyId).stream()
+                .collect(Collectors.toMap(ClinicalConcept::getId, Function.identity()));
+    }
 
     private void validateUniqueOrders(ClinicalTemplateDraftRequest request) {
         Set<Integer> sectionOrders = new HashSet<>();
