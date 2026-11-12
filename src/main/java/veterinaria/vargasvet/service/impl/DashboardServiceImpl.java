@@ -196,6 +196,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DashboardStatsDTO getStats(Integer companyId) {
         Integer targetCompanyId;
         
