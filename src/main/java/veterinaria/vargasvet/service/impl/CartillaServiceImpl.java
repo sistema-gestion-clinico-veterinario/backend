@@ -82,7 +82,7 @@ public class CartillaServiceImpl implements CartillaService {
     @Override
     @Transactional(readOnly = true)
     public Page<MascotaCartillaResponse> listarMascotasConCartilla(Integer companyId, String nombre, EspecieMascota especie, Boolean activo, Pageable pageable) {
-        Page<Mascota> mascotas = mascotaRepository.buscar(companyId, nombre, especie, null, activo, pageable);
+        Page<Mascota> mascotas = mascotaRepository.buscar(companyId, nombre, especie, null, activo, null, pageable);
 
         var estadosPendientes = java.util.List.of(
             EstadoControlPreventivo.PROGRAMADO,
