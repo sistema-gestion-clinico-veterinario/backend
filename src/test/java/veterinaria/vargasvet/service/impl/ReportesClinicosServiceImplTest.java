@@ -21,6 +21,13 @@ import veterinaria.vargasvet.repository.RegistroDesparasitacionRepository;
 import veterinaria.vargasvet.repository.RegistroVacunaRepository;
 import veterinaria.vargasvet.security.AccesoValidator;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.service.reportes.AlcanceReportes;
+import veterinaria.vargasvet.service.reportes.ReporteActividadClinica;
+import veterinaria.vargasvet.service.reportes.ReporteComparativoEmpresas;
+import veterinaria.vargasvet.service.reportes.ReporteIngresos;
+import veterinaria.vargasvet.service.reportes.ReportePacientesInactivos;
+import veterinaria.vargasvet.service.reportes.ReportePreventivos;
+import veterinaria.vargasvet.service.reportes.ReporteVentasProductos;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -53,18 +60,17 @@ class ReportesClinicosServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        AlcanceReportes alcance = new AlcanceReportes(accesoValidator, empleadoRepository);
+        ReporteActividadClinica actividad = new ReporteActividadClinica();
         service = new ReportesClinicosServiceImpl(
+                alcance,
                 citaRepository,
-                mascotaRepository,
-                registroVacunaRepository,
-                registroDesparasitacionRepository,
-                controlPreventivoRepository,
-                empleadoRepository,
-                purchaseRepository,
-                accesoValidator,
-                companyRepository,
-                productoRepository,
-                ventaLibreDetalleRepository);
+                actividad,
+                new ReporteIngresos(purchaseRepository),
+                new ReportePreventivos(registroVacunaRepository, registroDesparasitacionRepository, controlPreventivoRepository),
+                new ReportePacientesInactivos(mascotaRepository, citaRepository, alcance),
+                new ReporteVentasProductos(purchaseRepository, ventaLibreDetalleRepository, productoRepository, alcance),
+                new ReporteComparativoEmpresas(companyRepository, citaRepository, actividad));
     }
 
     @Test
