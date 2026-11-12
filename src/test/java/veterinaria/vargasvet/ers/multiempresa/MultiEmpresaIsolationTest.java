@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.ers.multiempresa;
 
 import org.junit.jupiter.api.AfterEach;
+import veterinaria.vargasvet.service.horarios.AsignacionMasivaDeHorarios;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -189,7 +190,8 @@ class MultiEmpresaIsolationTest {
         empleadoService = new EmpleadoServiceImpl(
                 usuarioRepository, empleadoRepository, especialidadRepository, tipoEmpleadoRepository,
                 companyRepository, horarioEmpleadoRepository, companyOperatingHourRepository, companyExceptionRepository,
-                citaRepository, passwordEncoder, userMapper, mock(EmailService.class), mock(BusinessValidator.class),
+                citaRepository,
+                new AsignacionMasivaDeHorarios(horarioEmpleadoRepository, companyOperatingHourRepository, companyExceptionRepository), passwordEncoder, userMapper, mock(EmailService.class), mock(BusinessValidator.class),
                 mock(AuditLogService.class), roleAssignmentService, sessionSecurityService, companyMembershipService,
                 credencialRepository, contactoService,
                 new veterinaria.vargasvet.service.AdministratorProtection(usuarioPorRolRepository, companyMembershipService, companyRepository),
