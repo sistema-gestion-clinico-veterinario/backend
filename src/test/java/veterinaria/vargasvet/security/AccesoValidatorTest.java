@@ -42,7 +42,7 @@ class AccesoValidatorTest {
     @BeforeEach
     void setUp() {
         validator = new AccesoValidator(
-                new RolePermissionEvaluator(rolVistaPermisoRepository, usuarioPorRolRepository));
+                new RolePermissionEvaluator(new PermisosDelRol(rolVistaPermisoRepository), usuarioPorRolRepository));
         role = new Role();
         role.setId(20);
         role.setScope(RoleScope.STAFF);

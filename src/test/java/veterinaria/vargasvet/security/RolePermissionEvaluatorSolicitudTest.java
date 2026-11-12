@@ -12,7 +12,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import veterinaria.vargasvet.domain.entity.Role;
 import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
 import veterinaria.vargasvet.domain.enums.RolePurpose;
-import veterinaria.vargasvet.repository.RolVistaPermisoRepository;
 import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 
 import java.util.Optional;
@@ -27,7 +26,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class RolePermissionEvaluatorSolicitudTest {
 
-    @Mock private RolVistaPermisoRepository rolVistaPermisoRepository;
+    @Mock private PermisosDelRol permisosDelRol;
     @Mock private UsuarioPorRolRepository usuarioPorRolRepository;
 
     @InjectMocks private RolePermissionEvaluator evaluator;
