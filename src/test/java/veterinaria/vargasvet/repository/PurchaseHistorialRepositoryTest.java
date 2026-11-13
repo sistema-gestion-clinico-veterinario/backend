@@ -25,6 +25,8 @@ import veterinaria.vargasvet.domain.enums.TipoPurchase;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,9 +68,9 @@ class PurchaseHistorialRepositoryTest {
         Purchase propio = pago(clinica, rocky, ana, "2026-11-10T10:00", PaymentStatus.PAID, MetodoPago.YAPE);
         pago(otraClinica, deOtraClinica, ana, "2026-11-10T11:00", PaymentStatus.PAID, MetodoPago.YAPE);
 
-        Page<Purchase> historial = historial(clinica, null, null, null, null, null, null);
+        Page<Long> historial = historial(clinica, null, null, null, null, null, null);
 
-        assertThat(historial.getContent()).extracting(Purchase::getId).containsExactly(propio.getId());
+        assertThat(historial.getContent()).containsExactly(propio.getId());
         assertThat(historial.getTotalElements()).isEqualTo(1);
     }
 
@@ -79,7 +81,7 @@ class PurchaseHistorialRepositoryTest {
         Purchase medio = pago(clinica, rocky, ana, "2026-11-05T10:00", PaymentStatus.PAID, MetodoPago.YAPE);
 
         assertThat(historial(clinica, null, null, null, null, null, null).getContent())
-                .extracting(Purchase::getId).containsExactly(reciente.getId(), medio.getId(), antiguo.getId());
+                .containsExactly(reciente.getId(), medio.getId(), antiguo.getId());
     }
 
     @Test
@@ -90,7 +92,7 @@ class PurchaseHistorialRepositoryTest {
         entityManager.flush();
 
         assertThat(historial(clinica, null, null, null, null, null, null).getContent())
-                .extracting(Purchase::getId).containsExactly(deServicio.getId());
+                .containsExactly(deServicio.getId());
     }
 
     @Test
@@ -99,7 +101,7 @@ class PurchaseHistorialRepositoryTest {
         pago(clinica, luna, beto, "2026-11-10T11:00", PaymentStatus.PAID, MetodoPago.YAPE);
 
         assertThat(historial(clinica, ana.getId(), null, null, null, null, null).getContent())
-                .extracting(Purchase::getId).containsExactly(deAna.getId());
+                .containsExactly(deAna.getId());
     }
 
     @Test
@@ -108,7 +110,7 @@ class PurchaseHistorialRepositoryTest {
         Purchase deLuna = pago(clinica, luna, beto, "2026-11-10T11:00", PaymentStatus.PAID, MetodoPago.YAPE);
 
         assertThat(historial(clinica, null, luna.getId(), null, null, null, null).getContent())
-                .extracting(Purchase::getId).containsExactly(deLuna.getId());
+                .containsExactly(deLuna.getId());
     }
 
     @Test
@@ -118,10 +120,10 @@ class PurchaseHistorialRepositoryTest {
         Purchase fin = pago(clinica, rocky, ana, "2026-11-30T23:59", PaymentStatus.PAID, MetodoPago.YAPE);
         pago(clinica, rocky, ana, "2026-12-01T00:00", PaymentStatus.PAID, MetodoPago.YAPE);
 
-        Page<Purchase> historial = historial(clinica, null, null, LocalDateTime.parse("2026-11-01T10:00"),
+        Page<Long> historial = historial(clinica, null, null, LocalDateTime.parse("2026-11-01T10:00"),
                 LocalDateTime.parse("2026-11-30T23:59"), null, null);
 
-        assertThat(historial.getContent()).extracting(Purchase::getId).containsExactly(fin.getId(), inicio.getId());
+        assertThat(historial.getContent()).containsExactly(fin.getId(), inicio.getId());
     }
 
     @Test
@@ -130,9 +132,9 @@ class PurchaseHistorialRepositoryTest {
         Purchase nuevo = pago(clinica, rocky, ana, "2026-11-20T10:00", PaymentStatus.PAID, MetodoPago.YAPE);
 
         assertThat(historial(clinica, null, null, LocalDateTime.parse("2026-11-01T00:00"), null, null, null).getContent())
-                .extracting(Purchase::getId).containsExactly(nuevo.getId());
+                .containsExactly(nuevo.getId());
         assertThat(historial(clinica, null, null, null, LocalDateTime.parse("2026-11-01T00:00"), null, null).getContent())
-                .extracting(Purchase::getId).containsExactly(viejo.getId());
+                .containsExactly(viejo.getId());
     }
 
     @Test
@@ -142,7 +144,7 @@ class PurchaseHistorialRepositoryTest {
         pago(clinica, rocky, ana, "2026-11-10T12:00", PaymentStatus.PENDING, MetodoPago.YAPE);
 
         assertThat(historial(clinica, null, null, null, null, PaymentStatus.PAID, MetodoPago.YAPE).getContent())
-                .extracting(Purchase::getId).containsExactly(pagadoConYape.getId());
+                .containsExactly(pagadoConYape.getId());
         assertThat(historial(clinica, null, null, null, null, PaymentStatus.PAID, null).getContent()).hasSize(2);
         assertThat(historial(clinica, null, null, null, null, null, MetodoPago.YAPE).getContent()).hasSize(2);
     }
@@ -153,24 +155,25 @@ class PurchaseHistorialRepositoryTest {
         pago(clinica, rocky, ana, "2026-11-10T11:00", PaymentStatus.PAID, MetodoPago.EFECTIVO);
         pago(clinica, luna, beto, "2026-11-10T12:00", PaymentStatus.PAID, MetodoPago.YAPE);
 
-        Page<Purchase> historial = historial(clinica, ana.getId(), rocky.getId(), LocalDateTime.parse("2026-11-01T00:00"),
+        Page<Long> historial = historial(clinica, ana.getId(), rocky.getId(), LocalDateTime.parse("2026-11-01T00:00"),
                 LocalDateTime.parse("2026-11-30T00:00"), PaymentStatus.PAID, MetodoPago.YAPE);
 
-        assertThat(historial.getContent()).extracting(Purchase::getId).containsExactly(buscado.getId());
+        assertThat(historial.getContent()).containsExactly(buscado.getId());
     }
 
     @Test
     void paginaYCuentaElTotalSinTraerTodo() {
+        List<Purchase> creados = new ArrayList<>();
         for (int dia = 1; dia <= 5; dia++) {
-            pago(clinica, rocky, ana, "2026-11-0" + dia + "T10:00", PaymentStatus.PAID, MetodoPago.YAPE);
+            creados.add(pago(clinica, rocky, ana, "2026-11-0" + dia + "T10:00", PaymentStatus.PAID, MetodoPago.YAPE));
         }
 
-        Page<Purchase> segunda = purchaseRepository.buscarHistorialPorEmpresa(clinica.getId(), TipoPurchase.SERVICIO_CITA,
+        Page<Long> segunda = purchaseRepository.buscarIdsDelHistorial(clinica.getId(), TipoPurchase.SERVICIO_CITA,
                 null, null, null, null, null, null, PageRequest.of(1, 2, Sort.by("createdAt").descending()));
 
         assertThat(segunda.getTotalElements()).isEqualTo(5);
         assertThat(segunda.getTotalPages()).isEqualTo(3);
-        assertThat(segunda.getContent()).extracting(p -> p.getCreatedAt().getDayOfMonth()).containsExactly(3, 2);
+        assertThat(segunda.getContent()).containsExactly(creados.get(2).getId(), creados.get(1).getId());
     }
 
     @Test
@@ -181,7 +184,7 @@ class PurchaseHistorialRepositoryTest {
         entityManager.flush();
 
         assertThat(historial(clinica, null, null, null, null, null, null).getContent())
-                .extracting(Purchase::getId).containsExactly(conEmpresa.getId());
+                .containsExactly(conEmpresa.getId());
     }
 
     @Test
@@ -189,17 +192,17 @@ class PurchaseHistorialRepositoryTest {
         pago(clinica, rocky, ana, "2026-11-10T10:00", PaymentStatus.PAID, MetodoPago.YAPE);
         pago(otraClinica, deOtraClinica, ana, "2026-11-10T11:00", PaymentStatus.PAID, MetodoPago.YAPE);
 
-        Page<Purchase> historial = purchaseRepository.buscarHistorialPorEmpresa(null, TipoPurchase.SERVICIO_CITA,
+        Page<Long> historial = purchaseRepository.buscarIdsDelHistorial(null, TipoPurchase.SERVICIO_CITA,
                 null, null, null, null, null, null, PAGINA);
 
         assertThat(historial.getContent()).isEmpty();
     }
 
-    private Page<Purchase> historial(Company empresa, Integer clienteId, Long mascotaId, LocalDateTime desde,
+    private Page<Long> historial(Company empresa, Integer clienteId, Long mascotaId, LocalDateTime desde,
                                      LocalDateTime hasta, PaymentStatus estado, MetodoPago metodo) {
         entityManager.flush();
         entityManager.clear();
-        return purchaseRepository.buscarHistorialPorEmpresa(empresa.getId(), TipoPurchase.SERVICIO_CITA, clienteId,
+        return purchaseRepository.buscarIdsDelHistorial(empresa.getId(), TipoPurchase.SERVICIO_CITA, clienteId,
                 mascotaId, desde, hasta, estado, metodo, PAGINA);
     }
 

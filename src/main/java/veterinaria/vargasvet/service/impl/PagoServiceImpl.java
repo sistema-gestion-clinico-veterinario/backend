@@ -29,6 +29,9 @@ import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
 
 import java.math.BigDecimal;
+import java.util.stream.Collectors;
+import java.util.function.Function;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -206,10 +209,55 @@ public class PagoServiceImpl implements PagoService {
         java.time.LocalDateTime desde = fechaDesde != null ? fechaDesde.atStartOfDay() : null;
         java.time.LocalDateTime hasta = fechaHasta != null ? fechaHasta.atTime(23, 59, 59) : null;
 
-        return purchaseRepository.buscarHistorialPorEmpresa(
-                        resolvedCompanyId, TipoPurchase.SERVICIO_CITA,
-                        clienteId, mascotaId, desde, hasta, estado, metodoPago, pageable)
-                .map(this::toListResponse);
+        Page<Long> ids = purchaseRepository.buscarIdsDelHistorial(
+                resolvedCompanyId, TipoPurchase.SERVICIO_CITA,
+                clienteId, mascotaId, desde, hasta, estado, metodoPago, pageable);
+        Map<Long, PurchaseRepository.PagoDelHistorial> pagos = ids.isEmpty() ? Map.of()
+                : purchaseRepository.listadoDelHistorial(ids.getContent()).stream()
+                        .collect(Collectors.toMap(PurchaseRepository.PagoDelHistorial::getId, Function.identity()));
+        return ids.map(id -> aListadoDelHistorial(pagos.get(id)));
+    }
+
+    private PagoListResponse aListadoDelHistorial(PurchaseRepository.PagoDelHistorial p) {
+        PagoListResponse r = new PagoListResponse();
+        r.setId(p.getId());
+        r.setMetodoPago(p.getMetodoPago());
+        r.setMonto(p.getTotal());
+        r.setMontoRecibido(p.getMontoRecibido());
+        r.setFechaPago(p.getCreatedAt());
+        r.setEstado(p.getPaymentStatus());
+
+        BigDecimal cambio = null;
+        if (p.getMontoRecibido() != null && p.getTotal() != null
+                && p.getMontoRecibido().compareTo(p.getTotal()) > 0) {
+            cambio = p.getMontoRecibido().subtract(p.getTotal());
+        }
+        r.setCambio(cambio);
+
+        if (p.getCitaId() != null) {
+            r.setCitaId(p.getCitaId());
+            String numeroCita = p.getNumeroCita();
+            if (numeroCita == null || numeroCita.isBlank()) {
+                numeroCita = citaRepository.findById(p.getCitaId()).map(this::asegurarNumeroCita).orElse(null);
+            }
+            r.setNumeroCita(numeroCita);
+            r.setEstadoCita(p.getEstadoCita() != null ? p.getEstadoCita().name() : null);
+            r.setMascotaNombre(p.getMascotaNombre());
+            if (p.getClienteUsuarioId() != null) {
+                r.setClienteNombre(nombreCompleto(p.getClienteNombre(), p.getClienteApellido()));
+            }
+            r.setServicioNombre(p.getServicioNombre());
+            if (p.getVeterinarioUsuarioId() != null) {
+                r.setVeterinarioNombre(nombreCompleto(p.getVeterinarioNombre(), p.getVeterinarioApellido()));
+            }
+        } else if (p.getUsuarioId() != null) {
+            r.setClienteNombre(nombreCompleto(p.getUsuarioNombre(), p.getUsuarioApellido()));
+        }
+        return r;
+    }
+
+    private String nombreCompleto(String nombre, String apellido) {
+        return (nombre != null ? nombre : "") + " " + (apellido != null ? apellido : "");
     }
 
     private Integer resolverCompanyId(Integer companyIdParam) {
