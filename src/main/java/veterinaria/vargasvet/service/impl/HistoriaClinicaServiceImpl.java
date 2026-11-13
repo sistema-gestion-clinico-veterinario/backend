@@ -36,6 +36,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -84,30 +85,27 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         Long ownVeterinarianId = resolveOwnVeterinarianFilter(isSuperAdmin, effectiveCompanyId);
 
         PageRequest pageRequest = PageRequest.of(page, size, Sort.unsorted());
-        Page<HistoriaClinica> pageHc;
+        Page<Long> pageIds;
 
         if (pacienteFiltro != null || propietarioFiltro != null) {
-            pageHc = historiaClinicaRepository.buscarConCoincidenciaFlexible(
+            pageIds = historiaClinicaRepository.buscarIdsConCoincidenciaFlexible(
                     isSuperAdmin, effectiveCompanyId, ownVeterinarianId, hcFiltro,
                     pacienteFiltro, propietarioFiltro,
                     desde, hasta,
                     pageRequest);
         } else {
-            pageHc = historiaClinicaRepository.buscar(
+            pageIds = historiaClinicaRepository.buscarIds(
                     isSuperAdmin, effectiveCompanyId, ownVeterinarianId, hcFiltro, null, null,
                     desde, hasta,
                     pageRequest);
         }
 
-        List<Long> ids = pageHc.getContent().stream().map(HistoriaClinica::getId).toList();
+        List<Long> ids = pageIds.getContent();
+        Map<Long, HistoriaClinicaRepository.HistoriaDelListado> detalles = ids.isEmpty() ? Map.of() :
+                historiaClinicaRepository.listadoPorIds(ids).stream()
+                        .collect(Collectors.toMap(HistoriaClinicaRepository.HistoriaDelListado::getId, Function.identity()));
 
-        Map<Long, LocalDateTime> ultimasFechas = ids.isEmpty() ? Map.of() :
-                consultaRepository.findUltimasFechasConsulta(ids).stream()
-                        .collect(Collectors.toMap(
-                                row -> (Long) row[0],
-                                row -> (LocalDateTime) row[1]));
-
-        return pageHc.map(hc -> toListResponse(hc, ultimasFechas.get(hc.getId())));
+        return pageIds.map(id -> aListado(detalles.get(id)));
     }
 
     private String normalizarFiltroTexto(String value) {
@@ -219,31 +217,19 @@ public class HistoriaClinicaServiceImpl implements HistoriaClinicaService {
         }
     }
 
-    private HistoriaClinicaListResponse toListResponse(HistoriaClinica hc, LocalDateTime fechaUltimaConsulta) {
+    private HistoriaClinicaListResponse aListado(HistoriaClinicaRepository.HistoriaDelListado hc) {
         HistoriaClinicaListResponse response = new HistoriaClinicaListResponse();
         response.setId(hc.getId());
         response.setNumeroHc(hc.getNumeroHc());
         response.setActiva(hc.getActiva());
-        response.setFechaUltimaConsulta(fechaUltimaConsulta);
-
-        Mascota mascota = hc.getMascota();
-        if (mascota != null) {
-            response.setMascotaId(mascota.getId());
-            response.setMascotaNombre(mascota.getNombreCompleto());
-            response.setEspecie(mascota.getEspecie() != null ? mascota.getEspecie().name() : mascota.getOtraEspecie());
-            response.setRaza(mascota.getRaza() != null ? mascota.getRaza().getNombre() : null);
-            if (mascota.getApoderado() != null) {
-                Usuario user = mascota.getApoderado().getUser();
-                if (user != null) {
-                    response.setPropietarioNombre(user.getNombre() + " " + user.getApellido());
-                    if (mascota.getApoderado().getCompany() != null) {
-                        response.setCompanyId(mascota.getApoderado().getCompany().getId());
-                        response.setCompanyName(mascota.getApoderado().getCompany().getName());
-                    }
-                }
-            }
-        }
-
+        response.setFechaUltimaConsulta(hc.getFechaUltimaConsulta());
+        response.setMascotaId(hc.getMascotaId());
+        response.setMascotaNombre(hc.getMascotaNombre());
+        response.setEspecie(hc.getEspecie());
+        response.setRaza(hc.getRaza());
+        response.setPropietarioNombre(hc.getPropietarioNombre());
+        response.setCompanyId(hc.getCompanyId());
+        response.setCompanyName(hc.getCompanyName());
         return response;
     }
 
