@@ -22,7 +22,7 @@ export const options = {
 
 const respuestasNo200 = new Counter('respuestas_no_200');
 
-const cabeceras = () => ({ headers: { 'Content-Type': 'application/json', 'X-Company-Slug': SLUG, Accept: 'application/json' } });
+const cabeceras = () => ({ headers: { 'Content-Type': 'application/json', 'X-Company-Slug': SLUG, Accept: 'application/json', Origin: 'http://localhost' } });
 
 function pedir(ruta, etiqueta) {
   const res = http.get(`${BASE}/api/v1${ruta}`, { ...cabeceras(), tags: { ruta: etiqueta } });
