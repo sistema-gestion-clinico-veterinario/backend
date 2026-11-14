@@ -169,6 +169,36 @@ estado_sesiones() {
   docker exec sv-pg psql -U postgres -d "$1" -c "select usuario_id, used_at is not null as usado, revoked_at is not null as revocado, last_activity_at from refresh_tokens order by id" >> "$SAL/logs/sondeo_$1.log" 2>&1
 }
 
+perfilar() {
+  local v="$1" f="$SAL/logs/perfil_$v.log" jar company_id ruta etiqueta hoy desde mes_d mes_h
+  : > "$f"
+  company_id="$(docker exec sv-pg psql -U postgres -d "$v" -tAc "SELECT id FROM company WHERE slug='$SLUG'")"
+  jar="$(mktemp)"
+  curl -s -o /dev/null -c "$jar" -H "Content-Type: application/json" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG"     -d "{\"slug\":\"$SLUG\",\"username\":\"${USUARIO}1\",\"password\":\"$CLAVE\"}" "http://127.0.0.1:$PUERTO/api/v1/auth/login"
+  hoy="$(date +%F)"; desde="$(date -d '1 year ago' +%F)"; mes_d="$(date +%Y-%m-01)"; mes_h="$(date -d "$(date +%Y-%m-01) +1 month -1 day" +%F)"
+  while IFS='|' read -r etiqueta ruta; do
+    [ -z "$etiqueta" ] && continue
+    docker exec sv-pg psql -U postgres -d "$v" -qtAc "SELECT pg_stat_statements_reset()" > /dev/null
+    local t0 t1 codigo
+    t0="$(date +%s%N)"
+    codigo="$(curl -s -o /dev/null -w "%{http_code}" -b "$jar" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.9.9.9, 10.0.0.1" "http://127.0.0.1:$PUERTO/api/v1$ruta")"
+    t1="$(date +%s%N)"
+    {
+      echo "=== $etiqueta  http=$codigo  $(( (t1 - t0) / 1000000 )) ms"
+      docker exec sv-pg psql -U postgres -d "$v" -qtAc "SELECT 'sentencias totales: '||coalesce(sum(calls),0)||'  tiempo SQL ms: '||coalesce(round(sum(total_exec_time)::numeric),0) FROM pg_stat_statements WHERE dbid=(SELECT oid FROM pg_database WHERE datname='$v')"
+      docker exec sv-pg psql -U postgres -d "$v" -qtAc "SELECT calls||' x  filas='||rows||'  '||left(regexp_replace(query,'\s+',' ','g'),140) FROM pg_stat_statements WHERE dbid=(SELECT oid FROM pg_database WHERE datname='$v') ORDER BY calls DESC LIMIT 4"
+    } >> "$f" 2>&1
+  done <<LISTA
+panel|/dashboard/overview?companyId=$company_id
+citas_del_mes|/appointments?page=0&size=100&companyId=$company_id&fechaDesde=$mes_d&fechaHasta=$mes_h
+lista_de_historias|/medical-records?page=0&size=10&companyId=$company_id
+reporte_clinico|/clinical-reports?fechaDesde=$desde&fechaHasta=$hoy&companyId=$company_id
+reporte_de_ventas|/clinical-reports/sales-products?fechaDesde=$desde&fechaHasta=$hoy&companyId=$company_id
+pacientes_inactivos|/clinical-reports/inactive-patients?page=0&size=20&companyId=$company_id
+LISTA
+  rm -f "$jar"
+}
+
 correr() {
   local v="$1" ronda="$2" iter="$3" d; d="$(dir_de "$v")"
   log "ronda $ronda · $v"
@@ -189,7 +219,7 @@ correr() {
     -e BASE_URL="http://127.0.0.1:$PUERTO" -e SLUG="$SLUG" -e USUARIO="$USUARIO" -e CLAVE="$CLAVE" -e COMPANY_ID="$company_id" \
     -e VUS="$VUS" -e ITER="$iter" -e PAUSA_S="$PAUSA_S" -e SALIDA="$SAL/k6_${v}_${ronda}.json" \
     "$RAIZ/medicion/escenario_p1_p4.js" > "$SAL/logs/k6_${v}_${ronda}.log" 2>&1
-  if [ "$ronda" = "0" ]; then estado_sesiones "$v"; fi
+  if [ "$ronda" = "0" ]; then estado_sesiones "$v"; perfilar "$v"; fi
   kill "$muestreador" 2> /dev/null; wait "$muestreador" 2> /dev/null
   local cpu1; cpu1="$(cpu_us "$v")"; cpu1="${cpu1:-0}"
   local mem_pico; mem_pico="$(sort -n "$SAL/muestras_mem.txt" | tail -1)"; mem_pico="${mem_pico:-0}"
@@ -236,6 +266,7 @@ verificar_calentamiento antes
 correr despues 0 3
 verificar_calentamiento despues
 
+[ -f "$RAIZ/medicion/SOLO_CALENTAMIENTO" ] && { log "terminado (solo calentamiento y perfil)"; exit 0; }
 for ronda in $(seq 1 "$RONDAS"); do
   if [ $((ronda % 2)) -eq 1 ]; then orden="antes despues"; else orden="despues antes"; fi
   for v in $orden; do correr "$v" "$ronda" "$ITER"; done
