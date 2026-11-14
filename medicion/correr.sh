@@ -14,6 +14,8 @@ VUS="${VUS:-3}"
 ITER="${ITER:-8}"
 PAUSA_S="${PAUSA_S:-0.3}"
 PGPASS="medicion"
+HEAP_MB="${HEAP_MB:-512}"
+JAVA_OPTS_LAB="-Xmx${HEAP_MB}m -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m"
 PUERTO=18080
 SLUG="clinica-medicion"
 USUARIO="medicion"
@@ -39,6 +41,7 @@ registrar_entorno() {
   {
     echo "fecha: $(date -u +%FT%TZ)"
     echo "núcleos: $NUCLEOS"
+    echo "heap de la JVM (MB): $HEAP_MB (producción: 192)"
     free -m | sed -n 2p | awk '{print "memoria total (MB): "$2}'
     echo "núcleo del sistema: $(uname -r)"
     echo "docker: $(docker version --format '{{.Server.Version}}')"
@@ -79,14 +82,14 @@ levantar_postgres() {
 iniciar_backend() {
   local v="$1" ddl="$2"
   docker rm -f "sv-$v" > /dev/null 2>&1 || true
-  docker run -d --name "sv-$v" --network sv-net $PIN_BACK --cpus 2 --memory 768m -p "127.0.0.1:$PUERTO:8080" \
+  docker run -d --name "sv-$v" --network sv-net $PIN_BACK --cpus 2 --memory 1g -p "127.0.0.1:$PUERTO:8080" \
     -e DATABASE_URL="jdbc:postgresql://sv-pg:5432/$v" -e DB_USERNAME=postgres -e DB_PASSWORD="$PGPASS" -e DB_SSL_MODE=disable \
     -e DB_POOL_MAX_SIZE=10 -e DB_POOL_MIN_IDLE=2 -e JPA_DDL_AUTO="$ddl" -e FLYWAY_ENABLED=false \
     -e JWT_PRIVATE_KEY=file:/app/keys/private_key.pem -e JWT_PUBLIC_KEY=file:/app/keys/public_key.pem \
     -e SUPABASE_URL=http://supabase-desactivado.local -e SUPABASE_SERVICE_ROLE_KEY=desactivado -e SUPABASE_BUCKET=desactivado \
     -e MAIL_HOST=127.0.0.1 -e MAIL_PORT=2525 -e MAIL_USERNAME=desactivado -e MAIL_PASSWORD=desactivado -e MAIL_FROM=medicion@softvet.local \
     -e MANAGEMENT_HEALTH_MAIL_ENABLED=false -e APP_URL=http://localhost -e CORS_ALLOWED_ORIGINS=http://localhost \
-    -e RATE_LIMIT_LOGIN_PER_MINUTE=1000 -e RATE_LIMIT_LOGIN_PER_ACCOUNT_PER_15_MINUTES=1000 -e COOKIE_SECURE=false -e COOKIE_SAME_SITE=Lax -e TRUSTED_PROXY_COUNT=0 -e SWAGGER_ENABLED=false -e REMINDERS_CRON="0 0 0 1 1 *" \
+    -e "JAVA_OPTS=$JAVA_OPTS_LAB" -e RATE_LIMIT_LOGIN_PER_MINUTE=1000 -e RATE_LIMIT_LOGIN_PER_ACCOUNT_PER_15_MINUTES=1000 -e COOKIE_SECURE=false -e COOKIE_SAME_SITE=Lax -e TRUSTED_PROXY_COUNT=0 -e SWAGGER_ENABLED=false -e REMINDERS_CRON="0 0 0 1 1 *" \
     -e IA_RADIOGRAFIA_URL=http://ia-desactivada.local -e IA_LABORATORIO_URL=http://ia-desactivada.local -e IA_DIAGNOSTICO_URL=http://ia-desactivada.local \
     "sv-backend:$v" > /dev/null
 }
