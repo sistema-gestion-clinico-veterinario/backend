@@ -24,6 +24,7 @@ export const options = {
     'group_duration{group:::P4_reportes}': ['max>=0'],
   },
   summaryTrendStats: ['avg', 'med', 'p(90)', 'p(95)', 'max'],
+  noCookiesReset: true,
   insecureSkipTLSVerify: false,
 };
 
