@@ -16,6 +16,13 @@ export const options = {
   scenarios: {
     trabajo_fijo: { executor: 'per-vu-iterations', vus: VUS, iterations: ITERACIONES, maxDuration: '30m' },
   },
+  thresholds: {
+    'group_duration{group:::P0_inicio_de_sesion}': ['max>=0'],
+    'group_duration{group:::P1_acceso_y_panel}': ['max>=0'],
+    'group_duration{group:::P2_agenda_mensual}': ['max>=0'],
+    'group_duration{group:::P3_historia_clinica}': ['max>=0'],
+    'group_duration{group:::P4_reportes}': ['max>=0'],
+  },
   summaryTrendStats: ['avg', 'med', 'p(90)', 'p(95)', 'max'],
   insecureSkipTLSVerify: false,
 };

@@ -141,6 +141,29 @@ preparar_base() {
 cpu_us() { docker exec "sv-$1" cat /sys/fs/cgroup/cpu.stat 2>/dev/null | awk '/^usage_usec/ {print $2}'; }
 mem_bytes() { docker exec "sv-$1" cat /sys/fs/cgroup/memory.current 2>/dev/null; }
 
+sondear() {
+  local v="$1" f="$SAL/logs/sondeo_$v.log" n jar
+  : > "$f"
+  for n in $(seq 1 "$VUS"); do
+    jar="$(mktemp)"
+    {
+      echo "--- usuario $USUARIO$n"
+      curl -s -o /dev/null -w "login: %{http_code}
+" -c "$jar" -H "Content-Type: application/json" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG"         -d "{\"slug\":\"$SLUG\",\"username\":\"$USUARIO$n\",\"password\":\"$CLAVE\"}" "http://127.0.0.1:$PUERTO/api/v1/auth/login"
+      echo "cookies: $(awk 'NF>=7 {print $6}' "$jar" | tr '
+' ' ')"
+      curl -s -w "
+navegacion: %{http_code}
+" -b "$jar" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" "http://127.0.0.1:$PUERTO/api/v1/me/navigation" | cut -c1-240
+    } >> "$f" 2>&1
+    rm -f "$jar"
+  done
+}
+
+estado_sesiones() {
+  docker exec sv-pg psql -U postgres -d "$1" -c "select usuario_id, used_at is not null as usado, revoked_at is not null as revocado, last_activity_at from refresh_tokens order by id" >> "$SAL/logs/sondeo_$1.log" 2>&1
+}
+
 correr() {
   local v="$1" ronda="$2" iter="$3" d; d="$(dir_de "$v")"
   log "ronda $ronda · $v"
@@ -148,6 +171,7 @@ correr() {
   local arranque
   arranque="$(esperar_salud)" || { docker logs "sv-$v" 2>&1 | tail -40 | tee -a "$SAL/logs/orquestador.log"; log "el backend $v no arrancó"; docker rm -f "sv-$v" > /dev/null 2>&1; return 1; }
   sleep 3
+  if [ "$ronda" = "0" ]; then sondear "$v"; fi
   local cpu_arr mem_arr cpu0
   cpu_arr="$(cpu_us "$v")"; mem_arr="$(mem_bytes "$v")"; cpu0="$cpu_arr"
   local company_id
@@ -160,6 +184,7 @@ correr() {
     -e BASE_URL="http://127.0.0.1:$PUERTO" -e SLUG="$SLUG" -e USUARIO="$USUARIO" -e CLAVE="$CLAVE" -e COMPANY_ID="$company_id" \
     -e VUS="$VUS" -e ITER="$iter" -e PAUSA_S="$PAUSA_S" -e SALIDA="$SAL/k6_${v}_${ronda}.json" \
     "$RAIZ/medicion/escenario_p1_p4.js" > "$SAL/logs/k6_${v}_${ronda}.log" 2>&1
+  if [ "$ronda" = "0" ]; then estado_sesiones "$v"; fi
   kill "$muestreador" 2> /dev/null; wait "$muestreador" 2> /dev/null
   local cpu1; cpu1="$(cpu_us "$v")"; cpu1="${cpu1:-0}"
   local mem_pico; mem_pico="$(sort -n "$SAL/muestras_mem.txt" | tail -1)"; mem_pico="${mem_pico:-0}"
@@ -182,7 +207,8 @@ correr() {
 }
 
 verificar_calentamiento() {
-  local v="$1" f="$SAL/k6_${v}_0.json"
+  local v="$1" f
+  f="$SAL/k6_${v}_0.json"
   [ -f "$f" ] || fallo "k6 no produjo resultados en el calentamiento de $v (ver logs/k6_${v}_0.log)"
   local malas total
   malas="$(jq '.respuestas_no_200' "$f")"; total="$(jq '.peticiones' "$f")"
