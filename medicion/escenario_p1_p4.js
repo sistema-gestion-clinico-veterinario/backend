@@ -47,7 +47,7 @@ const fecha = (d) => `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDat
 
 function iniciarSesion() {
   group('P0_inicio_de_sesion', () => {
-    const res = http.post(`${BASE}/api/v1/auth/login`, JSON.stringify({ slug: SLUG, username: USUARIO, password: CLAVE }), { ...cabeceras(), tags: { ruta: 'login' } });
+    const res = http.post(`${BASE}/api/v1/auth/login`, JSON.stringify({ slug: SLUG, username: `${USUARIO}${__VU}`, password: CLAVE }), { ...cabeceras(), tags: { ruta: 'login' } });
     const ok = check(res, { 'login 200': (r) => r.status === 200 });
     if (!ok) {
       respuestasNo200.add(1);

@@ -10,8 +10,8 @@ ANTES_DIR="${ANTES_DIR:-$RAIZ/.antes}"
 DESPUES_DIR="${DESPUES_DIR:-$RAIZ/.despues}"
 RONDAS="${RONDAS:-5}"
 REPOSO_S="${REPOSO_S:-30}"
-VUS="${VUS:-2}"
-ITER="${ITER:-10}"
+VUS="${VUS:-3}"
+ITER="${ITER:-8}"
 PAUSA_S="${PAUSA_S:-0.3}"
 PGPASS="medicion"
 PUERTO=18080
@@ -86,7 +86,7 @@ iniciar_backend() {
     -e SUPABASE_URL=http://supabase-desactivado.local -e SUPABASE_SERVICE_ROLE_KEY=desactivado -e SUPABASE_BUCKET=desactivado \
     -e MAIL_HOST=127.0.0.1 -e MAIL_PORT=2525 -e MAIL_USERNAME=desactivado -e MAIL_PASSWORD=desactivado -e MAIL_FROM=medicion@softvet.local \
     -e MANAGEMENT_HEALTH_MAIL_ENABLED=false -e APP_URL=http://localhost -e CORS_ALLOWED_ORIGINS=http://localhost \
-    -e COOKIE_SECURE=false -e COOKIE_SAME_SITE=Lax -e TRUSTED_PROXY_COUNT=0 -e SWAGGER_ENABLED=false -e REMINDERS_CRON="0 0 0 1 1 *" \
+    -e RATE_LIMIT_LOGIN_PER_MINUTE=1000 -e RATE_LIMIT_LOGIN_PER_ACCOUNT_PER_15_MINUTES=1000 -e COOKIE_SECURE=false -e COOKIE_SAME_SITE=Lax -e TRUSTED_PROXY_COUNT=0 -e SWAGGER_ENABLED=false -e REMINDERS_CRON="0 0 0 1 1 *" \
     -e IA_RADIOGRAFIA_URL=http://ia-desactivada.local -e IA_LABORATORIO_URL=http://ia-desactivada.local -e IA_DIAGNOSTICO_URL=http://ia-desactivada.local \
     "sv-backend:$v" > /dev/null
 }
@@ -114,9 +114,15 @@ preparar_base() {
   log "[$v] sembrando datos"
   psql_db "$v" -c "CREATE EXTENSION IF NOT EXISTS pgcrypto; CREATE EXTENSION IF NOT EXISTS pg_stat_statements;" || fallo "extensiones en $v"
   psql_db "$v" < "$RAIZ/medicion/sembrar.sql" > "$SAL/logs/siembra_$v.log" 2>&1 || { tail -30 "$SAL/logs/siembra_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la siembra de $v falló"; }
-  psql_db "$v" -v measurement_company_slug="$SLUG" -v measurement_email="medicion@softvet.test" \
-    -v measurement_username="$USUARIO" -v measurement_password="$CLAVE" < "$RAIZ/medicion/provisionar_cuenta.sql" \
-    > "$SAL/logs/cuenta_$v.log" 2>&1 || { tail -30 "$SAL/logs/cuenta_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la cuenta de medición en $v falló"; }
+  : > "$SAL/logs/cuenta_$v.log"
+  for n in $(seq 1 "$VUS"); do
+    psql_db "$v" -v measurement_company_slug="$SLUG" -v measurement_email="medicion$n@softvet.test" \
+      -v measurement_username="$USUARIO$n" -v measurement_password="$CLAVE" < "$RAIZ/medicion/provisionar_cuenta.sql" \
+      >> "$SAL/logs/cuenta_$v.log" 2>&1 || { tail -30 "$SAL/logs/cuenta_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la cuenta de medición $n en $v falló"; }
+  done
+  for f in "$d"/src/main/resources/db/historico/V53__*.sql "$d"/src/main/resources/db/historico/V76__*.sql; do
+    psql_db "$v" < "$f" >> "$SAL/logs/siembra_$v.log" 2>&1 || fallo "tabla de seguridad $(basename "$f") en $v"
+  done
   log "[$v] aplicando las migraciones de su versión"
   : > "$SAL/logs/migraciones_$v.log"
   local ok=0 mal=0
