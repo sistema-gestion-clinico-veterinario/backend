@@ -113,6 +113,11 @@ preparar_base() {
   log "[$v] creando el esquema con el propio backend"
   iniciar_backend "$v" create
   esperar_salud > /dev/null || { docker logs "sv-$v" 2>&1 | tail -60 | tee -a "$SAL/logs/orquestador.log"; fallo "el backend $v no arrancó al crear el esquema"; }
+  local espera=0
+  until docker logs "sv-$v" 2>&1 | grep -q "INICIALIZACIÓN COMPLETADA"; do
+    sleep 2; espera=$((espera+2))
+    [ "$espera" -ge 120 ] && fallo "el DataInitializer de $v no terminó"
+  done
   detener_backend "$v" esquema
   log "[$v] sembrando datos"
   psql_db "$v" -c "CREATE EXTENSION IF NOT EXISTS pgcrypto; CREATE EXTENSION IF NOT EXISTS pg_stat_statements;" || fallo "extensiones en $v"
