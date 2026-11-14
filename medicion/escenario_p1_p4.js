@@ -27,7 +27,10 @@ const cabeceras = () => ({ headers: { 'Content-Type': 'application/json', 'X-Com
 function pedir(ruta, etiqueta) {
   const res = http.get(`${BASE}/api/v1${ruta}`, { ...cabeceras(), tags: { ruta: etiqueta } });
   const ok = check(res, { [`${etiqueta} 200`]: (r) => r.status === 200 });
-  if (!ok) respuestasNo200.add(1);
+  if (!ok) {
+    respuestasNo200.add(1);
+    console.warn(`${etiqueta}: HTTP ${res.status} ${String(res.body).slice(0, 160)}`);
+  }
   return res;
 }
 
@@ -46,7 +49,10 @@ function iniciarSesion() {
   group('P0_inicio_de_sesion', () => {
     const res = http.post(`${BASE}/api/v1/auth/login`, JSON.stringify({ slug: SLUG, username: USUARIO, password: CLAVE }), { ...cabeceras(), tags: { ruta: 'login' } });
     const ok = check(res, { 'login 200': (r) => r.status === 200 });
-    if (!ok) respuestasNo200.add(1);
+    if (!ok) {
+      respuestasNo200.add(1);
+      console.warn(`login: HTTP ${res.status} ${String(res.body).slice(0, 200)}`);
+    }
   });
 }
 
@@ -117,6 +123,18 @@ export default function () {
   sleep(PAUSA_S);
 }
 
+function listar(valor) {
+  return Array.isArray(valor) ? valor : Object.values(valor || {});
+}
+
+function chequeosFallidos(grupo, acumulado) {
+  for (const c of listar(grupo.checks)) {
+    if (c.fails > 0) acumulado.push(`${c.name}: ${c.fails} fallos de ${c.passes + c.fails}`);
+  }
+  for (const g of listar(grupo.groups)) chequeosFallidos(g, acumulado);
+  return acumulado;
+}
+
 export function handleSummary(data) {
   const grupos = ['P0_inicio_de_sesion', 'P1_acceso_y_panel', 'P2_agenda_mensual', 'P3_historia_clinica', 'P4_reportes'];
   const resumen = { objetivo: BASE, vus: VUS, iteraciones_por_vu: ITERACIONES, recorridos: {} };
@@ -131,5 +149,6 @@ export function handleSummary(data) {
   resumen.latencia_ms = { mediana: get('http_req_duration', 'med'), p95: get('http_req_duration', 'p(95)') };
   resumen.bytes_recibidos = get('data_received', 'count');
   resumen.duracion_total_s = data.state.testRunDurationMs / 1000;
+  resumen.chequeos_fallidos = chequeosFallidos(data.root_group || {}, []);
   return { [SALIDA]: JSON.stringify(resumen, null, 1), stdout: JSON.stringify(resumen, null, 1) + '\n' };
 }

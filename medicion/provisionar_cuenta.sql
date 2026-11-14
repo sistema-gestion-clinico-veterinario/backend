@@ -15,8 +15,7 @@ DECLARE
     target_user_id integer;
     admin_role_id integer;
 BEGIN
-    SELECT id
-      INTO target_company_id
+    SELECT id INTO target_company_id
       FROM company
      WHERE slug = current_setting('softvet.measurement_company_slug')
        AND activo = true;
@@ -25,8 +24,7 @@ BEGIN
         RAISE EXCEPTION 'No existe una clínica activa con el slug indicado';
     END IF;
 
-    SELECT id
-      INTO admin_role_id
+    SELECT id INTO admin_role_id
       FROM roles
      WHERE name = 'ROLE_ADMIN'
        AND activo = true
@@ -37,134 +35,35 @@ BEGIN
         RAISE EXCEPTION 'No existe un ROLE_ADMIN activo';
     END IF;
 
-    INSERT INTO usuario (
-        activo,
-        apellido,
-        company_id,
-        credentials_version,
-        email,
-        email_verified,
-        nombre,
-        password_changed,
-        username
-    )
-    VALUES (
-        true,
-        'Medición',
-        target_company_id,
-        0,
-        current_setting('softvet.measurement_email'),
-        true,
-        'SoftVet',
-        true,
-        current_setting('softvet.measurement_username')
-    )
-    ON CONFLICT (username) DO UPDATE
-       SET activo = true,
-           company_id = EXCLUDED.company_id,
-           email = EXCLUDED.email,
-           email_verified = true,
-           nombre = EXCLUDED.nombre,
-           apellido = EXCLUDED.apellido,
-           password_changed = true
+    INSERT INTO usuario (activo, apellido, company_id, email, email_verified, nombre, username)
+    VALUES (true, 'Medición', target_company_id,
+            current_setting('softvet.measurement_email'), true, 'SoftVet',
+            current_setting('softvet.measurement_username'))
     RETURNING id INTO target_user_id;
 
     INSERT INTO usuario_empresa_credencial (
-        activada_con_google,
-        company_id,
-        created_at,
-        credentials_version,
-        password,
-        password_changed,
-        updated_at,
-        usuario_id
+        activada_con_google, company_id, created_at, credentials_version, password, password_changed, updated_at, usuario_id
     )
-    VALUES (
-        false,
-        target_company_id,
-        now(),
-        0,
-        crypt(current_setting('softvet.measurement_password'), gen_salt('bf', 12)),
-        true,
-        now(),
-        target_user_id
-    )
-    ON CONFLICT (usuario_id, company_id) WHERE company_id IS NOT NULL
-    DO UPDATE
-       SET password = EXCLUDED.password,
-           password_changed = true,
-           credentials_version = usuario_empresa_credencial.credentials_version + 1,
-           updated_at = now();
+    VALUES (false, target_company_id, now(), 0,
+            crypt(current_setting('softvet.measurement_password'), gen_salt('bf', 12)),
+            true, now(), target_user_id);
 
-    UPDATE usuario_membresia
-       SET estado = true,
-           fecha_salida = NULL,
-           updated_at = now()
-     WHERE usuario_id = target_user_id
-       AND company_id = target_company_id;
+    INSERT INTO usuario_membresia (company_id, created_at, estado, fecha_ingreso, updated_at, usuario_id)
+    VALUES (target_company_id, now(), true, current_date, now(), target_user_id);
 
-    IF NOT FOUND THEN
-        INSERT INTO usuario_membresia (
-            company_id,
-            created_at,
-            estado,
-            fecha_ingreso,
-            updated_at,
-            usuario_id
-        )
-        VALUES (
-            target_company_id,
-            now(),
-            true,
-            current_date,
-            now(),
-            target_user_id
-        );
-    END IF;
-
-    INSERT INTO usuario_por_rol (
-        company_id,
-        created_at,
-        rol_id,
-        usuario_id
-    )
-    VALUES (
-        target_company_id,
-        now(),
-        admin_role_id,
-        target_user_id
-    )
-    ON CONFLICT (usuario_id, rol_id) DO NOTHING;
+    INSERT INTO usuario_por_rol (company_id, created_at, rol_id, usuario_id)
+    VALUES (target_company_id, now(), admin_role_id, target_user_id);
 
     INSERT INTO user_consent (
-        contenido_hash,
-        documento_tipo,
-        documento_version,
-        fecha_aceptacion,
-        ip_address,
-        legal_document_id,
-        texto_recuperable,
-        tipo_constancia,
-        user_agent,
-        usuario_id
+        contenido_hash, documento_tipo, documento_version, fecha_aceptacion, ip_address,
+        legal_document_id, texto_recuperable, tipo_constancia, user_agent, usuario_id
     )
-    SELECT legal.contenido_hash,
-           legal.tipo,
-           legal.version,
-           now(),
-           '127.0.0.1',
-           legal.id,
-           true,
-           CASE
-               WHEN legal.tipo = 'TERMINOS_Y_CONDICIONES' THEN 'ACEPTACION'
-               ELSE 'CONSTANCIA_LECTURA'
-           END,
-           'softvet-measurement-provisioner',
-           target_user_id
+    SELECT legal.contenido_hash, legal.tipo, legal.version, now(), '127.0.0.1', legal.id, true,
+           CASE WHEN legal.tipo = 'TERMINOS_Y_CONDICIONES' THEN 'ACEPTACION' ELSE 'CONSTANCIA_LECTURA' END,
+           'medicion-ab', target_user_id
       FROM legal_document legal
-     WHERE legal.activo = true
-    ON CONFLICT (usuario_id, legal_document_id) DO NOTHING;
+     WHERE legal.activo = true;
 END
 $provision$;
 
-SELECT 'Cuenta técnica de medición aprovisionada' AS resultado;
+SELECT 'Cuenta de medición creada' AS resultado;

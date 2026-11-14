@@ -172,6 +172,18 @@ correr() {
   sleep "$REPOSO_S"
 }
 
+verificar_calentamiento() {
+  local v="$1" f="$SAL/k6_${v}_0.json"
+  [ -f "$f" ] || fallo "k6 no produjo resultados en el calentamiento de $v (ver logs/k6_${v}_0.log)"
+  local malas total
+  malas="$(jq '.respuestas_no_200' "$f")"; total="$(jq '.peticiones' "$f")"
+  log "[$v] calentamiento: $malas respuestas distintas de 200 sobre $total peticiones"
+  jq -r '.chequeos_fallidos[]?' "$f" | sed 's/^/    /' | tee -a "$SAL/logs/orquestador.log"
+  if [ "$total" -gt 0 ] && [ $((malas * 2)) -gt "$total" ]; then
+    fallo "más de la mitad de las respuestas de $v no fueron 200; revisa el escenario (logs/k6_${v}_0.log)"
+  fi
+}
+
 registrar_entorno
 construir_imagenes
 levantar_postgres
@@ -180,7 +192,9 @@ preparar_base despues
 
 log "calentamiento (se descarta)"
 correr antes 0 3
+verificar_calentamiento antes
 correr despues 0 3
+verificar_calentamiento despues
 
 for ronda in $(seq 1 "$RONDAS"); do
   if [ $((ronda % 2)) -eq 1 ]; then orden="antes despues"; else orden="despues antes"; fi
