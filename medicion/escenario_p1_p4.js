@@ -29,14 +29,24 @@ export const options = {
 
 const respuestasNo200 = new Counter('respuestas_no_200');
 
-const cabeceras = () => ({ headers: { 'Content-Type': 'application/json', 'X-Company-Slug': SLUG, Accept: 'application/json', Origin: 'http://localhost' } });
+let enviadas = 0;
+const cabeceras = () => {
+  enviadas += 1;
+  const cliente = `10.${__VU}.${Math.floor(enviadas / 40) % 250}.1`;
+  return { headers: { 'Content-Type': 'application/json', 'X-Company-Slug': SLUG, Accept: 'application/json', Origin: 'http://localhost', 'X-Forwarded-For': `${cliente}, 10.0.0.1` } };
+};
+
+function galletas(url) {
+  const jar = http.cookieJar().cookiesForURL(url);
+  return Object.keys(jar).map((k) => `${k}(${String(jar[k][0] || '').length})`).join(',');
+}
 
 function pedir(ruta, etiqueta) {
   const res = http.get(`${BASE}/api/v1${ruta}`, { ...cabeceras(), tags: { ruta: etiqueta } });
   const ok = check(res, { [`${etiqueta} 200`]: (r) => r.status === 200 });
   if (!ok) {
     respuestasNo200.add(1);
-    console.warn(`${etiqueta}: HTTP ${res.status} ${String(res.body).slice(0, 160)}`);
+    console.warn(`${etiqueta}: HTTP ${res.status} vu=${__VU} iter=${__ITER} galletas=[${galletas(res.url)}] ${String(res.body).slice(0, 120)}`);
   }
   return res;
 }
@@ -56,6 +66,7 @@ function iniciarSesion() {
   group('P0_inicio_de_sesion', () => {
     const res = http.post(`${BASE}/api/v1/auth/login`, JSON.stringify({ slug: SLUG, username: `${USUARIO}${__VU}`, password: CLAVE }), { ...cabeceras(), tags: { ruta: 'login' } });
     const ok = check(res, { 'login 200': (r) => r.status === 200 });
+    console.log(`login vu=${__VU} usuario=${USUARIO}${__VU} estado=${res.status} galletas=[${galletas(res.url)}]`);
     if (!ok) {
       respuestasNo200.add(1);
       console.warn(`login: HTTP ${res.status} ${String(res.body).slice(0, 200)}`);
