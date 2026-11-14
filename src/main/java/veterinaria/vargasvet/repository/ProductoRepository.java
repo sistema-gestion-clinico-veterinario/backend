@@ -21,11 +21,11 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     List<Producto> findByCompanyIdAndActivoTrue(Integer companyId);
 
-    @Query("SELECT p FROM Producto p WHERE p.company.id = :companyId " +
+    @Query("SELECT p FROM Producto p LEFT JOIN p.marcaProducto mp WHERE p.company.id = :companyId " +
             "AND (:search IS NULL OR :search = '' " +
             "     OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :search, '%')) " +
             "     OR LOWER(p.sku) LIKE LOWER(CONCAT('%', :search, '%')) " +
-            "     OR LOWER(COALESCE(p.marcaProducto.nombre, p.marca, '')) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "     OR LOWER(COALESCE(mp.nombre, p.marca, '')) LIKE LOWER(CONCAT('%', :search, '%')) " +
             "     OR LOWER(COALESCE(p.codigoBarras, '')) LIKE LOWER(CONCAT('%', :search, '%'))) " +
             "AND (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
             "AND (:activo IS NULL OR p.activo = :activo)")

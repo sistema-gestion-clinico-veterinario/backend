@@ -2,85 +2,84 @@ package veterinaria.vargasvet.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import veterinaria.vargasvet.domain.entity.Apoderado;
 import veterinaria.vargasvet.domain.entity.Company;
-import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.domain.enums.EstadoAccesoPortalPropietario;
 import veterinaria.vargasvet.domain.enums.ModoAccesoPropietario;
 import veterinaria.vargasvet.domain.enums.RoleScope;
 import veterinaria.vargasvet.repository.ApoderadoRepository;
 import veterinaria.vargasvet.repository.PasswordResetTokenRepository;
-import veterinaria.vargasvet.repository.UsuarioPorRolRepository;
 import veterinaria.vargasvet.repository.UsuarioRepository;
 import veterinaria.vargasvet.security.SecurityUtils;
+import veterinaria.vargasvet.util.AppClock;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PortalPropietarioPolicyServiceTest {
 
     @Mock ApoderadoRepository apoderadoRepository;
     @Mock PasswordResetTokenRepository passwordResetTokenRepository;
-    @Mock UsuarioPorRolRepository usuarioPorRolRepository;
     @Mock UsuarioRepository usuarioRepository;
     @Mock SessionSecurityService sessionSecurityService;
 
     @InjectMocks PortalPropietarioPolicyService service;
 
     @Test
-    void gestionInternaRevocaElAccesoSinEliminarDatosNiLaCuenta() {
+    void gestionInternaRevocaElPortalDeLaEmpresaYDevuelveCuantosPropietariosAfecto() {
         Company company = company();
-        Usuario usuario = usuario(9, "propietario@clinica.test");
-        usuario.setVerificationToken("invitacion-pendiente");
-        usuario.setVerificationTokenExpiresAt(LocalDateTime.now().plusHours(2));
-        Apoderado apoderado = apoderado(usuario, company);
+        when(apoderadoRepository.cambiarEstadoAccesoPortalDeLaEmpresa(eq(3), eq(EstadoAccesoPortalPropietario.REVOCADO),
+                any(LocalDateTime.class), eq("admin@clinica.test"))).thenReturn(42);
 
-        when(apoderadoRepository.findByCompanyId(3)).thenReturn(List.of(apoderado));
-        when(usuarioPorRolRepository.existsActiveRoleScope(9, 3, RoleScope.STAFF)).thenReturn(false);
-
+        int afectados;
         try (MockedStatic<SecurityUtils> security = mockStatic(SecurityUtils.class)) {
             security.when(SecurityUtils::getCurrentUserEmail).thenReturn("admin@clinica.test");
-            int afectados = service.aplicarCambio(company, ModoAccesoPropietario.PORTAL_OPCIONAL,
+            afectados = service.aplicarCambio(company, ModoAccesoPropietario.PORTAL_OPCIONAL,
                     ModoAccesoPropietario.SOLO_GESTION_INTERNA);
-
-            assertThat(afectados).isEqualTo(1);
         }
 
-        assertThat(apoderado.getEstadoAccesoPortal()).isEqualTo(EstadoAccesoPortalPropietario.REVOCADO);
-        assertThat(apoderado.getEstado()).isTrue();
-        assertThat(apoderado.getAccesoPortalModificadoPor()).isEqualTo("admin@clinica.test");
-        assertThat(usuario.getVerificationToken()).isNull();
-        verify(apoderadoRepository).save(apoderado);
-        verify(sessionSecurityService).invalidateSessionsForCompany(usuario, company);
-        verify(passwordResetTokenRepository).deleteByUsuarioAndCompany(usuario, company);
-        verify(usuarioRepository).save(usuario);
-        verify(apoderadoRepository, never()).delete(any());
-        verify(usuarioRepository, never()).delete(any());
+        assertThat(afectados).isEqualTo(42);
     }
 
     @Test
-    void unEmpleadoPropietarioConservaSuInvitacionLaboralPeroPierdeElPortal() {
+    void gestionInternaCierraSesionesBorraRecuperacionesYLimpiaInvitacionesDeLaEmpresa() {
         Company company = company();
-        Usuario usuario = usuario(10, "empleado@clinica.test");
-        usuario.setVerificationToken("alta-laboral");
-        Apoderado apoderado = apoderado(usuario, company);
-        when(apoderadoRepository.findByCompanyId(3)).thenReturn(List.of(apoderado));
-        when(usuarioPorRolRepository.existsActiveRoleScope(10, 3, RoleScope.STAFF)).thenReturn(true);
 
         service.aplicarCambio(company, ModoAccesoPropietario.PORTAL_POR_DEFECTO,
                 ModoAccesoPropietario.SOLO_GESTION_INTERNA);
 
-        assertThat(apoderado.getEstadoAccesoPortal()).isEqualTo(EstadoAccesoPortalPropietario.REVOCADO);
-        assertThat(usuario.getVerificationToken()).isEqualTo("alta-laboral");
-        verify(usuarioRepository, never()).save(usuario);
+        InOrder orden = inOrder(apoderadoRepository, sessionSecurityService, passwordResetTokenRepository, usuarioRepository);
+        orden.verify(apoderadoRepository).cambiarEstadoAccesoPortalDeLaEmpresa(eq(3),
+                eq(EstadoAccesoPortalPropietario.REVOCADO), any(LocalDateTime.class), any());
+        orden.verify(sessionSecurityService).invalidateClientSessionsForCompany(company);
+        orden.verify(passwordResetTokenRepository).deleteDeLosApoderadosDeLaEmpresa(3);
+        orden.verify(usuarioRepository).limpiarTokenDeVerificacionDeApoderadosSinRol(3, RoleScope.STAFF);
+    }
+
+    @Test
+    void laFechaDeLaRevocacionEsLaDelMomentoDelCambio() {
+        LocalDateTime antes = AppClock.now().minusSeconds(5);
+        ArgumentCaptor<LocalDateTime> cuando = ArgumentCaptor.forClass(LocalDateTime.class);
+
+        service.aplicarCambio(company(), ModoAccesoPropietario.PORTAL_OPCIONAL,
+                ModoAccesoPropietario.SOLO_GESTION_INTERNA);
+
+        verify(apoderadoRepository).cambiarEstadoAccesoPortalDeLaEmpresa(eq(3), any(), cuando.capture(), any());
+        assertThat(cuando.getValue()).isBetween(antes, AppClock.now().plusSeconds(5));
     }
 
     @Test
@@ -89,29 +88,28 @@ class PortalPropietarioPolicyServiceTest {
                 ModoAccesoPropietario.PORTAL_OPCIONAL);
 
         assertThat(afectados).isZero();
-        verifyNoInteractions(apoderadoRepository, passwordResetTokenRepository, usuarioPorRolRepository,
-                usuarioRepository, sessionSecurityService);
+        verifyNoInteractions(apoderadoRepository, passwordResetTokenRepository, usuarioRepository,
+                sessionSecurityService);
     }
 
     @Test
-    void gestionInternaTambienRevocaPropietariosSinCuentaDeUsuario() {
-        Company company = company();
-        Apoderado apoderado = new Apoderado();
-        apoderado.setId(25L);
-        apoderado.setCompany(company);
-        apoderado.setEstado(true);
-        apoderado.setEstadoAccesoPortal(EstadoAccesoPortalPropietario.SIN_ACCESO);
-        when(apoderadoRepository.findByCompanyId(3)).thenReturn(List.of(apoderado));
-
-        int afectados = service.aplicarCambio(company, ModoAccesoPropietario.PORTAL_POR_DEFECTO,
+    void sinCambioDeModoNoSeTocaNada() {
+        int afectados = service.aplicarCambio(company(), ModoAccesoPropietario.SOLO_GESTION_INTERNA,
                 ModoAccesoPropietario.SOLO_GESTION_INTERNA);
 
-        assertThat(afectados).isEqualTo(1);
-        assertThat(apoderado.getEstadoAccesoPortal()).isEqualTo(EstadoAccesoPortalPropietario.REVOCADO);
-        assertThat(apoderado.getEstado()).isTrue();
-        verify(apoderadoRepository).save(apoderado);
-        verifyNoInteractions(passwordResetTokenRepository, usuarioPorRolRepository,
-                usuarioRepository, sessionSecurityService);
+        assertThat(afectados).isZero();
+        verifyNoInteractions(apoderadoRepository, passwordResetTokenRepository, usuarioRepository,
+                sessionSecurityService);
+    }
+
+    @Test
+    void pasarEntreModosConPortalNoRevocaNada() {
+        int afectados = service.aplicarCambio(company(), ModoAccesoPropietario.PORTAL_OPCIONAL,
+                ModoAccesoPropietario.PORTAL_POR_DEFECTO);
+
+        assertThat(afectados).isZero();
+        verifyNoInteractions(apoderadoRepository, passwordResetTokenRepository, usuarioRepository,
+                sessionSecurityService);
     }
 
     private Company company() {
@@ -120,23 +118,5 @@ class PortalPropietarioPolicyServiceTest {
         company.setName("Clínica Test");
         company.setActivo(true);
         return company;
-    }
-
-    private Usuario usuario(int id, String email) {
-        Usuario usuario = new Usuario();
-        usuario.setId(id);
-        usuario.setEmail(email);
-        usuario.setActivo(true);
-        return usuario;
-    }
-
-    private Apoderado apoderado(Usuario usuario, Company company) {
-        Apoderado apoderado = new Apoderado();
-        apoderado.setId((long) usuario.getId());
-        apoderado.setUser(usuario);
-        apoderado.setCompany(company);
-        apoderado.setEstado(true);
-        apoderado.setEstadoAccesoPortal(EstadoAccesoPortalPropietario.ACTIVO);
-        return apoderado;
     }
 }

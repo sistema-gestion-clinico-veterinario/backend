@@ -600,6 +600,7 @@ class RF10AndRF11Test {
         tipo.setPermiteEspecialidades(true);
         tipo.setEsVeterinario(true);
         when(tipoEmpleadoRepository.findByNombreAndCompanyId("Médico clínico", 3)).thenReturn(Optional.of(tipo));
+        org.mockito.Mockito.lenient().when(tipoEmpleadoRepository.findByNombreInAndCompanyId(any(), eq(3))).thenReturn(List.of(tipo));
         conUsuarioGuardable();
 
         assertThatThrownBy(() -> service.registerEmpleado(request))
@@ -615,6 +616,7 @@ class RF10AndRF11Test {
         veterinaria.vargasvet.domain.entity.TipoEmpleado tipo = new veterinaria.vargasvet.domain.entity.TipoEmpleado();
         tipo.setNombre("Recepcionista");
         when(tipoEmpleadoRepository.findByNombreAndCompanyId("Recepcionista", 3)).thenReturn(Optional.of(tipo));
+        org.mockito.Mockito.lenient().when(tipoEmpleadoRepository.findByNombreInAndCompanyId(any(), eq(3))).thenReturn(List.of(tipo));
         conUsuarioGuardable();
         when(empleadoRepository.saveAndFlush(any(Empleado.class))).thenAnswer(invocation -> {
             Empleado empleado = invocation.getArgument(0);
@@ -631,6 +633,34 @@ class RF10AndRF11Test {
     }
 
     @Test
+    @DisplayName("[Green Software] Registrar un empleado con varios cargos los resuelve con una sola consulta")
+    void variosCargosSeResuelvenConUnaSolaConsulta() {
+        EmpleadoRequest request = requestValido();
+        request.setTiposEmpleado(Set.of("Recepcionista", "Auxiliar"));
+        veterinaria.vargasvet.domain.entity.TipoEmpleado recepcion = new veterinaria.vargasvet.domain.entity.TipoEmpleado();
+        recepcion.setNombre("Recepcionista");
+        veterinaria.vargasvet.domain.entity.TipoEmpleado auxiliar = new veterinaria.vargasvet.domain.entity.TipoEmpleado();
+        auxiliar.setNombre("Auxiliar");
+        org.mockito.Mockito.lenient().when(tipoEmpleadoRepository.findByNombreAndCompanyId("Recepcionista", 3)).thenReturn(Optional.of(recepcion));
+        org.mockito.Mockito.lenient().when(tipoEmpleadoRepository.findByNombreAndCompanyId("Auxiliar", 3)).thenReturn(Optional.of(auxiliar));
+        when(tipoEmpleadoRepository.findByNombreInAndCompanyId(any(), eq(3))).thenReturn(List.of(recepcion, auxiliar));
+        conUsuarioGuardable();
+        when(empleadoRepository.saveAndFlush(any(Empleado.class))).thenAnswer(invocation -> {
+            Empleado empleado = invocation.getArgument(0);
+            empleado.setId(30L);
+            return empleado;
+        });
+        when(userMapper.toProfileDTO(any())).thenReturn(new UserProfileDTO());
+        when(emailService.createMail(any(), any(), any()))
+                .thenAnswer(invocation -> new Mail(null, invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)));
+
+        service.registerEmpleado(request);
+
+        verify(tipoEmpleadoRepository, times(1)).findByNombreInAndCompanyId(any(), eq(3));
+        verify(empleadoRepository).saveAndFlush(any(Empleado.class));
+    }
+
+    @Test
     @DisplayName("[CP-RF10-03] Registrar un veterinario con una colegiatura que ya usa otra persona activa se rechaza")
     void registrarConLaColegiaturaDeOtraPersonaActivaSeRechaza() {
         EmpleadoRequest request = requestValido();
@@ -641,6 +671,7 @@ class RF10AndRF11Test {
         tipoVet.setPermiteEspecialidades(true);
         tipoVet.setEsVeterinario(true);
         when(tipoEmpleadoRepository.findByNombreAndCompanyId("VETERINARIO", 3)).thenReturn(Optional.of(tipoVet));
+        org.mockito.Mockito.lenient().when(tipoEmpleadoRepository.findByNombreInAndCompanyId(any(), eq(3))).thenReturn(List.of(tipoVet));
         when(companyRepository.findById(3)).thenReturn(Optional.of(company));
         when(passwordEncoder.encode(any())).thenReturn("HASH");
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> {
@@ -675,6 +706,7 @@ class RF10AndRF11Test {
         tipoVet.setPermiteEspecialidades(true);
         tipoVet.setEsVeterinario(true);
         when(tipoEmpleadoRepository.findByNombreAndCompanyId("VETERINARIO", 3)).thenReturn(Optional.of(tipoVet));
+        org.mockito.Mockito.lenient().when(tipoEmpleadoRepository.findByNombreInAndCompanyId(any(), eq(3))).thenReturn(List.of(tipoVet));
         when(empleadoRepository.existsByNumeroColegiaturaAndCompanyIdAndEstadoTrueAndIdNot("CMVP-2222", 3, 30L)).thenReturn(true);
 
         assertThatThrownBy(() -> service.updateEmpleado(30L, request))

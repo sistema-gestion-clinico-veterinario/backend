@@ -1,5 +1,6 @@
 package veterinaria.vargasvet.ers.personal;
 
+import veterinaria.vargasvet.service.horarios.AsignacionMasivaDeHorarios;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import veterinaria.vargasvet.domain.entity.Cita;
+import veterinaria.vargasvet.domain.entity.Mascota;
 import veterinaria.vargasvet.domain.entity.Company;
 import veterinaria.vargasvet.domain.entity.Empleado;
 import veterinaria.vargasvet.domain.entity.HorarioEmpleado;
@@ -28,6 +30,7 @@ import veterinaria.vargasvet.repository.CompanyOperatingHourRepository;
 import veterinaria.vargasvet.repository.CompanyRepository;
 import veterinaria.vargasvet.repository.EmpleadoRepository;
 import veterinaria.vargasvet.repository.EspecialidadRepository;
+import veterinaria.vargasvet.repository.HorarioDeEmpleado;
 import veterinaria.vargasvet.repository.HorarioEmpleadoRepository;
 import veterinaria.vargasvet.repository.RoleRepository;
 import veterinaria.vargasvet.repository.TipoEmpleadoRepository;
@@ -49,7 +52,11 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -67,6 +74,7 @@ class RF12To14Test {
     @Mock private CompanyOperatingHourRepository companyOperatingHourRepository;
     @Mock private CompanyExceptionRepository companyExceptionRepository;
     @Mock private CitaRepository citaRepository;
+    @Mock private AsignacionMasivaDeHorarios asignacionMasiva;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private UserMapper userMapper;
     @Mock private EmailService emailService;
@@ -110,18 +118,20 @@ class RF12To14Test {
     }
 
     @Test
-    @DisplayName("[CP-RF12-01] Devuelve turnos ordenados con fecha y horas")
+    @DisplayName("[CP-RF12-01] Devuelve los turnos con fecha, día y horas en el orden de la consulta")
     void consultaHorarioOrdenado() {
-        HorarioEmpleado tarde = horario(2L, LocalTime.of(14, 0), LocalTime.of(18, 0));
-        HorarioEmpleado manana = horario(1L, LocalTime.of(8, 0), LocalTime.of(12, 0));
-        when(horarioEmpleadoRepository.findByEmpleadoId(7L)).thenReturn(List.of(tarde, manana));
+        HorarioDeEmpleado manana = horarioDeEmpleado(1L, LocalTime.of(8, 0), LocalTime.of(12, 0));
+        HorarioDeEmpleado tarde = horarioDeEmpleado(2L, LocalTime.of(14, 0), LocalTime.of(18, 0));
+        when(horarioEmpleadoRepository.findHorarioDelEmpleado(7L)).thenReturn(List.of(manana, tarde));
 
         var response = service.getHorario(7L);
 
         assertThat(response).extracting("id").containsExactly(1L, 2L);
         assertThat(response.getFirst().getFecha()).isEqualTo(fecha);
+        assertThat(response.getFirst().getDiaSemana()).isEqualTo("JUEVES");
         assertThat(response.getFirst().getHoraInicio()).isEqualTo(LocalTime.of(8, 0));
         assertThat(response.getFirst().getHoraFin()).isEqualTo(LocalTime.of(12, 0));
+        assertThat(response.getFirst().getActivo()).isTrue();
     }
 
     @Test
@@ -133,13 +143,8 @@ class RF12To14Test {
 
         service.assignBulkSchedule(7L, request);
 
-        verify(horarioEmpleadoRepository).save(any(HorarioEmpleado.class));
-        assertThat(empleado.getHorarios()).singleElement()
-                .satisfies(turno -> {
-                    assertThat(turno.getFecha()).isEqualTo(fecha);
-                    assertThat(turno.getHoraInicio()).isEqualTo(LocalTime.of(8, 0));
-                    assertThat(turno.getHoraFin()).isEqualTo(LocalTime.of(12, 0));
-                });
+        verify(asignacionMasiva).asignar(7L, 3, request, "admin@empresa.test");
+        verify(auditLogService).log(eq("ASIGNAR_HORARIOS_MASIVO"), eq("Horarios"), anyString());
     }
 
     @Test
@@ -147,15 +152,33 @@ class RF12To14Test {
     void rechazaHorarioCruzado() {
         when(empleadoRepository.findByIdAndCompanyId(7L, 3)).thenReturn(Optional.of(empleado));
         when(citaRepository.findByEmpleadoIdAndDateRange(7L, fecha, fecha)).thenReturn(List.of());
-        when(horarioEmpleadoRepository.existsOverlap(7L, fecha, LocalTime.of(9, 0), LocalTime.of(13, 0)))
-                .thenReturn(true);
+        BulkScheduleRequest request = bulk(turno(LocalTime.of(9, 0), LocalTime.of(13, 0)));
+        doThrow(new IllegalStateException("Conflicto de horario el día " + fecha))
+                .when(asignacionMasiva).asignar(7L, 3, request, "admin@empresa.test");
 
-        assertThatThrownBy(() -> service.assignBulkSchedule(
-                7L, bulk(turno(LocalTime.of(9, 0), LocalTime.of(13, 0)))))
+        assertThatThrownBy(() -> service.assignBulkSchedule(7L, request))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Conflicto de horario");
 
-        verify(horarioEmpleadoRepository, never()).save(any());
+        verify(auditLogService, never()).log(eq("ASIGNAR_HORARIOS_MASIVO"), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("[CP-RF13-03] No asigna horario si el empleado tiene citas en el rango")
+    void rechazaAsignarHorarioConCitasEnElRango() {
+        when(empleadoRepository.findByIdAndCompanyId(7L, 3)).thenReturn(Optional.of(empleado));
+        Cita cita = new Cita();
+        Mascota mascota = new Mascota();
+        mascota.setNombreCompleto("Luna");
+        cita.setMascota(mascota);
+        cita.setFechaHoraInicio(fecha.atTime(10, 0));
+        when(citaRepository.findByEmpleadoIdAndDateRange(7L, fecha, fecha)).thenReturn(List.of(cita));
+
+        assertThatThrownBy(() -> service.assignBulkSchedule(7L, bulk(turno(LocalTime.of(8, 0), LocalTime.of(12, 0)))))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("existen citas programadas");
+
+        verify(asignacionMasiva, never()).asignar(any(), any(), any(), any());
     }
 
     @Test
@@ -206,6 +229,10 @@ class RF12To14Test {
         horario.setHoraFin(fin);
         horario.setActivo(true);
         return horario;
+    }
+
+    private HorarioDeEmpleado horarioDeEmpleado(Long id, LocalTime inicio, LocalTime fin) {
+        return new HorarioDeEmpleado(id, 7L, fecha, DiaSemana.JUEVES, inicio, fin, true);
     }
 
     private HorarioEmpleadoRequest turno(LocalTime inicio, LocalTime fin) {

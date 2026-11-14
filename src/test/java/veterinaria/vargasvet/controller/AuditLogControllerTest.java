@@ -102,14 +102,15 @@ class AuditLogControllerTest {
 
     @Test
     void laExportacionTambienQuedaLimitadaALaEmpresaYDejaConstancia() {
-        when(servicio.getLogs(any(), any(), any(), any(), any(), any(), any(Pageable.class))).thenReturn(pagina());
+        when(servicio.exportLogs(any(), any(), any(), any(), any(), any(), any(Pageable.class))).thenReturn(java.util.List.of());
         try (MockedStatic<SecurityUtils> seguridad = mockStatic(SecurityUtils.class)) {
             comoAdministradorDeClinica(seguridad, 7);
 
             controlador.exportLogs(999, null, null, null, null, null);
         }
 
-        verify(servicio).getLogs(eq(7), isNull(), isNull(), isNull(), isNull(), isNull(), any(Pageable.class));
+        verify(servicio).exportLogs(eq(7), isNull(), isNull(), isNull(), isNull(), isNull(), any(Pageable.class));
+        verify(servicio, never()).getLogs(any(), any(), any(), any(), any(), any(), any(Pageable.class));
         verify(servicio).log(eq("EXPORTAR_AUDITORIA"), eq("Seguridad"), contains("ana@patitas.test"));
     }
 

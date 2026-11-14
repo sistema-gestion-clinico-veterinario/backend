@@ -154,39 +154,49 @@ public class PrescripcionServiceImpl implements PrescripcionService {
                                                     String numeroDocumentoEmpleado, String numeroHc,
                                                     LocalDate fechaDesde, LocalDate fechaHasta,
                                                     int page, int size) {
-        boolean isSuperAdmin = SecurityUtils.isSuperAdmin();
-        Integer effectiveCompanyId;
-
-        if (isSuperAdmin) {
-            if (companyId != null) {
-                isSuperAdmin = false;
-                effectiveCompanyId = companyId;
-            } else {
-                effectiveCompanyId = -1;
-            }
-        } else {
-            effectiveCompanyId = SecurityUtils.getCurrentCompanyId();
-            if (effectiveCompanyId == null) effectiveCompanyId = -1;
-        }
+        boolean todasLasEmpresas = SecurityUtils.isSuperAdmin() && companyId == null;
+        Integer empresaId = SecurityUtils.isSuperAdmin() ? companyId : SecurityUtils.getCurrentCompanyId();
 
         String queryFiltro = (query != null && !query.isBlank())
                 ? "%" + query.trim().toLowerCase() + "%" : null;
         String nombreMascotaFiltro = (nombreMascota != null && !nombreMascota.isBlank())
                 ? "%" + nombreMascota.trim().toLowerCase() + "%" : null;
+        String microchipFiltro = normalizarFiltro(numeroMicrochip);
+        String documentoApoderadoFiltro = normalizarFiltro(numeroDocumentoApoderado);
+        String documentoEmpleadoFiltro = normalizarFiltro(numeroDocumentoEmpleado);
+        String numeroHcFiltro = normalizarFiltro(numeroHc);
 
-        LocalDate effectiveDesde = fechaDesde != null ? fechaDesde : LocalDate.of(1, 1, 1);
-        LocalDate effectiveHasta = fechaHasta != null ? fechaHasta : LocalDate.of(9999, 12, 31);
+        LocalDateTime desde = (fechaDesde != null ? fechaDesde : LocalDate.of(1, 1, 1)).atStartOfDay();
+        LocalDateTime hasta = (fechaHasta != null ? fechaHasta : LocalDate.of(9999, 12, 31)).plusDays(1).atStartOfDay();
+        PageRequest pagina = PageRequest.of(page, size);
 
-        return prescripcionRepository.buscar(
-                isSuperAdmin, effectiveCompanyId, queryFiltro,
-                nombreMascotaFiltro,
-                normalizarFiltro(numeroMicrochip),
-                normalizarFiltro(numeroDocumentoApoderado),
-                normalizarFiltro(numeroDocumentoEmpleado),
-                normalizarFiltro(numeroHc),
-                effectiveDesde, effectiveHasta,
-                PageRequest.of(page, size))
-                .map(consultaMapper::toPrescripcionListResponse);
+        Page<PrescripcionRepository.RecetaDelListado> recetas = todasLasEmpresas
+                ? prescripcionRepository.buscarDeTodasLasEmpresas(queryFiltro, nombreMascotaFiltro, microchipFiltro,
+                        documentoApoderadoFiltro, documentoEmpleadoFiltro, numeroHcFiltro, desde, hasta, pagina)
+                : prescripcionRepository.buscarDeLaEmpresa(empresaId != null ? empresaId : -1, queryFiltro,
+                        nombreMascotaFiltro, microchipFiltro, documentoApoderadoFiltro, documentoEmpleadoFiltro,
+                        numeroHcFiltro, desde, hasta, pagina);
+        return recetas.map(this::aResumen);
+    }
+
+    private PrescripcionResumenResponse aResumen(PrescripcionRepository.RecetaDelListado receta) {
+        PrescripcionResumenResponse resumen = new PrescripcionResumenResponse();
+        resumen.setId(receta.getId());
+        resumen.setMedicamento(receta.getMedicamento());
+        resumen.setPrincipioActivo(receta.getPrincipioActivo());
+        resumen.setDosis(receta.getDosis());
+        resumen.setFrecuencia(receta.getFrecuencia());
+        resumen.setDuracionDias(receta.getDuracionDias());
+        resumen.setViaAdministracion(receta.getViaAdministracion());
+        resumen.setInstrucciones(receta.getInstrucciones());
+        resumen.setFechaInicio(receta.getFechaInicio());
+        resumen.setFechaFin(receta.getFechaFin());
+        resumen.setVeterinarioNombre(receta.getVeterinarioNombre());
+        resumen.setFechaCreacion(receta.getFechaCreacion());
+        resumen.setConsultaId(receta.getConsultaId());
+        resumen.setPacienteNombre(receta.getPacienteNombre());
+        resumen.setNumeroHc(receta.getNumeroHc());
+        return resumen;
     }
 
     private String normalizarFiltro(String value) {

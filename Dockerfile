@@ -6,9 +6,14 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copiar fuente, ejecutar pruebas y compilar
+# Copiar fuente, ejecutar pruebas y compilar (EJECUTAR_PRUEBAS=false las omite)
+ARG EJECUTAR_PRUEBAS=true
 COPY src ./src
-RUN mvn verify -B --no-transfer-progress
+RUN if [ "$EJECUTAR_PRUEBAS" = "false" ]; then \
+      mvn package -DskipTests -B --no-transfer-progress; \
+    else \
+      mvn verify -B --no-transfer-progress; \
+    fi
 
 # ── Etapa 2: Imagen final (solo JRE) ──────────────────────────
 FROM eclipse-temurin:21-jre-alpine

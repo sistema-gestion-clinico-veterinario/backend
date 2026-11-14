@@ -25,13 +25,6 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     }
 
     @Query("SELECT c.mascota.id AS mascotaId, MAX(c.fechaHoraInicio) AS fecha FROM Cita c " +
-            "WHERE c.mascota.apoderado.company.id = :companyId AND c.estado = 'COMPLETADA' AND c.eliminada = false " +
-            "GROUP BY c.mascota.id")
-    List<UltimaVisitaPorMascota> findUltimaVisitaCompletadaPorCompany(@Param("companyId") Integer companyId);
-
-    /** Igual que {@link #findUltimaVisitaCompletadaPorCompany}, acotada a un conjunto de mascotas
-     * (una página del listado de pacientes inactivos), para no recalcular sobre toda la empresa. */
-    @Query("SELECT c.mascota.id AS mascotaId, MAX(c.fechaHoraInicio) AS fecha FROM Cita c " +
             "WHERE c.mascota.id IN :mascotaIds AND c.estado = 'COMPLETADA' AND c.eliminada = false " +
             "GROUP BY c.mascota.id")
     List<UltimaVisitaPorMascota> findUltimaVisitaCompletadaByMascotaIds(@Param("mascotaIds") List<Long> mascotaIds);
@@ -76,6 +69,38 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
                                      @Param("fechaFin") LocalDateTime fechaFin,
                                      @Param("veterinarioId") Long veterinarioId,
                                      @Param("especie") EspecieMascota especie);
+
+    interface ResumenPorEmpresa {
+        Integer getCompanyId();
+        Long getConsultas();
+        Long getPacientesAtendidos();
+        java.math.BigDecimal getIngresos();
+        Long getNuevosPacientes();
+        Long getCompletadas();
+        Long getCerradas();
+        Long getNoAsistieron();
+    }
+
+    @Query("SELECT a.company.id AS companyId, " +
+            "COUNT(c) AS consultas, " +
+            "COUNT(DISTINCT CASE WHEN c.estado IN ('COMPLETADA', 'EN_PROCESO') THEN m.id END) AS pacientesAtendidos, " +
+            "COALESCE(SUM(CASE WHEN c.estado NOT IN ('CANCELADA', 'NO_ASISTIO') " +
+            "THEN GREATEST(LEAST(COALESCE(c.montoPagado, 0), COALESCE(c.totalServicio, 0)), 0) END), 0) AS ingresos, " +
+            "COUNT(DISTINCT CASE WHEN m.createdAt >= :fechaInicio AND m.createdAt < :fechaFin THEN m.id END) AS nuevosPacientes, " +
+            "COUNT(CASE WHEN c.estado = 'COMPLETADA' THEN 1 END) AS completadas, " +
+            "COUNT(CASE WHEN c.estado IN ('COMPLETADA', 'CANCELADA', 'NO_ASISTIO') THEN 1 END) AS cerradas, " +
+            "COUNT(CASE WHEN c.estado = 'NO_ASISTIO' THEN 1 END) AS noAsistieron " +
+            "FROM Cita c JOIN c.mascota m JOIN m.apoderado a JOIN a.user u JOIN c.empleado e " +
+            "WHERE a.company.id IN :companyIds " +
+            "AND c.eliminada = false " +
+            "AND c.fechaHoraInicio >= :fechaInicio " +
+            "AND c.fechaHoraInicio < :fechaFin " +
+            "AND (CAST(:especie AS string) IS NULL OR m.especie = :especie) " +
+            "GROUP BY a.company.id")
+    List<ResumenPorEmpresa> resumirPorEmpresa(@Param("companyIds") List<Integer> companyIds,
+                                              @Param("fechaInicio") LocalDateTime fechaInicio,
+                                              @Param("fechaFin") LocalDateTime fechaFin,
+                                              @Param("especie") EspecieMascota especie);
 
     interface EstadoCount {
         EstadoCita getEstado();

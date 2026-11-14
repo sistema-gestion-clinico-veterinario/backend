@@ -59,6 +59,21 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
 
     @Query("select distinct r.familyId from RefreshToken r where r.familyId in :familyIds and r.revokedAt is null")
     List<String> findActiveFamilyIds(@Param("familyIds") java.util.Collection<String> familyIds);
+    @Query("""
+            select distinct r.familyId from RefreshToken r
+            where r.company.id = :companyId and r.revokedAt is null and r.familyId is not null
+              and r.usuario.id in (select a.user.id from Apoderado a where a.company.id = :companyId)
+            """)
+    List<String> findFamilyIdsActivasDeLosApoderados(@Param("companyId") Integer companyId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            update RefreshToken r set r.revokedAt = :cuando
+            where r.company.id = :companyId and r.revokedAt is null
+              and r.usuario.id in (select a.user.id from Apoderado a where a.company.id = :companyId)
+            """)
+    int revocarActivasDeLosApoderados(@Param("companyId") Integer companyId, @Param("cuando") Instant cuando);
+
     List<RefreshToken> findAllByUsuarioAndRevokedAtIsNull(Usuario usuario);
     List<RefreshToken> findAllByUsuarioAndCompanyAndRevokedAtIsNull(Usuario usuario, Company company);
 

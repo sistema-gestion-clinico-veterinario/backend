@@ -916,6 +916,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserProfileDTO getProfile(Integer id) {
         Usuario usuario = findManageableUser(id);
         Integer companyId = SecurityUtils.getCurrentCompanyId();

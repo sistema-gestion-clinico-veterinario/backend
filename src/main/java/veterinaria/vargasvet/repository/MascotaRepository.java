@@ -35,9 +35,23 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
     @Query("SELECT DISTINCT m.apoderado.id FROM Mascota m WHERE m.apoderado.id IN :apoderadoIds AND m.activo = true")
     java.util.Set<Long> apoderadosConMascotaActiva(@Param("apoderadoIds") java.util.Collection<Long> apoderadoIds);
 
-    @Query("SELECT m FROM Mascota m JOIN FETCH m.apoderado a JOIN FETCH a.user " +
-           "WHERE a.company.id = :companyId AND m.activo = true")
-    List<Mascota> findActiveByCompanyId(@Param("companyId") Integer companyId);
+    interface PacienteInactivoFila {
+        String getMascota();
+        String getNombreApoderado();
+        String getApellidoApoderado();
+        java.time.LocalDateTime getCreadoEn();
+        java.time.LocalDateTime getUltimaVisita();
+    }
+
+    @Query("SELECT m.nombreCompleto AS mascota, u.nombre AS nombreApoderado, u.apellido AS apellidoApoderado, " +
+           "m.createdAt AS creadoEn, " +
+           "(SELECT MAX(c.fechaHoraInicio) FROM Cita c WHERE c.mascota = m AND c.estado = 'COMPLETADA' AND c.eliminada = false) AS ultimaVisita " +
+           "FROM Mascota m JOIN m.apoderado a JOIN a.user u " +
+           "WHERE a.company.id = :companyId AND m.activo = true AND NOT EXISTS (" +
+           "SELECT 1 FROM Cita v WHERE v.mascota = m AND v.estado = 'COMPLETADA' AND v.eliminada = false " +
+           "AND v.fechaHoraInicio >= :umbral)")
+    List<PacienteInactivoFila> findInactivasParaReporte(@Param("companyId") Integer companyId,
+                                                        @Param("umbral") java.time.LocalDateTime umbral);
 
     /**
      * Mascotas activas sin visita reciente (o que nunca visitaron), paginadas y ordenadas por
@@ -110,18 +124,21 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
                    "AND (:especie IS NULL OR m.especie = :especie) " +
                    "AND (:activo IS NULL OR m.activo = :activo) " +
                    "AND (CAST(:nombrePropietario AS text) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', CAST(:nombrePropietario AS text), '%'))) " +
+                   "AND (CAST(:apoderadoId AS string) IS NULL OR a.id = :apoderadoId) " +
                    "ORDER BY m.nombreCompleto ASC",
            countQuery = "SELECT COUNT(m) FROM Mascota m JOIN m.apoderado a JOIN a.user u " +
                         "WHERE a.company.id = :companyId " +
                         "AND (CAST(:nombre AS text) IS NULL OR LOWER(m.nombreCompleto) LIKE LOWER(CONCAT('%', CAST(:nombre AS text), '%'))) " +
                         "AND (:especie IS NULL OR m.especie = :especie) " +
                         "AND (:activo IS NULL OR m.activo = :activo) " +
-                        "AND (CAST(:nombrePropietario AS text) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', CAST(:nombrePropietario AS text), '%')))")
+                        "AND (CAST(:nombrePropietario AS text) IS NULL OR LOWER(CONCAT(u.nombre, ' ', u.apellido)) LIKE LOWER(CONCAT('%', CAST(:nombrePropietario AS text), '%'))) " +
+                        "AND (CAST(:apoderadoId AS string) IS NULL OR a.id = :apoderadoId)")
     Page<Mascota> buscar(@Param("companyId") Integer companyId,
                          @Param("nombre") String nombre,
                          @Param("especie") EspecieMascota especie,
                          @Param("nombrePropietario") String nombrePropietario,
                          @Param("activo") Boolean activo,
+                         @Param("apoderadoId") Long apoderadoId,
                          Pageable pageable);
 
     @Query("SELECT COUNT(m) FROM Mascota m WHERE m.apoderado.company.id = :companyId")
