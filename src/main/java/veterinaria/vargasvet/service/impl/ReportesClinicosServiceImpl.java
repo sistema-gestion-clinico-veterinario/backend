@@ -42,6 +42,7 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
     private final ReporteComparativoEmpresas comparativoEmpresas;
 
     @Override
+    @Transactional(readOnly = true)
     public ReportesClinicosDTO obtenerReportes(Integer companyId, LocalDate fechaDesde, LocalDate fechaHasta,
                                                Long veterinarioId, EspecieMascota especie) {
         Integer empresa = alcance.resolverEmpresa(companyId);
@@ -104,12 +105,14 @@ public class ReportesClinicosServiceImpl implements ReportesClinicosService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ReportesComparativoEmpresasDTO obtenerComparativoEmpresas(LocalDate fechaDesde, LocalDate fechaHasta,
                                                                       EspecieMascota especie) {
         return comparativoEmpresas.obtener(fechaDesde, fechaHasta, especie);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PacientesInactivosPageDTO obtenerPacientesInactivos(Integer companyId, int page, int size) {
         return pacientesInactivos.pagina(companyId, page, size);
     }
