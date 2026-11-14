@@ -1,0 +1,30 @@
+{
+ "objetivo": "http://127.0.0.1:18080",
+ "vus": 3,
+ "iteraciones_por_vu": 3,
+ "recorridos": {},
+ "peticiones": 144,
+ "respuestas_no_200": 81,
+ "tasa_de_fallos_http": 0.5625,
+ "latencia_ms": {
+  "mediana": 37.435201,
+  "p95": 1514.5021483999944
+ },
+ "bytes_recibidos": 1510496,
+ "duracion_total_s": 74.143683817,
+ "chequeos_fallidos": [
+  "navegacion 200: 6 fallos de 9",
+  "privacidad 200: 6 fallos de 9",
+  "cumplimiento 200: 6 fallos de 9",
+  "notificaciones 200: 6 fallos de 9",
+  "avisos_de_cumplimiento 200: 6 fallos de 9",
+  "panel 200: 6 fallos de 9",
+  "citas_del_mes 200: 6 fallos de 21",
+  "empleados 200: 6 fallos de 9",
+  "propietarios 200: 6 fallos de 9",
+  "lista_de_historias 200: 6 fallos de 9",
+  "reporte_clinico 200: 9 fallos de 9",
+  "reporte_de_ventas 200: 6 fallos de 9",
+  "pacientes_inactivos 200: 6 fallos de 9"
+ ]
+}

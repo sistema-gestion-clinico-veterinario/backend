@@ -1,0 +1,113 @@
+time="2026-11-14T17:33:42Z" level=warning msg="reporte_clinico: HTTP 500 {\"timestamp\":\"2026-11-14T17:33:42.613+00:00\",\"status\":500,\"error\":\"Internal Server Error\",\"path\":\"/api/v1/clinical-reports\"}" source=console
+time="2026-11-14T17:33:45Z" level=warning msg="navegacion: HTTP 401 {\"timestamp\":[2026,11,14,12,33,45,164735764],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/navigation\"}" source=console
+time="2026-11-14T17:33:45Z" level=warning msg="privacidad: HTTP 401 {\"timestamp\":[2026,11,14,12,33,45,187056539],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/privacidad/mi-estado\"}" source=console
+time="2026-11-14T17:33:45Z" level=warning msg="cumplimiento: HTTP 401 {\"timestamp\":[2026,11,14,12,33,45,201956000],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/compliance\"}" source=console
+time="2026-11-14T17:33:45Z" level=warning msg="notificaciones: HTTP 401 {\"timestamp\":[2026,11,14,12,33,45,209729715],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/notifications/read\"}" source=console
+time="2026-11-14T17:33:45Z" level=warning msg="avisos_de_cumplimiento: HTTP 401 {\"timestamp\":[2026,11,14,12,33,45,223347713],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/compliance/request-notifications\"}" source=console
+time="2026-11-14T17:33:45Z" level=warning msg="panel: HTTP 401 {\"timestamp\":[2026,11,14,12,33,45,601713918],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/dashboard/overview\"}" source=console
+time="2026-11-14T17:33:46Z" level=warning msg="citas_del_mes: HTTP 401 {\"timestamp\":[2026,11,14,12,33,46,6336472],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/appointments\"}" source=console
+time="2026-11-14T17:33:46Z" level=warning msg="empleados: HTTP 401 {\"timestamp\":[2026,11,14,12,33,46,21175002],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/admin/employees\"}" source=console
+time="2026-11-14T17:33:46Z" level=warning msg="propietarios: HTTP 401 {\"timestamp\":[2026,11,14,12,33,46,34231681],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clients/guardians\"}" source=console
+time="2026-11-14T17:33:47Z" level=warning msg="lista_de_historias: HTTP 401 {\"timestamp\":[2026,11,14,12,33,46,872758693],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/medical-records\"}" source=console
+time="2026-11-14T17:33:51Z" level=warning msg="reporte_clinico: HTTP 401 {\"timestamp\":[2026,11,14,12,33,47,959243896],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clinical-reports\"}" source=console
+time="2026-11-14T17:33:58Z" level=warning msg="reporte_de_ventas: HTTP 401 {\"timestamp\":[2026,11,14,12,33,54,539071864],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clinical-reports/sales-products\"}" source=console
+time="2026-11-14T17:34:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports?fechaDesde=2025-11-14&fechaHasta=2026-11-14&companyId=1\": request timeout"
+time="2026-11-14T17:34:13Z" level=warning msg="reporte_clinico: HTTP 0 null" source=console
+time="2026-11-14T17:34:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports?fechaDesde=2025-11-14&fechaHasta=2026-11-14&companyId=1\": request timeout"
+time="2026-11-14T17:34:13Z" level=warning msg="reporte_clinico: HTTP 0 null" source=console
+time="2026-11-14T17:34:19Z" level=warning msg="pacientes_inactivos: HTTP 401 {\"timestamp\":[2026,11,14,12,34,19,806971371],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clinical-reports/inactive-patients\"}" source=console
+time="2026-11-14T17:34:20Z" level=warning msg="navegacion: HTTP 401 {\"timestamp\":[2026,11,14,12,34,20,187804687],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/navigation\"}" source=console
+time="2026-11-14T17:34:20Z" level=warning msg="privacidad: HTTP 401 {\"timestamp\":[2026,11,14,12,34,20,203647613],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/privacidad/mi-estado\"}" source=console
+time="2026-11-14T17:34:20Z" level=warning msg="cumplimiento: HTTP 401 {\"timestamp\":[2026,11,14,12,34,20,213385380],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/compliance\"}" source=console
+time="2026-11-14T17:34:20Z" level=warning msg="notificaciones: HTTP 401 {\"timestamp\":[2026,11,14,12,34,20,224810933],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/notifications/read\"}" source=console
+time="2026-11-14T17:34:20Z" level=warning msg="avisos_de_cumplimiento: HTTP 401 {\"timestamp\":[2026,11,14,12,34,20,232702916],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/compliance/request-notifications\"}" source=console
+time="2026-11-14T17:34:20Z" level=warning msg="panel: HTTP 401 {\"timestamp\":[2026,11,14,12,34,20,245159224],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/dashboard/overview\"}" source=console
+time="2026-11-14T17:34:20Z" level=warning msg="citas_del_mes: HTTP 401 {\"timestamp\":[2026,11,14,12,34,20,583639344],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/appointments\"}" source=console
+time="2026-11-14T17:34:20Z" level=warning msg="empleados: HTTP 401 {\"timestamp\":[2026,11,14,12,34,20,598070860],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/admin/employees\"}" source=console
+time="2026-11-14T17:34:20Z" level=warning msg="propietarios: HTTP 401 {\"timestamp\":[2026,11,14,12,34,20,611768390],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clients/guardians\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="lista_de_historias: HTTP 401 {\"timestamp\":[2026,11,14,12,34,20,992911140],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/medical-records\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="reporte_clinico: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,511551065],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clinical-reports\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="navegacion: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,505847382],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/navigation\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="navegacion: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,508025417],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/navigation\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="reporte_de_ventas: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,519240626],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clinical-reports/sales-products\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="privacidad: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,519408526],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/privacidad/mi-estado\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="privacidad: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,520473863],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/privacidad/mi-estado\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="pacientes_inactivos: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,523813079],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clinical-reports/inactive-patients\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="cumplimiento: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,529182808],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/compliance\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="cumplimiento: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,530904505],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/compliance\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="notificaciones: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,534844371],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/notifications/read\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="notificaciones: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,538073248],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/notifications/read\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="avisos_de_cumplimiento: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,538786517],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/compliance/request-notifications\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="avisos_de_cumplimiento: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,541936354],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/compliance/request-notifications\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="panel: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,543828782],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/dashboard/overview\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="panel: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,548359512],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/dashboard/overview\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="citas_del_mes: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,850263592],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/appointments\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="empleados: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,856075287],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/admin/employees\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="citas_del_mes: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,854519177],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/appointments\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="propietarios: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,859050815],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clients/guardians\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="empleados: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,861041024],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/admin/employees\"}" source=console
+time="2026-11-14T17:34:21Z" level=warning msg="propietarios: HTTP 401 {\"timestamp\":[2026,11,14,12,34,21,864238129],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clients/guardians\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="lista_de_historias: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,165851792],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/medical-records\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="lista_de_historias: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,167728216],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/medical-records\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="reporte_clinico: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,470817115],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clinical-reports\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="reporte_clinico: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,473184536],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clinical-reports\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="reporte_de_ventas: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,474942431],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clinical-reports/sales-products\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="pacientes_inactivos: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,478933100],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clinical-reports/inactive-patients\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="reporte_de_ventas: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,481225999],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clinical-reports/sales-products\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="pacientes_inactivos: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,484634229],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clinical-reports/inactive-patients\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="navegacion: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,782437808],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/navigation\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="privacidad: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,785773248],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/privacidad/mi-estado\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="cumplimiento: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,790999324],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/compliance\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="navegacion: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,792018067],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/navigation\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="notificaciones: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,794753226],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/notifications/read\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="privacidad: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,796095227],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/privacidad/mi-estado\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="avisos_de_cumplimiento: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,797821504],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/compliance/request-notifications\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="cumplimiento: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,800156606],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/compliance\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="panel: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,802163473],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/dashboard/overview\"}" source=console
+time="2026-11-14T17:34:22Z" level=warning msg="notificaciones: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,806030425],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/notifications/read\"}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="avisos_de_cumplimiento: HTTP 401 {\"timestamp\":[2026,11,14,12,34,22,809910548],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/me/compliance/request-notifications\"}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="panel: HTTP 401 {\"timestamp\":[2026,11,14,12,34,23,5637729],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/dashboard/overview\"}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="citas_del_mes: HTTP 401 {\"timestamp\":[2026,11,14,12,34,23,106975221],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/appointments\"}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="empleados: HTTP 401 {\"timestamp\":[2026,11,14,12,34,23,116496963],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/admin/employees\"}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="propietarios: HTTP 401 {\"timestamp\":[2026,11,14,12,34,23,122801816],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clients/guardians\"}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="citas_del_mes: HTTP 401 {\"timestamp\":[2026,11,14,12,34,23,310863175],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/appointments\"}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="empleados: HTTP 401 {\"timestamp\":[2026,11,14,12,34,23,316813837],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/admin/employees\"}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="propietarios: HTTP 429 {\"success\":false,\"message\":\"Demasiadas solicitudes. Intente nuevamente más tarde.\",\"data\":null}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="lista_de_historias: HTTP 429 {\"success\":false,\"message\":\"Demasiadas solicitudes. Intente nuevamente más tarde.\",\"data\":null}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="lista_de_historias: HTTP 429 {\"success\":false,\"message\":\"Demasiadas solicitudes. Intente nuevamente más tarde.\",\"data\":null}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="reporte_clinico: HTTP 429 {\"success\":false,\"message\":\"Demasiadas solicitudes. Intente nuevamente más tarde.\",\"data\":null}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="reporte_de_ventas: HTTP 429 {\"success\":false,\"message\":\"Demasiadas solicitudes. Intente nuevamente más tarde.\",\"data\":null}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="pacientes_inactivos: HTTP 429 {\"success\":false,\"message\":\"Demasiadas solicitudes. Intente nuevamente más tarde.\",\"data\":null}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="reporte_clinico: HTTP 401 {\"timestamp\":[2026,11,14,12,34,23,926003516],\"message\":\"Acceso no autorizado o token inv�lido\",\"path\":\"/api/v1/clinical-reports\"}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="reporte_de_ventas: HTTP 429 {\"success\":false,\"message\":\"Demasiadas solicitudes. Intente nuevamente más tarde.\",\"data\":null}" source=console
+time="2026-11-14T17:34:23Z" level=warning msg="pacientes_inactivos: HTTP 429 {\"success\":false,\"message\":\"Demasiadas solicitudes. Intente nuevamente más tarde.\",\"data\":null}" source=console
+{
+ "objetivo": "http://127.0.0.1:18080",
+ "vus": 3,
+ "iteraciones_por_vu": 3,
+ "recorridos": {},
+ "peticiones": 144,
+ "respuestas_no_200": 81,
+ "tasa_de_fallos_http": 0.5625,
+ "latencia_ms": {
+  "mediana": 37.435201,
+  "p95": 1514.5021483999944
+ },
+ "bytes_recibidos": 1510496,
+ "duracion_total_s": 74.143683817,
+ "chequeos_fallidos": [
+  "navegacion 200: 6 fallos de 9",
+  "privacidad 200: 6 fallos de 9",
+  "cumplimiento 200: 6 fallos de 9",
+  "notificaciones 200: 6 fallos de 9",
+  "avisos_de_cumplimiento 200: 6 fallos de 9",
+  "panel 200: 6 fallos de 9",
+  "citas_del_mes 200: 6 fallos de 21",
+  "empleados 200: 6 fallos de 9",
+  "propietarios 200: 6 fallos de 9",
+  "lista_de_historias 200: 6 fallos de 9",
+  "reporte_clinico 200: 9 fallos de 9",
+  "reporte_de_ventas 200: 6 fallos de 9",
+  "pacientes_inactivos 200: 6 fallos de 9"
+ ]
+}

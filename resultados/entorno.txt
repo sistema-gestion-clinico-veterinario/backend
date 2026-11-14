@@ -1,0 +1,9 @@
+fecha: 2026-11-14T17:30:47Z
+núcleos: 4
+memoria total (MB): 15983
+núcleo del sistema: 7.0.0-1017-azure
+docker: 28.0.4
+k6: k6 v2.4.0 (commit/dd9395906d, go1.26.11, linux/amd64)
+antes:   5b27bbabb33224241586674bb2401e47bb98f92f (Merge pull request #432 from sistema-gestion-clinico-veterinario/develop)
+despues: 8f07747a56db2ae2c02ea4009d8bf9c8ec30beb5 (Fusionar origin/main con mejora/green-recursos para la medición del después)
+fijado de CPU: PG='--cpuset-cpus 0' backend='--cpuset-cpus 1,2' k6='taskset -c 3'

@@ -1,0 +1,27 @@
+fecha: 2026-11-14T17:30:47Z
+núcleos: 4
+memoria total (MB): 15983
+núcleo del sistema: 7.0.0-1017-azure
+docker: 28.0.4
+k6: k6 v2.4.0 (commit/dd9395906d, go1.26.11, linux/amd64)
+antes:   5b27bbabb33224241586674bb2401e47bb98f92f (Merge pull request #432 from sistema-gestion-clinico-veterinario/develop)
+despues: 8f07747a56db2ae2c02ea4009d8bf9c8ec30beb5 (Fusionar origin/main con mejora/green-recursos para la medición del después)
+fijado de CPU: PG='--cpuset-cpus 0' backend='--cpuset-cpus 1,2' k6='taskset -c 3'
+[17:30:47] construyendo la imagen antes desde 5b27bba
+[17:31:40] construyendo la imagen despues desde 8f07747
+[17:31:58] levantando PostgreSQL
+[17:32:07] [antes] creando el esquema con el propio backend
+[17:32:24] [antes] sembrando datos
+[17:32:27] [antes] aplicando las migraciones de su versión
+[17:32:30] [antes] migraciones: 28 aplicadas, 2 con error (ver logs/migraciones_antes.log)
+citas=27580 consultas=20653 mascotas=3881
+indices en citas/consulta: 17
+[17:32:30] [despues] creando el esquema con el propio backend
+[17:32:45] [despues] sembrando datos
+[17:32:48] [despues] aplicando las migraciones de su versión
+[17:32:51] [despues] migraciones: 33 aplicadas, 2 con error (ver logs/migraciones_despues.log)
+citas=27580 consultas=20653 mascotas=3881
+indices en citas/consulta: 22
+[17:32:52] calentamiento (se descarta)
+[17:32:52] ronda 0 · antes
+[17:34:54] FALLO: k6 no produjo resultados en el calentamiento de antes (ver logs/k6_antes_0.log)

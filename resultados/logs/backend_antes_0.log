@@ -1,0 +1,191 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.2)
+
+2026-11-14T17:32:53.413Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : Starting VargasvetApplication v0.0.1-SNAPSHOT using Java 21.0.13 with PID 1 (/app/app.jar started by softvet in /app)
+2026-11-14T17:32:53.415Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-11-14T17:32:54.616Z  INFO 1 --- [vargasvet] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-14T17:32:54.803Z  INFO 1 --- [vargasvet] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 178 ms. Found 77 JPA repository interfaces.
+2026-11-14T17:32:55.509Z  INFO 1 --- [vargasvet] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-11-14T17:32:55.518Z  INFO 1 --- [vargasvet] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-11-14T17:32:55.518Z  INFO 1 --- [vargasvet] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.34]
+2026-11-14T17:32:55.535Z  INFO 1 --- [vargasvet] [           main] o.a.c.c.C.[.[localhost].[/api/v1]        : Initializing Spring embedded WebApplicationContext
+2026-11-14T17:32:55.536Z  INFO 1 --- [vargasvet] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2081 ms
+2026-11-14T17:32:55.658Z  INFO 1 --- [vargasvet] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-14T17:32:55.701Z  INFO 1 --- [vargasvet] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.5.Final
+2026-11-14T17:32:55.721Z  INFO 1 --- [vargasvet] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-14T17:32:55.874Z  INFO 1 --- [vargasvet] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-14T17:32:55.893Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-11-14T17:32:56.051Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@34604b32
+2026-11-14T17:32:56.052Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-11-14T17:32:56.070Z  WARN 1 --- [vargasvet] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-11-14T17:32:56.083Z  INFO 1 --- [vargasvet] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 16.16
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-14T17:32:57.871Z  INFO 1 --- [vargasvet] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-14T17:32:57.873Z  INFO 1 --- [vargasvet] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-14T17:32:58.152Z  INFO 1 --- [vargasvet] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-11-14T17:33:02.272Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter jwtFilterRegistration was not registered (disabled)
+2026-11-14T17:33:02.273Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter cookieSecurityFilterRegistration was not registered (disabled)
+2026-11-14T17:33:02.273Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter backupReportTokenFilterRegistration was not registered (disabled)
+2026-11-14T17:33:02.273Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter rateLimitFilterRegistration was not registered (disabled)
+2026-11-14T17:33:02.273Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter requestTraceFilterRegistration was not registered (disabled)
+2026-11-14T17:33:03.086Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.WebSecurityConfig     : Contraseñas protegidas con BCrypt, factor de costo 12
+2026-11-14T17:33:05.214Z  WARN 1 --- [vargasvet] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-11-14T17:33:05.540Z  INFO 1 --- [vargasvet] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-11-14T17:33:06.336Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-11-14T17:33:06.337Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@7eba20]]
+2026-11-14T17:33:06.338Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-11-14T17:33:06.361Z  INFO 1 --- [vargasvet] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-11-14T17:33:06.369Z  INFO 1 --- [vargasvet] [           main] o.s.s.config.TaskSchedulerRouter         : More than one TaskScheduler bean exists within the context, and none is named 'taskScheduler'. Mark one of them as primary or name it 'taskScheduler' (possibly as an alias); or implement the SchedulingConfigurer interface and call ScheduledTaskRegistrar#setScheduler explicitly within the configureTasks() callback: [messageBrokerTaskScheduler, heartbeatScheduler]
+2026-11-14T17:33:06.374Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : Started VargasvetApplication in 13.355 seconds (process running for 13.807)
+2026-11-14T17:33:06.454Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : === INICIALIZANDO DATOS DEL SISTEMA ===
+2026-11-14T17:33:06.499Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Rol del sistema verificado: ROLE_SUPER_ADMIN
+2026-11-14T17:33:06.506Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Rol del sistema verificado: ROLE_ADMIN
+2026-11-14T17:33:06.506Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Inicializando ventanas...
+2026-11-14T17:33:06.686Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.a.c.c.C.[.[localhost].[/api/v1]        : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-11-14T17:33:06.686Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-11-14T17:33:06.691Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 5 ms
+2026-11-14T17:33:06.772Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Verificando permisos del SUPER_ADMIN...
+2026-11-14T17:33:06.783Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : ⏭ SUPER_ADMIN ya tiene todos los permisos al día
+2026-11-14T17:33:06.783Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : === INICIALIZACIÓN COMPLETADA ===
+2026-11-14T17:33:42.600Z ERROR 1 --- [vargasvet] [nio-8080-exec-2] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Java heap space] with root cause
+
+java.lang.OutOfMemoryError: Java heap space
+	at java.base/java.util.Calendar.<init>(Unknown Source) ~[na:na]
+	at java.base/java.util.GregorianCalendar.<init>(Unknown Source) ~[na:na]
+	at java.base/java.util.Calendar$Builder.build(Unknown Source) ~[na:na]
+	at java.base/sun.util.locale.provider.CalendarProviderImpl.getInstance(Unknown Source) ~[na:na]
+	at java.base/java.util.Calendar.createCalendar(Unknown Source) ~[na:na]
+	at java.base/java.util.Calendar.getInstance(Unknown Source) ~[na:na]
+	at org.hibernate.type.descriptor.jdbc.TimestampJdbcType$2.doExtract(TimestampJdbcType.java:110) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.type.descriptor.jdbc.BasicExtractor.extract(BasicExtractor.java:44) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl.getCurrentRowValue(JdbcValuesResultSetImpl.java:387) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.internal.RowProcessingStateStandardImpl.getJdbcValue(RowProcessingStateStandardImpl.java:152) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.basic.BasicResultAssembler.extractRawValue(BasicResultAssembler.java:54) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.basic.BasicResultAssembler.assemble(BasicResultAssembler.java:60) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.extractConcreteTypeStateValues(EntityInitializerImpl.java:1603) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.initializeEntityInstance(EntityInitializerImpl.java:1329) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.initializeInstance(EntityInitializerImpl.java:1308) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.initializeInstance(EntityInitializerImpl.java:97) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.internal.StandardRowReader.coordinateInitializers(StandardRowReader.java:244) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.internal.StandardRowReader.readRow(StandardRowReader.java:141) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.spi.ListResultsConsumer.read(ListResultsConsumer.java:249) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:201) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:35) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.doExecuteQuery(JdbcSelectExecutorStandardImpl.java:224) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.executeQuery(JdbcSelectExecutorStandardImpl.java:102) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.executeQuery(JdbcSelectExecutor.java:91) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:165) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.lambda$new$1(ConcreteSqmSelectQueryPlan.java:152) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan$$Lambda/0x00007ff89ee854a0.interpret(Unknown Source) ~[na:na]
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.withCacheableSqmInterpretation(ConcreteSqmSelectQueryPlan.java:442) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.performList(ConcreteSqmSelectQueryPlan.java:362) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.query.sqm.internal.QuerySqmImpl.doList(QuerySqmImpl.java:380) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.query.spi.AbstractSelectionQuery.list(AbstractSelectionQuery.java:143) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.query.Query.getResultList(Query.java:120) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+
+2026-11-14T17:34:19.794Z ERROR 1 --- [vargasvet] [alina-utility-2] o.a.coyote.http11.Http11NioProtocol      : Error processing async timeouts
+
+java.util.concurrent.ExecutionException: java.lang.OutOfMemoryError: Java heap space
+	at java.base/java.util.concurrent.FutureTask.report(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.FutureTask.get(Unknown Source) ~[na:na]
+	at org.apache.coyote.AbstractProtocol.startAsyncTimeout(AbstractProtocol.java:660) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.coyote.AbstractProtocol.lambda$start$0(AbstractProtocol.java:646) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.lang.OutOfMemoryError: Java heap space
+	at java.base/java.util.concurrent.ConcurrentHashMap$KeySetView.iterator(Unknown Source) ~[na:na]
+	at org.apache.coyote.AbstractProtocol.lambda$startAsyncTimeout$1(AbstractProtocol.java:667) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.coyote.AbstractProtocol$$Lambda/0x00007ff89ee297b8.run(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at java.base/java.lang.Thread.runWith(Unknown Source) ~[na:na]
+	... 1 common frames omitted
+
+2026-11-14T17:34:19.802Z ERROR 1 --- [vargasvet] [nio-8080-exec-3] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-14T17:34:16.755Z ERROR 1 --- [vargasvet] [MessageBroker-1] o.s.s.s.TaskUtils$LoggingErrorHandler    : Unexpected error occurred in scheduled task
+
+java.lang.OutOfMemoryError: Java heap space
+	at org.springframework.web.socket.messaging.SubProtocolWebSocketHandler$DefaultStats.toString(SubProtocolWebSocketHandler.java:716) ~[spring-websocket-6.2.2.jar!/:6.2.2]
+	at org.springframework.web.socket.messaging.SubProtocolWebSocketHandler.getStatsInfo(SubProtocolWebSocketHandler.java:275) ~[spring-websocket-6.2.2.jar!/:6.2.2]
+	at org.springframework.web.socket.config.WebSocketMessageBrokerStats.getWebSocketSessionStatsInfo(WebSocketMessageBrokerStats.java:169) ~[spring-websocket-6.2.2.jar!/:6.2.2]
+	at org.springframework.web.socket.config.WebSocketMessageBrokerStats.toString(WebSocketMessageBrokerStats.java:286) ~[spring-websocket-6.2.2.jar!/:6.2.2]
+	at org.springframework.web.socket.config.WebSocketMessageBrokerStats.lambda$initLoggingTask$0(WebSocketMessageBrokerStats.java:156) ~[spring-websocket-6.2.2.jar!/:6.2.2]
+	at org.springframework.web.socket.config.WebSocketMessageBrokerStats$$Lambda/0x00007ff89ee11ff8.run(Unknown Source) ~[na:na]
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54) ~[spring-context-6.2.2.jar!/:6.2.2]
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.runWith(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+
+2026-11-14T17:34:19.810Z ERROR 1 --- [vargasvet] [nio-8080-exec-8] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Java heap space] with root cause
+
+java.lang.OutOfMemoryError: Java heap space
+	at java.base/sun.text.resources.cldr.FormatData_en.getContents(Unknown Source) ~[na:na]
+	at java.base/java.util.ListResourceBundle.loadLookup(Unknown Source) ~[na:na]
+	at java.base/java.util.ListResourceBundle.handleKeySet(Unknown Source) ~[na:na]
+	at java.base/java.util.ResourceBundle.containsKey(Unknown Source) ~[na:na]
+	at java.base/java.text.DateFormatSymbols.initializeData(Unknown Source) ~[na:na]
+	at java.base/java.text.DateFormatSymbols.<init>(Unknown Source) ~[na:na]
+	at java.base/sun.util.locale.provider.DateFormatSymbolsProviderImpl.getInstance(Unknown Source) ~[na:na]
+	at java.base/java.text.DateFormatSymbols.getProviderInstance(Unknown Source) ~[na:na]
+	at java.base/java.text.DateFormatSymbols.getInstance(Unknown Source) ~[na:na]
+	at java.base/java.util.Calendar.getDisplayName(Unknown Source) ~[na:na]
+	at java.base/java.text.SimpleDateFormat.subFormat(Unknown Source) ~[na:na]
+	at java.base/java.text.SimpleDateFormat.format(Unknown Source) ~[na:na]
+	at java.base/java.text.SimpleDateFormat.format(Unknown Source) ~[na:na]
+	at java.base/java.text.DateFormat.format(Unknown Source) ~[na:na]
+	at org.apache.tomcat.util.http.ConcurrentDateFormat.format(ConcurrentDateFormat.java:51) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.tomcat.util.http.FastHttpDateFormat.getCurrentDate(FastHttpDateFormat.java:100) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.coyote.http11.Http11Processor.prepareResponse(Http11Processor.java:977) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.coyote.AbstractProcessor.action(AbstractProcessor.java:377) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.coyote.Response.action(Response.java:210) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.coyote.Response.commit(Response.java:464) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.catalina.connector.OutputBuffer.doFlush(OutputBuffer.java:290) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.catalina.connector.OutputBuffer.flush(OutputBuffer.java:270) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.catalina.connector.CoyoteOutputStream.flush(CoyoteOutputStream.java:136) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.springframework.security.web.util.OnCommittedResponseWrapper$SaveContextServletOutputStream.flush(OnCommittedResponseWrapper.java:524) ~[spring-security-web-6.4.2.jar!/:6.4.2]
+	at org.springframework.web.context.request.async.StandardServletAsyncWebRequest$LifecycleServletOutputStream.flush(StandardServletAsyncWebRequest.java:415) ~[spring-web-6.2.2.jar!/:6.2.2]
+	at java.base/java.io.FilterOutputStream.flush(Unknown Source) ~[na:na]
+	at com.fasterxml.jackson.core.json.UTF8JsonGenerator.flush(UTF8JsonGenerator.java:1205) ~[jackson-core-2.18.2.jar!/:2.18.2]
+	at com.fasterxml.jackson.databind.ObjectWriter.writeValue(ObjectWriter.java:1063) ~[jackson-databind-2.18.2.jar!/:2.18.2]
+	at org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter.writeInternal(AbstractJackson2HttpMessageConverter.java:486) ~[spring-web-6.2.2.jar!/:6.2.2]
+	at org.springframework.http.converter.AbstractGenericHttpMessageConverter.write(AbstractGenericHttpMessageConverter.java:126) ~[spring-web-6.2.2.jar!/:6.2.2]
+	at org.springframework.web.servlet.mvc.method.annotation.AbstractMessageConverterMethodProcessor.writeWithMessageConverters(AbstractMessageConverterMethodProcessor.java:345) ~[spring-webmvc-6.2.2.jar!/:6.2.2]
+	at org.springframework.web.servlet.mvc.method.annotation.HttpEntityMethodProcessor.handleReturnValue(HttpEntityMethodProcessor.java:263) ~[spring-webmvc-6.2.2.jar!/:6.2.2]
+
+2026-11-14T17:34:19.816Z ERROR 1 --- [vargasvet] [pool-2-thread-1] o.s.s.s.TaskUtils$LoggingErrorHandler    : Unexpected error occurred in scheduled task
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-14T17:34:20.180Z ERROR 1 --- [vargasvet] [nio-8080-exec-4] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Java heap space] with root cause
+
+java.lang.OutOfMemoryError: Java heap space
+

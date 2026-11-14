@@ -1,0 +1,78 @@
+NOTICE:  column "creado_ip" of relation "aviso_privacidad" already exists, skipping
+NOTICE:  column "creado_dispositivo" of relation "aviso_privacidad" already exists, skipping
+NOTICE:  column "dispositivo" of relation "audit_logs" already exists, skipping
+NOTICE:  column "audiencia" of relation "aviso_privacidad" already exists, skipping
+NOTICE:  constraint "ck_aviso_privacidad_audiencia" of relation "aviso_privacidad" does not exist, skipping
+NOTICE:  constraint "uq_aviso_privacidad_company_version" of relation "aviso_privacidad" does not exist, skipping
+NOTICE:  index "ux_aviso_privacidad_vigente" does not exist, skipping
+NOTICE:  relation "entrega_aviso_privacidad" already exists, skipping
+NOTICE:  column "tipo_constancia" of relation "user_consent" already exists, skipping
+ERROR:  trigger "trg_user_consent_inmutable" for table "user_consent" does not exist
+ERROR en V107__Distinguir_Aceptacion_Y_Lectura_Legal.sql
+NOTICE:  relation "solicitud_cancelacion_datos" already exists, skipping
+NOTICE:  relation "role_assignment_history" already exists, skipping
+NOTICE:  column "created_at" of relation "usuario_por_rol" already exists, skipping
+NOTICE:  column "created_by_user_id" of relation "usuario_por_rol" already exists, skipping
+NOTICE:  column "last_activity_at" of relation "refresh_tokens" already exists, skipping
+NOTICE:  relation "access_review" already exists, skipping
+NOTICE:  relation "access_review_item" already exists, skipping
+NOTICE:  relation "solicitud_derecho_datos" already exists, skipping
+NOTICE:  relation "consentimiento_informado_veterinario" already exists, skipping
+NOTICE:  relation "company_compliance_policy" already exists, skipping
+NOTICE:  column "especialidad_requerida_id" of relation "servicios" already exists, skipping
+NOTICE:  column "es_veterinario" of relation "tipo_empleado" already exists, skipping
+NOTICE:  relation "backup_execution" already exists, skipping
+NOTICE:  column "dispositivo_nombre" of relation "caja" already exists, skipping
+NOTICE:  relation "solicitud_cambio_cumplimiento" already exists, skipping
+NOTICE:  column "row_version" of relation "solicitud_cambio_cumplimiento" already exists, skipping
+NOTICE:  column "evidencia_referencia" of relation "solicitud_cambio_cumplimiento" already exists, skipping
+NOTICE:  column "vigente_desde_solicitada" of relation "solicitud_cambio_cumplimiento" already exists, skipping
+NOTICE:  column "revision_por_usuario_id" of relation "solicitud_cambio_cumplimiento" already exists, skipping
+NOTICE:  column "revision_at" of relation "solicitud_cambio_cumplimiento" already exists, skipping
+NOTICE:  column "vista_clinica_at" of relation "solicitud_cambio_cumplimiento" already exists, skipping
+NOTICE:  constraint "ck_solicitud_cumplimiento_estado" of relation "solicitud_cambio_cumplimiento" does not exist, skipping
+NOTICE:  constraint "ck_solicitud_cumplimiento_resolucion" of relation "solicitud_cambio_cumplimiento" does not exist, skipping
+NOTICE:  index "uq_solicitud_cumplimiento_activa" does not exist, skipping
+NOTICE:  column "protected_size_bytes" of relation "backup_execution" already exists, skipping
+NOTICE:  column "protected_file_count" of relation "backup_execution" already exists, skipping
+NOTICE:  column "compression_algorithm" of relation "backup_execution" already exists, skipping
+NOTICE:  column "encryption_algorithm" of relation "backup_execution" already exists, skipping
+NOTICE:  column "database_restore_verified" of relation "backup_execution" already exists, skipping
+NOTICE:  column "database_restore_duration_seconds" of relation "backup_execution" already exists, skipping
+NOTICE:  relation "notification_read_state" already exists, skipping
+NOTICE:  column "recovery_status" of relation "backup_execution" already exists, skipping
+NOTICE:  column "integral_recovery_verified" of relation "backup_execution" already exists, skipping
+NOTICE:  column "integral_recovery_duration_seconds" of relation "backup_execution" already exists, skipping
+NOTICE:  column "integral_recovery_tested_at" of relation "backup_execution" already exists, skipping
+NOTICE:  column "correlation_id" of relation "audit_logs" already exists, skipping
+NOTICE:  column "outcome" of relation "audit_logs" already exists, skipping
+NOTICE:  relation "system_logs" already exists, skipping
+NOTICE:  trigger "trg_system_logs_no_update" for relation "system_logs" does not exist, skipping
+NOTICE:  trigger "trg_system_logs_no_delete" for relation "system_logs" does not exist, skipping
+ERROR:  relation "clinical_concept" already exists
+ERROR en V130__Plantillas_Clinicas_Configurables.sql
+NOTICE:  column "business_trace_id" of relation "citas" already exists, skipping
+NOTICE:  column "business_trace_id" of relation "audit_logs" already exists, skipping
+NOTICE:  column "entity_type" of relation "audit_logs" already exists, skipping
+NOTICE:  column "entity_id" of relation "audit_logs" already exists, skipping
+NOTICE:  column "previous_value" of relation "audit_logs" already exists, skipping
+NOTICE:  column "new_value" of relation "audit_logs" already exists, skipping
+NOTICE:  column "idempotency_key" of relation "purchases" already exists, skipping
+NOTICE:  column "business_trace_id" of relation "purchases" already exists, skipping
+NOTICE:  column "receipt_status" of relation "purchases" already exists, skipping
+NOTICE:  column "receipt_attempts" of relation "purchases" already exists, skipping
+NOTICE:  column "receipt_error" of relation "purchases" already exists, skipping
+NOTICE:  column "receipt_generated_at" of relation "purchases" already exists, skipping
+NOTICE:  constraint "ck_purchases_receipt_status" of relation "purchases" does not exist, skipping
+NOTICE:  constraint "ck_purchases_receipt_attempts" of relation "purchases" does not exist, skipping
+NOTICE:  column "description" of relation "clinical_template" already exists, skipping
+NOTICE:  column "applicable_species" of relation "clinical_template" already exists, skipping
+NOTICE:  column "is_default" of relation "clinical_template" already exists, skipping
+NOTICE:  column "active" of relation "clinical_template" already exists, skipping
+NOTICE:  relation "clinical_template_service" already exists, skipping
+NOTICE:  column "modo_acceso_propietario" of relation "company" already exists, skipping
+NOTICE:  constraint "chk_company_modo_acceso_propietario" of relation "company" does not exist, skipping
+NOTICE:  column "estado_acceso_portal" of relation "apoderado" already exists, skipping
+NOTICE:  column "acceso_portal_modificado_en" of relation "apoderado" already exists, skipping
+NOTICE:  column "acceso_portal_modificado_por" of relation "apoderado" already exists, skipping
+NOTICE:  constraint "ck_apoderado_estado_acceso_portal" of relation "apoderado" does not exist, skipping
