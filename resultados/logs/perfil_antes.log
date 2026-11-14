@@ -1,0 +1,36 @@
+=== panel  http=200  112 ms
+sentencias totales: 172  tiempo SQL ms: 74
+36 x  filas=36  select hc1_0.id,hc1_0.activa,hc1_0.antecedentes_familiares,hc1_0.antecedentes_personales,hc1_0.created_at,hc1_0.enfermedades,hc1_0.grupo_san
+30 x  filas=0  select cp1_0.cita_suspende_id,cp1_0.id,cp1_0.created_at,cp1_0.created_by,cp1_0.estado,cp1_0.estado_modificado_por,cp1_0.fecha_modificacion_e
+12 x  filas=12  select upr1_0.id,c2_0.id,c2_0.activo,c2_0.address,c2_0.business_hours,c2_0.color_primario,c2_0.created_at,c2_0.created_by,c2_0.description,c
+11 x  filas=11  select u1_0.id,u1_0.activo,u1_0.apellido,u1_0.company_id,u1_0.dni,u1_0.email,u1_0.email_verified,u1_0.nombre,u1_0.username,u1_0.verification
+=== citas_del_mes  http=200  59 ms
+sentencias totales: 238  tiempo SQL ms: 12
+100 x  filas=0  select cp1_0.cita_suspende_id,cp1_0.id,cp1_0.created_at,cp1_0.created_by,cp1_0.estado,cp1_0.estado_modificado_por,cp1_0.fecha_modificacion_e
+97 x  filas=97  select hc1_0.id,hc1_0.activa,hc1_0.antecedentes_familiares,hc1_0.antecedentes_personales,hc1_0.created_at,hc1_0.enfermedades,hc1_0.grupo_san
+10 x  filas=10  select e1_0.id,e1_0.company_id,e1_0.created_at,e2_0.empleado_id,e2_1.id,e2_1.company_id,e2_1.created_at,e2_1.descripcion,e2_1.nombre,e2_1.up
+10 x  filas=10  select u1_0.id,u1_0.activo,u1_0.apellido,u1_0.company_id,u1_0.dni,u1_0.email,u1_0.email_verified,u1_0.nombre,u1_0.username,u1_0.verification
+=== lista_de_historias  http=200  41 ms
+sentencias totales: 33  tiempo SQL ms: 6
+10 x  filas=10  select m1_0.id,m1_0.activo,m1_0.apoderado_id,m1_0.color,m1_0.created_at,m1_0.especie,m1_0.estado_modificado_por,m1_0.esterilizado,m1_0.fecha
+5 x  filas=5  select a1_0.id,a1_0.acceso_portal_modificado_en,a1_0.acceso_portal_modificado_por,a1_0.company_id,a1_0.created_at,a1_0.estado,a1_0.estado_ac
+4 x  filas=4  select upr1_0.id,c2_0.id,c2_0.activo,c2_0.address,c2_0.business_hours,c2_0.color_primario,c2_0.created_at,c2_0.created_by,c2_0.description,c
+2 x  filas=2  select rvp1_0.id,rvp1_0.data_scope,rvp1_0.eliminar,rvp1_0.escribir,rvp1_0.leer,rvp1_0.modificar,rvp1_0.rol_id,rvp1_0.vista_id,v1_0.id,v1_0.a
+=== reporte_clinico  http=200  2347 ms
+sentencias totales: 2455  tiempo SQL ms: 486
+2400 x  filas=2400  select hc1_0.id,hc1_0.activa,hc1_0.antecedentes_familiares,hc1_0.antecedentes_personales,hc1_0.created_at,hc1_0.enfermedades,hc1_0.grupo_san
+10 x  filas=0  select te1_0.empleado_id,te1_1.id,te1_1.company_id,te1_1.created_at,te1_1.descripcion,te1_1.es_veterinario,te1_1.estado,te1_1.nombre,te1_1.p
+10 x  filas=0  select e1_0.empleado_id,e1_1.id,e1_1.company_id,e1_1.created_at,e1_1.descripcion,e1_1.nombre,e1_1.updated_at from empleado_especialidad e1_0
+10 x  filas=0  select s1_0.empleado_id,s1_0.id,s1_0.fecha_asignacion,s1_0.servicio_id from empleado_servicio s1_0 where s1_0.empleado_id=$1
+=== reporte_de_ventas  http=200  140 ms
+sentencias totales: 18  tiempo SQL ms: 23
+3 x  filas=3  select upr1_0.id,c2_0.id,c2_0.activo,c2_0.address,c2_0.business_hours,c2_0.color_primario,c2_0.created_at,c2_0.created_by,c2_0.description,c
+2 x  filas=8000  select p1_0.id,p1_0.business_trace_id,p1_0.cita_id,p1_0.cliente_id,p1_0.cliente_doc_walkin,p1_0.cliente_nombre_walkin,p1_0.company_id,p1_0.c
+1 x  filas=0  select vld1_0.id,vld1_0.cantidad,vld1_0.precio_unitario,vld1_0.producto_id,p1_0.id,p1_0.activo,p1_0.aplicacion_especie,p1_0.categoria_id,c1_
+1 x  filas=0  select ap1_0.id,ap1_0.activo,ap1_0.audiencia,ap1_0.campos,ap1_0.company_id,ap1_0.contenido,ap1_0.contenido_hash,ap1_0.creado_dispositivo,ap1
+=== pacientes_inactivos  http=200  40 ms
+sentencias totales: 35  tiempo SQL ms: 19
+20 x  filas=20  select hc1_0.id,hc1_0.activa,hc1_0.antecedentes_familiares,hc1_0.antecedentes_personales,hc1_0.created_at,hc1_0.enfermedades,hc1_0.grupo_san
+3 x  filas=3  select upr1_0.id,c2_0.id,c2_0.activo,c2_0.address,c2_0.business_hours,c2_0.color_primario,c2_0.created_at,c2_0.created_by,c2_0.description,c
+1 x  filas=20  select m1_0.id,m1_0.activo,m1_0.apoderado_id,a1_0.id,a1_0.acceso_portal_modificado_en,a1_0.acceso_portal_modificado_por,a1_0.company_id,a1_0
+1 x  filas=1  insert into system_logs (category,company_id,correlation_id,dispositivo,duration_ms,error_type,event,http_method,ip_address,outcome,request_

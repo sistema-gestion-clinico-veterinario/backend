@@ -1,0 +1,36 @@
+=== panel  http=200  84 ms
+sentencias totales: 63  tiempo SQL ms: 37
+10 x  filas=0  select uec1_0.id,uec1_0.company_id,uec1_0.created_at,uec1_0.direccion,uec1_0.telefono,uec1_0.updated_at,uec1_0.usuario_id from usuario_empre
+6 x  filas=6  select hc1_0.id from historia_clinica hc1_0 left join mascota m1_0 on m1_0.id=hc1_0.mascota_id where m1_0.id=$1 fetch first $2 rows only
+3 x  filas=11  select u1_0.id,u1_0.activo,u1_0.apellido,u1_0.company_id,u1_0.dni,u1_0.email,u1_0.email_verified,u1_0.nombre,u1_0.username,u1_0.verification
+2 x  filas=0  select cp1_0.cita_suspende_id,cp1_0.id,cp1_0.created_at,cp1_0.created_by,cp1_0.estado,cp1_0.estado_modificado_por,cp1_0.fecha_modificacion_e
+=== citas_del_mes  http=200  39 ms
+sentencias totales: 21  tiempo SQL ms: 12
+4 x  filas=0  select cp1_0.cita_suspende_id,cp1_0.id,cp1_0.created_at,cp1_0.created_by,cp1_0.estado,cp1_0.estado_modificado_por,cp1_0.fecha_modificacion_e
+1 x  filas=100  select c1_0.id,c1_0.business_trace_id,c2_0.id,c2_0.anamnesis,c2_0.cerrado_por,c2_0.cita_id,c2_0.clinical_template_id,c2_0.created_at,c2_0.de
+1 x  filas=10  select e1_0.id,e1_0.company_id,e1_0.created_at,e2_0.empleado_id,e2_1.id,e2_1.company_id,e2_1.created_at,e2_1.descripcion,e2_1.nombre,e2_1.up
+1 x  filas=1  SELECT $1||coalesce(sum(calls),$2)||$3||coalesce(round(sum(total_exec_time)::numeric),$4) FROM pg_stat_statements WHERE dbid=(SELECT oid FRO
+=== lista_de_historias  http=200  34 ms
+sentencias totales: 15  tiempo SQL ms: 13
+1 x  filas=1  select u1_0.id,u1_0.activo,u1_0.apellido,c1_0.id,c1_0.activo,c1_0.address,c1_0.business_hours,c1_0.color_primario,c1_0.created_at,c1_0.creat
+1 x  filas=1  select count(rt1_0.id),max(rt1_0.last_activity_at) from refresh_tokens rt1_0 where rt1_0.family_id=$1 and rt1_0.revoked_at is null
+1 x  filas=1  select c1_0.id,c1_0.activo,c1_0.address,c1_0.business_hours,c1_0.color_primario,c1_0.created_at,c1_0.created_by,c1_0.description,c1_0.email,
+1 x  filas=1  SELECT $1||coalesce(sum(calls),$2)||$3||coalesce(round(sum(total_exec_time)::numeric),$4) FROM pg_stat_statements WHERE dbid=(SELECT oid FRO
+=== reporte_clinico  http=200  1660 ms
+sentencias totales: 25  tiempo SQL ms: 411
+2 x  filas=0  select cp1_0.id,cp1_0.cita_suspende_id,cp1_0.created_at,cp1_0.created_by,cp1_0.estado,cp1_0.estado_modificado_por,cp1_0.fecha_modificacion_e
+2 x  filas=14962  select p1_0.id,p1_0.business_trace_id,c1_0.id,c1_0.business_trace_id,c1_0.creado_por_user_id,c1_0.created_at,c1_0.duracion_minutos,c1_0.elim
+2 x  filas=19194  select distinct c1_0.id,c1_0.business_trace_id,c2_0.id,c2_0.anamnesis,c2_0.cerrado_por,c2_0.cita_id,c2_0.clinical_template_id,c2_0.created_a
+1 x  filas=1101  select m1_0.nombre_completo,u1_0.nombre,u1_0.apellido,m1_0.created_at,(select max(c1_0.fecha_hora_inicio) from citas c1_0 where c1_0.mascota
+=== reporte_de_ventas  http=200  174 ms
+sentencias totales: 15  tiempo SQL ms: 6
+2 x  filas=2714  select p1_0.metodo_pago,cast(p1_0.created_at as date),count(p1_0.id),coalesce(sum(p1_0.total),$10) from purchases p1_0 where p1_0.company_id
+2 x  filas=0  select p2_0.id,p2_0.sku,p2_0.nombre,sum(vld1_0.cantidad),coalesce(sum(vld1_0.subtotal),$16) from venta_libre_detalle vld1_0 join purchases p
+1 x  filas=1  select u1_0.id,u1_0.activo,u1_0.apellido,c1_0.id,c1_0.activo,c1_0.address,c1_0.business_hours,c1_0.color_primario,c1_0.created_at,c1_0.creat
+1 x  filas=1  select count(rt1_0.id),max(rt1_0.last_activity_at) from refresh_tokens rt1_0 where rt1_0.family_id=$1 and rt1_0.revoked_at is null
+=== pacientes_inactivos  http=200  39 ms
+sentencias totales: 13  tiempo SQL ms: 19
+1 x  filas=20  select c1_0.mascota_id,max(c1_0.fecha_hora_inicio) from citas c1_0 where c1_0.mascota_id in ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,
+1 x  filas=1  select u1_0.id,u1_0.activo,u1_0.apellido,c1_0.id,c1_0.activo,c1_0.address,c1_0.business_hours,c1_0.color_primario,c1_0.created_at,c1_0.creat
+1 x  filas=1  select count(rt1_0.id),max(rt1_0.last_activity_at) from refresh_tokens rt1_0 where rt1_0.family_id=$1 and rt1_0.revoked_at is null
+1 x  filas=1  SELECT $1||coalesce(sum(calls),$2)||$3||coalesce(round(sum(total_exec_time)::numeric),$4) FROM pg_stat_statements WHERE dbid=(SELECT oid FRO

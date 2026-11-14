@@ -1,0 +1,41 @@
+fecha: 2026-11-14T19:28:39Z
+núcleos: 4
+heap de la JVM (MB): 512 (producción: 192)
+memoria total (MB): 15983
+núcleo del sistema: 7.0.0-1017-azure
+docker: 28.0.4
+k6: k6 v2.4.0 (commit/dd9395906d, go1.26.11, linux/amd64)
+antes:   5b27bbabb33224241586674bb2401e47bb98f92f (Merge pull request #432 from sistema-gestion-clinico-veterinario/develop)
+despues: cb7f6bdb1865b9ca3b5e8aedc0a4ef6bcaf17e13 (Fusionar origin/main con mejora/green-recursos para la medición del después)
+fijado de CPU: PG='--cpuset-cpus 0' backend='--cpuset-cpus 1,2' k6='taskset -c 3'
+[19:28:40] construyendo la imagen antes desde 5b27bba
+[19:29:31] construyendo la imagen despues desde cb7f6bd
+[19:29:54] levantando PostgreSQL
+[19:30:04] [antes] creando el esquema con el propio backend
+[19:30:25] [antes] sembrando datos
+[19:30:30] [antes] aplicando las migraciones de su versión
+[19:30:33] [antes] migraciones: 28 aplicadas, 2 con error (ver logs/migraciones_antes.log)
+citas=27580 consultas=20653 mascotas=3881
+indices en citas/consulta: 17
+[19:30:34] [despues] creando el esquema con el propio backend
+[19:30:55] [despues] sembrando datos
+[19:31:00] [despues] aplicando las migraciones de su versión
+[19:31:03] [despues] migraciones: 33 aplicadas, 2 con error (ver logs/migraciones_despues.log)
+citas=27580 consultas=20653 mascotas=3881
+indices en citas/consulta: 22
+[19:31:04] calentamiento (se descarta)
+[19:31:04] ronda 0 · antes
+[19:32:33] [antes] calentamiento: 0 respuestas distintas de 200 sobre 192 peticiones
+[19:32:33] ronda 0 · despues
+[19:33:57] [despues] calentamiento: 0 respuestas distintas de 200 sobre 192 peticiones
+[19:33:57] ronda 1 · antes
+[19:36:02] ronda 1 · despues
+[19:37:51] ronda 2 · despues
+[19:39:48] ronda 2 · antes
+[19:41:57] ronda 3 · antes
+[19:44:03] ronda 3 · despues
+[19:46:02] ronda 4 · despues
+[19:48:00] ronda 4 · antes
+[19:50:10] ronda 5 · antes
+[19:52:21] ronda 5 · despues
+[19:54:24] terminado

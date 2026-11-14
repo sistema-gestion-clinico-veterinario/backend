@@ -1,0 +1,28 @@
+--- usuario medicion1
+login: 200
+cookies: by refresh_token__clinica-medicion access_token__clinica-medicion 
+{"success":true,"message":"Navegación efectiva obtenida","data":[{"ventanaId":null,"ventanaCodigo":null,"ventanaNombre":"Dashboard","ventanaIcono":null,"presentacion":"FLAT","grupo":null,"orden":1000,"vistas":[{"id":1,"codigo":"VISTA_DASHB
+navegacion: 200
+70 peticiones seguidas con sesión válida (códigos):
+     60 200
+     10 429
+--- usuario medicion2
+login: 200
+cookies: by refresh_token__clinica-medicion access_token__clinica-medicion 
+{"success":false,"message":"Demasiadas solicitudes. Intente nuevamente más tarde.","data":null}
+navegacion: 429
+--- usuario medicion3
+login: 200
+cookies: by refresh_token__clinica-medicion access_token__clinica-medicion 
+{"success":true,"message":"Navegación efectiva obtenida","data":[{"ventanaId":null,"ventanaCodigo":null,"ventanaNombre":"Dashboard","ventanaIcono":null,"presentacion":"FLAT","grupo":null,"orden":1000,"vistas":[{"id":1,"codigo":"VISTA_DASHB
+navegacion: 200
+ usuario_id | usado | revocado |       last_activity_at        
+------------+-------+----------+-------------------------------
+       1976 | f     | f        | 2026-11-14 19:31:26.970313+00
+       1977 | f     | f        | 2026-11-14 19:31:28.553854+00
+       1978 | f     | f        | 2026-11-14 19:31:29.139062+00
+       1977 | f     | f        | 2026-11-14 19:31:29.933178+00
+       1976 | f     | f        | 2026-11-14 19:31:30.040623+00
+       1978 | f     | f        | 2026-11-14 19:31:30.088967+00
+(6 rows)
+

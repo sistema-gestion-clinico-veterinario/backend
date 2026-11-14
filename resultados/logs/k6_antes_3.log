@@ -1,0 +1,50 @@
+time="2026-11-14T19:42:20Z" level=info msg="login vu=1 usuario=medicion1 estado=200 galletas=[refresh_token__clinica-medicion(759),access_token__clinica-medicion(896)]" source=console
+time="2026-11-14T19:42:20Z" level=info msg="login vu=3 usuario=medicion3 estado=200 galletas=[refresh_token__clinica-medicion(759),access_token__clinica-medicion(896)]" source=console
+time="2026-11-14T19:42:20Z" level=info msg="login vu=2 usuario=medicion2 estado=200 galletas=[refresh_token__clinica-medicion(759),access_token__clinica-medicion(896)]" source=console
+{
+ "objetivo": "http://127.0.0.1:18080",
+ "vus": 3,
+ "iteraciones_por_vu": 8,
+ "recorridos": {
+  "P0_inicio_de_sesion": {
+   "mediana_ms": 1184.404276,
+   "p95_ms": 1185.0002038,
+   "promedio_ms": 1184.5252606666666,
+   "maximo_ms": 1185.066418
+  },
+  "P1_acceso_y_panel": {
+   "mediana_ms": 426.3906555,
+   "p95_ms": 705.8065552,
+   "promedio_ms": 429.6902014583333,
+   "maximo_ms": 728.236491
+  },
+  "P2_agenda_mensual": {
+   "mediana_ms": 732.7242025,
+   "p95_ms": 1089.0041161,
+   "promedio_ms": 753.0947015416665,
+   "maximo_ms": 1180.165536
+  },
+  "P3_historia_clinica": {
+   "mediana_ms": 142.09805799999998,
+   "p95_ms": 414.0373489999996,
+   "promedio_ms": 182.2893655,
+   "maximo_ms": 520.530447
+  },
+  "P4_reportes": {
+   "mediana_ms": 6206.2363685,
+   "p95_ms": 8284.17394555,
+   "promedio_ms": 6436.391114583334,
+   "maximo_ms": 8300.593411
+  }
+ },
+ "peticiones": 507,
+ "respuestas_no_200": 0,
+ "tasa_de_fallos_http": 0,
+ "latencia_ms": {
+  "mediana": 49.300804,
+  "p95": 1183.2287827999999
+ },
+ "bytes_recibidos": 14606967,
+ "duracion_total_s": 73.712600845,
+ "chequeos_fallidos": []
+}
