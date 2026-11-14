@@ -1,11 +1,19 @@
 \set ON_ERROR_STOP on
+\if :{?citas_grande}
+\else
+\set citas_grande 20000
+\endif
+\if :{?propietarios_grande}
+\else
+\set propietarios_grande 1200
+\endif
 SET synchronous_commit = off;
 SELECT setseed(0.42);
 
 CREATE TEMP TABLE tamano AS
 SELECT g AS n,
-       CASE WHEN g = 1 THEN 20000 ELSE 800 + (g * 7919) % 1200 END AS n_citas,
-       CASE WHEN g = 1 THEN 1200 ELSE 100 + (g * 37) % 100 END AS n_propietarios,
+       CASE WHEN g = 1 THEN :citas_grande ELSE 800 + (g * 7919) % 1200 END AS n_citas,
+       CASE WHEN g = 1 THEN :propietarios_grande ELSE 100 + (g * 37) % 100 END AS n_propietarios,
        CASE WHEN g = 1 THEN 10 ELSE 4 + (g % 3) END AS n_empleados
 FROM generate_series(1, 6) g;
 

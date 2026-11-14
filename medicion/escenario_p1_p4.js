@@ -34,7 +34,7 @@ let enviadas = 0;
 const cabeceras = () => {
   enviadas += 1;
   const cliente = `10.${__VU}.${Math.floor(enviadas / 40) % 250}.1`;
-  return { headers: { 'Content-Type': 'application/json', 'X-Company-Slug': SLUG, Accept: 'application/json', Origin: 'http://localhost', 'X-Forwarded-For': `${cliente}, 10.0.0.1` } };
+  return { headers: { 'Content-Type': 'application/json', 'X-Company-Slug': SLUG, Accept: 'application/json', Origin: 'http://localhost', 'X-Forwarded-For': `${cliente}${__ENV.XFF_RESTO !== undefined ? __ENV.XFF_RESTO : ', 10.0.0.1'}` } };
 };
 
 function galletas(url) {
@@ -43,7 +43,7 @@ function galletas(url) {
 }
 
 function pedir(ruta, etiqueta) {
-  const res = http.get(`${BASE}/api/v1${ruta}`, { ...cabeceras(), tags: { ruta: etiqueta } });
+  const res = http.get(`${BASE}/api/v1${ruta}`, { ...cabeceras(), timeout: __ENV.TIMEOUT || '60s', tags: { ruta: etiqueta } });
   const ok = check(res, { [`${etiqueta} 200`]: (r) => r.status === 200 });
   if (!ok) {
     respuestasNo200.add(1);
@@ -65,7 +65,7 @@ const fecha = (d) => `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDat
 
 function iniciarSesion() {
   group('P0_inicio_de_sesion', () => {
-    const res = http.post(`${BASE}/api/v1/auth/login`, JSON.stringify({ slug: SLUG, username: `${USUARIO}${__VU}`, password: CLAVE }), { ...cabeceras(), tags: { ruta: 'login' } });
+    const res = http.post(`${BASE}/api/v1/auth/login`, JSON.stringify({ slug: SLUG, username: `${USUARIO}${__VU}`, password: CLAVE }), { ...cabeceras(), timeout: __ENV.TIMEOUT || '60s', tags: { ruta: 'login' } });
     const ok = check(res, { 'login 200': (r) => r.status === 200 });
     console.log(`login vu=${__VU} usuario=${USUARIO}${__VU} estado=${res.status} galletas=[${galletas(res.url)}]`);
     if (!ok) {
