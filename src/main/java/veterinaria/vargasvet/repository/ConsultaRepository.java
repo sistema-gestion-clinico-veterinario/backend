@@ -17,9 +17,6 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long> {
            "WHERE c.id = :id AND m.apoderado.company.id = :companyId")
     Optional<Consulta> findByIdAndCompanyId(@Param("id") Long id, @Param("companyId") Integer companyId);
 
-    @Query("SELECT c.historiaClinica.id, MAX(c.fechaConsulta) FROM Consulta c WHERE c.historiaClinica.id IN :ids GROUP BY c.historiaClinica.id")
-    List<Object[]> findUltimasFechasConsulta(@Param("ids") List<Long> ids);
-
     @Query("SELECT c.tipoConsulta, COUNT(c) FROM Consulta c " +
            "JOIN c.historiaClinica h JOIN h.mascota m JOIN m.apoderado a " +
            "WHERE a.company.id = :companyId " +

@@ -98,7 +98,7 @@ public class DashboardServiceImpl implements DashboardService {
                                 .map(this::toAppointmentSummary).toList() : List.of())
                 .pets(canRead("VISTA_MASCOTAS")
                         ? mascotaService.listar(targetCompanyId, null, null, null,
-                                null, 0, 6).getContent().stream()
+                                null, null, 0, 6).getContent().stream()
                                 .map(this::toPetSummary).toList() : List.of())
                 .roles(canRead("VISTA_ROLES")
                         ? roleService.getRolesByCompany(targetCompanyId) : List.of())
@@ -196,6 +196,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DashboardStatsDTO getStats(Integer companyId) {
         Integer targetCompanyId;
         

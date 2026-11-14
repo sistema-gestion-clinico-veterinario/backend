@@ -93,7 +93,8 @@ class RecordatorioPreventivoDestinatariosIntegrationTest {
         consentimientos = new veterinaria.vargasvet.service.ConsentimientoDatosService(consentimientoRepository, avisoRepository,
                 usuarioRepository, apoderadoRepository, mock(AuditLogService.class), membershipService,
                 mock(veterinaria.vargasvet.service.AvisoPrivacidadEntregaService.class), compliance);
-        service = new RecordatorioPreventivoServiceImpl(controlRepository, recordatorioRepository, emailService,
+        service = veterinaria.vargasvet.testutil.RecordatoriosTestFixture.servicio(controlRepository, recordatorioRepository,
+                apoderadoRepository, emailService,
                 new OwnerContactPolicy(mock(UsuarioContactoService.class)),
                 new PetOwnershipService(mascotaRepository, relacionRepository, mock(CitaRepository.class), mock(AuditLogService.class)),
                 consentimientos, compliance);

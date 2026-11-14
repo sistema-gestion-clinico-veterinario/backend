@@ -60,11 +60,7 @@ public class ConsentimientoDatosService {
                 && avisoRepository.findByCompanyIdAndAudienciaAndActivoTrue(companyId, audiencia).isPresent();
     }
 
-    /**
-     * Indica si la persona todavía debe ver personalmente la versión vigente del aviso.
-     * La constancia presencial registrada por un trabajador demuestra que la clínica informó,
-     * pero no sustituye la lectura de la persona cuando ingresa a su propia cuenta.
-     */
+
     @Transactional(readOnly = true)
     public boolean requiereLecturaPersonal(Integer usuarioId, Integer companyId,
                                             AudienciaAvisoPrivacidad audiencia) {

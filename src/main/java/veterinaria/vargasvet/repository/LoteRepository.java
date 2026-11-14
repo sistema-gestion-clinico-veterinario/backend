@@ -35,7 +35,8 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
             "AND l.cantidad > 0 AND l.fechaVencimiento >= :hoy " +
             "ORDER BY l.fechaVencimiento ASC, l.fechaIngreso ASC, l.id ASC")
     List<Lote> findDisponiblesFefoForUpdate(@Param("productoId") Long productoId,
-                                             @Param("hoy") LocalDate hoy);
+                                             @Param("hoy") LocalDate hoy,
+                                             Pageable limite);
 
     @Query("SELECT l.producto.id, SUM(l.cantidad) FROM Lote l " +
             "WHERE l.producto.id IN :productoIds AND l.activo = true " +

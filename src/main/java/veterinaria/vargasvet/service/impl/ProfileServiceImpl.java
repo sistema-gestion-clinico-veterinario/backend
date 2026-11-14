@@ -1,11 +1,11 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import veterinaria.vargasvet.mapper.HorarioEmpleadoMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Apoderado;
 import veterinaria.vargasvet.domain.entity.Empleado;
-import veterinaria.vargasvet.domain.entity.HorarioEmpleado;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.dto.request.ProfileUpdateRequest;
 import veterinaria.vargasvet.dto.response.HorarioEmpleadoResponse;
@@ -120,23 +120,8 @@ public class ProfileServiceImpl implements ProfileService {
             res.setEspecialidades(empleado.getEspecialidades().stream().map(e -> e.getNombre()).collect(Collectors.toSet()));
             res.setTiposEmpleado(empleado.getTiposEmpleado().stream().map(t -> t.getNombre()).collect(Collectors.toSet()));
 
-            List<HorarioEmpleadoResponse> horarios = horarioEmpleadoRepository.findByEmpleadoId(empleado.getId())
-                    .stream()
-                    .filter(h -> Boolean.TRUE.equals(h.getActivo()))
-                    .sorted(java.util.Comparator.comparing(HorarioEmpleado::getFecha,
-                            java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder()))
-                            .thenComparing(HorarioEmpleado::getHoraInicio))
-                    .map(h -> {
-                        HorarioEmpleadoResponse hr = new HorarioEmpleadoResponse();
-                        hr.setId(h.getId());
-                        hr.setFecha(h.getFecha());
-                        hr.setDiaSemana(h.getDiaSemana().name());
-                        hr.setHoraInicio(h.getHoraInicio());
-                        hr.setHoraFin(h.getHoraFin());
-                        hr.setActivo(h.getActivo());
-                        return hr;
-                    })
-                    .collect(Collectors.toList());
+            List<HorarioEmpleadoResponse> horarios = HorarioEmpleadoMapper.aRespuestas(
+                    horarioEmpleadoRepository.findHorarioActivoDelEmpleado(empleado.getId()));
             res.setHorarios(horarios);
         } else if (apoderado != null) {
             res.setEmpleado(false);

@@ -22,15 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Una mascota está operable mientras alguna persona ACTIVA de su empresa pueda autorizar su atención
- * (la propietaria principal o una copropietaria vigente). Cuando una persona se suspende, se da de
- * baja o se reactiva, las mascotas se pausan o restauran según eso, sin tocar las que el personal
- * dio de baja por otra causa (por ejemplo, un fallecimiento).
- *
- * <p>Todo se resuelve dentro de la empresa de la persona: una misma persona puede ser cliente de
- * varias clínicas, y lo que ocurra en una nunca afecta a las mascotas de otra.
- */
+
 @Service
 @RequiredArgsConstructor
 public class PetOwnershipService {
@@ -43,8 +35,7 @@ public class PetOwnershipService {
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
 
-    /** Bloquea a las personas que autorizan la atención de la mascota y vuelve a leer su estado y el de la mascota:
-     * agendar y dar de baja a su dueño no pueden cruzarse. Se bloquean en orden de id para no cruzarse entre sí. */
+
     public void lockAuthorizers(Mascota mascota) {
         Apoderado principal = mascota.getApoderado();
         if (principal == null) return;
@@ -62,8 +53,7 @@ public class PetOwnershipService {
         entityManager.refresh(mascota);
     }
 
-    /** Bloquea la mascota y vuelve a leerla: dos operaciones sobre la misma mascota (restaurarla al reactivar a su dueño,
-     * registrar su fallecimiento) se atienden de una en una y la segunda ve el resultado de la primera. */
+
     public void lockPet(Mascota mascota) {
         entityManager.lock(mascota, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
         entityManager.refresh(mascota);
@@ -71,8 +61,7 @@ public class PetOwnershipService {
 
     public enum Permiso { INFORMACION, AUTORIZAR, PAGOS }
 
-    /** ¿La persona tiene alguno de estos permisos sobre la mascota ahora? El propietario principal siempre los tiene;
-     * las demás personas, solo por un vínculo vigente de su misma empresa que lo incluya. */
+
     public boolean puede(Apoderado persona, Mascota mascota, Permiso... permisos) {
         if (persona == null || mascota == null || mascota.getApoderado() == null
                 || !Boolean.TRUE.equals(persona.getEstado())) {
@@ -91,7 +80,7 @@ public class PetOwnershipService {
         }
     }
 
-    /** Mascotas sobre las que la persona tiene alguno de estos permisos, ordenadas por nombre. */
+
     public List<Mascota> mascotasConAlgunPermiso(Apoderado persona, Permiso... permisos) {
         Integer companyId = companyIdOf(persona);
         if (companyId == null || !Boolean.TRUE.equals(persona.getEstado())) return List.of();
@@ -112,8 +101,7 @@ public class PetOwnershipService {
         return companyId != null && relacionRepository.existsVigenteDeLaPersona(persona.getId(), companyId, AppClock.today());
     }
 
-    /** A quién se le avisa de lo que pasa con la mascota: su propietario principal y cada persona con un vínculo
-     * vigente que incluya recibir información, siempre que sigan activas en la empresa. El principal va primero. */
+
     public List<Apoderado> destinatariosDeAvisos(Mascota mascota) {
         return destinatariosDeAvisos(List.of(mascota)).getOrDefault(mascota.getId(), List.of());
     }
@@ -183,11 +171,6 @@ public class PetOwnershipService {
         }
     }
 
-    /**
-     * Vuelve a evaluar una mascota después de cambiar quién puede autorizarla: la pausa si ya no tiene a nadie
-     * activo (salvo que tenga citas vigentes) o la restaura si el sistema la había pausado y ahora sí lo tiene.
-     * Devuelve un aviso para el usuario o null si no hay nada que informar.
-     */
     public String reevaluate(Mascota pet) {
         Apoderado principal = pet.getApoderado();
         Integer companyId = companyIdOf(principal);
@@ -217,7 +200,6 @@ public class PetOwnershipService {
                 + " quedó inactiva porque ya no tiene una persona activa que pueda autorizar su atención.";
     }
 
-    /** Revisión periódica: pausa las mascotas activas cuyo propietario está inactivo y que no tienen a nadie más que las autorice. */
     @org.springframework.transaction.annotation.Transactional
     public long reviewInactiveOwners(long afterId, int limit) {
         java.util.List<Mascota> batch = mascotaRepository.findActiveWithInactiveOwner(
@@ -230,10 +212,6 @@ public class PetOwnershipService {
         return batch.size() < limit ? -1 : last;
     }
 
-    /**
-     * Ajusta las mascotas de la persona después de cambiar su estado. {@code tipoSiSePausa} es el tipo
-     * con el que se marcan las que se pausen; es null cuando la persona se reactiva.
-     */
     public ApoderadoEstadoResponse syncPets(Apoderado persona, TipoInactividad tipoSiSePausa) {
         ApoderadoEstadoResponse result = new ApoderadoEstadoResponse();
         Integer companyId = companyIdOf(persona);

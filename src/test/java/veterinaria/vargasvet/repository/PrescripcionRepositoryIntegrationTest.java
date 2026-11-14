@@ -147,10 +147,10 @@ class PrescripcionRepositoryIntegrationTest {
         prescripcion.setCreatedAt(LocalDateTime.now());
         prescripcionRepository.save(prescripcion);
 
-        Page<Prescripcion> resultado = prescripcionRepository.buscar(
-                false, company.getId(), "%amoxicilina%",
+        Page<PrescripcionRepository.RecetaDelListado> resultado = prescripcionRepository.buscarDeLaEmpresa(
+                company.getId(), "%amoxicilina%",
                 null, null, null, null, null,
-                LocalDate.of(1, 1, 1), LocalDate.of(9999, 12, 31),
+                LocalDate.of(1, 1, 1).atStartOfDay(), LocalDate.of(9999, 12, 31).plusDays(1).atStartOfDay(),
                 PageRequest.of(0, 10));
 
         assertThat(resultado.getTotalElements()).isEqualTo(1);

@@ -83,6 +83,9 @@ public class JWTFilter extends GenericFilterBean {
                     throw new org.springframework.security.authentication.CredentialsExpiredException(
                             "Los permisos de la sesión cambiaron; actualice la sesión");
                 }
+                httpRequest.setAttribute(RolePermissionEvaluator.ASIGNACION_ACTIVA_ATTR,
+                        new RolePermissionEvaluator.AsignacionDeSolicitud(
+                                principal.getId(), principal.getActiveRoleId(), principal.getCompanyId(), activeAssignment));
                 boolean esSuperAdmin = activeAssignment.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN;
 
                 // Por id, no por email: el correo ya no identifica de forma unica una

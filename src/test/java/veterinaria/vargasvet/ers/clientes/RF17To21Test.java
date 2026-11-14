@@ -64,6 +64,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -324,14 +325,14 @@ class RF17To21Test {
         MascotaResponse mapped = new MascotaResponse();
         mapped.setId(50L);
         mapped.setNombreCompleto("Luna");
-        when(mascotaRepository.buscar(eq(7), eq("Luna"), eq(EspecieMascota.PERRO), eq("Ana"), eq(true), any()))
+        when(mascotaRepository.buscar(eq(7), eq("Luna"), eq(EspecieMascota.PERRO), eq("Ana"), eq(true), isNull(), any()))
                 .thenReturn(new PageImpl<>(List.of(luna)));
         when(mascotaMapper.toResponse(luna)).thenReturn(mapped);
 
-        var page = mascotaService().listar(null, " Luna ", EspecieMascota.PERRO, " Ana ", true, 0, 10);
+        var page = mascotaService().listar(null, " Luna ", EspecieMascota.PERRO, " Ana ", true, null, 0, 10);
 
         assertThat(page.getContent()).extracting(MascotaResponse::getId).containsExactly(50L);
-        verify(mascotaRepository).buscar(eq(7), eq("Luna"), eq(EspecieMascota.PERRO), eq("Ana"), eq(true), any());
+        verify(mascotaRepository).buscar(eq(7), eq("Luna"), eq(EspecieMascota.PERRO), eq("Ana"), eq(true), isNull(), any());
     }
 
     @Test

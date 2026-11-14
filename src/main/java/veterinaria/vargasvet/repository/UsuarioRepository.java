@@ -1,10 +1,12 @@
 package veterinaria.vargasvet.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.Usuario;
+import veterinaria.vargasvet.domain.enums.RoleScope;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +16,18 @@ import org.springframework.data.jpa.repository.Lock;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     Optional<Usuario> findByEmail(String email);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            UPDATE Usuario u
+            SET u.verificationToken = NULL, u.verificationTokenExpiresAt = NULL
+            WHERE u.id IN (SELECT a.user.id FROM Apoderado a WHERE a.company.id = :companyId)
+              AND NOT EXISTS (SELECT 1 FROM UsuarioPorRol upr JOIN upr.rol r
+                              WHERE upr.usuario.id = u.id AND upr.company.id = :companyId
+                                AND r.scope = :scope AND r.activo = true)
+            """)
+    int limpiarTokenDeVerificacionDeApoderadosSinRol(@Param("companyId") Integer companyId,
+                                                     @Param("scope") RoleScope scope);
 
     @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.company WHERE u.email = :email")
     Optional<Usuario> findByEmailWithCompany(@Param("email") String email);

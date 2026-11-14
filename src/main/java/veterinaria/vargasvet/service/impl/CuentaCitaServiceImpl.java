@@ -49,11 +49,21 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
     @Transactional
     public Page<CuentaCitaResponse> listarPendientes(Integer companyId, int page, int size) {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
-        return citaRepository.findCuentasPendientes(resolvedCompanyId, PageRequest.of(page, size))
-                .map(cita -> {
-                    asegurarNumeroCita(cita);
-                    return map(cita, detalleRepository.findByCitaIdOrderByCreatedAtAscIdAsc(cita.getId()));
-                });
+        Page<Cita> pendientes = citaRepository.findCuentasPendientes(resolvedCompanyId, PageRequest.of(page, size));
+        Map<Long, List<DetalleCuentaCita>> detallesPorCita = detallesDeLasCitas(pendientes.getContent());
+        return pendientes.map(cita -> {
+            asegurarNumeroCita(cita);
+            return map(cita, detallesPorCita.getOrDefault(cita.getId(), List.of()));
+        });
+    }
+
+    private Map<Long, List<DetalleCuentaCita>> detallesDeLasCitas(List<Cita> citas) {
+        if (citas.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> citaIds = citas.stream().map(Cita::getId).toList();
+        return detalleRepository.findDeLasCitas(citaIds).stream()
+                .collect(Collectors.groupingBy(detalle -> detalle.getCita().getId()));
     }
 
     @Override

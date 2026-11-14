@@ -19,6 +19,14 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
     Optional<PasswordResetToken> findByTokenForUpdate(@Param("tokenHash") String tokenHash);
     void deleteByUsuario(Usuario usuario);
     void deleteByUsuarioAndCompany(Usuario usuario, Company company);
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            DELETE FROM PasswordResetToken token
+            WHERE token.company.id = :companyId
+              AND token.usuario.id IN (SELECT a.user.id FROM Apoderado a WHERE a.company.id = :companyId)
+            """)
+    int deleteDeLosApoderadosDeLaEmpresa(@Param("companyId") Integer companyId);
+
     @Modifying
     @Query("DELETE FROM PasswordResetToken token WHERE token.usuario = :usuario AND token.company IS NULL")
     void deleteByUsuarioAndCompanyIsNull(@Param("usuario") Usuario usuario);

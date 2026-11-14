@@ -4,222 +4,84 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import veterinaria.vargasvet.domain.entity.ControlPreventivo;
-import veterinaria.vargasvet.domain.entity.RecordatorioPreventivo;
-import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
-import veterinaria.vargasvet.domain.enums.EstadoRecordatorio;
-import veterinaria.vargasvet.domain.enums.TipoAvisoRecordatorio;
-import veterinaria.vargasvet.domain.enums.TipoControlPreventivo;
 import veterinaria.vargasvet.dto.Mail;
-import veterinaria.vargasvet.repository.ControlPreventivoRepository;
-import veterinaria.vargasvet.repository.RecordatorioPreventivoRepository;
 import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.service.RecordatorioPreventivoService;
+import veterinaria.vargasvet.service.recordatorios.AvisosParaPropietario;
+import veterinaria.vargasvet.service.recordatorios.ComponedorDelCorreoPreventivo;
+import veterinaria.vargasvet.service.recordatorios.PlanificadorDeRecordatoriosPreventivos;
+import veterinaria.vargasvet.service.recordatorios.RegistroDeRecordatoriosEnviados;
 import veterinaria.vargasvet.util.AppClock;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivoService {
-    private final ControlPreventivoRepository controlRepository;
-    private final RecordatorioPreventivoRepository recordatorioRepository;
+
+    private static final String PLANTILLA = "email/recordatorio-preventivo-template";
+
+    private final PlanificadorDeRecordatoriosPreventivos planificador;
+    private final ComponedorDelCorreoPreventivo componedor;
+    private final RegistroDeRecordatoriosEnviados registro;
     private final EmailService emailService;
-    private final veterinaria.vargasvet.service.OwnerContactPolicy ownerContactPolicy;
-    private final veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
-    private final veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
-    private final veterinaria.vargasvet.service.CompanyComplianceService complianceService;
+
+    private enum Resultado { ENVIADO, NO_ENVIADO, ENVIADO_SIN_REGISTRO }
 
     @Override
-    @Transactional
     @Scheduled(cron = "${app.reminders.cron:0 0 8 * * *}", zone = "${app.reminders.zone:America/Lima}")
     public void procesarRecordatorios() {
         LocalDate hoy = AppClock.today();
-        List<ControlPreventivo> candidatos = controlRepository.findReminderCandidates(
-                hoy.plusDays(7), EnumSet.of(EstadoControlPreventivo.PROGRAMADO,
-                        EstadoControlPreventivo.PROXIMO, EstadoControlPreventivo.PENDIENTE,
-                        EstadoControlPreventivo.ATRASADO));
+        List<AvisosParaPropietario> pendientes = planificador.planificar(hoy);
 
-        Set<ReminderKey> existentes = candidatos.isEmpty() ? Set.of() : recordatorioRepository
-                .findExistingKeys(candidatos.stream().map(ControlPreventivo::getId).toList())
-                .stream()
-                .map(item -> new ReminderKey(item.getControlId(), item.getTipoAviso(), item.getFechaProgramada(),
-                        item.getApoderadoId()))
-                .collect(java.util.stream.Collectors.toSet());
-
-        Map<Long, List<veterinaria.vargasvet.domain.entity.Apoderado>> destinatariosPorMascota =
-                petOwnershipService.destinatariosDeAvisos(candidatos.stream()
-                        .map(ControlPreventivo::getMascota).distinct().toList());
-        Set<ConsentKey> autorizaronRecibirlos = new HashSet<>();
-        destinatariosPorMascota.values().stream().flatMap(List::stream)
-                .filter(apoderado -> apoderado.getCompany() != null && apoderado.getUser() != null)
-                .collect(java.util.stream.Collectors.groupingBy(
-                        apoderado -> apoderado.getCompany().getId(),
-                        java.util.stream.Collectors.mapping(
-                                apoderado -> apoderado.getUser().getId(),
-                                java.util.stream.Collectors.toSet())))
-                .forEach((companyId, usuarioIds) -> consentimientoDatosService
-                        .usuariosQueAutorizaron(
-                                complianceService.gestionadoPorSoftvet(companyId,
-                                        veterinaria.vargasvet.domain.enums.ControlCumplimientoClinica.RECORDATORIOS_CORREO)
-                                        ? usuarioIds : java.util.Set.of(), companyId,
-                                veterinaria.vargasvet.domain.enums.FinalidadDatos.RECORDATORIOS_PREVENTIVOS)
-                        .forEach(usuarioId -> autorizaronRecibirlos.add(new ConsentKey(usuarioId, companyId))));
-
-        Map<Long, List<AvisoPendiente>> porApoderado = new LinkedHashMap<>();
-        Map<Long, veterinaria.vargasvet.domain.entity.Apoderado> personas = new HashMap<>();
-        for (ControlPreventivo control : candidatos) {
-            TipoAvisoRecordatorio tipoAviso = determinarAviso(control, hoy);
-            actualizarEstado(control, hoy);
-            if (tipoAviso == null) continue;
-            for (var destinatario : destinatariosPorMascota.getOrDefault(control.getMascota().getId(), List.of())) {
-                if (destinatario.getUser() == null || !destinatario.getUser().isActivo()
-                        || destinatario.getCompany() == null
-                        || !autorizaronRecibirlos.contains(new ConsentKey(
-                                destinatario.getUser().getId(), destinatario.getCompany().getId()))
-                        || existentes.contains(new ReminderKey(control.getId(), tipoAviso,
-                                control.getFechaRecomendada(), destinatario.getId()))) {
-                    continue;
+        int enviados = 0;
+        int noEnviados = 0;
+        int sinRegistro = 0;
+        for (AvisosParaPropietario propietario : pendientes) {
+            switch (procesar(propietario, hoy)) {
+                case ENVIADO -> enviados++;
+                case NO_ENVIADO -> noEnviados++;
+                case ENVIADO_SIN_REGISTRO -> {
+                    enviados++;
+                    sinRegistro++;
                 }
-                personas.put(destinatario.getId(), destinatario);
-                porApoderado.computeIfAbsent(destinatario.getId(), ignored -> new ArrayList<>())
-                        .add(new AvisoPendiente(control, tipoAviso));
             }
         }
-
-        if (porApoderado.isEmpty()) return;
-        Set<Long> avisadosRecientemente = new HashSet<>(recordatorioRepository
-                .findApoderadoIdsWithRecentReminder(porApoderado.keySet(), AppClock.now().minusDays(7)));
-
-        porApoderado.forEach((apoderadoId, avisos) -> {
-            if (!avisadosRecientemente.contains(apoderadoId)) {
-                enviarConsolidado(personas.get(apoderadoId), avisos, hoy);
-            }
-        });
+        if (!pendientes.isEmpty()) {
+            log.info("Recordatorios preventivos: {} propietarios, {} enviados, {} no enviados (se reintentan en la próxima "
+                    + "ejecución), {} enviados sin registrar.", pendientes.size(), enviados, noEnviados, sinRegistro);
+        }
     }
 
-    private void enviarConsolidado(veterinaria.vargasvet.domain.entity.Apoderado destinatario,
-                                   List<AvisoPendiente> avisos, LocalDate hoy) {
-        if (avisos.isEmpty()) return;
-        avisos.sort(Comparator.comparing((AvisoPendiente a) -> prioridad(a.tipoAviso()))
-                .thenComparing(a -> a.control().getFechaRecomendada()));
-        var usuario = destinatario.getUser();
-        if (!ownerContactPolicy.puedeRecibirCorreo(usuario)) {
-            log.debug("Recordatorio preventivo omitido: el correo del propietario {} no está verificado.", usuario.getId());
-            return;
-        }
-        var company = usuario.getCompany();
-
-        List<Map<String, Object>> controles = avisos.stream().map(aviso -> {
-            ControlPreventivo c = aviso.control();
-            LocalDate fecha = c.getFechaRecomendada();
-            long dias = java.time.temporal.ChronoUnit.DAYS.between(hoy, fecha);
-            String resumenDias;
-            if (dias < 0) resumenDias = "Hace " + Math.abs(dias) + " día(s)";
-            else if (dias == 0) resumenDias = "Es hoy";
-            else resumenDias = "En " + dias + " día(s)";
-
-            Map<String, Object> item = new HashMap<>();
-            item.put("mascota", c.getMascota().getNombreCompleto());
-            item.put("control", c.getNombreControl());
-            item.put("tipo", c.getTipo().name());
-            item.put("tipoDisplay", c.getTipo() == TipoControlPreventivo.VACUNACION
-                    ? "Vacunación" : "Desparasitación");
-            item.put("fecha", fecha);
-            item.put("estado", aviso.tipoAviso().name());
-            item.put("resumenDias", resumenDias);
-            item.put("esAtrasado", aviso.tipoAviso() == TipoAvisoRecordatorio.ATRASADO);
-            item.put("esPendiente", aviso.tipoAviso() == TipoAvisoRecordatorio.PENDIENTE);
-            item.put("esProximo", aviso.tipoAviso() == TipoAvisoRecordatorio.PROXIMO);
-            return item;
-        }).toList();
-
-        Map<String, Object> model = new HashMap<>();
-        model.put("nombre", (usuario.getNombre() + " " + usuario.getApellido()).trim());
-        model.put("controles", controles);
-        model.put("totalControles", controles.size());
-        model.put("fechaProceso", hoy);
-        String companyName = company == null ? "su veterinaria" : company.getName();
-        model.put("companyName", companyName);
-        if (company != null) {
-            model.put("companyLogo", company.getLogoUrl());
-            model.put("companyEmail", company.getEmail());
-            model.put("companyPhone", company.getPhone());
-            model.put("companyAddress", company.getAddress());
-        }
-        Mail mail = emailService.createMail(usuario.getEmail(), "Controles preventivos de sus mascotas - " + companyName, model);
-
-        // Se espera el resultado real del envío (el job ya corre en un hilo de fondo, no bloquea
-        // ninguna petición web) para no marcar como "enviado" un recordatorio que en realidad falló.
-        // Si falla, deliberadamente NO se guarda ningún registro: así, mañana el control vuelve a
-        // aparecer como candidato y se reintenta con normalidad — sin necesidad de un estado FALLIDO
-        // que requeriría además ajustar la lógica de deduplicación (findExistingKeys /
-        // findApoderadoIdsWithRecentReminder) para no bloquear el reintento.
-        boolean enviado;
+    private Resultado procesar(AvisosParaPropietario propietario, LocalDate hoy) {
         try {
-            enviado = emailService.sendEmail(mail, "email/recordatorio-preventivo-template").join();
-        } catch (Exception e) {
-            log.error("Error inesperado al enviar recordatorio preventivo a {}: {}", usuario.getEmail(), e.getMessage());
-            enviado = false;
+            if (!enviar(componedor.componer(propietario, hoy))) {
+                log.warn("No se pudo enviar el recordatorio preventivo al propietario {}; se reintentará en la próxima "
+                        + "ejecución programada.", propietario.apoderadoId());
+                return Resultado.NO_ENVIADO;
+            }
+        } catch (RuntimeException e) {
+            log.error("No se pudo preparar el recordatorio preventivo del propietario {}.", propietario.apoderadoId(), e);
+            return Resultado.NO_ENVIADO;
         }
-
-        if (!enviado) {
-            log.warn("No se pudo enviar el recordatorio preventivo a {}; se reintentará en la próxima ejecución programada.",
-                    usuario.getEmail());
-            return;
-        }
-
-        LocalDateTime enviadoAt = AppClock.now();
-        for (AvisoPendiente aviso : avisos) {
-            RecordatorioPreventivo registro = new RecordatorioPreventivo();
-            registro.setApoderado(destinatario);
-            registro.setControlPreventivo(aviso.control());
-            registro.setTipoAviso(aviso.tipoAviso());
-            registro.setFechaProgramada(aviso.control().getFechaRecomendada());
-            registro.setFechaEnvio(enviadoAt);
-            registro.setEstado(EstadoRecordatorio.ENVIADO);
-            registro.setCreatedBy("SYSTEM");
-            registro.setUpdatedBy("SYSTEM");
-            recordatorioRepository.save(registro);
-        }
-        log.info("Recordatorio preventivo consolidado enviado a {} con {} controles", usuario.getEmail(), avisos.size());
-    }
-
-    private TipoAvisoRecordatorio determinarAviso(ControlPreventivo control, LocalDate hoy) {
-        LocalDate fecha = control.getFechaRecomendada();
-        if (hoy.isAfter(fecha)) return TipoAvisoRecordatorio.ATRASADO;
-        if (hoy.isEqual(fecha)) return TipoAvisoRecordatorio.PENDIENTE;
-        if (!hoy.isBefore(fecha.minusDays(7))) return TipoAvisoRecordatorio.PROXIMO;
-        return null;
-    }
-
-    private void actualizarEstado(ControlPreventivo control, LocalDate hoy) {
-        EstadoControlPreventivo nuevo = control.getFechaRecomendada().isBefore(hoy)
-                ? EstadoControlPreventivo.ATRASADO
-                : control.getFechaRecomendada().isEqual(hoy) ? EstadoControlPreventivo.PENDIENTE
-                : !control.getFechaRecomendada().isAfter(hoy.plusDays(7))
-                ? EstadoControlPreventivo.PROXIMO : EstadoControlPreventivo.PROGRAMADO;
-        if (control.getEstado() != nuevo) {
-            control.setEstado(nuevo);
-            control.setEstadoModificadoPor("SYSTEM");
-            control.setFechaModificacionEstado(AppClock.now());
-            control.setUpdatedBy("SYSTEM");
+        try {
+            registro.registrar(propietario);
+            return Resultado.ENVIADO;
+        } catch (RuntimeException e) {
+            log.error("El recordatorio preventivo del propietario {} se envió pero no se pudo registrar; podría repetirse "
+                    + "en la próxima ejecución.", propietario.apoderadoId(), e);
+            return Resultado.ENVIADO_SIN_REGISTRO;
         }
     }
 
-    private int prioridad(TipoAvisoRecordatorio tipo) {
-        return switch (tipo) {
-            case ATRASADO -> 0;
-            case PENDIENTE -> 1;
-            case PROXIMO -> 2;
-        };
+    private boolean enviar(Mail correo) {
+        try {
+            return emailService.sendEmail(correo, PLANTILLA).join();
+        } catch (RuntimeException e) {
+            log.error("Error inesperado al enviar un recordatorio preventivo.", e);
+            return false;
+        }
     }
-
-    private record AvisoPendiente(ControlPreventivo control, TipoAvisoRecordatorio tipoAviso) {}
-    private record ReminderKey(Long controlId, TipoAvisoRecordatorio tipoAviso, LocalDate fechaProgramada, Long apoderadoId) {}
-    private record ConsentKey(Integer usuarioId, Integer companyId) {}
 }

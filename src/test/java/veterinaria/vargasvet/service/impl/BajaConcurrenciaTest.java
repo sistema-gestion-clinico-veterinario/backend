@@ -1,6 +1,9 @@
 package veterinaria.vargasvet.service.impl;
 
 import org.junit.jupiter.api.AfterEach;
+import veterinaria.vargasvet.service.horarios.AsignacionMasivaDeHorarios;
+import veterinaria.vargasvet.service.horarios.GuardadoDeHorariosDelEmpleado;
+import veterinaria.vargasvet.service.horarios.InformeDeHorarios;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -174,7 +177,10 @@ class BajaConcurrenciaTest {
         EmpleadoServiceImpl service = new EmpleadoServiceImpl(
                 usuarioRepository, empleadoRepository, especialidadRepository, tipoEmpleadoRepository,
                 companyRepository, horarioEmpleadoRepository, companyOperatingHourRepository, companyExceptionRepository,
-                citaRepository, mock(PasswordEncoder.class), new UserMapper(new ModelMapper()), mock(EmailService.class),
+                citaRepository,
+                new AsignacionMasivaDeHorarios(horarioEmpleadoRepository, companyOperatingHourRepository, companyExceptionRepository),
+                new GuardadoDeHorariosDelEmpleado(horarioEmpleadoRepository, companyOperatingHourRepository, companyExceptionRepository),
+                new InformeDeHorarios(empleadoRepository, horarioEmpleadoRepository), mock(PasswordEncoder.class), new UserMapper(new ModelMapper()), mock(EmailService.class),
                 mock(BusinessValidator.class), mock(AuditLogService.class), mock(veterinaria.vargasvet.service.RoleAssignmentService.class), sessions, membership,
                 credencialRepository, mock(UsuarioContactoService.class),
                 new AdministratorProtection(usuarioPorRolRepository, membership, companyRepository),

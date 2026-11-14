@@ -89,6 +89,14 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
     @Query("SELECT COUNT(e) FROM Empleado e WHERE e.company.id = :companyId")
     long countByCompanyId(@Param("companyId") Integer companyId);
 
+    @Query("SELECT new veterinaria.vargasvet.repository.EmpleadoDelInforme(" +
+           "e.id, CONCAT(u.nombre, ' ', u.apellido), COALESCE(MIN(t.nombre), 'Personal')) " +
+           "FROM Empleado e JOIN e.user u LEFT JOIN e.tiposEmpleado t " +
+           "WHERE e.company.id = :companyId " +
+           "GROUP BY e.id, u.nombre, u.apellido " +
+           "ORDER BY e.id ASC")
+    java.util.List<EmpleadoDelInforme> findEmpleadosDelInformeDeHorarios(@Param("companyId") Integer companyId);
+
     @Query("SELECT e FROM Empleado e WHERE e.company.id = :companyId")
     java.util.List<Empleado> findAllByCompanyId(@Param("companyId") Integer companyId);
 

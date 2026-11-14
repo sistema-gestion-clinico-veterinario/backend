@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 import veterinaria.vargasvet.domain.entity.HorarioEmpleado;
+import veterinaria.vargasvet.domain.enums.DiaSemana;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
@@ -11,7 +12,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Repository
-public interface HorarioEmpleadoRepository extends JpaRepository<HorarioEmpleado, Long> {
+public interface HorarioEmpleadoRepository extends JpaRepository<HorarioEmpleado, Long>, HorarioEmpleadoLoteRepository {
     List<HorarioEmpleado> findByEmpleadoId(Long empleadoId);
     
     List<HorarioEmpleado> findByEmpleadoIdAndFechaBetween(Long empleadoId, LocalDate start, LocalDate end);
@@ -23,6 +24,32 @@ public interface HorarioEmpleadoRepository extends JpaRepository<HorarioEmpleado
             @Param("companyId") Integer companyId,
             @Param("fecha") LocalDate fecha);
     
+    String SELECCION_DE_HORARIO = "SELECT new veterinaria.vargasvet.repository.HorarioDeEmpleado(" +
+           "h.id, h.empleado.id, h.fecha, h.diaSemana, h.horaInicio, h.horaFin, h.activo) " +
+           "FROM HorarioEmpleado h ";
+
+    String ORDEN_CRONOLOGICO = "h.fecha ASC NULLS FIRST, h.horaInicio ASC";
+
+    @Query(SELECCION_DE_HORARIO + "WHERE h.empleado.id = :empleadoId ORDER BY " + ORDEN_CRONOLOGICO)
+    List<HorarioDeEmpleado> findHorarioDelEmpleado(@Param("empleadoId") Long empleadoId);
+
+    @Query(SELECCION_DE_HORARIO + "WHERE h.empleado.id = :empleadoId AND h.activo = true ORDER BY " + ORDEN_CRONOLOGICO)
+    List<HorarioDeEmpleado> findHorarioActivoDelEmpleado(@Param("empleadoId") Long empleadoId);
+
+    @Query(SELECCION_DE_HORARIO + "WHERE h.empleado.company.id = :companyId ORDER BY h.empleado.id ASC, " + ORDEN_CRONOLOGICO)
+    List<HorarioDeEmpleado> findHorariosDeLaEmpresa(@Param("companyId") Integer companyId);
+
+    interface TurnoOcupado {
+        LocalDate getFecha();
+        LocalTime getHoraInicio();
+        LocalTime getHoraFin();
+    }
+
+    @Query("SELECT h.fecha AS fecha, h.horaInicio AS horaInicio, h.horaFin AS horaFin FROM HorarioEmpleado h " +
+           "WHERE h.empleado.id = :empleadoId AND h.fecha BETWEEN :start AND :end")
+    List<TurnoOcupado> findTurnosOcupados(@Param("empleadoId") Long empleadoId,
+                                          @Param("start") LocalDate start, @Param("end") LocalDate end);
+
     @Query("SELECT h FROM HorarioEmpleado h WHERE h.empleado.id = :empleadoId AND h.fecha = :fecha")
     List<HorarioEmpleado> findByEmpleadoIdAndFecha(@Param("empleadoId") Long empleadoId, @Param("fecha") LocalDate fecha);
     @Modifying(clearAutomatically = true, flushAutomatically = true)

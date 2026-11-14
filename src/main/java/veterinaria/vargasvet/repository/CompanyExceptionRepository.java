@@ -15,6 +15,8 @@ public interface CompanyExceptionRepository extends JpaRepository<CompanyExcepti
     List<CompanyException> findByCompanyId(Integer companyId);
     Optional<CompanyException> findByCompanyIdAndDate(Integer companyId, LocalDate date);
 
+    List<CompanyException> findByCompanyIdAndDateBetween(Integer companyId, LocalDate desde, LocalDate hasta);
+
     @Query("SELECT ce FROM CompanyException ce WHERE ce.company.id = :companyId AND ce.date = CAST(:date AS date)")
     Optional<CompanyException> findByCompanyIdAndDateString(@Param("companyId") Integer companyId, @Param("date") String date);
 }

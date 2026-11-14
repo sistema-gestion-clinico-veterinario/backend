@@ -115,8 +115,8 @@ class RecordatorioPreventivoPersistenceIntegrationTest {
                 org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class);
         when(consentimiento.usuariosQueAutorizaron(org.mockito.ArgumentMatchers.anyCollection(), any(Integer.class), any()))
                 .thenAnswer(invocation -> java.util.Set.copyOf(invocation.getArgument(0)));
-        RecordatorioPreventivoServiceImpl service = new RecordatorioPreventivoServiceImpl(
-                controlRepository, recordatorioRepository, emailService,
+        RecordatorioPreventivoServiceImpl service = veterinaria.vargasvet.testutil.RecordatoriosTestFixture.servicio(
+                controlRepository, recordatorioRepository, apoderadoRepository, emailService,
                 new veterinaria.vargasvet.service.OwnerContactPolicy(mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class)),
                 new veterinaria.vargasvet.service.PetOwnershipService(mascotaRepository, relacionRepository,
                         mock(veterinaria.vargasvet.repository.CitaRepository.class),

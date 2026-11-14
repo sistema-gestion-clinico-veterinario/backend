@@ -89,7 +89,6 @@ public class EmpleadoController {
     @PreAuthorize("@accesoValidator.can('VISTA_HORARIOS', 'ESCRIBIR')")
     public ResponseEntity<ApiResponse<Void>> assignBulkSchedule(@PathVariable Long id, @Valid @RequestBody BulkScheduleRequest request) {
         empleadoService.assignBulkSchedule(id, request);
-        auditLogService.log("ASIGNAR_HORARIO_MASIVO", "Horario", "Asignó horario masivo al empleado con ID: " + id + " desde " + request.getStartDate() + " hasta " + request.getEndDate());
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario masivo asignado correctamente", null));
     }
 
@@ -103,7 +102,6 @@ public class EmpleadoController {
         java.time.LocalDate start = java.time.LocalDate.parse(startDate);
         java.time.LocalDate end = java.time.LocalDate.parse(endDate);
         empleadoService.deleteBulkSchedule(id, start, end, dias);
-        auditLogService.log("ELIMINAR_HORARIO_MASIVO", "Horario", "Eliminó horario masivo del empleado con ID: " + id + " desde " + startDate + " hasta " + endDate);
         return ResponseEntity.ok(new ApiResponse<>(true, "Horarios eliminados correctamente en el rango seleccionado", null));
     }
 
@@ -172,7 +170,6 @@ public class EmpleadoController {
         java.time.LocalDate source = java.time.LocalDate.parse(sourceWeekStart);
         java.time.LocalDate target = java.time.LocalDate.parse(targetWeekStart);
         empleadoService.cloneWeekSchedule(id, source, target);
-        auditLogService.log("CLONAR_HORARIO_SEMANA", "Horario", "Clonó la semana desde " + sourceWeekStart + " hacia " + targetWeekStart + " para el empleado ID: " + id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario clonado con éxito para la semana seleccionada", null));
     }
 
@@ -185,7 +182,6 @@ public class EmpleadoController {
         java.time.LocalDate source = java.time.LocalDate.parse(sourceDate);
         java.time.LocalDate target = java.time.LocalDate.parse(targetDate);
         empleadoService.cloneDaySchedule(id, source, target);
-        auditLogService.log("CLONAR_HORARIO_DIA", "Horario", "Clonó el día desde " + sourceDate + " hacia " + targetDate + " para el empleado ID: " + id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Horario clonado con éxito para el día seleccionado", null));
     }
 

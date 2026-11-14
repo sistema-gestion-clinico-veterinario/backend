@@ -295,11 +295,11 @@ public class MascotaServiceImpl implements MascotaService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<MascotaResponse> listar(Integer companyId, String nombre, EspecieMascota especie, String nombrePropietario, Boolean activo, int page, int size) {
+    public Page<MascotaResponse> listar(Integer companyId, String nombre, EspecieMascota especie, String nombrePropietario, Boolean activo, Long apoderadoId, int page, int size) {
         Integer resolvedCompanyId = resolverCompanyId(companyId);
         String nombreFiltro = (nombre != null && !nombre.isBlank()) ? nombre.trim() : null;
         String propietarioFiltro = (nombrePropietario != null && !nombrePropietario.isBlank()) ? nombrePropietario.trim() : null;
-        return mascotaRepository.buscar(resolvedCompanyId, nombreFiltro, especie, propietarioFiltro, activo,
+        return mascotaRepository.buscar(resolvedCompanyId, nombreFiltro, especie, propietarioFiltro, activo, apoderadoId,
                 PageRequest.of(page, size, Sort.unsorted()))
                 .map(mascotaMapper::toResponse);
     }

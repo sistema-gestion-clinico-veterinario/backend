@@ -1,6 +1,11 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import veterinaria.vargasvet.mapper.HorarioEmpleadoMapper;
+import veterinaria.vargasvet.service.horarios.AsignacionMasivaDeHorarios;
+import veterinaria.vargasvet.service.horarios.GuardadoDeHorariosDelEmpleado;
+import veterinaria.vargasvet.service.horarios.InformeDeHorarios;
+import veterinaria.vargasvet.service.horarios.ReglasHorarioEmpresa;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +21,7 @@ import veterinaria.vargasvet.dto.response.UserProfileDTO;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.mapper.UserMapper;
 import veterinaria.vargasvet.repository.*;
+import veterinaria.vargasvet.repository.HorarioEmpleadoLoteRepository.NuevoHorario;
 
 import java.time.LocalTime;
 import java.util.List;
@@ -36,6 +42,7 @@ import veterinaria.vargasvet.dto.response.EmpleadoListResponse;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -60,6 +67,9 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     private final CompanyOperatingHourRepository companyOperatingHourRepository;
     private final CompanyExceptionRepository companyExceptionRepository;
     private final CitaRepository citaRepository;
+    private final AsignacionMasivaDeHorarios asignacionMasiva;
+    private final GuardadoDeHorariosDelEmpleado guardadoDeHorarios;
+    private final InformeDeHorarios informeDeHorarios;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final EmailService emailService;
@@ -202,16 +212,22 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         validarEspecialidadesPermitidas(dto.getEspecialidades(), permiteEspecialidades);
         if (permiteEspecialidades && dto.getEspecialidades() != null) {
+            Map<String, Especialidad> especialidadesPorNombre = new HashMap<>();
+            especialidadRepository.findByNombreInAndCompanyId(dto.getEspecialidades(), companyIdToUse)
+                    .forEach(especialidad -> especialidadesPorNombre.put(especialidad.getNombre(), especialidad));
             empleado.setEspecialidades(dto.getEspecialidades().stream()
-                    .map(nombre -> especialidadRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
+                    .map(nombre -> Optional.ofNullable(especialidadesPorNombre.get(nombre))
                             .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada: " + nombre + " para la empresa")))
                     .collect(Collectors.toSet()));
         }
 
   
         if (dto.getTiposEmpleado() != null) {
+            Map<String, TipoEmpleado> tiposPorNombre = new HashMap<>();
+            tipoEmpleadoRepository.findByNombreInAndCompanyId(dto.getTiposEmpleado(), companyIdToUse)
+                    .forEach(tipo -> tiposPorNombre.put(tipo.getNombre(), tipo));
             empleado.setTiposEmpleado(dto.getTiposEmpleado().stream()
-                    .map(nombre -> tipoEmpleadoRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
+                    .map(nombre -> Optional.ofNullable(tiposPorNombre.get(nombre))
                             .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado: " + nombre + " para la empresa")))
                     .collect(Collectors.toSet()));
         }
@@ -227,7 +243,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
 
         if (dto.getHorarios() != null && !dto.getHorarios().isEmpty()) {
-            guardarHorarios(savedEmpleado, dto.getHorarios());
+            guardadoDeHorarios.agregar(savedEmpleado.getId(), savedEmpleado.getCompany().getId(),
+                    dto.getHorarios(), SecurityUtils.getCurrentUserEmail());
         }
 
         sendWelcomeEmail(savedUser, dto.getNombre(), verificationToken);
@@ -308,9 +325,14 @@ public class EmpleadoServiceImpl implements EmpleadoService {
 
         if (dto.getTiposEmpleado() != null) {
             java.util.Set<TipoEmpleado> newTipos = new java.util.HashSet<>();
+            Map<String, TipoEmpleado> tiposPorNombre = new HashMap<>();
+            tipoEmpleadoRepository.findByNombreInAndCompanyId(dto.getTiposEmpleado(), companyIdToUse)
+                    .forEach(tipo -> tiposPorNombre.put(tipo.getNombre(), tipo));
             for (String nombre : dto.getTiposEmpleado()) {
-                TipoEmpleado tipo = tipoEmpleadoRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
-                        .orElseThrow(() -> new ResourceNotFoundException("Tipo de empleado no encontrado: " + nombre + " para la empresa"));
+                TipoEmpleado tipo = tiposPorNombre.get(nombre);
+                if (tipo == null) {
+                    throw new ResourceNotFoundException("Tipo de empleado no encontrado: " + nombre + " para la empresa");
+                }
                 newTipos.add(tipo);
             }
             empleado.getTiposEmpleado().retainAll(newTipos);
@@ -336,9 +358,14 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         validarEspecialidadesPermitidas(dto.getEspecialidades(), permiteEspecialidades);
         if (permiteEspecialidades && dto.getEspecialidades() != null) {
             java.util.Set<Especialidad> newEspecialidades = new java.util.HashSet<>();
+            Map<String, Especialidad> especialidadesPorNombre = new HashMap<>();
+            especialidadRepository.findByNombreInAndCompanyId(dto.getEspecialidades(), companyIdToUse)
+                    .forEach(especialidad -> especialidadesPorNombre.put(especialidad.getNombre(), especialidad));
             for (String nombre : dto.getEspecialidades()) {
-                Especialidad esp = especialidadRepository.findByNombreAndCompanyId(nombre, companyIdToUse)
-                        .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada: " + nombre + " para la empresa"));
+                Especialidad esp = especialidadesPorNombre.get(nombre);
+                if (esp == null) {
+                    throw new ResourceNotFoundException("Especialidad no encontrada: " + nombre + " para la empresa");
+                }
                 newEspecialidades.add(esp);
             }
             empleado.getEspecialidades().retainAll(newEspecialidades);
@@ -351,9 +378,8 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         empleadoRepository.save(empleado);
 
         if (dto.getHorarios() != null) {
-            empleado.getHorarios().clear();
-            empleadoRepository.saveAndFlush(empleado);
-            guardarHorarios(empleado, dto.getHorarios());
+            guardadoDeHorarios.reemplazar(empleado.getId(), empleado.getCompany().getId(),
+                    dto.getHorarios(), SecurityUtils.getCurrentUserEmail());
         }
 
         auditLogService.log(
@@ -533,93 +559,11 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         return cambiarEstado(empleadoId, false, TipoInactividad.BAJA, "Eliminado por el administrador");
     }
 
-    private void guardarHorarios(Empleado empleado, List<HorarioEmpleadoRequest> horariosRequest) {
-        String adminEmail = SecurityUtils.getCurrentUserEmail();
-        Integer companyId = empleado.getCompany().getId();
-
-        for (HorarioEmpleadoRequest h : horariosRequest) {
-            if (h.getHoraInicio() == null || h.getHoraFin() == null) continue;
-
-            LocalDate fecha = h.getFecha();
-            DiaSemana dia;
-
-            if (fecha != null) {
-                dia = toDiaSemana(fecha.getDayOfWeek());
-                validarHorarioContraEmpresa(companyId, fecha, h.getHoraInicio(), h.getHoraFin());
-            } else {
-                dia = h.getDiaSemana();
-                if (dia == null) continue;
-                validarHorarioPorDia(companyId, dia, h.getHoraInicio(), h.getHoraFin());
-            }
-
-            HorarioEmpleado horario = new HorarioEmpleado();
-            horario.setEmpleado(empleado);
-            horario.setFecha(fecha);
-            horario.setDiaSemana(dia);
-            horario.setHoraInicio(h.getHoraInicio());
-            horario.setHoraFin(h.getHoraFin());
-            horario.setActivo(h.getActivo() != null ? h.getActivo() : true);
-            horario.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
-            horario.setCreatedBy(adminEmail);
-            horarioEmpleadoRepository.save(horario);
-        }
-    }
-
-    private void validarHorarioPorDia(Integer companyId, DiaSemana dia, LocalTime inicio, LocalTime fin) {
-        if (!inicio.isBefore(fin)) {
-            throw new IllegalArgumentException("La hora de inicio debe ser anterior a la de fin");
-        }
-        var opHourOpt = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, dia);
-        if (opHourOpt.isEmpty()) return;
-        CompanyOperatingHour opHour = opHourOpt.get();
-        if (Boolean.FALSE.equals(opHour.getIsOpen())) {
-            throw new IllegalArgumentException("La clínica no abre los días " + dia);
-        }
-        LocalTime opening = opHour.getOpeningTime();
-        LocalTime closing = opHour.getClosingTime();
-        if (inicio.isBefore(opening) || fin.isAfter(closing)) {
-            throw new IllegalArgumentException(String.format(
-                "El horario (%s - %s) está fuera del horario de atención de la clínica (%s - %s)",
-                inicio, fin, opening, closing));
-        }
-    }
-
     private void validarHorarioContraEmpresa(Integer companyId, LocalDate fecha, LocalTime inicio, LocalTime fin) {
-        DiaSemana dia = toDiaSemana(fecha.getDayOfWeek());
-        
-        // 1. Validar excepciones de empresa (feriados/cierres)
-        companyExceptionRepository.findByCompanyIdAndDate(companyId, fecha)
-                .ifPresent(ex -> {
-                    if (Boolean.FALSE.equals(ex.getIsOpen())) {
-                        throw new IllegalArgumentException("La clínica está cerrada el día " + fecha + " (" + ex.getDescription() + ")");
-                    }
-                });
-
-        // 2. Validar horario de atención del día (solo si está configurado)
-        var opHourOpt = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, dia);
-        if (opHourOpt.isEmpty()) {
-            // Sin configuración de horario, se permite cualquier hora
-            return;
-        }
-
-        CompanyOperatingHour opHour = opHourOpt.get();
-        if (Boolean.FALSE.equals(opHour.getIsOpen())) {
-            throw new IllegalArgumentException("La clínica no abre los días " + dia);
-        }
-
-        LocalTime opening = opHour.getOpeningTime();
-        LocalTime closing = opHour.getClosingTime();
-
-        // Validar si el turno está contenido en el horario de atención
-        // Si el turno cruza la medianoche (inicio >= fin), es inválido si la clínica no abre 24h
-        if (!inicio.isBefore(fin)) {
-            throw new IllegalArgumentException("La hora de inicio debe ser anterior a la de fin (no se permiten turnos de duración cero o que crucen la medianoche)");
-        }
-
-        if (inicio.isBefore(opening) || fin.isAfter(closing)) {
-            throw new IllegalArgumentException(String.format("El horario (%s - %s) está fuera del horario de atención de la clínica (%s - %s)",
-                    inicio, fin, opening, closing));
-        }
+        new ReglasHorarioEmpresa(
+                companyExceptionRepository.findByCompanyIdAndDateBetween(companyId, fecha, fecha),
+                companyOperatingHourRepository.findByCompanyId(companyId))
+                .validarTurno(fecha, inicio, fin);
     }
 
     @Override
@@ -654,96 +598,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
             throw new IllegalStateException(sb.toString());
         }
 
-        // 3. Generar turnos día por día
-        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-            final LocalDate currentDay = date;
-            DiaSemana dia = toDiaSemana(currentDay.getDayOfWeek());
-
-            // Verificar si la empresa abre ese día
-            if (!isEmpresaAbiertaEnDia(companyId, currentDay, dia)) {
-                continue;
-            }
-
-            // Filtrar solo los turnos que aplican a este día de la semana
-            List<HorarioEmpleadoRequest> shiftsParaHoy = request.getShifts().stream()
-                    .filter(s -> s.getDiaSemana() == null || s.getDiaSemana().equals(dia))
-                    .toList();
-            
-            if (shiftsParaHoy.isEmpty()) continue;
-
-            // Si hay sobreescritura, borrar SOLO el turno original que se está reemplazando
-            if (Boolean.TRUE.equals(request.getOverwrite()) && request.getOriginalStartTime() != null) {
-                LocalTime originalStart = request.getOriginalStartTime();
-                empleado.getHorarios().removeIf(h -> h.getFecha().equals(currentDay) && h.getHoraInicio().equals(originalStart));
-                empleadoRepository.saveAndFlush(empleado);
-            }
-
-            // Validar traslapes con OTROS turnos que ya existan (y que no son el que estamos reemplazando)
-            for (HorarioEmpleadoRequest shiftReq : shiftsParaHoy) {
-                if (horarioEmpleadoRepository.existsOverlap(empleadoId, currentDay, shiftReq.getHoraInicio(), shiftReq.getHoraFin())) {
-                    throw new IllegalStateException("Conflicto de horario el día " + currentDay + ": el nuevo rango (" + 
-                        shiftReq.getHoraInicio() + "-" + shiftReq.getHoraFin() + ") se traslapa con otro turno existente.");
-                }
-            }
-
-            // Validar refrigerio solo si hay más de un turno para el MISMO día
-            if (shiftsParaHoy.size() > 1) {
-                validarRefrigerio(shiftsParaHoy);
-            }
-
-            for (HorarioEmpleadoRequest shiftReq : shiftsParaHoy) {
-                validarHorarioContraEmpresa(companyId, currentDay, shiftReq.getHoraInicio(), shiftReq.getHoraFin());
-
-                // Solo verificar traslape si NO estamos sobrescribiendo (porque ya borramos arriba)
-                if (!Boolean.TRUE.equals(request.getOverwrite())) {
-                    if (horarioEmpleadoRepository.existsOverlap(empleadoId, currentDay, shiftReq.getHoraInicio(), shiftReq.getHoraFin())) {
-                        throw new IllegalStateException("Conflicto de horario el día " + currentDay + " en la franja " + shiftReq.getHoraInicio());
-                    }
-                }
-
-                HorarioEmpleado h = new HorarioEmpleado();
-                h.setEmpleado(empleado);
-                h.setFecha(currentDay);
-                h.setDiaSemana(dia);
-                h.setHoraInicio(shiftReq.getHoraInicio());
-                h.setHoraFin(shiftReq.getHoraFin());
-                h.setActivo(true);
-                h.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
-                h.setCreatedBy(adminEmail);
-                if (empleado.getHorarios() == null) {
-                    empleado.setHorarios(new java.util.ArrayList<>());
-                }
-                empleado.getHorarios().add(h);
-                horarioEmpleadoRepository.save(h);
-            }
-        }
+        asignacionMasiva.asignar(empleadoId, companyId, request, adminEmail);
 
         auditLogService.log(
             "ASIGNAR_HORARIOS_MASIVO",
             "Horarios",
             "Asignación masiva de horarios para el empleado " + empleado.getUser().getNombre() + " " + empleado.getUser().getApellido() + " entre " + start + " y " + end
         );
-    }
-
-    /**
-     * Verifica si la empresa está abierta en un día determinado.
-     * Si no hay horario operativo configurado, se permite la asignación (retorna true).
-     */
-    private boolean isEmpresaAbiertaEnDia(Integer companyId, LocalDate fecha, DiaSemana dia) {
-        // Verificar excepciones (feriados/cierres especiales) - solo bloquear si existe y está cerrado
-        var exception = companyExceptionRepository.findByCompanyIdAndDate(companyId, fecha);
-        if (exception.isPresent() && Boolean.FALSE.equals(exception.get().getIsOpen())) {
-            return false;
-        }
-
-        // Verificar horario operativo del día
-        var opHour = companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, dia);
-        // Si no hay configuración, se permite (no bloquear). Solo bloquear si explícitamente cerrado.
-        if (opHour.isPresent() && Boolean.FALSE.equals(opHour.get().getIsOpen())) {
-            return false;
-        }
-
-        return true;
     }
 
     @Override
@@ -818,50 +679,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         horarioEmpleadoRepository.deleteById(horarioId);
     }
 
-    private void validarRefrigerio(List<HorarioEmpleadoRequest> shifts) {
-        // Ordenar por hora de inicio
-        List<HorarioEmpleadoRequest> sorted = shifts.stream()
-                .sorted(java.util.Comparator.comparing(HorarioEmpleadoRequest::getHoraInicio))
-                .toList();
-        
-        for (int i = 0; i < sorted.size() - 1; i++) {
-            LocalTime finActual = sorted.get(i).getHoraFin();
-            LocalTime inicioSiguiente = sorted.get(i+1).getHoraInicio();
-            
-            if (inicioSiguiente.isBefore(finActual)) {
-                throw new IllegalArgumentException(String.format(
-                    "Los turnos no pueden traslaparse o cruzarse (%s - %s con %s - %s)",
-                    sorted.get(i).getHoraInicio(), finActual,
-                    inicioSiguiente, sorted.get(i+1).getHoraFin()
-                ));
-            }
-            
-            long minutosGap = java.time.Duration.between(finActual, inicioSiguiente).toMinutes();
-            if (minutosGap < 60) {
-                throw new IllegalArgumentException("Debe haber al menos 1 hora de refrigerio entre turnos (" + finActual + " - " + inicioSiguiente + ")");
-            }
-        }
-    }
-
     private DiaSemana toDiaSemana(DayOfWeek dayOfWeek) {
-        return switch (dayOfWeek) {
-            case MONDAY    -> DiaSemana.LUNES;
-            case TUESDAY   -> DiaSemana.MARTES;
-            case WEDNESDAY -> DiaSemana.MIERCOLES;
-            case THURSDAY  -> DiaSemana.JUEVES;
-            case FRIDAY    -> DiaSemana.VIERNES;
-            case SATURDAY  -> DiaSemana.SABADO;
-            case SUNDAY    -> DiaSemana.DOMINGO;
-        };
+        return DiaSemana.desde(dayOfWeek);
     }
 
     @Transactional(readOnly = true)
     public List<HorarioEmpleadoResponse> getHorario(Long empleadoId) {
-        return horarioEmpleadoRepository.findByEmpleadoId(empleadoId).stream()
-                .sorted(java.util.Comparator.comparing(HorarioEmpleado::getFecha, java.util.Comparator.nullsFirst(LocalDate::compareTo))
-                        .thenComparing(HorarioEmpleado::getHoraInicio))
-                .map(this::toHorarioResponse)
-                .toList();
+        return HorarioEmpleadoMapper.aRespuestas(horarioEmpleadoRepository.findHorarioDelEmpleado(empleadoId));
     }
 
     private java.util.concurrent.CompletableFuture<Boolean> sendWelcomeEmail(Usuario usuario, String nombre, String verificationToken) {
@@ -1091,15 +915,15 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
 
         // ── 5. Limpiar SOLO si todas las validaciones pasaron ────────────────────────
-        empleado.getHorarios().removeIf(h -> !h.getFecha().isBefore(targetStart) && !h.getFecha().isAfter(targetEnd));
-        empleadoRepository.saveAndFlush(empleado);
+        horarioEmpleadoRepository.eliminarTurnosEntre(empleadoId, targetStart, targetEnd);
 
         // ── 6. Clonar día por día, respetando días cerrados ──────────────────────────
+        LocalDateTime creadoEn = veterinaria.vargasvet.util.AppClock.now();
+        List<NuevoHorario> nuevos = new java.util.ArrayList<>();
         for (HorarioEmpleado source : sourceShifts) {
             LocalDate targetDay = source.getFecha().plusDays(daysDiff);
             DiaSemana dia       = toDiaSemana(targetDay.getDayOfWeek());
 
-            // Omitir días cerrados (ya detectados en el pre-check de arriba)
             var opHourOpt = horariosPorDia.computeIfAbsent(dia,
                     d -> companyOperatingHourRepository.findByCompanyIdAndDiaSemana(companyId, d));
             if (opHourOpt.isPresent() && Boolean.FALSE.equals(opHourOpt.get().getIsOpen())) {
@@ -1111,21 +935,9 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 continue;
             }
 
-            HorarioEmpleado target = new HorarioEmpleado();
-            target.setEmpleado(empleado);
-            target.setFecha(targetDay);
-            target.setDiaSemana(dia);
-            target.setHoraInicio(source.getHoraInicio());
-            target.setHoraFin(source.getHoraFin());
-            target.setActivo(true);
-            target.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
-            target.setCreatedBy(adminEmail);
-            if (empleado.getHorarios() == null) {
-                empleado.setHorarios(new java.util.ArrayList<>());
-            }
-            empleado.getHorarios().add(target);
-            horarioEmpleadoRepository.save(target);
+            nuevos.add(new NuevoHorario(empleadoId, targetDay, dia, source.getHoraInicio(), source.getHoraFin(), creadoEn, adminEmail));
         }
+        horarioEmpleadoRepository.insertarEnLote(nuevos);
 
         auditLogService.log(
             "CLONAR_HORARIOS_SEMANA",
@@ -1212,26 +1024,13 @@ public class EmpleadoServiceImpl implements EmpleadoService {
         }
 
         // 5. Limpiar horarios previos del día destino
-        empleado.getHorarios().removeIf(h -> h.getFecha().equals(targetDate));
-        empleadoRepository.saveAndFlush(empleado);
+        horarioEmpleadoRepository.eliminarTurnosEntre(empleadoId, targetDate, targetDate);
 
-        // 6. Clonar día por día
-        for (HorarioEmpleado source : sourceShifts) {
-            HorarioEmpleado target = new HorarioEmpleado();
-            target.setEmpleado(empleado);
-            target.setFecha(targetDate);
-            target.setDiaSemana(diaDestino);
-            target.setHoraInicio(source.getHoraInicio());
-            target.setHoraFin(source.getHoraFin());
-            target.setActivo(true);
-            target.setCreatedAt(veterinaria.vargasvet.util.AppClock.now());
-            target.setCreatedBy(adminEmail);
-            if (empleado.getHorarios() == null) {
-                empleado.setHorarios(new java.util.ArrayList<>());
-            }
-            empleado.getHorarios().add(target);
-            horarioEmpleadoRepository.save(target);
-        }
+        // 6. Clonar el día
+        LocalDateTime creadoEn = veterinaria.vargasvet.util.AppClock.now();
+        horarioEmpleadoRepository.insertarEnLote(sourceShifts.stream()
+                .map(source -> new NuevoHorario(empleadoId, targetDate, diaDestino, source.getHoraInicio(), source.getHoraFin(), creadoEn, adminEmail))
+                .toList());
 
         auditLogService.log(
             "CLONAR_HORARIOS_DIA",
@@ -1305,18 +1104,7 @@ public class EmpleadoServiceImpl implements EmpleadoService {
     @Override
     @Transactional(readOnly = true)
     public List<veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse> getSchedulesReport(Integer companyId) {
-        Integer resolvedId = resolverCompanyId(companyId);
-        List<Empleado> empleados = empleadoRepository.findAllByCompanyId(resolvedId);
-        
-        return empleados.stream().map(emp -> {
-            List<HorarioEmpleadoResponse> horarios = getHorario(emp.getId());
-            return veterinaria.vargasvet.dto.response.EmployeeScheduleReportResponse.builder()
-                    .empleadoId(emp.getId())
-                    .nombreCompleto(emp.getUser().getNombre() + " " + emp.getUser().getApellido())
-                    .cargo(emp.getTiposEmpleado().isEmpty() ? "Personal" : emp.getTiposEmpleado().iterator().next().getNombre())
-                    .horarios(horarios)
-                    .build();
-        }).collect(Collectors.toList());
+        return informeDeHorarios.completo(resolverCompanyId(companyId));
     }
 
     @Override

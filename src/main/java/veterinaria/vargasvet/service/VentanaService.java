@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import veterinaria.vargasvet.domain.entity.Ventana;
+import veterinaria.vargasvet.dto.response.VentanaResponse;
 import veterinaria.vargasvet.exception.ResourceNotFoundException;
 import veterinaria.vargasvet.repository.VentanaRepository;
 
@@ -21,18 +22,18 @@ public class VentanaService {
     private final AuditLogService auditLogService;
 
     @Transactional(readOnly = true)
-    public List<Ventana> listarTodas() {
-        return ventanaRepository.findByActivoTrueOrderByOrdenAsc();
+    public List<VentanaResponse> listarTodas() {
+        return ventanaRepository.findByActivoTrueOrderByOrdenAsc().stream().map(VentanaResponse::de).toList();
     }
 
     @Transactional(readOnly = true)
-    public Ventana obtenerPorId(Integer id) {
-        return ventanaRepository.findById(id)
+    public VentanaResponse obtenerPorId(Integer id) {
+        return ventanaRepository.findById(id).map(VentanaResponse::de)
                 .orElseThrow(() -> new ResourceNotFoundException("Ventana no encontrada"));
     }
 
     @Transactional
-    public Ventana crear(Ventana ventana) {
+    public VentanaResponse crear(Ventana ventana) {
         ventana.setCodigo(normalizarCodigo(ventana.getCodigo()));
         ventana.setGrupo(normalizarTexto(ventana.getGrupo()));
         if (ventanaRepository.findByCodigo(ventana.getCodigo()) != null) {
@@ -41,11 +42,11 @@ public class VentanaService {
         Ventana guardada = ventanaRepository.save(ventana);
         auditLogService.log("REGISTRAR_MODULO", MODULO_AUDITORIA,
                 "Se registró el módulo " + guardada.getCodigo() + " \"" + guardada.getNombre() + "\"");
-        return guardada;
+        return VentanaResponse.de(guardada);
     }
 
     @Transactional
-    public Ventana actualizar(Integer id, Ventana datos) {
+    public VentanaResponse actualizar(Integer id, Ventana datos) {
         Ventana ventana = ventanaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ventana no encontrada"));
 
@@ -73,7 +74,7 @@ public class VentanaService {
             auditLogService.log("MODIFICAR_MODULO", MODULO_AUDITORIA,
                     "Se modificó el módulo " + guardada.getCodigo() + ": " + String.join("; ", cambios));
         }
-        return guardada;
+        return VentanaResponse.de(guardada);
     }
 
     @Transactional

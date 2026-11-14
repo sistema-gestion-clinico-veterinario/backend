@@ -84,6 +84,15 @@ public class SessionSecurityService {
         closeRealtimeConnections(activeTokens);
     }
 
+    /** Revoca de una vez las sesiones activas de todos los clientes (apoderados) de la empresa,
+     * sin cargar cada sesión ni cada cliente. */
+    @Transactional
+    public void invalidateClientSessionsForCompany(Company company) {
+        List<String> familyIds = refreshTokenRepository.findFamilyIdsActivasDeLosApoderados(company.getId());
+        refreshTokenRepository.revocarActivasDeLosApoderados(company.getId(), AppClock.instantNow());
+        familyIds.forEach(realtimeSubscriptionGuard::closeConnectionsOfSession);
+    }
+
     /** Sin esto, una conexión en tiempo real de una sesión recién revocada seguiría abierta hasta la próxima revisión periódica. */
     private void closeRealtimeConnections(List<RefreshToken> revokedTokens) {
         revokedTokens.stream()
