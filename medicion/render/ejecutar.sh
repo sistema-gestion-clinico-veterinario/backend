@@ -216,13 +216,14 @@ fase_vivo() {
 }
 
 fase_carga() {
+  local versiones="${1:-antes despues}"
   [ -n "${K6_CLOUD_TOKEN:-}" ] && [ -n "${K6_CLOUD_STACK_ID:-}" ] && [ -n "${K6_CLOUD_PROJECT_ID:-}" ] || fallo "faltan secretos de Grafana"
-  for v in antes despues; do
+  for v in $versiones; do
     seg="$(esperar_salud "$v")" || fallo "el servicio $v no respondió"
     log "[$v] listo ($seg s)"
   done
   local pids=()
-  for v in antes despues; do
+  for v in $versiones; do
     local company_id
     company_id="$(psql_db "$v" -tAc "SELECT id FROM company WHERE slug='$SLUG'")"
     log "[$v] iniciando la prueba escalonada ($NIVELES_CARGA usuarios virtuales, $ETAPA_CARGA por nivel)"
@@ -236,7 +237,7 @@ fase_carga() {
   done
   for pid in "${pids[@]}"; do wait "$pid" || log "una prueba terminó con avisos (ver logs/k6_carga_*.log)"; done
   log "pruebas terminadas"
-  for v in antes despues; do
+  for v in $versiones; do
     [ -f "$SAL/k6_carga_${v}.json" ] && log "[$v] $(jq -c '{iteraciones_completas, peticiones, respuestas_no_200, vus_maximos, p95_ms: .latencia_ms.p95}' "$SAL/k6_carga_${v}.json")"
   done
 }
@@ -259,7 +260,9 @@ case "$FASE" in
   sembrar) fase_sembrar ;;
   medir) fase_medir ;;
   vivo) fase_vivo ;;
-  carga) fase_carga ;;
-  *) fallo "fase desconocida en medicion/render/FASE: '$FASE' (usa verificar, sembrar, medir, vivo o carga)" ;;
+  carga) fase_carga "antes despues" ;;
+  carga-antes) fase_carga antes ;;
+  carga-despues) fase_carga despues ;;
+  *) fallo "fase desconocida en medicion/render/FASE: '$FASE' (usa verificar, sembrar, medir, vivo, carga, carga-antes o carga-despues)" ;;
 esac
 log "terminado ($FASE)"
