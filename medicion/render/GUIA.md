@@ -143,6 +143,6 @@ Borra los dos servicios de Render, los dos proyectos de Supabase, los cinco secr
 ## 8. Ver k6 en vivo en Grafana Cloud (fase `vivo`)
 
 1. En Grafana Cloud, en tu stack: **Testing & synthetics → Performance → Settings → Access → Personal token**. Crea el token y cópialo. Ahí mismo está el **Stack ID**.
-2. Guarda dos secretos nuevos en GitHub: `MEDICION_K6_TOKEN` (el token) y `MEDICION_K6_STACK` (el Stack ID).
+2. Guarda tres secretos nuevos en GitHub: `MEDICION_K6_TOKEN` (el token), `MEDICION_K6_STACK` (el Stack ID) y `MEDICION_K6_PROJECT` (el número del proyecto: en Performance Testing abre «Default project» y copia el número del final de la dirección).
 3. Con `FASE` en `vivo`, un push a `medicion/render` envía una ronda de ANTES y otra de DESPUÉS a Grafana Cloud mientras corren. Se ven en **Testing & synthetics → Performance → Tests and test runs**.
 4. Al terminar, revoca el token en la misma pantalla.

@@ -51,6 +51,7 @@ jobs:
           MEDICION_CLAVE: ${{ secrets.MEDICION_CLAVE }}
           K6_CLOUD_TOKEN: ${{ secrets.MEDICION_K6_TOKEN }}
           K6_CLOUD_STACK_ID: ${{ secrets.MEDICION_K6_STACK }}
+          K6_CLOUD_PROJECT_ID: ${{ secrets.MEDICION_K6_PROJECT }}
         run: bash medicion/render/ejecutar.sh
 
       - name: Guardar los resultados como artefacto

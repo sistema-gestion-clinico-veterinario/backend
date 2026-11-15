@@ -193,7 +193,7 @@ fase_medir() {
 }
 
 fase_vivo() {
-  [ -n "${K6_CLOUD_TOKEN:-}" ] && [ -n "${K6_CLOUD_STACK_ID:-}" ] || fallo "faltan los secretos de Grafana (MEDICION_K6_TOKEN y MEDICION_K6_STACK)"
+  [ -n "${K6_CLOUD_TOKEN:-}" ] && [ -n "${K6_CLOUD_STACK_ID:-}" ] && [ -n "${K6_CLOUD_PROJECT_ID:-}" ] || fallo "faltan secretos de Grafana (MEDICION_K6_TOKEN, MEDICION_K6_STACK y MEDICION_K6_PROJECT)"
   for v in antes despues; do
     seg="$(esperar_salud "$v")" || fallo "el servicio $v no respondió"
     log "[$v] listo ($seg s)"
