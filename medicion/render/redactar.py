@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 from pathlib import Path
 from urllib.parse import urlparse
@@ -41,5 +42,6 @@ for ruta in raiz.rglob('*'):
     nuevo = texto
     for valor, marca in sustituciones:
         nuevo = nuevo.replace(valor, marca)
+    nuevo = re.sub(r'[A-Za-z0-9-]+\.grafana\.net', '<stack>.grafana.net', nuevo)
     if nuevo != texto:
         ruta.write_text(nuevo, encoding='utf-8')

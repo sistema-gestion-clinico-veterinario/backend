@@ -192,6 +192,26 @@ fase_medir() {
   [ -n "${GITHUB_STEP_SUMMARY:-}" ] && [ -f "$SAL/RESUMEN.md" ] && cat "$SAL/RESUMEN.md" >> "$GITHUB_STEP_SUMMARY"
 }
 
+fase_vivo() {
+  [ -n "${K6_CLOUD_TOKEN:-}" ] && [ -n "${K6_CLOUD_STACK_ID:-}" ] || fallo "faltan los secretos de Grafana (MEDICION_K6_TOKEN y MEDICION_K6_STACK)"
+  for v in antes despues; do
+    seg="$(esperar_salud "$v")" || fallo "el servicio $v no respondió"
+    log "[$v] listo ($seg s)"
+  done
+  for v in antes despues; do
+    local company_id
+    company_id="$(psql_db "$v" -tAc "SELECT id FROM company WHERE slug='$SLUG'")"
+    log "[$v] enviando la prueba a Grafana Cloud en vivo"
+    k6 cloud run --local-execution \
+      -e BASE_URL="$(url_de "$v")" -e SLUG="$SLUG" -e USUARIO="$USUARIO" -e CLAVE="$CLAVE" -e COMPANY_ID="$company_id" \
+      -e VUS="$VUS" -e ITER="$ITER" -e PAUSA_S="$PAUSA_S" -e XFF_RESTO="$XFF_RESTO" -e TIMEOUT="$TIMEOUT_HTTP" \
+      -e NOMBRE_PRUEBA="Render en vivo - $v" -e SALIDA="$SAL/k6_vivo_${v}.json" \
+      "$RAIZ/medicion/escenario_p1_p4.js" > "$SAL/logs/k6_vivo_${v}.log" 2>&1 \
+      || log "k6 terminó con avisos en $v (ver logs/k6_vivo_${v}.log)"
+    log "[$v] terminada"
+  done
+}
+
 {
   echo "fecha: $(date -u +%FT%TZ)"
   echo "fase: $FASE"
@@ -209,6 +229,7 @@ case "$FASE" in
   verificar) fase_verificar ;;
   sembrar) fase_sembrar ;;
   medir) fase_medir ;;
-  *) fallo "fase desconocida en medicion/render/FASE: '$FASE' (usa verificar, sembrar o medir)" ;;
+  vivo) fase_vivo ;;
+  *) fallo "fase desconocida en medicion/render/FASE: '$FASE' (usa verificar, sembrar, medir o vivo)" ;;
 esac
 log "terminado ($FASE)"

@@ -49,6 +49,8 @@ jobs:
           DB_ANTES: ${{ secrets.MEDICION_DB_ANTES }}
           DB_DESPUES: ${{ secrets.MEDICION_DB_DESPUES }}
           MEDICION_CLAVE: ${{ secrets.MEDICION_CLAVE }}
+          K6_CLOUD_TOKEN: ${{ secrets.MEDICION_K6_TOKEN }}
+          K6_CLOUD_STACK_ID: ${{ secrets.MEDICION_K6_STACK }}
         run: bash medicion/render/ejecutar.sh
 
       - name: Guardar los resultados como artefacto
