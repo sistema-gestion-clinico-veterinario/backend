@@ -149,9 +149,8 @@ Borra los dos servicios de Render, los dos proyectos de Supabase, los cinco secr
 
 ## 9. Prueba de carga escalonada (fase `carga`)
 
-Con `FASE` en `carga`, un push a `medicion/render` lanza **las dos versiones a la vez** desde GitHub, con 1, 10, 25, 50 y 100 usuarios virtuales (3 minutos en cada nivel, 3 s de pausa entre secciones del recorrido) y las envía a Grafana Cloud en vivo como «Render carga escalonada - antes» y «Render carga escalonada - despues». Dura unos 20 minutos más la espera de arranque.
+Con `FASE` en `carga` (o `carga-antes` / `carga-despues` para una sola versión), un push a `medicion/render` lanza la prueba **primero con el ANTES y después con el DESPUÉS, de una en una** (el plan gratuito de Grafana Cloud permite solo 1 prueba a la vez), con 1, 10, 25, 50 y 100 usuarios virtuales (3 minutos por nivel, 3 s de pausa), y las envía en vivo a Grafana Cloud. Cada una lleva un tope de 40 minutos y la ejecución completa, de 150.
 
-- **Antes de subir:** en Grafana, **Testing & synthetics → Performance → Settings → Stack limits**, mira «Max VUs per test» de tu plan. Si es menor que 100, baja el último nivel (variable `NIVELES_CARGA` en `medicion/render/ejecutar.sh`).
-- **Cuota:** cada usuario virtual activo en una hora cuenta como 1 VUh: 100 usuarios son unas 100 VUh por versión, unas 220 en total de las 500 del mes.
-- **Qué mide:** en qué nivel cada versión empieza a dar errores o a pasarse de tiempo. Con 0,15 CPU y 192 MB de heap, el servicio puede saturarse o reiniciarse; son servicios de prueba.
-- **Límite de interpretación:** 100 usuarios virtuales sin pausas largas equivalen a mucho más que 100 personas reales: no es una prueba de «100 usuarios reales».
+- **Antes de subir:** «Max VUs per test» del proyecto debe ser al menos 100 (en tu cuenta es 100).
+- **Duración:** unos 5 minutos de arranque más unos 20 por versión, con un nuevo arranque entre una y otra: 50 minutos aproximadamente.
+- **Límite de interpretación:** las dos versiones no se miden a la vez, sino una detrás de otra; 100 usuarios virtuales sin pausas largas equivalen a mucho más que 100 personas reales.

@@ -15,7 +15,7 @@ jobs:
   medir:
     name: Verificar, sembrar o medir según medicion/render/FASE
     runs-on: ubuntu-24.04
-    timeout-minutes: 240
+    timeout-minutes: 150
 
     steps:
       - name: Descargar el arnés de medición
