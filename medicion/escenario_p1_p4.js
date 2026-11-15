@@ -11,11 +11,25 @@ const VUS = parseInt(__ENV.VUS || '2', 10);
 const ITERACIONES = parseInt(__ENV.ITER || '10', 10);
 const PAUSA_S = parseFloat(__ENV.PAUSA_S || '0.3');
 const SALIDA = __ENV.SALIDA || 'resultado.json';
+const CUENTAS = parseInt(__ENV.CUENTAS || '3', 10);
+const PERFIL = __ENV.PERFIL || 'fijo';
+const ETAPA = __ENV.ETAPA || '300s';
+const NIVELES = (__ENV.NIVELES || '1,2,3,5').split(',').map((n) => parseInt(n, 10));
+
+const escenarios = PERFIL === 'carga'
+  ? {
+      carga_escalonada: {
+        executor: 'ramping-vus',
+        startVUs: 1,
+        stages: NIVELES.flatMap((n) => [{ duration: '30s', target: n }, { duration: ETAPA, target: n }]),
+        gracefulRampDown: '120s',
+        gracefulStop: '120s',
+      },
+    }
+  : { trabajo_fijo: { executor: 'per-vu-iterations', vus: VUS, iterations: ITERACIONES, maxDuration: '30m' } };
 
 export const options = {
-  scenarios: {
-    trabajo_fijo: { executor: 'per-vu-iterations', vus: VUS, iterations: ITERACIONES, maxDuration: '30m' },
-  },
+  scenarios: escenarios,
   thresholds: {
     'group_duration{group:::P0_inicio_de_sesion}': ['max>=0'],
     'group_duration{group:::P1_acceso_y_panel}': ['max>=0'],
@@ -66,7 +80,7 @@ const fecha = (d) => `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDat
 
 function iniciarSesion() {
   group('P0_inicio_de_sesion', () => {
-    const res = http.post(`${BASE}/api/v1/auth/login`, JSON.stringify({ slug: SLUG, username: `${USUARIO}${__VU}`, password: CLAVE }), { ...cabeceras(), timeout: __ENV.TIMEOUT || '60s', tags: { ruta: 'login' } });
+    const res = http.post(`${BASE}/api/v1/auth/login`, JSON.stringify({ slug: SLUG, username: `${USUARIO}${((__VU - 1) % CUENTAS) + 1}`, password: CLAVE }), { ...cabeceras(), timeout: __ENV.TIMEOUT || '60s', tags: { ruta: 'login' } });
     const ok = check(res, { 'login 200': (r) => r.status === 200 });
     console.log(`login vu=${__VU} usuario=${USUARIO}${__VU} estado=${res.status} galletas=[${galletas(res.url)}]`);
     if (!ok) {
@@ -163,6 +177,9 @@ export function handleSummary(data) {
     if (m) resumen.recorridos[g] = { mediana_ms: m.values.med, p95_ms: m.values['p(95)'], promedio_ms: m.values.avg, maximo_ms: m.values.max, muestras: m.values.count };
   }
   const get = (nombre, campo) => (data.metrics[nombre] ? data.metrics[nombre].values[campo] : null);
+  resumen.perfil = PERFIL;
+  resumen.iteraciones_completas = get('iterations', 'count');
+  resumen.vus_maximos = get('vus_max', 'max');
   resumen.peticiones = get('http_reqs', 'count');
   resumen.respuestas_no_200 = get('respuestas_no_200', 'count') || 0;
   resumen.tasa_de_fallos_http = get('http_req_failed', 'rate');

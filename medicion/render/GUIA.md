@@ -146,3 +146,7 @@ Borra los dos servicios de Render, los dos proyectos de Supabase, los cinco secr
 2. Guarda tres secretos nuevos en GitHub: `MEDICION_K6_TOKEN` (el token), `MEDICION_K6_STACK` (el Stack ID) y `MEDICION_K6_PROJECT` (el número del proyecto: en Performance Testing abre «Default project» y copia el número del final de la dirección).
 3. Con `FASE` en `vivo`, un push a `medicion/render` envía una ronda de ANTES y otra de DESPUÉS a Grafana Cloud mientras corren. Se ven en **Testing & synthetics → Performance → Tests and test runs**.
 4. Al terminar, revoca el token en la misma pantalla.
+
+## 9. Prueba de carga escalonada (fase `carga`)
+
+Con `FASE` en `carga`, un push a `medicion/render` lanza **las dos versiones a la vez** desde GitHub, con 1, 2, 3 y 5 usuarios virtuales (5 minutos en cada nivel), y las envía a Grafana Cloud en vivo como «Render carga escalonada - antes» y «Render carga escalonada - despues». Dura unos 22 minutos más la espera de arranque. Sirve para ver en qué nivel cada versión empieza a dar errores o a pasarse de tiempo. Los servicios gratuitos pueden saturarse o reiniciarse: son de prueba.

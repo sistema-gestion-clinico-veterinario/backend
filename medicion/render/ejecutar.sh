@@ -18,6 +18,8 @@ REPOSO_S="${REPOSO_S:-60}"
 CITAS_GRANDE="${CITAS_GRANDE:-6000}"
 PROP_GRANDE="${PROP_GRANDE:-400}"
 XFF_RESTO="${XFF_RESTO:-}"
+NIVELES_CARGA="${NIVELES_CARGA:-1,2,3,5}"
+ETAPA_CARGA="${ETAPA_CARGA:-300s}"
 TIMEOUT_HTTP="${TIMEOUT_HTTP:-180s}"
 export PGOPTIONS="-c search_path=public,extensions"
 
@@ -212,6 +214,32 @@ fase_vivo() {
   done
 }
 
+fase_carga() {
+  [ -n "${K6_CLOUD_TOKEN:-}" ] && [ -n "${K6_CLOUD_STACK_ID:-}" ] && [ -n "${K6_CLOUD_PROJECT_ID:-}" ] || fallo "faltan secretos de Grafana"
+  for v in antes despues; do
+    seg="$(esperar_salud "$v")" || fallo "el servicio $v no respondió"
+    log "[$v] listo ($seg s)"
+  done
+  local pids=()
+  for v in antes despues; do
+    local company_id
+    company_id="$(psql_db "$v" -tAc "SELECT id FROM company WHERE slug='$SLUG'")"
+    log "[$v] iniciando la prueba escalonada ($NIVELES_CARGA usuarios virtuales, $ETAPA_CARGA por nivel)"
+    k6 cloud run --local-execution \
+      -e BASE_URL="$(url_de "$v")" -e SLUG="$SLUG" -e USUARIO="$USUARIO" -e CLAVE="$CLAVE" -e COMPANY_ID="$company_id" \
+      -e PAUSA_S="$PAUSA_S" -e XFF_RESTO="$XFF_RESTO" -e TIMEOUT="$TIMEOUT_HTTP" -e CUENTAS="$CUENTAS" \
+      -e PERFIL=carga -e NIVELES="$NIVELES_CARGA" -e ETAPA="$ETAPA_CARGA" \
+      -e NOMBRE_PRUEBA="Render carga escalonada - $v" -e SALIDA="$SAL/k6_carga_${v}.json" \
+      "$RAIZ/medicion/escenario_p1_p4.js" > "$SAL/logs/k6_carga_${v}.log" 2>&1 &
+    pids+=($!)
+  done
+  for pid in "${pids[@]}"; do wait "$pid" || log "una prueba terminó con avisos (ver logs/k6_carga_*.log)"; done
+  log "pruebas terminadas"
+  for v in antes despues; do
+    [ -f "$SAL/k6_carga_${v}.json" ] && log "[$v] $(jq -c '{iteraciones_completas, peticiones, respuestas_no_200, vus_maximos, p95_ms: .latencia_ms.p95}' "$SAL/k6_carga_${v}.json")"
+  done
+}
+
 {
   echo "fecha: $(date -u +%FT%TZ)"
   echo "fase: $FASE"
@@ -230,6 +258,7 @@ case "$FASE" in
   sembrar) fase_sembrar ;;
   medir) fase_medir ;;
   vivo) fase_vivo ;;
-  *) fallo "fase desconocida en medicion/render/FASE: '$FASE' (usa verificar, sembrar, medir o vivo)" ;;
+  carga) fase_carga ;;
+  *) fallo "fase desconocida en medicion/render/FASE: '$FASE' (usa verificar, sembrar, medir, vivo o carga)" ;;
 esac
 log "terminado ($FASE)"
