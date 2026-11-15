@@ -1,0 +1,69 @@
+{
+ "objetivo": "<url-despues>",
+ "vus": 2,
+ "iteraciones_por_vu": 10,
+ "recorridos": {
+  "P0_inicio_de_sesion": {
+   "mediana_ms": 105349.02981949999,
+   "p95_ms": 180001.46965629997,
+   "promedio_ms": 115234.00016767997,
+   "maximo_ms": 180001.57299
+  },
+  "P1_acceso_y_panel": {
+   "mediana_ms": 24324.6719195,
+   "p95_ms": 298185.7201345,
+   "promedio_ms": 65483.28106457874,
+   "maximo_ms": 420449.525481
+  },
+  "P2_agenda_mensual": {
+   "mediana_ms": 4131.192888,
+   "p95_ms": 233840.342941,
+   "promedio_ms": 34521.41938318057,
+   "maximo_ms": 289471.276493
+  },
+  "P3_historia_clinica": {
+   "mediana_ms": 896.888915,
+   "p95_ms": 136757.45379125,
+   "promedio_ms": 20561.53174731482,
+   "maximo_ms": 451417.141724
+  },
+  "P4_reportes": {
+   "mediana_ms": 2400.887911,
+   "p95_ms": 183426.145865,
+   "promedio_ms": 28988.85806361571,
+   "maximo_ms": 391013.159355
+  }
+ },
+ "perfil": "carga",
+ "iteraciones_completas": 216,
+ "vus_maximos": 100,
+ "peticiones": 3051,
+ "respuestas_no_200": 2577,
+ "tasa_de_fallos_http": 0.8446411012782694,
+ "latencia_ms": {
+  "mediana": 1553.36176,
+  "p95": 92071.1656025
+ },
+ "bytes_recibidos": 196967775,
+ "duracion_total_s": 1146.04632758,
+ "chequeos_fallidos": [
+  "login 200: 83 fallos de 100",
+  "navegacion 200: 183 fallos de 216",
+  "privacidad 200: 185 fallos de 216",
+  "cumplimiento 200: 187 fallos de 216",
+  "notificaciones 200: 188 fallos de 216",
+  "avisos_de_cumplimiento 200: 190 fallos de 216",
+  "panel 200: 190 fallos de 216",
+  "citas_del_mes 200: 190 fallos de 268",
+  "empleados 200: 190 fallos de 216",
+  "propietarios 200: 191 fallos de 216",
+  "lista_de_historias 200: 191 fallos de 216",
+  "historia 200: 3 fallos de 25",
+  "consulta 200: 4 fallos de 22",
+  "recetas 200: 3 fallos de 22",
+  "diagnosticos 200: 3 fallos de 22",
+  "reporte_clinico 200: 197 fallos de 216",
+  "reporte_de_ventas 200: 198 fallos de 216",
+  "pacientes_inactivos 200: 201 fallos de 216"
+ ]
+}

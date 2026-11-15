@@ -1,0 +1,16 @@
+fecha: 2026-11-15T22:03:12Z
+fase: carga
+k6: k6 v2.4.0 (commit/dd9395906d, go1.26.11, linux/amd64)
+psql: psql (PostgreSQL) 16.15 (Ubuntu 16.15-1.pgdg24.04+2)
+usuarios virtuales: 1, iteraciones por ronda: 4, rondas: 4, reposo: 60 s, citas de la clínica grande: 6000
+antes:   5b27bbabb33224241586674bb2401e47bb98f92f
+despues: cb7f6bdb1865b9ca3b5e8aedc0a4ef6bcaf17e13
+[22:07:51] [antes] listo (279 s)
+[22:07:51] [antes] iniciando la prueba escalonada (1,10,25,50,100 usuarios virtuales, 180s por nivel)
+[22:26:39] [antes] k6 terminó con código 0
+[22:26:39] [antes] {"iteraciones_completas":109,"peticiones":1583,"respuestas_no_200":1394,"vus_maximos":100,"p95_ms":179992.95530909998}
+[22:31:22] [despues] listo (283 s)
+[22:31:22] [despues] iniciando la prueba escalonada (1,10,25,50,100 usuarios virtuales, 180s por nivel)
+[22:50:35] [despues] k6 terminó con código 0
+[22:50:35] [despues] {"iteraciones_completas":216,"peticiones":3051,"respuestas_no_200":2577,"vus_maximos":100,"p95_ms":92071.1656025}
+[22:50:35] terminado (carga)
