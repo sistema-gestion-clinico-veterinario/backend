@@ -18,8 +18,9 @@ REPOSO_S="${REPOSO_S:-60}"
 CITAS_GRANDE="${CITAS_GRANDE:-6000}"
 PROP_GRANDE="${PROP_GRANDE:-400}"
 XFF_RESTO="${XFF_RESTO:-}"
-NIVELES_CARGA="${NIVELES_CARGA:-1,2,3,5}"
-ETAPA_CARGA="${ETAPA_CARGA:-300s}"
+NIVELES_CARGA="${NIVELES_CARGA:-1,10,25,50,100}"
+ETAPA_CARGA="${ETAPA_CARGA:-180s}"
+PAUSA_CARGA="${PAUSA_CARGA:-3}"
 TIMEOUT_HTTP="${TIMEOUT_HTTP:-180s}"
 export PGOPTIONS="-c search_path=public,extensions"
 
@@ -227,7 +228,7 @@ fase_carga() {
     log "[$v] iniciando la prueba escalonada ($NIVELES_CARGA usuarios virtuales, $ETAPA_CARGA por nivel)"
     k6 cloud run --local-execution \
       -e BASE_URL="$(url_de "$v")" -e SLUG="$SLUG" -e USUARIO="$USUARIO" -e CLAVE="$CLAVE" -e COMPANY_ID="$company_id" \
-      -e PAUSA_S="$PAUSA_S" -e XFF_RESTO="$XFF_RESTO" -e TIMEOUT="$TIMEOUT_HTTP" -e CUENTAS="$CUENTAS" \
+      -e PAUSA_S="$PAUSA_CARGA" -e XFF_RESTO="$XFF_RESTO" -e TIMEOUT="$TIMEOUT_HTTP" -e CUENTAS="$CUENTAS" \
       -e PERFIL=carga -e NIVELES="$NIVELES_CARGA" -e ETAPA="$ETAPA_CARGA" \
       -e NOMBRE_PRUEBA="Render carga escalonada - $v" -e SALIDA="$SAL/k6_carga_${v}.json" \
       "$RAIZ/medicion/escenario_p1_p4.js" > "$SAL/logs/k6_carga_${v}.log" 2>&1 &

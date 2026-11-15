@@ -149,4 +149,9 @@ Borra los dos servicios de Render, los dos proyectos de Supabase, los cinco secr
 
 ## 9. Prueba de carga escalonada (fase `carga`)
 
-Con `FASE` en `carga`, un push a `medicion/render` lanza **las dos versiones a la vez** desde GitHub, con 1, 2, 3 y 5 usuarios virtuales (5 minutos en cada nivel), y las envía a Grafana Cloud en vivo como «Render carga escalonada - antes» y «Render carga escalonada - despues». Dura unos 22 minutos más la espera de arranque. Sirve para ver en qué nivel cada versión empieza a dar errores o a pasarse de tiempo. Los servicios gratuitos pueden saturarse o reiniciarse: son de prueba.
+Con `FASE` en `carga`, un push a `medicion/render` lanza **las dos versiones a la vez** desde GitHub, con 1, 10, 25, 50 y 100 usuarios virtuales (3 minutos en cada nivel, 3 s de pausa entre secciones del recorrido) y las envía a Grafana Cloud en vivo como «Render carga escalonada - antes» y «Render carga escalonada - despues». Dura unos 20 minutos más la espera de arranque.
+
+- **Antes de subir:** en Grafana, **Testing & synthetics → Performance → Settings → Stack limits**, mira «Max VUs per test» de tu plan. Si es menor que 100, baja el último nivel (variable `NIVELES_CARGA` en `medicion/render/ejecutar.sh`).
+- **Cuota:** cada usuario virtual activo en una hora cuenta como 1 VUh: 100 usuarios son unas 100 VUh por versión, unas 220 en total de las 500 del mes.
+- **Qué mide:** en qué nivel cada versión empieza a dar errores o a pasarse de tiempo. Con 0,15 CPU y 192 MB de heap, el servicio puede saturarse o reiniciarse; son servicios de prueba.
+- **Límite de interpretación:** 100 usuarios virtuales sin pausas largas equivalen a mucho más que 100 personas reales: no es una prueba de «100 usuarios reales».
