@@ -8,10 +8,19 @@ from collections import defaultdict
 from pathlib import Path
 from urllib.parse import parse_qs
 
-RAIZ = Path(sys.argv[1])
-NIVEL = int(sys.argv[2])
-NIV = RAIZ / 'niveles'
-LOGS = RAIZ / 'logs'
+RAIZ = NIV = LOGS = None
+NIVEL = 0
+CFG = 'C'
+
+
+def configurar(raiz, nivel, cfg):
+    global RAIZ, NIV, LOGS, NIVEL, CFG
+    RAIZ = Path(raiz)
+    NIV = RAIZ / 'niveles'
+    LOGS = RAIZ / 'logs'
+    NIVEL = int(nivel)
+    CFG = cfg
+
 LIMITE_MEM_MB = 2048
 UMBRAL_TOPE_CPU = 95
 
@@ -137,7 +146,7 @@ def leer_k6_csv(ruta):
 
 
 def analizar(version):
-    etiqueta = f'{version}_{NIVEL}'
+    etiqueta = f'{version}_{NIVEL}_{CFG}'
     cpus, mems = leer_estadisticas(NIV / f'stats_{etiqueta}.csv')
     cpus_pg, _ = leer_estadisticas(NIV / f'stats_pg_{etiqueta}.csv')
     tramos, endpoints = leer_k6_csv(NIV / f'k6_{etiqueta}.csv.gz')
@@ -317,41 +326,47 @@ def linea_tiempo_md(datos):
     return filas
 
 
-antes = analizar('antes')
-despues = analizar('despues')
-ma, md = metricas(antes), metricas(despues)
+def generar():
+    antes = analizar('antes')
+    despues = analizar('despues')
+    ma, md = metricas(antes), metricas(despues)
 
-lineas = [f'# Capacidad: {NIVEL} usuarios simultáneos', '']
-entorno = RAIZ / 'entorno.txt'
-if entorno.exists():
-    for linea in entorno.read_text(encoding='utf-8').splitlines():
-        if linea.startswith(('recursos del backend', 'configuración de la JVM', 'pausa entre acciones', 'mezcla de acciones')):
-            lineas.append(f'- {linea}')
-lineas.append('')
-lineas += tabla_resumen(ma, md, antes, despues)
-lineas.append('')
-for datos, m, titulo in ((antes, ma, 'ANTES'), (despues, md, 'DESPUÉS')):
-    lineas.append(f'## Qué pasó en el {titulo}: {veredicto(m)}')
+    lineas = [f'# Capacidad: {NIVEL} usuarios simultáneos, configuración {CFG}', '']
+    entorno = RAIZ / 'entorno.txt'
+    if entorno.exists():
+        for linea in entorno.read_text(encoding='utf-8').splitlines():
+            if linea.startswith(('recursos del backend', 'configuración de la JVM', 'pausa entre acciones', 'mezcla de acciones')):
+                lineas.append(f'- {linea}')
     lineas.append('')
-    for nota in que_paso(datos, m):
-        lineas.append(f'- {nota}')
+    lineas += tabla_resumen(ma, md, antes, despues)
     lineas.append('')
-    te = tabla_endpoints(datos)
-    if te:
-        lineas.append(f'**Por endpoint, {titulo}** (los que más tiempo acumulan):')
+    for datos, m, titulo in ((antes, ma, 'ANTES'), (despues, md, 'DESPUÉS')):
+        lineas.append(f'## Qué pasó en el {titulo}: {veredicto(m)}')
         lineas.append('')
-        lineas += te
+        for nota in que_paso(datos, m):
+            lineas.append(f'- {nota}')
         lineas.append('')
-    tl = linea_tiempo_md(datos)
-    if tl:
-        lineas.append('<details><summary>Línea de tiempo cada 15 s</summary>')
-        lineas.append('')
-        lineas += tl
-        lineas.append('')
-        lineas.append('</details>')
-        lineas.append('')
-lineas.append('> Veredicto: AGUANTA = menos de 1 % de errores y p95 menor a 2 s; DEGRADADO = menos de 5 % y p95 menor a 5 s; SATURADO = menos de 5 % de errores pero p95 de 5 s o más; FALLA = 5 % o más de errores. Los usuarios virtuales hacen una acción cada ~15 s (con variación), no peticiones sin pausa. Es una medición de laboratorio, no una promesa de producción.')
+        te = tabla_endpoints(datos)
+        if te:
+            lineas.append(f'**Por endpoint, {titulo}** (los que más tiempo acumulan):')
+            lineas.append('')
+            lineas += te
+            lineas.append('')
+        tl = linea_tiempo_md(datos)
+        if tl:
+            lineas.append('<details><summary>Línea de tiempo cada 15 s</summary>')
+            lineas.append('')
+            lineas += tl
+            lineas.append('')
+            lineas.append('</details>')
+            lineas.append('')
+    lineas.append('> Veredicto: AGUANTA = menos de 1 % de errores y p95 menor a 2 s; DEGRADADO = menos de 5 % y p95 menor a 5 s; SATURADO = menos de 5 % de errores pero p95 de 5 s o más; FALLA = 5 % o más de errores. Los usuarios virtuales hacen una acción cada ~15 s (con variación), no peticiones sin pausa. Es una medición de laboratorio, no una promesa de producción.')
 
-salida = NIV / f'INFORME_{NIVEL}.md'
-salida.write_text('\n'.join(lineas) + '\n', encoding='utf-8')
-print('\n'.join(lineas))
+    salida = NIV / f'INFORME_{NIVEL}_{CFG}.md'
+    salida.write_text('\n'.join(lineas) + '\n', encoding='utf-8')
+    print('\n'.join(lineas))
+
+
+if __name__ == '__main__':
+    configurar(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else 'C')
+    generar()

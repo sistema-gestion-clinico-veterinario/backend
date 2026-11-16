@@ -20,11 +20,31 @@ const NIVEL = parseInt(__ENV.NIVEL || '100', 10);
 const RAMPA = __ENV.RAMPA || '120s';
 const MANTENER = __ENV.MANTENER || '300s';
 const JITTER = __ENV.JITTER === '1';
+const BASE_N = parseInt(__ENV.BASE_N || '50', 10);
+const PICO_N = parseInt(__ENV.PICO_N || '300', 10);
 const MEZCLA = __ENV.MEZCLA || 'completa';
 const PESOS = (__ENV.PESOS || '30,35,30,5').split(',').map((n) => parseFloat(n));
 const ESPERA_LOGIN_MS = parseInt(__ENV.ESPERA_LOGIN_S || '20', 10) * 1000;
 
-const escenarios = PERFIL === 'capacidad'
+const escenarios = PERFIL === 'recuperacion'
+  ? {
+      recuperacion: {
+        executor: 'ramping-vus',
+        startVUs: 0,
+        stages: [
+          { duration: '30s', target: BASE_N },
+          { duration: '60s', target: BASE_N },
+          { duration: '60s', target: PICO_N },
+          { duration: '180s', target: PICO_N },
+          { duration: '30s', target: BASE_N },
+          { duration: '300s', target: BASE_N },
+          { duration: '30s', target: 0 },
+        ],
+        gracefulRampDown: '60s',
+        gracefulStop: '60s',
+      },
+    }
+  : PERFIL === 'capacidad'
   ? {
       capacidad: {
         executor: 'ramping-vus',

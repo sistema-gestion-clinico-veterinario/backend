@@ -24,12 +24,15 @@ USUARIO="medicion"
 CLAVE="$(openssl rand -hex 12)"
 
 BASE_JVM="-XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m"
-case "$CONFIG" in
-  A) JAVA_OPTS_LAB="-Xmx192m $BASE_JVM -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m" ;;
-  B) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m" ;;
-  C) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m" ;;
-  *) echo "CONFIG desconocida: '$CONFIG' (usa A, B o C)"; exit 1 ;;
-esac
+opciones_jvm() {
+  case "$1" in
+    A) JAVA_OPTS_LAB="-Xmx192m $BASE_JVM -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m" ;;
+    B) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m" ;;
+    C) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m" ;;
+    *) echo "configuración desconocida: '$1' (usa A, B o C)"; exit 1 ;;
+  esac
+}
+opciones_jvm "$CONFIG"
 
 NUCLEOS="$(nproc)"
 if [ "$NUCLEOS" -ge 4 ]; then
@@ -53,7 +56,9 @@ registrar_entorno() {
     echo "núcleos del equipo: $NUCLEOS"
     free -m | sed -n 2p | awk '{print "memoria total del equipo (MB): "$2}'
     echo "recursos del backend: $CPUS CPU, $MEMORIA de RAM (como Render Standard)"
-    echo "configuración de la JVM: $CONFIG -> $JAVA_OPTS_LAB"
+    echo "configuraciones de la JVM:"
+    for c in A B C; do opciones_jvm "$c"; echo "  $c -> $JAVA_OPTS_LAB"; done
+    opciones_jvm "$CONFIG"
     echo "pool de conexiones: $POOL"
     echo "pausa entre acciones: $PAUSA_S s (con variación aleatoria)"
     echo "mezcla de acciones (panel, agenda, historia clínica, reportes): $PESOS %"
@@ -172,9 +177,10 @@ muestrear() {
 }
 
 correr_nivel() {
-  local v="$1" nivel="$2" rampa="$3" mantener="$4"
-  local etiqueta="${v}_${nivel}" t0 salud company_id
-  log "[$v] nivel $nivel: arrancando el backend ($CPUS CPU, $MEMORIA, configuración $CONFIG)"
+  local v="$1" nivel="$2" rampa="$3" mantener="$4" cfg="$5" perfil="${6:-capacidad}"
+  local etiqueta="${v}_${nivel}_${cfg}" t0 salud company_id
+  opciones_jvm "$cfg"
+  log "[$v] $perfil $nivel (configuración $cfg): arrancando el backend ($CPUS CPU, $MEMORIA)"
   iniciar_backend "$v" none "$CPUS" "$MEMORIA" "$PIN_BACK"
   salud="$(esperar_salud)" || { docker logs "sv-$v" 2>&1 | tail -40 | tee -a "$SAL/logs/orquestador.log"; fallo "el backend $v no arrancó"; }
   log "[$v] arrancó en $salud s"
@@ -187,11 +193,11 @@ correr_nivel() {
   muestrear "sv-pg" "$SAL/niveles/stats_pg_${etiqueta}.csv" &
   local muestreador_pg=$!
   t0="$(date +%s)"
-  log "[$v] nivel $nivel: k6 con hasta $nivel usuarios (subida $rampa, sostenido $mantener)"
+  log "[$v] $perfil $nivel: k6 en marcha (subida $rampa, sostenido $mantener)"
   $PIN_K6 env K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_PERIOD=5s K6_WEB_DASHBOARD_EXPORT="$SAL/niveles/panel_k6_${etiqueta}.html" \
     k6 run --quiet --out "csv=$SAL/niveles/k6_${etiqueta}.csv" \
     -e BASE_URL="http://127.0.0.1:$PUERTO" -e SLUG="$SLUG" -e USUARIO="$USUARIO" -e CLAVE="$CLAVE" -e COMPANY_ID="$company_id" \
-    -e CUENTAS="$CUENTAS" -e PERFIL=capacidad -e NIVEL="$nivel" -e RAMPA="$rampa" -e MANTENER="$mantener" \
+    -e CUENTAS="$CUENTAS" -e PERFIL="$perfil" -e NIVEL="$nivel" -e PICO_N="$nivel" -e BASE_N="${BASE_RECUPERACION:-50}" -e RAMPA="$rampa" -e MANTENER="$mantener" \
     -e PAUSA_S="$PAUSA_S" -e JITTER=1 -e MEZCLA=realista -e PESOS="$PESOS" -e TIMEOUT="$TIMEOUT_HTTP" -e SALIDA="$SAL/niveles/k6_${etiqueta}.json" \
     "$RAIZ/medicion/escenario_p1_p4.js" > "$SAL/logs/k6_${etiqueta}.log" 2>&1
   local codigo=$?
@@ -205,31 +211,44 @@ correr_nivel() {
   corriendo="${estado%%|*}"; codigo_salida="${estado#*|}"
   salud_final="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://127.0.0.1:$PUERTO/api/v1/actuator/health" || true)"
   sql="$(docker exec sv-pg psql -U postgres -d "$v" -qtAc "SELECT coalesce(sum(calls),0)||'|'||coalesce(round(sum(total_exec_time)::numeric/1000,1),0) FROM pg_stat_statements WHERE dbid=(SELECT oid FROM pg_database WHERE datname='$v')" 2>/dev/null || echo '0|0')"
-  jq -n --arg version "$v" --argjson nivel "$nivel" --argjson duracion "$duracion" \
+  jq -n --arg version "$v" --argjson nivel "$nivel" --arg cfg "$cfg" --arg perfil "$perfil" --argjson duracion "$duracion" \
     --argjson cpu_s "$(( (cpu1 - cpu0) / 1000000 ))" --arg oom "$oom" --argjson reinicios "${reinicios:-0}" \
     --arg corriendo "$corriendo" --argjson salida "${codigo_salida:--1}" --arg salud "$salud_final" \
     --arg sql "$sql" --argjson arranque "$salud" --argjson k6_codigo "$codigo" \
-    '{version:$version, nivel:$nivel, duracion_s:$duracion, cpu_contenedor_s:$cpu_s, oom_killed:($oom=="true"),
+    '{version:$version, nivel:$nivel, configuracion:$cfg, perfil:$perfil, duracion_s:$duracion, cpu_contenedor_s:$cpu_s, oom_killed:($oom=="true"),
       reinicios:$reinicios, sigue_corriendo:($corriendo=="true"), codigo_salida:$salida, salud_final_http:$salud,
       arranque_s:$arranque, k6_codigo_salida:$k6_codigo, sql_sentencias:(($sql|split("|")[0])|tonumber), sql_tiempo_s:(($sql|split("|")[1])|tonumber)}' \
     > "$SAL/niveles/estado_${etiqueta}.json" || log "no se pudo escribir el estado de $etiqueta"
   detener_backend "$v" "$etiqueta"
   gzip -f "$SAL/niveles/k6_${etiqueta}.csv" 2>/dev/null || true
-  log "[$v] nivel $nivel terminado: k6 código $codigo, OOM=$oom, reinicios=$reinicios, salud final=$salud_final"
+  log "[$v] $perfil $nivel ($cfg) terminado: k6 código $codigo, OOM=$oom, reinicios=$reinicios, salud final=$salud_final"
   sleep 20
 }
 
 registrar_entorno
 construir_imagenes
 levantar_postgres
+opciones_jvm C
 preparar_base antes
 preparar_base despues
 
-while read -r nivel rampa mantener _ <&3; do
-  case "$nivel" in ''|\#*) continue ;; esac
-  for v in antes despues; do correr_nivel "$v" "$nivel" "$rampa" "$mantener"; done
-  python3 "$RAIZ/medicion/capacidad/informe_nivel.py" "$SAL" "$nivel" > "$SAL/logs/informe_$nivel.log" 2>&1 \
-    && cat "$SAL/niveles/INFORME_${nivel}.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
-    || log "no se pudo generar el informe del nivel $nivel (ver logs/informe_$nivel.log)"
+while read -r campo1 campo2 campo3 campo4 _ <&3; do
+  case "$campo1" in ''|\#*) continue ;; esac
+  if [ "$campo1" = "recuperacion" ]; then
+    pico="$campo2"; cfg="${campo3:-$CONFIG}"
+    for v in antes despues; do correr_nivel "$v" "$pico" "-" "-" "$cfg" recuperacion; done
+    python3 "$RAIZ/medicion/capacidad/informe_recuperacion.py" "$SAL" "$pico" "$cfg" > "$SAL/logs/informe_recuperacion_${pico}_${cfg}.log" 2>&1 \
+      && cat "$SAL/niveles/INFORME_recuperacion_${pico}_${cfg}.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
+      || log "no se pudo generar el informe de recuperación (ver logs/informe_recuperacion_${pico}_${cfg}.log)"
+  else
+    nivel="$campo1"; rampa="$campo2"; mantener="$campo3"; cfg="${campo4:-$CONFIG}"
+    for v in antes despues; do correr_nivel "$v" "$nivel" "$rampa" "$mantener" "$cfg" capacidad; done
+    python3 "$RAIZ/medicion/capacidad/informe_nivel.py" "$SAL" "$nivel" "$cfg" > "$SAL/logs/informe_${nivel}_${cfg}.log" 2>&1 \
+      && cat "$SAL/niveles/INFORME_${nivel}_${cfg}.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
+      || log "no se pudo generar el informe del nivel $nivel (ver logs/informe_${nivel}_${cfg}.log)"
+  fi
 done 3< "$PLAN"
+python3 "$RAIZ/medicion/capacidad/resumen_global.py" "$SAL" > "$SAL/logs/resumen_global.log" 2>&1 \
+  && cat "$SAL/RESUMEN_CONFIGURACIONES.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
+  || log "no se pudo generar el resumen global (ver logs/resumen_global.log)"
 log "terminado"

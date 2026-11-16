@@ -1,2 +1,7 @@
-# nivel  subida  sostenido
-500 500s 150s
+# nivel  subida  sostenido  configuracion
+# recuperacion  pico  configuracion
+100 110s 150s A
+100 110s 150s B
+250 250s 150s A
+250 250s 150s B
+recuperacion 300 C
