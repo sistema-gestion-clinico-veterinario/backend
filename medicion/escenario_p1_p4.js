@@ -88,7 +88,7 @@ function pausa() {
 let enviadas = 0;
 const cabeceras = () => {
   enviadas += 1;
-  const cliente = `10.${__VU}.${Math.floor(enviadas / 40) % 250}.1`;
+  const cliente = `10.${(__VU >> 8) & 255}.${__VU & 255}.${(Math.floor(enviadas / 40) % 250) + 1}`;
   return { headers: { 'Content-Type': 'application/json', 'X-Company-Slug': SLUG, Accept: 'application/json', Origin: 'http://localhost', 'X-Forwarded-For': `${cliente}${__ENV.XFF_RESTO !== undefined ? __ENV.XFF_RESTO : ', 10.0.0.1'}` } };
 };
 
