@@ -184,7 +184,8 @@ correr_nivel() {
   local muestreador=$!
   t0="$(date +%s)"
   log "[$v] nivel $nivel: k6 con hasta $nivel usuarios (subida $rampa, sostenido $mantener)"
-  $PIN_K6 k6 run --quiet --out "csv=$SAL/niveles/k6_${etiqueta}.csv" \
+  $PIN_K6 env K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_PERIOD=5s K6_WEB_DASHBOARD_EXPORT="$SAL/niveles/panel_k6_${etiqueta}.html" \
+    k6 run --quiet --out "csv=$SAL/niveles/k6_${etiqueta}.csv" \
     -e BASE_URL="http://127.0.0.1:$PUERTO" -e SLUG="$SLUG" -e USUARIO="$USUARIO" -e CLAVE="$CLAVE" -e COMPANY_ID="$company_id" \
     -e CUENTAS="$CUENTAS" -e PERFIL=capacidad -e NIVEL="$nivel" -e RAMPA="$rampa" -e MANTENER="$mantener" \
     -e PAUSA_S="$PAUSA_S" -e JITTER=1 -e TIMEOUT="$TIMEOUT_HTTP" -e SALIDA="$SAL/niveles/k6_${etiqueta}.json" \
