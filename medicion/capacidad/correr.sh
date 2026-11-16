@@ -14,6 +14,7 @@ CPUS="${CPUS:-1}"
 MEMORIA="${MEMORIA:-2g}"
 CUENTAS="${CUENTAS:-50}"
 PAUSA_S="${PAUSA_S:-15}"
+PESOS="${PESOS:-30,35,30,5}"
 TIMEOUT_HTTP="${TIMEOUT_HTTP:-30s}"
 POOL="${POOL:-10}"
 PGPASS="medicion"
@@ -55,6 +56,7 @@ registrar_entorno() {
     echo "configuración de la JVM: $CONFIG -> $JAVA_OPTS_LAB"
     echo "pool de conexiones: $POOL"
     echo "pausa entre acciones: $PAUSA_S s (con variación aleatoria)"
+    echo "mezcla de acciones (panel, agenda, historia clínica, reportes): $PESOS %"
     echo "cuentas de medición: $CUENTAS"
     echo "docker: $(docker version --format '{{.Server.Version}}')"
     echo "k6: $(k6 version | head -1)"
@@ -159,11 +161,11 @@ preparar_base() {
 cpu_us() { docker exec "sv-$1" cat /sys/fs/cgroup/cpu.stat 2>/dev/null | awk '/^usage_usec/ {print $2}'; }
 
 muestrear() {
-  local v="$1" archivo="$2"
+  local contenedor="$1" archivo="$2"
   : > "$archivo"
   while true; do
     local linea
-    linea="$(docker stats --no-stream --format '{{.CPUPerc}},{{.MemUsage}}' "sv-$v" 2>/dev/null || true)"
+    linea="$(docker stats --no-stream --format '{{.CPUPerc}},{{.MemUsage}}' "$contenedor" 2>/dev/null || true)"
     [ -n "$linea" ] && echo "$(date +%s),$linea" >> "$archivo"
     sleep 4
   done
@@ -180,18 +182,20 @@ correr_nivel() {
   company_id="$(docker exec sv-pg psql -U postgres -d "$v" -tAc "SELECT id FROM company WHERE slug='$SLUG'")"
   docker exec sv-pg psql -U postgres -d "$v" -qtAc "SELECT pg_stat_statements_reset()" > /dev/null
   local cpu0; cpu0="$(cpu_us "$v")"; cpu0="${cpu0:-0}"
-  muestrear "$v" "$SAL/niveles/stats_${etiqueta}.csv" &
+  muestrear "sv-$v" "$SAL/niveles/stats_${etiqueta}.csv" &
   local muestreador=$!
+  muestrear "sv-pg" "$SAL/niveles/stats_pg_${etiqueta}.csv" &
+  local muestreador_pg=$!
   t0="$(date +%s)"
   log "[$v] nivel $nivel: k6 con hasta $nivel usuarios (subida $rampa, sostenido $mantener)"
   $PIN_K6 env K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_PERIOD=5s K6_WEB_DASHBOARD_EXPORT="$SAL/niveles/panel_k6_${etiqueta}.html" \
     k6 run --quiet --out "csv=$SAL/niveles/k6_${etiqueta}.csv" \
     -e BASE_URL="http://127.0.0.1:$PUERTO" -e SLUG="$SLUG" -e USUARIO="$USUARIO" -e CLAVE="$CLAVE" -e COMPANY_ID="$company_id" \
     -e CUENTAS="$CUENTAS" -e PERFIL=capacidad -e NIVEL="$nivel" -e RAMPA="$rampa" -e MANTENER="$mantener" \
-    -e PAUSA_S="$PAUSA_S" -e JITTER=1 -e TIMEOUT="$TIMEOUT_HTTP" -e SALIDA="$SAL/niveles/k6_${etiqueta}.json" \
+    -e PAUSA_S="$PAUSA_S" -e JITTER=1 -e MEZCLA=realista -e PESOS="$PESOS" -e TIMEOUT="$TIMEOUT_HTTP" -e SALIDA="$SAL/niveles/k6_${etiqueta}.json" \
     "$RAIZ/medicion/escenario_p1_p4.js" > "$SAL/logs/k6_${etiqueta}.log" 2>&1
   local codigo=$?
-  kill "$muestreador" 2> /dev/null; wait "$muestreador" 2> /dev/null
+  kill "$muestreador" "$muestreador_pg" 2> /dev/null; wait "$muestreador" "$muestreador_pg" 2> /dev/null
   local duracion=$(( $(date +%s) - t0 ))
   local cpu1; cpu1="$(cpu_us "$v")"; cpu1="${cpu1:-0}"
   local estado oom reinicios corriendo codigo_salida salud_final sql

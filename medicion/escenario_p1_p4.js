@@ -20,6 +20,9 @@ const NIVEL = parseInt(__ENV.NIVEL || '100', 10);
 const RAMPA = __ENV.RAMPA || '120s';
 const MANTENER = __ENV.MANTENER || '300s';
 const JITTER = __ENV.JITTER === '1';
+const MEZCLA = __ENV.MEZCLA || 'completa';
+const PESOS = (__ENV.PESOS || '30,35,30,5').split(',').map((n) => parseFloat(n));
+const ESPERA_LOGIN_MS = parseInt(__ENV.ESPERA_LOGIN_S || '20', 10) * 1000;
 
 const escenarios = PERFIL === 'capacidad'
   ? {
@@ -119,25 +122,31 @@ function datos(res) {
 const dos = (n) => String(n).padStart(2, '0');
 const fecha = (d) => `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
 
+let ultimoLogin = 0;
+
 function iniciarSesion() {
+  ultimoLogin = Date.now();
   group('P0_inicio_de_sesion', () => {
-    for (let intento = 1; intento <= 3 && !conSesion; intento++) {
-      const res = http.post(`${BASE}/api/v1/auth/login`, JSON.stringify({ slug: SLUG, username: `${USUARIO}${((__VU - 1) % CUENTAS) + 1}`, password: CLAVE }), { ...cabeceras(), timeout: __ENV.TIMEOUT || '60s', tags: { ruta: 'login' } });
-      const ok = check(res, { 'login 200': (r) => r.status === 200 });
-      contarEstado(res);
-      if (ok) {
-        conSesion = true;
-        if (!EMPRESA_FIJA) { try { EMPRESA = String(res.json('data.companyId')); } catch (e) { /* sin id */ } }
-      } else {
-        respuestasNo200.add(1);
-        if (avisos < 3) {
-          avisos += 1;
-          console.warn(`login: HTTP ${res.status} vu=${__VU} intento=${intento} ${String(res.body).slice(0, 120)}`);
-        }
-        sleep(3 * intento);
+    const res = http.post(`${BASE}/api/v1/auth/login`, JSON.stringify({ slug: SLUG, username: `${USUARIO}${((__VU - 1) % CUENTAS) + 1}`, password: CLAVE }), { ...cabeceras(), timeout: __ENV.TIMEOUT || '60s', tags: { ruta: 'login' } });
+    const ok = check(res, { 'login 200': (r) => r.status === 200 });
+    contarEstado(res);
+    if (ok) {
+      conSesion = true;
+      if (!EMPRESA_FIJA) { try { EMPRESA = String(res.json('data.companyId')); } catch (e) { /* sin id */ } }
+    } else {
+      respuestasNo200.add(1);
+      if (avisos < 3) {
+        avisos += 1;
+        console.warn(`login: HTTP ${res.status} vu=${__VU} ${String(res.body).slice(0, 120)}`);
       }
     }
   });
+}
+
+function asegurarSesion() {
+  if (conSesion) return true;
+  if (ultimoLogin === 0 || Date.now() - ultimoLogin >= ESPERA_LOGIN_MS) iniciarSesion();
+  return conSesion;
 }
 
 function p1() {
@@ -195,8 +204,29 @@ function p4() {
   });
 }
 
-export default function () {
-  if (!conSesion) iniciarSesion();
+function elegirPantalla() {
+  const total = PESOS.reduce((x, y) => x + y, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < PESOS.length; i++) {
+    r -= PESOS[i];
+    if (r < 0) return i;
+  }
+  return PESOS.length - 1;
+}
+
+function jornadaRealista() {
+  if (!conSesion) {
+    if (!asegurarSesion()) { pausa(); return; }
+    p1();
+    pausa();
+    return;
+  }
+  [p1, p2, p3, p4][elegirPantalla()]();
+  pausa();
+}
+
+function jornadaCompleta() {
+  asegurarSesion();
   p1();
   pausa();
   p2();
@@ -205,6 +235,11 @@ export default function () {
   pausa();
   p4();
   pausa();
+}
+
+export default function () {
+  if (MEZCLA === 'realista') jornadaRealista();
+  else jornadaCompleta();
 }
 
 function listar(valor) {
