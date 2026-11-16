@@ -197,6 +197,8 @@ def veredicto(m):
         return 'AGUANTA'
     if m['errores_pct'] < 5 and (m['p95_ms'] or 0) < 5000:
         return 'DEGRADADO'
+    if m['errores_pct'] < 5:
+        return 'SATURADO (muy lento, casi sin errores)'
     return 'FALLA'
 
 
@@ -348,7 +350,7 @@ for datos, m, titulo in ((antes, ma, 'ANTES'), (despues, md, 'DESPUÉS')):
         lineas.append('')
         lineas.append('</details>')
         lineas.append('')
-lineas.append('> Veredicto: AGUANTA = menos de 1 % de errores y p95 menor a 2 s; DEGRADADO = menos de 5 % y p95 menor a 5 s; FALLA = peor que eso. Los usuarios virtuales hacen una acción cada ~15 s (con variación), no peticiones sin pausa. Es una medición de laboratorio, no una promesa de producción.')
+lineas.append('> Veredicto: AGUANTA = menos de 1 % de errores y p95 menor a 2 s; DEGRADADO = menos de 5 % y p95 menor a 5 s; SATURADO = menos de 5 % de errores pero p95 de 5 s o más; FALLA = 5 % o más de errores. Los usuarios virtuales hacen una acción cada ~15 s (con variación), no peticiones sin pausa. Es una medición de laboratorio, no una promesa de producción.')
 
 salida = NIV / f'INFORME_{NIVEL}.md'
 salida.write_text('\n'.join(lineas) + '\n', encoding='utf-8')
