@@ -1,0 +1,17 @@
+{
+  "version": "antes",
+  "nivel": 250,
+  "configuracion": "B",
+  "perfil": "capacidad",
+  "duracion_s": 491,
+  "cpu_contenedor_s": 117,
+  "oom_killed": false,
+  "reinicios": 0,
+  "sigue_corriendo": true,
+  "codigo_salida": 0,
+  "salud_final_http": "000",
+  "arranque_s": 20,
+  "k6_codigo_salida": 0,
+  "sql_sentencias": 241914,
+  "sql_tiempo_s": 46.3
+}

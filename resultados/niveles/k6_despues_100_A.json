@@ -1,0 +1,81 @@
+{
+ "objetivo": "http://127.0.0.1:18080",
+ "vus": 2,
+ "iteraciones_por_vu": 10,
+ "recorridos": {
+  "P0_inicio_de_sesion": {
+   "mediana_ms": 30000.987885,
+   "p95_ms": 30001.5099106,
+   "promedio_ms": 28205.022996117954,
+   "maximo_ms": 30001.739258
+  },
+  "P1_acceso_y_panel": {
+   "mediana_ms": 1566.594481,
+   "p95_ms": 180005.8118275,
+   "promedio_ms": 46523.696889290906,
+   "maximo_ms": 180007.459033
+  },
+  "P2_agenda_mensual": {
+   "mediana_ms": 86741.269489,
+   "p95_ms": 197277.3584319,
+   "promedio_ms": 80754.9998139,
+   "maximo_ms": 200365.017734
+  },
+  "P3_historia_clinica": {
+   "mediana_ms": 30001.123395,
+   "p95_ms": 48085.65068939989,
+   "promedio_ms": 29431.988833105264,
+   "maximo_ms": 94340.337777
+  },
+  "P4_reportes": {
+   "mediana_ms": 90003.349356,
+   "p95_ms": 90003.349356,
+   "promedio_ms": 90003.349356,
+   "maximo_ms": 90003.349356
+  }
+ },
+ "perfil": "capacidad",
+ "iteraciones_completas": 482,
+ "vus_maximos": 100,
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 380,
+  "otro_4xx": 0,
+  "5xx": 0,
+  "sin_respuesta": 542
+ },
+ "latencia_extra_ms": {
+  "p90": 30000.797065,
+  "max": 30001.569095
+ },
+ "peticiones": 922,
+ "respuestas_no_200": 542,
+ "tasa_de_fallos_http": 0.5878524945770065,
+ "latencia_ms": {
+  "mediana": 30000.0706305,
+  "p95": 30000.912657
+ },
+ "bytes_recibidos": 5502961,
+ "duracion_total_s": 322.65381954,
+ "chequeos_fallidos": [
+  "login 200: 377 fallos de 407",
+  "navegacion 200: 16 fallos de 55",
+  "privacidad 200: 12 fallos de 55",
+  "cumplimiento 200: 12 fallos de 55",
+  "notificaciones 200: 13 fallos de 55",
+  "avisos_de_cumplimiento 200: 12 fallos de 55",
+  "panel 200: 10 fallos de 55",
+  "citas_del_mes 200: 38 fallos de 86",
+  "empleados 200: 16 fallos de 30",
+  "propietarios 200: 15 fallos de 30",
+  "lista_de_historias 200: 14 fallos de 19",
+  "historia 200: 1 fallos de 5",
+  "consulta 200: 1 fallos de 4",
+  "recetas 200: 1 fallos de 4",
+  "diagnosticos 200: 1 fallos de 4",
+  "reporte_clinico 200: 1 fallos de 1",
+  "reporte_de_ventas 200: 1 fallos de 1",
+  "pacientes_inactivos 200: 1 fallos de 1"
+ ]
+}

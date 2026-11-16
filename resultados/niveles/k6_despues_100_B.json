@@ -1,0 +1,62 @@
+{
+ "objetivo": "http://127.0.0.1:18080",
+ "vus": 2,
+ "iteraciones_por_vu": 10,
+ "recorridos": {
+  "P0_inicio_de_sesion": {
+   "mediana_ms": 407.791811,
+   "p95_ms": 1391.1200622,
+   "promedio_ms": 563.9173421600002,
+   "maximo_ms": 2024.201893
+  },
+  "P1_acceso_y_panel": {
+   "mediana_ms": 366.060935,
+   "p95_ms": 7604.314166499994,
+   "promedio_ms": 1349.4336557314618,
+   "maximo_ms": 15383.774023
+  },
+  "P2_agenda_mensual": {
+   "mediana_ms": 585.276217,
+   "p95_ms": 10954.068796799998,
+   "promedio_ms": 2060.5385939200955,
+   "maximo_ms": 16445.154498
+  },
+  "P3_historia_clinica": {
+   "mediana_ms": 219.0442225,
+   "p95_ms": 6887.696696049997,
+   "promedio_ms": 1175.1551717526884,
+   "maximo_ms": 12461.852902
+  },
+  "P4_reportes": {
+   "mediana_ms": 5081.024775,
+   "p95_ms": 20454.0425448,
+   "promedio_ms": 8590.586043190477,
+   "maximo_ms": 21425.311107
+  }
+ },
+ "perfil": "capacidad",
+ "iteraciones_completas": 1347,
+ "vus_maximos": 100,
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 8034,
+  "otro_4xx": 0,
+  "5xx": 0,
+  "sin_respuesta": 0
+ },
+ "latencia_extra_ms": {
+  "p90": 752.0834044999999,
+  "max": 16446.085945
+ },
+ "peticiones": 8034,
+ "respuestas_no_200": 0,
+ "tasa_de_fallos_http": 0,
+ "latencia_ms": {
+  "mediana": 49.5922245,
+  "p95": 1543.9634041999993
+ },
+ "bytes_recibidos": 196414338,
+ "duracion_total_s": 305.03840548700003,
+ "chequeos_fallidos": []
+}

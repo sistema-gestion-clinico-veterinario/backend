@@ -1,0 +1,81 @@
+{
+ "objetivo": "http://127.0.0.1:18080",
+ "vus": 2,
+ "iteraciones_por_vu": 10,
+ "recorridos": {
+  "P0_inicio_de_sesion": {
+   "mediana_ms": 30000.886963,
+   "p95_ms": 30001.437501200002,
+   "promedio_ms": 27154.32293347626,
+   "maximo_ms": 30001.600239
+  },
+  "P1_acceso_y_panel": {
+   "mediana_ms": 357.225934,
+   "p95_ms": 180006.23048620002,
+   "promedio_ms": 45757.79618331111,
+   "maximo_ms": 180010.4518
+  },
+  "P2_agenda_mensual": {
+   "mediana_ms": 90002.5933975,
+   "p95_ms": 164268.32882504998,
+   "promedio_ms": 67260.98181995057,
+   "maximo_ms": 209749.281446
+  },
+  "P3_historia_clinica": {
+   "mediana_ms": 30000.541968999998,
+   "p95_ms": 74463.15125875,
+   "promedio_ms": 20966.264591212323,
+   "maximo_ms": 100815.757203
+  },
+  "P4_reportes": {
+   "mediana_ms": 90002.751279,
+   "p95_ms": 90003.7765404,
+   "promedio_ms": 69425.04564396295,
+   "maximo_ms": 90004.006078
+  }
+ },
+ "perfil": "capacidad",
+ "iteraciones_completas": 1443,
+ "vus_maximos": 250,
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 2068,
+  "otro_4xx": 0,
+  "5xx": 0,
+  "sin_respuesta": 1869
+ },
+ "latencia_extra_ms": {
+  "p90": 30000.7593734,
+  "max": 30004.678694
+ },
+ "peticiones": 3937,
+ "respuestas_no_200": 1869,
+ "tasa_de_fallos_http": 0.4747269494538989,
+ "latencia_ms": {
+  "mediana": 4353.509418,
+  "p95": 30000.8727178
+ },
+ "bytes_recibidos": 41629207,
+ "duracion_total_s": 489.881473873,
+ "chequeos_fallidos": [
+  "login 200: 873 fallos de 970",
+  "navegacion 200: 68 fallos de 251",
+  "privacidad 200: 73 fallos de 251",
+  "cumplimiento 200: 74 fallos de 245",
+  "notificaciones 200: 75 fallos de 241",
+  "avisos_de_cumplimiento 200: 72 fallos de 233",
+  "panel 200: 66 fallos de 225",
+  "lista_de_historias 200: 61 fallos de 146",
+  "historia 200: 6 fallos de 85",
+  "consulta 200: 6 fallos de 79",
+  "recetas 200: 9 fallos de 79",
+  "diagnosticos 200: 11 fallos de 79",
+  "citas_del_mes 200: 179 fallos de 595",
+  "empleados 200: 126 fallos de 195",
+  "propietarios 200: 113 fallos de 182",
+  "reporte_clinico 200: 16 fallos de 27",
+  "reporte_de_ventas 200: 19 fallos de 27",
+  "pacientes_inactivos 200: 22 fallos de 27"
+ ]
+}

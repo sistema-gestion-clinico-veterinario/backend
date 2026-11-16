@@ -1,0 +1,77 @@
+{
+ "objetivo": "http://127.0.0.1:18080",
+ "vus": 2,
+ "iteraciones_por_vu": 10,
+ "recorridos": {
+  "P0_inicio_de_sesion": {
+   "mediana_ms": 30000.8692185,
+   "p95_ms": 30001.39447125,
+   "promedio_ms": 29666.60176030204,
+   "maximo_ms": 30001.56995
+  },
+  "P1_acceso_y_panel": {
+   "mediana_ms": 46583.1846155,
+   "p95_ms": 180006.00399475,
+   "promedio_ms": 86991.29013108333,
+   "maximo_ms": 180006.593563
+  },
+  "P2_agenda_mensual": {
+   "mediana_ms": 90002.9843905,
+   "p95_ms": 90003.68762634999,
+   "promedio_ms": 90002.91393963638,
+   "maximo_ms": 90004.054308
+  },
+  "P3_historia_clinica": {
+   "mediana_ms": 30000.834207,
+   "p95_ms": 30001.252631800002,
+   "promedio_ms": 30000.871667636362,
+   "maximo_ms": 30001.326023
+  },
+  "P4_reportes": {
+   "mediana_ms": 90002.596519,
+   "p95_ms": 90003.4125268,
+   "promedio_ms": 90002.739507,
+   "maximo_ms": 90003.592814
+  }
+ },
+ "perfil": "capacidad",
+ "iteraciones_completas": 1643,
+ "vus_maximos": 250,
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 130,
+  "otro_4xx": 0,
+  "5xx": 0,
+  "sin_respuesta": 1791
+ },
+ "latencia_extra_ms": {
+  "p90": 30000.830522,
+  "max": 30001.161427
+ },
+ "peticiones": 1921,
+ "respuestas_no_200": 1791,
+ "tasa_de_fallos_http": 0.9323269130661114,
+ "latencia_ms": {
+  "mediana": 30000.347973,
+  "p95": 30000.902528
+ },
+ "bytes_recibidos": 652344,
+ "duracion_total_s": 489.881213752,
+ "chequeos_fallidos": [
+  "login 200: 1558 fallos de 1576",
+  "navegacion 200: 22 fallos de 42",
+  "privacidad 200: 23 fallos de 42",
+  "cumplimiento 200: 21 fallos de 40",
+  "notificaciones 200: 20 fallos de 38",
+  "avisos_de_cumplimiento 200: 20 fallos de 38",
+  "panel 200: 18 fallos de 36",
+  "reporte_clinico 200: 6 fallos de 6",
+  "reporte_de_ventas 200: 6 fallos de 6",
+  "pacientes_inactivos 200: 5 fallos de 5",
+  "lista_de_historias 200: 22 fallos de 22",
+  "citas_del_mes 200: 24 fallos de 24",
+  "empleados 200: 24 fallos de 24",
+  "propietarios 200: 22 fallos de 22"
+ ]
+}

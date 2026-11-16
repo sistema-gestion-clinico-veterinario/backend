@@ -1,0 +1,78 @@
+{
+ "objetivo": "http://127.0.0.1:18080",
+ "vus": 2,
+ "iteraciones_por_vu": 10,
+ "recorridos": {
+  "P0_inicio_de_sesion": {
+   "mediana_ms": 30000.904561,
+   "p95_ms": 30001.4291894,
+   "promedio_ms": 29000.222257614845,
+   "maximo_ms": 30004.281832
+  },
+  "P1_acceso_y_panel": {
+   "mediana_ms": 631.026134,
+   "p95_ms": 180006.357102,
+   "promedio_ms": 55841.470619536005,
+   "maximo_ms": 180007.412971
+  },
+  "P2_agenda_mensual": {
+   "mediana_ms": 689.482272,
+   "p95_ms": 90003.4906118,
+   "promedio_ms": 34932.32782261016,
+   "maximo_ms": 171967.770236
+  },
+  "P3_historia_clinica": {
+   "mediana_ms": 18573.797641,
+   "p95_ms": 30001.467631,
+   "promedio_ms": 15638.13559107734,
+   "maximo_ms": 59658.511477
+  },
+  "P4_reportes": {
+   "mediana_ms": 49722.7009975,
+   "p95_ms": 90003.53650300001,
+   "promedio_ms": 47028.71743169233,
+   "maximo_ms": 90004.219674
+  }
+ },
+ "perfil": "recuperacion",
+ "iteraciones_completas": 1999,
+ "vus_maximos": 300,
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 2371,
+  "otro_4xx": 0,
+  "5xx": 0,
+  "sin_respuesta": 2140
+ },
+ "latencia_extra_ms": {
+  "p90": 30000.724963,
+  "max": 30003.734762
+ },
+ "peticiones": 4511,
+ "respuestas_no_200": 2140,
+ "tasa_de_fallos_http": 0.47439592108180006,
+ "latencia_ms": {
+  "mediana": 1781.570781,
+  "p95": 30000.837915
+ },
+ "bytes_recibidos": 52314716,
+ "duracion_total_s": 703.5567837460001,
+ "chequeos_fallidos": [
+  "login 200: 1365 fallos de 1415",
+  "navegacion 200: 83 fallos de 250",
+  "privacidad 200: 77 fallos de 250",
+  "cumplimiento 200: 77 fallos de 250",
+  "notificaciones 200: 74 fallos de 250",
+  "avisos_de_cumplimiento 200: 70 fallos de 250",
+  "panel 200: 67 fallos de 250",
+  "citas_del_mes 200: 71 fallos de 613",
+  "empleados 200: 66 fallos de 177",
+  "propietarios 200: 62 fallos de 177",
+  "lista_de_historias 200: 87 fallos de 181",
+  "historia 200: 2 fallos de 94",
+  "reporte_clinico 200: 14 fallos de 26",
+  "reporte_de_ventas 200: 13 fallos de 26",
+  "pacientes_inactivos 200: 12 fallos de 26"
+ ]
+}

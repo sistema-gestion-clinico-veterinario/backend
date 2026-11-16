@@ -1,0 +1,923 @@
+time="2026-11-16T05:23:31Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports?fechaDesde=2025-11-16&fechaHasta=2026-11-16&companyId=1\": request timeout"
+time="2026-11-16T05:23:31Z" level=warning msg="reporte_clinico: HTTP 0 vu=11 iter=1 null" source=console
+time="2026-11-16T05:23:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": EOF"
+time="2026-11-16T05:23:32Z" level=warning msg="login: HTTP 0 vu=40 null" source=console
+time="2026-11-16T05:23:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:36Z" level=warning msg="login: HTTP 0 vu=25 null" source=console
+time="2026-11-16T05:23:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:37Z" level=warning msg="login: HTTP 0 vu=26 null" source=console
+time="2026-11-16T05:23:38Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:38Z" level=warning msg="login: HTTP 0 vu=27 null" source=console
+time="2026-11-16T05:23:39Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:39Z" level=warning msg="login: HTTP 0 vu=28 null" source=console
+time="2026-11-16T05:23:40Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:40Z" level=warning msg="login: HTTP 0 vu=29 null" source=console
+time="2026-11-16T05:23:41Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:41Z" level=warning msg="login: HTTP 0 vu=30 null" source=console
+time="2026-11-16T05:23:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:42Z" level=warning msg="login: HTTP 0 vu=31 null" source=console
+time="2026-11-16T05:23:43Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-16T05:23:43Z" level=warning msg="panel: HTTP 0 vu=1 iter=2 null" source=console
+time="2026-11-16T05:23:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:43Z" level=warning msg="login: HTTP 0 vu=32 null" source=console
+time="2026-11-16T05:23:44Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-16T05:23:44Z" level=warning msg="avisos_de_cumplimiento: HTTP 0 vu=16 iter=1 null" source=console
+time="2026-11-16T05:23:44Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-16T05:23:44Z" level=warning msg="consulta: HTTP 0 vu=4 iter=2 {\"success\":true,\"message\":\"Consulta recuperada con éxito\",\"data\":{\"id\":36,\"version\":0,\"estado\":\"CERRADA\",\"tipoConsulta\":" source=console
+time="2026-11-16T05:23:44Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:44Z" level=warning msg="login: HTTP 0 vu=33 null" source=console
+time="2026-11-16T05:23:45Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=1&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:23:45Z" level=warning msg="citas_del_mes: HTTP 0 vu=2 iter=2 null" source=console
+time="2026-11-16T05:23:45Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-16T05:23:45Z" level=warning msg="notificaciones: HTTP 0 vu=24 iter=0 null" source=console
+time="2026-11-16T05:23:45Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-16T05:23:45Z" level=warning msg="privacidad: HTTP 0 vu=23 iter=0 null" source=console
+time="2026-11-16T05:23:45Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=1&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:23:45Z" level=warning msg="citas_del_mes: HTTP 0 vu=21 iter=1 null" source=console
+time="2026-11-16T05:23:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:46Z" level=warning msg="login: HTTP 0 vu=34 null" source=console
+time="2026-11-16T05:23:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:23:47Z" level=warning msg="citas_del_mes: HTTP 0 vu=18 iter=1 null" source=console
+time="2026-11-16T05:23:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:47Z" level=warning msg="login: HTTP 0 vu=35 null" source=console
+time="2026-11-16T05:23:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:23:47Z" level=warning msg="citas_del_mes: HTTP 0 vu=6 iter=2 null" source=console
+time="2026-11-16T05:23:48Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:48Z" level=warning msg="login: HTTP 0 vu=36 null" source=console
+time="2026-11-16T05:23:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:49Z" level=warning msg="login: HTTP 0 vu=37 null" source=console
+time="2026-11-16T05:23:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:50Z" level=warning msg="login: HTTP 0 vu=38 null" source=console
+time="2026-11-16T05:23:50Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:23:50Z" level=warning msg="lista_de_historias: HTTP 0 vu=8 iter=2 null" source=console
+time="2026-11-16T05:23:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:51Z" level=warning msg="login: HTTP 0 vu=39 null" source=console
+time="2026-11-16T05:23:52Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:23:52Z" level=warning msg="navegacion: HTTP 0 vu=14 iter=2 null" source=console
+time="2026-11-16T05:23:53Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:23:53Z" level=warning msg="citas_del_mes: HTTP 0 vu=20 iter=1 null" source=console
+time="2026-11-16T05:23:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:53Z" level=warning msg="login: HTTP 0 vu=41 null" source=console
+time="2026-11-16T05:23:54Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:23:54Z" level=warning msg="navegacion: HTTP 0 vu=7 iter=2 null" source=console
+time="2026-11-16T05:23:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:54Z" level=warning msg="login: HTTP 0 vu=42 null" source=console
+time="2026-11-16T05:23:55Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:23:55Z" level=warning msg="navegacion: HTTP 0 vu=22 iter=1 null" source=console
+time="2026-11-16T05:23:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:55Z" level=warning msg="login: HTTP 0 vu=43 null" source=console
+time="2026-11-16T05:23:56Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:23:56Z" level=warning msg="lista_de_historias: HTTP 0 vu=13 iter=2 null" source=console
+time="2026-11-16T05:23:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:57Z" level=warning msg="login: HTTP 0 vu=44 null" source=console
+time="2026-11-16T05:23:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:58Z" level=warning msg="login: HTTP 0 vu=45 null" source=console
+time="2026-11-16T05:23:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:23:59Z" level=warning msg="login: HTTP 0 vu=46 null" source=console
+time="2026-11-16T05:24:00Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:24:00Z" level=warning msg="lista_de_historias: HTTP 0 vu=10 iter=2 null" source=console
+time="2026-11-16T05:24:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:00Z" level=warning msg="login: HTTP 0 vu=47 null" source=console
+time="2026-11-16T05:24:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:01Z" level=warning msg="login: HTTP 0 vu=48 null" source=console
+time="2026-11-16T05:24:01Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/sales-products?fechaDesde=2025-11-16&fechaHasta=2026-11-16&companyId=1\": request timeout"
+time="2026-11-16T05:24:01Z" level=warning msg="reporte_de_ventas: HTTP 0 vu=11 iter=1 null" source=console
+time="2026-11-16T05:24:02Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:02Z" level=warning msg="login: HTTP 0 vu=49 null" source=console
+time="2026-11-16T05:24:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=1&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:24:02Z" level=warning msg="citas_del_mes: HTTP 0 vu=17 iter=1 null" source=console
+time="2026-11-16T05:24:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records/numero/HC-00000008\": request timeout"
+time="2026-11-16T05:24:02Z" level=warning msg="historia: HTTP 0 vu=5 iter=2 null" source=console
+time="2026-11-16T05:24:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=1&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:24:03Z" level=warning msg="citas_del_mes: HTTP 0 vu=12 iter=2 null" source=console
+time="2026-11-16T05:24:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=1&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:24:03Z" level=warning msg="citas_del_mes: HTTP 0 vu=15 iter=1 null" source=console
+time="2026-11-16T05:24:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-16T05:24:03Z" level=warning msg="privacidad: HTTP 0 vu=3 iter=2 null" source=console
+time="2026-11-16T05:24:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=3&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:24:03Z" level=warning msg="citas_del_mes: HTTP 0 vu=19 iter=1 null" source=console
+time="2026-11-16T05:24:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:03Z" level=warning msg="login: HTTP 0 vu=50 null" source=console
+time="2026-11-16T05:24:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:04Z" level=warning msg="login: HTTP 0 vu=51 null" source=console
+time="2026-11-16T05:24:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:05Z" level=warning msg="login: HTTP 0 vu=52 null" source=console
+time="2026-11-16T05:24:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:24:06Z" level=warning msg="citas_del_mes: HTTP 0 vu=9 iter=3 null" source=console
+time="2026-11-16T05:24:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:06Z" level=warning msg="login: HTTP 0 vu=53 null" source=console
+time="2026-11-16T05:24:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:08Z" level=warning msg="login: HTTP 0 vu=54 null" source=console
+time="2026-11-16T05:24:09Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:09Z" level=warning msg="login: HTTP 0 vu=55 null" source=console
+time="2026-11-16T05:24:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:10Z" level=warning msg="login: HTTP 0 vu=56 null" source=console
+time="2026-11-16T05:24:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:11Z" level=warning msg="login: HTTP 0 vu=57 null" source=console
+time="2026-11-16T05:24:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:12Z" level=warning msg="login: HTTP 0 vu=58 null" source=console
+time="2026-11-16T05:24:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:13Z" level=warning msg="login: HTTP 0 vu=60 null" source=console
+time="2026-11-16T05:24:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:14Z" level=warning msg="login: HTTP 0 vu=59 null" source=console
+time="2026-11-16T05:24:14Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-16T05:24:14Z" level=warning msg="panel: HTTP 0 vu=16 iter=1 null" source=console
+time="2026-11-16T05:24:14Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/prescriptions/consultation/36\": request timeout"
+time="2026-11-16T05:24:14Z" level=warning msg="recetas: HTTP 0 vu=4 iter=2 null" source=console
+time="2026-11-16T05:24:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=2&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:24:15Z" level=warning msg="citas_del_mes: HTTP 0 vu=2 iter=2 null" source=console
+time="2026-11-16T05:24:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-16T05:24:15Z" level=warning msg="avisos_de_cumplimiento: HTTP 0 vu=24 iter=0 null" source=console
+time="2026-11-16T05:24:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:15Z" level=warning msg="login: HTTP 0 vu=62 null" source=console
+time="2026-11-16T05:24:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-16T05:24:15Z" level=warning msg="cumplimiento: HTTP 0 vu=23 iter=0 null" source=console
+time="2026-11-16T05:24:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=2&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:24:15Z" level=warning msg="citas_del_mes: HTTP 0 vu=21 iter=1 null" source=console
+time="2026-11-16T05:24:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:16Z" level=warning msg="login: HTTP 0 vu=61 null" source=console
+time="2026-11-16T05:24:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:24:17Z" level=warning msg="empleados: HTTP 0 vu=18 iter=1 null" source=console
+time="2026-11-16T05:24:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:24:17Z" level=warning msg="empleados: HTTP 0 vu=6 iter=2 null" source=console
+time="2026-11-16T05:24:17Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:17Z" level=warning msg="login: HTTP 0 vu=40 null" source=console
+time="2026-11-16T05:24:17Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:17Z" level=warning msg="login: HTTP 0 vu=63 null" source=console
+time="2026-11-16T05:24:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:19Z" level=warning msg="login: HTTP 0 vu=64 null" source=console
+time="2026-11-16T05:24:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:19Z" level=warning msg="login: HTTP 0 vu=26 null" source=console
+time="2026-11-16T05:24:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:20Z" level=warning msg="login: HTTP 0 vu=65 null" source=console
+time="2026-11-16T05:24:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:21Z" level=warning msg="login: HTTP 0 vu=29 null" source=console
+time="2026-11-16T05:24:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:21Z" level=warning msg="login: HTTP 0 vu=66 null" source=console
+time="2026-11-16T05:24:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:22Z" level=warning msg="login: HTTP 0 vu=67 null" source=console
+time="2026-11-16T05:24:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:22Z" level=warning msg="login: HTTP 0 vu=30 null" source=console
+time="2026-11-16T05:24:22Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-16T05:24:22Z" level=warning msg="privacidad: HTTP 0 vu=14 iter=2 null" source=console
+time="2026-11-16T05:24:23Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:24:23Z" level=warning msg="empleados: HTTP 0 vu=20 iter=1 null" source=console
+time="2026-11-16T05:24:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:23Z" level=warning msg="login: HTTP 0 vu=68 null" source=console
+time="2026-11-16T05:24:24Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-16T05:24:24Z" level=warning msg="privacidad: HTTP 0 vu=7 iter=2 null" source=console
+time="2026-11-16T05:24:24Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:24Z" level=warning msg="login: HTTP 0 vu=69 null" source=console
+time="2026-11-16T05:24:25Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-16T05:24:25Z" level=warning msg="privacidad: HTTP 0 vu=22 iter=1 null" source=console
+time="2026-11-16T05:24:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:25Z" level=warning msg="login: HTTP 0 vu=31 null" source=console
+time="2026-11-16T05:24:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:25Z" level=warning msg="login: HTTP 0 vu=70 null" source=console
+time="2026-11-16T05:24:26Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:24:26Z" level=warning msg="lista_de_historias: HTTP 0 vu=1 iter=3 null" source=console
+time="2026-11-16T05:24:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:26Z" level=warning msg="login: HTTP 0 vu=25 null" source=console
+time="2026-11-16T05:24:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:26Z" level=warning msg="login: HTTP 0 vu=71 null" source=console
+time="2026-11-16T05:24:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:27Z" level=warning msg="login: HTTP 0 vu=37 null" source=console
+time="2026-11-16T05:24:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:27Z" level=warning msg="login: HTTP 0 vu=34 null" source=console
+time="2026-11-16T05:24:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:27Z" level=warning msg="login: HTTP 0 vu=72 null" source=console
+time="2026-11-16T05:24:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:27Z" level=warning msg="login: HTTP 0 vu=35 null" source=console
+time="2026-11-16T05:24:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:28Z" level=warning msg="login: HTTP 0 vu=32 null" source=console
+time="2026-11-16T05:24:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:28Z" level=warning msg="login: HTTP 0 vu=73 null" source=console
+time="2026-11-16T05:24:29Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:29Z" level=warning msg="login: HTTP 0 vu=38 null" source=console
+time="2026-11-16T05:24:29Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:29Z" level=warning msg="login: HTTP 0 vu=27 null" source=console
+time="2026-11-16T05:24:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:30Z" level=warning msg="login: HTTP 0 vu=74 null" source=console
+time="2026-11-16T05:24:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:30Z" level=warning msg="login: HTTP 0 vu=28 null" source=console
+time="2026-11-16T05:24:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:30Z" level=warning msg="login: HTTP 0 vu=36 null" source=console
+time="2026-11-16T05:24:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:31Z" level=warning msg="login: HTTP 0 vu=75 null" source=console
+time="2026-11-16T05:24:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:31Z" level=warning msg="login: HTTP 0 vu=39 null" source=console
+time="2026-11-16T05:24:31Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/inactive-patients?page=0&size=20&companyId=1\": request timeout"
+time="2026-11-16T05:24:31Z" level=warning msg="pacientes_inactivos: HTTP 0 vu=11 iter=1 null" source=console
+time="2026-11-16T05:24:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:32Z" level=warning msg="login: HTTP 0 vu=76 null" source=console
+time="2026-11-16T05:24:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=2&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:24:32Z" level=warning msg="citas_del_mes: HTTP 0 vu=17 iter=1 null" source=console
+time="2026-11-16T05:24:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=2&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:24:33Z" level=warning msg="citas_del_mes: HTTP 0 vu=12 iter=2 null" source=console
+time="2026-11-16T05:24:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=2&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:24:33Z" level=warning msg="citas_del_mes: HTTP 0 vu=15 iter=1 null" source=console
+time="2026-11-16T05:24:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-16T05:24:33Z" level=warning msg="cumplimiento: HTTP 0 vu=3 iter=2 null" source=console
+time="2026-11-16T05:24:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=4&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:24:33Z" level=warning msg="citas_del_mes: HTTP 0 vu=19 iter=1 null" source=console
+time="2026-11-16T05:24:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:33Z" level=warning msg="login: HTTP 0 vu=77 null" source=console
+time="2026-11-16T05:24:34Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:24:34Z" level=warning msg="navegacion: HTTP 0 vu=8 iter=3 null" source=console
+time="2026-11-16T05:24:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:34Z" level=warning msg="login: HTTP 0 vu=33 null" source=console
+time="2026-11-16T05:24:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:34Z" level=warning msg="login: HTTP 0 vu=78 null" source=console
+time="2026-11-16T05:24:34Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:24:34Z" level=warning msg="lista_de_historias: HTTP 0 vu=13 iter=3 null" source=console
+time="2026-11-16T05:24:35Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:35Z" level=warning msg="login: HTTP 0 vu=79 null" source=console
+time="2026-11-16T05:24:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:36Z" level=warning msg="login: HTTP 0 vu=80 null" source=console
+time="2026-11-16T05:24:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:37Z" level=warning msg="login: HTTP 0 vu=81 null" source=console
+time="2026-11-16T05:24:38Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:38Z" level=warning msg="login: HTTP 0 vu=45 null" source=console
+time="2026-11-16T05:24:38Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:38Z" level=warning msg="login: HTTP 0 vu=43 null" source=console
+time="2026-11-16T05:24:38Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:38Z" level=warning msg="login: HTTP 0 vu=82 null" source=console
+time="2026-11-16T05:24:39Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:39Z" level=warning msg="login: HTTP 0 vu=41 null" source=console
+time="2026-11-16T05:24:39Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:39Z" level=warning msg="login: HTTP 0 vu=83 null" source=console
+time="2026-11-16T05:24:41Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:41Z" level=warning msg="login: HTTP 0 vu=84 null" source=console
+time="2026-11-16T05:24:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:42Z" level=warning msg="login: HTTP 0 vu=85 null" source=console
+time="2026-11-16T05:24:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:42Z" level=warning msg="login: HTTP 0 vu=42 null" source=console
+time="2026-11-16T05:24:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:43Z" level=warning msg="login: HTTP 0 vu=86 null" source=console
+time="2026-11-16T05:24:43Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:24:43Z" level=warning msg="lista_de_historias: HTTP 0 vu=10 iter=3 null" source=console
+time="2026-11-16T05:24:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:43Z" level=warning msg="login: HTTP 0 vu=48 null" source=console
+time="2026-11-16T05:24:44Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:44Z" level=warning msg="login: HTTP 0 vu=87 null" source=console
+time="2026-11-16T05:24:44Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/diagnoses/consultation/36\": request timeout"
+time="2026-11-16T05:24:44Z" level=warning msg="diagnosticos: HTTP 0 vu=4 iter=2 null" source=console
+time="2026-11-16T05:24:45Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=3&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:24:45Z" level=warning msg="citas_del_mes: HTTP 0 vu=2 iter=2 null" source=console
+time="2026-11-16T05:24:45Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-16T05:24:45Z" level=warning msg="panel: HTTP 0 vu=24 iter=0 null" source=console
+time="2026-11-16T05:24:45Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:45Z" level=warning msg="login: HTTP 0 vu=88 null" source=console
+time="2026-11-16T05:24:45Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-16T05:24:45Z" level=warning msg="notificaciones: HTTP 0 vu=23 iter=0 null" source=console
+time="2026-11-16T05:24:45Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=3&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:24:45Z" level=warning msg="citas_del_mes: HTTP 0 vu=21 iter=1 null" source=console
+time="2026-11-16T05:24:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:46Z" level=warning msg="login: HTTP 0 vu=44 null" source=console
+time="2026-11-16T05:24:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:46Z" level=warning msg="login: HTTP 0 vu=46 null" source=console
+time="2026-11-16T05:24:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:46Z" level=warning msg="login: HTTP 0 vu=89 null" source=console
+time="2026-11-16T05:24:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:46Z" level=warning msg="login: HTTP 0 vu=47 null" source=console
+time="2026-11-16T05:24:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:24:47Z" level=warning msg="propietarios: HTTP 0 vu=18 iter=1 null" source=console
+time="2026-11-16T05:24:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:24:47Z" level=warning msg="propietarios: HTTP 0 vu=6 iter=2 null" source=console
+time="2026-11-16T05:24:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:47Z" level=warning msg="login: HTTP 0 vu=90 null" source=console
+time="2026-11-16T05:24:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:47Z" level=warning msg="login: HTTP 0 vu=54 null" source=console
+time="2026-11-16T05:24:48Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:48Z" level=warning msg="login: HTTP 0 vu=49 null" source=console
+time="2026-11-16T05:24:48Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:48Z" level=warning msg="login: HTTP 0 vu=91 null" source=console
+time="2026-11-16T05:24:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:24:49Z" level=warning msg="navegacion: HTTP 0 vu=5 iter=3 null" source=console
+time="2026-11-16T05:24:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:49Z" level=warning msg="login: HTTP 0 vu=51 null" source=console
+time="2026-11-16T05:24:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:49Z" level=warning msg="login: HTTP 0 vu=92 null" source=console
+time="2026-11-16T05:24:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:50Z" level=warning msg="login: HTTP 0 vu=93 null" source=console
+time="2026-11-16T05:24:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:51Z" level=warning msg="login: HTTP 0 vu=53 null" source=console
+time="2026-11-16T05:24:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:51Z" level=warning msg="login: HTTP 0 vu=52 null" source=console
+time="2026-11-16T05:24:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:51Z" level=warning msg="login: HTTP 0 vu=50 null" source=console
+time="2026-11-16T05:24:52Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:52Z" level=warning msg="login: HTTP 0 vu=94 null" source=console
+time="2026-11-16T05:24:52Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-16T05:24:52Z" level=warning msg="cumplimiento: HTTP 0 vu=14 iter=2 null" source=console
+time="2026-11-16T05:24:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:53Z" level=warning msg="login: HTTP 0 vu=55 null" source=console
+time="2026-11-16T05:24:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:53Z" level=warning msg="login: HTTP 0 vu=95 null" source=console
+time="2026-11-16T05:24:53Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:24:53Z" level=warning msg="propietarios: HTTP 0 vu=20 iter=1 null" source=console
+time="2026-11-16T05:24:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:53Z" level=warning msg="login: HTTP 0 vu=58 null" source=console
+time="2026-11-16T05:24:54Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-16T05:24:54Z" level=warning msg="cumplimiento: HTTP 0 vu=7 iter=2 null" source=console
+time="2026-11-16T05:24:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:54Z" level=warning msg="login: HTTP 0 vu=96 null" source=console
+time="2026-11-16T05:24:55Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-16T05:24:55Z" level=warning msg="cumplimiento: HTTP 0 vu=22 iter=1 null" source=console
+time="2026-11-16T05:24:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:55Z" level=warning msg="login: HTTP 0 vu=97 null" source=console
+time="2026-11-16T05:24:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:56Z" level=warning msg="login: HTTP 0 vu=98 null" source=console
+time="2026-11-16T05:24:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:57Z" level=warning msg="login: HTTP 0 vu=60 null" source=console
+time="2026-11-16T05:24:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:57Z" level=warning msg="login: HTTP 0 vu=61 null" source=console
+time="2026-11-16T05:24:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:57Z" level=warning msg="login: HTTP 0 vu=99 null" source=console
+time="2026-11-16T05:24:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:58Z" level=warning msg="login: HTTP 0 vu=40 null" source=console
+time="2026-11-16T05:24:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:24:58Z" level=warning msg="login: HTTP 0 vu=100 null" source=console
+time="2026-11-16T05:25:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:00Z" level=warning msg="login: HTTP 0 vu=66 null" source=console
+time="2026-11-16T05:25:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:00Z" level=warning msg="login: HTTP 0 vu=56 null" source=console
+time="2026-11-16T05:25:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:00Z" level=warning msg="login: HTTP 0 vu=65 null" source=console
+time="2026-11-16T05:25:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:00Z" level=warning msg="login: HTTP 0 vu=62 null" source=console
+time="2026-11-16T05:25:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:01Z" level=warning msg="login: HTTP 0 vu=59 null" source=console
+time="2026-11-16T05:25:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=3&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:25:02Z" level=warning msg="citas_del_mes: HTTP 0 vu=17 iter=1 null" source=console
+time="2026-11-16T05:25:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=3&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:25:03Z" level=warning msg="citas_del_mes: HTTP 0 vu=12 iter=2 null" source=console
+time="2026-11-16T05:25:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=3&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:25:03Z" level=warning msg="citas_del_mes: HTTP 0 vu=15 iter=1 null" source=console
+time="2026-11-16T05:25:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-16T05:25:03Z" level=warning msg="notificaciones: HTTP 0 vu=3 iter=2 null" source=console
+time="2026-11-16T05:25:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:25:03Z" level=warning msg="empleados: HTTP 0 vu=19 iter=1 null" source=console
+time="2026-11-16T05:25:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:03Z" level=warning msg="login: HTTP 0 vu=57 null" source=console
+time="2026-11-16T05:25:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:04Z" level=warning msg="login: HTTP 0 vu=63 null" source=console
+time="2026-11-16T05:25:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:04Z" level=warning msg="login: HTTP 0 vu=29 null" source=console
+time="2026-11-16T05:25:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:04Z" level=warning msg="login: HTTP 0 vu=26 null" source=console
+time="2026-11-16T05:25:05Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:25:05Z" level=warning msg="lista_de_historias: HTTP 0 vu=16 iter=2 null" source=console
+time="2026-11-16T05:25:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:05Z" level=warning msg="login: HTTP 0 vu=70 null" source=console
+time="2026-11-16T05:25:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:06Z" level=warning msg="login: HTTP 0 vu=25 null" source=console
+time="2026-11-16T05:25:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:06Z" level=warning msg="login: HTTP 0 vu=72 null" source=console
+time="2026-11-16T05:25:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:07Z" level=warning msg="login: HTTP 0 vu=37 null" source=console
+time="2026-11-16T05:25:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:07Z" level=warning msg="login: HTTP 0 vu=34 null" source=console
+time="2026-11-16T05:25:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:07Z" level=warning msg="login: HTTP 0 vu=30 null" source=console
+time="2026-11-16T05:25:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:07Z" level=warning msg="login: HTTP 0 vu=38 null" source=console
+time="2026-11-16T05:25:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:08Z" level=warning msg="login: HTTP 0 vu=68 null" source=console
+time="2026-11-16T05:25:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:08Z" level=warning msg="login: HTTP 0 vu=64 null" source=console
+time="2026-11-16T05:25:09Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:09Z" level=warning msg="login: HTTP 0 vu=32 null" source=console
+time="2026-11-16T05:25:09Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:09Z" level=warning msg="login: HTTP 0 vu=69 null" source=console
+time="2026-11-16T05:25:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:10Z" level=warning msg="login: HTTP 0 vu=71 null" source=console
+time="2026-11-16T05:25:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:11Z" level=warning msg="login: HTTP 0 vu=31 null" source=console
+time="2026-11-16T05:25:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:11Z" level=warning msg="login: HTTP 0 vu=35 null" source=console
+time="2026-11-16T05:25:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:12Z" level=warning msg="login: HTTP 0 vu=67 null" source=console
+time="2026-11-16T05:25:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:13Z" level=warning msg="login: HTTP 0 vu=77 null" source=console
+time="2026-11-16T05:25:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:25:13Z" level=warning msg="navegacion: HTTP 0 vu=1 iter=4 null" source=console
+time="2026-11-16T05:25:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:13Z" level=warning msg="login: HTTP 0 vu=73 null" source=console
+time="2026-11-16T05:25:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:13Z" level=warning msg="login: HTTP 0 vu=74 null" source=console
+time="2026-11-16T05:25:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:14Z" level=warning msg="login: HTTP 0 vu=39 null" source=console
+time="2026-11-16T05:25:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=4&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:25:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:15Z" level=warning msg="login: HTTP 0 vu=28 null" source=console
+time="2026-11-16T05:25:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=4&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:25:18Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:18Z" level=warning msg="login: HTTP 0 vu=82 null" source=console
+time="2026-11-16T05:25:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:19Z" level=warning msg="login: HTTP 0 vu=36 null" source=console
+time="2026-11-16T05:25:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-16T05:25:19Z" level=warning msg="privacidad: HTTP 0 vu=5 iter=3 null" source=console
+time="2026-11-16T05:25:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:19Z" level=warning msg="login: HTTP 0 vu=76 null" source=console
+time="2026-11-16T05:25:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:25:19Z" level=warning msg="lista_de_historias: HTTP 0 vu=13 iter=4 null" source=console
+time="2026-11-16T05:25:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:20Z" level=warning msg="login: HTTP 0 vu=75 null" source=console
+time="2026-11-16T05:25:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:20Z" level=warning msg="login: HTTP 0 vu=27 null" source=console
+time="2026-11-16T05:25:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:21Z" level=warning msg="login: HTTP 0 vu=79 null" source=console
+time="2026-11-16T05:25:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:21Z" level=warning msg="login: HTTP 0 vu=43 null" source=console
+time="2026-11-16T05:25:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:22Z" level=warning msg="login: HTTP 0 vu=86 null" source=console
+time="2026-11-16T05:25:22Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:25:22Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-16T05:25:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:22Z" level=warning msg="login: HTTP 0 vu=85 null" source=console
+time="2026-11-16T05:25:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:23Z" level=warning msg="login: HTTP 0 vu=81 null" source=console
+time="2026-11-16T05:25:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:23Z" level=warning msg="login: HTTP 0 vu=84 null" source=console
+time="2026-11-16T05:25:24Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-16T05:25:25Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-16T05:25:25Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:25:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:26Z" level=warning msg="login: HTTP 0 vu=33 null" source=console
+time="2026-11-16T05:25:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:26Z" level=warning msg="login: HTTP 0 vu=78 null" source=console
+time="2026-11-16T05:25:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:27Z" level=warning msg="login: HTTP 0 vu=54 null" source=console
+time="2026-11-16T05:25:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:27Z" level=warning msg="login: HTTP 0 vu=44 null" source=console
+time="2026-11-16T05:25:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:25:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:28Z" level=warning msg="login: HTTP 0 vu=83 null" source=console
+time="2026-11-16T05:25:29Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:29Z" level=warning msg="login: HTTP 0 vu=80 null" source=console
+time="2026-11-16T05:25:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:30Z" level=warning msg="login: HTTP 0 vu=88 null" source=console
+time="2026-11-16T05:25:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:30Z" level=warning msg="login: HTTP 0 vu=45 null" source=console
+time="2026-11-16T05:25:30Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:25:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:30Z" level=warning msg="login: HTTP 0 vu=91 null" source=console
+time="2026-11-16T05:25:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:30Z" level=warning msg="login: HTTP 0 vu=41 null" source=console
+time="2026-11-16T05:25:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:30Z" level=warning msg="login: HTTP 0 vu=48 null" source=console
+time="2026-11-16T05:25:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:31Z" level=warning msg="login: HTTP 0 vu=47 null" source=console
+time="2026-11-16T05:25:31Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:25:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:31Z" level=warning msg="login: HTTP 0 vu=49 null" source=console
+time="2026-11-16T05:25:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:25:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:25:32Z" level=warning msg="navegacion: HTTP 0 vu=10 iter=4 null" source=console
+time="2026-11-16T05:25:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=4&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:25:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=4&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:25:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=4&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:25:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-16T05:25:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:25:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-16T05:25:33Z" level=warning msg="cumplimiento: HTTP 0 vu=8 iter=3 null" source=console
+time="2026-11-16T05:25:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:33Z" level=warning msg="login: HTTP 0 vu=42 null" source=console
+time="2026-11-16T05:25:34Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-16T05:25:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:34Z" level=warning msg="login: HTTP 0 vu=92 null" source=console
+time="2026-11-16T05:25:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:34Z" level=warning msg="login: HTTP 0 vu=96 null" source=console
+time="2026-11-16T05:25:35Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:35Z" level=warning msg="login: HTTP 0 vu=58 null" source=console
+time="2026-11-16T05:25:35Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:35Z" level=warning msg="login: HTTP 0 vu=89 null" source=console
+time="2026-11-16T05:25:35Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:35Z" level=warning msg="login: HTTP 0 vu=95 null" source=console
+time="2026-11-16T05:25:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:36Z" level=warning msg="login: HTTP 0 vu=55 null" source=console
+time="2026-11-16T05:25:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:36Z" level=warning msg="login: HTTP 0 vu=87 null" source=console
+time="2026-11-16T05:25:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:36Z" level=warning msg="login: HTTP 0 vu=94 null" source=console
+time="2026-11-16T05:25:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:36Z" level=warning msg="login: HTTP 0 vu=98 null" source=console
+time="2026-11-16T05:25:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:37Z" level=warning msg="login: HTTP 0 vu=61 null" source=console
+time="2026-11-16T05:25:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:37Z" level=warning msg="login: HTTP 0 vu=46 null" source=console
+time="2026-11-16T05:25:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:37Z" level=warning msg="login: HTTP 0 vu=90 null" source=console
+time="2026-11-16T05:25:39Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:39Z" level=warning msg="login: HTTP 0 vu=51 null" source=console
+time="2026-11-16T05:25:41Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:41Z" level=warning msg="login: HTTP 0 vu=52 null" source=console
+time="2026-11-16T05:25:41Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:41Z" level=warning msg="login: HTTP 0 vu=53 null" source=console
+time="2026-11-16T05:25:41Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:41Z" level=warning msg="login: HTTP 0 vu=66 null" source=console
+time="2026-11-16T05:25:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:42Z" level=warning msg="login: HTTP 0 vu=50 null" source=console
+time="2026-11-16T05:25:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:43Z" level=warning msg="login: HTTP 0 vu=93 null" source=console
+time="2026-11-16T05:25:43Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-16T05:25:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:43Z" level=warning msg="login: HTTP 0 vu=60 null" source=console
+time="2026-11-16T05:25:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:44Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:44Z" level=warning msg="login: HTTP 0 vu=70 null" source=console
+time="2026-11-16T05:25:44Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:44Z" level=warning msg="login: HTTP 0 vu=56 null" source=console
+time="2026-11-16T05:25:44Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:25:44Z" level=warning msg="lista_de_historias: HTTP 0 vu=9 iter=4 null" source=console
+time="2026-11-16T05:25:45Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:25:45Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:25:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:46Z" level=warning msg="login: HTTP 0 vu=100 null" source=console
+time="2026-11-16T05:25:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:47Z" level=warning msg="login: HTTP 0 vu=64 null" source=console
+time="2026-11-16T05:25:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:47Z" level=warning msg="login: HTTP 0 vu=99 null" source=console
+time="2026-11-16T05:25:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:47Z" level=warning msg="login: HTTP 0 vu=97 null" source=console
+time="2026-11-16T05:25:48Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:48Z" level=warning msg="login: HTTP 0 vu=59 null" source=console
+time="2026-11-16T05:25:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-16T05:25:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:49Z" level=warning msg="login: HTTP 0 vu=62 null" source=console
+time="2026-11-16T05:25:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:50Z" level=warning msg="login: HTTP 0 vu=57 null" source=console
+time="2026-11-16T05:25:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:51Z" level=warning msg="login: HTTP 0 vu=71 null" source=console
+time="2026-11-16T05:25:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:51Z" level=warning msg="login: HTTP 0 vu=68 null" source=console
+time="2026-11-16T05:25:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:51Z" level=warning msg="login: HTTP 0 vu=77 null" source=console
+time="2026-11-16T05:25:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:51Z" level=warning msg="login: HTTP 0 vu=65 null" source=console
+time="2026-11-16T05:25:52Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:52Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:25:52Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-16T05:25:54Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-16T05:25:54Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:25:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:55Z" level=warning msg="login: HTTP 0 vu=63 null" source=console
+time="2026-11-16T05:25:55Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-16T05:25:55Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-16T05:25:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:55Z" level=warning msg="login: HTTP 0 vu=69 null" source=console
+time="2026-11-16T05:25:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:56Z" level=warning msg="login: HTTP 0 vu=73 null" source=console
+time="2026-11-16T05:25:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:25:57Z" level=warning msg="login: HTTP 0 vu=72 null" source=console
+time="2026-11-16T05:25:58Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-16T05:25:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:00Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:00Z" level=warning msg="login: HTTP 0 vu=79 null" source=console
+time="2026-11-16T05:26:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:01Z" level=warning msg="login: HTTP 0 vu=67 null" source=console
+time="2026-11-16T05:26:01Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:01Z" level=warning msg="login: HTTP 0 vu=85 null" source=console
+time="2026-11-16T05:26:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-16T05:26:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-16T05:26:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-16T05:26:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:03Z" level=warning msg="login: HTTP 0 vu=74 null" source=console
+time="2026-11-16T05:26:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:04Z" level=warning msg="login: HTTP 0 vu=76 null" source=console
+time="2026-11-16T05:26:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:04Z" level=warning msg="login: HTTP 0 vu=86 null" source=console
+time="2026-11-16T05:26:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:06Z" level=warning msg="login: HTTP 0 vu=75 null" source=console
+time="2026-11-16T05:26:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:06Z" level=warning msg="login: HTTP 0 vu=78 null" source=console
+time="2026-11-16T05:26:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:26:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:07Z" level=warning msg="login: HTTP 0 vu=88 null" source=console
+time="2026-11-16T05:26:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:08Z" level=warning msg="login: HTTP 0 vu=82 null" source=console
+time="2026-11-16T05:26:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:10Z" level=warning msg="login: HTTP 0 vu=80 null" source=console
+time="2026-11-16T05:26:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:13Z" level=warning msg="login: HTTP 0 vu=84 null" source=console
+time="2026-11-16T05:26:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-16T05:26:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:13Z" level=warning msg="login: HTTP 0 vu=91 null" source=console
+time="2026-11-16T05:26:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:13Z" level=warning msg="login: HTTP 0 vu=89 null" source=console
+time="2026-11-16T05:26:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:14Z" level=warning msg="login: HTTP 0 vu=83 null" source=console
+time="2026-11-16T05:26:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:14Z" level=warning msg="login: HTTP 0 vu=81 null" source=console
+time="2026-11-16T05:26:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:26:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:26:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:16Z" level=warning msg="login: HTTP 0 vu=92 null" source=console
+time="2026-11-16T05:26:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:16Z" level=warning msg="login: HTTP 0 vu=94 null" source=console
+time="2026-11-16T05:26:18Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:18Z" level=warning msg="login: HTTP 0 vu=90 null" source=console
+time="2026-11-16T05:26:18Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-16T05:26:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:21Z" level=warning msg="login: HTTP 0 vu=96 null" source=console
+time="2026-11-16T05:26:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:21Z" level=warning msg="login: HTTP 0 vu=95 null" source=console
+time="2026-11-16T05:26:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:22Z" level=warning msg="login: HTTP 0 vu=87 null" source=console
+time="2026-11-16T05:26:22Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:22Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-16T05:26:24Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-16T05:26:24Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-16T05:26:24Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:25Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-16T05:26:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:25Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-16T05:26:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:26Z" level=warning msg="login: HTTP 0 vu=98 null" source=console
+time="2026-11-16T05:26:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-16T05:26:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:28Z" level=warning msg="login: HTTP 0 vu=100 null" source=console
+time="2026-11-16T05:26:29Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:29Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:30Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:31Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:31Z" level=warning msg="login: HTTP 0 vu=93 null" source=console
+time="2026-11-16T05:26:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:31Z" level=warning msg="login: HTTP 0 vu=97 null" source=console
+time="2026-11-16T05:26:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-16T05:26:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-16T05:26:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:35Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:26:36Z" level=warning msg="citas_del_mes: HTTP 0 vu=9 iter=5 null" source=console
+time="2026-11-16T05:26:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:37Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:26:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:37Z" level=warning msg="login: HTTP 0 vu=99 null" source=console
+time="2026-11-16T05:26:38Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:39Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:41Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:41Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:41Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:43Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-16T05:26:43Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:26:44Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:45Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-16T05:26:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:54Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-16T05:26:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:55Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-16T05:26:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:56Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:26:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:56Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:26:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:58Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-16T05:26:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:26:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:02Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-16T05:27:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:27:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-16T05:27:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:27:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:27:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:27:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:27:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:27:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-16T05:27:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:27:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:27:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:27:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-16T05:27:16Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:27:16Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:27:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:17Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:17Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:17Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:18Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:18Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-16T05:27:18Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:18Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-16T05:27:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:24Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:24Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-16T05:27:24Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:25Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-30\": request timeout"
+time="2026-11-16T05:27:25Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-16T05:27:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:26Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-16T05:27:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-16T05:27:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-16T05:27:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:27:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-16T05:27:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:35Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-16T05:27:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+{
+ "objetivo": "http://127.0.0.1:18080",
+ "vus": 2,
+ "iteraciones_por_vu": 10,
+ "recorridos": {
+  "P0_inicio_de_sesion": {
+   "mediana_ms": 30000.987885,
+   "p95_ms": 30001.5099106,
+   "promedio_ms": 28205.022996117954,
+   "maximo_ms": 30001.739258
+  },
+  "P1_acceso_y_panel": {
+   "mediana_ms": 1566.594481,
+   "p95_ms": 180005.8118275,
+   "promedio_ms": 46523.696889290906,
+   "maximo_ms": 180007.459033
+  },
+  "P2_agenda_mensual": {
+   "mediana_ms": 86741.269489,
+   "p95_ms": 197277.3584319,
+   "promedio_ms": 80754.9998139,
+   "maximo_ms": 200365.017734
+  },
+  "P3_historia_clinica": {
+   "mediana_ms": 30001.123395,
+   "p95_ms": 48085.65068939989,
+   "promedio_ms": 29431.988833105264,
+   "maximo_ms": 94340.337777
+  },
+  "P4_reportes": {
+   "mediana_ms": 90003.349356,
+   "p95_ms": 90003.349356,
+   "promedio_ms": 90003.349356,
+   "maximo_ms": 90003.349356
+  }
+ },
+ "perfil": "capacidad",
+ "iteraciones_completas": 482,
+ "vus_maximos": 100,
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 380,
+  "otro_4xx": 0,
+  "5xx": 0,
+  "sin_respuesta": 542
+ },
+ "latencia_extra_ms": {
+  "p90": 30000.797065,
+  "max": 30001.569095
+ },
+ "peticiones": 922,
+ "respuestas_no_200": 542,
+ "tasa_de_fallos_http": 0.5878524945770065,
+ "latencia_ms": {
+  "mediana": 30000.0706305,
+  "p95": 30000.912657
+ },
+ "bytes_recibidos": 5502961,
+ "duracion_total_s": 322.65381954,
+ "chequeos_fallidos": [
+  "login 200: 377 fallos de 407",
+  "navegacion 200: 16 fallos de 55",
+  "privacidad 200: 12 fallos de 55",
+  "cumplimiento 200: 12 fallos de 55",
+  "notificaciones 200: 13 fallos de 55",
+  "avisos_de_cumplimiento 200: 12 fallos de 55",
+  "panel 200: 10 fallos de 55",
+  "citas_del_mes 200: 38 fallos de 86",
+  "empleados 200: 16 fallos de 30",
+  "propietarios 200: 15 fallos de 30",
+  "lista_de_historias 200: 14 fallos de 19",
+  "historia 200: 1 fallos de 5",
+  "consulta 200: 1 fallos de 4",
+  "recetas 200: 1 fallos de 4",
+  "diagnosticos 200: 1 fallos de 4",
+  "reporte_clinico 200: 1 fallos de 1",
+  "reporte_de_ventas 200: 1 fallos de 1",
+  "pacientes_inactivos 200: 1 fallos de 1"
+ ]
+}

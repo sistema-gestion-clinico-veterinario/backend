@@ -1,0 +1,81 @@
+{
+ "objetivo": "http://127.0.0.1:18080",
+ "vus": 2,
+ "iteraciones_por_vu": 10,
+ "recorridos": {
+  "P0_inicio_de_sesion": {
+   "mediana_ms": 30000.937969,
+   "p95_ms": 30001.471012,
+   "promedio_ms": 28839.29721749384,
+   "maximo_ms": 30001.695132
+  },
+  "P1_acceso_y_panel": {
+   "mediana_ms": 1002.842096,
+   "p95_ms": 180006.96950425,
+   "promedio_ms": 70833.72301102527,
+   "maximo_ms": 180007.844076
+  },
+  "P2_agenda_mensual": {
+   "mediana_ms": 90002.402357,
+   "p95_ms": 90004.16357365,
+   "promedio_ms": 54255.352506018986,
+   "maximo_ms": 210007.731486
+  },
+  "P3_historia_clinica": {
+   "mediana_ms": 30000.643527,
+   "p95_ms": 30001.5137391,
+   "promedio_ms": 18352.773728006086,
+   "maximo_ms": 121018.561861
+  },
+  "P4_reportes": {
+   "mediana_ms": 90002.460881,
+   "p95_ms": 90003.9649046,
+   "promedio_ms": 58152.086176925935,
+   "maximo_ms": 90004.258914
+  }
+ },
+ "perfil": "recuperacion",
+ "iteraciones_completas": 1871,
+ "vus_maximos": 300,
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 1661,
+  "otro_4xx": 0,
+  "5xx": 0,
+  "sin_respuesta": 2265
+ },
+ "latencia_extra_ms": {
+  "p90": 30000.7794725,
+  "max": 30001.318708
+ },
+ "peticiones": 3926,
+ "respuestas_no_200": 2265,
+ "tasa_de_fallos_http": 0.5769230769230769,
+ "latencia_ms": {
+  "mediana": 30000.0197405,
+  "p95": 30000.879530000002
+ },
+ "bytes_recibidos": 35244995,
+ "duracion_total_s": 748.8010234870001,
+ "chequeos_fallidos": [
+  "login 200: 1324 fallos de 1381",
+  "navegacion 200: 82 fallos de 210",
+  "privacidad 200: 86 fallos de 210",
+  "cumplimiento 200: 85 fallos de 205",
+  "notificaciones 200: 82 fallos de 201",
+  "avisos_de_cumplimiento 200: 80 fallos de 199",
+  "panel 200: 79 fallos de 198",
+  "lista_de_historias 200: 88 fallos de 164",
+  "historia 200: 6 fallos de 76",
+  "consulta 200: 1 fallos de 71",
+  "recetas 200: 1 fallos de 71",
+  "diagnosticos 200: 1 fallos de 71",
+  "citas_del_mes 200: 113 fallos de 463",
+  "empleados 200: 97 fallos de 167",
+  "propietarios 200: 89 fallos de 158",
+  "reporte_clinico 200: 17 fallos de 27",
+  "reporte_de_ventas 200: 17 fallos de 27",
+  "pacientes_inactivos 200: 17 fallos de 27"
+ ]
+}

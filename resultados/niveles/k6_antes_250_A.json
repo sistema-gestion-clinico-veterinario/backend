@@ -1,0 +1,78 @@
+{
+ "objetivo": "http://127.0.0.1:18080",
+ "vus": 2,
+ "iteraciones_por_vu": 10,
+ "recorridos": {
+  "P0_inicio_de_sesion": {
+   "mediana_ms": 30000.90633,
+   "p95_ms": 30001.410934,
+   "promedio_ms": 29519.639603103205,
+   "maximo_ms": 30001.804051
+  },
+  "P1_acceso_y_panel": {
+   "mediana_ms": 913.350102,
+   "p95_ms": 180006.09989885,
+   "promedio_ms": 73298.35617675,
+   "maximo_ms": 180006.768391
+  },
+  "P2_agenda_mensual": {
+   "mediana_ms": 90002.83888550001,
+   "p95_ms": 90004.02166765,
+   "promedio_ms": 79383.33569727273,
+   "maximo_ms": 195848.657901
+  },
+  "P3_historia_clinica": {
+   "mediana_ms": 30000.6932745,
+   "p95_ms": 30001.341653299998,
+   "promedio_ms": 24825.431067595233,
+   "maximo_ms": 49219.700203
+  },
+  "P4_reportes": {
+   "mediana_ms": 90002.880607,
+   "p95_ms": 90003.7084493,
+   "promedio_ms": 90002.94156685715,
+   "maximo_ms": 90003.858023
+  }
+ },
+ "perfil": "capacidad",
+ "iteraciones_completas": 1605,
+ "vus_maximos": 250,
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 349,
+  "otro_4xx": 1,
+  "5xx": 2,
+  "sin_respuesta": 1792
+ },
+ "latencia_extra_ms": {
+  "p90": 30000.8416471,
+  "max": 30001.206778
+ },
+ "peticiones": 2144,
+ "respuestas_no_200": 1795,
+ "tasa_de_fallos_http": 0.8372201492537313,
+ "latencia_ms": {
+  "mediana": 30000.313672999997,
+  "p95": 30000.90718745
+ },
+ "bytes_recibidos": 4628207,
+ "duracion_total_s": 489.881220418,
+ "chequeos_fallidos": [
+  "login 200: 1463 fallos de 1491",
+  "navegacion 200: 32 fallos de 64",
+  "privacidad 200: 33 fallos de 64",
+  "cumplimiento 200: 31 fallos de 62",
+  "notificaciones 200: 25 fallos de 56",
+  "avisos_de_cumplimiento 200: 23 fallos de 54",
+  "panel 200: 21 fallos de 52",
+  "lista_de_historias 200: 25 fallos de 42",
+  "historia 200: 2 fallos de 17",
+  "citas_del_mes 200: 42 fallos de 83",
+  "empleados 200: 39 fallos de 47",
+  "propietarios 200: 36 fallos de 44",
+  "reporte_clinico 200: 8 fallos de 8",
+  "reporte_de_ventas 200: 8 fallos de 8",
+  "pacientes_inactivos 200: 7 fallos de 7"
+ ]
+}
