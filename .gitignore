@@ -91,3 +91,5 @@ uploads/
 *.tar.gz.gpg
 privada*.asc
 restauracion-error.log
+__pycache__/
+*.pyc
