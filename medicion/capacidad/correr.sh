@@ -220,11 +220,11 @@ levantar_postgres
 preparar_base antes
 preparar_base despues
 
-while read -r nivel rampa mantener _; do
+while read -r nivel rampa mantener _ <&3; do
   case "$nivel" in ''|\#*) continue ;; esac
   for v in antes despues; do correr_nivel "$v" "$nivel" "$rampa" "$mantener"; done
   python3 "$RAIZ/medicion/capacidad/informe_nivel.py" "$SAL" "$nivel" > "$SAL/logs/informe_$nivel.log" 2>&1 \
     && cat "$SAL/niveles/INFORME_${nivel}.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
     || log "no se pudo generar el informe del nivel $nivel (ver logs/informe_$nivel.log)"
-done < "$PLAN"
+done 3< "$PLAN"
 log "terminado"
