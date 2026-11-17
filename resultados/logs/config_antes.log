@@ -1,0 +1,23 @@
+--- columnas de las tablas de configuración (para diagnóstico)
+       table_name        |                                                                                                                                                                                     columnas                                                                                                                                                                                     
+-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ company_operating_hours | closing_time:time without time zone:OBLIGATORIA, company_id:integer:OBLIGATORIA, is_open:boolean:OBLIGATORIA, opening_time:time without time zone:OBLIGATORIA, id:bigint:OBLIGATORIA, dia_semana:character varying:OBLIGATORIA
+ horario_empleado        | activo:boolean:OBLIGATORIA, fecha:date, hora_fin:time without time zone:OBLIGATORIA, hora_inicio:time without time zone:OBLIGATORIA, created_at:timestamp without time zone, empleado_id:bigint:OBLIGATORIA, id:bigint:OBLIGATORIA, updated_at:timestamp without time zone, created_by:character varying, dia_semana:character varying:OBLIGATORIA, updated_by:character varying
+ raza                    | activo:boolean:OBLIGATORIA, company_id:bigint, created_at:timestamp without time zone, id:bigint:OBLIGATORIA, updated_at:timestamp without time zone, created_by:character varying, nombre:character varying:OBLIGATORIA, updated_by:character varying, descripcion:text, especie:character varying:OBLIGATORIA
+(3 rows)
+
+         ?column?          
+---------------------------
+ horarios de la clínica: 7
+(1 row)
+
+         ?column?          
+---------------------------
+ turnos de empleados: 1260
+(1 row)
+
+ ?column? 
+----------
+ razas: 2
+(1 row)
+

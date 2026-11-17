@@ -1,0 +1,49 @@
+fecha: 2026-11-17T04:27:10Z
+núcleos del equipo: 4
+memoria total del equipo (MB): 15701
+recursos del backend: 1 CPU, 2g de RAM (como Render Standard)
+configuraciones de la JVM:
+  A -> -Xmx192m -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m
+  B -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m
+  C -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m
+pool de conexiones: 10
+pausa entre acciones: 15 s (con variación aleatoria)
+mezcla de acciones (panel, agenda, historia clínica, reportes): 30,35,30,5 %
+cuentas de medición: 3
+docker: 28.0.4
+k6: k6 v2.4.0 (commit/dd9395906d, go1.26.11, linux/amd64)
+antes:   5b27bbabb33224241586674bb2401e47bb98f92f
+despues: cb7f6bdb1865b9ca3b5e8aedc0a4ef6bcaf17e13
+fijado de CPU: PG='--cpuset-cpus 2' backend='--cpuset-cpus 1' k6='taskset -c 0,3'
+plan de niveles:
+  # nivel  subida  sostenido  configuracion
+  # recuperacion  pico  configuracion
+  100 110s 150s A
+  100 110s 150s B
+  250 250s 150s A
+  250 250s 150s B
+  recuperacion 300 C
+[04:27:11] construyendo la imagen antes desde 5b27bba
+[04:27:54] construyendo la imagen despues desde cb7f6bd
+[04:28:15] levantando PostgreSQL
+[04:28:23] [antes] creando el esquema con el propio backend
+[04:28:52] [antes] sembrando datos
+[04:28:55] [antes] aplicando las migraciones de su versión
+[04:28:57] [antes] migraciones: 29 aplicadas, 1 con error
+citas=10580 consultas=7925 mascotas=2081
+[04:28:57] [despues] creando el esquema con el propio backend
+[04:29:24] [despues] sembrando datos
+[04:29:26] [despues] aplicando las migraciones de su versión
+[04:29:29] [despues] migraciones: 34 aplicadas, 1 con error
+citas=10580 consultas=7925 mascotas=2081
+[04:29:29] [antes] configuración de la clínica (horarios, turnos, razas)
+[04:30:08] [antes] clínica=1 rol_cliente=3 veterinarios=10 servicios=6 razas=1/2
+[04:30:10] [antes] aviso de privacidad: HTTP 200 HTTP 200 
+[04:30:10] [antes] jornada de clínica: 1 usuarios, 2 iteraciones
+[04:30:27] [antes] terminado: k6 código 0
+[04:30:27] [despues] configuración de la clínica (horarios, turnos, razas)
+[04:31:04] [despues] clínica=1 rol_cliente=3 veterinarios=10 servicios=6 razas=1/2
+[04:31:05] [despues] aviso de privacidad: HTTP 200 HTTP 200 
+[04:31:05] [despues] jornada de clínica: 1 usuarios, 2 iteraciones
+[04:31:23] [despues] terminado: k6 código 0
+[04:31:23] terminado
