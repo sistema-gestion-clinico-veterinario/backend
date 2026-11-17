@@ -23,7 +23,7 @@ SELECT e.id, f.dia, (ARRAY['LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABA
        TIME '08:00', TIME '20:00', true, now()
 FROM empleado e
 JOIN company c ON c.id = e.company_id AND c.slug = :'slug'
-CROSS JOIN LATERAL generate_series(((now() AT TIME ZONE 'America/Lima')::date), ((now() AT TIME ZONE 'America/Lima')::date + 125), interval '1 day') AS f(dia)
+CROSS JOIN LATERAL generate_series(((now() AT TIME ZONE 'America/Lima')::date), ((now() AT TIME ZONE 'America/Lima')::date + 185), interval '1 day') AS f(dia)
 WHERE e.estado = true AND e.user_id IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM horario_empleado h WHERE h.empleado_id = e.id AND h.fecha = f.dia::date);
 
