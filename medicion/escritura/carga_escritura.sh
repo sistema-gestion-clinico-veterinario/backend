@@ -12,7 +12,11 @@ CONFIG="$(tr -d '[:space:]' < "$RAIZ/medicion/capacidad/CONFIG")"
 CPUS="${CPUS:-1}"
 MEMORIA="${MEMORIA:-2g}"
 CUENTAS="${CUENTAS:-1}"
-PLAN_CARGA="$RAIZ/medicion/escritura/PLAN_CARGA"
+PLAN_CARGA="${PLAN_CARGA:-$RAIZ/medicion/escritura/PLAN_CARGA}"
+VERSIONES="${VERSIONES:-antes despues}"
+SIN_CONTROL="${SIN_CONTROL:-0}"
+XMX="${XMX:-1g}"
+K6_NUCLEOS="${K6_NUCLEOS:-0,3}"
 ITER_POR_VU="${ITER_POR_VU:-19}"
 PAUSA_S="${PAUSA_S:-15}"
 PESOS="${PESOS:-30,35,30,5}"
@@ -31,7 +35,7 @@ opciones_jvm() {
     A) JAVA_OPTS_LAB="-Xmx192m $BASE_JVM -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m" ;;
     B) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m" ;;
     C) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m" ;;
-    D) JAVA_OPTS_LAB="-Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
+    D) JAVA_OPTS_LAB="-Xmx$XMX -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
     E) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
     *) echo "configuración desconocida: '$1' (usa A, B, C, D o E)"; exit 1 ;;
   esac
@@ -41,8 +45,8 @@ opciones_jvm "$CONFIG"
 NUCLEOS="$(nproc)"
 if [ "$NUCLEOS" -ge 4 ]; then
   PIN_PG="--cpuset-cpus 2"
-  PIN_BACK="--cpuset-cpus 1"
-  PIN_K6="taskset -c 0,3"
+  if [ "$CPUS" -ge 2 ]; then PIN_BACK="--cpuset-cpus 1,3"; else PIN_BACK="--cpuset-cpus 1"; fi
+  PIN_K6="taskset -c $K6_NUCLEOS"
 else
   PIN_PG=""
   PIN_BACK=""
@@ -58,8 +62,10 @@ registrar_entorno() {
   {
     echo "fecha: $(date -u +%FT%TZ)"
     echo "núcleos del equipo: $NUCLEOS"
+    echo "procesador: $(lscpu | awk -F: '/Model name/ {gsub(/^ +/,"",$2); print $2}'); hilos por núcleo: $(lscpu | awk -F: '/Thread\(s\) per core/ {gsub(/ /,"",$2); print $2}'); núcleos por socket: $(lscpu | awk -F: '/Core\(s\) per socket/ {gsub(/ /,"",$2); print $2}')"
+    echo "versiones medidas: $VERSIONES; heap máximo: $XMX; núcleos de k6: $K6_NUCLEOS; reservas de horario por usuario: $ITER_POR_VU"
     free -m | sed -n 2p | awk '{print "memoria total del equipo (MB): "$2}'
-    echo "recursos del backend: $CPUS CPU, $MEMORIA de RAM (como Render Standard)"
+    echo "recursos del backend: $CPUS CPU, $MEMORIA de RAM"
     echo "configuraciones de la JVM:"
     for c in C D E; do opciones_jvm "$c"; echo "  $c -> $JAVA_OPTS_LAB"; done
     echo "usadas en esta corrida: D (Metaspace 256 MB) para la escalera; E (Metaspace 128 MB, igual que el Dockerfile) para el control"
@@ -71,8 +77,8 @@ registrar_entorno() {
     echo "cuentas de medición: una por usuario virtual, $TOTAL_CUENTAS en total"
     echo "docker: $(docker version --format '{{.Server.Version}}')"
     echo "k6: $(k6 version | head -1)"
-    echo "antes:   $(git -C "$ANTES_DIR" rev-parse HEAD)"
-    echo "despues: $(git -C "$DESPUES_DIR" rev-parse HEAD)"
+    echo "antes:   $(git -C "$ANTES_DIR" rev-parse HEAD 2>/dev/null || echo no medido)"
+    echo "despues: $(git -C "$DESPUES_DIR" rev-parse HEAD 2>/dev/null || echo no medido)"
     echo "fijado de CPU: PG='$PIN_PG' backend='$PIN_BACK' k6='$PIN_K6'"
     echo "plan de niveles:"; sed 's/^/  /' "$PLAN_CARGA"
   } > "$SAL/entorno.txt"
@@ -80,7 +86,7 @@ registrar_entorno() {
 }
 
 construir_imagenes() {
-  for v in antes despues; do
+  for v in $VERSIONES; do
     local d; d="$(dir_de "$v")"
     log "construyendo la imagen $v desde $(git -C "$d" rev-parse --short HEAD)"
     if ! docker build -f "$DESPUES_DIR/Dockerfile.measurement" -t "sv-backend:$v" "$d" > "$SAL/logs/build_$v.log" 2>&1; then
@@ -100,7 +106,7 @@ levantar_postgres() {
     sleep 2
   done
   docker exec sv-pg pg_isready -U postgres > /dev/null 2>&1 || fallo "PostgreSQL no arrancó"
-  for v in antes despues; do
+  for v in $VERSIONES; do
     docker exec sv-pg psql -U postgres -qc "CREATE DATABASE $v" || fallo "no se pudo crear la base $v"
   done
 }
@@ -319,7 +325,7 @@ correr_nivel_escritura() {
   $PIN_K6 env K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_PERIOD=5s K6_WEB_DASHBOARD_EXPORT="$SAL/niveles/panel_k6_${etiqueta}.html" \
     k6 run --quiet --out "csv=$SAL/niveles/k6_${etiqueta}.csv" \
     -e BASE_URL="http://127.0.0.1:$PUERTO" -e SLUG="$SLUG" -e USUARIO="$USUARIO" -e CLAVE="$CLAVE" -e IDS="$ids" \
-    -e CUENTA_BASE="$base_cuenta" -e U_BASE="$base_u" -e ETIQUETA_NIVEL="$etq_caja" -e NIVEL="$nivel" -e RAMPA="$rampa" -e MANTENER="$mantener" \
+    -e CUENTA_BASE="$base_cuenta" -e U_BASE="$base_u" -e ITER_POR_VU="$ITER_POR_VU" -e ETIQUETA_NIVEL="$etq_caja" -e NIVEL="$nivel" -e RAMPA="$rampa" -e MANTENER="$mantener" \
     -e PAUSA_S="$PAUSA_S" -e TIMEOUT="$TIMEOUT_HTTP" -e SALIDA="$SAL/niveles/k6_${etiqueta}.json" \
     "$RAIZ/medicion/escritura/carga_escrituras.js" > "$SAL/logs/k6_${etiqueta}.log" 2>&1
   codigo=$?
@@ -340,7 +346,8 @@ correr_nivel_escritura() {
     --argjson cpu_s "$(( (cpu1 - cpu0) / 1000000 ))" --arg oom "$oom" --argjson reinicios "${reinicios:-0}" \
     --arg corriendo "$corriendo" --argjson salida "${codigo_salida:--1}" --arg salud "$salud_final" \
     --arg sql "$sql" --argjson k6_codigo "$codigo" --arg config "$config" --argjson correos "$(( correos1 - correos0 ))" \
-    '{version:$version, nivel:$nivel, config_jvm:$config, correos_recibidos:$correos, perfil:"carga_escritura", duracion_s:$duracion, cpu_contenedor_s:$cpu_s, oom_killed:($oom=="true"),
+    --arg heap_max "$XMX" --argjson cpus_limite "$CPUS" --argjson memoria_limite_mb "$(( ${MEMORIA%g} * 1024 ))" \
+    '{version:$version, nivel:$nivel, config_jvm:$config, correos_recibidos:$correos, heap_max:$heap_max, cpus_limite:$cpus_limite, memoria_limite_mb:$memoria_limite_mb, perfil:"carga_escritura", duracion_s:$duracion, cpu_contenedor_s:$cpu_s, oom_killed:($oom=="true"),
       reinicios:$reinicios, sigue_corriendo:($corriendo=="true"), codigo_salida:$salida, salud_final_http:$salud,
       k6_codigo_salida:$k6_codigo, sql_sentencias:(($sql|split("|")[0])|tonumber), sql_tiempo_s:(($sql|split("|")[1])|tonumber)}' \
     > "$SAL/niveles/estado_${etiqueta}.json" || log "no se pudo escribir el estado de $etiqueta"
@@ -357,6 +364,9 @@ correr_nivel_escritura() {
 
 PAUSA_S="${PAUSA_S:-15}"
 CONTROL_USUARIOS=10
+[ "$SIN_CONTROL" = 1 ] && CONTROL_USUARIOS=0
+MODO_INFORME=""
+[ "$VERSIONES" = "despues" ] && MODO_INFORME="una"
 TOTAL_CUENTAS=$((1 + CONTROL_USUARIOS))
 while read -r campo1 campo2 campo3 _; do
   case "$campo1" in ''|\#*) continue ;; esac
@@ -368,28 +378,35 @@ construir_imagenes
 levantar_postgres
 levantar_correo
 opciones_jvm D
-preparar_base antes
-preparar_base despues
-for v in antes despues; do preparar_clinica "$v"; done
+for v in $VERSIONES; do preparar_base "$v"; done
+for v in $VERSIONES; do preparar_clinica "$v"; done
 
-log "control: $CONTROL_USUARIOS usuarios con Metaspace de 128 MB (igual que el Dockerfile) y el servidor de correo de pruebas"
-correr_nivel_escritura despues "$CONTROL_USUARIOS" 30s 150s 0 1 E ctrl128
-python3 "$RAIZ/medicion/escritura/informe_carga.py" "$SAL" "$CONTROL_USUARIOS" control > "$SAL/logs/informe_control.log" 2>&1 \
-  && cat "$SAL/niveles/INFORME_CONTROL_128.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
-  || log "no se pudo generar el informe del control (ver logs/informe_control.log)"
+if [ "$SIN_CONTROL" != 1 ]; then
+  log "control: $CONTROL_USUARIOS usuarios con Metaspace de 128 MB (igual que el Dockerfile) y el servidor de correo de pruebas"
+  correr_nivel_escritura despues "$CONTROL_USUARIOS" 30s 150s 0 1 E ctrl128
+  python3 "$RAIZ/medicion/escritura/informe_carga.py" "$SAL" "$CONTROL_USUARIOS" control > "$SAL/logs/informe_control.log" 2>&1 \
+    && cat "$SAL/niveles/INFORME_CONTROL_128.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
+    || log "no se pudo generar el informe del control (ver logs/informe_control.log)"
+fi
 
 base_u=$((CONTROL_USUARIOS * ITER_POR_VU))
 base_cuenta=$((1 + CONTROL_USUARIOS))
 while read -r nivel rampa mantener _ <&3; do
   case "$nivel" in ''|\#*) continue ;; esac
-  for v in antes despues; do correr_nivel_escritura "$v" "$nivel" "$rampa" "$mantener" "$base_u" "$base_cuenta"; done
-  python3 "$RAIZ/medicion/escritura/informe_carga.py" "$SAL" "$nivel" > "$SAL/logs/informe_carga_${nivel}.log" 2>&1 \
+  for v in $VERSIONES; do correr_nivel_escritura "$v" "$nivel" "$rampa" "$mantener" "$base_u" "$base_cuenta"; done
+  python3 "$RAIZ/medicion/escritura/informe_carga.py" "$SAL" "$nivel" $MODO_INFORME > "$SAL/logs/informe_carga_${nivel}.log" 2>&1 \
     && cat "$SAL/niveles/INFORME_CARGA_${nivel}.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
     || log "no se pudo generar el informe del nivel $nivel (ver logs/informe_carga_${nivel}.log)"
   base_u=$((base_u + nivel * ITER_POR_VU))
   base_cuenta=$((base_cuenta + nivel))
 done 3< "$PLAN_CARGA"
-python3 "$RAIZ/medicion/escritura/resumen_carga.py" "$SAL" > "$SAL/logs/resumen_carga.log" 2>&1 \
-  && cat "$SAL/RESUMEN_FASE2B.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
-  || log "no se pudo generar el resumen global (ver logs/resumen_carga.log)"
+if [ "$VERSIONES" = "despues" ]; then
+  python3 "$RAIZ/medicion/escritura/resumen_escalado.py" "$SAL" > "$SAL/logs/resumen_escalado.log" 2>&1 \
+    && cat "$SAL/RESUMEN_FASE3.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
+    || log "no se pudo generar el resumen del escalado (ver logs/resumen_escalado.log)"
+else
+  python3 "$RAIZ/medicion/escritura/resumen_carga.py" "$SAL" > "$SAL/logs/resumen_carga.log" 2>&1 \
+    && cat "$SAL/RESUMEN_FASE2B.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
+    || log "no se pudo generar el resumen global (ver logs/resumen_carga.log)"
+fi
 log "terminado"

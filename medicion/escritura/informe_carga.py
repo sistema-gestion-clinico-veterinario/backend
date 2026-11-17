@@ -144,7 +144,7 @@ def notas_jvm(d, jvm):
             f"{jvm['completos']} completas, {jvm['por_metadatos']} provocadas por el umbral de metadatos de clases."
         )
     if jvm['heap_tras_gc_max_mb'] is not None:
-        notas.append(f"Heap tras GC: máximo de {jvm['heap_tras_gc_max_mb']:.0f} MB (tope -Xmx1g).")
+        notas.append(f"Heap tras GC: máximo de {jvm['heap_tras_gc_max_mb']:.0f} MB (tope -Xmx{d['heap_max']}).")
     if jvm['clases']:
         t_fin = jvm['clases'][-1][0]
         tardias = [c for c in jvm['clases'] if c[0] >= t_fin / 2]
@@ -189,12 +189,18 @@ def analizar(version, config=None):
     et = f'{version}_{NIVEL}'
     estado = n.leer_json(NIV / f'estado_{et}.json')
     config = config or (estado or {}).get('config_jvm') or 'D'
+    limite_cpu = (estado or {}).get('cpus_limite') or 1
+    n.LIMITE_MEM_MB = (estado or {}).get('memoria_limite_mb') or 2048
     cpus, mems = n.leer_estadisticas(NIV / f'stats_{et}.csv')
+    cpus = [c / limite_cpu for c in cpus]
     cpus_pg, _ = n.leer_estadisticas(NIV / f'stats_pg_{et}.csv')
     tramos, endpoints = n.leer_k6_csv(NIV / f'k6_{et}.csv.gz')
     return {
         'version': version,
         'config': config,
+        'limite_cpu': limite_cpu,
+        'limite_mem_mb': n.LIMITE_MEM_MB,
+        'heap_max': '1g' if config == 'E' else ((estado or {}).get('heap_max') or '1g'),
         'k6': n.leer_json(NIV / f'k6_{et}.json'),
         'estado': estado,
         'cpu': n.resumen_cpu(cpus),
@@ -306,7 +312,7 @@ def notas_generales(d, m):
     for nota in n.que_paso(d, m):
         if nota.startswith('Último tramo sano'):
             nota = nota.replace('Último tramo sano (menos de 1 % de errores y p95 menor a 2 s)', 'Sin degradación hasta (primer tramo de 15 s con 1 % de errores o p95 de 2 s)')
-        salida.append(nota)
+        salida.append(nota.replace('100 % = el límite de 1 CPU', f"100 % = el límite de {d['limite_cpu']} CPU"))
     log = d['log']
     otros = log['oom_total'] - log['sin_memoria_java'] - log['oom_metaspace']
     if log['sin_memoria_java']:
@@ -358,7 +364,7 @@ def lineas_entorno():
     entorno = RAIZ / 'entorno.txt'
     if entorno.exists():
         for linea in entorno.read_text(encoding='utf-8').splitlines():
-            if linea.startswith(('recursos del backend', 'pausa entre acciones', 'antes', 'despues', 'usadas en esta corrida', 'correo:')):
+            if linea.startswith(('recursos del backend', 'pausa entre acciones', 'antes', 'despues', 'usadas en esta corrida', 'correo:', 'procesador', 'versiones medidas')):
                 salida.append(f'- {linea}')
     return salida
 
@@ -380,6 +386,38 @@ def generar():
     print('\n'.join(lineas))
 
 
+def tabla_una(d, m):
+    e = d['estado'] or {}
+    filas = [
+        ('Veredicto', n.veredicto(m)),
+        ('Usuarios sin degradación', n.fmt(m['sano'])),
+        ('Peticiones hechas', n.fmt(m['peticiones'])),
+        ('Peticiones correctas (2xx)', n.fmt(m['ok'])),
+        ('Errores (%)', n.fmt(m['errores_pct'], 1, ' %')),
+        ('Ritmo medio (peticiones/s)', n.fmt(m['rps'], 1)),
+        ('Tiempo mediano (ms)', n.fmt(m['mediana_ms'])),
+        ('Tiempo p95 (ms)', n.fmt(m['p95_ms'])),
+        (f"CPU del backend, media (% del límite de {d['limite_cpu']} CPU)", n.fmt(d['cpu']['media'], 0)),
+        ('Tiempo con la CPU al tope (%)', n.fmt(d['cpu']['tope_pct'], 0)),
+        ('CPU de PostgreSQL, media (% de 1 núcleo)', n.fmt(d['cpu_pg']['media'], 0)),
+        (f"Memoria pico (MB, de {d['limite_mem_mb']})", n.fmt(d['mem_pico_mb'])),
+        ('Sentencias SQL', n.fmt(e.get('sql_sentencias'))),
+        ('Reinicios del contenedor', n.fmt(e.get('reinicios'))),
+    ]
+    return ['| | DESPUÉS |', '|---|---|'] + [f'| {a} | {b} |' for a, b in filas]
+
+
+def generar_una():
+    d = analizar('despues')
+    m = n.metricas(d)
+    lineas = [f'# Fase 3: {NIVEL} usuarios simultáneos, {d["limite_cpu"]} CPU, {d["limite_mem_mb"] // 1024} GB, heap {d["heap_max"]}', '']
+    lineas += lineas_entorno() + [''] + tabla_una(d, m) + ['']
+    lineas += bloque_version('DESPUÉS', d, m)
+    lineas.append('> Todos los números salen de los archivos de la prueba. Los usuarios hacen una acción cada ~15 s. Laboratorio con la base de datos en el mismo equipo: sirve para comparar, no es una promesa para producción.')
+    (NIV / f'INFORME_CARGA_{NIVEL}.md').write_text('\n'.join(lineas) + '\n', encoding='utf-8')
+    print('\n'.join(lineas))
+
+
 def generar_control():
     d = analizar('ctrl128', 'E')
     m = n.metricas(d)
@@ -395,5 +433,7 @@ if __name__ == '__main__':
     configurar(sys.argv[1], sys.argv[2])
     if len(sys.argv) > 3 and sys.argv[3] == 'control':
         generar_control()
+    elif len(sys.argv) > 3 and sys.argv[3] == 'una':
+        generar_una()
     else:
         generar()
