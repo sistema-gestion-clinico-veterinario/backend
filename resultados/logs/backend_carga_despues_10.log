@@ -1,0 +1,186 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.2)
+
+2026-11-17T04:55:35.860Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : Starting VargasvetApplication v0.0.1-SNAPSHOT using Java 21.0.13 with PID 1 (/app/app.jar started by softvet in /app)
+2026-11-17T04:55:35.865Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-11-17T04:55:38.324Z  INFO 1 --- [vargasvet] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-17T04:55:38.800Z  INFO 1 --- [vargasvet] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 459 ms. Found 75 JPA repository interfaces.
+2026-11-17T04:55:40.386Z  INFO 1 --- [vargasvet] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-11-17T04:55:40.405Z  INFO 1 --- [vargasvet] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-11-17T04:55:40.409Z  INFO 1 --- [vargasvet] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.34]
+2026-11-17T04:55:40.598Z  INFO 1 --- [vargasvet] [           main] o.a.c.c.C.[.[localhost].[/api/v1]        : Initializing Spring embedded WebApplicationContext
+2026-11-17T04:55:40.602Z  INFO 1 --- [vargasvet] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4661 ms
+2026-11-17T04:55:40.945Z  INFO 1 --- [vargasvet] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-17T04:55:41.034Z  INFO 1 --- [vargasvet] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.5.Final
+2026-11-17T04:55:41.082Z  INFO 1 --- [vargasvet] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-17T04:55:41.462Z  INFO 1 --- [vargasvet] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-17T04:55:41.517Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-11-17T04:55:41.819Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@3fb42ec7
+2026-11-17T04:55:41.824Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-11-17T04:55:41.861Z  WARN 1 --- [vargasvet] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-11-17T04:55:41.890Z  INFO 1 --- [vargasvet] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 16.16
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-17T04:55:45.943Z  INFO 1 --- [vargasvet] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-17T04:55:45.948Z  INFO 1 --- [vargasvet] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-17T04:55:46.484Z  INFO 1 --- [vargasvet] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-11-17T04:55:53.886Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter jwtFilterRegistration was not registered (disabled)
+2026-11-17T04:55:53.886Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter cookieSecurityFilterRegistration was not registered (disabled)
+2026-11-17T04:55:53.886Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter backupReportTokenFilterRegistration was not registered (disabled)
+2026-11-17T04:55:53.886Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter rateLimitFilterRegistration was not registered (disabled)
+2026-11-17T04:55:53.886Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter requestTraceFilterRegistration was not registered (disabled)
+2026-11-17T04:55:55.727Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.WebSecurityConfig     : Contraseñas protegidas con BCrypt, factor de costo 12
+2026-11-17T04:56:01.503Z  INFO 1 --- [vargasvet] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-11-17T04:56:02.510Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-11-17T04:56:02.511Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@37a415c3]]
+2026-11-17T04:56:02.515Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-11-17T04:56:02.531Z  INFO 1 --- [vargasvet] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-11-17T04:56:02.549Z  INFO 1 --- [vargasvet] [           main] o.s.s.config.TaskSchedulerRouter         : More than one TaskScheduler bean exists within the context, and none is named 'taskScheduler'. Mark one of them as primary or name it 'taskScheduler' (possibly as an alias); or implement the SchedulingConfigurer interface and call ScheduledTaskRegistrar#setScheduler explicitly within the configureTasks() callback: [messageBrokerTaskScheduler, heartbeatScheduler]
+2026-11-17T04:56:02.560Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : Started VargasvetApplication in 27.394 seconds (process running for 28.262)
+2026-11-17T04:56:02.740Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : === INICIALIZANDO DATOS DEL SISTEMA ===
+2026-11-17T04:56:02.848Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Rol del sistema verificado: ROLE_SUPER_ADMIN
+2026-11-17T04:56:02.864Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Rol del sistema verificado: ROLE_ADMIN
+2026-11-17T04:56:02.864Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Inicializando ventanas...
+2026-11-17T04:56:03.450Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Verificando permisos del SUPER_ADMIN...
+2026-11-17T04:56:03.487Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : ⏭ SUPER_ADMIN ya tiene todos los permisos al día
+2026-11-17T04:56:03.487Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : === INICIALIZACIÓN COMPLETADA ===
+2026-11-17T04:56:04.437Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.a.c.c.C.[.[localhost].[/api/v1]        : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-11-17T04:56:04.438Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-11-17T04:56:04.442Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 4 ms
+2026-11-17T04:56:27.173Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3888 tiene el correo verificado
+2026-11-17T04:56:27.320Z ERROR 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Error al enviar correo a lab.76@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:56:27.326Z  WARN 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.76@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:56:44.173Z ERROR 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Error al enviar correo a lab.190@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:56:44.173Z  WARN 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.190@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:56:44.323Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3889 tiene el correo verificado
+2026-11-17T04:56:47.972Z ERROR 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Error al enviar correo a lab.95@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:56:47.972Z  WARN 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.95@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:56:48.062Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3890 tiene el correo verificado
+2026-11-17T04:56:59.286Z ERROR 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Error al enviar correo a lab.171@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:56:59.290Z  WARN 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.171@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:56:59.387Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3891 tiene el correo verificado
+2026-11-17T04:57:01.812Z ERROR 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Error al enviar correo a lab.228@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:57:01.817Z  WARN 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.228@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:57:01.900Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3892 tiene el correo verificado
+2026-11-17T04:57:02.139Z ERROR 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Error al enviar correo a lab.57@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:57:02.142Z  WARN 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.57@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:57:02.221Z  WARN 1 --- [vargasvet] [io-8080-exec-10] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3893 tiene el correo verificado
+2026-11-17T04:57:02.693Z  INFO 1 --- [vargasvet] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 0, completed tasks = 0]
+2026-11-17T04:57:02.775Z ERROR 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Error al enviar correo a lab.133@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:57:02.784Z ERROR 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Error al enviar correo a lab.152@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:57:02.786Z  WARN 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.133@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:57:02.791Z  WARN 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.152@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:57:05.021Z ERROR 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Error al enviar correo a lab.209@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:57:05.024Z  WARN 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.209@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:57:05.101Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3896 tiene el correo verificado
+2026-11-17T04:57:11.326Z ERROR 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Error al enviar correo a lab.114@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:57:11.332Z  WARN 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.114@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:57:11.402Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3897 tiene el correo verificado
+2026-11-17T04:57:16.537Z ERROR 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Error al enviar correo a lab.77@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:57:16.546Z  WARN 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.77@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:57:16.633Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3898 tiene el correo verificado
+2026-11-17T04:57:20.887Z ERROR 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Error al enviar correo a lab.134@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:57:20.895Z  WARN 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.134@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:57:20.987Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3899 tiene el correo verificado
+2026-11-17T04:57:36.226Z ERROR 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Error al enviar correo a lab.229@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:57:36.227Z  WARN 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.229@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:57:36.298Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3900 tiene el correo verificado
+2026-11-17T04:57:37.075Z ERROR 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Error al enviar correo a lab.153@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:57:37.076Z  WARN 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.153@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:57:37.146Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3901 tiene el correo verificado
+2026-11-17T04:57:43.554Z ERROR 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Error al enviar correo a lab.96@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:57:43.560Z  WARN 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.96@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:57:43.628Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3902 tiene el correo verificado
+2026-11-17T04:58:03.398Z ERROR 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Error al enviar correo a lab.135@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:58:03.403Z  WARN 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.135@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:58:03.467Z  WARN 1 --- [vargasvet] [nio-8080-exec-2] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3903 tiene el correo verificado
+2026-11-17T04:58:15.826Z ERROR 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Error al enviar correo a lab.210@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:58:15.830Z  WARN 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.210@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:58:15.888Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3904 tiene el correo verificado
+2026-11-17T04:58:17.327Z ERROR 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Error al enviar correo a lab.230@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:58:17.328Z  WARN 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.230@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:58:17.381Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3905 tiene el correo verificado
+2026-11-17T04:58:22.251Z ERROR 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Error al enviar correo a lab.78@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:58:22.253Z  WARN 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.78@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:58:22.309Z  WARN 1 --- [vargasvet] [nio-8080-exec-2] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3906 tiene el correo verificado
+2026-11-17T04:58:22.979Z ERROR 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Error al enviar correo a lab.97@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:58:22.983Z  WARN 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.97@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:58:23.039Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3907 tiene el correo verificado
+2026-11-17T04:58:33.147Z ERROR 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Error al enviar correo a lab.191@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T04:58:33.147Z  WARN 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.191@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T04:58:34.208Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3908 tiene el correo verificado
+Exception in thread "http-nio-8080-exec-5" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-10" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-2" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-9" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-3" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-6" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-16" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-7" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-1" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-11" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-15" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-17" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-18" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-19" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-21" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-8" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-22" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-23" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-14" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-26" java.lang.OutOfMemoryError: Metaspace
+Exception in thread "http-nio-8080-exec-24" java.lang.OutOfMemoryError: Metaspace

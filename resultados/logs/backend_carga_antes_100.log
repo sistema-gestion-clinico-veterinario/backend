@@ -1,0 +1,1781 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.2)
+
+2026-11-17T05:35:06.754Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : Starting VargasvetApplication v0.0.1-SNAPSHOT using Java 21.0.13 with PID 1 (/app/app.jar started by softvet in /app)
+2026-11-17T05:35:06.756Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-11-17T05:35:09.301Z  INFO 1 --- [vargasvet] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-17T05:35:09.789Z  INFO 1 --- [vargasvet] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 475 ms. Found 77 JPA repository interfaces.
+2026-11-17T05:35:11.463Z  INFO 1 --- [vargasvet] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-11-17T05:35:11.485Z  INFO 1 --- [vargasvet] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-11-17T05:35:11.486Z  INFO 1 --- [vargasvet] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.34]
+2026-11-17T05:35:11.745Z  INFO 1 --- [vargasvet] [           main] o.a.c.c.C.[.[localhost].[/api/v1]        : Initializing Spring embedded WebApplicationContext
+2026-11-17T05:35:11.746Z  INFO 1 --- [vargasvet] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4914 ms
+2026-11-17T05:35:12.080Z  INFO 1 --- [vargasvet] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-17T05:35:12.165Z  INFO 1 --- [vargasvet] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.5.Final
+2026-11-17T05:35:12.216Z  INFO 1 --- [vargasvet] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-17T05:35:12.614Z  INFO 1 --- [vargasvet] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-17T05:35:12.667Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-11-17T05:35:12.968Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@2e88ad38
+2026-11-17T05:35:12.969Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-11-17T05:35:13.007Z  WARN 1 --- [vargasvet] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-11-17T05:35:13.033Z  INFO 1 --- [vargasvet] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 16.16
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-17T05:35:17.272Z  INFO 1 --- [vargasvet] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-17T05:35:17.277Z  INFO 1 --- [vargasvet] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-17T05:35:17.982Z  INFO 1 --- [vargasvet] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-11-17T05:35:25.254Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter jwtFilterRegistration was not registered (disabled)
+2026-11-17T05:35:25.255Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter cookieSecurityFilterRegistration was not registered (disabled)
+2026-11-17T05:35:25.255Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter backupReportTokenFilterRegistration was not registered (disabled)
+2026-11-17T05:35:25.255Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter rateLimitFilterRegistration was not registered (disabled)
+2026-11-17T05:35:25.255Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter requestTraceFilterRegistration was not registered (disabled)
+2026-11-17T05:35:27.480Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.WebSecurityConfig     : Contraseñas protegidas con BCrypt, factor de costo 12
+2026-11-17T05:35:31.777Z  WARN 1 --- [vargasvet] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-11-17T05:35:32.578Z  INFO 1 --- [vargasvet] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-11-17T05:35:34.304Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-11-17T05:35:34.304Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@37c69f4d]]
+2026-11-17T05:35:34.309Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-11-17T05:35:34.327Z  INFO 1 --- [vargasvet] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-11-17T05:35:34.349Z  INFO 1 --- [vargasvet] [           main] o.s.s.config.TaskSchedulerRouter         : More than one TaskScheduler bean exists within the context, and none is named 'taskScheduler'. Mark one of them as primary or name it 'taskScheduler' (possibly as an alias); or implement the SchedulingConfigurer interface and call ScheduledTaskRegistrar#setScheduler explicitly within the configureTasks() callback: [messageBrokerTaskScheduler, heartbeatScheduler]
+2026-11-17T05:35:34.360Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : Started VargasvetApplication in 28.34 seconds (process running for 29.224)
+2026-11-17T05:35:34.541Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : === INICIALIZANDO DATOS DEL SISTEMA ===
+2026-11-17T05:35:34.629Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Rol del sistema verificado: ROLE_SUPER_ADMIN
+2026-11-17T05:35:34.642Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Rol del sistema verificado: ROLE_ADMIN
+2026-11-17T05:35:34.642Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Inicializando ventanas...
+2026-11-17T05:35:35.341Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.a.c.c.C.[.[localhost].[/api/v1]        : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-11-17T05:35:35.341Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-11-17T05:35:35.350Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 9 ms
+2026-11-17T05:35:35.877Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Verificando permisos del SUPER_ADMIN...
+2026-11-17T05:35:36.004Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : ⏭ SUPER_ADMIN ya tiene todos los permisos al día
+2026-11-17T05:35:36.005Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : === INICIALIZACIÓN COMPLETADA ===
+2026-11-17T05:35:55.718Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3990 tiene el correo verificado
+2026-11-17T05:35:55.950Z ERROR 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2584@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:35:55.961Z  WARN 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2584@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:35:58.450Z ERROR 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2641@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:35:58.450Z  WARN 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2641@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:35:58.585Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3991 tiene el correo verificado
+2026-11-17T05:36:04.640Z ERROR 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2565@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:04.641Z  WARN 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2565@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:04.726Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3992 tiene el correo verificado
+2026-11-17T05:36:08.748Z ERROR 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2622@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:08.749Z  WARN 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2622@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:08.887Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3993 tiene el correo verificado
+2026-11-17T05:36:08.891Z ERROR 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2755@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:08.892Z  WARN 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2755@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:08.989Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3994 tiene el correo verificado
+2026-11-17T05:36:10.377Z ERROR 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2660@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:10.383Z  WARN 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2660@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:10.455Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3995 tiene el correo verificado
+2026-11-17T05:36:11.836Z ERROR 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2679@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:11.837Z  WARN 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2679@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:11.943Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3996 tiene el correo verificado
+2026-11-17T05:36:13.026Z ERROR 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2585@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:13.026Z  WARN 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2585@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:13.108Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3997 tiene el correo verificado
+2026-11-17T05:36:13.994Z ERROR 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2546@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:14.000Z  WARN 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2546@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:14.100Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3998 tiene el correo verificado
+2026-11-17T05:36:14.542Z ERROR 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2793@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:14.542Z  WARN 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2793@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:14.612Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3999 tiene el correo verificado
+2026-11-17T05:36:16.185Z ERROR 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2527@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:16.186Z  WARN 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2527@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:16.275Z  WARN 1 --- [vargasvet] [io-8080-exec-10] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4000 tiene el correo verificado
+2026-11-17T05:36:16.599Z ERROR 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2907@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:16.599Z  WARN 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2907@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:16.677Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4001 tiene el correo verificado
+2026-11-17T05:36:18.551Z ERROR 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2774@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:18.551Z  WARN 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2774@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:18.606Z ERROR 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2736@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:18.607Z  WARN 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2736@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:18.683Z  WARN 1 --- [vargasvet] [io-8080-exec-10] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4002 tiene el correo verificado
+2026-11-17T05:36:18.712Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4003 tiene el correo verificado
+2026-11-17T05:36:21.193Z ERROR 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2850@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:21.194Z  WARN 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2850@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:21.247Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4004 tiene el correo verificado
+2026-11-17T05:36:25.102Z ERROR 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Error al enviar correo a lab.3002@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:25.102Z  WARN 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.3002@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:25.182Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4005 tiene el correo verificado
+2026-11-17T05:36:27.923Z ERROR 1 --- [vargasvet] [nio-8080-exec-6] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+	at java.base/java.lang.ClassLoader.defineClass1(Native Method) ~[na:na]
+	at java.base/java.lang.ClassLoader.defineClass(Unknown Source) ~[na:na]
+	at java.base/java.security.SecureClassLoader.defineClass(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader.defineClass(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader$1.run(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader$1.run(Unknown Source) ~[na:na]
+	at java.base/java.security.AccessController.executePrivileged(Unknown Source) ~[na:na]
+	at java.base/java.security.AccessController.doPrivileged(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader.findClass(Unknown Source) ~[na:na]
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source) ~[na:na]
+	at org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass(JarUrlClassLoader.java:107) ~[app.jar:0.0.1-SNAPSHOT]
+	at org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass(LaunchedClassLoader.java:91) ~[app.jar:0.0.1-SNAPSHOT]
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source) ~[na:na]
+	at java.base/java.lang.ClassLoader.defineClass1(Native Method) ~[na:na]
+	at java.base/java.lang.ClassLoader.defineClass(Unknown Source) ~[na:na]
+	at java.base/java.security.SecureClassLoader.defineClass(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader.defineClass(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader$1.run(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader$1.run(Unknown Source) ~[na:na]
+	at java.base/java.security.AccessController.executePrivileged(Unknown Source) ~[na:na]
+	at java.base/java.security.AccessController.doPrivileged(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader.findClass(Unknown Source) ~[na:na]
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source) ~[na:na]
+	at org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass(JarUrlClassLoader.java:107) ~[app.jar:0.0.1-SNAPSHOT]
+	at org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass(LaunchedClassLoader.java:91) ~[app.jar:0.0.1-SNAPSHOT]
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source) ~[na:na]
+	at com.fasterxml.jackson.databind.deser.BasicDeserializerFactory.createTreeDeserializer(BasicDeserializerFactory.java:1158) ~[jackson-databind-2.18.2.jar!/:2.18.2]
+	at com.fasterxml.jackson.databind.deser.DeserializerCache._createDeserializer2(DeserializerCache.java:469) ~[jackson-databind-2.18.2.jar!/:2.18.2]
+	at com.fasterxml.jackson.databind.deser.DeserializerCache._createDeserializer(DeserializerCache.java:415) ~[jackson-databind-2.18.2.jar!/:2.18.2]
+	at com.fasterxml.jackson.databind.deser.DeserializerCache._createAndCache2(DeserializerCache.java:317) ~[jackson-databind-2.18.2.jar!/:2.18.2]
+	at com.fasterxml.jackson.databind.deser.DeserializerCache._createAndCacheValueDeserializer(DeserializerCache.java:284) ~[jackson-databind-2.18.2.jar!/:2.18.2]
+	at com.fasterxml.jackson.databind.deser.DeserializerCache.findValueDeserializer(DeserializerCache.java:174) ~[jackson-databind-2.18.2.jar!/:2.18.2]
+
+2026-11-17T05:36:28.307Z ERROR 1 --- [vargasvet] [nio-8080-exec-6] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+	at java.base/java.lang.ClassLoader.defineClass1(Native Method) ~[na:na]
+	at java.base/java.lang.ClassLoader.defineClass(Unknown Source) ~[na:na]
+	at java.base/java.security.SecureClassLoader.defineClass(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader.defineClass(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader$1.run(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader$1.run(Unknown Source) ~[na:na]
+	at java.base/java.security.AccessController.executePrivileged(Unknown Source) ~[na:na]
+	at java.base/java.security.AccessController.doPrivileged(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader.findClass(Unknown Source) ~[na:na]
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source) ~[na:na]
+	at org.springframework.boot.loader.net.protocol.jar.JarUrlClassLoader.loadClass(JarUrlClassLoader.java:107) ~[app.jar:0.0.1-SNAPSHOT]
+	at org.springframework.boot.loader.launch.LaunchedClassLoader.loadClass(LaunchedClassLoader.java:91) ~[app.jar:0.0.1-SNAPSHOT]
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source) ~[na:na]
+	at org.apache.catalina.core.ApplicationContext.getRequestDispatcher(ApplicationContext.java:442) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.catalina.core.ApplicationContextFacade.getRequestDispatcher(ApplicationContextFacade.java:215) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.catalina.core.StandardHostValve.custom(StandardHostValve.java:350) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.catalina.core.StandardHostValve.status(StandardHostValve.java:208) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.catalina.core.StandardHostValve.throwable(StandardHostValve.java:285) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:149) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at java.base/java.lang.Thread.runWith(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+
+2026-11-17T05:36:29.165Z ERROR 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Error al enviar correo a lab.3078@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:29.181Z  WARN 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.3078@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:29.306Z ERROR 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Error al enviar correo a lab.3116@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:29.327Z  WARN 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.3116@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:29.332Z ERROR 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Error al enviar correo a lab.3021@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:29.378Z  WARN 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.3021@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:29.455Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4006 tiene el correo verificado
+2026-11-17T05:36:29.516Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4007 tiene el correo verificado
+2026-11-17T05:36:29.536Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4008 tiene el correo verificado
+2026-11-17T05:36:30.370Z ERROR 1 --- [vargasvet] [nio-8080-exec-9] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:30.797Z ERROR 1 --- [vargasvet] [nio-8080-exec-9] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:31.017Z ERROR 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Error al enviar correo a lab.3154@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:31.019Z ERROR 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2812@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:31.023Z  WARN 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2812@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:31.038Z  WARN 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.3154@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:31.047Z ERROR 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Error al enviar correo a lab.3097@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:31.129Z  WARN 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.3097@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:31.294Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4011 tiene el correo verificado
+2026-11-17T05:36:31.329Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4009 tiene el correo verificado
+2026-11-17T05:36:31.358Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4010 tiene el correo verificado
+2026-11-17T05:36:32.039Z ERROR 1 --- [vargasvet] [nio-8080-exec-5] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:32.395Z ERROR 1 --- [vargasvet] [nio-8080-exec-5] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:32.625Z ERROR 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Error al enviar correo a lab.3040@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:32.625Z  WARN 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.3040@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:32.848Z  WARN 1 --- [vargasvet] [io-8080-exec-14] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4012 tiene el correo verificado
+2026-11-17T05:36:33.048Z ERROR 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2831@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:33.056Z  WARN 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2831@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:33.199Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4013 tiene el correo verificado
+2026-11-17T05:36:34.230Z  INFO 1 --- [vargasvet] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 0, completed tasks = 0]
+2026-11-17T05:36:35.965Z ERROR 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Error al enviar correo a lab.3268@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:35.965Z  WARN 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.3268@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:36.060Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4014 tiene el correo verificado
+2026-11-17T05:36:37.443Z ERROR 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Error al enviar correo a lab.3249@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:37.443Z  WARN 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.3249@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:37.634Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4015 tiene el correo verificado
+2026-11-17T05:36:37.757Z ERROR 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2851@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:37.757Z  WARN 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2851@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:37.865Z  WARN 1 --- [vargasvet] [io-8080-exec-12] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4016 tiene el correo verificado
+2026-11-17T05:36:38.391Z ERROR 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2888@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:38.391Z  WARN 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2888@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:38.539Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4017 tiene el correo verificado
+2026-11-17T05:36:39.492Z ERROR 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2869@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:39.504Z  WARN 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2869@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:39.511Z ERROR 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Error al enviar correo a lab.2945@softvet.test: Mail server connection failed. Failed messages: org.eclipse.angus.mail.util.MailConnectException: Couldn't connect to host, port: 127.0.0.1, 2525; timeout 10000;
+  nested exception is:
+	java.net.ConnectException: Connection refused (connect failed)
+2026-11-17T05:36:39.512Z  WARN 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : No se pudo registrar en auditoría el fallo de envío de correo a lab.2945@softvet.test: No thread-bound request found: Are you referring to request attributes outside of an actual web request, or processing a request outside of the originally receiving thread? If you are actually operating within a web request and still receive this message, your code is probably running outside of DispatcherServlet: In this case, use RequestContextListener or RequestContextFilter to expose the current request.
+2026-11-17T05:36:39.625Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4018 tiene el correo verificado
+2026-11-17T05:36:39.661Z  WARN 1 --- [vargasvet] [io-8080-exec-11] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4019 tiene el correo verificado
+2026-11-17T05:36:48.021Z ERROR 1 --- [vargasvet] [nio-8080-exec-5] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:49.849Z ERROR 1 --- [vargasvet] [io-8080-exec-15] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:53.449Z ERROR 1 --- [vargasvet] [nio-8080-exec-3] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:53.460Z ERROR 1 --- [vargasvet] [io-8080-exec-13] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:54.099Z ERROR 1 --- [vargasvet] [io-8080-exec-39] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:54.694Z ERROR 1 --- [vargasvet] [io-8080-exec-14] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:55.308Z ERROR 1 --- [vargasvet] [io-8080-exec-11] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:56.550Z ERROR 1 --- [vargasvet] [nio-8080-exec-7] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:57.139Z ERROR 1 --- [vargasvet] [nio-8080-exec-1] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:59.002Z ERROR 1 --- [vargasvet] [nio-8080-exec-2] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler processing failed: java.lang.InternalError: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:59.005Z ERROR 1 --- [vargasvet] [io-8080-exec-38] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:36:59.580Z ERROR 1 --- [vargasvet] [io-8080-exec-41] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:00.518Z ERROR 1 --- [vargasvet] [io-8080-exec-25] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:01.566Z ERROR 1 --- [vargasvet] [io-8080-exec-10] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:01.918Z ERROR 1 --- [vargasvet] [io-8080-exec-17] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler processing failed: java.lang.InternalError: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:02.251Z ERROR 1 --- [vargasvet] [io-8080-exec-21] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:03.232Z ERROR 1 --- [vargasvet] [io-8080-exec-40] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:03.554Z ERROR 1 --- [vargasvet] [nio-8080-exec-2] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:03.918Z ERROR 1 --- [vargasvet] [io-8080-exec-31] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:04.591Z ERROR 1 --- [vargasvet] [io-8080-exec-16] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:04.594Z ERROR 1 --- [vargasvet] [io-8080-exec-19] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:05.273Z ERROR 1 --- [vargasvet] [nio-8080-exec-9] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler processing failed: java.lang.InternalError: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:05.619Z ERROR 1 --- [vargasvet] [io-8080-exec-53] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:05.619Z ERROR 1 --- [vargasvet] [io-8080-exec-21] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:05.965Z ERROR 1 --- [vargasvet] [io-8080-exec-17] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:06.624Z ERROR 1 --- [vargasvet] [io-8080-exec-30] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:06.633Z ERROR 1 --- [vargasvet] [io-8080-exec-63] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:06.984Z ERROR 1 --- [vargasvet] [io-8080-exec-35] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:07.329Z ERROR 1 --- [vargasvet] [io-8080-exec-23] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:07.662Z ERROR 1 --- [vargasvet] [io-8080-exec-53] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:08.004Z ERROR 1 --- [vargasvet] [io-8080-exec-68] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:08.007Z ERROR 1 --- [vargasvet] [io-8080-exec-67] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:08.361Z ERROR 1 --- [vargasvet] [io-8080-exec-41] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:08.692Z ERROR 1 --- [vargasvet] [io-8080-exec-45] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:09.009Z ERROR 1 --- [vargasvet] [nio-8080-exec-9] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:09.324Z ERROR 1 --- [vargasvet] [io-8080-exec-68] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:10.963Z ERROR 1 --- [vargasvet] [io-8080-exec-72] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:12.329Z ERROR 1 --- [vargasvet] [io-8080-exec-27] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:12.944Z ERROR 1 --- [vargasvet] [io-8080-exec-29] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:13.257Z ERROR 1 --- [vargasvet] [io-8080-exec-29] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:13.580Z ERROR 1 --- [vargasvet] [io-8080-exec-32] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:13.926Z ERROR 1 --- [vargasvet] [io-8080-exec-58] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:14.277Z ERROR 1 --- [vargasvet] [io-8080-exec-14] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:14.618Z ERROR 1 --- [vargasvet] [io-8080-exec-42] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:14.967Z ERROR 1 --- [vargasvet] [io-8080-exec-37] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:15.324Z ERROR 1 --- [vargasvet] [io-8080-exec-77] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:15.676Z ERROR 1 --- [vargasvet] [nio-8080-exec-3] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:16.360Z ERROR 1 --- [vargasvet] [io-8080-exec-33] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:16.365Z ERROR 1 --- [vargasvet] [io-8080-exec-36] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:19.736Z ERROR 1 --- [vargasvet] [io-8080-exec-22] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:19.738Z ERROR 1 --- [vargasvet] [io-8080-exec-18] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:20.080Z ERROR 1 --- [vargasvet] [io-8080-exec-44] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:20.444Z ERROR 1 --- [vargasvet] [io-8080-exec-38] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:20.763Z ERROR 1 --- [vargasvet] [nio-8080-exec-5] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:22.356Z ERROR 1 --- [vargasvet] [io-8080-exec-34] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:22.973Z ERROR 1 --- [vargasvet] [io-8080-exec-15] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:23.293Z ERROR 1 --- [vargasvet] [io-8080-exec-24] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:23.619Z ERROR 1 --- [vargasvet] [io-8080-exec-71] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:23.963Z ERROR 1 --- [vargasvet] [nio-8080-exec-6] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:25.285Z ERROR 1 --- [vargasvet] [io-8080-exec-51] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:27.016Z ERROR 1 --- [vargasvet] [io-8080-exec-47] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:27.347Z ERROR 1 --- [vargasvet] [nio-8080-exec-3] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:28.050Z ERROR 1 --- [vargasvet] [io-8080-exec-54] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:29.028Z ERROR 1 --- [vargasvet] [nio-8080-exec-7] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:29.035Z ERROR 1 --- [vargasvet] [io-8080-exec-56] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:29.355Z ERROR 1 --- [vargasvet] [nio-8080-exec-6] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:29.682Z ERROR 1 --- [vargasvet] [io-8080-exec-36] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:30.002Z ERROR 1 --- [vargasvet] [io-8080-exec-60] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:30.626Z ERROR 1 --- [vargasvet] [io-8080-exec-59] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:30.944Z ERROR 1 --- [vargasvet] [io-8080-exec-61] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:31.580Z ERROR 1 --- [vargasvet] [io-8080-exec-55] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:31.874Z ERROR 1 --- [vargasvet] [io-8080-exec-13] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:32.185Z ERROR 1 --- [vargasvet] [io-8080-exec-65] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:32.494Z ERROR 1 --- [vargasvet] [io-8080-exec-25] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+Exception in thread "http-nio-8080-exec-8" Exception in thread "http-nio-8080-exec-52" 
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "http-nio-8080-exec-8"
+2026-11-17T05:37:36.052Z ERROR 1 --- [vargasvet] [io-8080-exec-26] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:36.380Z ERROR 1 --- [vargasvet] [nio-8080-exec-2] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:37.668Z ERROR 1 --- [vargasvet] [nio-8080-exec-1] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:38.654Z ERROR 1 --- [vargasvet] [io-8080-exec-19] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:38.662Z ERROR 1 --- [vargasvet] [io-8080-exec-55] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:39.003Z ERROR 1 --- [vargasvet] [io-8080-exec-10] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:40.578Z ERROR 1 --- [vargasvet] [io-8080-exec-16] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:40.877Z ERROR 1 --- [vargasvet] [nio-8080-exec-2] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:41.483Z ERROR 1 --- [vargasvet] [io-8080-exec-62] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:42.703Z ERROR 1 --- [vargasvet] [io-8080-exec-63] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:43.005Z ERROR 1 --- [vargasvet] [io-8080-exec-23] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:43.328Z ERROR 1 --- [vargasvet] [io-8080-exec-35] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:47.848Z ERROR 1 --- [vargasvet] [io-8080-exec-78] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:49.241Z ERROR 1 --- [vargasvet] [io-8080-exec-68] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:50.255Z ERROR 1 --- [vargasvet] [io-8080-exec-67] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:51.254Z ERROR 1 --- [vargasvet] [nio-8080-exec-9] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:51.581Z ERROR 1 --- [vargasvet] [io-8080-exec-84] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:51.938Z ERROR 1 --- [vargasvet] [io-8080-exec-85] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:53.051Z ERROR 1 --- [vargasvet] [io-8080-exec-87] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:53.420Z ERROR 1 --- [vargasvet] [io-8080-exec-37] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+Exception in thread "http-nio-8080-exec-46" Exception in thread "http-nio-8080-exec-70" Exception in thread "http-nio-8080-exec-48" 
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "http-nio-8080-exec-52"
+2026-11-17T05:37:55.196Z ERROR 1 --- [vargasvet] [io-8080-exec-58] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:55.561Z ERROR 1 --- [vargasvet] [io-8080-exec-82] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:56.269Z ERROR 1 --- [vargasvet] [io-8080-exec-96] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:56.630Z ERROR 1 --- [vargasvet] [io-8080-exec-67] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:56.995Z ERROR 1 --- [vargasvet] [io-8080-exec-18] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:57.355Z ERROR 1 --- [vargasvet] [io-8080-exec-80] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:37:58.066Z ERROR 1 --- [vargasvet] [io-8080-exec-38] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:00.266Z ERROR 1 --- [vargasvet] [io-8080-exec-34] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "http-nio-8080-exec-46"
+
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "http-nio-8080-exec-70"
+2026-11-17T05:38:01.353Z ERROR 1 --- [vargasvet] [io-8080-exec-27] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:02.781Z ERROR 1 --- [vargasvet] [io-8080-exec-32] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:03.138Z ERROR 1 --- [vargasvet] [io-8080-exec-94] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:03.864Z ERROR 1 --- [vargasvet] [io-8080-exec-29] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:05.333Z ERROR 1 --- [vargasvet] [io-8080-exec-51] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:05.700Z ERROR 1 --- [vargasvet] [o-8080-exec-109] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:07.150Z ERROR 1 --- [vargasvet] [o-8080-exec-115] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:08.291Z ERROR 1 --- [vargasvet] [o-8080-exec-114] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:08.667Z ERROR 1 --- [vargasvet] [o-8080-exec-114] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:09.034Z ERROR 1 --- [vargasvet] [o-8080-exec-101] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:10.120Z ERROR 1 --- [vargasvet] [o-8080-exec-117] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:11.602Z ERROR 1 --- [vargasvet] [io-8080-exec-89] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "http-nio-8080-exec-48"
+2026-11-17T05:38:13.087Z ERROR 1 --- [vargasvet] [io-8080-exec-60] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:15.330Z ERROR 1 --- [vargasvet] [io-8080-exec-95] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:15.693Z ERROR 1 --- [vargasvet] [nio-8080-exec-4] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.InternalError: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:15.698Z ERROR 1 --- [vargasvet] [o-8080-exec-106] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:16.076Z ERROR 1 --- [vargasvet] [o-8080-exec-108] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:16.478Z ERROR 1 --- [vargasvet] [o-8080-exec-120] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:17.229Z ERROR 1 --- [vargasvet] [io-8080-exec-42] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:17.995Z ERROR 1 --- [vargasvet] [io-8080-exec-47] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:18.002Z ERROR 1 --- [vargasvet] [o-8080-exec-125] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:18.379Z ERROR 1 --- [vargasvet] [o-8080-exec-113] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:19.519Z ERROR 1 --- [vargasvet] [nio-8080-exec-3] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:21.441Z ERROR 1 --- [vargasvet] [nio-8080-exec-7] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:21.829Z ERROR 1 --- [vargasvet] [io-8080-exec-36] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:23.320Z ERROR 1 --- [vargasvet] [io-8080-exec-59] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:24.088Z ERROR 1 --- [vargasvet] [o-8080-exec-102] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:24.474Z ERROR 1 --- [vargasvet] [io-8080-exec-62] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:25.533Z ERROR 1 --- [vargasvet] [io-8080-exec-61] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:25.880Z ERROR 1 --- [vargasvet] [o-8080-exec-129] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:27.000Z ERROR 1 --- [vargasvet] [io-8080-exec-65] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:27.380Z ERROR 1 --- [vargasvet] [o-8080-exec-107] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:27.748Z ERROR 1 --- [vargasvet] [o-8080-exec-132] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:28.850Z ERROR 1 --- [vargasvet] [o-8080-exec-134] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:29.980Z ERROR 1 --- [vargasvet] [o-8080-exec-139] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:30.715Z ERROR 1 --- [vargasvet] [o-8080-exec-124] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:31.086Z ERROR 1 --- [vargasvet] [o-8080-exec-143] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:32.160Z ERROR 1 --- [vargasvet] [o-8080-exec-126] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:32.554Z ERROR 1 --- [vargasvet] [io-8080-exec-55] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:33.273Z ERROR 1 --- [vargasvet] [io-8080-exec-19] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:33.647Z ERROR 1 --- [vargasvet] [io-8080-exec-68] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:34.024Z ERROR 1 --- [vargasvet] [o-8080-exec-146] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:34.398Z ERROR 1 --- [vargasvet] [o-8080-exec-149] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:34.772Z ERROR 1 --- [vargasvet] [nio-8080-exec-6] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:35.832Z ERROR 1 --- [vargasvet] [o-8080-exec-148] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+Exception in thread "http-nio-8080-exec-50" 
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "http-nio-8080-exec-50"
+2026-11-17T05:38:36.575Z ERROR 1 --- [vargasvet] [io-8080-exec-71] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:37.642Z ERROR 1 --- [vargasvet] [io-8080-exec-85] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:37.975Z ERROR 1 --- [vargasvet] [o-8080-exec-152] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:39.700Z ERROR 1 --- [vargasvet] [o-8080-exec-128] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:40.469Z ERROR 1 --- [vargasvet] [io-8080-exec-82] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:40.842Z ERROR 1 --- [vargasvet] [io-8080-exec-96] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:41.217Z ERROR 1 --- [vargasvet] [o-8080-exec-110] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:41.592Z ERROR 1 --- [vargasvet] [io-8080-exec-67] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:41.968Z ERROR 1 --- [vargasvet] [io-8080-exec-80] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:42.357Z ERROR 1 --- [vargasvet] [o-8080-exec-136] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:42.742Z ERROR 1 --- [vargasvet] [o-8080-exec-140] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:43.501Z ERROR 1 --- [vargasvet] [io-8080-exec-26] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:43.901Z ERROR 1 --- [vargasvet] [o-8080-exec-162] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:45.420Z ERROR 1 --- [vargasvet] [io-8080-exec-27] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:45.801Z ERROR 1 --- [vargasvet] [o-8080-exec-145] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:46.554Z ERROR 1 --- [vargasvet] [io-8080-exec-14] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:47.697Z ERROR 1 --- [vargasvet] [o-8080-exec-150] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:48.081Z ERROR 1 --- [vargasvet] [io-8080-exec-29] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:49.213Z ERROR 1 --- [vargasvet] [nio-8080-exec-9] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:49.599Z ERROR 1 --- [vargasvet] [o-8080-exec-170] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:51.081Z ERROR 1 --- [vargasvet] [io-8080-exec-93] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:52.204Z ERROR 1 --- [vargasvet] [o-8080-exec-119] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:53.339Z ERROR 1 --- [vargasvet] [io-8080-exec-97] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:53.716Z ERROR 1 --- [vargasvet] [o-8080-exec-177] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:54.097Z ERROR 1 --- [vargasvet] [o-8080-exec-130] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:54.472Z ERROR 1 --- [vargasvet] [io-8080-exec-95] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:55.223Z ERROR 1 --- [vargasvet] [io-8080-exec-18] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:55.980Z ERROR 1 --- [vargasvet] [io-8080-exec-38] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:56.742Z ERROR 1 --- [vargasvet] [o-8080-exec-137] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:57.122Z ERROR 1 --- [vargasvet] [o-8080-exec-158] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:57.493Z ERROR 1 --- [vargasvet] [io-8080-exec-89] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:58.225Z ERROR 1 --- [vargasvet] [o-8080-exec-161] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:58.607Z ERROR 1 --- [vargasvet] [io-8080-exec-86] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:58.982Z ERROR 1 --- [vargasvet] [io-8080-exec-78] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:38:59.738Z ERROR 1 --- [vargasvet] [o-8080-exec-184] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:00.121Z ERROR 1 --- [vargasvet] [o-8080-exec-164] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:00.509Z ERROR 1 --- [vargasvet] [o-8080-exec-186] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:00.903Z ERROR 1 --- [vargasvet] [o-8080-exec-185] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:01.287Z ERROR 1 --- [vargasvet] [o-8080-exec-187] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:02.817Z ERROR 1 --- [vargasvet] [o-8080-exec-106] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:03.188Z ERROR 1 --- [vargasvet] [o-8080-exec-120] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:03.565Z ERROR 1 --- [vargasvet] [o-8080-exec-192] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:05.850Z ERROR 1 --- [vargasvet] [io-8080-exec-84] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:06.234Z ERROR 1 --- [vargasvet] [io-8080-exec-16] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:07.006Z ERROR 1 --- [vargasvet] [io-8080-exec-35] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:08.152Z ERROR 1 --- [vargasvet] [io-8080-exec-36] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:09.265Z ERROR 1 --- [vargasvet] [io-8080-exec-26] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:10.026Z ERROR 1 --- [vargasvet] [o-8080-exec-102] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:10.400Z ERROR 1 --- [vargasvet] [o-8080-exec-101] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:10.781Z ERROR 1 --- [vargasvet] [io-8080-exec-62] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:11.159Z ERROR 1 --- [vargasvet] [o-8080-exec-199] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:11.534Z ERROR 1 --- [vargasvet] [o-8080-exec-159] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:12.290Z ERROR 1 --- [vargasvet] [o-8080-exec-129] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:13.833Z ERROR 1 --- [vargasvet] [o-8080-exec-160] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:13.834Z ERROR 1 --- [vargasvet] [o-8080-exec-201] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:15.352Z ERROR 1 --- [vargasvet] [o-8080-exec-166] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:15.742Z ERROR 1 --- [vargasvet] [o-8080-exec-139] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:16.511Z ERROR 1 --- [vargasvet] [io-8080-exec-94] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:16.898Z ERROR 1 --- [vargasvet] [o-8080-exec-189] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:17.660Z ERROR 1 --- [vargasvet] [o-8080-exec-126] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:18.046Z ERROR 1 --- [vargasvet] [io-8080-exec-55] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:21.043Z ERROR 1 --- [vargasvet] [o-8080-exec-115] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:21.783Z ERROR 1 --- [vargasvet] [o-8080-exec-206] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:22.526Z ERROR 1 --- [vargasvet] [o-8080-exec-175] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:23.616Z ERROR 1 --- [vargasvet] [o-8080-exec-128] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:24.730Z ERROR 1 --- [vargasvet] [o-8080-exec-142] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:24.735Z ERROR 1 --- [vargasvet] [o-8080-exec-157] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:25.493Z ERROR 1 --- [vargasvet] [o-8080-exec-200] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:26.257Z ERROR 1 --- [vargasvet] [io-8080-exec-67] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:27.767Z ERROR 1 --- [vargasvet] [o-8080-exec-107] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:27.769Z ERROR 1 --- [vargasvet] [o-8080-exec-203] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:28.161Z ERROR 1 --- [vargasvet] [o-8080-exec-147] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:28.544Z ERROR 1 --- [vargasvet] [o-8080-exec-204] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:28.964Z ERROR 1 --- [vargasvet] [o-8080-exec-124] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:29.356Z ERROR 1 --- [vargasvet] [o-8080-exec-143] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:29.735Z ERROR 1 --- [vargasvet] [io-8080-exec-27] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:30.114Z ERROR 1 --- [vargasvet] [io-8080-exec-14] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:31.642Z ERROR 1 --- [vargasvet] [o-8080-exec-194] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:32.777Z ERROR 1 --- [vargasvet] [io-8080-exec-39] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:33.152Z ERROR 1 --- [vargasvet] [o-8080-exec-131] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:33.537Z ERROR 1 --- [vargasvet] [o-8080-exec-114] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:35.051Z ERROR 1 --- [vargasvet] [io-8080-exec-85] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:35.426Z ERROR 1 --- [vargasvet] [nio-8080-exec-4] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:36.204Z ERROR 1 --- [vargasvet] [io-8080-exec-65] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:36.579Z ERROR 1 --- [vargasvet] [o-8080-exec-183] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:37.325Z ERROR 1 --- [vargasvet] [o-8080-exec-162] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:37.695Z ERROR 1 --- [vargasvet] [o-8080-exec-137] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:38.427Z ERROR 1 --- [vargasvet] [o-8080-exec-161] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:38.799Z ERROR 1 --- [vargasvet] [io-8080-exec-10] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:39.181Z ERROR 1 --- [vargasvet] [o-8080-exec-191] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:39.559Z ERROR 1 --- [vargasvet] [o-8080-exec-184] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:40.309Z ERROR 1 --- [vargasvet] [o-8080-exec-149] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:40.675Z ERROR 1 --- [vargasvet] [nio-8080-exec-3] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:41.049Z ERROR 1 --- [vargasvet] [o-8080-exec-148] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:41.416Z ERROR 1 --- [vargasvet] [io-8080-exec-71] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:42.476Z ERROR 1 --- [vargasvet] [io-8080-exec-59] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:42.807Z ERROR 1 --- [vargasvet] [io-8080-exec-61] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:43.842Z ERROR 1 --- [vargasvet] [o-8080-exec-140] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:44.205Z ERROR 1 --- [vargasvet] [o-8080-exec-132] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:44.585Z ERROR 1 --- [vargasvet] [io-8080-exec-38] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:45.365Z ERROR 1 --- [vargasvet] [o-8080-exec-108] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:46.104Z ERROR 1 --- [vargasvet] [o-8080-exec-145] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:46.108Z ERROR 1 --- [vargasvet] [io-8080-exec-86] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:46.488Z ERROR 1 --- [vargasvet] [o-8080-exec-150] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:46.869Z ERROR 1 --- [vargasvet] [io-8080-exec-36] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:48.726Z ERROR 1 --- [vargasvet] [o-8080-exec-185] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:49.100Z ERROR 1 --- [vargasvet] [o-8080-exec-187] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:49.480Z ERROR 1 --- [vargasvet] [io-8080-exec-93] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:50.610Z ERROR 1 --- [vargasvet] [o-8080-exec-199] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:51.367Z ERROR 1 --- [vargasvet] [o-8080-exec-175] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:51.746Z ERROR 1 --- [vargasvet] [o-8080-exec-182] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:52.122Z ERROR 1 --- [vargasvet] [io-8080-exec-95] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:52.494Z ERROR 1 --- [vargasvet] [io-8080-exec-80] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:54.732Z ERROR 1 --- [vargasvet] [io-8080-exec-35] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:56.224Z ERROR 1 --- [vargasvet] [io-8080-exec-49] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:56.225Z ERROR 1 --- [vargasvet] [o-8080-exec-101] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:56.607Z ERROR 1 --- [vargasvet] [o-8080-exec-198] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:57.359Z ERROR 1 --- [vargasvet] [o-8080-exec-160] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:57.726Z ERROR 1 --- [vargasvet] [o-8080-exec-177] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:58.859Z ERROR 1 --- [vargasvet] [o-8080-exec-164] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:39:59.641Z ERROR 1 --- [vargasvet] [o-8080-exec-186] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:01.525Z ERROR 1 --- [vargasvet] [o-8080-exec-159] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:02.256Z ERROR 1 --- [vargasvet] [io-8080-exec-64] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:02.259Z ERROR 1 --- [vargasvet] [io-8080-exec-18] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:02.631Z ERROR 1 --- [vargasvet] [io-8080-exec-67] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:03.003Z ERROR 1 --- [vargasvet] [o-8080-exec-106] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:04.142Z ERROR 1 --- [vargasvet] [o-8080-exec-203] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:04.521Z ERROR 1 --- [vargasvet] [o-8080-exec-170] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:05.284Z ERROR 1 --- [vargasvet] [o-8080-exec-124] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:07.190Z ERROR 1 --- [vargasvet] [io-8080-exec-97] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:08.347Z ERROR 1 --- [vargasvet] [o-8080-exec-177] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:08.731Z ERROR 1 --- [vargasvet] [o-8080-exec-107] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:09.510Z ERROR 1 --- [vargasvet] [nio-8080-exec-7] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:10.267Z ERROR 1 --- [vargasvet] [o-8080-exec-143] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:10.273Z ERROR 1 --- [vargasvet] [io-8080-exec-85] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:10.656Z ERROR 1 --- [vargasvet] [o-8080-exec-157] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:12.892Z ERROR 1 --- [vargasvet] [o-8080-exec-162] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:13.268Z ERROR 1 --- [vargasvet] [o-8080-exec-147] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:14.378Z ERROR 1 --- [vargasvet] [o-8080-exec-126] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:14.739Z ERROR 1 --- [vargasvet] [io-8080-exec-62] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:15.849Z ERROR 1 --- [vargasvet] [nio-8080-exec-3] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:16.224Z ERROR 1 --- [vargasvet] [o-8080-exec-166] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:16.600Z ERROR 1 --- [vargasvet] [io-8080-exec-35] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:17.363Z ERROR 1 --- [vargasvet] [o-8080-exec-191] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:18.123Z ERROR 1 --- [vargasvet] [o-8080-exec-184] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:18.506Z ERROR 1 --- [vargasvet] [io-8080-exec-14] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:18.890Z ERROR 1 --- [vargasvet] [io-8080-exec-38] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:19.278Z ERROR 1 --- [vargasvet] [o-8080-exec-183] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:19.660Z ERROR 1 --- [vargasvet] [o-8080-exec-108] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:21.175Z ERROR 1 --- [vargasvet] [io-8080-exec-86] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:21.938Z ERROR 1 --- [vargasvet] [io-8080-exec-36] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:23.831Z ERROR 1 --- [vargasvet] [o-8080-exec-187] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:24.601Z ERROR 1 --- [vargasvet] [o-8080-exec-145] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:25.001Z ERROR 1 --- [vargasvet] [io-8080-exec-93] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:25.388Z ERROR 1 --- [vargasvet] [o-8080-exec-132] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:25.768Z ERROR 1 --- [vargasvet] [io-8080-exec-57] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:26.158Z ERROR 1 --- [vargasvet] [io-8080-exec-71] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:27.299Z ERROR 1 --- [vargasvet] [o-8080-exec-182] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:27.683Z ERROR 1 --- [vargasvet] [io-8080-exec-27] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:28.066Z ERROR 1 --- [vargasvet] [o-8080-exec-150] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:28.448Z ERROR 1 --- [vargasvet] [io-8080-exec-65] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:31.457Z ERROR 1 --- [vargasvet] [o-8080-exec-148] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:31.838Z ERROR 1 --- [vargasvet] [o-8080-exec-160] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:32.596Z ERROR 1 --- [vargasvet] [io-8080-exec-95] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:33.750Z ERROR 1 --- [vargasvet] [io-8080-exec-59] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:34.123Z ERROR 1 --- [vargasvet] [io-8080-exec-44] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:34.518Z ERROR 1 --- [vargasvet] [o-8080-exec-159] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:34.907Z ERROR 1 --- [vargasvet] [io-8080-exec-18] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:36.063Z ERROR 1 --- [vargasvet] [o-8080-exec-198] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:36.432Z ERROR 1 --- [vargasvet] [o-8080-exec-175] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:37.888Z ERROR 1 --- [vargasvet] [io-8080-exec-49] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:39.384Z ERROR 1 --- [vargasvet] [o-8080-exec-149] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:41.622Z ERROR 1 --- [vargasvet] [o-8080-exec-198] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:42.366Z ERROR 1 --- [vargasvet] [io-8080-exec-67] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:44.266Z ERROR 1 --- [vargasvet] [io-8080-exec-85] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:45.018Z ERROR 1 --- [vargasvet] [io-8080-exec-97] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:45.773Z ERROR 1 --- [vargasvet] [o-8080-exec-177] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:46.154Z ERROR 1 --- [vargasvet] [o-8080-exec-143] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:47.293Z ERROR 1 --- [vargasvet] [o-8080-exec-157] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:47.674Z ERROR 1 --- [vargasvet] [nio-8080-exec-7] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:49.181Z ERROR 1 --- [vargasvet] [io-8080-exec-40] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:49.950Z ERROR 1 --- [vargasvet] [nio-8080-exec-3] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+Exception in thread "http-nio-8080-exec-22" 
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "http-nio-8080-exec-22"
+2026-11-17T05:40:51.480Z ERROR 1 --- [vargasvet] [io-8080-exec-35] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:53.018Z ERROR 1 --- [vargasvet] [o-8080-exec-191] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:54.585Z ERROR 1 --- [vargasvet] [o-8080-exec-184] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:56.553Z ERROR 1 --- [vargasvet] [o-8080-exec-106] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:56.953Z ERROR 1 --- [vargasvet] [o-8080-exec-101] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:57.757Z ERROR 1 --- [vargasvet] [o-8080-exec-145] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:58.518Z ERROR 1 --- [vargasvet] [io-8080-exec-62] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:58.901Z ERROR 1 --- [vargasvet] [io-8080-exec-71] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:40:59.292Z ERROR 1 --- [vargasvet] [io-8080-exec-86] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:01.244Z ERROR 1 --- [vargasvet] [o-8080-exec-203] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:01.640Z ERROR 1 --- [vargasvet] [o-8080-exec-132] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:02.424Z ERROR 1 --- [vargasvet] [io-8080-exec-36] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:04.363Z ERROR 1 --- [vargasvet] [io-8080-exec-27] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:05.551Z ERROR 1 --- [vargasvet] [io-8080-exec-62] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:06.726Z ERROR 1 --- [vargasvet] [nio-8080-exec-4] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:08.297Z ERROR 1 --- [vargasvet] [io-8080-exec-59] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:08.682Z ERROR 1 --- [vargasvet] [io-8080-exec-93] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:09.456Z ERROR 1 --- [vargasvet] [o-8080-exec-160] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:11.402Z ERROR 1 --- [vargasvet] [io-8080-exec-95] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:11.406Z ERROR 1 --- [vargasvet] [io-8080-exec-44] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:12.172Z ERROR 1 --- [vargasvet] [io-8080-exec-49] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:12.551Z ERROR 1 --- [vargasvet] [o-8080-exec-149] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:14.878Z ERROR 1 --- [vargasvet] [o-8080-exec-200] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:16.377Z ERROR 1 --- [vargasvet] [io-8080-exec-18] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:16.761Z ERROR 1 --- [vargasvet] [o-8080-exec-160] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+Exception in thread "http-nio-8080-exec-78" Exception in thread "http-nio-8080-exec-81" 
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "http-nio-8080-exec-78"
+
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "http-nio-8080-exec-81"
+2026-11-17T05:41:20.187Z ERROR 1 --- [vargasvet] [o-8080-exec-177] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:20.950Z ERROR 1 --- [vargasvet] [io-8080-exec-14] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:22.468Z ERROR 1 --- [vargasvet] [o-8080-exec-157] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:23.222Z ERROR 1 --- [vargasvet] [io-8080-exec-84] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:23.230Z ERROR 1 --- [vargasvet] [io-8080-exec-38] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:24.399Z ERROR 1 --- [vargasvet] [nio-8080-exec-3] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:25.932Z ERROR 1 --- [vargasvet] [o-8080-exec-197] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:26.308Z ERROR 1 --- [vargasvet] [io-8080-exec-35] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:27.070Z ERROR 1 --- [vargasvet] [o-8080-exec-191] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-11-17T05:41:30.925Z ERROR 1 --- [vargasvet] [o-8080-exec-133] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+Exception in thread "http-nio-8080-exec-158" 
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "http-nio-8080-exec-158"
+2026-11-17T05:41:34.390Z ERROR 1 --- [vargasvet] [io-8080-exec-86] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+

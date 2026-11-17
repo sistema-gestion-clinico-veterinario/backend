@@ -1,0 +1,726 @@
+time="2026-11-17T05:30:34Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/consultations/20684/close\": EOF"
+time="2026-11-17T05:30:34Z" level=info msg="PASO|7|cerrar_consulta|PATCH|0|3954|FALLO|null" source=console
+time="2026-11-17T05:30:37Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": EOF"
+time="2026-11-17T05:30:37Z" level=info msg="PASO|1|navegacion|GET|0|3550|FALLO|null" source=console
+time="2026-11-17T05:30:40Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": EOF"
+time="2026-11-17T05:30:40Z" level=info msg="PASO|1|privacidad|GET|0|2412|FALLO|null" source=console
+time="2026-11-17T05:30:48Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": EOF"
+time="2026-11-17T05:30:48Z" level=info msg="PASO|1|cumplimiento|GET|0|8948|FALLO|null" source=console
+time="2026-11-17T05:30:48Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27683/check-in\": EOF"
+time="2026-11-17T05:30:48Z" level=info msg="PASO|15|checkin|PATCH|0|3557|FALLO|null" source=console
+time="2026-11-17T05:30:54Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27682/check-in\": EOF"
+time="2026-11-17T05:30:54Z" level=info msg="PASO|14|checkin|PATCH|0|14398|FALLO|null" source=console
+time="2026-11-17T05:30:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": EOF"
+time="2026-11-17T05:30:55Z" level=info msg="PASO|42|apoderado|POST|0|14722|FALLO|null" source=console
+time="2026-11-17T05:30:55Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports?fechaDesde=2025-11-17&fechaHasta=2026-11-17&companyId=1\": EOF"
+time="2026-11-17T05:30:55Z" level=info msg="PASO|2|reporte_clinico|GET|0|16429|FALLO|null" source=console
+time="2026-11-17T05:30:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": EOF"
+time="2026-11-17T05:30:57Z" level=info msg="PASO|1|notificaciones|GET|0|8784|FALLO|null" source=console
+time="2026-11-17T05:30:58Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-17T05:30:58Z" level=info msg="PASO|36|reporte_clinico|GET|0|30002|FALLO|{\"success\":true,\"message\":\"Reportes clínicos obtenidos con éxito\",\"data\":{\"fechaDesde\":\"2025-11-17\",\"fechaHasta\":\"2026-11-17\",\"resumen\":{\"consultas\":9573,\"pacientesAtendidos\":2278,\"ingresos\":449040.00,\"nuevosPacientes\":2340,\"tiempoPromedioAtencionMinutos\":30,\"porcentajeCitasCompletadas\":78.2,\"noAsis" source=console
+time="2026-11-17T05:30:59Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27683/start\": EOF"
+time="2026-11-17T05:30:59Z" level=info msg="PASO|15|iniciar|PATCH|0|10235|FALLO|null" source=console
+time="2026-11-17T05:30:59Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27699/check-in\": EOF"
+time="2026-11-17T05:30:59Z" level=info msg="PASO|16|checkin|PATCH|0|19411|FALLO|null" source=console
+time="2026-11-17T05:31:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": EOF"
+time="2026-11-17T05:31:01Z" level=info msg="PASO|60|login|POST|0|21650|FALLO|null" source=console
+time="2026-11-17T05:31:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": EOF"
+time="2026-11-17T05:31:01Z" level=info msg="PASO|4|apoderado|POST|0|11486|FALLO|null" source=console
+time="2026-11-17T05:31:01Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-17T05:31:01Z" level=info msg="PASO|53|login|POST|0|30001|FALLO|{\"success\":true,\"message\":\"Login exitoso\",\"data\":{\"roles\":[\"ROLE_ADMIN\"],\"assignedRoles\":[\"ROLE_ADMIN\"],\"availableRoles\":[{\"id\":2,\"name\":\"ROLE_ADMIN\",\"scope\":\"STAFF\",\"purpose\":\"COMPANY_ADMIN\"}],\"companyId\":1,\"companyName\":\"Clinica de medicion\",\"companyLogoUrl\":null,\"companyColorPrimario\":null,\"compa" source=console
+time="2026-11-17T05:31:01Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-17T05:31:01Z" level=info msg="PASO|48|panel|GET|0|30001|FALLO|{\"success\":true,\"message\":\"Dashboard recuperado con éxito\",\"data\":{\"stats\":{\"totalPacientes\":2534,\"totalCitasHoy\":37,\"totalCitas\":20131,\"totalEmpleados\":10,\"totalEmpresas\":0,\"citasPorDia\":[18,37,29,36,39,31,29],\"citasPorSemana\":[169,155,216,271],\"citasPorMes\":[773,611,705,707,710,684,666,766,705,687" source=console
+time="2026-11-17T05:31:02Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:02Z" level=info msg="PASO|54|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": EOF"
+time="2026-11-17T05:31:02Z" level=info msg="PASO|7|navegacion|GET|0|8735|FALLO|null" source=console
+time="2026-11-17T05:31:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:03Z" level=info msg="PASO|55|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": EOF"
+time="2026-11-17T05:31:04Z" level=info msg="PASO|38|apoderado|POST|0|26601|FALLO|null" source=console
+time="2026-11-17T05:31:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:04Z" level=info msg="PASO|56|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:05Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": EOF"
+time="2026-11-17T05:31:05Z" level=info msg="PASO|1|avisos_de_cumplimiento|GET|0|8004|FALLO|null" source=console
+time="2026-11-17T05:31:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:05Z" level=info msg="PASO|57|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/consultations/9\": request timeout"
+time="2026-11-17T05:31:06Z" level=info msg="PASO|31|consulta_lectura|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:06Z" level=info msg="PASO|22|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:06Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27686/check-in\": EOF"
+time="2026-11-17T05:31:06Z" level=info msg="PASO|21|checkin|PATCH|0|17252|FALLO|null" source=console
+time="2026-11-17T05:31:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:31:06Z" level=info msg="PASO|11|citas_del_mes|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:07Z" level=info msg="PASO|58|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:07Z" level=info msg="PASO|39|navegacion|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:07Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27682/start\": EOF"
+time="2026-11-17T05:31:07Z" level=info msg="PASO|14|iniciar|PATCH|0|12845|FALLO|null" source=console
+time="2026-11-17T05:31:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:08Z" level=info msg="PASO|59|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:08Z" level=info msg="PASO|13|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:31:08Z" level=info msg="PASO|40|apoderado|POST|0|30000|FALLO|null" source=console
+time="2026-11-17T05:31:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:31:08Z" level=info msg="PASO|28|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:09Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/sales-products?fechaDesde=2025-11-17&fechaHasta=2026-11-17&companyId=1\": request timeout"
+time="2026-11-17T05:31:09Z" level=info msg="PASO|30|reporte_de_ventas|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:09Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:09Z" level=info msg="PASO|52|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:09Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": EOF"
+time="2026-11-17T05:31:09Z" level=info msg="PASO|20|apoderado|POST|0|24764|FALLO|null" source=console
+time="2026-11-17T05:31:09Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": EOF"
+time="2026-11-17T05:31:09Z" level=info msg="PASO|46|apoderado|POST|0|15854|FALLO|null" source=console
+time="2026-11-17T05:31:09Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27710/check-in\": request timeout"
+time="2026-11-17T05:31:09Z" level=info msg="PASO|34|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:10Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:31:10Z" level=info msg="PASO|45|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/prescriptions/consultation/20685\": request timeout"
+time="2026-11-17T05:31:10Z" level=info msg="PASO|29|receta|POST|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:11Z" level=info msg="PASO|3|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:13Z" level=info msg="PASO|37|navegacion|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:14Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27695/check-in\": EOF"
+time="2026-11-17T05:31:14Z" level=info msg="PASO|24|checkin|PATCH|0|24628|FALLO|null" source=console
+time="2026-11-17T05:31:14Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:31:14Z" level=info msg="PASO|33|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:14Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:14Z" level=info msg="PASO|47|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:31:15Z" level=info msg="PASO|18|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:16Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports?fechaDesde=2025-11-17&fechaHasta=2026-11-17&companyId=1\": request timeout"
+time="2026-11-17T05:31:16Z" level=info msg="PASO|19|reporte_clinico|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:16Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27688/check-in\": request timeout"
+time="2026-11-17T05:31:16Z" level=info msg="PASO|12|checkin|PATCH|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:16Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:16Z" level=info msg="PASO|26|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:18Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:31:18Z" level=info msg="PASO|17|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:18Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:31:18Z" level=info msg="PASO|5|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:18Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:18Z" level=info msg="PASO|44|navegacion|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:19Z" level=info msg="PASO|32|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:19Z" level=info msg="PASO|35|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:20Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:31:20Z" level=info msg="PASO|49|citas_del_mes|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:31:21Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:31:21Z" level=info msg="PASO|25|citas_del_mes|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:21Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:31:21Z" level=info msg="PASO|6|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:21Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:31:21Z" level=info msg="PASO|9|avisos_de_cumplimiento|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:31:23Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:31:23Z" level=info msg="PASO|41|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:23Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/inactive-patients?page=0&size=20&companyId=1\": EOF"
+time="2026-11-17T05:31:23Z" level=info msg="PASO|30|pacientes_inactivos|GET|0|14476|FALLO|null" source=console
+time="2026-11-17T05:31:25Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/sales-products?fechaDesde=2025-11-17&fechaHasta=2026-11-17&companyId=1\": request timeout"
+time="2026-11-17T05:31:25Z" level=info msg="PASO|2|reporte_de_ventas|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:31:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:31:27Z" level=info msg="PASO|8|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": EOF"
+time="2026-11-17T05:31:27Z" level=info msg="PASO|50|apoderado|POST|0|24266|FALLO|null" source=console
+time="2026-11-17T05:31:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:31:27Z" level=info msg="PASO|43|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:31:27Z" level=info msg="PASO|23|lista_de_historias|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/sales-products?fechaDesde=2025-11-17&fechaHasta=2026-11-17&companyId=1\": request timeout"
+time="2026-11-17T05:31:28Z" level=info msg="PASO|36|reporte_de_ventas|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:31:29Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27699/start\": request timeout"
+time="2026-11-17T05:31:29Z" level=info msg="PASO|16|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:31Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:31:31Z" level=info msg="PASO|27|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:31:32Z" level=info msg="PASO|7|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:34Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:31:34Z" level=info msg="PASO|10|propietarios|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:34Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:31:34Z" level=info msg="PASO|51|notificaciones|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:31:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:31:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:31:36Z" level=info msg="PASO|22|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:36Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27686/start\": request timeout"
+time="2026-11-17T05:31:36Z" level=info msg="PASO|21|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:31:36Z" level=info msg="PASO|11|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": EOF"
+time="2026-11-17T05:31:36Z" level=info msg="PASO|37|privacidad|GET|0|23085|FALLO|null" source=console
+time="2026-11-17T05:31:37Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:31:37Z" level=info msg="PASO|39|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:38Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:31:38Z" level=info msg="PASO|13|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:38Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:31:38Z" level=info msg="PASO|28|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:39Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:31:39Z" level=info msg="PASO|52|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:39Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27710/start\": request timeout"
+time="2026-11-17T05:31:39Z" level=info msg="PASO|34|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:40Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:31:40Z" level=info msg="PASO|45|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:40Z" level=warning msg="Request Failed" error="Put \"http://127.0.0.1:18080/api/v1/pets/4006\": request timeout"
+time="2026-11-17T05:31:40Z" level=info msg="PASO|29|actualizar_mascota|PUT|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:40Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:31:40Z" level=info msg="PASO|48|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:41Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:31:41Z" level=info msg="PASO|3|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:41Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:31:41Z" level=info msg="PASO|42|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:42Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:42Z" level=info msg="PASO|15|navegacion|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:44Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27695/start\": request timeout"
+time="2026-11-17T05:31:44Z" level=info msg="PASO|24|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:44Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:31:44Z" level=info msg="PASO|33|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:44Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:31:44Z" level=info msg="PASO|47|privacidad|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:44Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:44Z" level=info msg="PASO|53|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:46Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/sales-products?fechaDesde=2025-11-17&fechaHasta=2026-11-17&companyId=1\": request timeout"
+time="2026-11-17T05:31:46Z" level=info msg="PASO|19|reporte_de_ventas|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:46Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27688/start\": request timeout"
+time="2026-11-17T05:31:46Z" level=info msg="PASO|12|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:46Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:31:46Z" level=info msg="PASO|26|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:46Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27697/check-in\": request timeout"
+time="2026-11-17T05:31:46Z" level=info msg="PASO|14|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports?fechaDesde=2025-11-17&fechaHasta=2026-11-17&companyId=1\": request timeout"
+time="2026-11-17T05:31:47Z" level=info msg="PASO|31|reporte_clinico|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:48Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:31:48Z" level=info msg="PASO|38|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:48Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:48Z" level=info msg="PASO|60|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:48Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:31:48Z" level=info msg="PASO|44|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:31:49Z" level=info msg="PASO|32|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:49Z" level=info msg="PASO|55|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-17T05:31:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:49Z" level=info msg="PASO|54|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:31:49Z" level=info msg="PASO|35|privacidad|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:50Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:31:50Z" level=info msg="PASO|49|empleados|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:51Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:31:51Z" level=info msg="PASO|25|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:51Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:31:51Z" level=info msg="PASO|6|empleados|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:31:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:51Z" level=info msg="PASO|56|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:51Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:31:51Z" level=info msg="PASO|9|panel|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:53Z" level=info msg="PASO|59|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:53Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27680/check-in\": request timeout"
+time="2026-11-17T05:31:53Z" level=info msg="PASO|4|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:53Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:31:53Z" level=info msg="PASO|41|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:55Z" level=info msg="PASO|57|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-17T05:31:55Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/inactive-patients?page=0&size=20&companyId=1\": request timeout"
+time="2026-11-17T05:31:55Z" level=info msg="PASO|2|pacientes_inactivos|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:31:56Z" level=info msg="PASO|40|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:57Z" level=info msg="PASO|20|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:31:58Z" level=info msg="PASO|46|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:58Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:31:58Z" level=info msg="PASO|17|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:58Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/inactive-patients?page=0&size=20&companyId=1\": request timeout"
+time="2026-11-17T05:31:58Z" level=info msg="PASO|36|pacientes_inactivos|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:31:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:31:59Z" level=info msg="PASO|58|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:01Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:32:01Z" level=info msg="PASO|27|notificaciones|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:32:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:32:02Z" level=info msg="PASO|5|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:02Z" level=info msg="PASO|7|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:32:04Z" level=info msg="PASO|51|avisos_de_cumplimiento|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:32:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:06Z" level=info msg="PASO|22|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:32:06Z" level=info msg="PASO|11|propietarios|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:06Z" level=info msg="PASO|37|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:07Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27684/check-in\": request timeout"
+time="2026-11-17T05:32:07Z" level=info msg="PASO|8|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:07Z" level=info msg="PASO|39|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:32:07Z" level=info msg="PASO|18|lista_de_historias|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:32:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:32:07Z" level=info msg="PASO|50|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:08Z" level=info msg="PASO|13|cumplimiento|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:32:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:32:08Z" level=info msg="PASO|28|panel|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:09Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:32:09Z" level=info msg="PASO|30|citas_del_mes|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:32:09Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:09Z" level=info msg="PASO|52|cumplimiento|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:32:10Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:32:10Z" level=info msg="PASO|45|propietarios|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:10Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/consultations/20685/close\": request timeout"
+time="2026-11-17T05:32:10Z" level=info msg="PASO|29|cerrar_consulta|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:11Z" level=info msg="PASO|3|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:12Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:32:12Z" level=info msg="PASO|15|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:32:13Z" level=info msg="PASO|43|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:14Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:32:14Z" level=info msg="PASO|33|propietarios|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:32:14Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:14Z" level=info msg="PASO|47|cumplimiento|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:32:16Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/inactive-patients?page=0&size=20&companyId=1\": request timeout"
+time="2026-11-17T05:32:16Z" level=info msg="PASO|19|pacientes_inactivos|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:32:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:32:16Z" level=info msg="PASO|23|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:16Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:16Z" level=info msg="PASO|26|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:16Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27697/start\": request timeout"
+time="2026-11-17T05:32:16Z" level=info msg="PASO|14|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/sales-products?fechaDesde=2025-11-17&fechaHasta=2026-11-17&companyId=1\": request timeout"
+time="2026-11-17T05:32:17Z" level=info msg="PASO|31|reporte_de_ventas|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:18Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:18Z" level=info msg="PASO|44|cumplimiento|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:32:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:19Z" level=info msg="PASO|32|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:19Z" level=info msg="PASO|35|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:20Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:32:20Z" level=info msg="PASO|42|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:32:20Z" level=info msg="PASO|16|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:20Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:32:20Z" level=info msg="PASO|49|propietarios|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:21Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:32:21Z" level=info msg="PASO|25|propietarios|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:21Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:32:21Z" level=info msg="PASO|6|propietarios|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:21Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:32:21Z" level=info msg="PASO|10|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:32:21Z" level=info msg="PASO|21|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:32:21Z" level=info msg="PASO|34|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:32:21Z" level=info msg="PASO|24|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:22Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:32:22Z" level=info msg="PASO|48|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:23Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27680/start\": request timeout"
+time="2026-11-17T05:32:23Z" level=info msg="PASO|4|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:23Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:32:23Z" level=info msg="PASO|41|propietarios|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:32:26Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:32:26Z" level=info msg="PASO|12|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:32:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:32:27Z" level=info msg="PASO|20|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:32:28Z" level=info msg="PASO|17|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:30Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:32:30Z" level=info msg="PASO|38|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:32:30Z" level=info msg="PASO|55|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-17T05:32:31Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:32:31Z" level=info msg="PASO|27|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:32:31Z" level=info msg="PASO|54|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:32:32Z" level=info msg="PASO|5|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:32:32Z" level=info msg="PASO|7|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:32:33Z" level=info msg="PASO|57|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:34Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:32:34Z" level=info msg="PASO|51|panel|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:32:35Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:32:35Z" level=info msg="PASO|60|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:35Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:32:35Z" level=info msg="PASO|53|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:32:36Z" level=info msg="PASO|22|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:32:36Z" level=info msg="PASO|37|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:37Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27684/start\": request timeout"
+time="2026-11-17T05:32:37Z" level=info msg="PASO|8|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:37Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:32:37Z" level=info msg="PASO|39|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:38Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:32:38Z" level=info msg="PASO|13|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:39Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27696/check-in\": request timeout"
+time="2026-11-17T05:32:39Z" level=info msg="PASO|9|checkin|PATCH|0|30002|FALLO|null" source=console
+time="2026-11-17T05:32:39Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:32:39Z" level=info msg="PASO|30|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:39Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:32:39Z" level=info msg="PASO|52|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:41Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:32:41Z" level=info msg="PASO|46|navegacion|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:32:41Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:32:41Z" level=info msg="PASO|3|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:42Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:42Z" level=info msg="PASO|15|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:32:42Z" level=info msg="PASO|56|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:32:42Z" level=info msg="PASO|59|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-17T05:32:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:32:42Z" level=info msg="PASO|40|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:32:43Z" level=info msg="PASO|58|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:32:43Z" level=info msg="PASO|2|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:44Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:32:44Z" level=info msg="PASO|47|notificaciones|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:32:45Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:32:45Z" level=info msg="PASO|18|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:46Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:32:46Z" level=info msg="PASO|26|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/inactive-patients?page=0&size=20&companyId=1\": request timeout"
+time="2026-11-17T05:32:47Z" level=info msg="PASO|31|pacientes_inactivos|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:48Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:32:48Z" level=info msg="PASO|29|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:48Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports?fechaDesde=2025-11-17&fechaHasta=2026-11-17&companyId=1\": request timeout"
+time="2026-11-17T05:32:48Z" level=info msg="PASO|50|reporte_clinico|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:48Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:32:48Z" level=info msg="PASO|44|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:32:49Z" level=info msg="PASO|32|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:32:49Z" level=info msg="PASO|36|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:32:49Z" level=info msg="PASO|35|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:50Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:32:50Z" level=info msg="PASO|42|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:51Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:32:51Z" level=info msg="PASO|11|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:51Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:32:51Z" level=info msg="PASO|33|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:51Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:32:51Z" level=info msg="PASO|43|navegacion|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:32:52Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:32:52Z" level=info msg="PASO|48|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:32:55Z" level=info msg="PASO|28|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:55Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports?fechaDesde=2025-11-17&fechaHasta=2026-11-17&companyId=1\": request timeout"
+time="2026-11-17T05:32:55Z" level=info msg="PASO|45|reporte_clinico|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:32:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:32:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:57Z" level=info msg="PASO|20|cumplimiento|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:32:58Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:32:58Z" level=info msg="PASO|17|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:00Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:33:00Z" level=info msg="PASO|38|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:00Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:33:00Z" level=info msg="PASO|34|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:01Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:33:01Z" level=info msg="PASO|41|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:01Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:33:01Z" level=info msg="PASO|27|panel|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:33:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:33:01Z" level=info msg="PASO|23|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:33:02Z" level=info msg="PASO|5|propietarios|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:33:03Z" level=info msg="PASO|19|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:33:04Z" level=info msg="PASO|10|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:33:04Z" level=info msg="PASO|49|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:05Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:33:05Z" level=info msg="PASO|6|lista_de_historias|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:33:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:33:06Z" level=info msg="PASO|25|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:33:06Z" level=info msg="PASO|14|navegacion|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:33:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:06Z" level=info msg="PASO|22|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:06Z" level=info msg="PASO|37|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:07Z" level=info msg="PASO|39|avisos_de_cumplimiento|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:33:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:08Z" level=info msg="PASO|13|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:09Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27696/start\": request timeout"
+time="2026-11-17T05:33:09Z" level=info msg="PASO|9|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:09Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:33:09Z" level=info msg="PASO|30|propietarios|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:09Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:09Z" level=info msg="PASO|52|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:33:10Z" level=info msg="PASO|24|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:10Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:33:10Z" level=info msg="PASO|16|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:33:11Z" level=info msg="PASO|46|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:11Z" level=info msg="PASO|3|avisos_de_cumplimiento|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:33:12Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:33:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:33:13Z" level=info msg="PASO|55|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-17T05:33:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:33:13Z" level=info msg="PASO|21|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:33:14Z" level=info msg="PASO|54|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:14Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:14Z" level=info msg="PASO|47|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:33:15Z" level=info msg="PASO|4|apoderado|POST|0|30000|FALLO|null" source=console
+time="2026-11-17T05:33:16Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:16Z" level=info msg="PASO|26|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:18Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:33:18Z" level=info msg="PASO|29|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:18Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:33:18Z" level=info msg="PASO|12|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:18Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:33:18Z" level=info msg="PASO|53|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:18Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:33:18Z" level=info msg="PASO|51|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-17T05:33:18Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/sales-products?fechaDesde=2025-11-17&fechaHasta=2026-11-17&companyId=1\": request timeout"
+time="2026-11-17T05:33:18Z" level=info msg="PASO|50|reporte_de_ventas|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:18Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:18Z" level=info msg="PASO|44|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:19Z" level=info msg="PASO|32|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:33:19Z" level=info msg="PASO|36|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:19Z" level=info msg="PASO|35|avisos_de_cumplimiento|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:33:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:33:19Z" level=info msg="PASO|60|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-17T05:33:20Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:33:20Z" level=info msg="PASO|42|propietarios|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:21Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:33:21Z" level=info msg="PASO|11|empleados|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:33:21Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:33:21Z" level=info msg="PASO|33|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:21Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:33:21Z" level=info msg="PASO|43|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:22Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:33:22Z" level=info msg="PASO|48|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:24Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:33:24Z" level=info msg="PASO|56|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:33:25Z" level=info msg="PASO|57|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:25Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/sales-products?fechaDesde=2025-11-17&fechaHasta=2026-11-17&companyId=1\": request timeout"
+time="2026-11-17T05:33:25Z" level=info msg="PASO|45|reporte_de_ventas|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:33:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:33:27Z" level=info msg="PASO|20|notificaciones|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:33:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:33:28Z" level=info msg="PASO|17|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:33:28Z" level=info msg="PASO|59|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:29Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:33:29Z" level=info msg="PASO|8|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:29Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:33:29Z" level=info msg="PASO|2|citas_del_mes|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:33:30Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:33:30Z" level=info msg="PASO|38|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:30Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:33:30Z" level=info msg="PASO|34|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:31Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:33:31Z" level=info msg="PASO|41|empleados|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:33:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-17T05:33:32Z" level=info msg="PASO|58|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-17T05:33:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:33:33Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:33:33Z" level=info msg="PASO|40|navegacion|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:33:34Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:33:34Z" level=info msg="PASO|18|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:34Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:33:34Z" level=info msg="PASO|49|privacidad|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:33:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:33:34Z" level=info msg="PASO|28|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:33:36Z" level=info msg="PASO|25|privacidad|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:33:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:33:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:33:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:33:37Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:33:38Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:33:39Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:33:39Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:33:39Z" level=info msg="PASO|31|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:40Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:33:40Z" level=info msg="PASO|16|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:41Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:33:41Z" level=info msg="PASO|46|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:41Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:33:42Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:44Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:33:46Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:33:47Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27694/check-in\": request timeout"
+time="2026-11-17T05:33:47Z" level=info msg="PASO|10|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:33:47Z" level=info msg="PASO|9|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:48Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:33:48Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:33:48Z" level=info msg="PASO|12|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:48Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/inactive-patients?page=0&size=20&companyId=1\": request timeout"
+time="2026-11-17T05:33:48Z" level=info msg="PASO|50|pacientes_inactivos|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:48Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:33:48Z" level=info msg="PASO|19|lista_de_historias|GET|0|30000|FALLO|null" source=console
+time="2026-11-17T05:33:48Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:33:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:33:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:33:49Z" level=info msg="PASO|6|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:33:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:33:49Z" level=info msg="PASO|23|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:33:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-17T05:33:50Z" level=info msg="PASO|5|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-17T05:33:50Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:33:50Z" level=info msg="PASO|27|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:51Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:33:51Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:33:51Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:33:51Z" level=info msg="PASO|43|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:52Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:33:55Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/inactive-patients?page=0&size=20&companyId=1\": request timeout"
+time="2026-11-17T05:33:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-17T05:33:57Z" level=info msg="PASO|24|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:58Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-17T05:33:59Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:33:59Z" level=info msg="PASO|8|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:33:59Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:34:00Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:34:00Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:34:01Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:34:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:34:03Z" level=info msg="PASO|40|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:34:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:34:04Z" level=info msg="PASO|18|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-17T05:34:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:34:05Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-17T05:34:05Z" level=info msg="PASO|4|lista_de_historias|GET|0|30002|FALLO|null" source=console
+time="2026-11-17T05:34:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:34:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:34:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-17T05:34:10Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-17T05:34:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:34:12Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:34:17Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27694/start\": request timeout"
+time="2026-11-17T05:34:17Z" level=info msg="PASO|10|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-17T05:34:18Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:34:18Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:34:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-17T05:34:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-17T05:34:20Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:34:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:34:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:34:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-17T05:34:29Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:34:29Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-17T05:34:37Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+{
+ "perfil": "carga_escritura",
+ "nivel": 60,
+ "iteraciones_completas": 265,
+ "peticiones": 1010,
+ "duracion_total_s": 310.000555255,
+ "latencia_ms": {
+  "mediana": 303.1084155,
+  "p95": 30000.8189862,
+  "max": 30001.223034
+ },
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 671,
+  "otro_4xx": 0,
+  "5xx": 0,
+  "sin_respuesta": 339
+ },
+ "pasos": {
+  "apoderado": {
+   "correctos": 32,
+   "fallidos": 30
+  },
+  "mascota": {
+   "correctos": 32,
+   "fallidos": 0
+  },
+  "cita": {
+   "correctos": 32,
+   "fallidos": 0
+  },
+  "checkin": {
+   "correctos": 2,
+   "fallidos": 12
+  },
+  "iniciar": {
+   "correctos": 2,
+   "fallidos": 12
+  },
+  "consulta": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "diagnostico": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "receta": {
+   "correctos": 1,
+   "fallidos": 1
+  },
+  "actualizar_mascota": {
+   "correctos": 1,
+   "fallidos": 1
+  },
+  "cerrar_consulta": {
+   "correctos": 0,
+   "fallidos": 2
+  },
+  "finalizar_servicio": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "punto_cobro": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "vincular_equipo": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "abrir_caja": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "pago": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "cancelar_cita": {
+   "correctos": 2,
+   "fallidos": 0
+  }
+ },
+ "acciones": {
+  "panel": 36,
+  "agenda": 33,
+  "historia": 28,
+  "reportes": 11,
+  "recepcion": 62,
+  "atencion": 14,
+  "cobro": 0,
+  "cancelar": 2
+ },
+ "acciones_sin_trabajo": 37,
+ "vus_maximos": 60
+}
