@@ -232,9 +232,9 @@ fase1_version() {
   log "[$v] configuración de la clínica (horarios, turnos, razas)"
   psql_db "$v" -v slug="$SLUG" < "$RAIZ/medicion/escritura/config_clinica.sql" > "$SAL/logs/config_$v.log" 2>&1 \
     || { tail -30 "$SAL/logs/config_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la configuración de la clínica en $v falló"; }
-  log "[$v] ficha clínica general (datos de la migración V130 de su versión)"
+  log "[$v] ficha clínica general (migración V130 completa de su versión, sobre tablas limpias)"
   local f130; f130="$(dir_de "$v")/src/main/resources/db/migration/V130__Plantillas_Clinicas_Configurables.sql"
-  sed -n '/^INSERT INTO clinical_concept/,$p' "$f130" | psql_db "$v" > "$SAL/logs/plantilla_clinica_$v.log" 2>&1     || { tail -30 "$SAL/logs/plantilla_clinica_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la ficha clínica general de $v falló"; }
+  { echo 'DROP TABLE IF EXISTS consultation_field_answer, clinical_template_field, clinical_template_section, clinical_template, clinical_concept CASCADE;'; echo 'ALTER TABLE consulta DROP COLUMN IF EXISTS clinical_template_id;'; cat "$f130"; } | psql_db "$v" > "$SAL/logs/plantilla_clinica_$v.log" 2>&1 || { tail -30 "$SAL/logs/plantilla_clinica_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la ficha clínica general de $v falló"; }
   iniciar_backend "$v" none "$CPUS" "$MEMORIA" "$PIN_BACK"
   esperar_salud > /dev/null || { docker logs "sv-$v" 2>&1 | tail -40 | tee -a "$SAL/logs/orquestador.log"; fallo "el backend $v no arrancó"; }
   local espera=0
