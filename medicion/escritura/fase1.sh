@@ -156,6 +156,7 @@ preparar_base() {
   : > "$SAL/logs/migraciones_$v.log"
   local ok=0 mal=0
   for f in $(ls "$d"/src/main/resources/db/migration/V*.sql | sort -V); do
+    case "$(basename "$f")" in V130__*) psql_db "$v" -c "DROP TABLE IF EXISTS consultation_field_answer, clinical_template_field, clinical_template_section, clinical_template, clinical_template_service, clinical_concept CASCADE; ALTER TABLE consulta DROP COLUMN IF EXISTS clinical_template_id;" >> "$SAL/logs/migraciones_$v.log" 2>&1 ;; esac
     if psql_db "$v" < "$f" >> "$SAL/logs/migraciones_$v.log" 2>&1; then ok=$((ok+1)); else mal=$((mal+1)); echo "ERROR en $(basename "$f")" >> "$SAL/logs/migraciones_$v.log"; fi
   done
   log "[$v] migraciones: $ok aplicadas, $mal con error"
@@ -232,9 +233,6 @@ fase1_version() {
   log "[$v] configuración de la clínica (horarios, turnos, razas)"
   psql_db "$v" -v slug="$SLUG" < "$RAIZ/medicion/escritura/config_clinica.sql" > "$SAL/logs/config_$v.log" 2>&1 \
     || { tail -30 "$SAL/logs/config_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la configuración de la clínica en $v falló"; }
-  log "[$v] ficha clínica general (migración V130 completa de su versión, sobre tablas limpias)"
-  local f130; f130="$(dir_de "$v")/src/main/resources/db/migration/V130__Plantillas_Clinicas_Configurables.sql"
-  { echo 'DROP TABLE IF EXISTS consultation_field_answer, clinical_template_field, clinical_template_section, clinical_template, clinical_concept CASCADE;'; echo 'ALTER TABLE consulta DROP COLUMN IF EXISTS clinical_template_id;'; cat "$f130"; } | psql_db "$v" > "$SAL/logs/plantilla_clinica_$v.log" 2>&1 || { tail -30 "$SAL/logs/plantilla_clinica_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la ficha clínica general de $v falló"; }
   iniciar_backend "$v" none "$CPUS" "$MEMORIA" "$PIN_BACK"
   esperar_salud > /dev/null || { docker logs "sv-$v" 2>&1 | tail -40 | tee -a "$SAL/logs/orquestador.log"; fallo "el backend $v no arrancó"; }
   local espera=0
