@@ -1,0 +1,71 @@
+fecha: 2026-11-17T19:34:48Z
+núcleos del equipo: 4
+procesador: Intel(R) Xeon(R) 6975P-C; hilos por núcleo: 2; núcleos por socket: 2
+versiones medidas: despues; heap máximo: 1g; núcleos de k6: 0; reservas de horario por usuario: 14
+memoria total del equipo (MB): 15701
+recursos del backend: 2 CPU, 2g de RAM
+configuraciones de la JVM:
+  C -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m
+  D -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  E -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+usadas en esta corrida: D (Metaspace 256 MB) para la escalera; E (Metaspace 128 MB, igual que el Dockerfile) para el control
+correo: servidor SMTP de pruebas en el contenedor sv-correo (sin TLS ni autenticación; los envíos terminan bien)
+pool de conexiones: 10
+pausa entre acciones: 15 s (con variación aleatoria)
+mezcla de acciones (panel, agenda, historia, reportes, recepción, atención, cobro, cancelar): 22,18,15,2,13,12,10,8 %
+cuentas de medición: una por usuario virtual, 1551 en total
+docker: 28.0.4
+k6: k6 v2.4.0 (commit/dd9395906d, go1.26.11, linux/amd64)
+antes:   no medido
+despues: cb7f6bdb1865b9ca3b5e8aedc0a4ef6bcaf17e13
+fijado de CPU: PG='--cpuset-cpus 2' backend='--cpuset-cpus 1,3' k6='taskset -c 0'
+plan de niveles:
+  # nivel  subida  sostenido
+  100 110s 150s
+  150 160s 150s
+  200 210s 150s
+  250 250s 150s
+  350 350s 150s
+  500 500s 150s
+[19:34:50] construyendo la imagen despues desde cb7f6bd
+#14 DONE 0.1s
+
+#15 [build 5/5] RUN --mount=type=cache,target=/root/.m2     mvn package -B -DskipTests --no-transfer-progress
+#15 0.969 [INFO] Scanning for projects...
+#15 31.49 [ERROR] [ERROR] Some problems were encountered while processing the POMs:
+#15 31.49 [FATAL] Non-resolvable parent POM for veterinaria:vargasvet:0.0.1-SNAPSHOT: The following artifacts could not be resolved: org.springframework.boot:spring-boot-starter-parent:pom:3.4.2 (absent): Could not transfer artifact org.springframework.boot:spring-boot-starter-parent:pom:3.4.2 from/to central (https://repo.maven.apache.org/maven2): status code: 429, reason phrase: Too Many Requests (429) and 'parent.relativePath' points at no local POM @ line 8, column 10
+#15 31.49  @ 
+#15 31.49 [ERROR] The build could not read 1 project -> [Help 1]
+#15 31.49 [ERROR]   
+#15 31.49 [ERROR]   The project veterinaria:vargasvet:0.0.1-SNAPSHOT (/app/pom.xml) has 1 error
+#15 31.49 [ERROR]     Non-resolvable parent POM for veterinaria:vargasvet:0.0.1-SNAPSHOT: The following artifacts could not be resolved: org.springframework.boot:spring-boot-starter-parent:pom:3.4.2 (absent): Could not transfer artifact org.springframework.boot:spring-boot-starter-parent:pom:3.4.2 from/to central (https://repo.maven.apache.org/maven2): status code: 429, reason phrase: Too Many Requests (429) and 'parent.relativePath' points at no local POM @ line 8, column 10 -> [Help 2]
+#15 31.49 [ERROR] 
+#15 31.49 [ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+#15 31.49 [ERROR] Re-run Maven using the -X switch to enable full debug logging.
+#15 31.49 [ERROR] 
+#15 31.49 [ERROR] For more information about the errors and possible solutions, please read the following articles:
+#15 31.49 [ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/ProjectBuildingException
+#15 31.49 [ERROR] [Help 2] http://cwiki.apache.org/confluence/display/MAVEN/UnresolvableModelException
+#15 ERROR: process "/bin/sh -c mvn package -B -DskipTests --no-transfer-progress" did not complete successfully: exit code: 1
+------
+ > [build 5/5] RUN --mount=type=cache,target=/root/.m2     mvn package -B -DskipTests --no-transfer-progress:
+31.49 [ERROR]   
+31.49 [ERROR]   The project veterinaria:vargasvet:0.0.1-SNAPSHOT (/app/pom.xml) has 1 error
+31.49 [ERROR]     Non-resolvable parent POM for veterinaria:vargasvet:0.0.1-SNAPSHOT: The following artifacts could not be resolved: org.springframework.boot:spring-boot-starter-parent:pom:3.4.2 (absent): Could not transfer artifact org.springframework.boot:spring-boot-starter-parent:pom:3.4.2 from/to central (https://repo.maven.apache.org/maven2): status code: 429, reason phrase: Too Many Requests (429) and 'parent.relativePath' points at no local POM @ line 8, column 10 -> [Help 2]
+31.49 [ERROR] 
+31.49 [ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+31.49 [ERROR] Re-run Maven using the -X switch to enable full debug logging.
+31.49 [ERROR] 
+31.49 [ERROR] For more information about the errors and possible solutions, please read the following articles:
+31.49 [ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/ProjectBuildingException
+31.49 [ERROR] [Help 2] http://cwiki.apache.org/confluence/display/MAVEN/UnresolvableModelException
+------
+Dockerfile.measurement:8
+--------------------
+   7 |     COPY src ./src
+   8 | >>> RUN --mount=type=cache,target=/root/.m2 \
+   9 | >>>     mvn package -B -DskipTests --no-transfer-progress
+  10 |     
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c mvn package -B -DskipTests --no-transfer-progress" did not complete successfully: exit code: 1
+[19:35:30] FALLO: no se pudo construir la imagen despues
