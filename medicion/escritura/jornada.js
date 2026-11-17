@@ -18,7 +18,8 @@ const IDS = JSON.parse(__ENV.IDS || '{}');
 
 const PASOS = [
   'login', 'apoderado', 'mascota', 'cita', 'checkin', 'iniciar', 'consulta', 'diagnostico', 'receta',
-  'cerrar_consulta', 'finalizar_servicio', 'pago', 'actualizar_mascota', 'actualizar_apoderado',
+  'punto_cobro', 'vincular_equipo', 'abrir_caja',
+  'cerrar_consulta', 'finalizar_servicio', 'pago', 'actualizar_mascota', 'cita_extra', 'cancelar_cita',
 ];
 const ok = {};
 const fallo = {};
@@ -39,6 +40,7 @@ export const options = {
 
 let conSesion = false;
 let ultimoLogin = 0;
+let cajaLista = false;
 
 function cabeceras(extra) {
   return Object.assign({
@@ -103,6 +105,15 @@ function iniciarSesion() {
   return conSesion;
 }
 
+function prepararCaja() {
+  const p = llamar('punto_cobro', 'POST', '/caja/puntos', { companyId: IDS.companyId, nombre: `Caja laboratorio ${__VU}`, activa: true });
+  const id = p.datos && p.datos.id;
+  if (!p.correcto || !id) return false;
+  const v = llamar('vincular_equipo', 'POST', `/caja/puntos/${id}/vincular?companyId=${IDS.companyId}`, { nombreEquipo: `Equipo laboratorio ${__VU}` });
+  if (!v.correcto) return false;
+  return llamar('abrir_caja', 'POST', '/caja/sesion/abrir', { companyId: IDS.companyId, montoApertura: 100 }).correcto;
+}
+
 function pausa() {
   sleep(JITTER ? PAUSA_S * (0.5 + Math.random()) : PAUSA_S);
 }
@@ -133,12 +144,18 @@ export default function () {
     }
   }
 
+  if (!cajaLista) {
+    cajaLista = prepararCaja();
+    pausa();
+  }
+
   const u = (__VU - 1) * ITER_POR_VU + __ITER;
   const sufijo = letras(u);
   const documento = String(90000000 + u);
   const servicio = IDS.servicios[u % IDS.servicios.length];
   const especie = u % 2 === 0 ? 'PERRO' : 'GATO';
-  const h = hueco(u);
+  const h = hueco(u * 2);
+  const h2 = hueco(u * 2 + 1);
   let completa = true;
 
   const pedidoApoderado = {
@@ -265,8 +282,21 @@ export default function () {
   if (!llamar('actualizar_mascota', 'PUT', `/pets/${mascotaId}`, pedidoMascotaActualizada).correcto) completa = false;
   pausa();
 
-  const pedidoApoderadoActualizado = Object.assign({}, pedidoApoderado, { id: apoderadoId, telefono: `9${rellenar(u + 1, 8)}`, direccion: 'Avenida Los Olivos 456' });
-  if (!llamar('actualizar_apoderado', 'PUT', `/clients/guardians/${apoderadoId}`, pedidoApoderadoActualizado).correcto) completa = false;
+  const extra = llamar('cita_extra', 'POST', '/appointments', {
+    mascotaId,
+    veterinarioId: h2.veterinarioId,
+    motivoCita: 'Control de seguimiento',
+    fechaHoraInicio: `${h2.fecha}T${h2.hora}`,
+    servicioId: servicio.id,
+    esEmergencia: false,
+  });
+  const extraId = extra.datos && extra.datos.id;
+  if (!extra.correcto || !extraId) {
+    completa = false;
+  } else {
+    pausa();
+    if (!llamar('cancelar_cita', 'PATCH', `/appointments/${extraId}/cancel?motivo=${encodeURIComponent('Cambio de planes del propietario')}`).correcto) completa = false;
+  }
 
   if (completa) jornadasCompletas.add(1);
   else jornadasIncompletas.add(1);

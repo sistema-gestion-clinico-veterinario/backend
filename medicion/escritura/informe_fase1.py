@@ -9,13 +9,15 @@ NIV = RAIZ / 'niveles'
 LOGS = RAIZ / 'logs'
 
 ORDEN = ['login', 'apoderado', 'mascota', 'cita', 'checkin', 'iniciar', 'consulta', 'diagnostico', 'receta',
-         'cerrar_consulta', 'finalizar_servicio', 'pago', 'actualizar_mascota', 'actualizar_apoderado']
+         'punto_cobro', 'vincular_equipo', 'abrir_caja',
+         'cerrar_consulta', 'finalizar_servicio', 'pago', 'actualizar_mascota', 'cita_extra', 'cancelar_cita']
 ETIQUETAS = {
     'login': 'Iniciar sesión', 'apoderado': 'Registrar propietario', 'mascota': 'Registrar mascota',
     'cita': 'Agendar cita', 'checkin': 'Recepción (llegada)', 'iniciar': 'Iniciar atención',
     'consulta': 'Leer la consulta', 'diagnostico': 'Registrar diagnóstico', 'receta': 'Registrar receta',
     'cerrar_consulta': 'Cerrar la consulta', 'finalizar_servicio': 'Finalizar servicio (sin consulta)',
-    'pago': 'Cobrar', 'actualizar_mascota': 'Actualizar mascota', 'actualizar_apoderado': 'Actualizar propietario',
+    'pago': 'Cobrar', 'actualizar_mascota': 'Actualizar mascota', 'cita_extra': 'Agendar segunda cita', 'cancelar_cita': 'Cancelar la segunda cita',
+    'punto_cobro': 'Caja: crear punto de cobro', 'vincular_equipo': 'Caja: vincular este equipo', 'abrir_caja': 'Caja: abrir la caja',
 }
 
 
@@ -76,7 +78,7 @@ def comprobaciones(d):
     pares = [
         ('Propietarios nuevos en la base', 'apoderados', correctos(d, 'apoderado')),
         ('Mascotas nuevas en la base', 'mascotas', correctos(d, 'mascota')),
-        ('Citas nuevas en la base', 'citas', correctos(d, 'cita')),
+        ('Citas nuevas en la base', 'citas', correctos(d, 'cita') + correctos(d, 'cita_extra')),
         ('Diagnósticos nuevos en la base', 'diagnosticos', correctos(d, 'diagnostico')),
         ('Recetas nuevas en la base', 'recetas', correctos(d, 'receta')),
         ('Pagos nuevos en la base', 'pagos', correctos(d, 'pago')),
