@@ -201,6 +201,31 @@ integridad() {
     'documentos_repetidos',(SELECT count(*) FROM (SELECT numero_documento FROM apoderado WHERE company_id=$2 GROUP BY numero_documento HAVING count(*)>1) x))"
 }
 
+publicar_aviso() {
+  local v="$1" jar base plantilla campos cuerpo
+  jar="$(mktemp)"
+  base="http://127.0.0.1:$PUERTO/api/v1"
+  {
+    echo "--- inicio de sesión del administrador de la clínica"
+    curl -s -o /dev/null -w 'HTTP %{http_code}\n' -c "$jar" -H "Content-Type: application/json" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.1" \
+      -d "{\"slug\":\"$SLUG\",\"username\":\"${USUARIO}1\",\"password\":\"$CLAVE\"}" "$base/auth/login"
+    echo "--- plantilla del aviso de privacidad"
+    plantilla="$(curl -s -b "$jar" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.1" "$base/admin/privacidad/aviso/plantilla?audiencia=PROPIETARIOS_Y_AUTORIZADOS")"
+    echo "$plantilla" | cut -c1-600
+    campos="$(echo "$plantilla" | jq -c '.data
+      | .domicilio = (if (.domicilio // "") == "" then "Avenida Los Olivos 123" else .domicilio end)
+      | .correoDerechos = (if (.correoDerechos // "") == "" then "derechos@clinica-medicion.softvet.test" else .correoDerechos end)
+      | .transferencias = (if (.transferencias // "") == "" then "No se transfieren datos personales a terceros ni al extranjero" else .transferencias end)
+      | .plazoConservacion = (if (.plazoConservacion // "") == "" then "Mientras dure la relación con la clínica y hasta 10 años por obligación legal" else .plazoConservacion end)')" || true
+    echo "--- publicación del aviso"
+    cuerpo="$(jq -nc --argjson c "${campos:-null}" '{audiencia:"PROPIETARIOS_Y_AUTORIZADOS", campos:$c, confirmoRevisionLegal:true}')"
+    curl -s -b "$jar" -w '\nHTTP %{http_code}\n' -H "Content-Type: application/json" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.1" \
+      -d "$cuerpo" "$base/admin/privacidad/aviso" | cut -c1-600
+  } > "$SAL/logs/aviso_$v.log" 2>&1
+  rm -f "$jar"
+  log "[$v] aviso de privacidad: $(grep -E '^HTTP' "$SAL/logs/aviso_$v.log" | tr '\n' ' ')"
+}
+
 fase1_version() {
   local v="$1" company_id rol_cliente vets servicios raza_perro raza_gato ids codigo
   opciones_jvm C
@@ -226,6 +251,7 @@ fase1_version() {
     --argjson p "${raza_perro:-0}" --argjson g "${raza_gato:-0}" \
     '{companyId:$c, rolCliente:$r, veterinarios:$v, servicios:$s, razas:{PERRO:$p, GATO:$g}, dias_con_turno:120, huecos_por_dia:16}')"
   echo "$ids" > "$SAL/niveles/ids_$v.json"
+  publicar_aviso "$v"
   instantanea "$v" > "$SAL/niveles/db_antes_$v.json"
   docker exec sv-pg psql -U postgres -d "$v" -qtAc "SELECT pg_stat_statements_reset()" > /dev/null
   log "[$v] jornada de clínica: $VUS_ESCRITURA usuarios, $ITER_ESCRITURA iteraciones"
