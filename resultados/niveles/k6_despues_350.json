@@ -1,0 +1,98 @@
+{
+ "perfil": "carga_escritura",
+ "nivel": 350,
+ "iteraciones_completas": 2640,
+ "peticiones": 8192,
+ "duracion_total_s": 589.8300410769999,
+ "latencia_ms": {
+  "mediana": 2543.814007,
+  "p95": 30000.87967205,
+  "max": 30021.591303
+ },
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 5473,
+  "otro_4xx": 74,
+  "5xx": 0,
+  "sin_respuesta": 2645
+ },
+ "pasos": {
+  "apoderado": {
+   "correctos": 336,
+   "fallidos": 233
+  },
+  "mascota": {
+   "correctos": 318,
+   "fallidos": 18
+  },
+  "cita": {
+   "correctos": 306,
+   "fallidos": 12
+  },
+  "checkin": {
+   "correctos": 124,
+   "fallidos": 56
+  },
+  "iniciar": {
+   "correctos": 46,
+   "fallidos": 134
+  },
+  "consulta": {
+   "correctos": 44,
+   "fallidos": 2
+  },
+  "diagnostico": {
+   "correctos": 43,
+   "fallidos": 3
+  },
+  "receta": {
+   "correctos": 43,
+   "fallidos": 3
+  },
+  "actualizar_mascota": {
+   "correctos": 43,
+   "fallidos": 3
+  },
+  "cerrar_consulta": {
+   "correctos": 41,
+   "fallidos": 5
+  },
+  "finalizar_servicio": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "punto_cobro": {
+   "correctos": 24,
+   "fallidos": 9
+  },
+  "vincular_equipo": {
+   "correctos": 24,
+   "fallidos": 0
+  },
+  "abrir_caja": {
+   "correctos": 22,
+   "fallidos": 2
+  },
+  "pago": {
+   "correctos": 22,
+   "fallidos": 3
+  },
+  "cancelar_cita": {
+   "correctos": 50,
+   "fallidos": 8
+  }
+ },
+ "acciones": {
+  "panel": 342,
+  "agenda": 310,
+  "historia": 293,
+  "reportes": 27,
+  "recepcion": 569,
+  "atencion": 180,
+  "cobro": 36,
+  "cancelar": 58
+ },
+ "acciones_sin_trabajo": 412,
+ "vus_maximos": 350
+}
