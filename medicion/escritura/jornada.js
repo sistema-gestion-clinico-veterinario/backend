@@ -118,13 +118,13 @@ function pausa() {
   sleep(JITTER ? PAUSA_S * (0.5 + Math.random()) : PAUSA_S);
 }
 
-function hueco(u) {
+function hueco(u, parte) {
   const veterinarios = IDS.veterinarios;
-  const dias = IDS.dias_con_turno || 120;
+  const dias = Math.floor((IDS.dias_con_turno || 120) / 2);
   const porDia = IDS.huecos_por_dia || 16;
   const v = veterinarios[u % veterinarios.length];
   const resto = Math.floor(u / veterinarios.length);
-  const dia = 1 + (resto % dias);
+  const dia = 1 + parte * dias + (resto % dias);
   const franja = Math.floor(resto / dias) % porDia;
   const minutos = 8 * 60 + franja * 30;
   return { veterinarioId: v, fecha: fechaLima(dia), hora: `${rellenar(Math.floor(minutos / 60), 2)}:${rellenar(minutos % 60, 2)}:00` };
@@ -154,8 +154,8 @@ export default function () {
   const documento = String(90000000 + u);
   const servicio = IDS.servicios[u % IDS.servicios.length];
   const especie = u % 2 === 0 ? 'PERRO' : 'GATO';
-  const h = hueco(u * 2);
-  const h2 = hueco(u * 2 + 1);
+  const h = hueco(u, 0);
+  const h2 = hueco(u, 1);
   let completa = true;
 
   const pedidoApoderado = {
