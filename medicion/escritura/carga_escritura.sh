@@ -25,12 +25,15 @@ USUARIO="medicion"
 CLAVE="$(openssl rand -hex 12)"
 
 BASE_JVM="-XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m"
+OBSERVACION_JVM="-Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false"
 opciones_jvm() {
   case "$1" in
     A) JAVA_OPTS_LAB="-Xmx192m $BASE_JVM -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m" ;;
     B) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m" ;;
     C) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m" ;;
-    *) echo "configuración desconocida: '$1' (usa A, B o C)"; exit 1 ;;
+    D) JAVA_OPTS_LAB="-Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
+    E) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
+    *) echo "configuración desconocida: '$1' (usa A, B, C, D o E)"; exit 1 ;;
   esac
 }
 opciones_jvm "$CONFIG"
@@ -58,8 +61,10 @@ registrar_entorno() {
     free -m | sed -n 2p | awk '{print "memoria total del equipo (MB): "$2}'
     echo "recursos del backend: $CPUS CPU, $MEMORIA de RAM (como Render Standard)"
     echo "configuraciones de la JVM:"
-    for c in A B C; do opciones_jvm "$c"; echo "  $c -> $JAVA_OPTS_LAB"; done
-    opciones_jvm "$CONFIG"
+    for c in C D E; do opciones_jvm "$c"; echo "  $c -> $JAVA_OPTS_LAB"; done
+    echo "usadas en esta corrida: D (Metaspace 256 MB) para la escalera; E (Metaspace 128 MB, igual que el Dockerfile) para el control"
+    echo "correo: servidor SMTP de pruebas en el contenedor sv-correo (sin TLS ni autenticación; los envíos terminan bien)"
+    opciones_jvm D
     echo "pool de conexiones: $POOL"
     echo "pausa entre acciones: $PAUSA_S s (con variación aleatoria)"
     echo "mezcla de acciones (panel, agenda, historia, reportes, recepción, atención, cobro, cancelar): 22,18,15,2,13,12,10,8 %"
@@ -100,6 +105,26 @@ levantar_postgres() {
   done
 }
 
+levantar_correo() {
+  log "levantando el servidor SMTP de pruebas"
+  docker run -d --name sv-correo --network sv-net -v "$RAIZ/medicion/escritura/sumidero_smtp.py:/sumidero.py:ro" python:3.12-alpine python -u /sumidero.py > /dev/null \
+    || fallo "no se pudo levantar el servidor SMTP de pruebas"
+  for i in $(seq 1 30); do
+    docker logs sv-correo 2>&1 | grep -q '^LISTO' && break
+    sleep 1
+  done
+  docker exec sv-correo python -c "
+import smtplib
+from email.message import EmailMessage
+m = EmailMessage(); m['From'] = 'a@x.test'; m['To'] = 'b@x.test'; m['Subject'] = 'comprobacion'; m.set_content('hola')
+with smtplib.SMTP('127.0.0.1', 2525, timeout=5) as s:
+    s.ehlo(); s.send_message(m)
+print('correo de comprobacion enviado')
+" || fallo "el servidor SMTP de pruebas no responde"
+}
+
+correos_recibidos() { docker logs sv-correo 2>&1 | grep -c '^MSG'; }
+
 iniciar_backend() {
   local v="$1" ddl="$2" cpus="$3" mem="$4" pin="$5"
   docker rm -f "sv-$v" > /dev/null 2>&1 || true
@@ -108,7 +133,7 @@ iniciar_backend() {
     -e DB_POOL_MAX_SIZE="$POOL" -e DB_POOL_MIN_IDLE=2 -e JPA_DDL_AUTO="$ddl" -e FLYWAY_ENABLED=false \
     -e JWT_PRIVATE_KEY=file:/app/keys/private_key.pem -e JWT_PUBLIC_KEY=file:/app/keys/public_key.pem \
     -e SUPABASE_URL=http://supabase-desactivado.local -e SUPABASE_SERVICE_ROLE_KEY=desactivado -e SUPABASE_BUCKET=desactivado \
-    -e MAIL_HOST=127.0.0.1 -e MAIL_PORT=2525 -e MAIL_USERNAME=desactivado -e MAIL_PASSWORD=desactivado -e MAIL_FROM=medicion@softvet.local \
+    -e MAIL_HOST=sv-correo -e MAIL_PORT=2525 -e MAIL_USERNAME=desactivado -e MAIL_PASSWORD=desactivado -e MAIL_FROM=medicion@softvet.local \
     -e MANAGEMENT_HEALTH_MAIL_ENABLED=false -e APP_URL=http://localhost -e CORS_ALLOWED_ORIGINS=http://localhost \
     -e "JAVA_OPTS=$JAVA_OPTS_LAB" -e RATE_LIMIT_LOGIN_PER_MINUTE=100000 -e RATE_LIMIT_LOGIN_PER_ACCOUNT_PER_15_MINUTES=100000 \
     -e COOKIE_SECURE=false -e COOKIE_SAME_SITE=Lax -e TRUSTED_PROXY_COUNT=1 -e SWAGGER_ENABLED=false -e REMINDERS_CRON="0 0 0 1 1 *" \
@@ -254,7 +279,7 @@ esperar_inicializacion() {
 
 preparar_clinica() {
   local v="$1"
-  opciones_jvm C
+  opciones_jvm D
   log "[$v] configuración de la clínica (horarios, turnos, razas)"
   psql_db "$v" -v slug="$SLUG" < "$RAIZ/medicion/escritura/config_clinica.sql" > "$SAL/logs/config_$v.log" 2>&1 \
     || { tail -30 "$SAL/logs/config_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la configuración de la clínica en $v falló"; }
@@ -270,10 +295,11 @@ preparar_clinica() {
 }
 
 correr_nivel_escritura() {
-  local v="$1" nivel="$2" rampa="$3" mantener="$4" base_u="$5" base_cuenta="$6"
-  local etiqueta="${v}_${nivel}" t0 salud ids codigo cpu0 cpu1 muestreador muestreador_pg
-  opciones_jvm C
-  log "[$v] nivel $nivel: arrancando el backend ($CPUS CPU, $MEMORIA)"
+  local v="$1" nivel="$2" rampa="$3" mantener="$4" base_u="$5" base_cuenta="$6" config="${7:-D}" prefijo="${8:-$1}"
+  local etiqueta="${prefijo}_${nivel}" etq_caja="$nivel" t0 salud ids codigo cpu0 cpu1 muestreador muestreador_pg correos0 correos1
+  [ "$prefijo" != "$v" ] && etq_caja="${prefijo}-${nivel}"
+  opciones_jvm "$config"
+  log "[$v] nivel $nivel (config $config, $etiqueta): arrancando el backend ($CPUS CPU, $MEMORIA)"
   iniciar_backend "$v" none "$CPUS" "$MEMORIA" "$PIN_BACK"
   esperar_inicializacion "$v"
   salud="$(esperar_salud)"
@@ -283,6 +309,7 @@ correr_nivel_escritura() {
   instantanea "$v" > "$SAL/niveles/db_antes_${etiqueta}.json"
   docker exec sv-pg psql -U postgres -d "$v" -qtAc "SELECT pg_stat_statements_reset()" > /dev/null
   cpu0="$(cpu_us "$v")"; cpu0="${cpu0:-0}"
+  correos0="$(correos_recibidos)"
   muestrear "sv-$v" "$SAL/niveles/stats_${etiqueta}.csv" &
   muestreador=$!
   muestrear "sv-pg" "$SAL/niveles/stats_pg_${etiqueta}.csv" &
@@ -292,13 +319,14 @@ correr_nivel_escritura() {
   $PIN_K6 env K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_PERIOD=5s K6_WEB_DASHBOARD_EXPORT="$SAL/niveles/panel_k6_${etiqueta}.html" \
     k6 run --quiet --out "csv=$SAL/niveles/k6_${etiqueta}.csv" \
     -e BASE_URL="http://127.0.0.1:$PUERTO" -e SLUG="$SLUG" -e USUARIO="$USUARIO" -e CLAVE="$CLAVE" -e IDS="$ids" \
-    -e CUENTA_BASE="$base_cuenta" -e U_BASE="$base_u" -e ETIQUETA_NIVEL="$nivel" -e NIVEL="$nivel" -e RAMPA="$rampa" -e MANTENER="$mantener" \
+    -e CUENTA_BASE="$base_cuenta" -e U_BASE="$base_u" -e ETIQUETA_NIVEL="$etq_caja" -e NIVEL="$nivel" -e RAMPA="$rampa" -e MANTENER="$mantener" \
     -e PAUSA_S="$PAUSA_S" -e TIMEOUT="$TIMEOUT_HTTP" -e SALIDA="$SAL/niveles/k6_${etiqueta}.json" \
     "$RAIZ/medicion/escritura/carga_escrituras.js" > "$SAL/logs/k6_${etiqueta}.log" 2>&1
   codigo=$?
   kill "$muestreador" "$muestreador_pg" 2> /dev/null; wait "$muestreador" "$muestreador_pg" 2> /dev/null
   local duracion=$(( $(date +%s) - t0 ))
   cpu1="$(cpu_us "$v")"; cpu1="${cpu1:-0}"
+  correos1="$(correos_recibidos)"
   instantanea "$v" > "$SAL/niveles/db_despues_${etiqueta}.json"
   integridad "$v" "$(echo "$ids" | jq -r .companyId)" > "$SAL/niveles/integridad_${etiqueta}.json"
   local estado oom reinicios corriendo codigo_salida salud_final sql
@@ -311,11 +339,16 @@ correr_nivel_escritura() {
   jq -n --arg version "$v" --argjson nivel "$nivel" --argjson duracion "$duracion" \
     --argjson cpu_s "$(( (cpu1 - cpu0) / 1000000 ))" --arg oom "$oom" --argjson reinicios "${reinicios:-0}" \
     --arg corriendo "$corriendo" --argjson salida "${codigo_salida:--1}" --arg salud "$salud_final" \
-    --arg sql "$sql" --argjson k6_codigo "$codigo" \
-    '{version:$version, nivel:$nivel, perfil:"carga_escritura", duracion_s:$duracion, cpu_contenedor_s:$cpu_s, oom_killed:($oom=="true"),
+    --arg sql "$sql" --argjson k6_codigo "$codigo" --arg config "$config" --argjson correos "$(( correos1 - correos0 ))" \
+    '{version:$version, nivel:$nivel, config_jvm:$config, correos_recibidos:$correos, perfil:"carga_escritura", duracion_s:$duracion, cpu_contenedor_s:$cpu_s, oom_killed:($oom=="true"),
       reinicios:$reinicios, sigue_corriendo:($corriendo=="true"), codigo_salida:$salida, salud_final_http:$salud,
       k6_codigo_salida:$k6_codigo, sql_sentencias:(($sql|split("|")[0])|tonumber), sql_tiempo_s:(($sql|split("|")[1])|tonumber)}' \
     > "$SAL/niveles/estado_${etiqueta}.json" || log "no se pudo escribir el estado de $etiqueta"
+  for registro in jvm_gc jvm_clases; do
+    docker cp "sv-$v:/tmp/$registro.log" "$SAL/niveles/${registro}_${etiqueta}.log" > /dev/null 2>&1 \
+      && gzip -f "$SAL/niveles/${registro}_${etiqueta}.log" \
+      || log "[$v] no se pudo copiar /tmp/$registro.log de $etiqueta"
+  done
   detener_backend "$v" "carga_${etiqueta}"
   gzip -f "$SAL/niveles/k6_${etiqueta}.csv" 2>/dev/null || true
   log "[$v] nivel $nivel terminado: k6 código $codigo, OOM=$oom, reinicios=$reinicios, salud final=$salud_final"
@@ -323,7 +356,8 @@ correr_nivel_escritura() {
 }
 
 PAUSA_S="${PAUSA_S:-15}"
-TOTAL_CUENTAS=1
+CONTROL_USUARIOS=10
+TOTAL_CUENTAS=$((1 + CONTROL_USUARIOS))
 while read -r campo1 campo2 campo3 _; do
   case "$campo1" in ''|\#*) continue ;; esac
   TOTAL_CUENTAS=$((TOTAL_CUENTAS + campo1))
@@ -332,13 +366,20 @@ done < "$PLAN_CARGA"
 registrar_entorno
 construir_imagenes
 levantar_postgres
-opciones_jvm C
+levantar_correo
+opciones_jvm D
 preparar_base antes
 preparar_base despues
 for v in antes despues; do preparar_clinica "$v"; done
 
-base_u=0
-base_cuenta=1
+log "control: $CONTROL_USUARIOS usuarios con Metaspace de 128 MB (igual que el Dockerfile) y el servidor de correo de pruebas"
+correr_nivel_escritura despues "$CONTROL_USUARIOS" 30s 150s 0 1 E ctrl128
+python3 "$RAIZ/medicion/escritura/informe_carga.py" "$SAL" "$CONTROL_USUARIOS" control > "$SAL/logs/informe_control.log" 2>&1 \
+  && cat "$SAL/niveles/INFORME_CONTROL_128.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
+  || log "no se pudo generar el informe del control (ver logs/informe_control.log)"
+
+base_u=$((CONTROL_USUARIOS * ITER_POR_VU))
+base_cuenta=$((1 + CONTROL_USUARIOS))
 while read -r nivel rampa mantener _ <&3; do
   case "$nivel" in ''|\#*) continue ;; esac
   for v in antes despues; do correr_nivel_escritura "$v" "$nivel" "$rampa" "$mantener" "$base_u" "$base_cuenta"; done
@@ -349,6 +390,6 @@ while read -r nivel rampa mantener _ <&3; do
   base_cuenta=$((base_cuenta + nivel))
 done 3< "$PLAN_CARGA"
 python3 "$RAIZ/medicion/escritura/resumen_carga.py" "$SAL" > "$SAL/logs/resumen_carga.log" 2>&1 \
-  && cat "$SAL/RESUMEN_FASE2.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
+  && cat "$SAL/RESUMEN_FASE2B.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
   || log "no se pudo generar el resumen global (ver logs/resumen_carga.log)"
 log "terminado"
