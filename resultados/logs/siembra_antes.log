@@ -1,0 +1,20 @@
+ setseed 
+---------
+ 
+(1 row)
+
+      tabla       | filas 
+------------------+-------
+ company          |     6
+ usuario          |  1075
+ apoderado        |  1040
+ mascota          |  2081
+ empleado         |    35
+ citas            | 10580
+ purchases        | 12157
+ historia_clinica |  2081
+ consulta         |  7925
+ prescripciones   |  3962
+ diagnosticos     |  7925
+(11 rows)
+

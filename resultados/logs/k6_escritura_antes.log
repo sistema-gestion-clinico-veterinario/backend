@@ -1,0 +1,117 @@
+time="2026-11-21T23:52:46Z" level=info msg="PASO|1|0|login|POST|200|462|ok|" source=console
+time="2026-11-21T23:52:47Z" level=info msg="PASO|1|0|punto_cobro|POST|200|83|ok|" source=console
+time="2026-11-21T23:52:47Z" level=info msg="PASO|1|0|vincular_equipo|POST|200|82|ok|" source=console
+time="2026-11-21T23:52:47Z" level=info msg="PASO|1|0|abrir_caja|POST|200|107|ok|" source=console
+time="2026-11-21T23:52:47Z" level=info msg="PASO|1|0|apoderado|POST|201|219|ok|" source=console
+time="2026-11-21T23:52:48Z" level=info msg="PASO|1|0|mascota|POST|201|172|ok|" source=console
+time="2026-11-21T23:52:49Z" level=info msg="PASO|1|0|cita|POST|201|281|ok|" source=console
+time="2026-11-21T23:52:49Z" level=info msg="PASO|1|0|checkin|PATCH|200|73|ok|" source=console
+time="2026-11-21T23:52:50Z" level=info msg="PASO|1|0|iniciar|PATCH|200|103|ok|" source=console
+time="2026-11-21T23:52:51Z" level=info msg="PASO|1|0|consulta|GET|200|84|ok|" source=console
+time="2026-11-21T23:52:51Z" level=info msg="PASO|1|0|diagnostico|POST|201|65|ok|" source=console
+time="2026-11-21T23:52:52Z" level=info msg="PASO|1|0|receta|POST|201|103|ok|" source=console
+time="2026-11-21T23:52:53Z" level=info msg="PASO|1|0|cerrar_consulta|PATCH|200|231|ok|" source=console
+time="2026-11-21T23:52:53Z" level=info msg="PASO|1|0|pago|POST|201|92|ok|" source=console
+time="2026-11-21T23:52:54Z" level=info msg="PASO|1|0|actualizar_mascota|PUT|200|65|ok|" source=console
+time="2026-11-21T23:52:54Z" level=info msg="PASO|1|0|cita_extra|POST|201|122|ok|" source=console
+time="2026-11-21T23:52:55Z" level=info msg="PASO|1|0|cancelar_cita|PATCH|200|72|ok|" source=console
+time="2026-11-21T23:52:56Z" level=info msg="PASO|1|1|apoderado|POST|201|99|ok|" source=console
+time="2026-11-21T23:52:56Z" level=info msg="PASO|1|1|mascota|POST|201|61|ok|" source=console
+time="2026-11-21T23:52:57Z" level=info msg="PASO|1|1|cita|POST|201|101|ok|" source=console
+time="2026-11-21T23:52:57Z" level=info msg="PASO|1|1|checkin|PATCH|200|51|ok|" source=console
+time="2026-11-21T23:52:58Z" level=info msg="PASO|1|1|iniciar|PATCH|200|60|ok|" source=console
+time="2026-11-21T23:52:58Z" level=info msg="PASO|1|1|consulta|GET|200|43|ok|" source=console
+time="2026-11-21T23:52:59Z" level=info msg="PASO|1|1|diagnostico|POST|201|43|ok|" source=console
+time="2026-11-21T23:52:59Z" level=info msg="PASO|1|1|receta|POST|201|44|ok|" source=console
+time="2026-11-21T23:53:00Z" level=info msg="PASO|1|1|cerrar_consulta|PATCH|200|79|ok|" source=console
+time="2026-11-21T23:53:01Z" level=info msg="PASO|1|1|pago|POST|201|59|ok|" source=console
+time="2026-11-21T23:53:01Z" level=info msg="PASO|1|1|actualizar_mascota|PUT|200|271|ok|" source=console
+time="2026-11-21T23:53:02Z" level=info msg="PASO|1|1|cita_extra|POST|201|94|ok|" source=console
+time="2026-11-21T23:53:03Z" level=info msg="PASO|1|1|cancelar_cita|PATCH|200|56|ok|" source=console
+{
+ "usuarios": 1,
+ "iteraciones_por_usuario": 2,
+ "jornadas_completas": 2,
+ "jornadas_incompletas": 0,
+ "peticiones": 30,
+ "duracion_total_s": 16.987051011,
+ "latencia_ms": {
+  "mediana": 82.8458215,
+  "p95": 276.44839164999996,
+  "max": 461.500899
+ },
+ "pasos": {
+  "login": {
+   "correctos": 1,
+   "fallidos": 0
+  },
+  "apoderado": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "mascota": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "cita": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "checkin": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "iniciar": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "consulta": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "diagnostico": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "receta": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "punto_cobro": {
+   "correctos": 1,
+   "fallidos": 0
+  },
+  "vincular_equipo": {
+   "correctos": 1,
+   "fallidos": 0
+  },
+  "abrir_caja": {
+   "correctos": 1,
+   "fallidos": 0
+  },
+  "cerrar_consulta": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "finalizar_servicio": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "pago": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "actualizar_mascota": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "cita_extra": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "cancelar_cita": {
+   "correctos": 2,
+   "fallidos": 0
+  }
+ }
+}
