@@ -321,6 +321,8 @@ class UsuarioServiceImplLoginTest {
         when(companyMembershipService.hasAnyMembership(10, 7)).thenReturn(true);
         when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(true);
         when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencialValida()));
+        when(usuarioRepository.findById(10)).thenReturn(Optional.of(sinRol));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
 
         assertThatThrownBy(() -> service.loginWithGoogle("Ana@Example.test", "vargas-vet"))
                 .isInstanceOf(org.springframework.security.authentication.DisabledException.class)
@@ -339,6 +341,8 @@ class UsuarioServiceImplLoginTest {
         when(companyMembershipService.hasAnyMembership(10, 7)).thenReturn(true);
         when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(true);
         when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencialValida()));
+        when(usuarioRepository.findById(10)).thenReturn(Optional.of(conRol));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
         tokensDeSesion();
 
         AuthResponse response = service.loginWithGoogle("ana@example.test", "vargas-vet");
@@ -356,6 +360,8 @@ class UsuarioServiceImplLoginTest {
         when(companyMembershipService.hasAnyMembership(10, 7)).thenReturn(true);
         when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(true);
         when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencial));
+        when(usuarioRepository.findById(10)).thenReturn(Optional.of(usuario));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
         tokensDeSesion();
     }
 

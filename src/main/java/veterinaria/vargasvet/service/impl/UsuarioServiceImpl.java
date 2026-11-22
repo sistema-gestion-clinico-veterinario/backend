@@ -422,8 +422,8 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 : null;
         accountLockoutService.registerSuccessfulLogin(attemptKey);
 
-        return transacciones.execute(status ->
-                completarLogin(usuario.getId(), company.getId(), hashAlmacenado, hashActualizado, username));
+        return enTransaccionAuditandoRechazos(() ->
+                completarLogin(usuario.getId(), company.getId(), hashAlmacenado, hashActualizado, username, false));
     }
 
     private record IdentificacionLogin(Company company, Usuario usuario, String hashCredencial) {
@@ -458,7 +458,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     private AuthResponse completarLogin(Integer usuarioId, Integer companyId, String hashVerificado,
-            String hashActualizado, String username) {
+            String hashActualizado, String username, boolean viaGoogle) {
         Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow(
                 () -> new BadCredentialsException("Credenciales inválidas"));
         Company company = companyRepository.findById(companyId).orElseThrow(
@@ -466,7 +466,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
                 resolveCredencial(usuarioId, companyId).orElseThrow(
                         () -> new BadCredentialsException("Credenciales inválidas"));
-        if (!hashVerificado.equals(credencial.getPassword())) {
+        if (hashVerificado != null && !hashVerificado.equals(credencial.getPassword())) {
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
@@ -476,7 +476,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         credencial.setUltimoAcceso(veterinaria.vargasvet.util.AppClock.now());
         credencialRepository.save(credencial);
 
-        return buildLoginResponse(usuario, company, credencial, username, false);
+        return buildLoginResponse(usuario, company, credencial, username, viaGoogle, true);
     }
 
     /** Login vía "Continuar con Google". Google ya verificó que la persona controla ese
@@ -486,7 +486,6 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
      * empresa resuelta, se rechaza igual que un login con contraseña incorrecta (mismo
      * mensaje genérico, para no revelar si el correo existe). */
     @Override
-    @Transactional
     public AuthResponse loginWithGoogle(String email, String slug) {
         String normalizedEmail = normalizeSecurityIdentifier(email);
         String normalizedSlug = slug == null ? "" : slug.trim().toLowerCase(Locale.ROOT);
@@ -495,64 +494,148 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
+        IdentificacionGoogle identificacion =
+                transacciones.execute(status -> identificarParaGoogle(normalizedEmail, normalizedSlug));
+        if (identificacion.acceso() == AccesoGoogle.SIN_CUENTA) {
+            enforceLoginAttempt(AuthenticationAttemptKey.forUnresolvedCompany(normalizedSlug, normalizedEmail));
+            authenticationAuditService.recordLoginFailure(null, normalizedEmail, "correo de Google sin cuenta");
+            throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+        }
+        if (identificacion.acceso() == AccesoGoogle.EMPRESA_INEXISTENTE) {
+            enforceLoginAttempt(AuthenticationAttemptKey.forUnresolvedCompany(normalizedSlug, normalizedEmail));
+            authenticationAuditService.recordLoginFailure(null, normalizedEmail, "empresa de Google inexistente");
+            throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+        }
+
+        Company company = identificacion.company();
+        Usuario usuario = identificacion.usuario();
+        String attemptKey = usuario == null
+                ? AuthenticationAttemptKey.forCompany(company.getId(), normalizedEmail)
+                : AuthenticationAttemptKey.forCompanyAccount(company.getId(), usuario.getId());
+        enforceLoginAttempt(attemptKey);
+        rechazarAccesoDeGoogle(identificacion, normalizedEmail, normalizedSlug);
+
+        accountLockoutService.registerSuccessfulLogin(attemptKey);
+
+        return enTransaccionAuditandoRechazos(() ->
+                completarLogin(usuario.getId(), company.getId(), null, null, normalizedEmail, true));
+    }
+
+    private enum AccesoGoogle {
+        SIN_CUENTA, EMPRESA_INEXISTENTE, SIN_MEMBRESIA, CERRADA, SUSPENDIDA, DADA_DE_BAJA, SIN_ACCESO, SIN_CREDENCIAL, PERMITIDO
+    }
+
+    private record IdentificacionGoogle(Company company, Usuario primerCandidato, Usuario usuario, AccesoGoogle acceso) {
+    }
+
+    private IdentificacionGoogle identificarParaGoogle(String normalizedEmail, String normalizedSlug) {
         // El correo puede existir en varias empresas. Google acredita el correo, pero el
         // slug decide qué cuenta concreta se está autenticando; jamás se toma la primera
         // coincidencia global porque revelaría o adoptaría la identidad de otra clínica.
         List<Usuario> emailCandidates = usuarioRepository.findAllByEmailIgnoreCase(normalizedEmail);
         if (emailCandidates.isEmpty()) {
-            enforceLoginAttempt(AuthenticationAttemptKey.forUnresolvedCompany(normalizedSlug, normalizedEmail));
-            authenticationAuditService.recordLoginFailure(null, normalizedEmail, "correo de Google sin cuenta");
-            throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+            return new IdentificacionGoogle(null, null, null, AccesoGoogle.SIN_CUENTA);
         }
         Company company = companyRepository.findBySlug(normalizedSlug).orElse(null);
         if (company == null) {
-            enforceLoginAttempt(AuthenticationAttemptKey.forUnresolvedCompany(normalizedSlug, normalizedEmail));
-            authenticationAuditService.recordLoginFailure(null, normalizedEmail, "empresa de Google inexistente");
-            throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+            return new IdentificacionGoogle(null, null, null, AccesoGoogle.EMPRESA_INEXISTENTE);
         }
+        Usuario primerCandidato = emailCandidates.get(0);
+        org.hibernate.Hibernate.initialize(primerCandidato.getCompany());
         Usuario usuario = emailCandidates.stream()
                 .filter(u -> companyMembershipService.hasAnyMembership(u.getId(), company.getId()))
                 .findFirst()
                 .orElse(null);
-        String attemptKey = usuario == null
-                ? AuthenticationAttemptKey.forCompany(company.getId(), normalizedEmail)
-                : AuthenticationAttemptKey.forCompanyAccount(company.getId(), usuario.getId());
-        enforceLoginAttempt(attemptKey);
         if (usuario == null) {
-            authenticationAuditService.recordLoginFailure(emailCandidates.get(0), normalizedEmail,
-                    "cuenta de Google sin acceso a la empresa");
-            throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+            return new IdentificacionGoogle(company, primerCandidato, null, AccesoGoogle.SIN_MEMBRESIA);
         }
+        org.hibernate.Hibernate.initialize(usuario.getCompany());
         if (!companyMembershipService.hasActiveMembership(usuario.getId(), company.getId())) {
+            AccesoGoogle acceso;
             if (accountClosureGuard.findReactivable(usuario.getId(), company.getId()).isPresent()) {
+                acceso = AccesoGoogle.CERRADA;
+            } else if (companyMembershipService.isSuspendedIn(usuario.getId(), company.getId())) {
+                acceso = AccesoGoogle.SUSPENDIDA;
+            } else if (companyMembershipService.isDeactivatedIn(usuario.getId(), company.getId())) {
+                acceso = AccesoGoogle.DADA_DE_BAJA;
+            } else {
+                acceso = AccesoGoogle.SIN_ACCESO;
+            }
+            return new IdentificacionGoogle(company, primerCandidato, usuario, acceso);
+        }
+        boolean conCredencial = resolveCredencial(usuario.getId(), company.getId()).isPresent();
+        return new IdentificacionGoogle(company, primerCandidato, usuario,
+                conCredencial ? AccesoGoogle.PERMITIDO : AccesoGoogle.SIN_CREDENCIAL);
+    }
+
+    private void rechazarAccesoDeGoogle(IdentificacionGoogle identificacion, String normalizedEmail, String normalizedSlug) {
+        Usuario usuario = identificacion.usuario();
+        switch (identificacion.acceso()) {
+            case SIN_MEMBRESIA -> {
+                authenticationAuditService.recordLoginFailure(identificacion.primerCandidato(), normalizedEmail,
+                        "cuenta de Google sin acceso a la empresa");
+                throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+            }
+            case CERRADA -> {
                 authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta cerrada por la persona (con Google)");
                 throw new veterinaria.vargasvet.exception.GoogleAccountClosedException(
-                        usuario.getId(), company.getId(), normalizedEmail, normalizedSlug);
+                        usuario.getId(), identificacion.company().getId(), normalizedEmail, normalizedSlug);
             }
-            if (companyMembershipService.isSuspendedIn(usuario.getId(), company.getId())) {
+            case SUSPENDIDA -> {
                 authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta suspendida (con Google)");
                 throw new veterinaria.vargasvet.exception.GoogleAccountSuspendedException();
             }
-            if (companyMembershipService.isDeactivatedIn(usuario.getId(), company.getId())) {
+            case DADA_DE_BAJA -> {
                 authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta dada de baja (con Google)");
                 throw new veterinaria.vargasvet.exception.GoogleAccountDeactivatedException();
             }
-            authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta de Google sin acceso a la empresa");
-            throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+            case SIN_ACCESO -> {
+                authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta de Google sin acceso a la empresa");
+                throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+            }
+            case SIN_CREDENCIAL -> {
+                authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta de Google sin credencial en la empresa");
+                throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+            }
+            default -> {
+            }
         }
+    }
 
-        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
-                resolveCredencial(usuario.getId(), company.getId()).orElse(null);
-        if (credencial == null) {
-            authenticationAuditService.recordLoginFailure(usuario, normalizedEmail, "cuenta de Google sin credencial en la empresa");
-            throw new veterinaria.vargasvet.exception.GoogleClinicAccessException();
+    private static final class RechazoDeAcceso extends RuntimeException {
+        private final transient Usuario usuario;
+        private final String identificador;
+        private final String motivo;
+        private final RuntimeException excepcion;
+
+        RechazoDeAcceso(Usuario usuario, String identificador, String motivo, RuntimeException excepcion) {
+            super(null, null, false, false);
+            this.usuario = usuario;
+            this.identificador = identificador;
+            this.motivo = motivo;
+            this.excepcion = excepcion;
         }
+    }
 
-        credencial.setUltimoAcceso(veterinaria.vargasvet.util.AppClock.now());
-        credencialRepository.save(credencial);
-        accountLockoutService.registerSuccessfulLogin(attemptKey);
+    private RuntimeException rechazarAcceso(boolean auditoriaDiferida, Usuario usuario, String identificador,
+            String motivo, RuntimeException excepcion) {
+        if (!auditoriaDiferida) {
+            authenticationAuditService.recordLoginFailure(usuario, identificador, motivo);
+            return excepcion;
+        }
+        if (usuario != null) {
+            org.hibernate.Hibernate.initialize(usuario.getCompany());
+        }
+        return new RechazoDeAcceso(usuario, identificador, motivo, excepcion);
+    }
 
-        return buildLoginResponse(usuario, company, credencial, normalizedEmail, true);
+    private <T> T enTransaccionAuditandoRechazos(java.util.function.Supplier<T> trabajo) {
+        try {
+            return transacciones.execute(status -> trabajo.get());
+        } catch (RechazoDeAcceso rechazo) {
+            authenticationAuditService.recordLoginFailure(rechazo.usuario, rechazo.identificador, rechazo.motivo);
+            throw rechazo.excepcion;
+        }
     }
 
     private void enforceLoginAttempt(String attemptKey) {
@@ -606,15 +689,21 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private AuthResponse buildLoginResponse(Usuario usuario, Company company,
             veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial, String username,
             boolean viaGoogle) {
+        return buildLoginResponse(usuario, company, credencial, username, viaGoogle, false);
+    }
+
+    private AuthResponse buildLoginResponse(Usuario usuario, Company company,
+            veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial, String username,
+            boolean viaGoogle, boolean auditoriaDiferida) {
         String via = viaGoogle ? " (con Google)" : "";
         if (!usuario.isEmailVerified()) {
-            authenticationAuditService.recordLoginFailure(usuario, username, "cuenta no habilitada" + via);
-            throw new DisabledException("Tu cuenta aún no ha sido verificada. Por favor, revisa tu correo electrónico.");
+            throw rechazarAcceso(auditoriaDiferida, usuario, username, "cuenta no habilitada" + via,
+                    new DisabledException("Tu cuenta aún no ha sido verificada. Por favor, revisa tu correo electrónico."));
         }
 
         if (!usuario.isActivo()) {
-            authenticationAuditService.recordLoginFailure(usuario, username, "cuenta no habilitada" + via);
-            throw new DisabledException("La cuenta está suspendida");
+            throw rechazarAcceso(auditoriaDiferida, usuario, username, "cuenta no habilitada" + via,
+                    new DisabledException("La cuenta está suspendida"));
         }
 
         if (!company.isActivo()) {
@@ -626,8 +715,8 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         // verse ni activarse aqui.
         List<String> assignedRoles = assignedRoleNames(usuario, company);
         if (assignedRoles.isEmpty()) {
-            authenticationAuditService.recordLoginFailure(usuario, username, "sin rol asignado" + via);
-            throw new DisabledException(NO_ASSIGNED_ROLE_MESSAGE);
+            throw rechazarAcceso(auditoriaDiferida, usuario, username, "sin rol asignado" + via,
+                    new DisabledException(NO_ASSIGNED_ROLE_MESSAGE));
         }
 
         UsuarioPorRol activeAssignment = resolveActiveAssignment(usuario, null, null, company.getId());
@@ -698,14 +787,11 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     @Override
-    @Transactional
     public AuthResponse adminLogin(veterinaria.vargasvet.dto.request.AdminLoginDTO adminLoginDTO) {
         String username = normalizeSecurityIdentifier(adminLoginDTO.getUsername());
 
-        // SuperAdmin siempre tiene company = null - el namespace de username "sin
-        // empresa" no se toca con el aislamiento entre empresas (esas cuentas nunca
-        // pertenecieron a una empresa en particular).
-        Usuario usuario = usuarioRepository.findByUsernameAndCompanyIsNull(username).orElse(null);
+        IdentificacionAdministrador identificacion = transacciones.execute(status -> identificarAdministrador(username));
+        Usuario usuario = identificacion.usuario();
         String attemptKey = usuario == null
                 ? AuthenticationAttemptKey.forPlatform(username)
                 : AuthenticationAttemptKey.forPlatformAccount(usuario.getId());
@@ -716,37 +802,72 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
-        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
-                resolveCredencial(usuario.getId(), null).orElse(null);
-        if (credencial == null || !passwordEncoder.matches(adminLoginDTO.getPassword(), credencial.getPassword())) {
+        String hashAlmacenado = identificacion.hashCredencial();
+        if (hashAlmacenado == null || !passwordEncoder.matches(adminLoginDTO.getPassword(), hashAlmacenado)) {
             authenticationAuditService.recordInvalidCredentials(usuario, username, attemptKey);
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
-        boolean esSuperAdmin = usuario.getUsuariosPorRol().stream()
-                .anyMatch(upr -> upr.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN);
-        if (!esSuperAdmin) {
+        if (!identificacion.esSuperAdmin()) {
             // Mismo mensaje generico: no revelar que las credenciales eran correctas
             // pero la cuenta no es de SuperAdmin.
             authenticationAuditService.recordInvalidCredentials(usuario, username, attemptKey);
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
-        if (passwordEncoder.upgradeEncoding(credencial.getPassword())) {
-            credencial.setPassword(passwordEncoder.encode(adminLoginDTO.getPassword()));
+        String hashActualizado = passwordEncoder.upgradeEncoding(hashAlmacenado)
+                ? passwordEncoder.encode(adminLoginDTO.getPassword())
+                : null;
+        accountLockoutService.registerSuccessfulLogin(attemptKey);
+
+        return enTransaccionAuditandoRechazos(() ->
+                completarAdminLogin(usuario.getId(), hashAlmacenado, hashActualizado, username));
+    }
+
+    private record IdentificacionAdministrador(Usuario usuario, String hashCredencial, boolean esSuperAdmin) {
+    }
+
+    private IdentificacionAdministrador identificarAdministrador(String username) {
+        // SuperAdmin siempre tiene company = null - el namespace de username "sin
+        // empresa" no se toca con el aislamiento entre empresas (esas cuentas nunca
+        // pertenecieron a una empresa en particular).
+        Usuario usuario = usuarioRepository.findByUsernameAndCompanyIsNull(username).orElse(null);
+        if (usuario == null) {
+            return new IdentificacionAdministrador(null, null, false);
+        }
+        String hash = resolveCredencial(usuario.getId(), null)
+                .map(veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial::getPassword)
+                .orElse(null);
+        boolean esSuperAdmin = usuario.getUsuariosPorRol().stream()
+                .anyMatch(upr -> upr.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN);
+        return new IdentificacionAdministrador(usuario, hash, esSuperAdmin);
+    }
+
+    private AuthResponse completarAdminLogin(Integer usuarioId, String hashVerificado, String hashActualizado,
+            String username) {
+        Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow(
+                () -> new BadCredentialsException("Credenciales inválidas"));
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                resolveCredencial(usuarioId, null).orElseThrow(
+                        () -> new BadCredentialsException("Credenciales inválidas"));
+        if (!hashVerificado.equals(credencial.getPassword())) {
+            throw new BadCredentialsException("Credenciales inválidas");
+        }
+
+        if (hashActualizado != null) {
+            credencial.setPassword(hashActualizado);
         }
         credencial.setUltimoAcceso(veterinaria.vargasvet.util.AppClock.now());
         credencialRepository.save(credencial);
-        accountLockoutService.registerSuccessfulLogin(attemptKey);
 
         if (!usuario.isEmailVerified()) {
-            authenticationAuditService.recordLoginFailure(usuario, username, "cuenta no habilitada");
-            throw new DisabledException("Tu cuenta aún no ha sido verificada. Por favor, revisa tu correo electrónico.");
+            throw rechazarAcceso(true, usuario, username, "cuenta no habilitada",
+                    new DisabledException("Tu cuenta aún no ha sido verificada. Por favor, revisa tu correo electrónico."));
         }
 
         if (!usuario.isActivo()) {
-            authenticationAuditService.recordLoginFailure(usuario, username, "cuenta no habilitada");
-            throw new DisabledException("La cuenta está suspendida");
+            throw rechazarAcceso(true, usuario, username, "cuenta no habilitada",
+                    new DisabledException("La cuenta está suspendida"));
         }
 
         List<String> assignedRoles = usuario.getUsuariosPorRol().stream()
@@ -754,8 +875,8 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 .collect(Collectors.toList());
         UsuarioPorRol activeAssignment = resolveActiveAssignment(usuario, null, null, null);
         if (activeAssignment == null) {
-            authenticationAuditService.recordLoginFailure(usuario, username, "cuenta no habilitada");
-            throw new DisabledException("Tu rol activo se encuentra desactivado. Contacta al administrador.");
+            throw rechazarAcceso(true, usuario, username, "cuenta no habilitada",
+                    new DisabledException("Tu rol activo se encuentra desactivado. Contacta al administrador."));
         }
         String activeRole = activeAssignment.getRol().getName();
         List<String> activeRolesList = java.util.Collections.singletonList(activeRole);

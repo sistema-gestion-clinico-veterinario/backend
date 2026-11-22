@@ -95,7 +95,8 @@ class AuditoriaConDispositivoTest {
         peticion.addHeader("User-Agent", CHROME_WINDOWS);
         when(proveedor.getIfAvailable()).thenReturn(peticion);
         AuthenticationAuditService servicioDeInicio = new AuthenticationAuditService(auditoria,
-                mock(AuditRealtimePublisher.class), proveedor, mock(ClientIpResolver.class), mock(AccountLockoutService.class));
+                mock(AuditRealtimePublisher.class), proveedor, mock(ClientIpResolver.class), mock(AccountLockoutService.class),
+                mock(org.springframework.transaction.PlatformTransactionManager.class));
         Usuario ana = new Usuario();
         ana.setEmail("ana@clinica.test");
 
@@ -114,7 +115,8 @@ class AuditoriaConDispositivoTest {
         ObjectProvider<HttpServletRequest> proveedor = mock(ObjectProvider.class);
         when(proveedor.getIfAvailable()).thenReturn(new MockHttpServletRequest());
         AuthenticationAuditService servicioDeInicio = new AuthenticationAuditService(auditoria,
-                mock(AuditRealtimePublisher.class), proveedor, mock(ClientIpResolver.class), mock(AccountLockoutService.class));
+                mock(AuditRealtimePublisher.class), proveedor, mock(ClientIpResolver.class), mock(AccountLockoutService.class),
+                mock(org.springframework.transaction.PlatformTransactionManager.class));
 
         MDC.put("correlationId", "login-prueba-0001");
         try {

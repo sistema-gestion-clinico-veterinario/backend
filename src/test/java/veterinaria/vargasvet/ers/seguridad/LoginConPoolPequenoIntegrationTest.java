@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +18,13 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import veterinaria.vargasvet.domain.entity.Role;
+import veterinaria.vargasvet.domain.entity.Usuario;
+import veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial;
+import veterinaria.vargasvet.domain.entity.UsuarioPorRol;
+import veterinaria.vargasvet.domain.enums.RolePurpose;
+import veterinaria.vargasvet.domain.enums.RoleScope;
+import veterinaria.vargasvet.dto.request.AdminLoginDTO;
 import veterinaria.vargasvet.dto.request.LoginDTO;
 import veterinaria.vargasvet.repository.ApoderadoRepository;
 import veterinaria.vargasvet.repository.CategoriaProductoRepository;
@@ -47,6 +56,7 @@ import veterinaria.vargasvet.service.CompanyRoleProvisioningService;
 import veterinaria.vargasvet.service.UsuarioService;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -78,52 +88,180 @@ class LoginConPoolPequenoIntegrationTest {
 
     @Autowired private UsuarioService usuarioService;
     @Autowired private DosEmpresasSembradas sembrador;
+    @Autowired private UsuarioRepository usuarioRepository;
+    @Autowired private RoleRepository roleRepository;
+    @Autowired private UsuarioPorRolRepository asignaciones;
+    @Autowired private UsuarioEmpresaCredencialRepository credenciales;
+    @Autowired private PasswordEncoder codificador;
+    @Autowired private JdbcTemplate jdbc;
+    @Autowired private veterinaria.vargasvet.service.AuthenticationAuditService auditoria;
 
     private DosEmpresasSembradas.Empresa empresa;
 
     @BeforeAll
     void sembrar() {
         empresa = sembrador.sembrar("TKP");
+        sembrarAdministradorDePlataforma();
+        suspender("cliente2.tkp");
+    }
+
+    private void suspender(String username) {
+        jdbc.update("UPDATE usuario SET activo = FALSE WHERE username = ?", username);
+    }
+
+    private void sembrarAdministradorDePlataforma() {
+        Role rol = new Role();
+        rol.setName("ROLE_ADMIN_PLATAFORMA_PRUEBA");
+        rol.setScope(RoleScope.PLATFORM);
+        rol.setPurpose(RolePurpose.PLATFORM_ADMIN);
+        rol = roleRepository.save(rol);
+
+        Usuario usuario = new Usuario();
+        usuario.setEmail("plataforma@prueba.test");
+        usuario.setUsername("plataforma.prueba");
+        usuario.setNombre("Plataforma");
+        usuario.setApellido("Prueba");
+        usuario.setDni("99999999");
+        usuario.setActivo(true);
+        usuario.setEmailVerified(true);
+        usuario = usuarioRepository.save(usuario);
+
+        UsuarioEmpresaCredencial credencial = new UsuarioEmpresaCredencial();
+        credencial.setUsuario(usuario);
+        credencial.setPassword(codificador.encode(DosEmpresasSembradas.CLAVE));
+        credencial.setPasswordChanged(true);
+        credencial.setCreatedAt(LocalDateTime.now());
+        credencial.setUpdatedAt(LocalDateTime.now());
+        credenciales.save(credencial);
+
+        UsuarioPorRol asignacion = new UsuarioPorRol();
+        asignacion.setUsuario(usuario);
+        asignacion.setRol(rol);
+        asignaciones.save(asignacion);
     }
 
     @Test
     void variosInicioDeSesionSimultaneosTerminanConUnPoolMasPequenoQueLosHilos() throws Exception {
+        List<String> fallos = simultaneos(i -> usuarioService.login(
+                credenciales(i % 2 == 0 ? "admin.tkp" : "cliente1.tkp", DosEmpresasSembradas.CLAVE)).getToken());
+
+        assertThat(fallos).as("inicios de sesión que fallaron con un pool de 3 conexiones").isEmpty();
+    }
+
+    @Test
+    void variosInicioDeSesionConGoogleSimultaneosTerminan() throws Exception {
+        List<String> fallos = simultaneos(i -> usuarioService.loginWithGoogle(
+                i % 2 == 0 ? "admin.tkp@tkp.test" : "cliente1.tkp@tkp.test", empresa.slug()).getToken());
+
+        assertThat(fallos).as("inicios de sesión con Google que fallaron con un pool de 3 conexiones").isEmpty();
+    }
+
+    @Test
+    void variosInicioDeSesionDeAdministradorDePlataformaSimultaneosTerminan() throws Exception {
+        List<String> fallos = simultaneos(i -> {
+            AdminLoginDTO dto = new AdminLoginDTO();
+            dto.setUsername("plataforma.prueba");
+            dto.setPassword(DosEmpresasSembradas.CLAVE);
+            return usuarioService.adminLogin(dto).getToken();
+        });
+
+        assertThat(fallos).as("inicios de sesión de administrador que fallaron con un pool de 3 conexiones").isEmpty();
+    }
+
+    @Test
+    void variasContrasenasIncorrectasSimultaneasSeRechazanSinAgotarElPool() throws Exception {
+        List<String> fallos = simultaneos(i -> {
+            try {
+                usuarioService.login(credenciales(i % 2 == 0 ? "admin.tkp" : "cliente1.tkp", "incorrecta-" + i));
+                return "entró con una contraseña incorrecta";
+            } catch (BadCredentialsException esperado) {
+                return "rechazada";
+            }
+        });
+
+        assertThat(fallos).as("rechazos que terminaron en un error distinto de credenciales inválidas").isEmpty();
+    }
+
+    @Test
+    void variasCuentasSuspendidasSimultaneasSeRechazanSinAgotarElPool() throws Exception {
+        List<String> fallos = simultaneos(i -> {
+            try {
+                usuarioService.login(credenciales("cliente2.tkp", DosEmpresasSembradas.CLAVE));
+                return "entró una cuenta suspendida";
+            } catch (DisabledException esperado) {
+                return "rechazada";
+            }
+        });
+
+        assertThat(fallos).as("rechazos que terminaron en un error distinto de cuenta deshabilitada").isEmpty();
+    }
+
+    @Test
+    void registrarCredencialesInvalidasNoRetieneUnaConexionMientrasRegistraElBloqueo() {
+        Configuracion.conexionesActivasEnElBloqueo.set(-1);
+        org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(
+                new org.springframework.web.context.request.ServletRequestAttributes(
+                        new org.springframework.mock.web.MockHttpServletRequest()));
+        try {
+            auditoria.recordInvalidCredentials(null, "alguien", "clave-de-prueba");
+        } finally {
+            org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
+        }
+
+        assertThat(Configuracion.conexionesActivasEnElBloqueo.get())
+                .as("conexiones activas mientras se registra el intento fallido (solo debe estar la del propio registro)")
+                .isEqualTo(1);
+    }
+
+    private List<String> simultaneos(java.util.function.IntFunction<String> operacion) throws Exception {
         ExecutorService hilos = Executors.newFixedThreadPool(SESIONES_SIMULTANEAS);
         CountDownLatch salida = new CountDownLatch(1);
         List<Future<String>> resultados = new ArrayList<>();
         for (int i = 0; i < SESIONES_SIMULTANEAS; i++) {
-            String usuario = i % 2 == 0 ? "admin.tkp" : "cliente1.tkp";
-            Callable<String> sesion = () -> {
-                salida.await();
-                return usuarioService.login(credenciales(usuario)).getToken();
+            int indice = i;
+            Callable<String> tarea = () -> {
+                org.springframework.web.context.request.RequestContextHolder.setRequestAttributes(
+                        new org.springframework.web.context.request.ServletRequestAttributes(
+                                new org.springframework.mock.web.MockHttpServletRequest()));
+                try {
+                    salida.await();
+                    return operacion.apply(indice);
+                } finally {
+                    org.springframework.web.context.request.RequestContextHolder.resetRequestAttributes();
+                }
             };
-            resultados.add(hilos.submit(sesion));
+            resultados.add(hilos.submit(tarea));
         }
         salida.countDown();
 
         List<String> fallos = new ArrayList<>();
         for (Future<String> resultado : resultados) {
             try {
-                assertThat(resultado.get(60, TimeUnit.SECONDS)).isNotBlank();
+                String valor = resultado.get(60, TimeUnit.SECONDS);
+                if (valor == null || valor.isBlank() || valor.startsWith("entr")) {
+                    fallos.add("resultado inesperado: " + valor);
+                }
             } catch (Exception e) {
                 fallos.add(e.getClass().getSimpleName() + ": " + e.getMessage());
             }
         }
         hilos.shutdownNow();
-
-        assertThat(fallos).as("inicios de sesión que fallaron con un pool de 3 conexiones").isEmpty();
+        return fallos;
     }
 
-    private LoginDTO credenciales(String usuario) {
+    private LoginDTO credenciales(String usuario, String clave) {
         LoginDTO dto = new LoginDTO();
         dto.setSlug(empresa.slug());
         dto.setUsername(usuario);
-        dto.setPassword(DosEmpresasSembradas.CLAVE);
+        dto.setPassword(clave);
         return dto;
     }
 
     @TestConfiguration
     static class Configuracion {
+
+        static final java.util.concurrent.atomic.AtomicInteger conexionesActivasEnElBloqueo =
+                new java.util.concurrent.atomic.AtomicInteger(-1);
 
         @Bean
         @Primary
@@ -146,7 +284,7 @@ class LoginConPoolPequenoIntegrationTest {
 
         @Bean
         @Primary
-        AccountLockoutService bloqueoQueUsaOtraConexion(JdbcTemplate jdbc) {
+        AccountLockoutService bloqueoQueUsaOtraConexion(JdbcTemplate jdbc, javax.sql.DataSource dataSource) {
             return new AccountLockoutService(jdbc) {
                 @Override
                 @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -158,6 +296,9 @@ class LoginConPoolPequenoIntegrationTest {
                 @Transactional(propagation = Propagation.REQUIRES_NEW)
                 public void registerFailedAttempt(String identifier) {
                     jdbc.queryForObject("SELECT 1", Integer.class);
+                    if (dataSource instanceof com.zaxxer.hikari.HikariDataSource hikari) {
+                        conexionesActivasEnElBloqueo.set(hikari.getHikariPoolMXBean().getActiveConnections());
+                    }
                 }
 
                 @Override

@@ -5,8 +5,11 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import veterinaria.vargasvet.domain.entity.AuditLog;
 import veterinaria.vargasvet.domain.entity.Usuario;
 import veterinaria.vargasvet.repository.AuditLogRepository;
@@ -30,6 +33,7 @@ public class AuthenticationAuditService {
     private final ObjectProvider<HttpServletRequest> requestProvider;
     private final ClientIpResolver clientIpResolver;
     private final AccountLockoutService accountLockoutService;
+    private final PlatformTransactionManager transactionManager;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordLoginFailure(Usuario knownUser, String attemptedIdentifier, String reason) {
@@ -43,12 +47,13 @@ public class AuthenticationAuditService {
      * concreta. La clave de bloqueo ya incluye empresa/plataforma; el identificador
      * separado se utiliza solo para generar la referencia anónima de auditoría.
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void recordInvalidCredentials(Usuario knownUser, String attemptedIdentifier, String lockoutKey) {
         String subjectHash = SecurityTokenUtils.hash(normalize(attemptedIdentifier)).substring(0, 12);
-        save(knownUser, "LOGIN_FALLIDO",
+        TransactionTemplate nuevaTransaccion = new TransactionTemplate(transactionManager);
+        nuevaTransaccion.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        nuevaTransaccion.executeWithoutResult(status -> save(knownUser, "LOGIN_FALLIDO",
                 "Intento de inicio de sesión rechazado (credenciales inválidas, referencia "
-                        + subjectHash + ").");
+                        + subjectHash + ")."));
         accountLockoutService.registerFailedAttempt(lockoutKey);
     }
 
