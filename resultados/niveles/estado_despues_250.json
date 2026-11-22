@@ -1,0 +1,20 @@
+{
+  "version": "despues",
+  "nivel": 250,
+  "config_jvm": "F",
+  "correos_recibidos": 782,
+  "heap_max": "1g",
+  "cpus_limite": 1,
+  "memoria_limite_mb": 2048,
+  "perfil": "carga_escritura",
+  "duracion_s": 447,
+  "cpu_contenedor_s": 237,
+  "oom_killed": false,
+  "reinicios": 0,
+  "sigue_corriendo": true,
+  "codigo_salida": 0,
+  "salud_final_http": "200",
+  "k6_codigo_salida": 0,
+  "sql_sentencias": 423021,
+  "sql_tiempo_s": 1793.7
+}
