@@ -9,7 +9,12 @@ RAIZ = Path(sys.argv[1])
 MODO = sys.argv[2] if len(sys.argv) > 2 else 'xms'
 NIV = RAIZ / 'niveles'
 
-if MODO == 'indice':
+if MODO == 'panel':
+    VARIANTES = (('legado', 'código anterior'), ('optimizado', 'código nuevo'))
+    TITULO = 'Fase 3d: panel optimizado frente al código anterior'
+    SALIDA = 'RESUMEN_FASE3D'
+    PIE = 'Mismo servidor, misma imagen y misma base de partida en cada corrida; solo cambia la bandera app.dashboard.consultas-optimizadas. El orden alterna por nivel. Una corrida por variante y nivel. Detalle, consultas más costosas y comparación de respuestas en INFORME_CARGA_<nivel>.md.'
+elif MODO == 'indice':
     VARIANTES = (('despues', 'sin índice'), ('indice', 'con índice'))
     TITULO = 'Fase 3c: índice en consentimiento_datos, cada corrida desde la misma base'
     SALIDA = 'RESUMEN_FASE3C'
@@ -20,7 +25,8 @@ else:
     SALIDA = 'RESUMEN_FASE3B'
     PIE = 'Las dos variantes corren en la misma máquina, una detrás de otra, alternando cuál va primero en cada nivel. Una corrida por variante y nivel. Las consultas más costosas de cada nivel están en INFORME_CARGA_<nivel>.md.'
 
-niveles = sorted({int(p.name[len('estado_despues_'):].split('.')[0]) for p in NIV.glob('estado_despues_*.json')})
+PRIMERA = VARIANTES[0][0]
+niveles = sorted({int(p.name[len(f'estado_{PRIMERA}_'):].split('.')[0]) for p in NIV.glob(f'estado_{PRIMERA}_*.json')})
 
 filas = []
 datos = []
@@ -37,6 +43,11 @@ for nivel in niveles:
         ok, fallo = c.tasa_exito_escrituras(d)
         consent = d.get('sql_consent') or {}
         tabla = d.get('consent_despues') or {}
+        sonda = d.get('sonda') or {}
+        panel = d['endpoints'].get('panel')
+        panel_p95 = c.n.percentil(panel['duraciones'], 0.95) if panel and panel['duraciones'] else None
+        sentencias_panel = (sonda['sentencias_sql'] / sonda['llamadas']) if sonda.get('llamadas') and sonda.get('sentencias_sql') is not None else None
+        sql_total = (d['estado'] or {}).get('sql_tiempo_s')
         datos.append({
             'nivel': nivel, 'variante': titulo, 'veredicto': c.n.veredicto(m).split(' (')[0], 'errores_pct': m['errores_pct'], 'rps': m['rps'],
             'mediana_ms': m['mediana_ms'], 'p95_ms': m['p95_ms'], 'sin_degradacion': m['sano'], 'pausas': j['pausas'], 'completas': j['completos'],
@@ -45,9 +56,13 @@ for nivel in niveles:
             'cpu_media': d['cpu']['media'], 'pool_agotado': d['log']['pool_conexiones'], 'datos': c.estado_datos(d),
             'consent_llamadas': consent.get('llamadas'), 'consent_total_ms': consent.get('total_ms'), 'consent_media_ms': consent.get('media_ms'),
             'consent_filas': tabla.get('filas'), 'consent_tabla_mb': tabla.get('tabla_mb'),
+            'sentencias_por_panel': sentencias_panel, 'panel_p95_ms': panel_p95, 'sql_tiempo_total_s': sql_total,
+            'sentencias_sql_total': (d['estado'] or {}).get('sql_sentencias'), 'peticiones': m['peticiones'],
         })
         if MODO == 'indice':
             extra = f"{c.n.fmt((consent.get('total_ms') or 0) / 1000, 1)} | {c.n.fmt(consent.get('media_ms'), 1)} | {c.n.fmt(tabla.get('filas'))} | "
+        elif MODO == 'panel':
+            extra = f"{c.n.fmt(sentencias_panel, 1)} | {c.n.fmt(panel_p95)} | {c.n.fmt(sql_total, 0)} | "
         else:
             extra = ''
         filas.append(
@@ -59,6 +74,9 @@ cabecera = '| Usuarios | Variante | Veredicto | Errores | Peticiones/s | p95 (ms
 sep = '|---|---|---|---|---|---|---|---|---|'
 if MODO == 'indice':
     cabecera += 'Tiempo SQL en consentimiento_datos (s) | Media por llamada (ms) | Filas de la tabla | '
+    sep += '---|---|---|'
+elif MODO == 'panel':
+    cabecera += 'Sentencias SQL por carga del panel | Panel p95 bajo carga (ms) | Tiempo total en PostgreSQL (s) | '
     sep += '---|---|---|'
 cabecera += 'Avisos de pool agotado | Escrituras correctas / fallidas | Datos |'
 sep += '---|---|---|'

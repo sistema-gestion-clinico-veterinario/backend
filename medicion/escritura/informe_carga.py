@@ -1,4 +1,5 @@
 import gzip
+import json
 import re
 import statistics
 import sys
@@ -231,6 +232,8 @@ def analizar(version, config=None):
         'consent_antes': n.leer_json(NIV / f'consentimiento_antes_{et}.json'),
         'consent_despues': n.leer_json(NIV / f'consentimiento_despues_{et}.json'),
         'et': et,
+        'sonda': n.leer_json(NIV / f'sonda_panel_{et}.json'),
+        'ruta_respuesta': NIV / f'panel_respuesta_{et}.json',
     }
 
 
@@ -504,7 +507,51 @@ def filas_consentimiento(a, b):
     ]
 
 
-def tabla_xms(a, b, ma, mb, nombre_a='SIN -Xms', nombre_b='CON -Xms = -Xmx', con_consent=False):
+def respuesta_panel(d):
+    try:
+        datos = json.loads(Path(d['ruta_respuesta']).read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+    cuerpo = datos.get('data', datos) if isinstance(datos, dict) else datos
+    if isinstance(cuerpo, dict):
+        cuerpo = {k: v for k, v in cuerpo.items() if k != 'recentLogs'}
+    return cuerpo
+
+
+def filas_panel(a, b):
+    def por_carga(d, clave):
+        x = d.get('sonda') or {}
+        if x.get('llamadas') and x.get(clave) is not None:
+            return x[clave] / x['llamadas']
+        return None
+
+    def mediana_sonda(d):
+        t = (d.get('sonda') or {}).get('tiempos_ms') or []
+        return statistics.median(t) if t else None
+
+    def primera(d):
+        return (d.get('sonda') or {}).get('primera_llamada_ms')
+
+    def bajo_carga(d, mediana):
+        ep = d['endpoints'].get('panel')
+        if not ep or not ep['duraciones']:
+            return None
+        return statistics.median(ep['duraciones']) if mediana else n.percentil(ep['duraciones'], 0.95)
+
+    ra, rb = respuesta_panel(a), respuesta_panel(b)
+    igual = 'sin datos' if ra is None or rb is None else ('sí' if ra == rb else 'NO')
+    return [
+        ('Sentencias SQL por carga del panel (sonda, sin carga)', n.fmt(por_carga(a, 'sentencias_sql'), 1), n.fmt(por_carga(b, 'sentencias_sql'), 1)),
+        ('Tiempo SQL por carga del panel (ms, sin carga)', n.fmt(por_carga(a, 'tiempo_sql_ms'), 1), n.fmt(por_carga(b, 'tiempo_sql_ms'), 1)),
+        ('Panel sin carga: mediana de 19 llamadas (ms)', n.fmt(mediana_sonda(a)), n.fmt(mediana_sonda(b))),
+        ('Panel sin carga: primera llamada (ms)', n.fmt(primera(a)), n.fmt(primera(b))),
+        ('Panel bajo carga: mediana (ms)', n.fmt(bajo_carga(a, True)), n.fmt(bajo_carga(b, True))),
+        ('Panel bajo carga: p95 (ms)', n.fmt(bajo_carga(a, False)), n.fmt(bajo_carga(b, False))),
+        ('Respuesta del panel idéntica a la del código anterior (sin el registro reciente)', '-', igual),
+    ]
+
+
+def tabla_xms(a, b, ma, mb, nombre_a='SIN -Xms', nombre_b='CON -Xms = -Xmx', con_consent=False, extra=None):
     ja, jb = a['jvm'], b['jvm']
     dur_a, dur_b = ja['duracion_jvm_s'] or 1, jb['duracion_jvm_s'] or 1
 
@@ -532,15 +579,17 @@ def tabla_xms(a, b, ma, mb, nombre_a='SIN -Xms', nombre_b='CON -Xms = -Xmx', con
     ]
     if con_consent:
         filas = filas[:9] + filas_consentimiento(a, b) + filas[9:]
+    if extra:
+        filas = filas[:9] + extra + filas[9:]
     return [f'| | {nombre_a} | {nombre_b} |', '|---|---|---|'] + [f'| {x} | {y} | {z} |' for x, y, z in filas]
 
 
-def generar_variantes(pref_a, nombre_a, pref_b, nombre_b, titulo, con_consent=False, nota=''):
+def generar_variantes(pref_a, nombre_a, pref_b, nombre_b, titulo, con_consent=False, nota='', panel=False):
     a, b = analizar(pref_a), analizar(pref_b)
     ma, mb = n.metricas(a), n.metricas(b)
     lineas = [f'# {titulo}: {NIVEL} usuarios (1 CPU, 2 GB)', '']
     lineas += lineas_entorno() + ['']
-    lineas += tabla_xms(a, b, ma, mb, nombre_a, nombre_b, con_consent) + ['']
+    lineas += tabla_xms(a, b, ma, mb, nombre_a, nombre_b, con_consent, filas_panel(a, b) if panel else None) + ['']
     if con_consent:
         for nombre, d in ((nombre_a, a), (nombre_b, b)):
             plan = plan_consentimiento(d)
@@ -552,6 +601,13 @@ def generar_variantes(pref_a, nombre_a, pref_b, nombre_b, titulo, con_consent=Fa
         lineas.append(nota)
     (NIV / f'INFORME_CARGA_{NIVEL}.md').write_text('\n'.join(lineas) + '\n', encoding='utf-8')
     print('\n'.join(lineas))
+
+
+def generar_panel():
+    generar_variantes(
+        'legado', 'Código anterior', 'optimizado', 'Código nuevo', 'Fase 3d: panel optimizado', panel=True,
+        nota='> Mismo servidor, misma imagen y misma base de partida; solo cambia la bandera app.dashboard.consultas-optimizadas. Una corrida por variante y nivel.',
+    )
 
 
 def generar_indice():
@@ -595,5 +651,7 @@ if __name__ == '__main__':
         generar_xms()
     elif len(sys.argv) > 3 and sys.argv[3] == 'indice':
         generar_indice()
+    elif len(sys.argv) > 3 and sys.argv[3] == 'panel':
+        generar_panel()
     else:
         generar()

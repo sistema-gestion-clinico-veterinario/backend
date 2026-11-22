@@ -16,6 +16,7 @@ PLAN_CARGA="${PLAN_CARGA:-$RAIZ/medicion/escritura/PLAN_CARGA}"
 VERSIONES="${VERSIONES:-antes despues}"
 SIN_CONTROL="${SIN_CONTROL:-0}"
 VARIANTES="${VARIANTES:-}"
+ENV_EXTRA_BACKEND=""
 RESET_BASE="${RESET_BASE:-0}"
 MODO_VARIANTES="${MODO_VARIANTES:-xms}"
 XMX="${XMX:-1g}"
@@ -112,7 +113,7 @@ levantar_postgres() {
   docker network create sv-net > /dev/null
   docker run -d --name sv-pg --network sv-net $PIN_PG --memory 2g -e POSTGRES_PASSWORD="$PGPASS" postgres:16 \
     -c shared_preload_libraries=pg_stat_statements,auto_explain -c pg_stat_statements.track=all -c max_connections=100 \
-    -c auto_explain.log_min_duration=300 -c auto_explain.log_analyze=on -c auto_explain.log_buffers=on -c auto_explain.sample_rate=0.1 > /dev/null
+    -c auto_explain.log_min_duration=300 -c auto_explain.log_analyze=on -c auto_explain.log_buffers=on -c auto_explain.sample_rate=0.1 ${PG_SHARED_BUFFERS:+-c shared_buffers=$PG_SHARED_BUFFERS} > /dev/null
   for i in $(seq 1 60); do
     docker exec sv-pg pg_isready -U postgres > /dev/null 2>&1 && break
     sleep 2
@@ -156,6 +157,7 @@ iniciar_backend() {
     -e "JAVA_OPTS=$JAVA_OPTS_LAB" -e RATE_LIMIT_LOGIN_PER_MINUTE=100000 -e RATE_LIMIT_LOGIN_PER_ACCOUNT_PER_15_MINUTES=100000 \
     -e COOKIE_SECURE=false -e COOKIE_SAME_SITE=Lax -e TRUSTED_PROXY_COUNT=1 -e SWAGGER_ENABLED=false -e REMINDERS_CRON="0 0 0 1 1 *" \
     -e IA_RADIOGRAFIA_URL=http://ia-desactivada.local -e IA_LABORATORIO_URL=http://ia-desactivada.local -e IA_DIAGNOSTICO_URL=http://ia-desactivada.local \
+    ${ENV_EXTRA_BACKEND:+-e $ENV_EXTRA_BACKEND} \
     "sv-backend:$v" > /dev/null
 }
 
@@ -329,15 +331,39 @@ reiniciar_base() {
   fi
 }
 
+sonda_panel() {
+  local v="$1" etiqueta="$2" ids="$3" jar base cid n=20 i r codigo segundos ok=0 primera="" tiempos="" resp sql
+  jar="$(mktemp)"; resp="$(mktemp)"
+  base="http://127.0.0.1:$PUERTO/api/v1"
+  cid="$(echo "$ids" | jq -r .companyId)"
+  curl -s -o /dev/null -c "$jar" -H "Content-Type: application/json" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.2" \
+    -d "{\"slug\":\"$SLUG\",\"username\":\"${USUARIO}1\",\"password\":\"$CLAVE\"}" "$base/auth/login"
+  r="$(curl -s -o "$SAL/niveles/panel_respuesta_${etiqueta}.json" -w '%{http_code} %{time_total}' -b "$jar" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.2" "$base/dashboard/overview?companyId=$cid")"
+  primera="$(echo "$r" | awk '{printf "%d", $2 * 1000}')"
+  docker exec sv-pg psql -U postgres -d "$v" -qtAc "SELECT pg_stat_statements_reset()" > /dev/null
+  for i in $(seq 2 $n); do
+    r="$(curl -s -o "$resp" -w '%{http_code} %{time_total}' -b "$jar" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.2" "$base/dashboard/overview?companyId=$cid")"
+    codigo="${r%% *}"; segundos="${r##* }"
+    [ "$codigo" = "200" ] && ok=$((ok + 1))
+    tiempos="$tiempos$(echo "$segundos" | awk '{printf "%d", $1 * 1000}'),"
+  done
+  sql="$(docker exec sv-pg psql -U postgres -d "$v" -tAc "SELECT coalesce(sum(calls), 0) || '|' || coalesce(round(sum(total_exec_time)::numeric, 1), 0) FROM pg_stat_statements WHERE dbid = (SELECT oid FROM pg_database WHERE datname = '$v') AND query NOT ILIKE '%pg_stat_statements%'" 2> /dev/null || echo '0|0')"
+  jq -n --argjson llamadas "$((n - 1))" --argjson ok "$ok" --argjson primera "${primera:-0}" --arg sql "$sql" --arg tiempos "${tiempos%,}" \
+    '{llamadas:$llamadas, http_200:$ok, primera_llamada_ms:$primera, sentencias_sql:(($sql|split("|")[0])|tonumber), tiempo_sql_ms:(($sql|split("|")[1])|tonumber), tiempos_ms:($tiempos|split(",")|map(tonumber))}' \
+    > "$SAL/niveles/sonda_panel_${etiqueta}.json" || log "[$v] no se pudo escribir la sonda del panel de $etiqueta"
+  rm -f "$jar" "$resp"
+}
+
 info_consentimiento() {
   docker exec sv-pg psql -U postgres -d "$1" -tAc "SELECT json_build_object('filas', (SELECT count(*) FROM consentimiento_datos), 'usuarios', (SELECT count(DISTINCT usuario_id) FROM consentimiento_datos), 'tabla_mb', (SELECT round(pg_total_relation_size('consentimiento_datos') / 1048576.0, 1)), 'indices', (SELECT coalesce(json_agg(indexdef), '[]'::json) FROM pg_indexes WHERE tablename = 'consentimiento_datos'))"
 }
 
 correr_nivel_escritura() {
-  local v="$1" nivel="$2" rampa="$3" mantener="$4" base_u="$5" base_cuenta="$6" config="${7:-D}" prefijo="${8:-$1}" prep="${9:-}" inicio_iso
+  local v="$1" nivel="$2" rampa="$3" mantener="$4" base_u="$5" base_cuenta="$6" config="${7:-D}" prefijo="${8:-$1}" prep="${9:-}" envx="${10:-}" inicio_iso
   local etiqueta="${prefijo}_${nivel}" etq_caja="$nivel" t0 salud ids codigo cpu0 cpu1 muestreador muestreador_pg correos0 correos1
   [ "$prefijo" != "$v" ] && etq_caja="${prefijo}-${nivel}"
   opciones_jvm "$config"
+  ENV_EXTRA_BACKEND="$envx"
   if [ "$RESET_BASE" = 1 ]; then reiniciar_base "$v" "$prep" "$etiqueta"; fi
   log "[$v] nivel $nivel (config $config, $etiqueta): arrancando el backend ($CPUS CPU, $MEMORIA)"
   iniciar_backend "$v" none "$CPUS" "$MEMORIA" "$PIN_BACK"
@@ -347,6 +373,7 @@ correr_nivel_escritura() {
   ids="$(armar_ids "$v")"
   echo "$ids" > "$SAL/niveles/ids_${etiqueta}.json"
   instantanea "$v" > "$SAL/niveles/db_antes_${etiqueta}.json"
+  sonda_panel "$v" "$etiqueta" "$ids"
   info_consentimiento "$v" > "$SAL/niveles/consentimiento_antes_${etiqueta}.json" 2> /dev/null || true
   docker exec sv-pg psql -U postgres -d "$v" -qtAc "SELECT pg_stat_statements_reset()" > /dev/null
   cpu0="$(cpu_us "$v")"; cpu0="${cpu0:-0}"
@@ -398,6 +425,7 @@ correr_nivel_escritura() {
   docker exec sv-pg psql -U postgres -d "$v" -tAc "SELECT json_build_object('llamadas', coalesce(sum(calls), 0), 'total_ms', coalesce(round(sum(total_exec_time)::numeric, 0), 0), 'media_ms', coalesce(round((sum(total_exec_time) / nullif(sum(calls), 0))::numeric, 2), 0)) FROM pg_stat_statements WHERE dbid = (SELECT oid FROM pg_database WHERE datname = '$v') AND query ILIKE '%consentimiento_datos%'" > "$SAL/niveles/sql_consentimiento_${etiqueta}.json" 2> /dev/null || true
   docker logs --since "$inicio_iso" sv-pg 2>&1 | head -c 600000 | gzip > "$SAL/niveles/plan_pg_${etiqueta}.log.gz" || true
   detener_backend "$v" "carga_${etiqueta}"
+  ENV_EXTRA_BACKEND=""
   gzip -f "$SAL/niveles/k6_${etiqueta}.csv" 2>/dev/null || true
   log "[$v] nivel $nivel terminado: k6 código $codigo, OOM=$oom, reinicios=$reinicios, salud final=$salud_final"
   sleep 20
@@ -449,8 +477,8 @@ while read -r nivel rampa mantener _ <&3; do
     orden="$VARIANTES"
     if [ $((indice % 2)) -eq 1 ]; then orden="$(echo "$VARIANTES" | awk '{for (i = NF; i > 0; i--) printf "%s%s", $i, (i > 1 ? " " : "")}')"; fi
     for variante in $orden; do
-      IFS=: read -r cfg_variante pref_variante prep_variante <<< "$variante"
-      correr_nivel_escritura despues "$nivel" "$rampa" "$mantener" "$base_u" "$base_cuenta" "$cfg_variante" "$pref_variante" "${prep_variante:-}"
+      IFS=: read -r cfg_variante pref_variante prep_variante env_variante <<< "$variante"
+      correr_nivel_escritura despues "$nivel" "$rampa" "$mantener" "$base_u" "$base_cuenta" "$cfg_variante" "$pref_variante" "${prep_variante:-}" "${env_variante:-}"
       if [ "$RESET_BASE" != 1 ]; then
         base_u=$((base_u + nivel * ITER_POR_VU))
         base_cuenta=$((base_cuenta + nivel))
