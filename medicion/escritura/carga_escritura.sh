@@ -361,6 +361,33 @@ info_consentimiento() {
   docker exec sv-pg psql -U postgres -d "$1" -tAc "SELECT json_build_object('filas', (SELECT count(*) FROM consentimiento_datos), 'usuarios', (SELECT count(DISTINCT usuario_id) FROM consentimiento_datos), 'tabla_mb', (SELECT round(pg_total_relation_size('consentimiento_datos') / 1048576.0, 1)), 'indices', (SELECT coalesce(json_agg(indexdef), '[]'::json) FROM pg_indexes WHERE tablename = 'consentimiento_datos'))"
 }
 
+caos_en_segundo_plano() {
+  local v="$1" etiqueta="$2" evento="$3" espera="$4"
+  local t_inicio t_evento t_bd_listo="" t_backend_ok="" i
+  t_inicio="$(date +%s.%N)"
+  sleep "$espera"
+  t_evento="$(date +%s.%N)"
+  case "$evento" in
+    bd_reinicio) docker restart sv-pg > /dev/null 2>&1 ;;
+    bd_kill) docker kill sv-pg > /dev/null 2>&1; docker start sv-pg > /dev/null 2>&1 ;;
+    backend_kill) docker kill "sv-$v" > /dev/null 2>&1; docker start "sv-$v" > /dev/null 2>&1 ;;
+  esac
+  case "$evento" in
+    bd_*)
+      for i in $(seq 1 300); do
+        docker exec sv-pg pg_isready -U postgres > /dev/null 2>&1 && { t_bd_listo="$(date +%s.%N)"; break; }
+        sleep 0.5
+      done ;;
+  esac
+  for i in $(seq 1 600); do
+    if curl -fsS --max-time 2 "http://127.0.0.1:$PUERTO/api/v1/actuator/health" > /dev/null 2>&1; then t_backend_ok="$(date +%s.%N)"; break; fi
+    sleep 0.5
+  done
+  jq -n --arg evento "$evento" --arg inicio "$t_inicio" --arg evento_t "$t_evento" --arg bd "$t_bd_listo" --arg be "$t_backend_ok" \
+    '{evento:$evento, t_inicio_k6:($inicio|tonumber), t_evento:($evento_t|tonumber), t_bd_listo:(if $bd=="" then null else ($bd|tonumber) end), t_backend_ok:(if $be=="" then null else ($be|tonumber) end)}' \
+    > "$SAL/niveles/caos_${etiqueta}.json"
+}
+
 correr_nivel_escritura() {
   local v="$1" nivel="$2" rampa="$3" mantener="$4" base_u="$5" base_cuenta="$6" config="${7:-D}" prefijo="${8:-$1}" prep="${9:-}" envx="${10:-}" inicio_iso
   local etiqueta="${prefijo}_${nivel}" etq_caja="$nivel" t0 salud ids codigo cpu0 cpu1 muestreador muestreador_pg correos0 correos1
@@ -389,6 +416,13 @@ correr_nivel_escritura() {
   t0="$(date +%s)"
   inicio_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   log "[$v] nivel $nivel: k6 con hasta $nivel usuarios (subida $rampa, sostenido $mantener)"
+  local evento_caos="" pid_caos=""
+  case "$prefijo" in caos_*) evento_caos="${prefijo#caos_}" ;; esac
+  if [ -n "$evento_caos" ]; then
+    log "[$v] evento de caos programado: $evento_caos a los ${ESPERA_CAOS:-150} s del inicio de la carga"
+    caos_en_segundo_plano "$v" "$etiqueta" "$evento_caos" "${ESPERA_CAOS:-150}" &
+    pid_caos=$!
+  fi
   $PIN_K6 env K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_PERIOD=5s K6_WEB_DASHBOARD_EXPORT="$SAL/niveles/panel_k6_${etiqueta}.html" \
     k6 run --quiet --out "csv=$SAL/niveles/k6_${etiqueta}.csv" \
     -e BASE_URL="http://127.0.0.1:$PUERTO" -e SLUG="$SLUG" -e USUARIO="$USUARIO" -e CLAVE="$CLAVE" -e IDS="$ids" \
@@ -396,6 +430,7 @@ correr_nivel_escritura() {
     -e PAUSA_S="$PAUSA_S" -e TIMEOUT="$TIMEOUT_HTTP" -e SALIDA="$SAL/niveles/k6_${etiqueta}.json" \
     "$RAIZ/medicion/escritura/carga_escrituras.js" > "$SAL/logs/k6_${etiqueta}.log" 2>&1
   codigo=$?
+  [ -n "$pid_caos" ] && wait "$pid_caos"
   kill "$muestreador" "$muestreador_pg" 2> /dev/null; wait "$muestreador" "$muestreador_pg" 2> /dev/null
   local duracion=$(( $(date +%s) - t0 ))
   cpu1="$(cpu_us "$v")"; cpu1="${cpu1:-0}"
@@ -441,7 +476,9 @@ CONTROL_USUARIOS=10
 MODO_INFORME=""
 [ "$VERSIONES" = "despues" ] && MODO_INFORME="una"
 [ -n "$VARIANTES" ] && MODO_INFORME="$MODO_VARIANTES"
+[ "$MODO_VARIANTES" = "caos" ] && MODO_INFORME="multi"
 RESUMEN_SCRIPT="resumen_xms.py"
+[ "$MODO_VARIANTES" = "caos" ] && RESUMEN_SCRIPT="resumen_caos.py"
 [ "$MODO_VARIANTES" = "multi" ] && RESUMEN_SCRIPT="resumen_multi.py"
 MULTIPLICADOR=1
 [ -n "$VARIANTES" ] && MULTIPLICADOR=$(echo "$VARIANTES" | wc -w)

@@ -1,0 +1,65 @@
+name: "Fase 3g: caída y recuperación del servicio (laboratorio)"
+
+on:
+  push:
+    branches: [medicion/continuidad]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: medicion-continuidad
+  cancel-in-progress: false
+
+env:
+  COMMIT_DESPUES: fe20b9e871f9a4d14b256d8aa0f7b4aeb543d8f4
+
+jobs:
+  caos:
+    name: Réplica ${{ matrix.replica }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [r1, r2]
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el código final (green-revalidacion-despues)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_DESPUES }}
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Ejecutar los escenarios de caída y recuperación
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: despues
+          VARIANTES: "F:caos_bd_reinicio F:caos_bd_kill F:caos_backend_kill"
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/escritura/PLAN_CAOS
+          RESET_BASE: "1"
+          MODO_VARIANTES: caos
+          FASE_ETIQUETA: 3g
+          ESPERA_CAOS: "150"
+          PG_SHARED_BUFFERS: 1GB
+          ITER_POR_VU: "40"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-continuidad-${{ matrix.replica }}
+          path: resultados/
+          if-no-files-found: warn
