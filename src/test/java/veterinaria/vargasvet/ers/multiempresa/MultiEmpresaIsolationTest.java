@@ -176,7 +176,8 @@ class MultiEmpresaIsolationTest {
                 new veterinaria.vargasvet.service.AdministratorProtection(usuarioPorRolRepository, companyMembershipService, companyRepository),
                 accountClosureGuard,
                 org.mockito.Mockito.mock(veterinaria.vargasvet.service.ConsentimientoDatosService.class),
-                mock(veterinaria.vargasvet.service.SessionActivityService.class));
+                mock(veterinaria.vargasvet.service.SessionActivityService.class),
+                org.springframework.transaction.support.TransactionOperations.withoutTransaction());
 
         veterinaria.vargasvet.service.RoleAssignmentService roleAssignmentService =
                 new veterinaria.vargasvet.service.RoleAssignmentService(

@@ -84,6 +84,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     private final veterinaria.vargasvet.service.AccountClosureGuard accountClosureGuard;
     private final veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
     private final veterinaria.vargasvet.service.SessionActivityService sessionActivityService;
+    private final org.springframework.transaction.support.TransactionOperations transacciones;
 
     private volatile String hashSenuelo;
 
@@ -369,7 +370,6 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     @Override
-    @Transactional
     public AuthResponse login(LoginDTO loginDTO) {
         String username = normalizeSecurityIdentifier(loginDTO.getUsername());
         loginDTO.setUsername(username);
@@ -385,26 +385,17 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             authenticationAuditService.recordInvalidCredentials(null, username, attemptKey);
             throw new BadCredentialsException("Credenciales inválidas");
         }
-        Company company = companyRepository.findBySlug(slug).orElse(null);
+
+        IdentificacionLogin identificacion = transacciones.execute(status -> identificarParaLogin(username, slug));
+        Company company = identificacion.company();
         if (company == null) {
             String attemptKey = AuthenticationAttemptKey.forUnresolvedCompany(slug, username);
             enforceLoginAttempt(attemptKey);
             authenticationAuditService.recordInvalidCredentials(null, username, attemptKey);
             throw new BadCredentialsException("Credenciales inválidas");
         }
-        // Acepta tanto el username como el correo de contacto en el mismo campo (mas
-        // rapido para la persona). Ninguno de los dos es unico en TODA la plataforma
-        // (puede repetirse entre empresas sin relacion), asi que se desambigua
-        // quedandose con el candidato que tenga membresia activa en ESTA empresa - la
-        // misma verificacion que antes, solo que ahora tambien filtra duplicados de
-        // otras empresas en vez de asumir un unico candidato global.
-        Usuario usuario = usuarioRepository.findAllByUsernameIgnoreCase(username).stream()
-                .filter(u -> companyMembershipService.hasActiveMembership(u.getId(), company.getId()))
-                .findFirst()
-                .or(() -> usuarioRepository.findAllByEmailIgnoreCase(username).stream()
-                        .filter(u -> companyMembershipService.hasActiveMembership(u.getId(), company.getId()))
-                        .findFirst())
-                .orElse(null);
+
+        Usuario usuario = identificacion.usuario();
         String attemptKey = usuario == null
                 ? AuthenticationAttemptKey.forCompany(company.getId(), username)
                 : AuthenticationAttemptKey.forCompanyAccount(company.getId(), usuario.getId());
@@ -420,19 +411,70 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
-        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
-                resolveCredencial(usuario.getId(), company.getId()).orElse(null);
-        if (credencial == null || !passwordEncoder.matches(loginDTO.getPassword(), credencial.getPassword())) {
+        String hashAlmacenado = identificacion.hashCredencial();
+        if (hashAlmacenado == null || !passwordEncoder.matches(loginDTO.getPassword(), hashAlmacenado)) {
             authenticationAuditService.recordInvalidCredentials(usuario, username, attemptKey);
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
-        if (passwordEncoder.upgradeEncoding(credencial.getPassword())) {
-            credencial.setPassword(passwordEncoder.encode(loginDTO.getPassword()));
+        String hashActualizado = passwordEncoder.upgradeEncoding(hashAlmacenado)
+                ? passwordEncoder.encode(loginDTO.getPassword())
+                : null;
+        accountLockoutService.registerSuccessfulLogin(attemptKey);
+
+        return transacciones.execute(status ->
+                completarLogin(usuario.getId(), company.getId(), hashAlmacenado, hashActualizado, username));
+    }
+
+    private record IdentificacionLogin(Company company, Usuario usuario, String hashCredencial) {
+    }
+
+    private IdentificacionLogin identificarParaLogin(String username, String slug) {
+        Company company = companyRepository.findBySlug(slug).orElse(null);
+        if (company == null) {
+            return new IdentificacionLogin(null, null, null);
+        }
+        // Acepta tanto el username como el correo de contacto en el mismo campo (mas
+        // rapido para la persona). Ninguno de los dos es unico en TODA la plataforma
+        // (puede repetirse entre empresas sin relacion), asi que se desambigua
+        // quedandose con el candidato que tenga membresia activa en ESTA empresa - la
+        // misma verificacion que antes, solo que ahora tambien filtra duplicados de
+        // otras empresas en vez de asumir un unico candidato global.
+        Usuario usuario = usuarioRepository.findAllByUsernameIgnoreCase(username).stream()
+                .filter(u -> companyMembershipService.hasActiveMembership(u.getId(), company.getId()))
+                .findFirst()
+                .or(() -> usuarioRepository.findAllByEmailIgnoreCase(username).stream()
+                        .filter(u -> companyMembershipService.hasActiveMembership(u.getId(), company.getId()))
+                        .findFirst())
+                .orElse(null);
+        if (usuario == null) {
+            return new IdentificacionLogin(company, null, null);
+        }
+        org.hibernate.Hibernate.initialize(usuario.getCompany());
+        String hash = resolveCredencial(usuario.getId(), company.getId())
+                .map(veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial::getPassword)
+                .orElse(null);
+        return new IdentificacionLogin(company, usuario, hash);
+    }
+
+    private AuthResponse completarLogin(Integer usuarioId, Integer companyId, String hashVerificado,
+            String hashActualizado, String username) {
+        Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow(
+                () -> new BadCredentialsException("Credenciales inválidas"));
+        Company company = companyRepository.findById(companyId).orElseThrow(
+                () -> new BadCredentialsException("Credenciales inválidas"));
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                resolveCredencial(usuarioId, companyId).orElseThrow(
+                        () -> new BadCredentialsException("Credenciales inválidas"));
+        if (!hashVerificado.equals(credencial.getPassword())) {
+            throw new BadCredentialsException("Credenciales inválidas");
+        }
+
+        if (hashActualizado != null) {
+            credencial.setPassword(hashActualizado);
         }
         credencial.setUltimoAcceso(veterinaria.vargasvet.util.AppClock.now());
         credencialRepository.save(credencial);
-        accountLockoutService.registerSuccessfulLogin(attemptKey);
 
         return buildLoginResponse(usuario, company, credencial, username, false);
     }

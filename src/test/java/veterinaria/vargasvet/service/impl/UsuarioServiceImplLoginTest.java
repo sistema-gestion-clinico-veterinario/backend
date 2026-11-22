@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -64,6 +65,9 @@ class UsuarioServiceImplLoginTest {
     @Mock EmpleadoRepository empleadoRepository;
     @Mock ApoderadoRepository apoderadoRepository;
     @Mock veterinaria.vargasvet.repository.UsuarioEmpresaCredencialRepository credencialRepository;
+
+    @Spy org.springframework.transaction.support.TransactionOperations transacciones =
+            org.springframework.transaction.support.TransactionOperations.withoutTransaction();
 
     @InjectMocks UsuarioServiceImpl service;
 
@@ -220,6 +224,8 @@ class UsuarioServiceImplLoginTest {
         when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(true);
         when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencial));
         when(passwordEncoder.matches("Password-123", "hash-almacenado")).thenReturn(true);
+        when(usuarioRepository.findById(10)).thenReturn(Optional.of(elCorrecto));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
         when(tokenProvider.createToken(any(), any(), any(), any(), any(), any(), any(), anyLong(), anyLong(), anyString()))
                 .thenReturn("access-token");
         when(tokenProvider.createRefreshToken(anyString(), any(), any(), anyString(), anyLong()))
@@ -250,6 +256,8 @@ class UsuarioServiceImplLoginTest {
         when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(true);
         when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencialValida()));
         when(passwordEncoder.matches("Password-123", "hash-almacenado")).thenReturn(true);
+        when(usuarioRepository.findById(10)).thenReturn(Optional.of(usuario));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
         org.mockito.ArgumentCaptor<String> sessionOfAccessToken = org.mockito.ArgumentCaptor.forClass(String.class);
         org.mockito.ArgumentCaptor<String> sessionOfRefreshToken = org.mockito.ArgumentCaptor.forClass(String.class);
         when(tokenProvider.createToken(any(), any(), any(), any(), any(), any(), any(), anyLong(), anyLong(),
@@ -273,6 +281,8 @@ class UsuarioServiceImplLoginTest {
         when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(true);
         when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencialValida()));
         when(passwordEncoder.matches("Password-123", "hash-almacenado")).thenReturn(true);
+        when(usuarioRepository.findById(10)).thenReturn(Optional.of(sinRol));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
 
         assertThatThrownBy(() -> service.login(loginConSlug("vargas-vet")))
                 .isInstanceOf(org.springframework.security.authentication.DisabledException.class)
@@ -293,6 +303,8 @@ class UsuarioServiceImplLoginTest {
         when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(true);
         when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencialValida()));
         when(passwordEncoder.matches("Password-123", "hash-almacenado")).thenReturn(true);
+        when(usuarioRepository.findById(10)).thenReturn(Optional.of(soloEnOtra));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
 
         assertThatThrownBy(() -> service.login(loginConSlug("vargas-vet")))
                 .isInstanceOf(org.springframework.security.authentication.DisabledException.class);
@@ -385,6 +397,8 @@ class UsuarioServiceImplLoginTest {
         when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(true);
         when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencialValida()));
         when(passwordEncoder.matches("Password-123", "hash-almacenado")).thenReturn(true);
+        when(usuarioRepository.findById(10)).thenReturn(Optional.of(usuario));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
         tokensDeSesion();
 
         service.login(loginConSlug("vargas-vet"));
