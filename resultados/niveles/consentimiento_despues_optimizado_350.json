@@ -1,0 +1,1 @@
+{"filas" : 2644, "usuarios" : 1322, "tabla_mb" : 0.7, "indices" : ["CREATE UNIQUE INDEX consentimiento_datos_pkey ON public.consentimiento_datos USING btree (id)"]}
