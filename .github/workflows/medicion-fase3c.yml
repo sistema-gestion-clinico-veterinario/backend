@@ -1,0 +1,82 @@
+name: "Fase 3c: índice de consentimientos desde una base limpia (laboratorio)"
+
+on:
+  push:
+    branches: [medicion/fase3c]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: medicion-fase3c
+  cancel-in-progress: false
+
+jobs:
+  xms:
+    name: Réplica ${{ matrix.replica }}, 1 CPU, 2 GB, con y sin índice
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [r1, r2]
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el DESPUÉS (medicion/despues)
+        uses: actions/checkout@v4
+        with:
+          ref: medicion/despues
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Ejecutar la comparación con y sin índice
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: despues
+          VARIANTES: "F:despues F:indice:indice_consentimiento.sql"
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/escritura/PLAN_3C
+          RESET_BASE: "1"
+          MODO_VARIANTES: indice
+          ITER_POR_VU: "14"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-fase3c-${{ matrix.replica }}
+          path: resultados/
+          if-no-files-found: warn
+
+      - name: Publicar los resultados en la rama medicion/resultados-fase3c-${{ matrix.replica }}
+        if: always()
+        env:
+          TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EJECUCION: ${{ github.run_id }}
+          RAMA: medicion/resultados-fase3c-${{ matrix.replica }}
+        run: |
+          set -e
+          if [ ! -d resultados ]; then echo "no hay resultados que publicar"; exit 0; fi
+          rm -rf /tmp/publicar && mkdir -p /tmp/publicar
+          cp -r resultados /tmp/publicar/resultados
+          find /tmp/publicar/resultados -name '*.log' -size +400k -exec sh -c 'tail -c 300000 "$1" > "$1.tmp" && mv "$1.tmp" "$1"' _ {} \;
+          find /tmp/publicar/resultados -name '*.csv.gz' -size +20M -delete
+          cd /tmp/publicar
+          git init -q
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git checkout -q -b "$RAMA"
+          git add -A
+          git commit -q -m "Resultados de la fase 3c (ejecución $EJECUCION)"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${REPO}.git" "$RAMA"

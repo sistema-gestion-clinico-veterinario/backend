@@ -227,6 +227,10 @@ def analizar(version, config=None):
         'integridad': n.leer_json(NIV / f'integridad_{et}.json'),
         'jvm': analizar_jvm(et, config),
         'sql_top': n.leer_json(NIV / f'sql_top_{et}.json'),
+        'sql_consent': n.leer_json(NIV / f'sql_consentimiento_{et}.json'),
+        'consent_antes': n.leer_json(NIV / f'consentimiento_antes_{et}.json'),
+        'consent_despues': n.leer_json(NIV / f'consentimiento_despues_{et}.json'),
+        'et': et,
     }
 
 
@@ -441,7 +445,66 @@ def generar_una():
     print('\n'.join(lineas))
 
 
-def tabla_xms(a, b, ma, mb):
+def plan_consentimiento(d):
+    ruta = NIV / f"plan_pg_{d['et']}.log.gz"
+    lineas = leer_lineas_gz(ruta)
+    if not lineas:
+        return []
+    bloques, actual = [], None
+    for linea in lineas:
+        if 'duration:' in linea and 'plan:' in linea:
+            if actual:
+                bloques.append(actual)
+            actual = [linea]
+        elif actual is not None:
+            if linea.startswith(('LOG:', '2026-', '20')) and 'duration:' not in linea and 'LOG:' in linea:
+                bloques.append(actual)
+                actual = None
+            else:
+                actual.append(linea)
+    if actual:
+        bloques.append(actual)
+    candidatos = []
+    for b in bloques:
+        texto = '\n'.join(b)
+        if 'consentimiento_datos' not in texto:
+            continue
+        m = re.search(r'duration: ([\d.]+) ms', b[0])
+        candidatos.append((float(m.group(1)) if m else 0.0, b))
+    if not candidatos:
+        return ['_Sin planes lentos de consentimiento_datos en el registro de PostgreSQL (auto_explain, muestreo del 10 %, umbral 300 ms)._']
+    candidatos.sort(key=lambda x: x[0], reverse=True)
+    duracion, bloque = candidatos[0]
+    salida = [f'**Plan más lento observado de la consulta sobre consentimiento_datos ({duracion:.0f} ms; {len(candidatos)} planes lentos muestreados):**', '', '```']
+    salida += [x.rstrip() for x in bloque[:70]]
+    salida += ['```']
+    return salida
+
+
+def filas_consentimiento(a, b):
+    def val(d, clave):
+        x = d.get('sql_consent') or {}
+        return x.get(clave)
+
+    def tab(d, clave):
+        x = d.get('consent_despues') or {}
+        return x.get(clave)
+
+    def indices(d):
+        x = (d.get('consent_despues') or {}).get('indices') or []
+        return str(len(x))
+
+    return [
+        ('Consultas sobre consentimiento_datos (llamadas)', n.fmt(val(a, 'llamadas')), n.fmt(val(b, 'llamadas'))),
+        ('Tiempo total en PostgreSQL (s)', n.fmt((val(a, 'total_ms') or 0) / 1000, 1) if val(a, 'total_ms') is not None else 'sin datos', n.fmt((val(b, 'total_ms') or 0) / 1000, 1) if val(b, 'total_ms') is not None else 'sin datos'),
+        ('Tiempo medio por llamada (ms)', n.fmt(val(a, 'media_ms'), 1), n.fmt(val(b, 'media_ms'), 1)),
+        ('Filas de consentimiento_datos al terminar', n.fmt(tab(a, 'filas')), n.fmt(tab(b, 'filas'))),
+        ('Tamaño de la tabla con índices (MB)', n.fmt(tab(a, 'tabla_mb'), 1), n.fmt(tab(b, 'tabla_mb'), 1)),
+        ('Índices de la tabla', indices(a), indices(b)),
+    ]
+
+
+def tabla_xms(a, b, ma, mb, nombre_a='SIN -Xms', nombre_b='CON -Xms = -Xmx', con_consent=False):
     ja, jb = a['jvm'], b['jvm']
     dur_a, dur_b = ja['duracion_jvm_s'] or 1, jb['duracion_jvm_s'] or 1
 
@@ -467,7 +530,35 @@ def tabla_xms(a, b, ma, mb):
         ('Heap tras GC, máximo (MB)', n.fmt(ja['heap_tras_gc_max_mb']), n.fmt(jb['heap_tras_gc_max_mb'])),
         ('Avisos de pool agotado', n.fmt(a['log']['pool_conexiones']), n.fmt(b['log']['pool_conexiones'])),
     ]
-    return ['| | SIN -Xms | CON -Xms = -Xmx |', '|---|---|---|'] + [f'| {x} | {y} | {z} |' for x, y, z in filas]
+    if con_consent:
+        filas = filas[:9] + filas_consentimiento(a, b) + filas[9:]
+    return [f'| | {nombre_a} | {nombre_b} |', '|---|---|---|'] + [f'| {x} | {y} | {z} |' for x, y, z in filas]
+
+
+def generar_variantes(pref_a, nombre_a, pref_b, nombre_b, titulo, con_consent=False, nota=''):
+    a, b = analizar(pref_a), analizar(pref_b)
+    ma, mb = n.metricas(a), n.metricas(b)
+    lineas = [f'# {titulo}: {NIVEL} usuarios (1 CPU, 2 GB)', '']
+    lineas += lineas_entorno() + ['']
+    lineas += tabla_xms(a, b, ma, mb, nombre_a, nombre_b, con_consent) + ['']
+    if con_consent:
+        for nombre, d in ((nombre_a, a), (nombre_b, b)):
+            plan = plan_consentimiento(d)
+            if plan:
+                lineas += [f'### {nombre}', ''] + plan + ['']
+    lineas += bloque_version(nombre_a, a, ma, con_sql=True)
+    lineas += bloque_version(nombre_b, b, mb, con_sql=True)
+    if nota:
+        lineas.append(nota)
+    (NIV / f'INFORME_CARGA_{NIVEL}.md').write_text('\n'.join(lineas) + '\n', encoding='utf-8')
+    print('\n'.join(lineas))
+
+
+def generar_indice():
+    generar_variantes(
+        'despues', 'SIN índice', 'indice', 'CON índice', 'Fase 3c: índice en consentimiento_datos', con_consent=True,
+        nota='> Cada corrida parte de la misma base (copiada de una plantilla), así que el orden y los datos acumulados no influyen. Las dos variantes usan -Xms = -Xmx. Una corrida por variante y nivel.',
+    )
 
 
 def generar_xms():
@@ -502,5 +593,7 @@ if __name__ == '__main__':
         generar_una()
     elif len(sys.argv) > 3 and sys.argv[3] == 'xms':
         generar_xms()
+    elif len(sys.argv) > 3 and sys.argv[3] == 'indice':
+        generar_indice()
     else:
         generar()

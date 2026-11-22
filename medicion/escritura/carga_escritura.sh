@@ -16,6 +16,8 @@ PLAN_CARGA="${PLAN_CARGA:-$RAIZ/medicion/escritura/PLAN_CARGA}"
 VERSIONES="${VERSIONES:-antes despues}"
 SIN_CONTROL="${SIN_CONTROL:-0}"
 VARIANTES="${VARIANTES:-}"
+RESET_BASE="${RESET_BASE:-0}"
+MODO_VARIANTES="${MODO_VARIANTES:-xms}"
 XMX="${XMX:-1g}"
 K6_NUCLEOS="${K6_NUCLEOS:-0,3}"
 ITER_POR_VU="${ITER_POR_VU:-19}"
@@ -109,7 +111,8 @@ levantar_postgres() {
   log "levantando PostgreSQL"
   docker network create sv-net > /dev/null
   docker run -d --name sv-pg --network sv-net $PIN_PG --memory 2g -e POSTGRES_PASSWORD="$PGPASS" postgres:16 \
-    -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all -c max_connections=100 > /dev/null
+    -c shared_preload_libraries=pg_stat_statements,auto_explain -c pg_stat_statements.track=all -c max_connections=100 \
+    -c auto_explain.log_min_duration=300 -c auto_explain.log_analyze=on -c auto_explain.log_buffers=on -c auto_explain.sample_rate=0.1 > /dev/null
   for i in $(seq 1 60); do
     docker exec sv-pg pg_isready -U postgres > /dev/null 2>&1 && break
     sleep 2
@@ -309,11 +312,33 @@ preparar_clinica() {
   detener_backend "$v" "preparacion_$v"
 }
 
+crear_plantilla() {
+  local v="$1"
+  log "[$v] guardando la base preparada como plantilla"
+  docker exec sv-pg psql -U postgres -qc "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$v' AND pid <> pg_backend_pid()" > /dev/null 2>&1 || true
+  docker exec sv-pg psql -U postgres -qc "CREATE DATABASE plantilla TEMPLATE $v" || fallo "no se pudo crear la plantilla de la base"
+}
+
+reiniciar_base() {
+  local v="$1" prep="$2" etiqueta="$3"
+  docker exec sv-pg psql -U postgres -qc "DROP DATABASE IF EXISTS $v WITH (FORCE)" || fallo "no se pudo borrar la base $v"
+  docker exec sv-pg psql -U postgres -qc "CREATE DATABASE $v TEMPLATE plantilla" || fallo "no se pudo recrear la base $v desde la plantilla"
+  if [ -n "$prep" ]; then
+    psql_db "$v" < "$RAIZ/medicion/escritura/$prep" > "$SAL/logs/preparacion_${etiqueta}.log" 2>&1 || fallo "la preparación $prep de $etiqueta falló"
+    log "[$v] preparación aplicada a $etiqueta: $prep"
+  fi
+}
+
+info_consentimiento() {
+  docker exec sv-pg psql -U postgres -d "$1" -tAc "SELECT json_build_object('filas', (SELECT count(*) FROM consentimiento_datos), 'usuarios', (SELECT count(DISTINCT usuario_id) FROM consentimiento_datos), 'tabla_mb', (SELECT round(pg_total_relation_size('consentimiento_datos') / 1048576.0, 1)), 'indices', (SELECT coalesce(json_agg(indexdef), '[]'::json) FROM pg_indexes WHERE tablename = 'consentimiento_datos'))"
+}
+
 correr_nivel_escritura() {
-  local v="$1" nivel="$2" rampa="$3" mantener="$4" base_u="$5" base_cuenta="$6" config="${7:-D}" prefijo="${8:-$1}"
+  local v="$1" nivel="$2" rampa="$3" mantener="$4" base_u="$5" base_cuenta="$6" config="${7:-D}" prefijo="${8:-$1}" prep="${9:-}" inicio_iso
   local etiqueta="${prefijo}_${nivel}" etq_caja="$nivel" t0 salud ids codigo cpu0 cpu1 muestreador muestreador_pg correos0 correos1
   [ "$prefijo" != "$v" ] && etq_caja="${prefijo}-${nivel}"
   opciones_jvm "$config"
+  if [ "$RESET_BASE" = 1 ]; then reiniciar_base "$v" "$prep" "$etiqueta"; fi
   log "[$v] nivel $nivel (config $config, $etiqueta): arrancando el backend ($CPUS CPU, $MEMORIA)"
   iniciar_backend "$v" none "$CPUS" "$MEMORIA" "$PIN_BACK"
   esperar_inicializacion "$v"
@@ -322,6 +347,7 @@ correr_nivel_escritura() {
   ids="$(armar_ids "$v")"
   echo "$ids" > "$SAL/niveles/ids_${etiqueta}.json"
   instantanea "$v" > "$SAL/niveles/db_antes_${etiqueta}.json"
+  info_consentimiento "$v" > "$SAL/niveles/consentimiento_antes_${etiqueta}.json" 2> /dev/null || true
   docker exec sv-pg psql -U postgres -d "$v" -qtAc "SELECT pg_stat_statements_reset()" > /dev/null
   cpu0="$(cpu_us "$v")"; cpu0="${cpu0:-0}"
   correos0="$(correos_recibidos)"
@@ -330,6 +356,7 @@ correr_nivel_escritura() {
   muestrear "sv-pg" "$SAL/niveles/stats_pg_${etiqueta}.csv" &
   muestreador_pg=$!
   t0="$(date +%s)"
+  inicio_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   log "[$v] nivel $nivel: k6 con hasta $nivel usuarios (subida $rampa, sostenido $mantener)"
   $PIN_K6 env K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_PERIOD=5s K6_WEB_DASHBOARD_EXPORT="$SAL/niveles/panel_k6_${etiqueta}.html" \
     k6 run --quiet --out "csv=$SAL/niveles/k6_${etiqueta}.csv" \
@@ -367,6 +394,9 @@ correr_nivel_escritura() {
   done
   docker exec sv-pg psql -U postgres -d "$v" -tAc "SELECT coalesce(json_agg(t), '[]'::json) FROM (SELECT left(regexp_replace(query, '[[:space:]]+', ' ', 'g'), 220) AS consulta, calls, round(total_exec_time::numeric, 0) AS total_ms, round(mean_exec_time::numeric, 2) AS media_ms, rows FROM pg_stat_statements WHERE dbid = (SELECT oid FROM pg_database WHERE datname = '$v') ORDER BY total_exec_time DESC LIMIT 10) t" > "$SAL/niveles/sql_top_${etiqueta}.json" 2> /dev/null \
     || log "[$v] no se pudo volcar las consultas más costosas de $etiqueta"
+  info_consentimiento "$v" > "$SAL/niveles/consentimiento_despues_${etiqueta}.json" 2> /dev/null || true
+  docker exec sv-pg psql -U postgres -d "$v" -tAc "SELECT json_build_object('llamadas', coalesce(sum(calls), 0), 'total_ms', coalesce(round(sum(total_exec_time)::numeric, 0), 0), 'media_ms', coalesce(round((sum(total_exec_time) / nullif(sum(calls), 0))::numeric, 2), 0)) FROM pg_stat_statements WHERE dbid = (SELECT oid FROM pg_database WHERE datname = '$v') AND query ILIKE '%consentimiento_datos%'" > "$SAL/niveles/sql_consentimiento_${etiqueta}.json" 2> /dev/null || true
+  docker logs --since "$inicio_iso" sv-pg 2>&1 | head -c 600000 | gzip > "$SAL/niveles/plan_pg_${etiqueta}.log.gz" || true
   detener_backend "$v" "carga_${etiqueta}"
   gzip -f "$SAL/niveles/k6_${etiqueta}.csv" 2>/dev/null || true
   log "[$v] nivel $nivel terminado: k6 código $codigo, OOM=$oom, reinicios=$reinicios, salud final=$salud_final"
@@ -378,14 +408,20 @@ CONTROL_USUARIOS=10
 [ "$SIN_CONTROL" = 1 ] && CONTROL_USUARIOS=0
 MODO_INFORME=""
 [ "$VERSIONES" = "despues" ] && MODO_INFORME="una"
-[ -n "$VARIANTES" ] && MODO_INFORME="xms"
+[ -n "$VARIANTES" ] && MODO_INFORME="$MODO_VARIANTES"
 MULTIPLICADOR=1
 [ -n "$VARIANTES" ] && MULTIPLICADOR=$(echo "$VARIANTES" | wc -w)
 TOTAL_CUENTAS=$((1 + CONTROL_USUARIOS))
+maximo_nivel=0
 while read -r campo1 campo2 campo3 _; do
   case "$campo1" in ''|\#*) continue ;; esac
-  TOTAL_CUENTAS=$((TOTAL_CUENTAS + campo1 * MULTIPLICADOR))
+  if [ "$RESET_BASE" = 1 ]; then
+    [ "$campo1" -gt "$maximo_nivel" ] && maximo_nivel=$campo1
+  else
+    TOTAL_CUENTAS=$((TOTAL_CUENTAS + campo1 * MULTIPLICADOR))
+  fi
 done < "$PLAN_CARGA"
+[ "$RESET_BASE" = 1 ] && TOTAL_CUENTAS=$((1 + CONTROL_USUARIOS + maximo_nivel))
 
 registrar_entorno
 construir_imagenes
@@ -394,6 +430,7 @@ levantar_correo
 opciones_jvm D
 for v in $VERSIONES; do preparar_base "$v"; done
 for v in $VERSIONES; do preparar_clinica "$v"; done
+[ "$RESET_BASE" = 1 ] && crear_plantilla despues
 
 if [ "$SIN_CONTROL" != 1 ]; then
   log "control: $CONTROL_USUARIOS usuarios con Metaspace de 128 MB (igual que el Dockerfile) y el servidor de correo de pruebas"
@@ -412,9 +449,12 @@ while read -r nivel rampa mantener _ <&3; do
     orden="$VARIANTES"
     if [ $((indice % 2)) -eq 1 ]; then orden="$(echo "$VARIANTES" | awk '{for (i = NF; i > 0; i--) printf "%s%s", $i, (i > 1 ? " " : "")}')"; fi
     for variante in $orden; do
-      correr_nivel_escritura despues "$nivel" "$rampa" "$mantener" "$base_u" "$base_cuenta" "${variante%%:*}" "${variante##*:}"
-      base_u=$((base_u + nivel * ITER_POR_VU))
-      base_cuenta=$((base_cuenta + nivel))
+      IFS=: read -r cfg_variante pref_variante prep_variante <<< "$variante"
+      correr_nivel_escritura despues "$nivel" "$rampa" "$mantener" "$base_u" "$base_cuenta" "$cfg_variante" "$pref_variante" "${prep_variante:-}"
+      if [ "$RESET_BASE" != 1 ]; then
+        base_u=$((base_u + nivel * ITER_POR_VU))
+        base_cuenta=$((base_cuenta + nivel))
+      fi
     done
     indice=$((indice + 1))
   else
@@ -429,8 +469,8 @@ while read -r nivel rampa mantener _ <&3; do
   fi
 done 3< "$PLAN_CARGA"
 if [ -n "$VARIANTES" ]; then
-  python3 "$RAIZ/medicion/escritura/resumen_xms.py" "$SAL" > "$SAL/logs/resumen_xms.log" 2>&1 \
-    && cat "$SAL/RESUMEN_FASE3B.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
+  python3 "$RAIZ/medicion/escritura/resumen_xms.py" "$SAL" "$MODO_VARIANTES" > "$SAL/logs/resumen_xms.log" 2>&1 \
+    && cat "$SAL"/RESUMEN_FASE3*.md >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
     || log "no se pudo generar el resumen de la fase 3b (ver logs/resumen_xms.log)"
 elif [ "$VERSIONES" = "despues" ]; then
   python3 "$RAIZ/medicion/escritura/resumen_escalado.py" "$SAL" > "$SAL/logs/resumen_escalado.log" 2>&1 \
