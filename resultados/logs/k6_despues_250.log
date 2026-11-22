@@ -1,0 +1,251 @@
+time="2026-11-22T00:26:00Z" level=info msg="PASO|85|cita|POST|400|27|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:26:24Z" level=info msg="PASO|82|cita|POST|400|19|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:27:19Z" level=info msg="PASO|24|iniciar|PATCH|400|300|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:27:21Z" level=info msg="PASO|65|iniciar|PATCH|400|301|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:27:21Z" level=info msg="PASO|124|iniciar|PATCH|400|92|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:27:24Z" level=info msg="PASO|74|cita|POST|400|103|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:27:29Z" level=info msg="PASO|77|cita|POST|400|25|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:27:35Z" level=info msg="PASO|22|iniciar|PATCH|400|799|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:27:41Z" level=info msg="PASO|123|iniciar|PATCH|400|744|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:27:42Z" level=info msg="PASO|1|iniciar|PATCH|400|98|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:27:48Z" level=info msg="PASO|63|iniciar|PATCH|400|1224|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:27:52Z" level=info msg="PASO|132|iniciar|PATCH|400|3307|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:27:54Z" level=info msg="PASO|55|iniciar|PATCH|400|388|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:27:55Z" level=info msg="PASO|131|iniciar|PATCH|400|53|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:27:56Z" level=info msg="PASO|116|iniciar|PATCH|400|2759|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:27:59Z" level=info msg="PASO|67|iniciar|PATCH|400|2110|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:02Z" level=info msg="PASO|139|iniciar|PATCH|400|1631|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:03Z" level=info msg="PASO|159|iniciar|PATCH|400|1302|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:04Z" level=info msg="PASO|72|iniciar|PATCH|400|2799|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:07Z" level=info msg="PASO|170|iniciar|PATCH|400|2699|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:11Z" level=info msg="PASO|180|iniciar|PATCH|400|3469|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:11Z" level=info msg="PASO|7|iniciar|PATCH|400|242|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:11Z" level=info msg="PASO|85|iniciar|PATCH|400|1062|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:12Z" level=info msg="PASO|100|iniciar|PATCH|400|2013|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:13Z" level=info msg="PASO|102|iniciar|PATCH|400|1238|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:15Z" level=info msg="PASO|166|iniciar|PATCH|400|1994|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:20Z" level=info msg="PASO|74|cita|POST|400|1527|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:28:23Z" level=info msg="PASO|141|iniciar|PATCH|400|2665|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:25Z" level=info msg="PASO|80|iniciar|PATCH|400|3259|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:27Z" level=info msg="PASO|100|iniciar|PATCH|400|1657|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:28Z" level=info msg="PASO|174|iniciar|PATCH|400|2790|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:29Z" level=info msg="PASO|110|iniciar|PATCH|400|5649|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:33Z" level=info msg="PASO|117|iniciar|PATCH|400|6030|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:37Z" level=info msg="PASO|45|iniciar|PATCH|400|5290|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:38Z" level=info msg="PASO|79|iniciar|PATCH|400|5422|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:39Z" level=info msg="PASO|13|iniciar|PATCH|400|3748|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:41Z" level=info msg="PASO|155|iniciar|PATCH|400|1949|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:42Z" level=info msg="PASO|58|iniciar|PATCH|400|3922|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:42Z" level=info msg="PASO|48|iniciar|PATCH|400|5116|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:42Z" level=info msg="PASO|183|iniciar|PATCH|400|4308|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:43Z" level=info msg="PASO|72|iniciar|PATCH|400|3847|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:44Z" level=info msg="PASO|16|iniciar|PATCH|400|3071|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:45Z" level=info msg="PASO|42|iniciar|PATCH|400|3365|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:46Z" level=info msg="PASO|32|iniciar|PATCH|400|2489|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:46Z" level=info msg="PASO|136|iniciar|PATCH|400|2494|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:46Z" level=info msg="PASO|145|iniciar|PATCH|400|2483|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:47Z" level=info msg="PASO|168|iniciar|PATCH|400|3800|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:47Z" level=info msg="PASO|56|iniciar|PATCH|400|3797|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:47Z" level=info msg="PASO|40|iniciar|PATCH|400|3522|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:48Z" level=info msg="PASO|167|iniciar|PATCH|400|2260|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:50Z" level=info msg="PASO|41|iniciar|PATCH|400|3979|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:50Z" level=info msg="PASO|171|iniciar|PATCH|400|3531|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:52Z" level=info msg="PASO|218|iniciar|PATCH|400|2860|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:53Z" level=info msg="PASO|96|iniciar|PATCH|400|2754|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:54Z" level=info msg="PASO|101|iniciar|PATCH|400|2784|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:28:54Z" level=info msg="PASO|156|iniciar|PATCH|400|4579|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:00Z" level=info msg="PASO|217|iniciar|PATCH|400|1299|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:00Z" level=info msg="PASO|79|cita|POST|400|1379|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:29:06Z" level=info msg="PASO|223|iniciar|PATCH|400|569|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:06Z" level=info msg="PASO|228|iniciar|PATCH|400|1822|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:07Z" level=info msg="PASO|219|iniciar|PATCH|400|512|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:08Z" level=info msg="PASO|236|iniciar|PATCH|400|1353|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:08Z" level=info msg="PASO|72|cita|POST|400|597|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:29:08Z" level=info msg="PASO|117|iniciar|PATCH|400|551|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:12Z" level=info msg="PASO|172|iniciar|PATCH|400|1177|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:19Z" level=info msg="PASO|222|iniciar|PATCH|400|767|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:19Z" level=info msg="PASO|247|iniciar|PATCH|400|1710|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:22Z" level=info msg="PASO|49|iniciar|PATCH|400|4045|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:24Z" level=info msg="PASO|84|iniciar|PATCH|400|3896|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:25Z" level=info msg="PASO|126|iniciar|PATCH|400|1407|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:26Z" level=info msg="PASO|231|iniciar|PATCH|400|728|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:27Z" level=info msg="PASO|65|iniciar|PATCH|400|2110|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:30Z" level=info msg="PASO|199|iniciar|PATCH|400|2637|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:31Z" level=info msg="PASO|207|iniciar|PATCH|400|2536|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:31Z" level=info msg="PASO|147|iniciar|PATCH|400|2547|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:31Z" level=info msg="PASO|122|iniciar|PATCH|400|1219|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:31Z" level=info msg="PASO|134|iniciar|PATCH|400|4747|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:33Z" level=info msg="PASO|93|iniciar|PATCH|400|2807|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:33Z" level=info msg="PASO|242|iniciar|PATCH|400|1662|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:33Z" level=info msg="PASO|205|cita|POST|400|2790|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:29:35Z" level=info msg="PASO|63|iniciar|PATCH|400|2106|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:36Z" level=info msg="PASO|77|iniciar|PATCH|400|2360|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:36Z" level=info msg="PASO|24|iniciar|PATCH|400|2893|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:39Z" level=info msg="PASO|170|iniciar|PATCH|400|949|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:41Z" level=info msg="PASO|197|cita|POST|400|588|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:29:43Z" level=info msg="PASO|142|iniciar|PATCH|400|876|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:51Z" level=info msg="PASO|228|iniciar|PATCH|400|2457|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:53Z" level=info msg="PASO|90|iniciar|PATCH|400|1773|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:53Z" level=info msg="PASO|46|iniciar|PATCH|400|1690|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:54Z" level=info msg="PASO|232|iniciar|PATCH|400|1753|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:56Z" level=info msg="PASO|122|iniciar|PATCH|400|2027|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:56Z" level=info msg="PASO|225|iniciar|PATCH|400|2426|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:56Z" level=info msg="PASO|161|iniciar|PATCH|400|2309|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:57Z" level=info msg="PASO|183|iniciar|PATCH|400|1531|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:58Z" level=info msg="PASO|151|iniciar|PATCH|400|2233|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:29:58Z" level=info msg="PASO|18|iniciar|PATCH|400|960|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:03Z" level=info msg="PASO|11|iniciar|PATCH|400|2887|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:06Z" level=info msg="PASO|154|iniciar|PATCH|400|2253|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:06Z" level=info msg="PASO|194|iniciar|PATCH|400|2570|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:07Z" level=info msg="PASO|3|iniciar|PATCH|400|2828|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:07Z" level=info msg="PASO|99|iniciar|PATCH|400|1658|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:08Z" level=info msg="PASO|102|iniciar|PATCH|400|501|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:08Z" level=info msg="PASO|210|iniciar|PATCH|400|2538|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:10Z" level=info msg="PASO|109|iniciar|PATCH|400|2572|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:10Z" level=info msg="PASO|143|iniciar|PATCH|400|2917|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:12Z" level=info msg="PASO|135|iniciar|PATCH|400|2776|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:12Z" level=info msg="PASO|159|iniciar|PATCH|400|1598|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:12Z" level=info msg="PASO|56|iniciar|PATCH|400|1059|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:14Z" level=info msg="PASO|195|cita|POST|400|1491|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:30:16Z" level=info msg="PASO|150|iniciar|PATCH|400|1921|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:20Z" level=info msg="PASO|106|iniciar|PATCH|400|2146|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:20Z" level=info msg="PASO|199|iniciar|PATCH|400|324|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:21Z" level=info msg="PASO|243|iniciar|PATCH|400|1030|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:24Z" level=info msg="PASO|8|iniciar|PATCH|400|1257|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:25Z" level=info msg="PASO|73|iniciar|PATCH|400|1586|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:25Z" level=info msg="PASO|190|iniciar|PATCH|400|1393|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:28Z" level=info msg="PASO|181|iniciar|PATCH|400|1206|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:32Z" level=info msg="PASO|38|iniciar|PATCH|400|1731|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:33Z" level=info msg="PASO|112|iniciar|PATCH|400|1330|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:34Z" level=info msg="PASO|180|iniciar|PATCH|400|1297|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:35Z" level=info msg="PASO|167|iniciar|PATCH|400|1340|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:37Z" level=info msg="PASO|239|iniciar|PATCH|400|2160|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:38Z" level=info msg="PASO|23|iniciar|PATCH|400|852|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:38Z" level=info msg="PASO|191|iniciar|PATCH|400|940|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:38Z" level=info msg="PASO|62|iniciar|PATCH|400|1467|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:39Z" level=info msg="PASO|183|iniciar|PATCH|400|1387|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:39Z" level=info msg="PASO|132|iniciar|PATCH|400|694|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:40Z" level=info msg="PASO|55|iniciar|PATCH|400|1502|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:42Z" level=info msg="PASO|226|iniciar|PATCH|400|1162|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:43Z" level=info msg="PASO|236|iniciar|PATCH|400|479|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:45Z" level=info msg="PASO|205|iniciar|PATCH|400|1159|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:45Z" level=info msg="PASO|147|iniciar|PATCH|400|999|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:49Z" level=info msg="PASO|128|iniciar|PATCH|400|1134|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:50Z" level=info msg="PASO|5|iniciar|PATCH|400|557|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:53Z" level=info msg="PASO|131|iniciar|PATCH|400|1997|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:53Z" level=info msg="PASO|246|iniciar|PATCH|400|2710|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:54Z" level=info msg="PASO|166|iniciar|PATCH|400|2220|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:54Z" level=info msg="PASO|79|cita|POST|400|2383|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:30:54Z" level=info msg="PASO|193|iniciar|PATCH|400|1905|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:57Z" level=info msg="PASO|192|iniciar|PATCH|400|1652|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:58Z" level=info msg="PASO|173|iniciar|PATCH|400|1504|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:59Z" level=info msg="PASO|11|iniciar|PATCH|400|1092|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:30:59Z" level=info msg="PASO|171|iniciar|PATCH|400|256|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:31:02Z" level=info msg="PASO|248|iniciar|PATCH|400|713|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:31:02Z" level=info msg="PASO|80|iniciar|PATCH|400|589|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:31:05Z" level=info msg="PASO|4|iniciar|PATCH|400|1399|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:31:07Z" level=info msg="PASO|164|iniciar|PATCH|400|1089|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:31:08Z" level=info msg="PASO|45|iniciar|PATCH|400|1318|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:31:09Z" level=info msg="PASO|21|iniciar|PATCH|400|2833|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:31:10Z" level=info msg="PASO|166|iniciar|PATCH|400|1512|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:31:11Z" level=info msg="PASO|93|iniciar|PATCH|400|1126|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:31:13Z" level=info msg="PASO|140|iniciar|PATCH|400|1418|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T00:31:13Z" level=info msg="PASO|109|iniciar|PATCH|400|835|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+{
+ "perfil": "carga_escritura",
+ "nivel": 250,
+ "iteraciones_completas": 3826,
+ "peticiones": 15399,
+ "duracion_total_s": 447.413462779,
+ "latencia_ms": {
+  "mediana": 790.759379,
+  "p95": 3540.7704759999983,
+  "max": 10176.30667
+ },
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 15246,
+  "otro_4xx": 153,
+  "5xx": 0,
+  "sin_respuesta": 0
+ },
+ "pasos": {
+  "apoderado": {
+   "correctos": 834,
+   "fallidos": 0
+  },
+  "mascota": {
+   "correctos": 834,
+   "fallidos": 0
+  },
+  "cita": {
+   "correctos": 823,
+   "fallidos": 11
+  },
+  "checkin": {
+   "correctos": 390,
+   "fallidos": 0
+  },
+  "iniciar": {
+   "correctos": 248,
+   "fallidos": 142
+  },
+  "consulta": {
+   "correctos": 248,
+   "fallidos": 0
+  },
+  "diagnostico": {
+   "correctos": 248,
+   "fallidos": 0
+  },
+  "receta": {
+   "correctos": 248,
+   "fallidos": 0
+  },
+  "actualizar_mascota": {
+   "correctos": 248,
+   "fallidos": 0
+  },
+  "cerrar_consulta": {
+   "correctos": 248,
+   "fallidos": 0
+  },
+  "finalizar_servicio": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "punto_cobro": {
+   "correctos": 118,
+   "fallidos": 0
+  },
+  "vincular_equipo": {
+   "correctos": 118,
+   "fallidos": 0
+  },
+  "abrir_caja": {
+   "correctos": 118,
+   "fallidos": 0
+  },
+  "pago": {
+   "correctos": 155,
+   "fallidos": 0
+  },
+  "cancelar_cita": {
+   "correctos": 167,
+   "fallidos": 0
+  }
+ },
+ "acciones": {
+  "panel": 787,
+  "agenda": 609,
+  "historia": 557,
+  "reportes": 77,
+  "recepcion": 834,
+  "atencion": 390,
+  "cobro": 155,
+  "cancelar": 167
+ },
+ "acciones_sin_trabajo": 592,
+ "vus_maximos": 250
+}
