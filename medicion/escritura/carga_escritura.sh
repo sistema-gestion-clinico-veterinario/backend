@@ -361,6 +361,19 @@ info_consentimiento() {
   docker exec sv-pg psql -U postgres -d "$1" -tAc "SELECT json_build_object('filas', (SELECT count(*) FROM consentimiento_datos), 'usuarios', (SELECT count(DISTINCT usuario_id) FROM consentimiento_datos), 'tabla_mb', (SELECT round(pg_total_relation_size('consentimiento_datos') / 1048576.0, 1)), 'indices', (SELECT coalesce(json_agg(indexdef), '[]'::json) FROM pg_indexes WHERE tablename = 'consentimiento_datos'))"
 }
 
+sonda_caida() {
+  local jar="$1" fase="$2" etiqueta="$3" base="http://127.0.0.1:$PUERTO/api/v1" cab codigo cookies_borradas
+  cab="$(mktemp)"
+  codigo="$(curl -s -o /dev/null -D "$cab" -w '%{http_code}' --max-time 40 -b "$jar" -X POST -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.9" "$base/auth/refresh")"
+  cookies_borradas="$(grep -ci 'Max-Age=0' "$cab")"
+  echo "$fase|POST /auth/refresh|$codigo|cookies de sesión borradas por la respuesta: $cookies_borradas" >> "$SAL/niveles/sonda_caida_${etiqueta}.txt"
+  codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 40 -b "$jar" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.9" "$base/me/navigation")"
+  echo "$fase|GET /me/navigation (con sesión)|$codigo|" >> "$SAL/niveles/sonda_caida_${etiqueta}.txt"
+  codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 40 -H "Content-Type: application/json" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.8" -d "{\"slug\":\"$SLUG\",\"username\":\"${USUARIO}1\",\"password\":\"$CLAVE\"}" "$base/auth/login")"
+  echo "$fase|POST /auth/login|$codigo|" >> "$SAL/niveles/sonda_caida_${etiqueta}.txt"
+  rm -f "$cab"
+}
+
 caos_en_segundo_plano() {
   local v="$1" etiqueta="$2" evento="$3" espera="$4"
   local t_inicio t_evento t_bd_listo="" t_backend_ok="" i seq_antes="" seq_despues=""
@@ -368,12 +381,19 @@ caos_en_segundo_plano() {
   t_inicio="$(date +%s.%N)"
   sleep "$espera"
   case "$evento" in bd_*) seq_antes="$(secuencia_purchases)" ;; esac
+  local jar=""
+  if [ "$evento" = "bd_parada" ]; then
+    jar="$(mktemp)"
+    : > "$SAL/niveles/sonda_caida_${etiqueta}.txt"
+    curl -s -o /dev/null -c "$jar" -H "Content-Type: application/json" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.9" \
+      -d "{\"slug\":\"$SLUG\",\"username\":\"${USUARIO}1\",\"password\":\"$CLAVE\"}" "http://127.0.0.1:$PUERTO/api/v1/auth/login"
+  fi
   t_evento="$(date +%s.%N)"
   case "$evento" in
     bd_reinicio) docker restart sv-pg > /dev/null 2>&1 ;;
     bd_kill) docker kill sv-pg > /dev/null 2>&1; docker start sv-pg > /dev/null 2>&1 ;;
     bd_kill_checkpoint) docker exec sv-pg psql -U postgres -qc "CHECKPOINT" > /dev/null 2>&1; docker kill sv-pg > /dev/null 2>&1; docker start sv-pg > /dev/null 2>&1 ;;
-    bd_parada) docker stop sv-pg > /dev/null 2>&1; sleep "${PARADA_BD_S:-30}"; docker start sv-pg > /dev/null 2>&1 ;;
+    bd_parada) docker stop sv-pg > /dev/null 2>&1; sleep 8; sonda_caida "$jar" "con la base caída" "$etiqueta"; sleep $(( ${PARADA_BD_S:-30} - 8 )); docker start sv-pg > /dev/null 2>&1 ;;
     backend_kill) docker kill "sv-$v" > /dev/null 2>&1; docker start "sv-$v" > /dev/null 2>&1 ;;
   esac
   case "$evento" in
@@ -388,6 +408,7 @@ caos_en_segundo_plano() {
     if curl -fsS --max-time 2 "http://127.0.0.1:$PUERTO/api/v1/actuator/health" > /dev/null 2>&1; then t_backend_ok="$(date +%s.%N)"; break; fi
     sleep 0.5
   done
+  [ -n "$jar" ] && sonda_caida "$jar" "con la base recuperada" "$etiqueta" && rm -f "$jar"
   jq -n --arg evento "$evento" --arg inicio "$t_inicio" --arg evento_t "$t_evento" --arg bd "$t_bd_listo" --arg be "$t_backend_ok" --arg sa "$seq_antes" --arg sd "$seq_despues" \
     '{secuencia_antes:$sa, secuencia_despues:$sd, evento:$evento, t_inicio_k6:($inicio|tonumber), t_evento:($evento_t|tonumber), t_bd_listo:(if $bd=="" then null else ($bd|tonumber) end), t_backend_ok:(if $be=="" then null else ($be|tonumber) end)}' \
     > "$SAL/niveles/caos_${etiqueta}.json"

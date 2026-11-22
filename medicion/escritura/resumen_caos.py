@@ -136,6 +136,11 @@ lineas += [''] + notas + [
     '',
     '> El evento ocurre a los 150 s del inicio de la carga, con 100 usuarios simulados (muy por debajo de la capacidad). "Hasta recuperar" es el tiempo desde el evento hasta el primer tramo de 5 s, seguido de otro, con tasa de fallos de disponibilidad (sin respuesta o error 5xx) no mayor que la de antes del evento más 2 puntos. Una corrida por escenario; el resultado vale para el laboratorio, no para Render ni Supabase.',
 ]
+for p in sorted(NIV.glob('sonda_caida_*.txt')):
+    filas = [l.split('|') for l in p.read_text(encoding='utf-8').splitlines() if l.count('|') >= 3]
+    if filas:
+        lineas += ['', f'**Sonda con una sesión abierta antes de detener PostgreSQL ({p.stem[len("sonda_caida_"):]})**', '', '| Momento | Llamada | Respuesta | Detalle |', '|---|---|---|---|']
+        lineas += [f'| {f[0]} | {f[1]} | {f[2]} | {f[3]} |' for f in filas]
 (RAIZ / 'RESUMEN_FASE3G_CAOS.md').write_text('\n'.join(lineas) + '\n', encoding='utf-8')
 (RAIZ / 'RESUMEN_FASE3G_CAOS.json').write_text(json.dumps([{**{k: v for k, v in r.items() if k != 'tipos'}, 'nivel': n, 'tipos': dict(r.get('tipos', {}))} for n, r in resultados], indent=1, ensure_ascii=False, default=str), encoding='utf-8')
 print('\n'.join(lineas))
