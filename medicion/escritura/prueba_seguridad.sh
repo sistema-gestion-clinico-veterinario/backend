@@ -8,7 +8,7 @@ PASAN=0
 FALLAN=0
 N_IP=0
 
-nueva_ip() { N_IP=$((N_IP + 1)); echo "10.251.$((N_IP / 250)).$((N_IP % 250 + 1))"; }
+nueva_ip() { N_IP=$((N_IP + 1)); IP="10.251.$((N_IP / 250)).$((N_IP % 250 + 1))"; }
 
 login() {
   curl -s -o /dev/null -w '%{http_code}' --max-time 45 -H "Content-Type: application/json" -H "Origin: http://localhost" \
@@ -55,14 +55,14 @@ consulta() { docker exec sv-pg psql -U postgres -d "$V" -tAc "$1" 2> /dev/null |
   echo "|---|---|---|---|"
 } > "$TXT"
 
-IP="$(nueva_ip)"
+nueva_ip
 r=()
 for i in 1 2 3 4 5; do r+=("$(login "${USUARIO}1" "incorrecta-$i" "$IP")"); done
 comprobar "S1 cinco contraseñas incorrectas seguidas" "401,401,401,401,401" "$(secuencia "${r[@]}")"
 comprobar "S1 la sexta, con la contraseña CORRECTA, sigue rechazada (cuenta bloqueada)" "401" "$(login "${USUARIO}1" "$CLAVE" "$IP")"
 informar "S1 cuentas bloqueadas registradas" "$(consulta "SELECT count(*) FROM account_lockouts WHERE locked_until IS NOT NULL AND locked_until > now()")"
 
-IP="$(nueva_ip)"
+nueva_ip
 r=()
 for i in 1 2 3; do r+=("$(login "${USUARIO}2" "incorrecta-$i" "$IP")"); done
 r+=("$(login "${USUARIO}2" "$CLAVE" "$IP")")
@@ -70,18 +70,18 @@ for i in 4 5 6; do r+=("$(login "${USUARIO}2" "incorrecta-$i" "$IP")"); done
 r+=("$(login "${USUARIO}2" "$CLAVE" "$IP")")
 comprobar "S2 tres fallos, acierto, tres fallos y acierto: el acierto limpia el contador" "401,401,401,200,401,401,401,200" "$(secuencia "${r[@]}")"
 
-IP="$(nueva_ip)"
+nueva_ip
 r=()
 for i in 1 2 3 4 5 6 7 8 9; do r+=("$(login "${USUARIO}3" "$CLAVE" "$IP")"); done
 comprobar "S3 nueve inicios correctos de la misma cuenta: el noveno supera el límite" "200,200,200,200,200,200,200,200,429" "$(secuencia "${r[@]}")"
 
 informar "S4 filas de auditoría LOGIN_FALLIDO tras S1 y S2" "$(consulta "SELECT count(*) FROM audit_logs WHERE action = 'LOGIN_FALLIDO'")"
 
-IP="$(nueva_ip)"
+nueva_ip
 r=()
 for i in 1 2 3 4; do r+=("$(olvido "${USUARIO}4@softvet.test" "$IP" "/tmp/olvido_existe_$i.json")"); done
 existente="$(secuencia "${r[@]}")"
-IP="$(nueva_ip)"
+nueva_ip
 r=()
 for i in 1 2 3 4; do r+=("$(olvido "fantasma4@softvet.test" "$IP" "/tmp/olvido_fantasma_$i.json")"); done
 fantasma="$(secuencia "${r[@]}")"
@@ -92,10 +92,10 @@ comprobar "S5 el cuerpo de la respuesta es idéntico para cuenta existente e ine
 sleep 4
 informar "S5 correos recibidos en el servidor de pruebas (esperados: 3 de la cuenta existente)" "$(docker logs sv-correo 2>&1 | grep -c '^MSG')"
 
-IP="$(nueva_ip)"
+nueva_ip
 r=()
 for i in 1 2 3 4; do r+=("$(reenvio "${USUARIO}5@softvet.test" "$IP" "/tmp/reenvio_existe_$i.json")"); done
-IP="$(nueva_ip)"
+nueva_ip
 f=()
 for i in 1 2 3 4; do f+=("$(reenvio "fantasma5@softvet.test" "$IP" "/tmp/reenvio_fantasma_$i.json")"); done
 comprobar "S6 reenvío de verificación de una cuenta ya activa" "200,200,200,429" "$(secuencia "${r[@]}")"
@@ -106,7 +106,8 @@ seq 1 40 | xargs -P 40 -I{} sh -c "curl -s -o /dev/null -w '%{http_code}\n' --ma
 distribucion="$(sort /tmp/paralelo_codigos.txt | uniq -c | awk '{printf "%s×%s ", $2, $1}')"
 comprobar "S7 cuarenta contraseñas incorrectas simultáneas de cuentas distintas (pool de $POOL): todas rechazadas con 401" "401×40" "${distribucion% }"
 comprobar "S7 después de la ráfaga, el servicio responde" "200" "$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$BASE/actuator/health")"
-comprobar "S7 después de la ráfaga, un inicio de sesión correcto funciona" "200" "$(login "${USUARIO}6" "$CLAVE" "$(nueva_ip)")"
+nueva_ip
+comprobar "S7 después de la ráfaga, un inicio de sesión correcto funciona" "200" "$(login "${USUARIO}6" "$CLAVE" "$IP")"
 
 {
   echo
