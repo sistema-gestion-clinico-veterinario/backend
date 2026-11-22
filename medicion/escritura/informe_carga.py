@@ -11,7 +11,7 @@ import informe_nivel as n  # noqa: E402
 RAIZ = NIV = LOGS = None
 NIVEL = 0
 
-TOPES_METASPACE_MB = {'D': 256, 'E': 128, 'A': 128, 'B': 128, 'C': 128}
+TOPES_METASPACE_MB = {'D': 256, 'E': 128, 'F': 256, 'A': 128, 'B': 128, 'C': 128}
 
 ORDEN_PASOS = ['apoderado', 'mascota', 'cita', 'checkin', 'iniciar', 'consulta', 'diagnostico', 'receta', 'actualizar_mascota',
                'cerrar_consulta', 'finalizar_servicio', 'punto_cobro', 'vincular_equipo', 'abrir_caja', 'pago', 'cancelar_cita']
@@ -73,8 +73,9 @@ def analizar_jvm(et, config):
     r = {
         'hay_gc': gc is not None, 'hay_clases': clases is not None, 'tope_mb': TOPES_METASPACE_MB.get(config),
         'metaspace': [], 'pausa_total_s': 0.0, 'pausas': 0, 'completos': 0, 'por_metadatos': 0, 'heap_tras_gc_max_mb': None,
-        'clases': [], 'duracion_jvm_s': 0.0,
+        'clases': [], 'duracion_jvm_s': 0.0, 'completas_s': 0.0, 'completas_por_heap': 0, 'heap_inicial_mb': None,
     }
+    capacidades = []
     heap = []
     for linea in gc or []:
         m = RE_METASPACE.search(linea)
@@ -85,13 +86,18 @@ def analizar_jvm(et, config):
         if p:
             r['pausas'] += 1
             r['pausa_total_s'] += float(p.group(9)) / 1000
+            capacidades.append(int(p.group(7)) * A_MB[p.group(8)])
             if p.group(2) == 'Pause Full':
                 r['completos'] += 1
+                r['completas_s'] += float(p.group(9)) / 1000
+                if 'Allocation Failure' in linea:
+                    r['completas_por_heap'] += 1
             if 'Metadata GC' in linea:
                 r['por_metadatos'] += 1
             heap.append(int(p.group(5)) * A_MB[p.group(6)])
             r['duracion_jvm_s'] = max(r['duracion_jvm_s'], float(p.group(1)))
     r['heap_tras_gc_max_mb'] = max(heap) if heap else None
+    r['heap_inicial_mb'] = capacidades[0] if capacidades else None
     for linea in clases or []:
         m = RE_CLASE.search(linea)
         if m:
@@ -220,6 +226,7 @@ def analizar(version, config=None):
         'db_despues': n.leer_json(NIV / f'db_despues_{et}.json'),
         'integridad': n.leer_json(NIV / f'integridad_{et}.json'),
         'jvm': analizar_jvm(et, config),
+        'sql_top': n.leer_json(NIV / f'sql_top_{et}.json'),
     }
 
 
@@ -325,7 +332,20 @@ def notas_generales(d, m):
     return salida
 
 
-def bloque_version(titulo, d, m):
+def tabla_sql_top(d):
+    filas = d.get('sql_top') or []
+    if not filas:
+        return []
+    total_s = (d['estado'] or {}).get('sql_tiempo_s') or 0
+    salida = ['| Consulta (recortada) | Veces | Tiempo total (s) | Media (ms) | % del tiempo SQL |', '|---|---|---|---|---|']
+    for f in filas:
+        consulta = str(f.get('consulta', '')).replace('|', '/')
+        pct = f"{f['total_ms'] / 1000 / total_s * 100:.0f} %" if total_s else '-'
+        salida.append(f"| `{consulta}` | {f.get('calls')} | {f['total_ms'] / 1000:.1f} | {f.get('media_ms')} | {pct} |")
+    return salida
+
+
+def bloque_version(titulo, d, m, con_sql=True):
     c, f = tasa_exito_escrituras(d)
     lineas = [f'## {titulo}: {n.veredicto(m)}; datos {estado_datos(d)}', '', f'- Escrituras correctas: {c}; fallidas: {f}.']
     acc = (d['k6'] or {}).get('acciones', {})
@@ -342,6 +362,9 @@ def bloque_version(titulo, d, m):
     tc = tabla_clases_tardias(d['jvm'])
     if tc:
         lineas += tc + ['']
+    tsql = tabla_sql_top(d) if con_sql else []
+    if tsql:
+        lineas += ['**Consultas que más tiempo de PostgreSQL consumen (pg_stat_statements, solo este nivel):**', ''] + tsql + ['']
     tcon = tabla_conciliacion(d)
     if tcon:
         lineas += ['**Comprobación contra la base de datos:**', ''] + tcon + ['']
@@ -418,6 +441,48 @@ def generar_una():
     print('\n'.join(lineas))
 
 
+def tabla_xms(a, b, ma, mb):
+    ja, jb = a['jvm'], b['jvm']
+    dur_a, dur_b = ja['duracion_jvm_s'] or 1, jb['duracion_jvm_s'] or 1
+
+    def pct(j, dur):
+        return n.fmt(j['pausa_total_s'] / dur * 100, 1, ' %') if j['pausas'] else 'sin datos'
+
+    filas = [
+        ('Veredicto', n.veredicto(ma), n.veredicto(mb)),
+        ('Errores (%)', n.fmt(ma['errores_pct'], 1, ' %'), n.fmt(mb['errores_pct'], 1, ' %')),
+        ('Ritmo medio (peticiones/s)', n.fmt(ma['rps'], 1), n.fmt(mb['rps'], 1)),
+        ('Tiempo mediano (ms)', n.fmt(ma['mediana_ms']), n.fmt(mb['mediana_ms'])),
+        ('Tiempo p95 (ms)', n.fmt(ma['p95_ms']), n.fmt(mb['p95_ms'])),
+        ('Usuarios sin degradación', n.fmt(ma['sano']), n.fmt(mb['sano'])),
+        ('CPU del backend, media (% del límite)', n.fmt(a['cpu']['media'], 0), n.fmt(b['cpu']['media'], 0)),
+        ('CPU de PostgreSQL, media (% de 1 núcleo)', n.fmt(a['cpu_pg']['media'], 0), n.fmt(b['cpu_pg']['media'], 0)),
+        ('Memoria pico (MB)', n.fmt(a['mem_pico_mb']), n.fmt(b['mem_pico_mb'])),
+        ('Capacidad del heap en la primera pausa de GC (MB)', n.fmt(ja['heap_inicial_mb']), n.fmt(jb['heap_inicial_mb'])),
+        ('Pausas de GC en total', n.fmt(ja['pausas']), n.fmt(jb['pausas'])),
+        ('Pausas completas', n.fmt(ja['completos']), n.fmt(jb['completos'])),
+        ('Pausas completas por "Allocation Failure"', n.fmt(ja['completas_por_heap']), n.fmt(jb['completas_por_heap'])),
+        ('Tiempo en pausas completas (s)', n.fmt(ja['completas_s'], 1), n.fmt(jb['completas_s'], 1)),
+        ('Tiempo en GC / vida de la JVM', pct(ja, dur_a), pct(jb, dur_b)),
+        ('Heap tras GC, máximo (MB)', n.fmt(ja['heap_tras_gc_max_mb']), n.fmt(jb['heap_tras_gc_max_mb'])),
+        ('Avisos de pool agotado', n.fmt(a['log']['pool_conexiones']), n.fmt(b['log']['pool_conexiones'])),
+    ]
+    return ['| | SIN -Xms | CON -Xms = -Xmx |', '|---|---|---|'] + [f'| {x} | {y} | {z} |' for x, y, z in filas]
+
+
+def generar_xms():
+    a, b = analizar('despues'), analizar('xms')
+    ma, mb = n.metricas(a), n.metricas(b)
+    lineas = [f'# Fase 3b: {NIVEL} usuarios, con y sin -Xms (1 CPU, 2 GB)', '']
+    lineas += lineas_entorno() + ['']
+    lineas += tabla_xms(a, b, ma, mb) + ['']
+    lineas += bloque_version('SIN -Xms', a, ma, con_sql=True)
+    lineas += bloque_version('CON -Xms = -Xmx', b, mb, con_sql=False)
+    lineas.append('> Las dos variantes corrieron en la misma máquina, una detrás de otra, y el orden alterna por nivel. La base conserva lo escrito antes, así que la segunda variante parte con algo más de datos. Una corrida por variante y nivel.')
+    (NIV / f'INFORME_CARGA_{NIVEL}.md').write_text('\n'.join(lineas) + '\n', encoding='utf-8')
+    print('\n'.join(lineas))
+
+
 def generar_control():
     d = analizar('ctrl128', 'E')
     m = n.metricas(d)
@@ -435,5 +500,7 @@ if __name__ == '__main__':
         generar_control()
     elif len(sys.argv) > 3 and sys.argv[3] == 'una':
         generar_una()
+    elif len(sys.argv) > 3 and sys.argv[3] == 'xms':
+        generar_xms()
     else:
         generar()

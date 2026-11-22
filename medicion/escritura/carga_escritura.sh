@@ -15,6 +15,7 @@ CUENTAS="${CUENTAS:-1}"
 PLAN_CARGA="${PLAN_CARGA:-$RAIZ/medicion/escritura/PLAN_CARGA}"
 VERSIONES="${VERSIONES:-antes despues}"
 SIN_CONTROL="${SIN_CONTROL:-0}"
+VARIANTES="${VARIANTES:-}"
 XMX="${XMX:-1g}"
 K6_NUCLEOS="${K6_NUCLEOS:-0,3}"
 ITER_POR_VU="${ITER_POR_VU:-19}"
@@ -37,7 +38,8 @@ opciones_jvm() {
     C) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m" ;;
     D) JAVA_OPTS_LAB="-Xmx$XMX -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
     E) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
-    *) echo "configuración desconocida: '$1' (usa A, B, C, D o E)"; exit 1 ;;
+    F) JAVA_OPTS_LAB="-Xms$XMX -Xmx$XMX -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
+    *) echo "configuración desconocida: '$1' (usa A, B, C, D, E o F)"; exit 1 ;;
   esac
 }
 opciones_jvm "$CONFIG"
@@ -63,11 +65,12 @@ registrar_entorno() {
     echo "fecha: $(date -u +%FT%TZ)"
     echo "núcleos del equipo: $NUCLEOS"
     echo "procesador: $(lscpu | awk -F: '/Model name/ {gsub(/^ +/,"",$2); print $2}'); hilos por núcleo: $(lscpu | awk -F: '/Thread\(s\) per core/ {gsub(/ /,"",$2); print $2}'); núcleos por socket: $(lscpu | awk -F: '/Core\(s\) per socket/ {gsub(/ /,"",$2); print $2}')"
+    [ -n "$VARIANTES" ] && echo "variantes (config:etiqueta), el orden alterna por nivel: $VARIANTES"
     echo "versiones medidas: $VERSIONES; heap máximo: $XMX; núcleos de k6: $K6_NUCLEOS; reservas de horario por usuario: $ITER_POR_VU"
     free -m | sed -n 2p | awk '{print "memoria total del equipo (MB): "$2}'
     echo "recursos del backend: $CPUS CPU, $MEMORIA de RAM"
     echo "configuraciones de la JVM:"
-    for c in C D E; do opciones_jvm "$c"; echo "  $c -> $JAVA_OPTS_LAB"; done
+    for c in C D E F; do opciones_jvm "$c"; echo "  $c -> $JAVA_OPTS_LAB"; done
     echo "usadas en esta corrida: D (Metaspace 256 MB) para la escalera; E (Metaspace 128 MB, igual que el Dockerfile) para el control"
     echo "correo: servidor SMTP de pruebas en el contenedor sv-correo (sin TLS ni autenticación; los envíos terminan bien)"
     opciones_jvm D
@@ -89,7 +92,13 @@ construir_imagenes() {
   for v in $VERSIONES; do
     local d; d="$(dir_de "$v")"
     log "construyendo la imagen $v desde $(git -C "$d" rev-parse --short HEAD)"
-    if ! docker build -f "$DESPUES_DIR/Dockerfile.measurement" -t "sv-backend:$v" "$d" > "$SAL/logs/build_$v.log" 2>&1; then
+    local intento construida=0
+    for intento in 1 2 3 4; do
+      if docker build -f "$DESPUES_DIR/Dockerfile.measurement" -t "sv-backend:$v" "$d" > "$SAL/logs/build_$v.log" 2>&1; then construida=1; break; fi
+      log "la construcción de $v falló (intento $intento de 4); espera de $((intento * 60)) s antes de reintentar"
+      sleep $((intento * 60))
+    done
+    if [ "$construida" != 1 ]; then
       tail -40 "$SAL/logs/build_$v.log" | tee -a "$SAL/logs/orquestador.log"
       fallo "no se pudo construir la imagen $v"
     fi
@@ -356,6 +365,8 @@ correr_nivel_escritura() {
       && gzip -f "$SAL/niveles/${registro}_${etiqueta}.log" \
       || log "[$v] no se pudo copiar /tmp/$registro.log de $etiqueta"
   done
+  docker exec sv-pg psql -U postgres -d "$v" -tAc "SELECT coalesce(json_agg(t), '[]'::json) FROM (SELECT left(regexp_replace(query, '[[:space:]]+', ' ', 'g'), 220) AS consulta, calls, round(total_exec_time::numeric, 0) AS total_ms, round(mean_exec_time::numeric, 2) AS media_ms, rows FROM pg_stat_statements WHERE dbid = (SELECT oid FROM pg_database WHERE datname = '$v') ORDER BY total_exec_time DESC LIMIT 10) t" > "$SAL/niveles/sql_top_${etiqueta}.json" 2> /dev/null \
+    || log "[$v] no se pudo volcar las consultas más costosas de $etiqueta"
   detener_backend "$v" "carga_${etiqueta}"
   gzip -f "$SAL/niveles/k6_${etiqueta}.csv" 2>/dev/null || true
   log "[$v] nivel $nivel terminado: k6 código $codigo, OOM=$oom, reinicios=$reinicios, salud final=$salud_final"
@@ -367,10 +378,13 @@ CONTROL_USUARIOS=10
 [ "$SIN_CONTROL" = 1 ] && CONTROL_USUARIOS=0
 MODO_INFORME=""
 [ "$VERSIONES" = "despues" ] && MODO_INFORME="una"
+[ -n "$VARIANTES" ] && MODO_INFORME="xms"
+MULTIPLICADOR=1
+[ -n "$VARIANTES" ] && MULTIPLICADOR=$(echo "$VARIANTES" | wc -w)
 TOTAL_CUENTAS=$((1 + CONTROL_USUARIOS))
 while read -r campo1 campo2 campo3 _; do
   case "$campo1" in ''|\#*) continue ;; esac
-  TOTAL_CUENTAS=$((TOTAL_CUENTAS + campo1))
+  TOTAL_CUENTAS=$((TOTAL_CUENTAS + campo1 * MULTIPLICADOR))
 done < "$PLAN_CARGA"
 
 registrar_entorno
@@ -391,16 +405,34 @@ fi
 
 base_u=$((CONTROL_USUARIOS * ITER_POR_VU))
 base_cuenta=$((1 + CONTROL_USUARIOS))
+indice=0
 while read -r nivel rampa mantener _ <&3; do
   case "$nivel" in ''|\#*) continue ;; esac
-  for v in $VERSIONES; do correr_nivel_escritura "$v" "$nivel" "$rampa" "$mantener" "$base_u" "$base_cuenta"; done
+  if [ -n "$VARIANTES" ]; then
+    orden="$VARIANTES"
+    if [ $((indice % 2)) -eq 1 ]; then orden="$(echo "$VARIANTES" | awk '{for (i = NF; i > 0; i--) printf "%s%s", $i, (i > 1 ? " " : "")}')"; fi
+    for variante in $orden; do
+      correr_nivel_escritura despues "$nivel" "$rampa" "$mantener" "$base_u" "$base_cuenta" "${variante%%:*}" "${variante##*:}"
+      base_u=$((base_u + nivel * ITER_POR_VU))
+      base_cuenta=$((base_cuenta + nivel))
+    done
+    indice=$((indice + 1))
+  else
+    for v in $VERSIONES; do correr_nivel_escritura "$v" "$nivel" "$rampa" "$mantener" "$base_u" "$base_cuenta"; done
+  fi
   python3 "$RAIZ/medicion/escritura/informe_carga.py" "$SAL" "$nivel" $MODO_INFORME > "$SAL/logs/informe_carga_${nivel}.log" 2>&1 \
     && cat "$SAL/niveles/INFORME_CARGA_${nivel}.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
     || log "no se pudo generar el informe del nivel $nivel (ver logs/informe_carga_${nivel}.log)"
-  base_u=$((base_u + nivel * ITER_POR_VU))
-  base_cuenta=$((base_cuenta + nivel))
+  if [ -z "$VARIANTES" ]; then
+    base_u=$((base_u + nivel * ITER_POR_VU))
+    base_cuenta=$((base_cuenta + nivel))
+  fi
 done 3< "$PLAN_CARGA"
-if [ "$VERSIONES" = "despues" ]; then
+if [ -n "$VARIANTES" ]; then
+  python3 "$RAIZ/medicion/escritura/resumen_xms.py" "$SAL" > "$SAL/logs/resumen_xms.log" 2>&1 \
+    && cat "$SAL/RESUMEN_FASE3B.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
+    || log "no se pudo generar el resumen de la fase 3b (ver logs/resumen_xms.log)"
+elif [ "$VERSIONES" = "despues" ]; then
   python3 "$RAIZ/medicion/escritura/resumen_escalado.py" "$SAL" > "$SAL/logs/resumen_escalado.log" 2>&1 \
     && cat "$SAL/RESUMEN_FASE3.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
     || log "no se pudo generar el resumen del escalado (ver logs/resumen_escalado.log)"
