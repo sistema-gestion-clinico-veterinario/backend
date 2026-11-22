@@ -1,0 +1,28 @@
+fecha: 2026-11-22T14:42:17Z
+núcleos del equipo: 4
+procesador: AMD EPYC 7763 64-Core Processor; hilos por núcleo: 2; núcleos por socket: 2
+variantes (config:etiqueta), el orden alterna por nivel: F:legado_base::DASHBOARD_CONSULTAS_OPTIMIZADAS=false F:legado_config:config_bd_plan_jit.sql:DASHBOARD_CONSULTAS_OPTIMIZADAS=false
+versiones medidas: despues; heap máximo: 1g; núcleos de k6: 0; reservas de horario por usuario: 14
+memoria total del equipo (MB): 15983
+recursos del backend: 1 CPU, 2g de RAM
+configuraciones de la JVM:
+  C -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m
+  D -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  E -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  F -> -Xms1g -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  G -> -Xms1280m -Xmx1280m -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+usadas en esta corrida: D (Metaspace 256 MB) para la escalera; E (Metaspace 128 MB, igual que el Dockerfile) para el control
+correo: servidor SMTP de pruebas en el contenedor sv-correo (sin TLS ni autenticación; los envíos terminan bien)
+pool de conexiones: 10
+pausa entre acciones: 15 s (con variación aleatoria)
+mezcla de acciones (panel, agenda, historia, reportes, recepción, atención, cobro, cancelar): 22,18,15,2,13,12,10,8 %
+cuentas de medición: una por usuario virtual, 351 en total
+docker: 28.0.4
+k6: k6 v2.4.0 (commit/dd9395906d, go1.26.11, linux/amd64)
+antes:   no medido
+despues: 98d2a79845070e6dda4899bb1483a344dd4b29b1
+fijado de CPU: PG='--cpuset-cpus 2' backend='--cpuset-cpus 1' k6='taskset -c 0'
+plan de niveles:
+  # nivel  subida  sostenido
+  250 250s 150s
+  350 350s 150s
