@@ -1,0 +1,58 @@
+fecha: 2026-11-22T01:40:55Z
+núcleos del equipo: 4
+procesador: AMD EPYC 9V45 96-Core Processor; hilos por núcleo: 2; núcleos por socket: 2
+variantes (config:etiqueta), el orden alterna por nivel: D:despues F:xms
+versiones medidas: despues; heap máximo: 1g; núcleos de k6: 0; reservas de horario por usuario: 14
+memoria total del equipo (MB): 15983
+recursos del backend: 1 CPU, 2g de RAM
+configuraciones de la JVM:
+  C -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m
+  D -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  E -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  F -> -Xms1g -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+usadas en esta corrida: D (Metaspace 256 MB) para la escalera; E (Metaspace 128 MB, igual que el Dockerfile) para el control
+correo: servidor SMTP de pruebas en el contenedor sv-correo (sin TLS ni autenticación; los envíos terminan bien)
+pool de conexiones: 10
+pausa entre acciones: 15 s (con variación aleatoria)
+mezcla de acciones (panel, agenda, historia, reportes, recepción, atención, cobro, cancelar): 22,18,15,2,13,12,10,8 %
+cuentas de medición: una por usuario virtual, 1601 en total
+docker: 28.0.4
+k6: k6 v2.4.0 (commit/dd9395906d, go1.26.11, linux/amd64)
+antes:   no medido
+despues: cb7f6bdb1865b9ca3b5e8aedc0a4ef6bcaf17e13
+fijado de CPU: PG='--cpuset-cpus 2' backend='--cpuset-cpus 1' k6='taskset -c 0'
+plan de niveles:
+  # nivel  subida  sostenido
+  200 210s 150s
+  250 250s 150s
+  350 350s 150s
+[01:40:55] construyendo la imagen despues desde cb7f6bd
+[01:41:38] levantando PostgreSQL
+[01:41:47] levantando el servidor SMTP de pruebas
+[01:41:49] [despues] creando el esquema con el propio backend
+[01:42:08] [despues] sembrando datos
+[01:42:11] [despues] aplicando las migraciones de su versión
+[01:42:15] [despues] migraciones: 34 aplicadas, 1 con error
+citas=27580 consultas=20653 mascotas=3881
+[01:42:15] [despues] configuración de la clínica (horarios, turnos, razas)
+[01:42:15] [despues] cuentas de medición 2 a 1601
+[01:42:46] [despues] aviso de privacidad: HTTP 200 HTTP 200 
+[01:42:46] [despues] nivel 200 (config D, despues_200): arrancando el backend (1 CPU, 2g)
+[01:43:17] [despues] nivel 200: k6 con hasta 200 usuarios (subida 210s, sostenido 150s)
+[01:50:02] [despues] nivel 200 terminado: k6 código 0, OOM=false, reinicios=0, salud final=200
+[01:50:22] [despues] nivel 200 (config F, xms_200): arrancando el backend (1 CPU, 2g)
+[01:50:50] [despues] nivel 200: k6 con hasta 200 usuarios (subida 210s, sostenido 150s)
+[01:57:35] [despues] nivel 200 terminado: k6 código 0, OOM=false, reinicios=0, salud final=200
+[01:57:56] [despues] nivel 250 (config F, xms_250): arrancando el backend (1 CPU, 2g)
+[01:58:25] [despues] nivel 250: k6 con hasta 250 usuarios (subida 250s, sostenido 150s)
+[02:05:54] [despues] nivel 250 terminado: k6 código 0, OOM=false, reinicios=0, salud final=200
+[02:06:14] [despues] nivel 250 (config D, despues_250): arrancando el backend (1 CPU, 2g)
+[02:06:44] [despues] nivel 250: k6 con hasta 250 usuarios (subida 250s, sostenido 150s)
+[02:14:14] [despues] nivel 250 terminado: k6 código 0, OOM=false, reinicios=0, salud final=200
+[02:14:35] [despues] nivel 350 (config D, despues_350): arrancando el backend (1 CPU, 2g)
+[02:15:05] [despues] nivel 350: k6 con hasta 350 usuarios (subida 350s, sostenido 150s)
+[02:24:17] [despues] nivel 350 terminado: k6 código 0, OOM=false, reinicios=0, salud final=200
+[02:24:37] [despues] nivel 350 (config F, xms_350): arrancando el backend (1 CPU, 2g)
+[02:25:05] [despues] nivel 350: k6 con hasta 350 usuarios (subida 350s, sostenido 150s)
+[02:34:15] [despues] nivel 350 terminado: k6 código 0, OOM=false, reinicios=0, salud final=200
+[02:34:39] terminado
