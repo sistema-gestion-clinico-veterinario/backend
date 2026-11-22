@@ -141,6 +141,18 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
                          @Param("apoderadoId") Long apoderadoId,
                          Pageable pageable);
 
+    interface MascotaDelPanel {
+        Long getId();
+        String getNombreCompleto();
+        EspecieMascota getEspecie();
+        String getRaza();
+    }
+
+    @Query("SELECT m.id AS id, m.nombreCompleto AS nombreCompleto, m.especie AS especie, r.nombre AS raza " +
+           "FROM Mascota m JOIN m.apoderado a LEFT JOIN m.raza r " +
+           "WHERE a.company.id = :companyId ORDER BY m.nombreCompleto ASC, m.id ASC")
+    List<MascotaDelPanel> primerasPorNombre(@Param("companyId") Integer companyId, Pageable pageable);
+
     @Query("SELECT COUNT(m) FROM Mascota m WHERE m.apoderado.company.id = :companyId")
     long countByCompanyId(@Param("companyId") Integer companyId);
 

@@ -237,6 +237,16 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
                       @Param("estado") EstadoCita estado,
                       @Param("veterinarioId") Long veterinarioId,
                       Pageable pageable);
+    interface TotalesCitas {
+        Long getTotal();
+        Long getHoy();
+    }
+
+    @Query("SELECT COUNT(c) AS total, " +
+            "COALESCE(SUM(CASE WHEN CAST(c.fechaHoraInicio AS date) = CURRENT_DATE THEN 1L ELSE 0L END), 0L) AS hoy " +
+            "FROM Cita c WHERE c.mascota.apoderado.company.id = :companyId AND c.eliminada = false")
+    TotalesCitas totalesPorCompany(@Param("companyId") Integer companyId);
+
     @Query("SELECT COUNT(c) FROM Cita c WHERE c.mascota.apoderado.company.id = :companyId AND c.eliminada = false")
     long countByCompanyId(@Param("companyId") Integer companyId);
 

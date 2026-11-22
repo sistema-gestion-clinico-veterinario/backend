@@ -1,6 +1,7 @@
 package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
 
+    private static final int MASCOTAS_EN_PANEL = 6;
+    private static final int PAGOS_EN_PANEL = 5;
+
     private final MascotaRepository mascotaRepository;
     private final CitaRepository citaRepository;
     private final EmpleadoRepository empleadoRepository;
@@ -49,6 +53,9 @@ public class DashboardServiceImpl implements DashboardService {
     private final PagoService pagoService;
     private final CompanyService companyService;
     private final AccesoValidator accesoValidator;
+
+    @Value("${app.dashboard.consultas-optimizadas:true}")
+    private boolean consultasOptimizadas;
 
     @Override
     @Transactional(readOnly = true)
@@ -96,10 +103,7 @@ public class DashboardServiceImpl implements DashboardService {
                         ? citaService.listar(targetCompanyId, today, null, null,
                                 null, null, 0, 30).getContent().stream()
                                 .map(this::toAppointmentSummary).toList() : List.of())
-                .pets(canRead("VISTA_MASCOTAS")
-                        ? mascotaService.listar(targetCompanyId, null, null, null,
-                                null, null, 0, 6).getContent().stream()
-                                .map(this::toPetSummary).toList() : List.of())
+                .pets(canRead("VISTA_MASCOTAS") ? mascotasDelPanel(targetCompanyId) : List.of())
                 .roles(canRead("VISTA_ROLES")
                         ? roleService.getRolesByCompany(targetCompanyId) : List.of())
                 .guardians(canRead("VISTA_CLIENTES")
@@ -107,10 +111,38 @@ public class DashboardServiceImpl implements DashboardService {
                                 .map(this::toGuardianSummary).toList() : List.of())
                 .schedules(canRead("VISTA_HORARIOS")
                         ? empleadoService.getSchedulesReportForDate(targetCompanyId, today) : List.of())
-                .payments(canRead("VISTA_PAGOS")
-                        ? pagoService.listarHistorialPorEmpresa(0, 5, targetCompanyId, null, null, null, null, null, null)
-                                .getContent().stream().map(this::toPaymentSummary).toList() : List.of())
+                .payments(canRead("VISTA_PAGOS") ? pagosDelPanel(targetCompanyId) : List.of())
                 .companies(companies)
+                .build();
+    }
+
+    private List<DashboardPetSummary> mascotasDelPanel(Integer companyId) {
+        if (!consultasOptimizadas) {
+            return mascotaService.listar(companyId, null, null, null, null, null, 0, MASCOTAS_EN_PANEL)
+                    .getContent().stream().map(this::toPetSummary).toList();
+        }
+        if (companyId == null) {
+            return List.of();
+        }
+        return mascotaRepository.primerasPorNombre(companyId, PageRequest.of(0, MASCOTAS_EN_PANEL)).stream()
+                .map(this::toPetSummaryDeFila).toList();
+    }
+
+    private List<DashboardPaymentSummary> pagosDelPanel(Integer companyId) {
+        if (!consultasOptimizadas) {
+            return pagoService.listarHistorialPorEmpresa(0, PAGOS_EN_PANEL, companyId, null, null, null, null, null, null)
+                    .getContent().stream().map(this::toPaymentSummary).toList();
+        }
+        return pagoService.ultimosDelHistorial(PAGOS_EN_PANEL, companyId).stream()
+                .map(this::toPaymentSummary).toList();
+    }
+
+    private DashboardPetSummary toPetSummaryDeFila(MascotaRepository.MascotaDelPanel fila) {
+        return DashboardPetSummary.builder()
+                .id(fila.getId())
+                .nombreCompleto(fila.getNombreCompleto())
+                .especie(fila.getEspecie())
+                .raza(fila.getRaza())
                 .build();
     }
 
@@ -210,8 +242,14 @@ public class DashboardServiceImpl implements DashboardService {
 
         if (targetCompanyId != null) {
             builder.totalPacientes(mascotaRepository.countByCompanyId(targetCompanyId));
-            builder.totalCitasHoy(citaRepository.countTodayByCompanyId(targetCompanyId));
-            builder.totalCitas(citaRepository.countByCompanyId(targetCompanyId));
+            if (consultasOptimizadas) {
+                CitaRepository.TotalesCitas totales = citaRepository.totalesPorCompany(targetCompanyId);
+                builder.totalCitasHoy(totales.getHoy());
+                builder.totalCitas(totales.getTotal());
+            } else {
+                builder.totalCitasHoy(citaRepository.countTodayByCompanyId(targetCompanyId));
+                builder.totalCitas(citaRepository.countByCompanyId(targetCompanyId));
+            }
             builder.totalEmpleados(empleadoRepository.countByCompanyId(targetCompanyId));
         } else if (SecurityUtils.isSuperAdmin()) {
             // Stats globales para SuperAdmin si no hay empresa seleccionada

@@ -218,6 +218,20 @@ public class PagoServiceImpl implements PagoService {
         return ids.map(id -> aListadoDelHistorial(pagos.get(id)));
     }
 
+    @Override
+    @Transactional
+    public java.util.List<PagoListResponse> ultimosDelHistorial(int cantidad, Integer companyId) {
+        Integer resolvedCompanyId = resolverCompanyId(companyId);
+        java.util.List<Long> ids = purchaseRepository.ultimosIdsDelHistorial(
+                resolvedCompanyId, TipoPurchase.SERVICIO_CITA, PageRequest.of(0, cantidad));
+        if (ids.isEmpty()) {
+            return java.util.List.of();
+        }
+        Map<Long, PurchaseRepository.PagoDelHistorial> pagos = purchaseRepository.listadoDelHistorial(ids).stream()
+                .collect(Collectors.toMap(PurchaseRepository.PagoDelHistorial::getId, Function.identity()));
+        return ids.stream().map(id -> aListadoDelHistorial(pagos.get(id))).toList();
+    }
+
     private PagoListResponse aListadoDelHistorial(PurchaseRepository.PagoDelHistorial p) {
         PagoListResponse r = new PagoListResponse();
         r.setId(p.getId());

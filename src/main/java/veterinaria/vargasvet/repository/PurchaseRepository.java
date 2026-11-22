@@ -42,6 +42,11 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
     @Query("SELECT p FROM Purchase p WHERE p.cita.mascota.apoderado.company.id = :companyId AND p.tipoPurchase = :tipo ORDER BY p.createdAt DESC")
     Page<Purchase> findByCompanyId(@Param("companyId") Integer companyId, @Param("tipo") TipoPurchase tipo, Pageable pageable);
 
+    @Query("SELECT p.id FROM Purchase p WHERE p.company.id = :companyId AND p.tipoPurchase = :tipo " +
+           "ORDER BY p.createdAt DESC, p.id DESC")
+    List<Long> ultimosIdsDelHistorial(@Param("companyId") Integer companyId, @Param("tipo") TipoPurchase tipo,
+                                      Pageable pageable);
+
     String HISTORIAL_DESDE = "FROM Purchase p LEFT JOIN p.cita c LEFT JOIN c.mascota m ";
 
     String HISTORIAL_FILTROS = "WHERE p.company.id = :companyId "

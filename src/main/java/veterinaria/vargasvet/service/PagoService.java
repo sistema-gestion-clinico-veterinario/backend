@@ -19,6 +19,8 @@ public interface PagoService {
     PagoResponse obtenerPorCita(Long citaId);
     Page<PagoListResponse> listarTodos(int page, int size, Integer companyId);
     Page<PagoListResponse> listarMisPagos(int page, int size);
+    java.util.List<PagoListResponse> ultimosDelHistorial(int cantidad, Integer companyId);
+
     Page<PagoListResponse> listarHistorialPorEmpresa(int page, int size, Integer companyId,
                                                       Integer clienteId, Long mascotaId,
                                                       LocalDate fechaDesde, LocalDate fechaHasta,
