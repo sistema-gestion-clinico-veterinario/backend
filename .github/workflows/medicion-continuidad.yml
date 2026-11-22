@@ -44,7 +44,7 @@ jobs:
           MEMORIA: 2g
           XMX: 1g
           VERSIONES: despues
-          VARIANTES: "F:caos_bd_reinicio F:caos_bd_kill F:caos_bd_parada F:caos_backend_kill"
+          VARIANTES: "F:caos_bd_reinicio F:caos_bd_kill F:caos_bd_kill_checkpoint F:caos_bd_parada F:caos_backend_kill"
           SIN_CONTROL: "1"
           PLAN_CARGA: medicion/escritura/PLAN_CAOS
           RESET_BASE: "1"

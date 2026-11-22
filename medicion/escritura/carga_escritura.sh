@@ -363,13 +363,16 @@ info_consentimiento() {
 
 caos_en_segundo_plano() {
   local v="$1" etiqueta="$2" evento="$3" espera="$4"
-  local t_inicio t_evento t_bd_listo="" t_backend_ok="" i
+  local t_inicio t_evento t_bd_listo="" t_backend_ok="" i seq_antes="" seq_despues=""
+  secuencia_purchases() { docker exec sv-pg psql -U postgres -d "$v" -tAc "SELECT last_value || '|' || (SELECT coalesce(max(id), 0) FROM purchases) FROM purchases_id_seq" 2> /dev/null | tr -d '[:space:]'; }
   t_inicio="$(date +%s.%N)"
   sleep "$espera"
+  case "$evento" in bd_*) seq_antes="$(secuencia_purchases)" ;; esac
   t_evento="$(date +%s.%N)"
   case "$evento" in
     bd_reinicio) docker restart sv-pg > /dev/null 2>&1 ;;
     bd_kill) docker kill sv-pg > /dev/null 2>&1; docker start sv-pg > /dev/null 2>&1 ;;
+    bd_kill_checkpoint) docker exec sv-pg psql -U postgres -qc "CHECKPOINT" > /dev/null 2>&1; docker kill sv-pg > /dev/null 2>&1; docker start sv-pg > /dev/null 2>&1 ;;
     bd_parada) docker stop sv-pg > /dev/null 2>&1; sleep "${PARADA_BD_S:-30}"; docker start sv-pg > /dev/null 2>&1 ;;
     backend_kill) docker kill "sv-$v" > /dev/null 2>&1; docker start "sv-$v" > /dev/null 2>&1 ;;
   esac
@@ -378,14 +381,15 @@ caos_en_segundo_plano() {
       for i in $(seq 1 300); do
         docker exec sv-pg pg_isready -U postgres > /dev/null 2>&1 && { t_bd_listo="$(date +%s.%N)"; break; }
         sleep 0.5
-      done ;;
+      done
+      seq_despues="$(secuencia_purchases)" ;;
   esac
   for i in $(seq 1 600); do
     if curl -fsS --max-time 2 "http://127.0.0.1:$PUERTO/api/v1/actuator/health" > /dev/null 2>&1; then t_backend_ok="$(date +%s.%N)"; break; fi
     sleep 0.5
   done
-  jq -n --arg evento "$evento" --arg inicio "$t_inicio" --arg evento_t "$t_evento" --arg bd "$t_bd_listo" --arg be "$t_backend_ok" \
-    '{evento:$evento, t_inicio_k6:($inicio|tonumber), t_evento:($evento_t|tonumber), t_bd_listo:(if $bd=="" then null else ($bd|tonumber) end), t_backend_ok:(if $be=="" then null else ($be|tonumber) end)}' \
+  jq -n --arg evento "$evento" --arg inicio "$t_inicio" --arg evento_t "$t_evento" --arg bd "$t_bd_listo" --arg be "$t_backend_ok" --arg sa "$seq_antes" --arg sd "$seq_despues" \
+    '{secuencia_antes:$sa, secuencia_despues:$sd, evento:$evento, t_inicio_k6:($inicio|tonumber), t_evento:($evento_t|tonumber), t_bd_listo:(if $bd=="" then null else ($bd|tonumber) end), t_backend_ok:(if $be=="" then null else ($be|tonumber) end)}' \
     > "$SAL/niveles/caos_${etiqueta}.json"
 }
 

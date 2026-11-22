@@ -15,6 +15,7 @@ NOMBRES = {
     'caos_bd_reinicio': 'Reinicio ordenado de PostgreSQL',
     'caos_bd_kill': 'Caída abrupta de PostgreSQL (SIGKILL) y arranque',
     'caos_bd_parada': 'PostgreSQL detenido 30 s',
+    'caos_bd_kill_checkpoint': 'Caída abrupta de PostgreSQL tras un CHECKPOINT',
     'caos_backend_kill': 'Caída abrupta del backend (SIGKILL) y arranque',
 }
 CUBO_S = 5
@@ -128,6 +129,8 @@ for nivel, r in resultados:
         f"{f1(r['recuperacion_s'], 0) if r['recuperacion_s'] is not None else 'no se recuperó'} | {ventana} | {r['fallos_90']} de {r['peticiones_90']} | {f1(r['ultimo_fallo_s'])} | {f1(r['error_antes_pct'], 2)} | "
         f"{r['sesiones_perdidas']} | {f1(r['rps_antes'])} → {f1(r['rps_despues'])} | {r['escrituras_ok']} / {r['escrituras_fallidas']} | {r['datos']} |")
     tipos = ', '.join(f'{k}: {v}' for k, v in r['tipos_90'].most_common()) or 'ninguno'
+    if r['caos'].get('secuencia_antes'):
+        notas.append(f"- {NOMBRES.get(r['pref'], r['pref'])}: secuencia de purchases (último valor | id máximo) antes del evento {r['caos']['secuencia_antes']} y tras recuperar la base {r['caos'].get('secuencia_despues') or 'sin datos'}.")
     notas.append(f"- {NOMBRES.get(r['pref'], r['pref'])}: tipos de fallo en los 90 s siguientes: {tipos}; respuestas 401 en ese lapso: {r['401_90']}.")
 lineas += [''] + notas + [
     '',
