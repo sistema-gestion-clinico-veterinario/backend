@@ -1,5 +1,6 @@
 import gzip
 import json
+import os
 import re
 import statistics
 import sys
@@ -389,8 +390,10 @@ def bloque_version(titulo, d, m, con_sql=True):
     return lineas
 
 
-ORDEN_MULTI = ['legado_base', 'legado_config', 'opt_base', 'opt_config', 'opt_config_heap']
+ORDEN_MULTI = ['legado_base', 'legado_config', 'opt_base', 'opt_config', 'opt_config_heap', 'login_antes', 'login_despues']
 NOMBRES_MULTI = {
+    'login_antes': 'Inicio de sesión anterior (una transacción)',
+    'login_despues': 'Inicio de sesión por fases',
     'legado_base': 'Código anterior, configuración actual',
     'legado_config': 'Código anterior + plan por consulta y sin JIT',
     'opt_base': 'Código nuevo, configuración actual',
@@ -445,6 +448,10 @@ def valores_multi(d, m):
     back, pg = cpu_por_mil(d)
     total = back + pg if back is not None and pg is not None else None
     pl = planes_lentos(d)
+    lg = d['endpoints'].get('login')
+    lg_n = lg['n'] if lg else None
+    lg_err = lg['errores'] / lg['n'] * 100 if lg and lg['n'] else None
+    lg_p95 = n.percentil(lg['duraciones'], 0.95) if lg and lg['duraciones'] else None
     return [
         ('Veredicto', n.veredicto(m)),
         ('Errores (%)', n.fmt(m['errores_pct'], 1, ' %')),
@@ -453,6 +460,9 @@ def valores_multi(d, m):
         ('Tiempo p95 (ms)', n.fmt(m['p95_ms'])),
         ('Usuarios sin degradación', n.fmt(m['sano'])),
         ('Peticiones sin respuesta (tiempo agotado)', n.fmt(m['estados'].get('sin_respuesta', 0))),
+        ('Inicios de sesión (peticiones)', n.fmt(lg_n)),
+        ('Inicios de sesión con error (%)', n.fmt(lg_err, 1, ' %')),
+        ('Inicios de sesión: p95 (ms)', n.fmt(lg_p95)),
         ('Panel bajo carga: mediana (ms)', n.fmt(p50)),
         ('Panel bajo carga: p95 (ms)', n.fmt(p95)),
         ('Sentencias SQL por carga del panel (sonda)', n.fmt(sentencias, 1)),
@@ -499,7 +509,7 @@ def generar_multi():
     metricas = [n.metricas(d) for d in datos]
     nombres = [NOMBRES_MULTI.get(p, p) for p in prefijos]
     columnas = [valores_multi(d, m) for d, m in zip(datos, metricas)]
-    lineas = [f'# Fase 3e: {NIVEL} usuarios (1 CPU, 2 GB)', '']
+    lineas = [f"# Fase {os.environ.get('FASE_ETIQUETA', '3e')}: {NIVEL} usuarios (1 CPU, 2 GB)", '']
     lineas += lineas_entorno() + ['']
     lineas += ['| | ' + ' | '.join(nombres) + ' |', '|---|' + '---|' * len(nombres)]
     for i, (etiqueta, _) in enumerate(columnas[0]):
@@ -507,7 +517,10 @@ def generar_multi():
     lineas.append('')
     for nombre, d, m in zip(nombres, datos, metricas):
         lineas += bloque_compacto(nombre, d, m)
-    lineas.append('> Cada corrida parte de la misma base de la plantilla y de la misma imagen; solo cambian la configuración de PostgreSQL y el heap. Una corrida por variante y nivel.')
+    if os.environ.get('FASE_ETIQUETA') == '3f':
+        lineas.append('> Cada corrida parte de la misma base de la plantilla, con la misma configuración de la JVM y de PostgreSQL; solo cambia la versión del código del inicio de sesión. Una corrida por variante y nivel.')
+    else:
+        lineas.append('> Cada corrida parte de la misma base de la plantilla y de la misma imagen; solo cambian la configuración de PostgreSQL y el heap. Una corrida por variante y nivel.')
     (NIV / f'INFORME_CARGA_{NIVEL}.md').write_text('\n'.join(lineas) + '\n', encoding='utf-8')
     print('\n'.join(lineas))
 

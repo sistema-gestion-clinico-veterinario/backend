@@ -1,0 +1,71 @@
+name: "Fase 3f: inicio de sesión por fases frente al anterior (laboratorio)"
+
+on:
+  push:
+    branches: [medicion/fase3f]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: medicion-fase3f
+  cancel-in-progress: false
+
+env:
+  COMMIT_ANTES: 98d2a79845070e6dda4899bb1483a344dd4b29b1
+  COMMIT_DESPUES: 8f99db655f9015b455b345c29beb3b2762217a2e
+
+jobs:
+  comparacion:
+    name: Réplica ${{ matrix.replica }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [r1, r2, r3, r4]
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el código anterior (etiqueta green-login-antes)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ANTES }}
+          path: .antes
+
+      - name: Descargar el código con el inicio de sesión por fases (etiqueta green-login-despues)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_DESPUES }}
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Ejecutar la comparación
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: antes despues
+          VARIANTES: "F:login_antes:::antes F:login_despues:::despues"
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/escritura/PLAN_3F
+          RESET_BASE: "1"
+          MODO_VARIANTES: multi
+          FASE_ETIQUETA: 3f
+          PG_SHARED_BUFFERS: 1GB
+          ITER_POR_VU: "14"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-fase3f-${{ matrix.replica }}
+          path: resultados/
+          if-no-files-found: warn

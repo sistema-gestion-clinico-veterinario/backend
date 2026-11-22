@@ -481,8 +481,8 @@ while read -r nivel rampa mantener _ <&3; do
     orden="$VARIANTES"
     if [ $((indice % 2)) -eq 1 ]; then orden="$(echo "$VARIANTES" | awk '{for (i = NF; i > 0; i--) printf "%s%s", $i, (i > 1 ? " " : "")}')"; fi
     for variante in $orden; do
-      IFS=: read -r cfg_variante pref_variante prep_variante env_variante <<< "$variante"
-      correr_nivel_escritura despues "$nivel" "$rampa" "$mantener" "$base_u" "$base_cuenta" "$cfg_variante" "$pref_variante" "${prep_variante:-}" "${env_variante:-}"
+      IFS=: read -r cfg_variante pref_variante prep_variante env_variante version_variante <<< "$variante"
+      correr_nivel_escritura "${version_variante:-despues}" "$nivel" "$rampa" "$mantener" "$base_u" "$base_cuenta" "$cfg_variante" "$pref_variante" "${prep_variante:-}" "${env_variante:-}"
       if [ "$RESET_BASE" != 1 ]; then
         base_u=$((base_u + nivel * ITER_POR_VU))
         base_cuenta=$((base_cuenta + nivel))
