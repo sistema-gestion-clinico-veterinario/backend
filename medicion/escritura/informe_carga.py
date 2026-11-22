@@ -339,8 +339,8 @@ def notas_generales(d, m):
     return salida
 
 
-def tabla_sql_top(d):
-    filas = d.get('sql_top') or []
+def tabla_sql_top(d, maximo=10):
+    filas = (d.get('sql_top') or [])[:maximo]
     if not filas:
         return []
     total_s = (d['estado'] or {}).get('sql_tiempo_s') or 0
@@ -387,6 +387,129 @@ def bloque_version(titulo, d, m, con_sql=True):
     if tl:
         lineas += ['<details><summary>Línea de tiempo cada 15 s</summary>', ''] + tl + ['', '</details>', '']
     return lineas
+
+
+ORDEN_MULTI = ['legado_base', 'legado_config', 'opt_base', 'opt_config', 'opt_config_heap']
+NOMBRES_MULTI = {
+    'legado_base': 'Código anterior, configuración actual',
+    'legado_config': 'Código anterior + plan por consulta y sin JIT',
+    'opt_base': 'Código nuevo, configuración actual',
+    'opt_config': 'Código nuevo + plan por consulta y sin JIT',
+    'opt_config_heap': 'Código nuevo + plan por consulta, sin JIT y heap de 1,25 GB',
+}
+
+
+def planes_lentos(d):
+    lineas = leer_lineas_gz(NIV / f"plan_pg_{d['et']}.log.gz")
+    if lineas is None:
+        return None
+    total = con_jit = 0
+    ms_jit = 0.0
+    for bloque in re.split(r'\n(?=\d{4}-\d\d-\d\d [\d:.]+ UTC \[\d+\] LOG:)', '\n'.join(lineas)):
+        if not re.search(r'duration: ([\d.]+) ms\s+plan:', bloque[:260]):
+            continue
+        total += 1
+        j = re.search(r'JIT:.*?Total ([\d.]+) ms', bloque, re.S)
+        if j:
+            con_jit += 1
+            ms_jit += float(j.group(1))
+    return {'total': total, 'con_jit': con_jit, 'ms_jit': ms_jit}
+
+
+def cpu_por_mil(d):
+    e = d['estado'] or {}
+    pet = (d['k6'] or {}).get('peticiones') or 0
+    dur = e.get('duracion_s')
+    if not pet or not dur or e.get('cpu_contenedor_s') is None or d['cpu_pg']['media'] is None:
+        return None, None
+    return e['cpu_contenedor_s'] / pet * 1000, d['cpu_pg']['media'] / 100 * dur / pet * 1000
+
+
+def config_bd(d):
+    try:
+        return (NIV / f"config_bd_{d['et']}.txt").read_text(encoding='utf-8').strip()
+    except OSError:
+        return 'sin datos'
+
+
+def valores_multi(d, m):
+    j = d['jvm']
+    dur = j['duracion_jvm_s'] or 1
+    gc = f"{j['pausa_total_s'] / dur * 100:.1f} %" if j['pausas'] else 'sin datos'
+    ep = d['endpoints'].get('panel')
+    p50 = statistics.median(ep['duraciones']) if ep and ep['duraciones'] else None
+    p95 = n.percentil(ep['duraciones'], 0.95) if ep and ep['duraciones'] else None
+    s = d.get('sonda') or {}
+    sentencias = s['sentencias_sql'] / s['llamadas'] if s.get('llamadas') and s.get('sentencias_sql') is not None else None
+    tiempo_sql = s['tiempo_sql_ms'] / s['llamadas'] if s.get('llamadas') and s.get('tiempo_sql_ms') is not None else None
+    back, pg = cpu_por_mil(d)
+    total = back + pg if back is not None and pg is not None else None
+    pl = planes_lentos(d)
+    return [
+        ('Veredicto', n.veredicto(m)),
+        ('Errores (%)', n.fmt(m['errores_pct'], 1, ' %')),
+        ('Ritmo medio (peticiones/s)', n.fmt(m['rps'], 1)),
+        ('Tiempo mediano (ms)', n.fmt(m['mediana_ms'])),
+        ('Tiempo p95 (ms)', n.fmt(m['p95_ms'])),
+        ('Usuarios sin degradación', n.fmt(m['sano'])),
+        ('Peticiones sin respuesta (tiempo agotado)', n.fmt(m['estados'].get('sin_respuesta', 0))),
+        ('Panel bajo carga: mediana (ms)', n.fmt(p50)),
+        ('Panel bajo carga: p95 (ms)', n.fmt(p95)),
+        ('Sentencias SQL por carga del panel (sonda)', n.fmt(sentencias, 1)),
+        ('Tiempo SQL por carga del panel (ms, sin carga)', n.fmt(tiempo_sql, 1)),
+        ('CPU del backend por 1.000 peticiones (s)', n.fmt(back, 1)),
+        ('CPU de PostgreSQL por 1.000 peticiones (s)', n.fmt(pg, 1)),
+        ('CPU total por 1.000 peticiones (s)', n.fmt(total, 1)),
+        ('CPU del backend, media (% del límite)', n.fmt(d['cpu']['media'], 0)),
+        ('CPU de PostgreSQL, media (% de 1 núcleo)', n.fmt(d['cpu_pg']['media'], 0)),
+        ('Memoria pico (MB)', n.fmt(d['mem_pico_mb'])),
+        ('Pausas completas de GC', n.fmt(j['completos'])),
+        ('Tiempo en GC', gc),
+        ('Heap tras GC, máximo (MB)', n.fmt(j['heap_tras_gc_max_mb'])),
+        ('Planes lentos muestreados (>= 300 ms)', n.fmt(pl['total']) if pl else 'sin datos'),
+        ('...de ellos con compilación JIT', n.fmt(pl['con_jit']) if pl else 'sin datos'),
+        ('Avisos de pool agotado', n.fmt(d['log']['pool_conexiones'])),
+        ('Configuración de PostgreSQL', config_bd(d)),
+    ]
+
+
+def prefijos_del_nivel():
+    encontrados = []
+    for p in NIV.glob(f'estado_*_{NIVEL}.json'):
+        pref = p.name[len('estado_'):-len(f'_{NIVEL}.json')]
+        if pref != 'ctrl128':
+            encontrados.append(pref)
+    return sorted(encontrados, key=lambda x: ORDEN_MULTI.index(x) if x in ORDEN_MULTI else 99)
+
+
+def bloque_compacto(titulo, d, m):
+    lineas = [f'## {titulo}: {n.veredicto(m)}; datos {estado_datos(d)}', '']
+    for nota in notas_generales(d, m) + notas_jvm(d, d['jvm']):
+        lineas.append(f'- {nota}')
+    lineas.append('')
+    tsql = tabla_sql_top(d, 5)
+    if tsql:
+        lineas += ['**Consultas que más tiempo de PostgreSQL consumen (las 5 primeras):**', ''] + tsql + ['']
+    return lineas
+
+
+def generar_multi():
+    prefijos = prefijos_del_nivel()
+    datos = [analizar(p) for p in prefijos]
+    metricas = [n.metricas(d) for d in datos]
+    nombres = [NOMBRES_MULTI.get(p, p) for p in prefijos]
+    columnas = [valores_multi(d, m) for d, m in zip(datos, metricas)]
+    lineas = [f'# Fase 3e: {NIVEL} usuarios (1 CPU, 2 GB)', '']
+    lineas += lineas_entorno() + ['']
+    lineas += ['| | ' + ' | '.join(nombres) + ' |', '|---|' + '---|' * len(nombres)]
+    for i, (etiqueta, _) in enumerate(columnas[0]):
+        lineas.append(f'| {etiqueta} | ' + ' | '.join(col[i][1] for col in columnas) + ' |')
+    lineas.append('')
+    for nombre, d, m in zip(nombres, datos, metricas):
+        lineas += bloque_compacto(nombre, d, m)
+    lineas.append('> Cada corrida parte de la misma base de la plantilla y de la misma imagen; solo cambian la configuración de PostgreSQL y el heap. Una corrida por variante y nivel.')
+    (NIV / f'INFORME_CARGA_{NIVEL}.md').write_text('\n'.join(lineas) + '\n', encoding='utf-8')
+    print('\n'.join(lineas))
 
 
 def lineas_entorno():
@@ -653,5 +776,7 @@ if __name__ == '__main__':
         generar_indice()
     elif len(sys.argv) > 3 and sys.argv[3] == 'panel':
         generar_panel()
+    elif len(sys.argv) > 3 and sys.argv[3] == 'multi':
+        generar_multi()
     else:
         generar()

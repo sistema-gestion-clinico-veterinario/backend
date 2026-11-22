@@ -42,7 +42,8 @@ opciones_jvm() {
     D) JAVA_OPTS_LAB="-Xmx$XMX -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
     E) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
     F) JAVA_OPTS_LAB="-Xms$XMX -Xmx$XMX -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
-    *) echo "configuración desconocida: '$1' (usa A, B, C, D, E o F)"; exit 1 ;;
+    G) JAVA_OPTS_LAB="-Xms${XMX_G:-1280m} -Xmx${XMX_G:-1280m} -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
+    *) echo "configuración desconocida: '$1' (usa A, B, C, D, E, F o G)"; exit 1 ;;
   esac
 }
 opciones_jvm "$CONFIG"
@@ -73,7 +74,7 @@ registrar_entorno() {
     free -m | sed -n 2p | awk '{print "memoria total del equipo (MB): "$2}'
     echo "recursos del backend: $CPUS CPU, $MEMORIA de RAM"
     echo "configuraciones de la JVM:"
-    for c in C D E F; do opciones_jvm "$c"; echo "  $c -> $JAVA_OPTS_LAB"; done
+    for c in C D E F G; do opciones_jvm "$c"; echo "  $c -> $JAVA_OPTS_LAB"; done
     echo "usadas en esta corrida: D (Metaspace 256 MB) para la escalera; E (Metaspace 128 MB, igual que el Dockerfile) para el control"
     echo "correo: servidor SMTP de pruebas en el contenedor sv-correo (sin TLS ni autenticación; los envíos terminan bien)"
     opciones_jvm D
@@ -365,6 +366,7 @@ correr_nivel_escritura() {
   opciones_jvm "$config"
   ENV_EXTRA_BACKEND="$envx"
   if [ "$RESET_BASE" = 1 ]; then reiniciar_base "$v" "$prep" "$etiqueta"; fi
+  docker exec sv-pg psql -U postgres -d "$v" -tAc "SELECT 'plan_cache_mode=' || current_setting('plan_cache_mode') || ' jit=' || current_setting('jit')" > "$SAL/niveles/config_bd_${etiqueta}.txt" 2> /dev/null || true
   log "[$v] nivel $nivel (config $config, $etiqueta): arrancando el backend ($CPUS CPU, $MEMORIA)"
   iniciar_backend "$v" none "$CPUS" "$MEMORIA" "$PIN_BACK"
   esperar_inicializacion "$v"
@@ -437,6 +439,8 @@ CONTROL_USUARIOS=10
 MODO_INFORME=""
 [ "$VERSIONES" = "despues" ] && MODO_INFORME="una"
 [ -n "$VARIANTES" ] && MODO_INFORME="$MODO_VARIANTES"
+RESUMEN_SCRIPT="resumen_xms.py"
+[ "$MODO_VARIANTES" = "multi" ] && RESUMEN_SCRIPT="resumen_multi.py"
 MULTIPLICADOR=1
 [ -n "$VARIANTES" ] && MULTIPLICADOR=$(echo "$VARIANTES" | wc -w)
 TOTAL_CUENTAS=$((1 + CONTROL_USUARIOS))
@@ -497,7 +501,7 @@ while read -r nivel rampa mantener _ <&3; do
   fi
 done 3< "$PLAN_CARGA"
 if [ -n "$VARIANTES" ]; then
-  python3 "$RAIZ/medicion/escritura/resumen_xms.py" "$SAL" "$MODO_VARIANTES" > "$SAL/logs/resumen_xms.log" 2>&1 \
+  python3 "$RAIZ/medicion/escritura/$RESUMEN_SCRIPT" "$SAL" "$MODO_VARIANTES" > "$SAL/logs/resumen_xms.log" 2>&1 \
     && cat "$SAL"/RESUMEN_FASE3*.md >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
     || log "no se pudo generar el resumen de la fase 3b (ver logs/resumen_xms.log)"
 elif [ "$VERSIONES" = "despues" ]; then
