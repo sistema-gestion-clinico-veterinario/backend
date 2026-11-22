@@ -132,6 +132,82 @@ class UsuarioServiceImplLoginTest {
     }
 
     @Test
+    void quienPierdeElAccesoMientrasSeVerificaLaContrasenaNoEntra() {
+        Company company = vargasVet();
+        Usuario usuario = conRolEnLaEmpresa(usuarioValido(), company);
+        when(companyRepository.findBySlug("vargas-vet")).thenReturn(Optional.of(company));
+        when(usuarioRepository.findAllByUsernameIgnoreCase("ana.qa")).thenReturn(List.of(usuario));
+        when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(true, false);
+        when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencialValida()));
+        when(passwordEncoder.matches("Password-123", "hash-almacenado")).thenReturn(true);
+        when(usuarioRepository.findById(10)).thenReturn(Optional.of(usuario));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
+
+        assertThatThrownBy(() -> service.login(loginConSlug("vargas-vet")))
+                .isInstanceOf(BadCredentialsException.class)
+                .hasMessage("Credenciales inválidas");
+
+        verify(authenticationAuditService).recordLoginFailure(
+                usuario, "ana.qa", "acceso a la clínica revocado durante el inicio de sesión");
+        verifyNoInteractions(tokenProvider);
+    }
+
+    @Test
+    void quienPierdeElAccesoMientrasSeVerificaConGoogleNoEntra() {
+        Company company = vargasVet();
+        Usuario usuario = conRolEnLaEmpresa(usuarioValido(), company);
+        when(usuarioRepository.findAllByEmailIgnoreCase("ana@example.test")).thenReturn(List.of(usuario));
+        when(companyRepository.findBySlug("vargas-vet")).thenReturn(Optional.of(company));
+        when(companyMembershipService.hasAnyMembership(10, 7)).thenReturn(true);
+        when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(true, false);
+        when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencialValida()));
+        when(usuarioRepository.findById(10)).thenReturn(Optional.of(usuario));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
+
+        assertThatThrownBy(() -> service.loginWithGoogle("ana@example.test", "vargas-vet"))
+                .isInstanceOf(veterinaria.vargasvet.exception.GoogleClinicAccessException.class);
+
+        verify(authenticationAuditService).recordLoginFailure(
+                usuario, "ana@example.test", "acceso a la clínica revocado durante el inicio de sesión");
+        verifyNoInteractions(tokenProvider);
+    }
+
+    @Test
+    void unAdministradorQuePierdeElRolDePlataformaMientrasSeVerificaLaContrasenaNoEntra() {
+        Usuario conRol = usuarioValido();
+        conRol.setId(1);
+        conRol.setUsername("root");
+        veterinaria.vargasvet.domain.entity.Role rol = new veterinaria.vargasvet.domain.entity.Role();
+        rol.setId(1);
+        rol.setName("ROLE_ADMIN_PLATAFORMA");
+        rol.setActivo(true);
+        rol.setScope(veterinaria.vargasvet.domain.enums.RoleScope.PLATFORM);
+        rol.setPurpose(veterinaria.vargasvet.domain.enums.RolePurpose.PLATFORM_ADMIN);
+        veterinaria.vargasvet.domain.entity.UsuarioPorRol asignacion = new veterinaria.vargasvet.domain.entity.UsuarioPorRol();
+        asignacion.setUsuario(conRol);
+        asignacion.setRol(rol);
+        conRol.getUsuariosPorRol().add(asignacion);
+        Usuario sinRol = usuarioValido();
+        sinRol.setId(1);
+        sinRol.setUsername("root");
+        when(usuarioRepository.findByUsernameAndCompanyIsNull("root")).thenReturn(Optional.of(conRol));
+        when(credencialRepository.findByUsuarioIdAndCompanyIsNull(1)).thenReturn(Optional.of(credencialValida()));
+        when(passwordEncoder.matches("Password-123", "hash-almacenado")).thenReturn(true);
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(sinRol));
+        veterinaria.vargasvet.dto.request.AdminLoginDTO dto = new veterinaria.vargasvet.dto.request.AdminLoginDTO();
+        dto.setUsername("root");
+        dto.setPassword("Password-123");
+
+        assertThatThrownBy(() -> service.adminLogin(dto))
+                .isInstanceOf(BadCredentialsException.class)
+                .hasMessage("Credenciales inválidas");
+
+        verify(authenticationAuditService).recordLoginFailure(
+                sinRol, "root", "rol de plataforma revocado durante el inicio de sesión");
+        verifyNoInteractions(tokenProvider);
+    }
+
+    @Test
     void rechazaLoginSinSlug() {
         LoginDTO dto = new LoginDTO();
         dto.setUsername("ana.qa");

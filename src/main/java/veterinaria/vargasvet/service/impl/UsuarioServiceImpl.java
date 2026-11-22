@@ -520,6 +520,12 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 () -> new BadCredentialsException("Credenciales inválidas"));
         Company company = companyRepository.findById(companyId).orElseThrow(
                 () -> new BadCredentialsException("Credenciales inválidas"));
+        if (!companyMembershipService.hasActiveMembership(usuarioId, companyId)) {
+            throw rechazarAcceso(true, usuario, username, "acceso a la clínica revocado durante el inicio de sesión",
+                    viaGoogle
+                            ? new veterinaria.vargasvet.exception.GoogleClinicAccessException()
+                            : new BadCredentialsException("Credenciales inválidas"));
+        }
         veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
                 resolveCredencial(usuarioId, companyId).orElseThrow(
                         () -> new BadCredentialsException("Credenciales inválidas"));
@@ -904,6 +910,12 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             String username) {
         Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow(
                 () -> new BadCredentialsException("Credenciales inválidas"));
+        boolean sigueSiendoSuperAdmin = usuario.getUsuariosPorRol().stream()
+                .anyMatch(upr -> upr.getRol().getPurpose() == RolePurpose.PLATFORM_ADMIN);
+        if (!sigueSiendoSuperAdmin) {
+            throw rechazarAcceso(true, usuario, username, "rol de plataforma revocado durante el inicio de sesión",
+                    new BadCredentialsException("Credenciales inválidas"));
+        }
         veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
                 resolveCredencial(usuarioId, null).orElseThrow(
                         () -> new BadCredentialsException("Credenciales inválidas"));
