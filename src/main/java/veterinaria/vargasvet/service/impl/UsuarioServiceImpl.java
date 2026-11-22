@@ -146,7 +146,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         return branding;
     }
 
-    private void sendVerificationEmail(Usuario usuario, String verificationToken, Company company) {
+    private CorreoPendiente correoDeVerificacion(Usuario usuario, String verificationToken, Company company) {
         try {
             Map<String, Object> model = new HashMap<>(resolveCompanyBranding(usuario, company));
             model.put("nombre", usuario.getEmail());
@@ -164,9 +164,10 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                     model
             );
 
-            emailService.sendEmailWithRetry(mail, "email/welcome-template");
+            return new CorreoPendiente(mail, "email/welcome-template");
         } catch (Exception e) {
-            System.err.println("[WARNING] No se pudo enviar el correo de verificación a " + usuario.getEmail() + ": " + e.getMessage());
+            System.err.println("[WARNING] No se pudo preparar el correo de verificación a " + usuario.getEmail() + ": " + e.getMessage());
+            return null;
         }
     }
 
@@ -264,63 +265,103 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     @Override
-    @Transactional
     public void resendVerificationToken(String email, String slug) {
-        email = normalizeSecurityIdentifier(email);
+        String correo = normalizeSecurityIdentifier(email);
 
         // El correo ya no es unico en toda la plataforma: la empresa la fija el slug del
         // enlace (igual que forgotPassword) y solo cuenta quien tiene una relacion ACTIVA
         // con ella. Asi un correo repetido entre empresas no rompe el reenvio, y quien fue
         // dado de baja antes de activar su cuenta no recibe un enlace nuevo.
         String normalizedSlug = slug == null || slug.isBlank() ? null : slug.trim().toLowerCase(Locale.ROOT);
+        IdentificacionDeCuenta identificacion =
+                transacciones.execute(status -> identificarParaReenvio(correo, normalizedSlug));
+        if (identificacion.claveDeLimite() != null) {
+            sharedRateLimitService.enforce("verification-account", identificacion.claveDeLimite(),
+                    recoveryPerAccountPerHour, java.time.Duration.ofHours(1));
+        }
+
+        // Respuesta uniforme: no revelar si la cuenta existe o ya fue activada.
+        if (identificacion.usuarioId() == null) {
+            passwordEncoder.matches(java.util.UUID.randomUUID().toString(), hashSenuelo());
+            return;
+        }
+
+        CorreoPendiente pendiente = transacciones.execute(status ->
+                reemitirVerificacion(identificacion.usuarioId(), identificacion.companyId()));
+        despacharCorreo(pendiente);
+    }
+
+    private record IdentificacionDeCuenta(String claveDeLimite, Integer usuarioId, Integer companyId) {
+    }
+
+    private record CorreoPendiente(Mail mail, String plantilla) {
+    }
+
+    private record ReenvioDeVerificacion(String correoEnmascarado, CorreoPendiente correo) {
+    }
+
+    private IdentificacionDeCuenta identificarParaReenvio(String correo, String normalizedSlug) {
         Company company = null;
         Usuario usuario = null;
+        String claveDeLimite = null;
         if (normalizedSlug != null) {
             company = companyRepository.findBySlug(normalizedSlug).orElse(null);
             if (company != null) {
-                sharedRateLimitService.enforce("verification-account",
-                        AuthenticationAttemptKey.forCompany(company.getId(), email),
-                        recoveryPerAccountPerHour, java.time.Duration.ofHours(1));
+                claveDeLimite = AuthenticationAttemptKey.forCompany(company.getId(), correo);
                 final Integer companyId = company.getId();
-                usuario = usuarioRepository.findAllByEmailIgnoreCase(email).stream()
+                usuario = usuarioRepository.findAllByEmailIgnoreCase(correo).stream()
                         .filter(u -> companyMembershipService.hasActiveMembership(u.getId(), companyId))
                         .findFirst()
                         .orElse(null);
             }
         } else {
-            sharedRateLimitService.enforce("verification-account",
-                    AuthenticationAttemptKey.forPlatform(email),
-                    recoveryPerAccountPerHour, java.time.Duration.ofHours(1));
-            usuario = usuarioRepository.findByEmailAndCompanyIsNull(email)
+            claveDeLimite = AuthenticationAttemptKey.forPlatform(correo);
+            usuario = usuarioRepository.findByEmailAndCompanyIsNull(correo)
                     .filter(u -> !companyMembershipService.hasOnlyInactiveMemberships(u.getId()))
                     .orElse(null);
         }
+        return new IdentificacionDeCuenta(claveDeLimite, usuario == null ? null : usuario.getId(),
+                company == null ? null : company.getId());
+    }
 
-        // Respuesta uniforme: no revelar si la cuenta existe o ya fue activada.
+    private CorreoPendiente reemitirVerificacion(Integer usuarioId, Integer companyId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId).orElse(null);
         if (usuario == null) {
-            passwordEncoder.matches(java.util.UUID.randomUUID().toString(), hashSenuelo());
-            return;
+            return null;
         }
 
         if (usuario.isEmailVerified() || anyCredencialPasswordChanged(usuario.getId()) || usuario.isActivo()) {
             usuario.setVerificationToken(null);
             usuario.setVerificationTokenExpiresAt(null);
             usuarioRepository.save(usuario);
-            return;
+            return null;
         }
 
-        reissueVerificationToken(usuario, company);
+        Company company = companyId == null ? null : companyRepository.findById(companyId).orElse(null);
+        return reemitirTokenDeVerificacion(usuario, company);
     }
 
     @Override
-    @Transactional
     public String resendVerificationByToken(String token, String slug) {
         if (token == null || token.isBlank()) {
             throw new ResourceNotFoundException("El enlace no es válido");
         }
+        String tokenHash = SecurityTokenUtils.hash(token);
+        IdentificacionDeCuenta identificacion =
+                transacciones.execute(status -> identificarReenvioPorToken(tokenHash, slug));
+        sharedRateLimitService.enforce("verification-account", identificacion.claveDeLimite(),
+                recoveryPerAccountPerHour, java.time.Duration.ofHours(1));
+
+        ReenvioDeVerificacion reenvio = transacciones.execute(status ->
+                reemitirVerificacionPorToken(tokenHash, identificacion.companyId()));
+        despacharCorreo(reenvio.correo());
+        return reenvio.correoEnmascarado();
+    }
+
+    private IdentificacionDeCuenta identificarReenvioPorToken(String tokenHash, String slug) {
         // El enlace (vencido o no) prueba que la persona recibió la invitación, así que no
         // hace falta que vuelva a escribir su correo: se reenvía a la dirección guardada.
-        Usuario usuario = usuarioRepository.findByVerificationTokenForUpdate(SecurityTokenUtils.hash(token))
+        Usuario usuario = usuarioRepository.findByVerificationTokenForUpdate(tokenHash)
                 .orElseThrow(() -> new ResourceNotFoundException("El enlace no es válido"));
         String normalizedSlug = slug == null || slug.isBlank() ? null : slug.trim().toLowerCase(Locale.ROOT);
         Company company;
@@ -335,27 +376,43 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 throw new ResourceNotFoundException("El enlace no es válido");
             }
         }
-        sharedRateLimitService.enforce("verification-account",
-                company == null
-                        ? AuthenticationAttemptKey.forPlatform(usuario.getEmail())
-                        : AuthenticationAttemptKey.forCompany(company.getId(), usuario.getEmail()),
-                recoveryPerAccountPerHour, java.time.Duration.ofHours(1));
+        String claveDeLimite = company == null
+                ? AuthenticationAttemptKey.forPlatform(usuario.getEmail())
+                : AuthenticationAttemptKey.forCompany(company.getId(), usuario.getEmail());
+        return new IdentificacionDeCuenta(claveDeLimite, usuario.getId(), company == null ? null : company.getId());
+    }
+
+    private ReenvioDeVerificacion reemitirVerificacionPorToken(String tokenHash, Integer companyId) {
+        Usuario usuario = usuarioRepository.findByVerificationTokenForUpdate(tokenHash)
+                .orElseThrow(() -> new ResourceNotFoundException("El enlace no es válido"));
 
         if (usuario.isEmailVerified() || anyCredencialPasswordChanged(usuario.getId()) || usuario.isActivo()) {
             throw new IllegalArgumentException("La cuenta ya fue activada. Inicia sesion o recupera tu contrasena.");
         }
 
-        reissueVerificationToken(usuario, company);
-        return maskEmail(usuario.getEmail());
+        Company company = companyId == null ? null : companyRepository.findById(companyId).orElse(null);
+        CorreoPendiente correo = reemitirTokenDeVerificacion(usuario, company);
+        return new ReenvioDeVerificacion(maskEmail(usuario.getEmail()), correo);
     }
 
-    private void reissueVerificationToken(Usuario usuario, Company company) {
+    private CorreoPendiente reemitirTokenDeVerificacion(Usuario usuario, Company company) {
         String newToken = SecurityTokenUtils.generate();
         usuario.setVerificationToken(SecurityTokenUtils.hash(newToken));
         usuario.setVerificationTokenExpiresAt(veterinaria.vargasvet.util.AppClock.now().plusHours(verificationTokenValidityHours));
         usuarioRepository.save(usuario);
 
-        sendVerificationEmail(usuario, newToken, company);
+        return correoDeVerificacion(usuario, newToken, company);
+    }
+
+    private void despacharCorreo(CorreoPendiente correo) {
+        if (correo == null) {
+            return;
+        }
+        try {
+            emailService.sendEmailWithRetry(correo.mail(), correo.plantilla());
+        } catch (Exception e) {
+            System.err.println("[WARNING] No se pudo despachar el correo de " + correo.plantilla() + ": " + e.getMessage());
+        }
     }
 
     private String maskEmail(String email) {
@@ -1206,7 +1263,6 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     @Override
-    @Transactional
     public void forgotPassword(veterinaria.vargasvet.dto.request.ForgotPasswordRequest request) {
         request.setEmail(normalizeSecurityIdentifier(request.getEmail()));
 
@@ -1216,65 +1272,77 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
         // cual cuenta restablecer: se desambigua igual que el login, quedandose con el
         // candidato que tenga membresia activa en la empresa del slug.
         String slug = request.getSlug() == null ? null : request.getSlug().trim().toLowerCase(Locale.ROOT);
+        String correo = request.getEmail();
+        IdentificacionDeCuenta identificacion =
+                transacciones.execute(status -> identificarParaRecuperacion(correo, slug));
+        if (identificacion.claveDeLimite() != null) {
+            sharedRateLimitService.enforce("password-reset-account", identificacion.claveDeLimite(),
+                    recoveryPerAccountPerHour, java.time.Duration.ofHours(1));
+        }
+
+        if (identificacion.usuarioId() == null) {
+            return;
+        }
+
+        CorreoPendiente pendiente = transacciones.execute(status ->
+                emitirRestablecimiento(identificacion.usuarioId(), identificacion.companyId()));
+        despacharCorreo(pendiente);
+    }
+
+    private IdentificacionDeCuenta identificarParaRecuperacion(String correo, String slug) {
         Company company = null;
         Usuario usuario;
+        String claveDeLimite;
         if (slug != null) {
             company = companyRepository.findBySlug(slug).orElse(null);
             if (company == null) {
-                return;
+                return new IdentificacionDeCuenta(null, null, null);
             }
-            sharedRateLimitService.enforce("password-reset-account",
-                    AuthenticationAttemptKey.forCompany(company.getId(), request.getEmail()),
-                    recoveryPerAccountPerHour, java.time.Duration.ofHours(1));
+            claveDeLimite = AuthenticationAttemptKey.forCompany(company.getId(), correo);
             final Integer companyId = company.getId();
-            usuario = usuarioRepository.findAllByEmailIgnoreCase(request.getEmail()).stream()
+            usuario = usuarioRepository.findAllByEmailIgnoreCase(correo).stream()
                     .filter(u -> companyMembershipService.hasActiveMembership(u.getId(), companyId))
                     .findFirst()
                     .orElse(null);
         } else {
             // Sin slug (pantalla global/SuperAdmin): solo apunta a la credencial sin
             // empresa, unica por correo dentro de ese grupo (indice unico parcial).
-            sharedRateLimitService.enforce("password-reset-account",
-                    AuthenticationAttemptKey.forPlatform(request.getEmail()),
-                    recoveryPerAccountPerHour, java.time.Duration.ofHours(1));
-            usuario = usuarioRepository.findByEmailAndCompanyIsNull(request.getEmail()).orElse(null);
+            claveDeLimite = AuthenticationAttemptKey.forPlatform(correo);
+            usuario = usuarioRepository.findByEmailAndCompanyIsNull(correo).orElse(null);
         }
 
-        if (usuario == null || !usuario.isActivo() || !usuario.isEmailVerified()) {
-            return;
-        }
-
-        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
-                resolveCredencial(usuario.getId(), company != null ? company.getId() : null).orElse(null);
-        if (credencial == null) {
-            return;
-        }
-
-        issuePasswordResetToken(usuario, company, credencial, "SOLICITAR_RESTABLECER_PASSWORD",
-                "El usuario solicitó restablecer su contraseña");
+        Integer companyId = company != null ? company.getId() : null;
+        boolean elegible = usuario != null && usuario.isActivo() && usuario.isEmailVerified()
+                && resolveCredencial(usuario.getId(), companyId).isPresent();
+        return new IdentificacionDeCuenta(claveDeLimite, elegible ? usuario.getId() : null, companyId);
     }
 
-    private void issuePasswordResetToken(Usuario usuario, Company company,
-                                         veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial,
-                                         String action, String detail) {
-        String token = createPasswordResetToken(usuario, company);
+    private CorreoPendiente emitirRestablecimiento(Integer usuarioId, Integer companyId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId).orElse(null);
+        if (usuario == null || !usuario.isActivo() || !usuario.isEmailVerified()) {
+            return null;
+        }
+        Company company = companyId == null ? null : companyRepository.findById(companyId).orElse(null);
 
+        String token = createPasswordResetToken(usuario, company);
+        CorreoPendiente correo = null;
         try {
-            sendPasswordResetEmail(usuario, company, token, false);
+            correo = correoDeRestablecimiento(usuario, company, token, false);
 
             auditLogService.log(
                 usuario.getEmail(),
                 "USER",
                 company != null ? company.getId() : null,
                 company != null ? company.getName() : companyName,
-                action,
+                "SOLICITAR_RESTABLECER_PASSWORD",
                 "Seguridad",
-                detail,
+                "El usuario solicitó restablecer su contraseña",
                 null
             );
         } catch (Exception e) {
-            System.err.println("[WARNING] No se pudo enviar el correo de recuperación a " + usuario.getEmail() + ": " + e.getMessage());
+            System.err.println("[WARNING] No se pudo preparar el correo de recuperación a " + usuario.getEmail() + ": " + e.getMessage());
         }
+        return correo;
     }
 
     private String createPasswordResetToken(Usuario usuario, Company company) {
@@ -1300,6 +1368,11 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     private void sendPasswordResetEmail(Usuario usuario, Company company, String token, boolean initiatedByAdmin) {
+        CorreoPendiente correo = correoDeRestablecimiento(usuario, company, token, initiatedByAdmin);
+        emailService.sendEmailWithRetry(correo.mail(), correo.plantilla());
+    }
+
+    private CorreoPendiente correoDeRestablecimiento(Usuario usuario, Company company, String token, boolean initiatedByAdmin) {
         Map<String, Object> model = new HashMap<>(resolveCompanyBranding(usuario, company));
         model.put("usuario", resolveNombreCompleto(usuario));
         model.put("initiatedByAdmin", initiatedByAdmin);
@@ -1314,7 +1387,7 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
                 "Restablecer Contraseña - " + model.get("companyName"),
                 model
         );
-        emailService.sendEmailWithRetry(mail, "email/forgot-password-template");
+        return new CorreoPendiente(mail, "email/forgot-password-template");
     }
 
     @Override

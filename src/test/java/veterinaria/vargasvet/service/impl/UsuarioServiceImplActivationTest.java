@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -58,6 +59,9 @@ class UsuarioServiceImplActivationTest {
     @Mock ApoderadoRepository apoderadoRepository;
     @Mock veterinaria.vargasvet.service.ConsentimientoDatosService consentimientoDatosService;
 
+    @Spy org.springframework.transaction.support.TransactionOperations transacciones =
+            org.springframework.transaction.support.TransactionOperations.withoutTransaction();
+
     @InjectMocks UsuarioServiceImpl service;
 
     @BeforeEach
@@ -98,6 +102,8 @@ class UsuarioServiceImplActivationTest {
         when(companyMembershipService.hasActiveMembership(20, 7)).thenReturn(false);
         when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(true);
         when(credencialRepository.findAllByUsuarioId(10)).thenReturn(List.of());
+        when(usuarioRepository.findById(10)).thenReturn(Optional.of(deVargas));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(vargas));
 
         service.resendVerificationToken("Ana@Example.test", "Vargas-Vet");
 
@@ -138,6 +144,7 @@ class UsuarioServiceImplActivationTest {
         when(usuarioRepository.findByEmailAndCompanyIsNull("admin@example.test")).thenReturn(Optional.of(adminPlataforma));
         when(companyMembershipService.hasOnlyInactiveMemberships(1)).thenReturn(false);
         when(credencialRepository.findAllByUsuarioId(1)).thenReturn(List.of());
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(adminPlataforma));
 
         service.resendVerificationToken("admin@example.test", null);
 

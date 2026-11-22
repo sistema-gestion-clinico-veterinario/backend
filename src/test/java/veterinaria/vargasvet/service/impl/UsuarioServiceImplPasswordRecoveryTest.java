@@ -7,6 +7,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -67,6 +68,9 @@ class UsuarioServiceImplPasswordRecoveryTest {
     @Mock PasswordPolicyService passwordPolicyService;
     @Mock SessionSecurityService sessionSecurityService;
     @Mock AccountLockoutService accountLockoutService;
+
+    @Spy org.springframework.transaction.support.TransactionOperations transacciones =
+            org.springframework.transaction.support.TransactionOperations.withoutTransaction();
 
     @InjectMocks UsuarioServiceImpl service;
 
@@ -132,6 +136,8 @@ class UsuarioServiceImplPasswordRecoveryTest {
         when(usuarioRepository.findAllByEmailIgnoreCase("ana@example.test")).thenReturn(List.of(usuario));
         when(companyMembershipService.hasActiveMembership(10, 7)).thenReturn(true);
         when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencial()));
+        when(usuarioRepository.findById(10)).thenReturn(Optional.of(usuario));
+        when(companyRepository.findById(7)).thenReturn(Optional.of(company));
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, Object>> model = ArgumentCaptor.forClass(Map.class);
         when(emailService.createMail(eq("ana@example.test"), anyString(), model.capture()))

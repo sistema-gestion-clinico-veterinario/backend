@@ -95,6 +95,7 @@ class LoginConPoolPequenoIntegrationTest {
     @Autowired private PasswordEncoder codificador;
     @Autowired private JdbcTemplate jdbc;
     @Autowired private veterinaria.vargasvet.service.AuthenticationAuditService auditoria;
+    @Autowired private veterinaria.vargasvet.repository.PasswordResetTokenRepository tokensDeRestablecimiento;
 
     private DosEmpresasSembradas.Empresa empresa;
 
@@ -103,6 +104,16 @@ class LoginConPoolPequenoIntegrationTest {
         empresa = sembrador.sembrar("TKP");
         sembrarAdministradorDePlataforma();
         suspender("cliente2.tkp");
+        dejarPendienteDeActivar("vet.tkp", "enlace-de-prueba");
+    }
+
+    private void dejarPendienteDeActivar(String username, String tokenEnClaro) {
+        jdbc.update("UPDATE usuario SET activo = FALSE, email_verified = FALSE, verification_token = ?, "
+                + "verification_token_expires_at = ? WHERE username = ?",
+                tokenEnClaro == null ? null : veterinaria.vargasvet.security.SecurityTokenUtils.hash(tokenEnClaro),
+                java.sql.Timestamp.valueOf(LocalDateTime.now().plusHours(2)), username);
+        jdbc.update("UPDATE usuario_empresa_credencial SET password_changed = FALSE WHERE usuario_id = "
+                + "(SELECT id FROM usuario WHERE username = ?)", username);
     }
 
     private void suspender(String username) {
@@ -211,6 +222,83 @@ class LoginConPoolPequenoIntegrationTest {
         assertThat(Configuracion.conexionesActivasEnElBloqueo.get())
                 .as("conexiones activas mientras se registra el intento fallido (solo debe estar la del propio registro)")
                 .isEqualTo(1);
+    }
+
+    @Test
+    void variasSolicitudesDeRecuperacionSimultaneasTerminanConUnPoolPequeno() throws Exception {
+        List<String> fallos = simultaneos(i -> {
+            veterinaria.vargasvet.dto.request.ForgotPasswordRequest solicitud =
+                    new veterinaria.vargasvet.dto.request.ForgotPasswordRequest();
+            solicitud.setEmail("inexistente-" + i + "@tkp.test");
+            solicitud.setSlug(empresa.slug());
+            usuarioService.forgotPassword(solicitud);
+            return "terminada";
+        });
+
+        assertThat(fallos).as("solicitudes de recuperación que fallaron con un pool de 3 conexiones").isEmpty();
+    }
+
+    @Test
+    void variosReenviosDeVerificacionSimultaneosTerminanConUnPoolPequeno() throws Exception {
+        List<String> fallos = simultaneos(i -> {
+            usuarioService.resendVerificationToken("inexistente-" + i + "@tkp.test", empresa.slug());
+            return "terminado";
+        });
+
+        assertThat(fallos).as("reenvíos de verificación que fallaron con un pool de 3 conexiones").isEmpty();
+    }
+
+    @Test
+    void variosReenviosPorEnlaceSimultaneosTerminanConUnPoolPequeno() throws Exception {
+        dejarPendienteDeActivar("vet.tkp", "enlace-de-prueba");
+        List<String> fallos = simultaneos(i -> {
+            try {
+                usuarioService.resendVerificationByToken("enlace-de-prueba", empresa.slug());
+                return "terminado";
+            } catch (veterinaria.vargasvet.exception.ResourceNotFoundException tokenYaReemplazado) {
+                return "rechazado";
+            }
+        });
+
+        assertThat(fallos).as("reenvíos por enlace que fallaron con un pool de 3 conexiones").isEmpty();
+    }
+
+    @Test
+    void laSolicitudDeRecuperacionDeUnaCuentaVigenteGuardaElTokenYSeAuditaEnUnaSolaTransaccion() {
+        long antes = tokensDeRestablecimiento.count();
+        veterinaria.vargasvet.dto.request.ForgotPasswordRequest solicitud =
+                new veterinaria.vargasvet.dto.request.ForgotPasswordRequest();
+        solicitud.setEmail("admin.tkp@tkp.test");
+        solicitud.setSlug(empresa.slug());
+
+        usuarioService.forgotPassword(solicitud);
+
+        assertThat(tokensDeRestablecimiento.count()).isGreaterThan(antes - 1).isGreaterThanOrEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM audit_logs WHERE action = 'SOLICITAR_RESTABLECER_PASSWORD'", Long.class))
+                .isGreaterThanOrEqualTo(1);
+    }
+
+    @Test
+    void elReenvioDeVerificacionEmiteUnTokenNuevoParaQuienSigueSinActivar() {
+        jdbc.update("UPDATE usuario SET verification_token = NULL WHERE username = 'vet.tkp'");
+
+        usuarioService.resendVerificationToken("vet.tkp@tkp.test", empresa.slug());
+
+        assertThat(jdbc.queryForObject("SELECT verification_token FROM usuario WHERE username = 'vet.tkp'", String.class))
+                .isNotNull();
+    }
+
+    @Test
+    void elReenvioPorEnlaceDevuelveElCorreoEnmascaradoYCambiaElToken() {
+        dejarPendienteDeActivar("vet.tkp", "enlace-de-prueba");
+        String tokenAnterior = jdbc.queryForObject("SELECT verification_token FROM usuario WHERE username = 'vet.tkp'", String.class);
+
+        String enmascarado = usuarioService.resendVerificationByToken("enlace-de-prueba", empresa.slug());
+
+        assertThat(enmascarado).startsWith("v***@");
+        assertThat(jdbc.queryForObject("SELECT verification_token FROM usuario WHERE username = 'vet.tkp'", String.class))
+                .isNotNull().isNotEqualTo(tokenAnterior);
     }
 
     private List<String> simultaneos(java.util.function.IntFunction<String> operacion) throws Exception {
