@@ -1,0 +1,69 @@
+name: "Prueba de seguridad de los accesos con PostgreSQL real (laboratorio)"
+
+on:
+  push:
+    branches: [medicion/seguridad]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: medicion-seguridad
+  cancel-in-progress: false
+
+env:
+  COMMIT_ANTES: 98d2a79845070e6dda4899bb1483a344dd4b29b1
+  COMMIT_DESPUES: fe20b9e871f9a4d14b256d8aa0f7b4aeb543d8f4
+
+jobs:
+  seguridad:
+    name: Réplica ${{ matrix.replica }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [r1, r2]
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el código anterior a todas las mejoras de acceso (green-login-antes)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_ANTES }}
+          path: .antes
+
+      - name: Descargar el código final (green-revalidacion-despues)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT_DESPUES }}
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Ejecutar la prueba de seguridad
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: antes despues
+          SIN_CONTROL: "1"
+          CUENTAS: "12"
+          CITAS_GRANDE: "2000"
+          PROPIETARIOS_GRANDE: "200"
+          MODO_SEGURIDAD: "1"
+          LIMITE_LOGIN_IP: "20"
+          LIMITE_LOGIN_CUENTA: "8"
+        run: bash medicion/escritura/carga_escritura.sh
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-seguridad-${{ matrix.replica }}
+          path: resultados/
+          if-no-files-found: warn

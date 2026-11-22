@@ -26,6 +26,8 @@ PAUSA_S="${PAUSA_S:-15}"
 PESOS="${PESOS:-30,35,30,5}"
 TIMEOUT_HTTP="${TIMEOUT_HTTP:-30s}"
 POOL="${POOL:-10}"
+LIMITE_LOGIN_IP="${LIMITE_LOGIN_IP:-100000}"
+LIMITE_LOGIN_CUENTA="${LIMITE_LOGIN_CUENTA:-100000}"
 PGPASS="medicion"
 PUERTO=18080
 SLUG="clinica-medicion"
@@ -155,7 +157,7 @@ iniciar_backend() {
     -e SUPABASE_URL=http://supabase-desactivado.local -e SUPABASE_SERVICE_ROLE_KEY=desactivado -e SUPABASE_BUCKET=desactivado \
     -e MAIL_HOST=sv-correo -e MAIL_PORT=2525 -e MAIL_USERNAME=desactivado -e MAIL_PASSWORD=desactivado -e MAIL_FROM=medicion@softvet.local \
     -e MANAGEMENT_HEALTH_MAIL_ENABLED=false -e APP_URL=http://localhost -e CORS_ALLOWED_ORIGINS=http://localhost \
-    -e "JAVA_OPTS=$JAVA_OPTS_LAB" -e RATE_LIMIT_LOGIN_PER_MINUTE=100000 -e RATE_LIMIT_LOGIN_PER_ACCOUNT_PER_15_MINUTES=100000 \
+    -e "JAVA_OPTS=$JAVA_OPTS_LAB" -e RATE_LIMIT_LOGIN_PER_MINUTE="$LIMITE_LOGIN_IP" -e RATE_LIMIT_LOGIN_PER_ACCOUNT_PER_15_MINUTES="$LIMITE_LOGIN_CUENTA" \
     -e COOKIE_SECURE=false -e COOKIE_SAME_SITE=Lax -e TRUSTED_PROXY_COUNT=1 -e SWAGGER_ENABLED=false -e REMINDERS_CRON="0 0 0 1 1 *" \
     -e IA_RADIOGRAFIA_URL=http://ia-desactivada.local -e IA_LABORATORIO_URL=http://ia-desactivada.local -e IA_DIAGNOSTICO_URL=http://ia-desactivada.local \
     ${ENV_EXTRA_BACKEND:+-e $ENV_EXTRA_BACKEND} \
@@ -461,6 +463,20 @@ levantar_postgres
 levantar_correo
 opciones_jvm D
 for v in $VERSIONES; do preparar_base "$v"; done
+if [ "${MODO_SEGURIDAD:-0}" = 1 ]; then
+  for v in $VERSIONES; do
+    log "[$v] prueba de seguridad con PostgreSQL real"
+    iniciar_backend "$v" none 1 2g "$PIN_BACK"
+    esperar_salud > /dev/null || fallo "el backend $v no arrancó"
+    esperar_inicializacion "$v"
+    export PUERTO SLUG USUARIO CLAVE SAL POOL LIMITE_LOGIN_IP LIMITE_LOGIN_CUENTA
+    bash "$RAIZ/medicion/escritura/prueba_seguridad.sh" "$v" || true
+    cat "$SAL/seguridad_$v.txt" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+    detener_backend "$v" "seguridad_$v"
+  done
+  log "terminado (prueba de seguridad)"
+  exit 0
+fi
 for v in $VERSIONES; do preparar_clinica "$v"; done
 [ "$RESET_BASE" = 1 ] && crear_plantilla despues
 
