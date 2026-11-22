@@ -1,0 +1,103 @@
+time="2026-11-22T00:06:45Z" level=info msg="PASO|14|cita|POST|400|19|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:07:03Z" level=info msg="PASO|10|cita|POST|400|33|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:07:22Z" level=info msg="PASO|15|cita|POST|400|31|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:08:40Z" level=info msg="PASO|15|cita|POST|400|34|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T00:08:56Z" level=info msg="PASO|8|cita|POST|400|7|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+{
+ "perfil": "carga_escritura",
+ "nivel": 100,
+ "iteraciones_completas": 1501,
+ "peticiones": 6236,
+ "duracion_total_s": 309.320834379,
+ "latencia_ms": {
+  "mediana": 18.5400015,
+  "p95": 279.35001175,
+  "max": 4053.006349
+ },
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 6231,
+  "otro_4xx": 5,
+  "5xx": 0,
+  "sin_respuesta": 0
+ },
+ "pasos": {
+  "apoderado": {
+   "correctos": 310,
+   "fallidos": 0
+  },
+  "mascota": {
+   "correctos": 310,
+   "fallidos": 0
+  },
+  "cita": {
+   "correctos": 305,
+   "fallidos": 5
+  },
+  "checkin": {
+   "correctos": 144,
+   "fallidos": 0
+  },
+  "iniciar": {
+   "correctos": 144,
+   "fallidos": 0
+  },
+  "consulta": {
+   "correctos": 144,
+   "fallidos": 0
+  },
+  "diagnostico": {
+   "correctos": 144,
+   "fallidos": 0
+  },
+  "receta": {
+   "correctos": 144,
+   "fallidos": 0
+  },
+  "actualizar_mascota": {
+   "correctos": 144,
+   "fallidos": 0
+  },
+  "cerrar_consulta": {
+   "correctos": 144,
+   "fallidos": 0
+  },
+  "finalizar_servicio": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "punto_cobro": {
+   "correctos": 52,
+   "fallidos": 0
+  },
+  "vincular_equipo": {
+   "correctos": 52,
+   "fallidos": 0
+  },
+  "abrir_caja": {
+   "correctos": 52,
+   "fallidos": 0
+  },
+  "pago": {
+   "correctos": 72,
+   "fallidos": 0
+  },
+  "cancelar_cita": {
+   "correctos": 61,
+   "fallidos": 0
+  }
+ },
+ "acciones": {
+  "panel": 289,
+  "agenda": 285,
+  "historia": 214,
+  "reportes": 26,
+  "recepcion": 310,
+  "atencion": 144,
+  "cobro": 72,
+  "cancelar": 61
+ },
+ "acciones_sin_trabajo": 193,
+ "vus_maximos": 100
+}
