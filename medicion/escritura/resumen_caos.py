@@ -14,6 +14,7 @@ NIV = RAIZ / 'niveles'
 NOMBRES = {
     'caos_bd_reinicio': 'Reinicio ordenado de PostgreSQL',
     'caos_bd_kill': 'Caída abrupta de PostgreSQL (SIGKILL) y arranque',
+    'caos_bd_parada': 'PostgreSQL detenido 30 s',
     'caos_backend_kill': 'Caída abrupta del backend (SIGKILL) y arranque',
 }
 CUBO_S = 5
@@ -86,6 +87,13 @@ def analizar_caos(pref, nivel):
     r['peticiones_en_ventana'] = len(en_ventana)
     r['tipos'] = Counter(('sin respuesta' if (x[1] in ('', '0') or x[2]) else x[1]) for x in fallos)
     r['sesiones_perdidas'] = sum(1 for x in despues if x[1] == '401')
+    siguientes = [x for x in despues if x[0] < t_ev + 90]
+    fallos90 = [x for x in siguientes if fallo_de_disponibilidad(x[1], x[2])]
+    r['fallos_90'] = len(fallos90)
+    r['peticiones_90'] = len(siguientes)
+    r['ultimo_fallo_s'] = (max(x[0] for x in fallos90) - t_ev) if fallos90 else None
+    r['tipos_90'] = Counter(('sin respuesta' if (x[1] in ('', '0') or x[2]) else x[1]) for x in fallos90)
+    r['401_90'] = sum(1 for x in siguientes if x[1] == '401')
     pre = [x for x in filas if t_ev - 60 <= x[0] < t_ev]
     post_ini = fin + 30
     post = [x for x in filas if post_ini <= x[0] < post_ini + 60]
@@ -106,21 +114,21 @@ for nivel in niveles:
 lineas = ['# Fase 3g: caída y recuperación del servicio', '']
 lineas += c.lineas_entorno() + ['']
 lineas += [
-    '| Usuarios | Escenario | PostgreSQL de nuevo disponible tras (s) | Backend con salud 200 tras (s) | Hasta recuperar el servicio (s) | Peticiones fallidas en esa ventana | Fallos antes del evento (%) | Respuestas 401 tras el evento | Peticiones/s antes → después | Escrituras correctas / fallidas | Datos |',
-    '|---|---|---|---|---|---|---|---|---|---|---|',
+    '| Usuarios | Escenario | PostgreSQL de nuevo disponible tras (s) | Backend con salud 200 tras (s) | Hasta recuperar el servicio (s) | Peticiones fallidas en esa ventana | Fallos de disponibilidad en los 90 s siguientes | Último fallo tras (s) | Fallos antes del evento (%) | Respuestas 401 tras el evento | Peticiones/s antes → después | Escrituras correctas / fallidas | Datos |',
+    '|---|---|---|---|---|---|---|---|---|---|---|---|---|',
 ]
 notas = []
 for nivel, r in resultados:
     if 'recuperacion_s' not in r:
-        lineas.append(f"| {nivel} | {NOMBRES.get(r['pref'], r['pref'])} | sin datos | sin datos | sin datos | sin datos | sin datos | sin datos | sin datos | {r['escrituras_ok']} / {r['escrituras_fallidas']} | {r['datos']} |")
+        lineas.append(f"| {nivel} | {NOMBRES.get(r['pref'], r['pref'])} | sin datos | sin datos | sin datos | sin datos | sin datos | sin datos | sin datos | sin datos | sin datos | {r['escrituras_ok']} / {r['escrituras_fallidas']} | {r['datos']} |")
         continue
     ventana = f"{r['fallidas_en_ventana']} de {r['peticiones_en_ventana']}"
     lineas.append(
         f"| {nivel} | {NOMBRES.get(r['pref'], r['pref'])} | {f1(r['bd_s'])} | {f1(r['backend_s'])} | "
-        f"{f1(r['recuperacion_s'], 0) if r['recuperacion_s'] is not None else 'no se recuperó'} | {ventana} | {f1(r['error_antes_pct'], 2)} | "
+        f"{f1(r['recuperacion_s'], 0) if r['recuperacion_s'] is not None else 'no se recuperó'} | {ventana} | {r['fallos_90']} de {r['peticiones_90']} | {f1(r['ultimo_fallo_s'])} | {f1(r['error_antes_pct'], 2)} | "
         f"{r['sesiones_perdidas']} | {f1(r['rps_antes'])} → {f1(r['rps_despues'])} | {r['escrituras_ok']} / {r['escrituras_fallidas']} | {r['datos']} |")
-    tipos = ', '.join(f'{k}: {v}' for k, v in r['tipos'].most_common()) or 'ninguno'
-    notas.append(f"- {NOMBRES.get(r['pref'], r['pref'])}: tipos de fallo en la ventana: {tipos}.")
+    tipos = ', '.join(f'{k}: {v}' for k, v in r['tipos_90'].most_common()) or 'ninguno'
+    notas.append(f"- {NOMBRES.get(r['pref'], r['pref'])}: tipos de fallo en los 90 s siguientes: {tipos}; respuestas 401 en ese lapso: {r['401_90']}.")
 lineas += [''] + notas + [
     '',
     '> El evento ocurre a los 150 s del inicio de la carga, con 100 usuarios simulados (muy por debajo de la capacidad). "Hasta recuperar" es el tiempo desde el evento hasta el primer tramo de 5 s, seguido de otro, con tasa de fallos de disponibilidad (sin respuesta o error 5xx) no mayor que la de antes del evento más 2 puntos. Una corrida por escenario; el resultado vale para el laboratorio, no para Render ni Supabase.',

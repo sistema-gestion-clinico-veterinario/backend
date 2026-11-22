@@ -370,6 +370,7 @@ caos_en_segundo_plano() {
   case "$evento" in
     bd_reinicio) docker restart sv-pg > /dev/null 2>&1 ;;
     bd_kill) docker kill sv-pg > /dev/null 2>&1; docker start sv-pg > /dev/null 2>&1 ;;
+    bd_parada) docker stop sv-pg > /dev/null 2>&1; sleep "${PARADA_BD_S:-30}"; docker start sv-pg > /dev/null 2>&1 ;;
     backend_kill) docker kill "sv-$v" > /dev/null 2>&1; docker start "sv-$v" > /dev/null 2>&1 ;;
   esac
   case "$evento" in
