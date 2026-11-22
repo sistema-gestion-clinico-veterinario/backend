@@ -1,0 +1,1 @@
+{"companyId":1,"rolCliente":3,"veterinarios":[1,2,3,4,5,6,7,8,9,10],"servicios":[{"id":1,"precio":50.00},{"id":2,"precio":60.00},{"id":3,"precio":70.00},{"id":4,"precio":80.00},{"id":5,"precio":90.00},{"id":6,"precio":100.00}],"razas":{"PERRO":1,"GATO":2},"dias_con_turno":180,"huecos_por_dia":16}
