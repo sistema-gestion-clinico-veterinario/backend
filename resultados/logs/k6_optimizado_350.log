@@ -1,0 +1,772 @@
+time="2026-11-22T05:35:38Z" level=info msg="PASO|9|cita|POST|400|75|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:35:42Z" level=info msg="PASO|12|cita|POST|400|23|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:35:54Z" level=info msg="PASO|2|cita|POST|400|18|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:36:38Z" level=info msg="PASO|13|cita|POST|400|17|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:36:42Z" level=info msg="PASO|130|cita|POST|400|7|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:36:57Z" level=info msg="PASO|89|iniciar|PATCH|400|27|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:36:57Z" level=info msg="PASO|12|cita|POST|400|30|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:37:05Z" level=info msg="PASO|149|cita|POST|400|35|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:37:07Z" level=info msg="PASO|17|cita|POST|400|30|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:37:09Z" level=info msg="PASO|8|cita|POST|400|63|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:37:28Z" level=info msg="PASO|106|iniciar|PATCH|400|296|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:37:43Z" level=info msg="PASO|184|iniciar|PATCH|400|192|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:37:52Z" level=info msg="PASO|13|cita|POST|400|44|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:37:58Z" level=info msg="PASO|104|iniciar|PATCH|400|14|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:38:05Z" level=info msg="PASO|6|cita|POST|400|19|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:38:05Z" level=info msg="PASO|52|iniciar|PATCH|400|21|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:38:40Z" level=info msg="PASO|203|iniciar|PATCH|400|23|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:38:51Z" level=info msg="PASO|238|iniciar|PATCH|400|332|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:38:52Z" level=info msg="PASO|255|iniciar|PATCH|400|139|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:38:59Z" level=info msg="PASO|152|iniciar|PATCH|400|25|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:39:05Z" level=info msg="PASO|85|iniciar|PATCH|400|17|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:39:06Z" level=info msg="PASO|262|iniciar|PATCH|400|64|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:39:14Z" level=info msg="PASO|229|iniciar|PATCH|400|21|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:39:14Z" level=info msg="PASO|86|iniciar|PATCH|400|48|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:39:19Z" level=info msg="PASO|210|iniciar|PATCH|400|54|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:39:38Z" level=info msg="PASO|193|iniciar|PATCH|400|3675|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:39:41Z" level=info msg="PASO|122|iniciar|PATCH|400|7905|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:39:42Z" level=info msg="PASO|18|iniciar|PATCH|400|9041|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:39:56Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records/numero/HC-00000003\": request timeout"
+time="2026-11-22T05:39:56Z" level=info msg="PASO|25|historia|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:56Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-22T05:39:56Z" level=info msg="PASO|171|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:56Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:39:56Z" level=info msg="PASO|299|checkin|PATCH|0|30001|FALLO|{\"success\":true,\"message\":\"Llegada registrada con éxito\",\"data\":{\"id\":28324,\"numeroCita\":\"CIT-20261122-63ACA7\",\"businessTraceId\":\"ATT-75EBE50478C04665A895FCEA\",\"version\":0,\"mascotaId\":4635,\"mascotaNombre\":\"Mascotagem\",\"apoderadoId\":2694,\"apoderadoNombre\":\"Clientegem Laboratorio\",\"apoderadoEmail\":\"la" source=console
+time="2026-11-22T05:39:57Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:39:57Z" level=info msg="PASO|152|apoderado|POST|0|30001|FALLO|{\"success\":true,\"message\":\"Dueño registrado exitosamente\",\"data\":{\"id\":3330,\"apoderadoId\":2794,\"email\":\"lab.2117@softvet.test\",\"nombre\":\"Clienteddl\",\"apellido\":\"Laboratorio\",\"dni\":\"90002117\",\"telefono\":\"900002117\",\"direccion\":\"Avenida Los Olivos 123\",\"systemRole\":null,\"companyId\":1,\"companyName\":\"Cl" source=console
+time="2026-11-22T05:39:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:39:57Z" level=info msg="PASO|143|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-22T05:39:57Z" level=info msg="PASO|135|empleados|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:39:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/pets\": request timeout"
+time="2026-11-22T05:39:57Z" level=info msg="PASO|255|mascota|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:39:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:39:58Z" level=info msg="PASO|279|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:39:58Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:39:58Z" level=info msg="PASO|186|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/caja/puntos\": request timeout"
+time="2026-11-22T05:39:58Z" level=info msg="PASO|45|punto_cobro|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:58Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports?fechaDesde=2025-11-22&fechaHasta=2026-11-22&companyId=1\": request timeout"
+time="2026-11-22T05:39:58Z" level=info msg="PASO|206|reporte_clinico|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:58Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28209/check-in\": request timeout"
+time="2026-11-22T05:39:58Z" level=info msg="PASO|276|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:59Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28099/start\": request timeout"
+time="2026-11-22T05:39:59Z" level=info msg="PASO|26|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:59Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28185/check-in\": request timeout"
+time="2026-11-22T05:39:59Z" level=info msg="PASO|102|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:39:59Z" level=info msg="PASO|177|apoderado|POST|0|30000|FALLO|null" source=console
+time="2026-11-22T05:39:59Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-22T05:39:59Z" level=info msg="PASO|316|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:59Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-22T05:39:59Z" level=info msg="PASO|47|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:59Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28315/cancel?motivo=Cambio%20de%20planes%20del%20propietario\": request timeout"
+time="2026-11-22T05:39:59Z" level=info msg="PASO|223|cancelar_cita|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:59Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:39:59Z" level=info msg="PASO|268|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:59Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28350/check-in\": request timeout"
+time="2026-11-22T05:39:59Z" level=info msg="PASO|216|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/caja/puntos\": request timeout"
+time="2026-11-22T05:39:59Z" level=info msg="PASO|109|punto_cobro|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:59Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-22T05:39:59Z" level=info msg="PASO|144|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:39:59Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-22T05:39:59Z" level=info msg="PASO|267|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:00Z" level=info msg="PASO|301|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:00Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:00Z" level=info msg="PASO|277|apoderado|POST|0|30001|FALLO|{\"success\":true,\"message\":\"Dueño registrado exitosamente\",\"data\":{\"id\":3328,\"apoderadoId\":2792,\"email\":\"lab.3865@softvet.test\",\"nombre\":\"Clientefsr\",\"apellido\":\"Laboratorio\",\"dni\":\"90003865\",\"telefono\":\"900003865\",\"direccion\":\"Avenida Los Olivos 123\",\"systemRole\":null,\"companyId\":1,\"companyName\":\"Cl" source=console
+time="2026-11-22T05:40:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-22T05:40:00Z" level=info msg="PASO|337|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:01Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:01Z" level=info msg="PASO|160|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:01Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-22T05:40:01Z" level=info msg="PASO|2|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/payments\": request timeout"
+time="2026-11-22T05:40:01Z" level=info msg="PASO|249|pago|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/pets\": request timeout"
+time="2026-11-22T05:40:01Z" level=info msg="PASO|325|mascota|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:01Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:01Z" level=info msg="PASO|326|reporte_clinico|GET|0|30001|FALLO|{\"success\":true,\"message\":\"Reportes clínicos obtenidos con éxito\",\"data\":{\"fechaDesde\":\"2025-11-22\",\"fechaHasta\":\"2026-11-22\",\"resumen\":{\"consultas\":9570,\"pacientesAtendidos\":2277,\"ingresos\":449040.00,\"nuevosPacientes\":2338,\"tiempoPromedioAtencionMinutos\":30,\"porcentajeCitasCompletadas\":78.2,\"noAsis" source=console
+time="2026-11-22T05:40:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:01Z" level=info msg="PASO|295|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:01Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:01Z" level=info msg="PASO|67|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-22T05:40:01Z" level=info msg="PASO|338|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:01Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:01Z" level=info msg="PASO|79|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:01Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-22T05:40:01Z" level=info msg="PASO|236|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:01Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records/numero/HC-00000009\": request timeout"
+time="2026-11-22T05:40:01Z" level=info msg="PASO|155|historia|GET|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/payments\": request timeout"
+time="2026-11-22T05:40:01Z" level=info msg="PASO|69|pago|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:01Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28284/start\": request timeout"
+time="2026-11-22T05:40:01Z" level=info msg="PASO|273|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|163|privacidad|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/sales-products?fechaDesde=2025-11-22&fechaHasta=2026-11-22&companyId=1\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|215|reporte_de_ventas|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/sales-products?fechaDesde=2025-11-22&fechaHasta=2026-11-22&companyId=1\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|27|reporte_de_ventas|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|234|citas_del_mes|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|246|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|23|reporte_clinico|GET|0|30002|FALLO|{\"success\":true,\"message\":\"Reportes clínicos obtenidos con éxito\",\"data\":{\"fechaDesde\":\"2025-11-22\",\"fechaHasta\":\"2026-11-22\",\"resumen\":{\"consultas\":9570,\"pacientesAtendidos\":2277,\"ingresos\":449040.00,\"nuevosPacientes\":2338,\"tiempoPromedioAtencionMinutos\":30,\"porcentajeCitasCompletadas\":78.2,\"noAsis" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|306|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|80|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|270|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|305|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|339|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|323|lista_de_historias|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|128|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|248|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|324|apoderado|POST|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|313|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|185|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28275/check-in\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|280|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:02Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:02Z" level=info msg="PASO|331|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records/numero/HC-00000005\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|173|historia|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28331/check-in\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|300|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records/numero/HC-00000003\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|6|historia|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/appointments\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|136|cita|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records/numero/HC-00000006\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|233|historia|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|291|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28112/cancel?motivo=Cambio%20de%20planes%20del%20propietario\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|254|cancelar_cita|PATCH|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|183|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/pets\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|271|mascota|POST|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|198|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/consultations/20990\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|29|consulta|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/consultations/9\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|199|consulta_lectura|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|145|navegacion|GET|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|239|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/pets\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|230|mascota|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|138|citas_del_mes|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|121|citas_del_mes|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records/numero/HC-00000001\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|76|historia|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|62|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|258|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|320|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records/numero/HC-00000010\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|319|historia|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|282|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|290|privacidad|GET|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|77|empleados|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|94|privacidad|GET|0|30001|FALLO|{\"success\":true,\"message\":\"Estado de tu privacidad\",\"data\":{\"avisoPublicado\":false,\"avisoVersion\":null,\"informada\":false,\"informadaVersion\":null,\"informadaFecha\":null,\"informadaCanal\":null,\"vistaPorLaPersona\":false,\"finalidades\":[]}}" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|340|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|317|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/consultations/20991\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|202|consulta|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28338/check-in\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|263|checkin|PATCH|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/appointments\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|78|cita|POST|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|204|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|9|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|129|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|16|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28379/start\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|314|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records/numero/HC-00000005\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|292|historia|GET|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:03Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28029/start\": request timeout"
+time="2026-11-22T05:40:03Z" level=info msg="PASO|178|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28140/start\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|141|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/consultations/7\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|57|consulta_lectura|GET|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/pets\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|100|mascota|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/appointments\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|8|cita|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/appointments\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|265|cita|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|309|apoderado|POST|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|237|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/inactive-patients?page=0&size=20&companyId=1\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|10|pacientes_inactivos|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|264|navegacion|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|32|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|170|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/consultations/20992\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|34|consulta|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/consultations/54\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|278|consulta_lectura|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|165|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|95|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|308|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|106|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|46|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28276/start\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|168|iniciar|PATCH|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|341|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28244/cancel?motivo=Cambio%20de%20planes%20del%20propietario\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|153|cancelar_cita|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|220|punto_cobro|POST|0|30001|FALLO|{\"success\":true,\"message\":\"Punto de cobro creado\",\"data\":{\"id\":158,\"nombre\":\"Caja optimizado-350-220\",\"activa\":true,\"vinculada\":false,\"dispositivoNombre\":null,\"dispositivoInfo\":null,\"vinculadaAt\":null,\"ultimoUsoAt\":null,\"esEsteEquipo\":false,\"sesionAbierta\":false,\"abiertaPorNombre\":null}}" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28267/start\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|227|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records/numero/HC-00000008\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|226|historia|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|187|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28363/start\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|98|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|30|pago|POST|0|30001|FALLO|{\"success\":true,\"message\":\"Pago registrado exitosamente\",\"data\":{\"id\":31892,\"citaId\":27841,\"numeroCita\":\"CIT-20261122-54A271\",\"metodoPago\":\"EFECTIVO\",\"monto\":100.00,\"montoRecibido\":1000,\"cambio\":900.00,\"saldoPendiente\":0.00,\"fechaPago\":\"2026-11-22T00:39:41.382422513\",\"estado\":\"PAID\",\"mercadoPagoId\":" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|49|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/pets\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|287|mascota|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28178/check-in\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|50|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|87|navegacion|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|205|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:04Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/consultations/54\": request timeout"
+time="2026-11-22T05:40:04Z" level=info msg="PASO|147|consulta_lectura|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|274|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28264/check-in\": request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|211|checkin|PATCH|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|182|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/pets\": request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|191|mascota|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/payments\": request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|197|pago|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|63|navegacion|GET|0|30002|FALLO|{\"success\":true,\"message\":\"Navegación efectiva obtenida\",\"data\":[{\"ventanaId\":null,\"ventanaCodigo\":null,\"ventanaNombre\":\"Dashboard\",\"ventanaIcono\":null,\"presentacion\":\"FLAT\",\"grupo\":null,\"orden\":1000,\"vistas\":[{\"id\":1,\"codigo\":\"VISTA_DASHBOARD\",\"nombre\":\"Dashboard\",\"ruta\":\"/dashboard\",\"grupo\":\"GENER" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|158|citas_del_mes|GET|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|133|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|342|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|66|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:05Z" level=info msg="PASO|207|iniciar|PATCH|400|24377|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28170/cancel?motivo=Cambio%20de%20planes%20del%20propietario\": request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|74|cancelar_cita|PATCH|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27767/check-in\": request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|103|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27919/check-in\": request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|151|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:05Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:05Z" level=info msg="PASO|272|reporte_clinico|GET|0|30002|FALLO|{\"success\":true,\"message\":\"Reportes clínicos obtenidos con éxito\",\"data\":{\"fechaDesde\":\"2025-11-22\",\"fechaHasta\":\"2026-11-22\",\"resumen\":{\"consultas\":9570,\"pacientesAtendidos\":2277,\"ingresos\":449040.00,\"nuevosPacientes\":2338,\"tiempoPromedioAtencionMinutos\":30,\"porcentajeCitasCompletadas\":78.2,\"noAsis" source=console
+time="2026-11-22T05:40:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:06Z" level=info msg="PASO|19|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:06Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28343/check-in\": request timeout"
+time="2026-11-22T05:40:06Z" level=info msg="PASO|120|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:06Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:06Z" level=info msg="PASO|123|navegacion|GET|0|30001|FALLO|{\"success\":true,\"message\":\"Navegación efectiva obtenida\",\"data\":[{\"ventanaId\":null,\"ventanaCodigo\":null,\"ventanaNombre\":\"Dashboard\",\"ventanaIcono\":null,\"presentacion\":\"FLAT\",\"grupo\":null,\"orden\":1000,\"vistas\":[{\"id\":1,\"codigo\":\"VISTA_DASHBOARD\",\"nombre\":\"Dashboard\",\"ruta\":\"/dashboard\",\"grupo\":\"GENER" source=console
+time="2026-11-22T05:40:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-22T05:40:06Z" level=info msg="PASO|343|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:06Z" level=info msg="PASO|169|iniciar|PATCH|400|29194|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:07Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28372/cancel?motivo=Cambio%20de%20planes%20del%20propietario\": request timeout"
+time="2026-11-22T05:40:07Z" level=info msg="PASO|275|cancelar_cita|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:07Z" level=info msg="PASO|283|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:07Z" level=info msg="PASO|217|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:07Z" level=info msg="PASO|335|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-22T05:40:07Z" level=info msg="PASO|22|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-22T05:40:07Z" level=info msg="PASO|344|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:07Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:07Z" level=info msg="PASO|312|reporte_de_ventas|GET|0|30001|FALLO|{\"success\":true,\"message\":\"Reporte de ventas y productos obtenido\",\"data\":{\"fechaDesde\":\"2025-11-22\",\"fechaHasta\":\"2026-11-22\",\"resumen\":{\"ventas\":4086,\"ingresos\":504804.00,\"unidadesVendidas\":0,\"ticketPromedio\":123.54,\"productosStockBajo\":0,\"productosSinStock\":0},\"resumenAnterior\":{\"ventas\":3914,\"in" source=console
+time="2026-11-22T05:40:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/pets\": request timeout"
+time="2026-11-22T05:40:07Z" level=info msg="PASO|43|mascota|POST|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-22T05:40:07Z" level=info msg="PASO|56|empleados|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-22T05:40:07Z" level=info msg="PASO|33|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/sales-products?fechaDesde=2025-11-22&fechaHasta=2026-11-22&companyId=1\": request timeout"
+time="2026-11-22T05:40:07Z" level=info msg="PASO|55|reporte_de_ventas|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records/numero/HC-00000009\": request timeout"
+time="2026-11-22T05:40:07Z" level=info msg="PASO|157|historia|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:07Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/sales-products?fechaDesde=2025-11-22&fechaHasta=2026-11-22&companyId=1\": request timeout"
+time="2026-11-22T05:40:07Z" level=info msg="PASO|127|reporte_de_ventas|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|116|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/appointments\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|296|cita|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|130|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|142|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/pets\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|245|mascota|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/pets\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|38|mascota|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|266|privacidad|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/caja/puntos/156/vincular?companyId=1\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|134|vincular_equipo|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=info msg="PASO|286|iniciar|PATCH|400|29385|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/consultations/7\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|117|consulta_lectura|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|14|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/diagnoses/consultation/20989\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|96|diagnostico|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/caja/puntos/154/vincular?companyId=1\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|232|vincular_equipo|POST|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|345|login|POST|0|30001|FALLO|{\"success\":true,\"message\":\"Login exitoso\",\"data\":{\"roles\":[\"ROLE_ADMIN\"],\"assignedRoles\":[\"ROLE_ADMIN\"],\"availableRoles\":[{\"id\":2,\"name\":\"ROLE_ADMIN\",\"scope\":\"STAFF\",\"purpose\":\"COMPANY_ADMIN\"}],\"companyId\":1,\"companyName\":\"Clinica de medicion\",\"companyLogoUrl\":null,\"companyColorPrimario\":null,\"compa" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|175|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|240|lista_de_historias|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|86|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:08Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-22T05:40:08Z" level=info msg="PASO|132|lista_de_historias|GET|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:09Z" level=info msg="PASO|276|iniciar|PATCH|400|10189|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:09Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/caja/puntos\": request timeout"
+time="2026-11-22T05:40:09Z" level=info msg="PASO|113|punto_cobro|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:09Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-22T05:40:09Z" level=info msg="PASO|346|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:09Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:09Z" level=info msg="PASO|261|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:09Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:09Z" level=info msg="PASO|52|citas_del_mes|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:10Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-22T05:40:10Z" level=info msg="PASO|244|propietarios|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:10Z" level=info msg="PASO|259|iniciar|PATCH|400|3157|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:10Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:10Z" level=info msg="PASO|201|apoderado|POST|0|30001|FALLO|{\"success\":true,\"message\":\"Dueño registrado exitosamente\",\"data\":{\"id\":3349,\"apoderadoId\":2813,\"email\":\"lab.2803@softvet.test\",\"nombre\":\"Clienteedv\",\"apellido\":\"Laboratorio\",\"dni\":\"90002803\",\"telefono\":\"900002803\",\"direccion\":\"Avenida Los Olivos 123\",\"systemRole\":null,\"companyId\":1,\"companyName\":\"Cl" source=console
+time="2026-11-22T05:40:10Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-22T05:40:10Z" level=info msg="PASO|15|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:10Z" level=info msg="PASO|328|apoderado|POST|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:10Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:10Z" level=info msg="PASO|3|navegacion|GET|0|30001|FALLO|{\"success\":true,\"message\":\"Navegación efectiva obtenida\",\"data\":[{\"ventanaId\":null,\"ventanaCodigo\":null,\"ventanaNombre\":\"Dashboard\",\"ventanaIcono\":null,\"presentacion\":\"FLAT\",\"grupo\":null,\"orden\":1000,\"vistas\":[{\"id\":1,\"codigo\":\"VISTA_DASHBOARD\",\"nombre\":\"Dashboard\",\"ruta\":\"/dashboard\",\"grupo\":\"GENER" source=console
+time="2026-11-22T05:40:11Z" level=info msg="PASO|300|iniciar|PATCH|400|7985|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:11Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:11Z" level=info msg="PASO|54|punto_cobro|POST|0|30000|FALLO|{\"success\":true,\"message\":\"Punto de cobro creado\",\"data\":{\"id\":163,\"nombre\":\"Caja optimizado-350-54\",\"activa\":true,\"vinculada\":false,\"dispositivoNombre\":null,\"dispositivoInfo\":null,\"vinculadaAt\":null,\"ultimoUsoAt\":null,\"esEsteEquipo\":false,\"sesionAbierta\":false,\"abiertaPorNombre\":null}}" source=console
+time="2026-11-22T05:40:11Z" level=info msg="PASO|280|iniciar|PATCH|400|8260|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:11Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/28308/cancel?motivo=Cambio%20de%20planes%20del%20propietario\": request timeout"
+time="2026-11-22T05:40:11Z" level=info msg="PASO|89|cancelar_cita|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/caja/sesion/abrir\": request timeout"
+time="2026-11-22T05:40:11Z" level=info msg="PASO|213|abrir_caja|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports?fechaDesde=2025-11-22&fechaHasta=2026-11-22&companyId=1\": request timeout"
+time="2026-11-22T05:40:11Z" level=info msg="PASO|196|reporte_clinico|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records/numero/HC-00000001\": request timeout"
+time="2026-11-22T05:40:11Z" level=info msg="PASO|125|historia|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-22T05:40:11Z" level=info msg="PASO|179|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-22T05:40:11Z" level=info msg="PASO|348|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/pets\": request timeout"
+time="2026-11-22T05:40:11Z" level=info msg="PASO|58|mascota|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-22T05:40:11Z" level=info msg="PASO|336|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-22T05:40:11Z" level=info msg="PASO|257|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:12Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-22T05:40:12Z" level=info msg="PASO|115|empleados|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-22T05:40:12Z" level=info msg="PASO|285|apoderado|POST|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:12Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-22T05:40:12Z" level=info msg="PASO|60|avisos_de_cumplimiento|GET|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:12Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:12Z" level=info msg="PASO|59|citas_del_mes|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:12Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/consultations/29\": request timeout"
+time="2026-11-22T05:40:12Z" level=info msg="PASO|235|consulta_lectura|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:12Z" level=info msg="PASO|303|iniciar|PATCH|400|499|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/appointments\": request timeout"
+time="2026-11-22T05:40:12Z" level=info msg="PASO|310|cita|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:12Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:12Z" level=info msg="PASO|146|citas_del_mes|GET|0|30002|FALLO|{\"success\":true,\"message\":\"Citas recuperadas con éxito\",\"data\":{\"content\":[{\"id\":71,\"numeroCita\":\"C-1-71\",\"businessTraceId\":\"187e3153-f3b9-4143-b3a9-488f546f4a9d\",\"version\":0,\"mascotaId\":2256,\"mascotaNombre\":\"Mascota 1128-1\",\"apoderadoId\":1128,\"apoderadoNombre\":\"Propietario1128 Medicion\",\"apoderadoE" source=console
+time="2026-11-22T05:40:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-22T05:40:12Z" level=info msg="PASO|349|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:12Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:12Z" level=info msg="PASO|51|empleados|GET|0|30001|FALLO|{\"success\":true,\"message\":\"Empleados recuperados con éxito\",\"data\":{\"content\":[{\"id\":1,\"nombre\":\"Empleado1\",\"apellido\":\"Medicion\",\"email\":\"e1_1@medicion.test\",\"telefono\":null,\"numeroColegiatura\":null,\"fotoUrl\":null,\"activo\":true,\"cuentaPendiente\":false,\"tipoInactividad\":null,\"tiposEmpleado\":[],\"tipo" source=console
+time="2026-11-22T05:40:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:13Z" level=info msg="PASO|65|citas_del_mes|GET|0|30002|FALLO|null" source=console
+time="2026-11-22T05:40:13Z" level=info msg="PASO|277|iniciar|PATCH|400|1352|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:13Z" level=info msg="PASO|70|iniciar|PATCH|400|4698|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:13Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:13Z" level=info msg="PASO|162|checkin|PATCH|0|30000|FALLO|{\"success\":true,\"message\":\"Llegada registrada con éxito\",\"data\":{\"id\":28107,\"numeroCita\":\"CIT-20261122-B090C1\",\"businessTraceId\":\"ATT-D76F4DFFC8554462AAC30F2B\",\"version\":0,\"mascotaId\":4419,\"mascotaNombre\":\"Mascotadit\",\"apoderadoId\":2478,\"apoderadoNombre\":\"Clientedit Laboratorio\",\"apoderadoEmail\":\"la" source=console
+time="2026-11-22T05:40:14Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-22T05:40:14Z" level=info msg="PASO|214|lista_de_historias|GET|0|30001|FALLO|{\"success\":true,\"message\":\"Historias clínicas recuperadas con éxito\",\"data\":{\"content\":[{\"id\":1,\"numeroHc\":\"HC-00000001\",\"mascotaId\":1,\"mascotaNombre\":\"Mascota 1-1\",\"especie\":\"GATO\",\"raza\":null,\"propietarioNombre\":\"Propietario1 Medicion\",\"companyId\":1,\"companyName\":\"Clinica de medicion\",\"fechaUltima" source=console
+time="2026-11-22T05:40:14Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-22T05:40:14Z" level=info msg="PASO|118|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-22T05:40:14Z" level=info msg="PASO|293|iniciar|PATCH|400|301|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:14Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-22T05:40:14Z" level=info msg="PASO|243|citas_del_mes|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:14Z" level=info msg="PASO|50|iniciar|PATCH|400|9875|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:15Z" level=info msg="PASO|151|iniciar|PATCH|400|9128|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:15Z" level=info msg="PASO|202|cerrar_consulta|PATCH|400|3061|FALLO|{\"success\":false,\"message\":\"El campo version es requerido para evitar ediciones simultáneas\",\"data\":null}" source=console
+time="2026-11-22T05:40:15Z" level=info msg="PASO|103|iniciar|PATCH|400|9796|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports?fechaDesde=2025-11-22&fechaHasta=2026-11-22&companyId=1\": request timeout"
+time="2026-11-22T05:40:15Z" level=info msg="PASO|12|reporte_clinico|GET|0|30000|FALLO|null" source=console
+time="2026-11-22T05:40:16Z" level=info msg="PASO|262|iniciar|PATCH|400|7145|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:16Z" level=info msg="PASO|263|iniciar|PATCH|400|12865|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:17Z" level=info msg="PASO|311|iniciar|PATCH|400|7859|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:18Z" level=info msg="PASO|8|cita|POST|400|67|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:40:18Z" level=info msg="PASO|233|iniciar|PATCH|400|2904|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:18Z" level=info msg="PASO|34|cerrar_consulta|PATCH|400|839|FALLO|{\"success\":false,\"message\":\"El campo version es requerido para evitar ediciones simultáneas\",\"data\":null}" source=console
+time="2026-11-22T05:40:18Z" level=info msg="PASO|269|iniciar|PATCH|400|2119|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:18Z" level=info msg="PASO|29|cerrar_consulta|PATCH|400|211|FALLO|{\"success\":false,\"message\":\"El campo version es requerido para evitar ediciones simultáneas\",\"data\":null}" source=console
+time="2026-11-22T05:40:19Z" level=info msg="PASO|162|iniciar|PATCH|400|5170|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:19Z" level=info msg="PASO|120|iniciar|PATCH|400|12650|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:20Z" level=info msg="PASO|38|iniciar|PATCH|400|3998|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:21Z" level=info msg="PASO|113|iniciar|PATCH|400|827|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:21Z" level=info msg="PASO|166|iniciar|PATCH|400|2127|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:22Z" level=info msg="PASO|293|iniciar|PATCH|400|110|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:24Z" level=info msg="PASO|184|iniciar|PATCH|400|24|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:24Z" level=info msg="PASO|322|iniciar|PATCH|400|21|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:25Z" level=info msg="PASO|276|cita|POST|400|46|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:40:25Z" level=info msg="PASO|281|iniciar|PATCH|400|23|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:26Z" level=info msg="PASO|292|iniciar|PATCH|400|6|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:26Z" level=info msg="PASO|153|iniciar|PATCH|400|26|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:27Z" level=info msg="PASO|229|iniciar|PATCH|400|20|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:27Z" level=info msg="PASO|296|iniciar|PATCH|400|6|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:27Z" level=info msg="PASO|44|iniciar|PATCH|400|17|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:28Z" level=info msg="PASO|297|iniciar|PATCH|400|7|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:30Z" level=info msg="PASO|182|iniciar|PATCH|400|257|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:30Z" level=info msg="PASO|27|iniciar|PATCH|400|82|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:30Z" level=info msg="PASO|9|iniciar|PATCH|400|140|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:31Z" level=info msg="PASO|25|iniciar|PATCH|400|61|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:31Z" level=info msg="PASO|198|iniciar|PATCH|400|256|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:32Z" level=info msg="PASO|135|iniciar|PATCH|400|112|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:33Z" level=info msg="PASO|186|iniciar|PATCH|400|248|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:33Z" level=info msg="PASO|8|iniciar|PATCH|400|65|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:34Z" level=info msg="PASO|137|iniciar|PATCH|400|39|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:34Z" level=info msg="PASO|83|iniciar|PATCH|400|47|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:34Z" level=info msg="PASO|250|iniciar|PATCH|400|12|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:34Z" level=info msg="PASO|172|iniciar|PATCH|400|74|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:35Z" level=info msg="PASO|127|iniciar|PATCH|400|14|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:35Z" level=info msg="PASO|268|iniciar|PATCH|400|20|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:37Z" level=info msg="PASO|306|iniciar|PATCH|400|29|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:38Z" level=info msg="PASO|51|iniciar|PATCH|400|16|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:38Z" level=info msg="PASO|6|iniciar|PATCH|400|21|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:39Z" level=info msg="PASO|88|iniciar|PATCH|400|9|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:40Z" level=info msg="PASO|148|cita|POST|400|9|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:40:43Z" level=info msg="PASO|331|iniciar|PATCH|400|8|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:43Z" level=info msg="PASO|39|iniciar|PATCH|400|21|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:44Z" level=info msg="PASO|70|iniciar|PATCH|400|25|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:47Z" level=info msg="PASO|94|iniciar|PATCH|400|71|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:47Z" level=info msg="PASO|213|iniciar|PATCH|400|36|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:47Z" level=info msg="PASO|269|cita|POST|400|7|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:40:47Z" level=info msg="PASO|222|iniciar|PATCH|400|8|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:48Z" level=info msg="PASO|258|iniciar|PATCH|400|5|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:49Z" level=info msg="PASO|89|iniciar|PATCH|400|22|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:49Z" level=info msg="PASO|79|iniciar|PATCH|400|23|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:50Z" level=info msg="PASO|261|iniciar|PATCH|400|166|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:50Z" level=info msg="PASO|322|iniciar|PATCH|400|26|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:51Z" level=info msg="PASO|276|cita|POST|400|14|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:40:51Z" level=info msg="PASO|259|iniciar|PATCH|400|6|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:51Z" level=info msg="PASO|152|iniciar|PATCH|400|23|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:52Z" level=info msg="PASO|229|iniciar|PATCH|400|26|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:52Z" level=info msg="PASO|228|iniciar|PATCH|400|22|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:52Z" level=info msg="PASO|119|iniciar|PATCH|400|25|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:52Z" level=info msg="PASO|193|iniciar|PATCH|400|32|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:58Z" level=info msg="PASO|346|iniciar|PATCH|400|79|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:58Z" level=info msg="PASO|267|iniciar|PATCH|400|18|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:58Z" level=info msg="PASO|206|iniciar|PATCH|400|17|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:40:59Z" level=info msg="PASO|336|iniciar|PATCH|400|13|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:02Z" level=info msg="PASO|313|iniciar|PATCH|400|40|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:02Z" level=info msg="PASO|28|iniciar|PATCH|400|102|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:02Z" level=info msg="PASO|259|cita|POST|400|43|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:41:02Z" level=info msg="PASO|134|punto_cobro|POST|400|30|FALLO|{\"success\":false,\"message\":\"Ya existe un punto de cobro con ese nombre\",\"data\":null}" source=console
+time="2026-11-22T05:41:02Z" level=info msg="PASO|191|iniciar|PATCH|400|47|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:03Z" level=info msg="PASO|62|iniciar|PATCH|400|31|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:03Z" level=info msg="PASO|237|iniciar|PATCH|400|31|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:06Z" level=info msg="PASO|207|iniciar|PATCH|400|14|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:07Z" level=info msg="PASO|308|iniciar|PATCH|400|48|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:07Z" level=info msg="PASO|285|iniciar|PATCH|400|39|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:08Z" level=info msg="PASO|226|iniciar|PATCH|400|179|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:10Z" level=info msg="PASO|287|iniciar|PATCH|400|29|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:10Z" level=info msg="PASO|307|iniciar|PATCH|400|6|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:10Z" level=info msg="PASO|312|iniciar|PATCH|400|5|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:11Z" level=info msg="PASO|123|iniciar|PATCH|400|21|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:12Z" level=info msg="PASO|321|iniciar|PATCH|400|24|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:13Z" level=info msg="PASO|209|iniciar|PATCH|400|79|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:13Z" level=info msg="PASO|269|iniciar|PATCH|400|34|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:13Z" level=info msg="PASO|147|iniciar|PATCH|400|31|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:14Z" level=info msg="PASO|94|iniciar|PATCH|400|68|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:14Z" level=info msg="PASO|29|iniciar|PATCH|400|145|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:14Z" level=info msg="PASO|60|iniciar|PATCH|400|42|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:14Z" level=info msg="PASO|157|iniciar|PATCH|400|29|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:15Z" level=info msg="PASO|3|iniciar|PATCH|400|39|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:15Z" level=info msg="PASO|75|iniciar|PATCH|400|62|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:16Z" level=info msg="PASO|30|iniciar|PATCH|400|108|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:16Z" level=info msg="PASO|304|iniciar|PATCH|400|20|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:17Z" level=info msg="PASO|289|iniciar|PATCH|400|12|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:17Z" level=info msg="PASO|183|iniciar|PATCH|400|7|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:18Z" level=info msg="PASO|139|iniciar|PATCH|400|6|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:18Z" level=info msg="PASO|100|iniciar|PATCH|400|5|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:19Z" level=info msg="PASO|348|iniciar|PATCH|400|53|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:19Z" level=info msg="PASO|122|iniciar|PATCH|400|63|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:19Z" level=info msg="PASO|164|iniciar|PATCH|400|24|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:20Z" level=info msg="PASO|109|punto_cobro|POST|400|44|FALLO|{\"success\":false,\"message\":\"Ya existe un punto de cobro con ese nombre\",\"data\":null}" source=console
+time="2026-11-22T05:41:20Z" level=info msg="PASO|247|iniciar|PATCH|400|23|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:21Z" level=info msg="PASO|24|iniciar|PATCH|400|6|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:21Z" level=info msg="PASO|140|cita|POST|400|7|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:41:23Z" level=info msg="PASO|34|iniciar|PATCH|400|27|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:23Z" level=info msg="PASO|173|iniciar|PATCH|400|14|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:23Z" level=info msg="PASO|72|iniciar|PATCH|400|15|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:25Z" level=info msg="PASO|264|iniciar|PATCH|400|18|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:25Z" level=info msg="PASO|170|iniciar|PATCH|400|21|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:27Z" level=info msg="PASO|292|iniciar|PATCH|400|15|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:28Z" level=info msg="PASO|5|iniciar|PATCH|400|24|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:29Z" level=info msg="PASO|325|iniciar|PATCH|400|6|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:30Z" level=info msg="PASO|259|iniciar|PATCH|400|7|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:32Z" level=info msg="PASO|179|iniciar|PATCH|400|21|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:32Z" level=info msg="PASO|20|iniciar|PATCH|400|8|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:34Z" level=info msg="PASO|59|iniciar|PATCH|400|53|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:36Z" level=info msg="PASO|92|iniciar|PATCH|400|45|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:36Z" level=info msg="PASO|299|iniciar|PATCH|400|29|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:36Z" level=info msg="PASO|205|iniciar|PATCH|400|47|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:40Z" level=info msg="PASO|126|iniciar|PATCH|400|41|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:40Z" level=info msg="PASO|66|iniciar|PATCH|400|30|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:42Z" level=info msg="PASO|314|iniciar|PATCH|400|83|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:42Z" level=info msg="PASO|45|iniciar|PATCH|400|219|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:42Z" level=info msg="PASO|51|iniciar|PATCH|400|193|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:43Z" level=info msg="PASO|77|iniciar|PATCH|400|387|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:44Z" level=info msg="PASO|237|iniciar|PATCH|400|378|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:44Z" level=info msg="PASO|264|cita|POST|400|475|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:41:45Z" level=info msg="PASO|265|iniciar|PATCH|400|674|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:45Z" level=info msg="PASO|106|iniciar|PATCH|400|407|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:46Z" level=info msg="PASO|160|iniciar|PATCH|400|1175|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:46Z" level=info msg="PASO|140|cita|POST|400|1083|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:41:47Z" level=info msg="PASO|157|iniciar|PATCH|400|763|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:48Z" level=info msg="PASO|333|iniciar|PATCH|400|1341|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:48Z" level=info msg="PASO|11|iniciar|PATCH|400|64|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:49Z" level=info msg="PASO|81|iniciar|PATCH|400|2466|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:50Z" level=info msg="PASO|23|iniciar|PATCH|400|718|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:50Z" level=info msg="PASO|1|iniciar|PATCH|400|1693|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:51Z" level=info msg="PASO|219|iniciar|PATCH|400|1158|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:51Z" level=info msg="PASO|230|iniciar|PATCH|400|859|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:53Z" level=info msg="PASO|60|iniciar|PATCH|400|1504|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:53Z" level=info msg="PASO|164|iniciar|PATCH|400|746|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:53Z" level=info msg="PASO|297|iniciar|PATCH|400|1771|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:55Z" level=info msg="PASO|115|iniciar|PATCH|400|2096|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:55Z" level=info msg="PASO|146|cita|POST|400|1589|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:41:55Z" level=info msg="PASO|214|iniciar|PATCH|400|59|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:55Z" level=info msg="PASO|313|iniciar|PATCH|400|898|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:55Z" level=info msg="PASO|206|iniciar|PATCH|400|170|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:56Z" level=info msg="PASO|167|iniciar|PATCH|400|1153|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:56Z" level=info msg="PASO|76|iniciar|PATCH|400|2993|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:56Z" level=info msg="PASO|338|iniciar|PATCH|400|2517|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:57Z" level=info msg="PASO|305|iniciar|PATCH|400|913|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:57Z" level=info msg="PASO|14|iniciar|PATCH|400|648|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:57Z" level=info msg="PASO|174|iniciar|PATCH|400|413|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:58Z" level=info msg="PASO|191|iniciar|PATCH|400|286|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:58Z" level=info msg="PASO|127|iniciar|PATCH|400|905|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:58Z" level=info msg="PASO|282|iniciar|PATCH|400|1031|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:58Z" level=info msg="PASO|89|iniciar|PATCH|400|2520|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:58Z" level=info msg="PASO|128|iniciar|PATCH|400|244|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:59Z" level=info msg="PASO|337|iniciar|PATCH|400|42|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:59Z" level=info msg="PASO|64|iniciar|PATCH|400|62|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:59Z" level=info msg="PASO|342|iniciar|PATCH|400|225|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:41:59Z" level=info msg="PASO|125|iniciar|PATCH|400|650|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:00Z" level=info msg="PASO|345|iniciar|PATCH|400|2112|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:00Z" level=info msg="PASO|249|iniciar|PATCH|400|1516|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:01Z" level=info msg="PASO|54|iniciar|PATCH|400|1275|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:02Z" level=info msg="PASO|270|iniciar|PATCH|400|1518|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:02Z" level=info msg="PASO|11|iniciar|PATCH|400|1390|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:02Z" level=info msg="PASO|287|iniciar|PATCH|400|212|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:03Z" level=info msg="PASO|31|iniciar|PATCH|400|885|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:03Z" level=info msg="PASO|274|iniciar|PATCH|400|51|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:05Z" level=info msg="PASO|99|iniciar|PATCH|400|426|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:06Z" level=info msg="PASO|232|iniciar|PATCH|400|813|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:06Z" level=info msg="PASO|225|iniciar|PATCH|400|576|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:06Z" level=info msg="PASO|283|iniciar|PATCH|400|53|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:06Z" level=info msg="PASO|55|iniciar|PATCH|400|734|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:07Z" level=info msg="PASO|199|iniciar|PATCH|400|189|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:08Z" level=info msg="PASO|10|iniciar|PATCH|400|594|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:08Z" level=info msg="PASO|319|iniciar|PATCH|400|44|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:09Z" level=info msg="PASO|115|iniciar|PATCH|400|645|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:09Z" level=info msg="PASO|350|iniciar|PATCH|400|138|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:09Z" level=info msg="PASO|95|iniciar|PATCH|400|53|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:10Z" level=info msg="PASO|34|iniciar|PATCH|400|21|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:10Z" level=info msg="PASO|272|iniciar|PATCH|400|13|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:11Z" level=info msg="PASO|124|iniciar|PATCH|400|22|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:11Z" level=info msg="PASO|47|iniciar|PATCH|400|7|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:14Z" level=info msg="PASO|300|iniciar|PATCH|400|10|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:15Z" level=info msg="PASO|73|iniciar|PATCH|400|57|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:15Z" level=info msg="PASO|120|iniciar|PATCH|400|69|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:17Z" level=info msg="PASO|255|iniciar|PATCH|400|361|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:22Z" level=info msg="PASO|189|iniciar|PATCH|400|423|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:24Z" level=info msg="PASO|186|iniciar|PATCH|400|666|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:24Z" level=info msg="PASO|198|iniciar|PATCH|400|1078|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:25Z" level=info msg="PASO|137|iniciar|PATCH|400|2890|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:25Z" level=info msg="PASO|295|iniciar|PATCH|400|7794|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:25Z" level=info msg="PASO|29|iniciar|PATCH|400|158|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:25Z" level=info msg="PASO|123|iniciar|PATCH|400|1297|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:25Z" level=info msg="PASO|43|iniciar|PATCH|400|1278|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:26Z" level=info msg="PASO|131|iniciar|PATCH|400|6495|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:26Z" level=info msg="PASO|266|iniciar|PATCH|400|363|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:26Z" level=info msg="PASO|9|iniciar|PATCH|400|1432|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:28Z" level=info msg="PASO|35|iniciar|PATCH|400|1058|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:28Z" level=info msg="PASO|191|iniciar|PATCH|400|617|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:29Z" level=info msg="PASO|138|cita|POST|400|1995|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-22T05:42:29Z" level=info msg="PASO|51|iniciar|PATCH|400|381|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:30Z" level=info msg="PASO|141|iniciar|PATCH|400|1088|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:30Z" level=info msg="PASO|81|iniciar|PATCH|400|424|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:30Z" level=info msg="PASO|95|iniciar|PATCH|400|71|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:34Z" level=info msg="PASO|28|iniciar|PATCH|400|5|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-22T05:42:38Z" level=info msg="PASO|31|iniciar|PATCH|400|7|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+{
+ "perfil": "carga_escritura",
+ "nivel": 350,
+ "iteraciones_completas": 6913,
+ "peticiones": 27504,
+ "duracion_total_s": 548.5464308009999,
+ "latencia_ms": {
+  "mediana": 45.6603025,
+  "p95": 2014.5599035499952,
+  "max": 30001.533817
+ },
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 27041,
+  "otro_4xx": 252,
+  "5xx": 0,
+  "sin_respuesta": 211
+ },
+ "pasos": {
+  "apoderado": {
+   "correctos": 1450,
+   "fallidos": 23
+  },
+  "mascota": {
+   "correctos": 1439,
+   "fallidos": 11
+  },
+  "cita": {
+   "correctos": 1411,
+   "fallidos": 28
+  },
+  "checkin": {
+   "correctos": 697,
+   "fallidos": 13
+  },
+  "iniciar": {
+   "correctos": 477,
+   "fallidos": 233
+  },
+  "consulta": {
+   "correctos": 474,
+   "fallidos": 3
+  },
+  "diagnostico": {
+   "correctos": 476,
+   "fallidos": 1
+  },
+  "receta": {
+   "correctos": 477,
+   "fallidos": 0
+  },
+  "actualizar_mascota": {
+   "correctos": 477,
+   "fallidos": 0
+  },
+  "cerrar_consulta": {
+   "correctos": 474,
+   "fallidos": 3
+  },
+  "finalizar_servicio": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "punto_cobro": {
+   "correctos": 224,
+   "fallidos": 7
+  },
+  "vincular_equipo": {
+   "correctos": 222,
+   "fallidos": 2
+  },
+  "abrir_caja": {
+   "correctos": 221,
+   "fallidos": 1
+  },
+  "pago": {
+   "correctos": 346,
+   "fallidos": 4
+  },
+  "cancelar_cita": {
+   "correctos": 287,
+   "fallidos": 6
+  }
+ },
+ "acciones": {
+  "panel": 1481,
+  "agenda": 1125,
+  "historia": 964,
+  "reportes": 145,
+  "recepcion": 1473,
+  "atencion": 710,
+  "cobro": 360,
+  "cancelar": 293
+ },
+ "acciones_sin_trabajo": 1069,
+ "vus_maximos": 350
+}
