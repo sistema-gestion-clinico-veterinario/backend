@@ -1,0 +1,47 @@
+name: "Publicar los resultados de la batería en una rama (solo lectura de artefactos)"
+
+on:
+  push:
+    branches: [medicion/publicar-bateria]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: medicion-publicar-bateria
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    name: Descargar los artefactos de la ejecución y publicarlos
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Descargar los artefactos de la batería
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 45229114452
+          github-token: ${{ github.token }}
+          pattern: bateria-r*
+          path: descargas
+
+      - name: Publicar en la rama medicion/resultados-bateria
+        env:
+          TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -e
+          find descargas -type f -size +50M -delete
+          du -sh descargas
+          rm -rf /tmp/publicar && mkdir -p /tmp/publicar
+          cp -r descargas /tmp/publicar/resultados-bateria
+          cd /tmp/publicar
+          git init -q
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git checkout -q -b medicion/resultados-bateria
+          git add -A
+          git commit -q -m "Resultados de la batería (ejecución 45229114452)"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${REPO}.git" medicion/resultados-bateria
