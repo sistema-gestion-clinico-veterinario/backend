@@ -42,7 +42,7 @@ jobs:
       - name: Compilar los dos frontends
         run: |
           for v in antes despues; do
-            (cd ".front-$v" && npm ci --no-audit --no-fund && npx ng build --configuration measurement)
+            (cd ".front-$v" && npx -y npm@11.6.2 ci --no-audit --no-fund && npx ng build --configuration measurement)
           done
       - uses: grafana/setup-k6-action@v1
       - name: Instalar Playwright
@@ -94,7 +94,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24 }
       - name: Compilar el frontend
-        run: cd .front-despues && npm ci --no-audit --no-fund && npx ng build --configuration measurement
+        run: cd .front-despues && npx -y npm@11.6.2 ci --no-audit --no-fund && npx ng build --configuration measurement
       - uses: grafana/setup-k6-action@v1
       - name: Instalar Playwright
         working-directory: medicion/visual
@@ -144,7 +144,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24 }
       - name: Compilar el frontend
-        run: cd .front-despues && npm ci --no-audit --no-fund && npx ng build --configuration measurement
+        run: cd .front-despues && npx -y npm@11.6.2 ci --no-audit --no-fund && npx ng build --configuration measurement
       - uses: grafana/setup-k6-action@v1
       - name: Instalar Playwright
         working-directory: medicion/visual
