@@ -8,11 +8,17 @@ TRABAJADORES="${TRABAJADORES_CORTE:-40}"
 ESPERA="${ESPERA_CORTE_S:-12}"
 TXT="$SAL/corte_$V.txt"
 D="$(mktemp -d)"
+: > "$D/otras.txt"
 
 recuento() {
   cat "$D"/w*.log 2> /dev/null | awk -v a="$1" -v b="$2" '
     $1 >= a && $1 < b { total++; n[$2]++ }
-    END { otros = total - n["200"] - n["401"] - n["503"] - n["000"]; printf "%d %d %d %d %d %d", total, n["200"], n["401"], n["503"], n["000"], otros }'
+    END {
+      otros = total - n["200"] - n["401"] - n["503"] - n["000"]
+      detalle = ""
+      for (c in n) if (c != "200" && c != "401" && c != "503" && c != "000") detalle = detalle (detalle == "" ? "" : ",") c ":" n[c]
+      printf "%d %d %d %d %d %d %s", total, n["200"], n["401"], n["503"], n["000"], otros, (detalle == "" ? "-" : detalle)
+    }'
 }
 
 trabajador() {
@@ -36,8 +42,8 @@ done
   echo
   echo "$TRABAJADORES usuarios distintos consultan \`GET /me/navigation\` en bucle (una pausa de 0,3 s entre peticiones de cada uno). En cada ciclo se detiene PostgreSQL con \`docker stop\`, se mantiene detenido $ESPERA s y se vuelve a arrancar. Se cuentan las respuestas recibidas durante esos $ESPERA s."
   echo
-  echo "| Ciclo | Respuestas | 200 | 401 | 503 | Sin respuesta | Otras | Conexiones cortadas con 57P01 |"
-  echo "|---|---|---|---|---|---|---|---|"
+  echo "| Ciclo | Respuestas | 200 | 401 | 503 | Sin respuesta | Otras | Códigos de las otras | Conexiones cortadas con 57P01 |"
+  echo "|---|---|---|---|---|---|---|---|---|"
 } > "$TXT"
 
 T_TOTAL=0; T_200=0; T_401=0; T_503=0; T_000=0; T_OTR=0; T_57=0
@@ -55,12 +61,22 @@ for c in $(seq 1 "$CICLOS"); do
   sleep 8
   touch "$D/fin"
   wait
-  read -r total ok n401 n503 n000 otros <<< "$(recuento "$t0" "$t1")"
+  read -r total ok n401 n503 n000 otros detalle <<< "$(recuento "$t0" "$t1")"
   n57="$(docker logs --since "${t0%.*}" --until "$(( ${t1%.*} + 1 ))" "sv-$V" 2>&1 | grep -c 'SQLSTATE(57P01)')"
-  echo "| $c | $total | $ok | $n401 | $n503 | $n000 | $otros | $n57 |" >> "$TXT"
+  echo "| $c | $total | $ok | $n401 | $n503 | $n000 | $otros | $detalle | $n57 |" >> "$TXT"
+  echo "$detalle" >> "$D/otras.txt"
   T_TOTAL=$((T_TOTAL + total)); T_200=$((T_200 + ok)); T_401=$((T_401 + n401)); T_503=$((T_503 + n503)); T_000=$((T_000 + n000)); T_OTR=$((T_OTR + otros)); T_57=$((T_57 + n57))
 done
-echo "| **Total** | **$T_TOTAL** | **$T_200** | **$T_401** | **$T_503** | **$T_000** | **$T_OTR** | **$T_57** |" >> "$TXT"
+TOTAL_CODIGOS="$(tr ',' '\n' < "$D/otras.txt" | grep -v '^-$' | awk -F: 'NF == 2 { n[$1] += $2 } END { for (c in n) printf "%s%s:%d", (s++ ? "," : ""), c, n[c] }')"
+echo "| **Total** | **$T_TOTAL** | **$T_200** | **$T_401** | **$T_503** | **$T_000** | **$T_OTR** | **${TOTAL_CODIGOS:--}** | **$T_57** |" >> "$TXT"
 echo >> "$TXT"
 echo "Un 401 durante el corte es una sesión válida que el servidor rechazó por no poder consultar la base. Un 503 es la respuesta correcta." >> "$TXT"
+{
+  echo
+  echo "Errores inesperados registrados por el filtro de sesión (cadena de excepciones y código SQL, cuántas veces):"
+  echo
+  echo '```'
+  docker logs "sv-$V" 2>&1 | grep 'Sesión sin autenticar por un error inesperado' | sed -E 's/^.*error inesperado: //' | sort | uniq -c | sort -rn | head -10
+  echo '```'
+} >> "$TXT"
 rm -rf "$D"

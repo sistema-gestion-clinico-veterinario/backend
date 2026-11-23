@@ -1,0 +1,260 @@
+name: "Evidencia visual en un navegador real y cierre de la caída de la base (laboratorio)"
+
+on:
+  push:
+    branches: [medicion/visual]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: medicion-visual
+  cancel-in-progress: false
+
+env:
+  FRONTEND_REPO: sistema-gestion-clinico-veterinario/frontend
+
+jobs:
+  caida:
+    name: Caída de la base vista en el navegador, réplica ${{ matrix.replica }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [r1, r2]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backend anterior (green-503-antes)
+        uses: actions/checkout@v4
+        with: { ref: green-503-antes, path: .antes }
+      - name: Backend final (green-diagnostico-despues)
+        uses: actions/checkout@v4
+        with: { ref: green-diagnostico-despues, path: .despues }
+      - name: Frontend anterior (green-sesion-antes)
+        uses: actions/checkout@v4
+        with: { repository: "${{ env.FRONTEND_REPO }}", ref: green-sesion-antes, path: .front-antes }
+      - name: Frontend nuevo (green-sesion-despues)
+        uses: actions/checkout@v4
+        with: { repository: "${{ env.FRONTEND_REPO }}", ref: green-sesion-despues, path: .front-despues }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Compilar los dos frontends
+        run: |
+          for v in antes despues; do
+            (cd ".front-$v" && npm ci --no-audit --no-fund && npx ng build --configuration measurement)
+          done
+      - uses: grafana/setup-k6-action@v1
+      - name: Instalar Playwright
+        working-directory: medicion/visual
+        run: |
+          npm init -y > /dev/null
+          npm install playwright@1.49.1 --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Ejecutar la prueba visual
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: antes despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/escritura/PLAN_CAOS
+          RESET_BASE: "0"
+          ESCENARIO_VISUAL: caida
+          ENV_EXTRA_BACKEND: DB_POOL_CONNECTION_TIMEOUT_MS=5000
+          FRONT_DIST_antes: ${{ github.workspace }}/.front-antes/dist/vetsystem-frontend/browser
+          FRONT_DIST_despues: ${{ github.workspace }}/.front-despues/dist/vetsystem-frontend/browser
+          PG_SHARED_BUFFERS: 1GB
+          ITER_POR_VU: "40"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-caida-${{ matrix.replica }}
+          path: resultados/
+          if-no-files-found: warn
+
+  login:
+    name: Inicio de sesión bajo ráfaga visto en el navegador
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backend anterior (green-login-antes)
+        uses: actions/checkout@v4
+        with: { ref: green-login-antes, path: .antes }
+      - name: Backend nuevo (green-login-despues)
+        uses: actions/checkout@v4
+        with: { ref: green-login-despues, path: .despues }
+      - name: Frontend (green-sesion-despues)
+        uses: actions/checkout@v4
+        with: { repository: "${{ env.FRONTEND_REPO }}", ref: green-sesion-despues, path: .front-despues }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Compilar el frontend
+        run: cd .front-despues && npm ci --no-audit --no-fund && npx ng build --configuration measurement
+      - uses: grafana/setup-k6-action@v1
+      - name: Instalar Playwright
+        working-directory: medicion/visual
+        run: |
+          npm init -y > /dev/null
+          npm install playwright@1.49.1 --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Ejecutar la prueba visual
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: antes despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/escritura/PLAN_CAOS
+          RESET_BASE: "0"
+          ESCENARIO_VISUAL: login
+          FRONT_DIST_antes: ${{ github.workspace }}/.front-despues/dist/vetsystem-frontend/browser
+          FRONT_DIST_despues: ${{ github.workspace }}/.front-despues/dist/vetsystem-frontend/browser
+          PG_SHARED_BUFFERS: 1GB
+          ITER_POR_VU: "40"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-login
+          path: resultados/
+          if-no-files-found: warn
+
+  panel:
+    name: Carga del panel vista en el navegador
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backend anterior (green-panel-antes)
+        uses: actions/checkout@v4
+        with: { ref: green-panel-antes, path: .antes }
+      - name: Backend nuevo (green-panel-despues)
+        uses: actions/checkout@v4
+        with: { ref: green-panel-despues, path: .despues }
+      - name: Frontend (green-sesion-despues)
+        uses: actions/checkout@v4
+        with: { repository: "${{ env.FRONTEND_REPO }}", ref: green-sesion-despues, path: .front-despues }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Compilar el frontend
+        run: cd .front-despues && npm ci --no-audit --no-fund && npx ng build --configuration measurement
+      - uses: grafana/setup-k6-action@v1
+      - name: Instalar Playwright
+        working-directory: medicion/visual
+        run: |
+          npm init -y > /dev/null
+          npm install playwright@1.49.1 --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Ejecutar la prueba visual
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: antes despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/escritura/PLAN_CAOS
+          RESET_BASE: "0"
+          ESCENARIO_VISUAL: panel
+          FRONT_DIST_antes: ${{ github.workspace }}/.front-despues/dist/vetsystem-frontend/browser
+          FRONT_DIST_despues: ${{ github.workspace }}/.front-despues/dist/vetsystem-frontend/browser
+          PG_SHARED_BUFFERS: 1GB
+          ITER_POR_VU: "40"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-panel
+          path: resultados/
+          if-no-files-found: warn
+
+  corte:
+    name: Corte con peticiones en curso con el código final, réplica ${{ matrix.replica }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [r1, r2]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backend final (green-diagnostico-despues)
+        uses: actions/checkout@v4
+        with: { ref: green-diagnostico-despues, path: .despues }
+      - uses: grafana/setup-k6-action@v1
+      - name: Ejecutar los cortes
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/escritura/PLAN_CAOS
+          RESET_BASE: "0"
+          MODO_CORTE: "1"
+          ENV_EXTRA_BACKEND: DB_POOL_CONNECTION_TIMEOUT_MS=5000
+          CICLOS_CORTE: "20"
+          TRABAJADORES_CORTE: "40"
+          ESPERA_CORTE_S: "12"
+          PG_SHARED_BUFFERS: 1GB
+          ITER_POR_VU: "40"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corte-final-${{ matrix.replica }}
+          path: resultados/
+          if-no-files-found: warn
+
+  espera-intermedia:
+    name: Espera de conexión con paradas de ${{ matrix.parada }} s, réplica ${{ matrix.replica }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [r1, r2]
+        parada: [5, 15]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backend final (green-diagnostico-despues)
+        uses: actions/checkout@v4
+        with: { ref: green-diagnostico-despues, path: .despues }
+      - uses: grafana/setup-k6-action@v1
+      - name: Ejecutar las paradas con tres esperas de conexión
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: despues
+          VARIANTES: "F:caos_bd_parada_despues:::despues F:caos_bd_parada_medio::DB_POOL_CONNECTION_TIMEOUT_MS=10000:despues F:caos_bd_parada_rapido::DB_POOL_CONNECTION_TIMEOUT_MS=5000:despues"
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/escritura/PLAN_CAOS
+          RESET_BASE: "1"
+          MODO_VARIANTES: caos
+          FASE_ETIQUETA: 3h
+          ESPERA_CAOS: "150"
+          PARADA_BD_S: ${{ matrix.parada }}
+          ESPERA_SONDA_S: ${{ matrix.parada == 5 && '0' || '8' }}
+          SONDA_INICIO_S: "2"
+          PG_SHARED_BUFFERS: 1GB
+          ITER_POR_VU: "40"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: espera-${{ matrix.parada }}s-${{ matrix.replica }}
+          path: resultados/
+          if-no-files-found: warn

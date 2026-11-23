@@ -408,8 +408,10 @@ caos_en_segundo_plano() {
     bd_parada)
       docker stop sv-pg > /dev/null 2>&1
       local t_parada restante; t_parada="$(date +%s)"
-      sleep 8
-      sonda_caida "$jar" "con la base caída" "$etiqueta"
+      if [ "${ESPERA_SONDA_S:-15}" -gt 0 ]; then
+        sleep "${SONDA_INICIO_S:-8}"
+        sonda_caida "$jar" "con la base caída" "$etiqueta"
+      fi
       restante=$(( ${PARADA_BD_S:-30} - ($(date +%s) - t_parada) ))
       [ "$restante" -gt 0 ] && sleep "$restante"
       docker start sv-pg > /dev/null 2>&1 ;;
@@ -427,7 +429,8 @@ caos_en_segundo_plano() {
     if curl -fsS --max-time 2 "http://127.0.0.1:$PUERTO/api/v1/actuator/health" > /dev/null 2>&1; then t_backend_ok="$(date +%s.%N)"; break; fi
     sleep 0.5
   done
-  [ -n "$jar" ] && sonda_caida "$jar" "con la base recuperada" "$etiqueta" && rm -f "$jar"
+  [ -n "$jar" ] && [ "${ESPERA_SONDA_S:-15}" -gt 0 ] && sonda_caida "$jar" "con la base recuperada" "$etiqueta"
+  [ -n "$jar" ] && rm -f "$jar"
   jq -n --arg evento "$evento" --arg inicio "$t_inicio" --arg evento_t "$t_evento" --arg bd "$t_bd_listo" --arg be "$t_backend_ok" --arg sa "$seq_antes" --arg sd "$seq_despues" \
     '{secuencia_antes:$sa, secuencia_despues:$sd, evento:$evento, t_inicio_k6:($inicio|tonumber), t_evento:($evento_t|tonumber), t_bd_listo:(if $bd=="" then null else ($bd|tonumber) end), t_backend_ok:(if $be=="" then null else ($be|tonumber) end)}' \
     > "$SAL/niveles/caos_${etiqueta}.json"
@@ -462,7 +465,7 @@ correr_nivel_escritura() {
   inicio_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   log "[$v] nivel $nivel: k6 con hasta $nivel usuarios (subida $rampa, sostenido $mantener)"
   local evento_caos="" pid_caos=""
-  case "$prefijo" in caos_*) evento_caos="${prefijo#caos_}"; evento_caos="${evento_caos%_antes}"; evento_caos="${evento_caos%_despues}"; evento_caos="${evento_caos%_rapido}" ;; esac
+  case "$prefijo" in caos_*) evento_caos="${prefijo#caos_}"; evento_caos="${evento_caos%_antes}"; evento_caos="${evento_caos%_despues}"; evento_caos="${evento_caos%_rapido}"; evento_caos="${evento_caos%_medio}" ;; esac
   if [ -n "$evento_caos" ]; then
     log "[$v] evento de caos programado: $evento_caos a los ${ESPERA_CAOS:-150} s del inicio de la carga"
     caos_en_segundo_plano "$v" "$etiqueta" "$evento_caos" "${ESPERA_CAOS:-150}" &
@@ -557,6 +560,24 @@ if [ "${MODO_SEGURIDAD:-0}" = 1 ]; then
     detener_backend "$v" "seguridad_$v"
   done
   log "terminado (prueba de seguridad)"
+  exit 0
+fi
+if [ -n "${ESCENARIO_VISUAL:-}" ]; then
+  for v in $VERSIONES; do preparar_clinica "$v"; done
+  mkdir -p "$SAL/visual"
+  for v in $VERSIONES; do
+    log "[$v] prueba visual ($ESCENARIO_VISUAL)"
+    iniciar_backend "$v" none 1 2g "$PIN_BACK"
+    esperar_salud > /dev/null || fallo "el backend $v no arrancó"
+    esperar_inicializacion "$v"
+    export PUERTO SLUG USUARIO CLAVE SAL RAIZ ESCENARIO_VISUAL FRONT_DIST_antes FRONT_DIST_despues
+    bash "$RAIZ/medicion/visual/prueba_visual.sh" "$v" || true
+    detener_backend "$v" "visual_${ESCENARIO_VISUAL}_$v"
+  done
+  python3 "$RAIZ/medicion/visual/informe_visual.py" "$SAL" "$ESCENARIO_VISUAL" > "$SAL/logs/informe_visual_$ESCENARIO_VISUAL.log" 2>&1 \
+    && cat "$SAL/visual/INFORME_$ESCENARIO_VISUAL.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
+    || log "no se pudo generar el informe visual (ver logs/informe_visual_$ESCENARIO_VISUAL.log)"
+  log "terminado (prueba visual $ESCENARIO_VISUAL)"
   exit 0
 fi
 if [ "${MODO_CORTE:-0}" = 1 ]; then

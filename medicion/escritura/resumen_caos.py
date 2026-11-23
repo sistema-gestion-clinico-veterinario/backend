@@ -2,6 +2,7 @@ import csv
 import gzip
 import json
 import re
+import os
 import sys
 from collections import Counter
 from pathlib import Path
@@ -11,13 +12,16 @@ import informe_carga as c  # noqa: E402
 
 RAIZ = Path(sys.argv[1])
 NIV = RAIZ / 'niveles'
+PARADA = os.environ.get('PARADA_BD_S', '30')
+
 NOMBRES = {
     'caos_bd_reinicio': 'Reinicio ordenado de PostgreSQL',
     'caos_bd_kill': 'Caída abrupta de PostgreSQL (SIGKILL) y arranque',
-    'caos_bd_parada': 'PostgreSQL detenido 30 s',
-    'caos_bd_parada_antes': 'PostgreSQL detenido 30 s, código anterior (401 y 500)',
-    'caos_bd_parada_despues': 'PostgreSQL detenido 30 s, código con 503',
-    'caos_bd_parada_rapido': 'PostgreSQL detenido 30 s, código con 503 y espera de conexión de 5 s',
+    'caos_bd_parada': f'PostgreSQL detenido {PARADA} s',
+    'caos_bd_parada_antes': f'PostgreSQL detenido {PARADA} s, código anterior (401 y 500)',
+    'caos_bd_parada_despues': f'PostgreSQL detenido {PARADA} s, código con 503',
+    'caos_bd_parada_rapido': f'PostgreSQL detenido {PARADA} s, código con 503 y espera de conexión de 5 s',
+    'caos_bd_parada_medio': f'PostgreSQL detenido {PARADA} s, código con 503 y espera de conexión de 10 s',
     'caos_bd_kill_checkpoint': 'Caída abrupta de PostgreSQL tras un CHECKPOINT',
     'caos_backend_kill': 'Caída abrupta del backend (SIGKILL) y arranque',
 }
