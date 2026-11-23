@@ -1,0 +1,126 @@
+name: "Corte de PostgreSQL: clasificación del error y espera de conexión (laboratorio)"
+
+on:
+  push:
+    branches: [medicion/corte]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: medicion-corte
+  cancel-in-progress: false
+
+jobs:
+  corte:
+    name: Corte con peticiones en curso, réplica ${{ matrix.replica }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [r1, r2]
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el código anterior (etiqueta green-sqlstate-antes)
+        uses: actions/checkout@v4
+        with:
+          ref: green-sqlstate-antes
+          path: .antes
+
+      - name: Descargar el código con la corrección (etiqueta green-sqlstate-despues)
+        uses: actions/checkout@v4
+        with:
+          ref: green-sqlstate-despues
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Ejecutar los cortes con cada versión
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: antes despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/escritura/PLAN_CAOS
+          RESET_BASE: "0"
+          MODO_CORTE: "1"
+          ENV_EXTRA_BACKEND: DB_POOL_CONNECTION_TIMEOUT_MS=5000
+          CICLOS_CORTE: "10"
+          TRABAJADORES_CORTE: "40"
+          ESPERA_CORTE_S: "12"
+          PG_SHARED_BUFFERS: 1GB
+          ITER_POR_VU: "40"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-corte-${{ matrix.replica }}
+          path: resultados/
+          if-no-files-found: warn
+
+  parada:
+    name: Parada de 30 s con la sonda acotada, réplica ${{ matrix.replica }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [r1, r2]
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el código anterior a M7 (etiqueta green-503-antes)
+        uses: actions/checkout@v4
+        with:
+          ref: green-503-antes
+          path: .antes
+
+      - name: Descargar el código con la corrección (etiqueta green-sqlstate-despues)
+        uses: actions/checkout@v4
+        with:
+          ref: green-sqlstate-despues
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Ejecutar la parada de PostgreSQL con cada variante
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: antes despues
+          VARIANTES: "F:caos_bd_parada_antes:::antes F:caos_bd_parada_despues:::despues F:caos_bd_parada_rapido::DB_POOL_CONNECTION_TIMEOUT_MS=5000:despues"
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/escritura/PLAN_CAOS
+          RESET_BASE: "1"
+          MODO_VARIANTES: caos
+          FASE_ETIQUETA: 3h
+          ESPERA_CAOS: "150"
+          PARADA_BD_S: "30"
+          ESPERA_SONDA_S: "15"
+          PG_SHARED_BUFFERS: 1GB
+          ITER_POR_VU: "40"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-parada-${{ matrix.replica }}
+          path: resultados/
+          if-no-files-found: warn

@@ -362,16 +362,28 @@ info_consentimiento() {
 }
 
 sonda_caida() {
-  local jar="$1" fase="$2" etiqueta="$3" base="http://127.0.0.1:$PUERTO/api/v1" cab codigo cookies_borradas
-  cab="$(mktemp)"
-  codigo="$(curl -s -o /dev/null -D "$cab" -w '%{http_code}' --max-time 40 -b "$jar" -X POST -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.9" "$base/auth/refresh")"
-  cookies_borradas="$(grep -ci 'Max-Age=0' "$cab")"
-  echo "$fase|POST /auth/refresh|$codigo|cookies de sesión borradas por la respuesta: $cookies_borradas" >> "$SAL/niveles/sonda_caida_${etiqueta}.txt"
-  codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 40 -b "$jar" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.9" "$base/me/navigation")"
-  echo "$fase|GET /me/navigation (con sesión)|$codigo|" >> "$SAL/niveles/sonda_caida_${etiqueta}.txt"
-  codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time 40 -H "Content-Type: application/json" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.8" -d "{\"slug\":\"$SLUG\",\"username\":\"${USUARIO}1\",\"password\":\"$CLAVE\"}" "$base/auth/login")"
-  echo "$fase|POST /auth/login|$codigo|" >> "$SAL/niveles/sonda_caida_${etiqueta}.txt"
-  rm -f "$cab"
+  local jar="$1" fase="$2" etiqueta="$3" base="http://127.0.0.1:$PUERTO/api/v1" espera="${ESPERA_SONDA_S:-15}" d
+  d="$(mktemp -d)"
+  (
+    codigo="$(curl -s -o /dev/null -D "$d/cab" -w '%{http_code}' --max-time "$espera" -b "$jar" -X POST -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.9" "$base/auth/refresh")"
+    cookies="$(grep -i '^set-cookie' "$d/cab" 2> /dev/null | tr -d '\r' | sed -E 's/^[Ss]et-[Cc]ookie: ([^=]+)=[^;]*;.*[Mm]ax-[Aa]ge=([0-9]+).*/\1 (Max-Age=\2)/' | paste -sd, -)"
+    echo "$codigo|cookies enviadas por la respuesta: ${cookies:-ninguna}" > "$d/1"
+  ) &
+  (
+    codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time "$espera" -b "$jar" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.9" "$base/me/navigation")"
+    echo "$codigo|" > "$d/2"
+  ) &
+  (
+    codigo="$(curl -s -o /dev/null -w '%{http_code}' --max-time "$espera" -H "Content-Type: application/json" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.8" -d "{\"slug\":\"$SLUG\",\"username\":\"${USUARIO}1\",\"password\":\"$CLAVE\"}" "$base/auth/login")"
+    echo "$codigo|" > "$d/3"
+  ) &
+  wait
+  local n nombre
+  for n in 1 2 3; do
+    case "$n" in 1) nombre="POST /auth/refresh" ;; 2) nombre="GET /me/navigation (con sesión)" ;; 3) nombre="POST /auth/login" ;; esac
+    echo "$fase|$nombre|$(cat "$d/$n" 2> /dev/null || echo '000|')" >> "$SAL/niveles/sonda_caida_${etiqueta}.txt"
+  done
+  rm -rf "$d"
 }
 
 caos_en_segundo_plano() {
@@ -393,7 +405,14 @@ caos_en_segundo_plano() {
     bd_reinicio) docker restart sv-pg > /dev/null 2>&1 ;;
     bd_kill) docker kill sv-pg > /dev/null 2>&1; docker start sv-pg > /dev/null 2>&1 ;;
     bd_kill_checkpoint) docker exec sv-pg psql -U postgres -qc "CHECKPOINT" > /dev/null 2>&1; docker kill sv-pg > /dev/null 2>&1; docker start sv-pg > /dev/null 2>&1 ;;
-    bd_parada) docker stop sv-pg > /dev/null 2>&1; sleep 8; sonda_caida "$jar" "con la base caída" "$etiqueta"; sleep $(( ${PARADA_BD_S:-30} - 8 )); docker start sv-pg > /dev/null 2>&1 ;;
+    bd_parada)
+      docker stop sv-pg > /dev/null 2>&1
+      local t_parada restante; t_parada="$(date +%s)"
+      sleep 8
+      sonda_caida "$jar" "con la base caída" "$etiqueta"
+      restante=$(( ${PARADA_BD_S:-30} - ($(date +%s) - t_parada) ))
+      [ "$restante" -gt 0 ] && sleep "$restante"
+      docker start sv-pg > /dev/null 2>&1 ;;
     backend_kill) docker kill "sv-$v" > /dev/null 2>&1; docker start "sv-$v" > /dev/null 2>&1 ;;
   esac
   case "$evento" in
@@ -538,6 +557,21 @@ if [ "${MODO_SEGURIDAD:-0}" = 1 ]; then
     detener_backend "$v" "seguridad_$v"
   done
   log "terminado (prueba de seguridad)"
+  exit 0
+fi
+if [ "${MODO_CORTE:-0}" = 1 ]; then
+  for v in $VERSIONES; do preparar_clinica "$v"; done
+  for v in $VERSIONES; do
+    log "[$v] corte de PostgreSQL con peticiones en curso"
+    iniciar_backend "$v" none 1 2g "$PIN_BACK"
+    esperar_salud > /dev/null || fallo "el backend $v no arrancó"
+    esperar_inicializacion "$v"
+    export PUERTO SLUG USUARIO CLAVE SAL POOL CICLOS_CORTE TRABAJADORES_CORTE ESPERA_CORTE_S
+    bash "$RAIZ/medicion/escritura/prueba_corte.sh" "$v" || true
+    cat "$SAL/corte_$v.txt" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+    detener_backend "$v" "corte_$v"
+  done
+  log "terminado (corte con peticiones en curso)"
   exit 0
 fi
 for v in $VERSIONES; do preparar_clinica "$v"; done
