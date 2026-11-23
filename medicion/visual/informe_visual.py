@@ -48,9 +48,9 @@ for v, nombre in VERSIONES:
     md += ['| Dato | Valor |', '|---|---|']
     for k, val in aplanar(d['resumen']):
         md.append(f'| {k} | {json.dumps(val, ensure_ascii=False) if isinstance(val, (list, dict)) else val} |')
-    md += ['', '| Segundos | Paso | Dirección | ¿Se ve el formulario de login? | Mensajes en pantalla |', '|---|---|---|---|---|']
+    md += ['', '| Segundos | Paso | Dirección | ¿Se ve el formulario de login? | Texto visible | Mensajes en pantalla |', '|---|---|---|---|---|---|']
     for o in d['observaciones']:
-        md.append(f"| {o['t']} | {o['paso']} | `{o['url']}` | {'sí' if o['formularioDeLogin'] else 'no'} | {' / '.join(o['mensajes']) or '-'} |")
+        md.append(f"| {o['t']} | {o['paso']} | `{o['url']}` | {'sí' if o['formularioDeLogin'] else 'no'} | {o.get('textoVisible') or '-'} | {' / '.join(o['mensajes']) or '-'} |")
     if d['errores']:
         md += ['', 'Incidencias del guion:'] + [f'- {e}' for e in d['errores']]
     md.append('')

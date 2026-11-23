@@ -24,9 +24,11 @@ const foto = async (nombre) => {
 async function estado() {
   const formulario = await page.locator('#username').isVisible().catch(() => false);
   const textos = await page.locator('[role="alert"], .p-toast-message, .text-red-600, .text-rose-600').allInnerTexts().catch(() => []);
+  const texto = await page.locator('body').innerText({ timeout: 2000 }).catch(() => '');
   return {
     url: page.url().replace(BASE, ''),
     formularioDeLogin: formulario,
+    textoVisible: texto.replace(/\s+/g, ' ').trim().slice(0, 110),
     mensajes: textos.map((t) => t.replace(/\s+/g, ' ').trim()).filter(Boolean).slice(0, 3).map((t) => t.slice(0, 160)),
   };
 }
@@ -88,13 +90,16 @@ async function caida() {
   await pausa(1500);
   await foto('02_clic_con_la_base_caida');
   await observar('clic con la base caída');
-  await pausa(11000);
+  await pausa(10500);
   await foto('03_12s_despues_del_clic');
   await observar('12 s después del clic');
+  await pausa(18000);
+  await foto('03b_30s_despues_del_clic');
+  await observar('30 s después del clic');
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch((e) => errores.push(`recarga: ${e.message}`));
-  await pausa(10000);
+  await pausa(15000);
   await foto('04_recarga_con_la_base_caida');
-  await observar('recarga con la base caída');
+  await observar('recarga con la base caída, 15 s después');
   execSync('docker start sv-pg', { stdio: 'ignore' });
   const salud = await esperarSalud(120);
   await pausa(6000);
@@ -114,7 +119,7 @@ async function caida() {
   await observar(enLogin ? 'tuvo que iniciar sesión otra vez' : 'siguió con la misma sesión');
   const fallas = api.filter((r) => r.t >= parada);
   return {
-    expulsadoAlLogin: observaciones.some((o) => ['clic con la base caída', '12 s después del clic', 'recarga con la base caída'].includes(o.paso) && o.formularioDeLogin),
+    expulsadoAlLogin: observaciones.some((o) => ['clic con la base caída', '12 s después del clic', '30 s después del clic', 'recarga con la base caída, 15 s después'].includes(o.paso) && o.formularioDeLogin),
     tuvoQueIniciarSesionOtraVez: enLogin,
     saludRecuperadaTrasSegundos: salud === null ? null : Number((salud - parada).toFixed(1)),
     respuestasApiTrasLaParada: contar(fallas),
@@ -178,9 +183,32 @@ const mediana = (valores) => {
   return v.length ? v[Math.floor(v.length / 2)] : null;
 };
 
+async function usuarioDeFondo(i, control) {
+  const cabeceras = { 'Content-Type': 'application/json', Origin: 'http://localhost', 'X-Company-Slug': SLUG, 'X-Forwarded-For': `10.252.0.${i + 1}` };
+  const base = `http://127.0.0.1:${PUERTO_BACKEND}/api/v1`;
+  try {
+    const login = await fetch(`${base}/auth/login`, { method: 'POST', headers: cabeceras, body: JSON.stringify({ slug: SLUG, username: `${USUARIO_BASE}${i + 2}`, password: CLAVE }), signal: AbortSignal.timeout(60000) });
+    const cookie = login.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
+    while (!control.fin) {
+      const t = Date.now();
+      try {
+        const r = await fetch(`${base}/dashboard/overview`, { headers: { ...cabeceras, Cookie: cookie }, signal: AbortSignal.timeout(60000) });
+        control.respuestas.push({ estado: r.status, ms: Date.now() - t });
+      } catch {
+        control.respuestas.push({ estado: 'sin respuesta', ms: Date.now() - t });
+      }
+      await pausa(300);
+    }
+  } catch { /* el usuario de fondo no pudo iniciar sesión */ }
+}
+
 async function panel() {
   await iniciarSesion();
   const destino = page.url();
+  const control = { fin: false, respuestas: [] };
+  const fondo = Array.from({ length: 30 }, (_, i) => usuarioDeFondo(i, control));
+  await pausa(20000);
+  control.respuestas.length = 0;
   const cargas = [];
   for (let i = 0; i < 5; i++) {
     api.length = 0;
@@ -193,8 +221,15 @@ async function panel() {
     if (i === 4) await foto('02_ultima_carga');
     await observar(`carga ${i + 1}: ${segundos} s`, { llamadasDelPanel: delPanel.length });
   }
+  control.fin = true;
+  await Promise.allSettled(fondo);
+  const duraciones = control.respuestas.filter((r) => typeof r.estado === 'number').map((r) => r.ms);
   return {
     destino: destino.replace(BASE, ''),
+    usuariosDeFondo: 30,
+    peticionesDeFondoDurantePrueba: control.respuestas.length,
+    medianaMsDeFondo: mediana(duraciones),
+    estadosDeFondo: contar(control.respuestas),
     cargas,
     medianaSegundosPorCarga: mediana(cargas.map((c) => c.segundos)),
     medianaMsDeLaLlamadaMasLentaDelPanel: mediana(cargas.map((c) => Math.max(0, ...c.msDelPanel))),
@@ -206,10 +241,10 @@ const escenarios = { caida, login: loginBajoRafaga, panel };
 const navegador = await chromium.launch();
 const contexto = await navegador.newContext({ viewport: { width: 1366, height: 800 }, recordVideo: { dir: `${SALIDA}/video`, size: { width: 1366, height: 800 } } });
 page = await contexto.newPage();
-page.on('response', (r) => {
+page.on('requestfinished', async (r) => {
   if (!r.url().includes('/api/v1/')) return;
-  const tiempo = r.request().timing();
-  api.push({ t: seg(), estado: r.status(), metodo: r.request().method(), ruta: new URL(r.url()).pathname, ms: Math.round(tiempo.responseEnd > 0 ? tiempo.responseEnd : 0) });
+  const respuesta = await r.response().catch(() => null);
+  api.push({ t: seg(), estado: respuesta ? respuesta.status() : 0, metodo: r.method(), ruta: new URL(r.url()).pathname, ms: Math.max(0, Math.round(r.timing().responseEnd)) });
 });
 page.on('requestfailed', (r) => {
   if (r.url().includes('/api/v1/')) api.push({ t: seg(), estado: 0, metodo: r.method(), ruta: new URL(r.url()).pathname, ms: 0 });
