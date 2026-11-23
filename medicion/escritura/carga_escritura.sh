@@ -171,6 +171,7 @@ registrar_entorno() {
     echo "umbral del generador: $UMBRAL_GENERADOR_CPU_PCT % de la CPU de k6 (criterio experimental, configurable)"
     echo "modo de afinidad: $PIN_MODO (aplicado: $AFINIDAD_APLICADA${AFINIDAD_MOTIVO:+; motivo: $AFINIDAD_MOTIVO}); k6 en CPU $K6_NUCLEOS, backend '$PIN_BACK', PostgreSQL '$PIN_PG', muestreadores '$PIN_MON'"
     echo "mezcla de operaciones: semilla ${SEMILLA:-no fijada (aleatoria)}; pesos ${PESOS_ACCIONES:-22,18,15,2,13,12,10,8} (panel, agenda, historia, reportes, recepción, atención, cobro, cancelar)"
+    echo "citas de la clínica grande: ${CITAS_GRANDE:-20000}; propietarios: ${PROPIETARIOS_GRANDE:-1200}"
     echo "pool de conexiones: $POOL; muestreo de PostgreSQL: $([ "$MUESTREO_PG" = 1 ] && echo sí || echo no); volcados de hilos en los segundos: ${VOLCADO_HILOS_S:-ninguno}; registro de Hikari en DEBUG: $([ -n "$LOG_HIKARI" ] && echo sí || echo no); NMT: $([ "$NMT" = 1 ] && echo "sí (añade sobrecosto de memoria nativa)" || echo no)"
     echo "caída del backend: $([ "$ABORTAR_SI_CAE" = 1 ] && echo "k6 se detiene $GRACIA_CAIDA_S s después de que el contenedor se detenga" || echo "k6 continúa hasta el final")"
     echo "heap en vivo: $([ "$HEAP_EN_VIVO" = 1 ] && echo "sí, cada $HEAP_PERIODO_S s (contadores hsperfdata y cgroup)" || echo no)"

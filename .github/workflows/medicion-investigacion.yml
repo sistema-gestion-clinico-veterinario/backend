@@ -40,10 +40,10 @@ jobs:
       - name: Descargar el arnés de medición
         uses: actions/checkout@v4
 
-      - name: Descargar el DESPUÉS (medicion/despues)
+      - name: Descargar el código corregido (green-rollback-despues)
         uses: actions/checkout@v4
         with:
-          ref: medicion/despues
+          ref: green-rollback-despues
           path: .despues
 
       - name: Instalar k6
@@ -95,20 +95,20 @@ jobs:
       matrix:
         include:
           - repeticion: 1
-            orden: "192 224 256 288 192-sin-informes"
+            orden: "192 256 288 192-sin-informes 192-citas6000"
           - repeticion: 2
-            orden: "192-sin-informes 288 256 224 192"
+            orden: "192-citas6000 192-sin-informes 288 256 192"
           - repeticion: 3
-            orden: "224 192-sin-informes 192 288 256"
+            orden: "256 192-citas6000 192 288 192-sin-informes"
 
     steps:
       - name: Descargar el arnés de medición
         uses: actions/checkout@v4
 
-      - name: Descargar el DESPUÉS (medicion/despues)
+      - name: Descargar el código corregido (green-rollback-despues)
         uses: actions/checkout@v4
         with:
-          ref: medicion/despues
+          ref: green-rollback-despues
           path: .despues
 
       - name: Instalar k6
@@ -137,11 +137,13 @@ jobs:
             etiqueta="EXP-HEAP-${mb}M"
             pesos="22,18,15,2,13,12,10,8"
             carpeta="${etiqueta}"
+            citas="20000"
             case "$entrada" in
               *-sin-informes) pesos="22,18,15,0,13,12,10,8"; carpeta="${etiqueta}-sin-informes" ;;
+              *-citas6000) citas="6000"; carpeta="${etiqueta}-citas6000" ;;
             esac
             echo "::group::${carpeta}"
-            RESULTADOS_DIR="$GITHUB_WORKSPACE/resultados-inv/inv-heap-r${{ matrix.repeticion }}-${carpeta}" PERFIL_LAB="$etiqueta" PESOS_ACCIONES="$pesos" bash medicion/escritura/carga_escritura.sh
+            CITAS_GRANDE="$citas" RESULTADOS_DIR="$GITHUB_WORKSPACE/resultados-inv/inv-heap-r${{ matrix.repeticion }}-${carpeta}" PERFIL_LAB="$etiqueta" PESOS_ACCIONES="$pesos" bash medicion/escritura/carga_escritura.sh
             codigo=$?
             echo "::endgroup::"
             if [ "$codigo" != 0 ]; then
@@ -169,10 +171,10 @@ jobs:
       - name: Descargar el arnés de medición
         uses: actions/checkout@v4
 
-      - name: Descargar el DESPUÉS (medicion/despues)
+      - name: Descargar el código corregido (green-rollback-despues)
         uses: actions/checkout@v4
         with:
-          ref: medicion/despues
+          ref: green-rollback-despues
           path: .despues
 
       - name: Instalar k6
@@ -232,10 +234,10 @@ jobs:
       - name: Descargar el arnés de medición
         uses: actions/checkout@v4
 
-      - name: Descargar el DESPUÉS (medicion/despues)
+      - name: Descargar el código corregido (green-rollback-despues)
         uses: actions/checkout@v4
         with:
-          ref: medicion/despues
+          ref: green-rollback-despues
           path: .despues
 
       - name: Instalar k6
@@ -303,10 +305,10 @@ jobs:
       - name: Descargar el arnés de medición
         uses: actions/checkout@v4
 
-      - name: Descargar el DESPUÉS (medicion/despues)
+      - name: Descargar el código corregido (green-rollback-despues)
         uses: actions/checkout@v4
         with:
-          ref: medicion/despues
+          ref: green-rollback-despues
           path: .despues
 
       - name: Instalar k6
