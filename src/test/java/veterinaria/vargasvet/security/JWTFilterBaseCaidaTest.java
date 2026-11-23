@@ -85,6 +85,18 @@ class JWTFilterBaseCaidaTest {
     }
 
     @Test
+    void unaConexionDelPoolMatadaPorElApagadoDelServidorResponde503() throws Exception {
+        when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(any(), any(), any()))
+                .thenThrow(IndisponibilidadPorCodigoSqlTest.comoLlegaAlFiltro("57P01"));
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(503);
+        assertThat(response.getHeader("Retry-After")).isEqualTo("5");
+        verify(chain, never()).doFilter(any(), any());
+    }
+
+    @Test
     void unaSesionRealmenteInvalidaSigueSinAutenticarYPasaAlResponsable401() throws Exception {
         when(usuarioPorRolRepository.findActiveAssignmentByUsuarioIdAndRoleIdAndCompanyId(any(), any(), any()))
                 .thenReturn(Optional.empty());
