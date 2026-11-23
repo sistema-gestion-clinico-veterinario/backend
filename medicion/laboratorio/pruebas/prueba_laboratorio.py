@@ -8,6 +8,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import afinidad as af  # noqa: E402
 import comparar_jstat as cj  # noqa: E402
 import hsperfdata as hs  # noqa: E402
 import informe_laboratorio as inf  # noqa: E402
@@ -146,6 +147,69 @@ class Topologia(unittest.TestCase):
         self.assertEqual(tp.lista_cpus('0,3'), [0, 3])
         self.assertEqual(tp.lista_cpus('0-2,5'), [0, 1, 2, 5])
         self.assertEqual(tp.lista_cpus(''), [])
+
+
+class Afinidad(unittest.TestCase):
+    def topologia(self, hermanos):
+        return {n: {'hermanos': h, 'core_id': str(n), 'package': '0'} for n, h in hermanos.items()}
+
+    def comprobar_aislamiento(self, hermanos, plan):
+        cpus = self.topologia(hermanos)
+        roles = {'backend': plan['backend'], 'postgres': plan['postgres'], 'k6': plan['k6']}
+        a = tp.analizar(cpus, roles)
+        conflictos = [c for c in a['roles_que_comparten_nucleo_fisico'] if 'backend' in (c['a'], c['b'])]
+        self.assertEqual(conflictos, [])
+
+    def test_mapa_02_13(self):
+        h = {0: [0, 2], 1: [1, 3], 2: [0, 2], 3: [1, 3]}
+        plan = af.planificar(self.topologia(h), 1)
+        self.assertTrue(plan['aplicado'])
+        self.assertEqual((plan['backend'], plan['cpu_reservada_sin_trabajo_fijado'], plan['postgres'], plan['k6'], plan['muestreadores']), ([1], [3], [0], [2], [2]))
+        self.comprobar_aislamiento(h, plan)
+
+    def test_mapa_01_23(self):
+        h = {0: [0, 1], 1: [0, 1], 2: [2, 3], 3: [2, 3]}
+        plan = af.planificar(self.topologia(h), 1)
+        self.assertEqual((plan['backend'], plan['cpu_reservada_sin_trabajo_fijado'], plan['postgres'], plan['k6']), ([2], [3], [0], [1]))
+        self.comprobar_aislamiento(h, plan)
+
+    def test_cuatro_nucleos_sin_smt(self):
+        h = {0: [0], 1: [1], 2: [2], 3: [3]}
+        plan = af.planificar(self.topologia(h), 1)
+        self.assertEqual((plan['backend'], plan['postgres'], plan['k6']), ([3], [2], [0]))
+        self.assertEqual(plan['cpu_reservada_sin_trabajo_fijado'], [])
+        self.comprobar_aislamiento(h, plan)
+
+    def test_dos_cpu_del_backend_usan_el_nucleo_completo(self):
+        h = {0: [0, 2], 1: [1, 3], 2: [0, 2], 3: [1, 3]}
+        plan = af.planificar(self.topologia(h), 2)
+        self.assertEqual(plan['backend'], [1, 3])
+        self.assertEqual(plan['cpu_reservada_sin_trabajo_fijado'], [])
+        self.comprobar_aislamiento(h, plan)
+
+    def test_no_se_aplica_si_no_alcanzan_los_recursos_o_faltan_datos(self):
+        h = {0: [0, 2], 1: [1, 3], 2: [0, 2], 3: [1, 3]}
+        self.assertFalse(af.planificar(self.topologia(h), 3)['aplicado'])
+        self.assertFalse(af.planificar(self.topologia({0: [0, 1], 1: [0, 1]}), 1)['aplicado'])
+        self.assertFalse(af.planificar(self.topologia({0: None, 1: None, 2: None, 3: None}), 1)['aplicado'])
+        self.assertIn('se conserva el fijado anterior', af.planificar(self.topologia({0: [0, 1], 1: [0, 1]}), 1)['motivo'])
+
+    def test_salida_para_el_shell(self):
+        h = {0: [0, 2], 1: [1, 3], 2: [0, 2], 3: [1, 3]}
+        texto = af.a_shell(af.planificar(self.topologia(h), 1))
+        self.assertIn("PIN_BACK='--cpuset-cpus 1'", texto)
+        self.assertIn("PIN_PG='--cpuset-cpus 0'", texto)
+        self.assertIn('K6_NUCLEOS=2', texto)
+        self.assertIn("PIN_MON='taskset -c 2'", texto)
+        self.assertIn('AFINIDAD_APLICADA=si', texto)
+        self.assertIn('AFINIDAD_APLICADA=no', af.a_shell(af.planificar(self.topologia({0: [0], 1: [1]}), 1)))
+
+    def test_nota_de_limitaciones(self):
+        h = {0: [0, 2], 1: [1, 3], 2: [0, 2], 3: [1, 3]}
+        notas = ' '.join(af.planificar(self.topologia(h), 1)['notas'])
+        self.assertIn('no está bloqueada', notas)
+        self.assertIn('comparten el otro núcleo físico', notas)
+        self.assertIn('no se ha demostrado', notas.replace('sigue sin demostrarse', 'no se ha demostrado'))
 
 
 class SaludGenerador(unittest.TestCase):

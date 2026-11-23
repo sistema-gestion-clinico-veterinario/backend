@@ -247,7 +247,7 @@ def lineas_entorno(raiz):
     salida = []
     try:
         for linea in (Path(raiz) / 'entorno.txt').read_text(encoding='utf-8').splitlines():
-            if linea.startswith(('perfil del laboratorio', 'imagen de ejecución', 'imágenes', '  imagen:', '  bases del', '  Dockerfile', '  k6 fijado', '  openjdk', '  java', '  jcmd', '  jstat', '  jfr', '  jps', '  el heap en vivo', 'k6:', 'docker:', 'runner:', 'kernel:', 'fijado de CPU', 'núcleos de k6', 'umbral del generador', 'heap en vivo')):
+            if linea.startswith(('perfil del laboratorio', 'modo de afinidad', 'mezcla de operaciones', 'caída del backend', 'imagen de ejecución', 'imágenes', '  imagen:', '  bases del', '  Dockerfile', '  k6 fijado', '  openjdk', '  java', '  jcmd', '  jstat', '  jfr', '  jps', '  el heap en vivo', 'k6:', 'docker:', 'runner:', 'kernel:', 'fijado de CPU', 'núcleos de k6', 'umbral del generador', 'heap en vivo')):
                 salida.append(f'- {linea.strip()}')
     except OSError:
         pass

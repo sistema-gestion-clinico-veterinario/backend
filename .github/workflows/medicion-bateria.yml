@@ -1,0 +1,171 @@
+name: "Batería: CAPACIDAD-2G y PRODUCCION-512M con 100 y 250 usuarios (laboratorio)"
+
+on:
+  push:
+    branches: [medicion/bateria]
+  workflow_dispatch:
+    inputs:
+      pin_modo:
+        description: "Afinidad de CPU: topologia (según los hilos hermanos reales) o fijo (modo anterior)"
+        type: choice
+        options:
+          - topologia
+          - fijo
+        default: topologia
+
+permissions:
+  contents: read
+
+concurrency:
+  group: medicion-bateria
+  cancel-in-progress: false
+
+jobs:
+  verificacion:
+    name: Pruebas de los scripts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Ejecutar las pruebas
+        run: |
+          python3 medicion/laboratorio/pruebas/prueba_laboratorio.py
+          python3 medicion/laboratorio/pruebas/prueba_comparacion.py
+          bash medicion/laboratorio/pruebas/prueba_arnes.sh
+
+  calibracion:
+    name: Calibración de la instrumentación y de la afinidad
+    needs: verificacion
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
+        with:
+          k6-version: "2.4.0"
+
+      - name: Calibrar
+        run: bash medicion/laboratorio/calibrar.sh
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: calibracion-bateria
+          path: resultados-laboratorio/
+          if-no-files-found: warn
+
+  bateria:
+    name: Repetición ${{ matrix.repeticion }} (orden ${{ matrix.orden }})
+    needs: [verificacion, calibracion]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - repeticion: 1
+            orden: "CAPACIDAD-2G PRODUCCION-512M"
+          - repeticion: 2
+            orden: "PRODUCCION-512M CAPACIDAD-2G"
+          - repeticion: 3
+            orden: "CAPACIDAD-2G PRODUCCION-512M"
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el DESPUÉS (medicion/despues)
+        uses: actions/checkout@v4
+        with:
+          ref: medicion/despues
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
+        with:
+          k6-version: "2.4.0"
+
+      - name: Ejecutar los dos perfiles en el orden de esta repetición
+        env:
+          VERSIONES: despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/laboratorio/PLAN_BATERIA
+          ITER_POR_VU: "14"
+          RESET_BASE: "1"
+          SEMILLA: "20261123"
+          PESOS_ACCIONES: "22,18,15,2,13,12,10,8"
+          PIN_MODO: ${{ inputs.pin_modo || 'topologia' }}
+          K6_NUCLEOS: "0"
+          HEAP_EN_VIVO: "1"
+          HEAP_PERIODO_S: "3"
+          ABORTAR_SI_CAE: "1"
+          GRACIA_CAIDA_S: "20"
+          LIMPIAR_PREVIO: "1"
+        run: |
+          fallos=0
+          for perfil in ${{ matrix.orden }}; do
+            echo "::group::Perfil $perfil"
+            RESULTADOS_DIR="$GITHUB_WORKSPACE/resultados-$perfil" PERFIL_LAB="$perfil" bash medicion/escritura/carga_escritura.sh
+            codigo=$?
+            echo "::endgroup::"
+            if [ "$codigo" != 0 ]; then
+              echo "::error::La ejecución del perfil $perfil terminó con código $codigo"
+              fallos=$((fallos + 1))
+            fi
+          done
+          [ "$fallos" = 0 ]
+
+      - name: Guardar los resultados de CAPACIDAD-2G
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bateria-r${{ matrix.repeticion }}-CAPACIDAD-2G
+          path: resultados-CAPACIDAD-2G/
+          if-no-files-found: warn
+
+      - name: Guardar los resultados de PRODUCCION-512M
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bateria-r${{ matrix.repeticion }}-PRODUCCION-512M
+          path: resultados-PRODUCCION-512M/
+          if-no-files-found: warn
+
+  comparacion:
+    name: Comparación entre perfiles, niveles y repeticiones
+    needs: bateria
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar los resultados de todas las repeticiones
+        uses: actions/download-artifact@v4
+        with:
+          pattern: bateria-r*
+          path: descargas
+
+      - name: Generar la comparación
+        run: |
+          python3 medicion/laboratorio/comparar_bateria.py descargas comparacion > /dev/null
+          cat comparacion/COMPARACION_BATERIA.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Guardar la comparación como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: comparacion-bateria
+          path: comparacion/
+          if-no-files-found: warn

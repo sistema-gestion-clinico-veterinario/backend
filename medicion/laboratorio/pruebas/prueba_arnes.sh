@@ -12,7 +12,7 @@ igual() { if [ "$2" = "$3" ]; then ok "$1"; else mal "$1 (esperado '$3', obtenid
 
 log() { echo "[log] $*" >> "$TMP/log.txt"; }
 fallo() { echo "FALLO: $*" >> "$TMP/log.txt"; exit 1; }
-for f in flags_de a_mb opciones_jvm aplicar_perfil verificar_k6 fijar_dockerfile; do eval "$(extraer $f)"; done
+for f in flags_de a_mb opciones_jvm aplicar_perfil verificar_k6 fijar_dockerfile definir_fijado vigilar_backend; do eval "$(extraer $f)"; done
 . "$AQUI/../imagenes.sh"
 BASE_JVM="-XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m"
 OBSERVACION_JVM="-Xlog:gc:file=/tmp/jvm_gc.log"
@@ -73,6 +73,45 @@ verificar_k6 && ok "k6 en la versión fijada" || mal "k6 en la versión fijada"
 k6() { echo "k6 v2.3.0 (commit/e088784614, go1.26.8, linux/amd64)"; }
 ( verificar_k6 ) > /dev/null 2>&1 && mal "k6 de otra versión debe fallar" || ok "k6 de otra versión falla"
 K6_VERSION_LIBRE=1 verificar_k6 && ok "K6_VERSION_LIBRE permite otra versión" || mal "K6_VERSION_LIBRE"
+
+python3() { python "$@"; }
+LAB_DIR="$AQUI/.."
+crear_sys() {
+  local d="$1"; shift
+  mkdir -p "$d"
+  local i=0 h
+  for h in "$@"; do mkdir -p "$d/cpu$i/topology"; echo "$h" > "$d/cpu$i/topology/thread_siblings_list"; i=$((i + 1)); done
+}
+crear_sys "$TMP/sys02" "0,2" "1,3" "0,2" "1,3"
+crear_sys "$TMP/sys01" "0-1" "0-1" "2-3" "2-3"
+SAL="$TMP"; CPUS=1; K6_NUCLEOS=0,3; NPROC_FORZADO=4
+PIN_MODO=fijo; definir_fijado
+igual "modo fijo conserva k6 0,3 y backend en CPU 1" "$K6_NUCLEOS|$PIN_BACK|$PIN_PG|$AFINIDAD_APLICADA" "0,3|--cpuset-cpus 1|--cpuset-cpus 2|no"
+K6_NUCLEOS=0; PIN_MODO=topologia; SYS_CPU_DIR="$TMP/sys02"; definir_fijado
+igual "modo topología, mapa (0,2)(1,3)" "$K6_NUCLEOS|$PIN_BACK|$PIN_PG|$PIN_MON|$PIN_K6|$AFINIDAD_APLICADA" "2|--cpuset-cpus 1|--cpuset-cpus 0|taskset -c 2|taskset -c 2|si"
+K6_NUCLEOS=0; SYS_CPU_DIR="$TMP/sys01"; definir_fijado
+igual "modo topología, mapa (0,1)(2,3)" "$K6_NUCLEOS|$PIN_BACK|$PIN_PG|$AFINIDAD_APLICADA" "1|--cpuset-cpus 2|--cpuset-cpus 0|si"
+K6_NUCLEOS=0; CPUS=3; definir_fijado
+igual "modo topología sin recursos suficientes conserva el fijado anterior" "$K6_NUCLEOS|$PIN_BACK|$AFINIDAD_APLICADA" "0|--cpuset-cpus 1,3|no"
+case "$AFINIDAD_MOTIVO" in *"se conserva el fijado anterior"*) ok "el motivo queda registrado" ;; *) mal "motivo: $AFINIDAD_MOTIVO" ;; esac
+unset SYS_CPU_DIR NPROC_FORZADO; CPUS=1
+
+mkdir -p "$TMP/niveles"
+GRACIA_CAIDA_S=0
+LLAMADAS="$TMP/llamadas"; : > "$LLAMADAS"
+docker() {
+  case "$*" in
+    *State.Running*) echo x >> "$LLAMADAS"; if [ "$(wc -l < "$LLAMADAS")" -lt 3 ]; then echo ""; else echo false; fi ;;
+    *OOMKilled*) echo "OOMKilled=true codigo_salida=137 error=" ;;
+  esac
+}
+sleep() { :; }
+pkill() { echo "$*" > "$TMP/pkill.txt"; }
+vigilar_backend despues despues_250
+igual "el vigilante ignora lecturas vacías y detecta el contenedor detenido" "$(wc -l < "$LLAMADAS" | tr -d ' ')" "3"
+case "$(cat "$TMP/niveles/caida_despues_250.txt")" in *"OOMKilled=true codigo_salida=137"*) ok "la caída queda registrada con OOMKilled y código de salida" ;; *) mal "caída: $(cat "$TMP/niveles/caida_despues_250.txt")" ;; esac
+igual "el vigilante detiene k6 con TERM" "$(cat "$TMP/pkill.txt")" "-TERM -x k6"
+unset -f docker sleep pkill
 
 rm -rf "$TMP"
 [ "$FALLOS" = 0 ] && echo "todas las comprobaciones pasaron" || { echo "$FALLOS comprobaciones fallaron"; exit 1; }

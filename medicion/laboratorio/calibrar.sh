@@ -179,6 +179,43 @@ PY
 [ "${PIPESTATUS[0]}" = 0 ] || error "el muestreador del generador no distinguió el caso ligero del saturado"
 nota ""
 
+nota "## 6. Afinidad de CPU por topología (modo opcional)"
+nota ""
+python3 "$LAB/afinidad.py" --cpus 1 --json "$SAL/afinidad_plan.json" > "$SAL/afinidad_plan.sh" || error "afinidad.py falló"
+nota '```'
+cat "$SAL/afinidad_plan.sh" | tee -a "$REPORTE"
+nota '```'
+python3 -c "import json,sys;[print('- ' + n) for n in json.load(open(sys.argv[1], encoding='utf-8')).get('notas', [])]" "$SAL/afinidad_plan.json" | tee -a "$REPORTE"
+(
+  . "$SAL/afinidad_plan.sh"
+  if [ "$AFINIDAD_APLICADA" = si ]; then
+    esperado_back="${PIN_BACK#--cpuset-cpus }"
+    esperado_pg="${PIN_PG#--cpuset-cpus }"
+    docker run -d --name sv-cal-b --cpuset-cpus "$esperado_back" --cpus 1 "$IMG_PYTHON" sleep 20 > /dev/null || exit 11
+    docker run -d --name sv-cal-p --cpuset-cpus "$esperado_pg" "$IMG_PYTHON" sleep 20 > /dev/null || exit 11
+    efectivo_back="$(docker exec sv-cal-b cat /sys/fs/cgroup/cpuset.cpus.effective)"
+    efectivo_pg="$(docker exec sv-cal-p cat /sys/fs/cgroup/cpuset.cpus.effective)"
+    taskset -c "$K6_NUCLEOS" sleep 5 &
+    pid=$!
+    sleep 1
+    afinidad_k6="$(taskset -cp "$pid" | sed 's/.*: //')"
+    wait "$pid"
+    docker rm -f sv-cal-b sv-cal-p > /dev/null 2>&1
+    echo "| Proceso | CPU esperadas | CPU efectivas |"
+    echo "|---|---|---|"
+    echo "| backend (contenedor, 1 CPU) | $esperado_back | $efectivo_back |"
+    echo "| PostgreSQL (contenedor) | $esperado_pg | $efectivo_pg |"
+    echo "| k6 (taskset) | $K6_NUCLEOS | $afinidad_k6 |"
+    [ "$efectivo_back" = "$esperado_back" ] && [ "$efectivo_pg" = "$esperado_pg" ] && [ "$afinidad_k6" = "$K6_NUCLEOS" ] || exit 12
+    python3 "$LAB/topologia.py" --pg "$esperado_pg" --backend "$esperado_back" --k6 "$K6_NUCLEOS" --mon "${PIN_MON#taskset -c }" --json "$SAL/afinidad_topologia.json" > /dev/null
+    python3 -c "import json,sys;d=json.load(open(sys.argv[1]));c=[x for x in d['roles_que_comparten_nucleo_fisico'] if 'backend' in (x['a'],x['b'])];print('El backend comparte núcleo físico con otro proceso fijado: ' + ('SÍ' if c else 'no'));sys.exit(1 if c else 0)" "$SAL/afinidad_topologia.json" || exit 13
+  else
+    echo "El modo no se aplicó en este runner: $AFINIDAD_MOTIVO"
+  fi
+) | tee -a "$REPORTE"
+[ "${PIPESTATUS[0]}" = 0 ] || error "la afinidad por topología no quedó como se planificó o el backend comparte núcleo físico"
+nota ""
+
 if [ "$FALLOS" = 0 ]; then nota "**Resultado: la instrumentación pasó todas las comprobaciones de este runner.**"; else nota "**Resultado: $FALLOS comprobaciones fallaron.**"; fi
 nota ""
 nota "Límites: es una sola ejecución en un runner de GitHub; la JVM de calibración está en reposo y no es el backend; el criterio de interferencia es experimental."

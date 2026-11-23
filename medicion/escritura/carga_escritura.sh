@@ -3,8 +3,12 @@ set -uo pipefail
 
 RAIZ="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$RAIZ"
-SAL="$RAIZ/resultados"
+SAL="${RESULTADOS_DIR:-$RAIZ/resultados}"
 mkdir -p "$SAL/logs" "$SAL/niveles"
+if [ "${LIMPIAR_PREVIO:-0}" = 1 ]; then
+  docker rm -f sv-pg sv-correo sv-antes sv-despues > /dev/null 2>&1
+  docker network rm sv-net > /dev/null 2>&1
+fi
 
 ANTES_DIR="${ANTES_DIR:-$RAIZ/.antes}"
 DESPUES_DIR="${DESPUES_DIR:-$RAIZ/.despues}"
@@ -50,6 +54,12 @@ CFG_CONTROL=E
 CPUS_PREP="$CPUS"
 MEM_PREP="$MEMORIA"
 PERFIL_EFECTIVO="$PERFIL_LAB"
+PIN_MODO="${PIN_MODO:-$(entrada_evento pin_modo)}"
+PIN_MODO="${PIN_MODO:-fijo}"
+SEMILLA="${SEMILLA:-}"
+PESOS_ACCIONES="${PESOS_ACCIONES:-}"
+ABORTAR_SI_CAE="${ABORTAR_SI_CAE:-0}"
+GRACIA_CAIDA_S="${GRACIA_CAIDA_S:-20}"
 
 BASE_JVM="-XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m"
 OBSERVACION_JVM="-Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false"
@@ -74,20 +84,31 @@ opciones_jvm() {
 }
 opciones_jvm "$CONFIG"
 
-NUCLEOS="$(nproc)"
-if [ "$NUCLEOS" -ge 4 ]; then
-  PIN_PG="--cpuset-cpus 2"
-  if awk -v c="$CPUS" 'BEGIN { exit !(c >= 2) }'; then PIN_BACK="--cpuset-cpus 1,3"; else PIN_BACK="--cpuset-cpus 1"; fi
-  PIN_K6="taskset -c $K6_NUCLEOS"
-else
-  PIN_PG=""
-  PIN_BACK=""
-  PIN_K6=""
-fi
-PIN_MON=""
-if [ "$NUCLEOS" -ge 4 ] && [ "$PIN_BACK" = "--cpuset-cpus 1" ]; then
-  case ",$K6_NUCLEOS," in *,3,*) ;; *) PIN_MON="taskset -c 3" ;; esac
-fi
+definir_fijado() {
+  NUCLEOS="${NPROC_FORZADO:-$(nproc)}"
+  if [ "$NUCLEOS" -ge 4 ]; then
+    PIN_PG="--cpuset-cpus 2"
+    if awk -v c="$CPUS" 'BEGIN { exit !(c >= 2) }'; then PIN_BACK="--cpuset-cpus 1,3"; else PIN_BACK="--cpuset-cpus 1"; fi
+    PIN_K6="taskset -c $K6_NUCLEOS"
+  else
+    PIN_PG=""
+    PIN_BACK=""
+    PIN_K6=""
+  fi
+  PIN_MON=""
+  if [ "$NUCLEOS" -ge 4 ] && [ "$PIN_BACK" = "--cpuset-cpus 1" ]; then
+    case ",$K6_NUCLEOS," in *,3,*) ;; *) PIN_MON="taskset -c 3" ;; esac
+  fi
+  AFINIDAD_APLICADA=no
+  AFINIDAD_MOTIVO=""
+  if [ "$PIN_MODO" = topologia ]; then
+    local plan
+    plan="$(python3 "$LAB_DIR/afinidad.py" --cpus "$CPUS" ${SYS_CPU_DIR:+--sys "$SYS_CPU_DIR"} --json "$SAL/afinidad_plan.json")"
+    eval "$plan"
+    [ "$AFINIDAD_APLICADA" = si ] && PIN_K6="taskset -c $K6_NUCLEOS"
+  fi
+}
+definir_fijado
 
 log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "$SAL/logs/orquestador.log"; }
 fallo() { log "FALLO: $*"; exit 1; }
@@ -130,6 +151,9 @@ registrar_entorno() {
     echo "recursos del backend: $CPUS CPU, $MEMORIA de RAM"
     echo "perfil del laboratorio: $PERFIL_EFECTIVO (memoria $MEMORIA, CPU $CPUS, heap máximo $XMX; configuración de la JVM en los niveles: $CFG_NIVEL, en el control: $CFG_CONTROL)"
     echo "umbral del generador: $UMBRAL_GENERADOR_CPU_PCT % de la CPU de k6 (criterio experimental, configurable)"
+    echo "modo de afinidad: $PIN_MODO (aplicado: $AFINIDAD_APLICADA${AFINIDAD_MOTIVO:+; motivo: $AFINIDAD_MOTIVO}); k6 en CPU $K6_NUCLEOS, backend '$PIN_BACK', PostgreSQL '$PIN_PG', muestreadores '$PIN_MON'"
+    echo "mezcla de operaciones: semilla ${SEMILLA:-no fijada (aleatoria)}; pesos ${PESOS_ACCIONES:-22,18,15,2,13,12,10,8} (panel, agenda, historia, reportes, recepción, atención, cobro, cancelar)"
+    echo "caída del backend: $([ "$ABORTAR_SI_CAE" = 1 ] && echo "k6 se detiene $GRACIA_CAIDA_S s después de que el contenedor se detenga" || echo "k6 continúa hasta el final")"
     echo "heap en vivo: $([ "$HEAP_EN_VIVO" = 1 ] && echo "sí, cada $HEAP_PERIODO_S s (contadores hsperfdata y cgroup)" || echo no)"
     echo "runner: ${ImageOS:-desconocido} ${ImageVersion:-desconocida}"
     echo "kernel: $(uname -r)"
@@ -229,7 +253,47 @@ registrar_topologia() {
   python3 "$LAB_DIR/topologia.py" --pg "${PIN_PG#--cpuset-cpus}" --backend "${PIN_BACK#--cpuset-cpus}" \
     --k6 "$([ -n "$PIN_K6" ] && echo "$K6_NUCLEOS")" --mon "${PIN_MON#taskset -c}" --json "$SAL/topologia.json" > "$SAL/topologia.md" 2> "$SAL/logs/topologia.log" \
     || log "no se pudo generar la topología (ver logs/topologia.log)"
+  {
+    echo
+    echo "### Modo de afinidad: $PIN_MODO"
+    if [ "$PIN_MODO" = topologia ]; then
+      if [ "$AFINIDAD_APLICADA" = si ]; then
+        python3 -c "import json,sys;[print('- ' + n) for n in json.load(open(sys.argv[1], encoding='utf-8'))['notas']]" "$SAL/afinidad_plan.json"
+      else
+        echo "- no se aplicó: $AFINIDAD_MOTIVO"
+      fi
+    else
+      echo "- fijado anterior (k6 en CPU $K6_NUCLEOS, backend '$PIN_BACK', PostgreSQL '$PIN_PG'), sin considerar qué CPU lógicas son hermanas SMT"
+    fi
+  } >> "$SAL/topologia.md"
   cat "$SAL/topologia_lscpu.txt" "$SAL/topologia.md" >> "$SAL/logs/orquestador.log" 2> /dev/null
+}
+
+registrar_io() {
+  local v="$1" etiqueta="$2" fase="$3" par
+  {
+    for par in "sv-$v:backend" "sv-pg:postgres"; do
+      echo "[${par#*:}]"
+      echo "io.stat: $(docker exec "${par%%:*}" cat /sys/fs/cgroup/io.stat 2> /dev/null | tr '\n' ';')"
+      echo "cpu.stat: $(docker exec "${par%%:*}" cat /sys/fs/cgroup/cpu.stat 2> /dev/null | tr '\n' ';')"
+      echo "memory.events: $(docker exec "${par%%:*}" cat /sys/fs/cgroup/memory.events 2> /dev/null | tr '\n' ';')"
+      echo "red: $(docker exec "${par%%:*}" cat /proc/net/dev 2> /dev/null | awk '/eth0/ {print "rx_bytes=" $2 ";tx_bytes=" $10}')"
+    done
+  } > "$SAL/niveles/io_${etiqueta}_${fase}.txt" 2>&1
+}
+
+vigilar_backend() {
+  local v="$1" etiqueta="$2" corriendo
+  while sleep 2; do
+    corriendo="$(docker inspect -f '{{.State.Running}}' "sv-$v" 2> /dev/null)"
+    if [ "$corriendo" = false ]; then
+      echo "t=$(date -u +%FT%TZ) $(docker inspect -f 'OOMKilled={{.State.OOMKilled}} codigo_salida={{.State.ExitCode}} error={{.State.Error}}' "sv-$v" 2>&1)" > "$SAL/niveles/caida_${etiqueta}.txt"
+      log "[$v] el contenedor del backend se detuvo en $etiqueta ($(cat "$SAL/niveles/caida_${etiqueta}.txt")); k6 se detiene en $GRACIA_CAIDA_S s"
+      sleep "$GRACIA_CAIDA_S"
+      pkill -TERM -x k6 2> /dev/null
+      return 0
+    fi
+  done
 }
 
 registrar_afinidad() {
@@ -589,7 +653,7 @@ caos_en_segundo_plano() {
 
 correr_nivel_escritura() {
   local v="$1" nivel="$2" rampa="$3" mantener="$4" base_u="$5" base_cuenta="$6" config="${7:-$CFG_NIVEL}" prefijo="${8:-$1}" prep="${9:-}" envx="${10:-}" inicio_iso
-  local etiqueta="${prefijo}_${nivel}" etq_caja="$nivel" t0 salud ids codigo cpu0 cpu1 muestreador muestreador_pg muestreador_gen muestreador_jvm correos0 correos1
+  local etiqueta="${prefijo}_${nivel}" etq_caja="$nivel" t0 salud ids codigo cpu0 cpu1 muestreador muestreador_pg muestreador_gen muestreador_jvm vigilante caida correos0 correos1
   [ "$prefijo" != "$v" ] && etq_caja="${prefijo}-${nivel}"
   opciones_jvm "$config"
   ENV_EXTRA_BACKEND="$envx"
@@ -620,6 +684,12 @@ correr_nivel_escritura() {
     $PIN_MON python3 "$LAB_DIR/muestreo_jvm.py" "$SAL/niveles/jvm_vivo_${etiqueta}.csv" --contenedor "sv-$v" --periodo "$HEAP_PERIODO_S" &
     muestreador_jvm=$!
   fi
+  registrar_io "$v" "$etiqueta" antes
+  vigilante=""
+  if [ "$ABORTAR_SI_CAE" = 1 ]; then
+    vigilar_backend "$v" "$etiqueta" &
+    vigilante=$!
+  fi
   t0="$(date +%s)"
   inicio_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   log "[$v] nivel $nivel: k6 con hasta $nivel usuarios (subida $rampa, sostenido $mantener)"
@@ -634,11 +704,15 @@ correr_nivel_escritura() {
     k6 run --quiet --out "csv=$SAL/niveles/k6_${etiqueta}.csv" \
     -e BASE_URL="http://127.0.0.1:$PUERTO" -e SLUG="$SLUG" -e USUARIO="$USUARIO" -e CLAVE="$CLAVE" -e IDS="$ids" \
     -e CUENTA_BASE="$base_cuenta" -e U_BASE="$base_u" -e ITER_POR_VU="$ITER_POR_VU" -e ETIQUETA_NIVEL="$etq_caja" -e NIVEL="$nivel" -e RAMPA="$rampa" -e MANTENER="$mantener" \
-    -e PAUSA_S="$PAUSA_S" -e TIMEOUT="$TIMEOUT_HTTP" -e SALIDA="$SAL/niveles/k6_${etiqueta}.json" \
+    -e PAUSA_S="$PAUSA_S" -e SEMILLA="$SEMILLA" -e PESOS_ACCIONES="$PESOS_ACCIONES" -e TIMEOUT="$TIMEOUT_HTTP" -e SALIDA="$SAL/niveles/k6_${etiqueta}.json" \
     "$RAIZ/medicion/escritura/carga_escrituras.js" > "$SAL/logs/k6_${etiqueta}.log" 2>&1
   codigo=$?
   [ -n "$pid_caos" ] && wait "$pid_caos"
   kill "$muestreador" "$muestreador_pg" $muestreador_gen $muestreador_jvm 2> /dev/null; wait "$muestreador" "$muestreador_pg" $muestreador_gen $muestreador_jvm 2> /dev/null
+  [ -n "$vigilante" ] && { kill "$vigilante" 2> /dev/null; wait "$vigilante" 2> /dev/null; }
+  registrar_io "$v" "$etiqueta" despues
+  caida=""
+  [ -f "$SAL/niveles/caida_${etiqueta}.txt" ] && caida="$(cat "$SAL/niveles/caida_${etiqueta}.txt")"
   local duracion=$(( $(date +%s) - t0 ))
   cpu1="$(cpu_us "$v")"; cpu1="${cpu1:-0}"
   correos1="$(correos_recibidos)"
@@ -655,10 +729,10 @@ correr_nivel_escritura() {
     --argjson cpu_s "$(( (cpu1 - cpu0) / 1000000 ))" --arg oom "$oom" --argjson reinicios "${reinicios:-0}" \
     --arg corriendo "$corriendo" --argjson salida "${codigo_salida:--1}" --arg salud "$salud_final" \
     --arg sql "$sql" --argjson k6_codigo "$codigo" --arg config "$config" --argjson correos "$(( correos1 - correos0 ))" \
-    --arg heap_max "$XMX" --arg perfil "$PERFIL_EFECTIVO" --argjson cpus_limite "$CPUS" --argjson memoria_limite_mb "$(a_mb "$MEMORIA")" \
+    --arg heap_max "$XMX" --arg perfil "$PERFIL_EFECTIVO" --arg caida "$caida" --argjson cpus_limite "$CPUS" --argjson memoria_limite_mb "$(a_mb "$MEMORIA")" \
     '{version:$version, perfil_lab:$perfil, nivel:$nivel, config_jvm:$config, correos_recibidos:$correos, heap_max:$heap_max, cpus_limite:$cpus_limite, memoria_limite_mb:$memoria_limite_mb, perfil:"carga_escritura", duracion_s:$duracion, cpu_contenedor_s:$cpu_s, oom_killed:($oom=="true"),
       reinicios:$reinicios, sigue_corriendo:($corriendo=="true"), codigo_salida:$salida, salud_final_http:$salud,
-      k6_codigo_salida:$k6_codigo, sql_sentencias:(($sql|split("|")[0])|tonumber), sql_tiempo_s:(($sql|split("|")[1])|tonumber)}' \
+      k6_codigo_salida:$k6_codigo, caida_backend:$caida, sql_sentencias:(($sql|split("|")[0])|tonumber), sql_tiempo_s:(($sql|split("|")[1])|tonumber)}' \
     > "$SAL/niveles/estado_${etiqueta}.json" || log "no se pudo escribir el estado de $etiqueta"
   for registro in jvm_gc jvm_clases; do
     docker cp "sv-$v:/tmp/$registro.log" "$SAL/niveles/${registro}_${etiqueta}.log" > /dev/null 2>&1 \

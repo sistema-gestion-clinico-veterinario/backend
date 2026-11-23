@@ -1,6 +1,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter } from 'k6/metrics';
+import { crearGenerador } from './aleatorio.js';
 
 const BASE = (__ENV.BASE_URL || '').replace(/\/$/, '');
 const SLUG = __ENV.SLUG;
@@ -16,6 +17,7 @@ const PAUSA_S = parseFloat(__ENV.PAUSA_S || '15');
 const TIMEOUT = __ENV.TIMEOUT || '30s';
 const ITER_POR_VU = parseInt(__ENV.ITER_POR_VU || '19', 10);
 const SALIDA = __ENV.SALIDA || 'resumen_carga.json';
+const SEMILLA = __ENV.SEMILLA ? parseInt(__ENV.SEMILLA, 10) : null;
 const IDS = JSON.parse(__ENV.IDS || '{}');
 const EMPRESA = IDS.companyId;
 
@@ -140,8 +142,21 @@ function leer(paso, ruta) {
   return llamar(paso, 'GET', ruta, undefined, false);
 }
 
+let generadorAccion = null;
+let generadorPausa = null;
+
+function aleatorio(flujo) {
+  if (SEMILLA === null) return Math.random();
+  if (flujo === 'accion') {
+    if (generadorAccion === null) generadorAccion = crearGenerador(SEMILLA * 7919 + __VU * 104729 + 1);
+    return generadorAccion();
+  }
+  if (generadorPausa === null) generadorPausa = crearGenerador(SEMILLA * 7919 + __VU * 104729 + 2);
+  return generadorPausa();
+}
+
 function pausa() {
-  sleep(PAUSA_S * (0.5 + Math.random()));
+  sleep(PAUSA_S * (0.5 + aleatorio('pausa')));
 }
 
 function iniciarSesion() {
@@ -333,7 +348,7 @@ function cancelar() {
 
 function elegirAccion() {
   const total = PESOS.reduce((x, y) => x + y, 0);
-  let r = Math.random() * total;
+  let r = aleatorio('accion') * total;
   for (let i = 0; i < PESOS.length; i++) {
     r -= PESOS[i];
     if (r < 0) return NOMBRES_ACCIONES[i];
