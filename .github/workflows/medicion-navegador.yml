@@ -175,3 +175,60 @@ jobs:
           name: visual-panel
           path: resultados/
           if-no-files-found: warn
+
+  reconexion:
+    name: Aviso de reconexión visto en el navegador
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backend final para las dos versiones (green-diagnostico-despues)
+        uses: actions/checkout@v4
+        with: { ref: green-diagnostico-despues, path: .antes }
+      - name: Backend final (green-diagnostico-despues)
+        uses: actions/checkout@v4
+        with: { ref: green-diagnostico-despues, path: .despues }
+      - name: Frontend anterior (green-reconexion-antes)
+        uses: actions/checkout@v4
+        with: { repository: "${{ env.FRONTEND_REPO }}", ref: green-reconexion-antes, path: .front-antes }
+      - name: Frontend nuevo (green-reconexion-despues)
+        uses: actions/checkout@v4
+        with: { repository: "${{ env.FRONTEND_REPO }}", ref: green-reconexion-despues, path: .front-despues }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - name: Compilar los dos frontends
+        run: |
+          for v in antes despues; do
+            (cd ".front-$v" && npx -y npm@11.6.2 ci --no-audit --no-fund && npx ng build --configuration measurement)
+          done
+      - uses: grafana/setup-k6-action@v1
+      - name: Instalar Playwright
+        working-directory: medicion/visual
+        run: |
+          npm init -y > /dev/null
+          npm install playwright@1.49.1 --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Ejecutar la prueba visual
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: antes despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/escritura/PLAN_CAOS
+          RESET_BASE: "0"
+          ESCENARIO_VISUAL: caida
+          ENV_EXTRA_BACKEND: DB_POOL_CONNECTION_TIMEOUT_MS=5000
+          FRONT_DIST_antes: ${{ github.workspace }}/.front-antes/dist/vetsystem-frontend/browser
+          FRONT_DIST_despues: ${{ github.workspace }}/.front-despues/dist/vetsystem-frontend/browser
+          PG_SHARED_BUFFERS: 1GB
+          ITER_POR_VU: "40"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-reconexion
+          path: resultados/
+          if-no-files-found: warn
