@@ -187,8 +187,17 @@ async function usuarioDeFondo(i, control) {
   const cabeceras = { 'Content-Type': 'application/json', Origin: 'http://localhost', 'X-Company-Slug': SLUG, 'X-Forwarded-For': `10.252.0.${i + 1}` };
   const base = `http://127.0.0.1:${PUERTO_BACKEND}/api/v1`;
   try {
-    const login = await fetch(`${base}/auth/login`, { method: 'POST', headers: cabeceras, body: JSON.stringify({ slug: SLUG, username: `${USUARIO_BASE}${i + 2}`, password: CLAVE }), signal: AbortSignal.timeout(60000) });
-    const cookie = login.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
+    await pausa(i * 600);
+    let cookie = '';
+    for (let intento = 0; intento < 5 && !cookie; intento++) {
+      const login = await fetch(`${base}/auth/login`, { method: 'POST', headers: cabeceras, body: JSON.stringify({ slug: SLUG, username: `${USUARIO_BASE}${i + 2}`, password: CLAVE }), signal: AbortSignal.timeout(60000) });
+      cookie = login.ok ? login.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ') : '';
+      if (!cookie) await pausa(2000);
+    }
+    if (!cookie) {
+      control.sinSesion += 1;
+      return;
+    }
     while (!control.fin) {
       const t = Date.now();
       try {
@@ -205,9 +214,9 @@ async function usuarioDeFondo(i, control) {
 async function panel() {
   await iniciarSesion();
   const destino = page.url();
-  const control = { fin: false, respuestas: [] };
+  const control = { fin: false, respuestas: [], sinSesion: 0 };
   const fondo = Array.from({ length: 30 }, (_, i) => usuarioDeFondo(i, control));
-  await pausa(20000);
+  await pausa(30000);
   control.respuestas.length = 0;
   const cargas = [];
   for (let i = 0; i < 5; i++) {
@@ -227,12 +236,14 @@ async function panel() {
   return {
     destino: destino.replace(BASE, ''),
     usuariosDeFondo: 30,
+    usuariosDeFondoSinSesion: control.sinSesion,
     peticionesDeFondoDurantePrueba: control.respuestas.length,
     medianaMsDeFondo: mediana(duraciones),
     estadosDeFondo: contar(control.respuestas),
     cargas,
-    medianaSegundosPorCarga: mediana(cargas.map((c) => c.segundos)),
-    medianaMsDeLaLlamadaMasLentaDelPanel: mediana(cargas.map((c) => Math.max(0, ...c.msDelPanel))),
+    primeraCargaSegundos: cargas[0]?.segundos ?? null,
+    medianaSegundosDeLasCargas2a5: mediana(cargas.slice(1).map((c) => c.segundos)),
+    medianaMsDeLaLlamadaDelPanelEnLasCargas2a5: mediana(cargas.slice(1).map((c) => Math.max(0, ...c.msDelPanel))),
   };
 }
 
