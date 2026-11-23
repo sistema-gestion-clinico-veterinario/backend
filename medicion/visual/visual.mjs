@@ -258,7 +258,7 @@ page.on('requestfinished', async (r) => {
   api.push({ t: seg(), estado: respuesta ? respuesta.status() : 0, metodo: r.method(), ruta: new URL(r.url()).pathname, ms: Math.max(0, Math.round(r.timing().responseEnd)) });
 });
 page.on('requestfailed', (r) => {
-  if (r.url().includes('/api/v1/')) api.push({ t: seg(), estado: 0, metodo: r.method(), ruta: new URL(r.url()).pathname, ms: 0 });
+  if (r.url().includes('/api/v1/')) api.push({ t: seg(), estado: 0, metodo: r.method(), ruta: new URL(r.url()).pathname, ms: 0, falla: r.failure()?.errorText ?? null });
 });
 
 let resumen = {};
