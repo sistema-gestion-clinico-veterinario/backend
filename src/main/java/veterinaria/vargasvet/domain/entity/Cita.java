@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @Data
@@ -118,8 +117,7 @@ public class Cita {
     @PrePersist
     protected void onCreate() {
         if (numeroCita == null || numeroCita.isBlank()) {
-            String fecha = veterinaria.vargasvet.util.AppClock.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-            numeroCita = "CIT-" + fecha + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+            numeroCita = veterinaria.vargasvet.util.NumeroDeCita.generar(veterinaria.vargasvet.util.AppClock.now().toLocalDate());
         }
         if (businessTraceId == null || businessTraceId.isBlank()) {
             businessTraceId = "ATT-" + UUID.randomUUID().toString().replace("-", "").substring(0, 24).toUpperCase();

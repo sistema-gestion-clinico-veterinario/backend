@@ -464,10 +464,10 @@ public class PagoServiceImpl implements PagoService {
 
     private String asegurarNumeroCita(Cita cita) {
         if (cita.getNumeroCita() == null || cita.getNumeroCita().isBlank()) {
-            String fecha = cita.getFechaHoraInicio() != null
-                    ? cita.getFechaHoraInicio().toLocalDate().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE)
-                    : java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
-            cita.setNumeroCita("CIT-" + fecha + "-" + java.util.UUID.randomUUID().toString().substring(0, 6).toUpperCase());
+            java.time.LocalDate fecha = cita.getFechaHoraInicio() != null
+                    ? cita.getFechaHoraInicio().toLocalDate()
+                    : java.time.LocalDate.now();
+            cita.setNumeroCita(veterinaria.vargasvet.util.NumeroDeCita.generar(fecha));
             citaRepository.save(cita);
         }
         return cita.getNumeroCita();

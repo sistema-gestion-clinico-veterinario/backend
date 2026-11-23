@@ -343,8 +343,7 @@ public class CuentaCitaServiceImpl implements CuentaCitaService {
 
     private void asegurarNumeroCita(Cita cita) {
         if (cita.getNumeroCita() != null && !cita.getNumeroCita().isBlank()) return;
-        String fecha = cita.getFechaHoraInicio().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
-        cita.setNumeroCita("CIT-" + fecha + "-" + java.util.UUID.randomUUID().toString().substring(0, 6).toUpperCase());
+        cita.setNumeroCita(veterinaria.vargasvet.util.NumeroDeCita.generar(cita.getFechaHoraInicio().toLocalDate()));
         citaRepository.save(cita);
     }
 
