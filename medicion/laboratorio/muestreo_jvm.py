@@ -9,14 +9,15 @@ import hsperfdata  # noqa: E402
 
 ORDEN = ['ts', 'duracion_ms', 'fuente', 'heap_usado_kb', 'heap_comprometido_kb', 'eden_usado_kb', 'viejo_usado_kb',
          'metaspace_usado_kb', 'metaspace_comprometido_kb', 'ygc', 'fgc', 'gct_s', 'cont_actual_kb', 'cont_anon_kb',
-         'cont_file_kb', 'cont_pico_kb']
+         'cont_file_kb', 'cont_pico_kb', 'rss_kb', 'rss_anon_kb', 'rss_file_kb', 'hilos_so', 'kstack_kb', 'slab_kb', 'sock_kb', 'hilos_java', 'clases_comprimidas_usado_kb']
 
 MARCA = b'\n=====SVLAB=====\n'
 
 SCRIPT_CONTENEDOR = (
     "for f in /tmp/hsperfdata_*/1; do cat \"$f\" 2>/dev/null; done; printf '\n=====SVLAB=====\n'; "
     "echo '--actual'; cat /sys/fs/cgroup/memory.current 2>/dev/null; "
-    "echo '--stat'; grep -E '^(anon|file) ' /sys/fs/cgroup/memory.stat 2>/dev/null; "
+    "echo '--stat'; grep -E '^(anon|file|kernel_stack|slab|sock) ' /sys/fs/cgroup/memory.stat 2>/dev/null; "
+    "echo '--status'; grep -E '^(VmRSS|RssAnon|RssFile|Threads):' /proc/1/status 2>/dev/null; "
     "echo '--pico'; cat /sys/fs/cgroup/memory.peak 2>/dev/null; true"
 )
 
@@ -59,6 +60,8 @@ def parsear_muestra(bruto):
         r['ygc'] = '' if heap['ygc'] is None else heap['ygc']
         r['fgc'] = '' if heap['fgc'] is None else heap['fgc']
         r['gct_s'] = '' if heap['gct_s'] is None else round(heap['gct_s'], 4)
+        r['hilos_java'] = '' if heap['hilos_java'] is None else heap['hilos_java']
+        r['clases_comprimidas_usado_kb'] = a_kb(heap['clases_comprimidas_usado_b'])
     else:
         r['fuente'] = 'ninguna'
     actual_b = a_numero((secciones.get('actual') or [''])[0])
@@ -66,7 +69,18 @@ def parsear_muestra(bruto):
     for linea in secciones.get('stat', []):
         partes = linea.split()
         if len(partes) == 2 and a_numero(partes[1]) is not None:
-            r['cont_anon_kb' if partes[0] == 'anon' else 'cont_file_kb'] = a_kb(float(partes[1]))
+            clave = {'anon': 'cont_anon_kb', 'file': 'cont_file_kb', 'kernel_stack': 'kstack_kb', 'slab': 'slab_kb', 'sock': 'sock_kb'}.get(partes[0])
+            if clave:
+                r[clave] = a_kb(float(partes[1]))
+    for linea in secciones.get('status', []):
+        partes = linea.replace(':', '').split()
+        if len(partes) >= 2 and a_numero(partes[1]) is not None:
+            if partes[0] == 'Threads':
+                r['hilos_so'] = int(float(partes[1]))
+            else:
+                clave = {'VmRSS': 'rss_kb', 'RssAnon': 'rss_anon_kb', 'RssFile': 'rss_file_kb'}.get(partes[0])
+                if clave:
+                    r[clave] = int(float(partes[1]))
     r['cont_pico_kb'] = a_kb(a_numero((secciones.get('pico') or [''])[0]))
     return r
 

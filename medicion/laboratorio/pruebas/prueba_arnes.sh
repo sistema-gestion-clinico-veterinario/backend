@@ -12,7 +12,7 @@ igual() { if [ "$2" = "$3" ]; then ok "$1"; else mal "$1 (esperado '$3', obtenid
 
 log() { echo "[log] $*" >> "$TMP/log.txt"; }
 fallo() { echo "FALLO: $*" >> "$TMP/log.txt"; exit 1; }
-for f in flags_de a_mb opciones_jvm aplicar_perfil verificar_k6 fijar_dockerfile definir_fijado vigilar_backend; do eval "$(extraer $f)"; done
+for f in flags_de a_mb opciones_jvm aplicar_perfil verificar_k6 fijar_dockerfile definir_fijado vigilar_backend volcar_hilos; do eval "$(extraer $f)"; done
 . "$AQUI/../imagenes.sh"
 BASE_JVM="-XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m"
 OBSERVACION_JVM="-Xlog:gc:file=/tmp/jvm_gc.log"
@@ -96,6 +96,21 @@ igual "modo topología sin recursos suficientes conserva el fijado anterior" "$K
 case "$AFINIDAD_MOTIVO" in *"se conserva el fijado anterior"*) ok "el motivo queda registrado" ;; *) mal "motivo: $AFINIDAD_MOTIVO" ;; esac
 unset SYS_CPU_DIR NPROC_FORZADO; CPUS=1
 
+NMT_OPCIONES=""; NMT=0
+PERFIL_LAB=EXP-HEAP-256M; PERFIL_EFECTIVO=EXP-HEAP-256M; MEMORIA=2g; XMX=1g; DESPUES_DIR="$FIX"; CPUS=1; VARIANTES=""; UMBRAL_GENERADOR_CPU_PCT=80; HEAP_EN_VIVO=1
+aplicar_perfil
+igual "EXP-HEAP-256M fija memoria 512m, -Xmx256m y la configuración H" "$MEMORIA/$XMX/$CFG_NIVEL/$CFG_CONTROL/$CPUS_PREP/$MEM_PREP" "512m/256m/H/H/1/2g"
+opciones_jvm H
+case "$JAVA_OPTS_LAB" in "-Xmx256m -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m -Xlog:gc"*) ok "la configuración H solo cambia -Xmx respecto de producción" ;; *) mal "configuración H: $JAVA_OPTS_LAB" ;; esac
+case "$JAVA_OPTS_LAB" in *NativeMemoryTracking*) mal "NMT no debe estar activo por defecto" ;; *) ok "NMT apagado por defecto" ;; esac
+NMT_OPCIONES="-XX:NativeMemoryTracking=summary -XX:+UnlockDiagnosticVMOptions -XX:+PrintNMTStatistics"
+opciones_jvm H
+case "$JAVA_OPTS_LAB" in *"-XX:NativeMemoryTracking=summary"*"-XX:+PrintNMTStatistics") ok "NMT se añade solo cuando se pide" ;; *) mal "NMT: $JAVA_OPTS_LAB" ;; esac
+NMT_OPCIONES=""
+PERFIL_LAB=EXP-HEAP-abcM; ( aplicar_perfil ) > /dev/null 2>&1 && mal "perfil experimental inválido debe fallar" || ok "perfil experimental inválido falla"
+PERFIL_LAB=EXP-HEAP-256M; ( VARIANTES="D:a" aplicar_perfil ) > /dev/null 2>&1 && mal "EXP-HEAP con VARIANTES debe fallar" || ok "EXP-HEAP con VARIANTES falla"
+XMX=1g; MEMORIA=2g
+
 mkdir -p "$TMP/niveles"
 GRACIA_CAIDA_S=0
 LLAMADAS="$TMP/llamadas"; : > "$LLAMADAS"
@@ -111,6 +126,24 @@ vigilar_backend despues despues_250
 igual "el vigilante ignora lecturas vacías y detecta el contenedor detenido" "$(wc -l < "$LLAMADAS" | tr -d ' ')" "3"
 case "$(cat "$TMP/niveles/caida_despues_250.txt")" in *"OOMKilled=true codigo_salida=137"*) ok "la caída queda registrada con OOMKilled y código de salida" ;; *) mal "caída: $(cat "$TMP/niveles/caida_despues_250.txt")" ;; esac
 igual "el vigilante detiene k6 con TERM" "$(cat "$TMP/pkill.txt")" "-TERM -x k6"
+mkdir -p "$TMP/niveles"
+docker() {
+  case "$1" in
+    kill) echo "$*" > "$TMP/kill.txt" ;;
+    logs) printf 'ruido previo
+Full thread dump OpenJDK 64-Bit Server VM:
+
+"http-nio-8080-exec-1" #1
+   java.lang.Thread.State: RUNNABLE
+
+JNI global refs: 1
+' ;;
+  esac
+}
+VOLCADO_HILOS_S="0,0"
+volcar_hilos despues despues_250 "$(date +%s)"
+igual "el volcado envía SIGQUIT al contenedor" "$(cat "$TMP/kill.txt")" "kill -s QUIT sv-despues"
+igual "el volcado se guarda comprimido y empieza en el volcado" "$(gzip -dc "$TMP/niveles/hilos_despues_250_t0.txt.gz" | head -1)" "Full thread dump OpenJDK 64-Bit Server VM:"
 unset -f docker sleep pkill
 
 rm -rf "$TMP"

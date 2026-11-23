@@ -59,6 +59,12 @@ PIN_MODO="${PIN_MODO:-fijo}"
 SEMILLA="${SEMILLA:-}"
 PESOS_ACCIONES="${PESOS_ACCIONES:-}"
 ABORTAR_SI_CAE="${ABORTAR_SI_CAE:-0}"
+NMT="${NMT:-0}"
+NMT_OPCIONES=""
+[ "$NMT" = 1 ] && NMT_OPCIONES="-XX:NativeMemoryTracking=summary -XX:+UnlockDiagnosticVMOptions -XX:+PrintNMTStatistics"
+MUESTREO_PG="${MUESTREO_PG:-0}"
+VOLCADO_HILOS_S="${VOLCADO_HILOS_S:-}"
+LOG_HIKARI="${LOG_HIKARI:-}"
 GRACIA_CAIDA_S="${GRACIA_CAIDA_S:-20}"
 
 BASE_JVM="-XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m"
@@ -77,9 +83,11 @@ opciones_jvm() {
     E) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
     F) JAVA_OPTS_LAB="-Xms$XMX -Xmx$XMX -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
     G) JAVA_OPTS_LAB="-Xms${XMX_G:-1280m} -Xmx${XMX_G:-1280m} -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
-    P) JAVA_OPTS_LAB="$(flags_de "$DESPUES_DIR") $OBSERVACION_JVM"
+    P) JAVA_OPTS_LAB="$(flags_de "$DESPUES_DIR") $OBSERVACION_JVM${NMT_OPCIONES:+ $NMT_OPCIONES}"
        case "$JAVA_OPTS_LAB" in " "*) echo "no se pudo leer ENV JAVA_OPTS de $DESPUES_DIR/Dockerfile"; exit 1 ;; esac ;;
-    *) echo "configuración desconocida: '$1' (usa A, B, C, D, E, F, G o P)"; exit 1 ;;
+    H) JAVA_OPTS_LAB="$(flags_de "$DESPUES_DIR" | sed "s/-Xmx[0-9]*[mMgG]/-Xmx$XMX/") $OBSERVACION_JVM${NMT_OPCIONES:+ $NMT_OPCIONES}"
+       case " $JAVA_OPTS_LAB " in *" -Xmx$XMX "*) ;; *) echo "no se pudo fijar -Xmx$XMX en los flags de producción de $DESPUES_DIR/Dockerfile"; exit 1 ;; esac ;;
+    *) echo "configuración desconocida: '$1' (usa A, B, C, D, E, F, G, P o H)"; exit 1 ;;
   esac
 }
 opciones_jvm "$CONFIG"
@@ -125,7 +133,17 @@ aplicar_perfil() {
       [ -z "${VARIANTES:-}" ] || fallo "el perfil PRODUCCION-512M no se combina con VARIANTES: cada variante define su propia JVM"
       [ "${MODO_SEGURIDAD:-0}" = 0 ] && [ -z "${ESCENARIO_VISUAL:-}" ] && [ "${MODO_CORTE:-0}" = 0 ] \
         || fallo "el perfil PRODUCCION-512M solo aplica a los niveles de carga, no a las pruebas de seguridad, visuales ni de corte" ;;
-    *) fallo "perfil desconocido: '$PERFIL_LAB' (usa CAPACIDAD-2G o PRODUCCION-512M)" ;;
+    EXP-HEAP-*M)
+      XMX="${PERFIL_LAB#EXP-HEAP-}"
+      XMX="${XMX%M}"
+      case "$XMX" in ''|*[!0-9]*) fallo "perfil experimental inválido: '$PERFIL_LAB' (usa EXP-HEAP-<MB>M, por ejemplo EXP-HEAP-256M)" ;; esac
+      XMX="${XMX}m"; MEMORIA=512m; CFG_NIVEL=H; CFG_CONTROL=H; CPUS_PREP=1; MEM_PREP=2g
+      PERFIL_EFECTIVO="$PERFIL_LAB (experimental: -Xmx$XMX en un contenedor de 512m; el resto de las opciones es el de producción)"
+      [ -n "$(flags_de "$DESPUES_DIR")" ] || fallo "el perfil $PERFIL_LAB necesita ENV JAVA_OPTS en $DESPUES_DIR/Dockerfile"
+      [ -z "${VARIANTES:-}" ] || fallo "el perfil $PERFIL_LAB no se combina con VARIANTES"
+      [ "${MODO_SEGURIDAD:-0}" = 0 ] && [ -z "${ESCENARIO_VISUAL:-}" ] && [ "${MODO_CORTE:-0}" = 0 ] \
+        || fallo "el perfil $PERFIL_LAB solo aplica a los niveles de carga" ;;
+    *) fallo "perfil desconocido: '$PERFIL_LAB' (usa CAPACIDAD-2G, PRODUCCION-512M o EXP-HEAP-<MB>M)" ;;
   esac
   case "$UMBRAL_GENERADOR_CPU_PCT" in ''|*[!0-9.]*) fallo "umbral del generador no numérico: '$UMBRAL_GENERADOR_CPU_PCT'" ;; esac
   case "$HEAP_EN_VIVO" in 0|1) ;; *) fallo "HEAP_EN_VIVO debe ser 0 o 1" ;; esac
@@ -153,6 +171,7 @@ registrar_entorno() {
     echo "umbral del generador: $UMBRAL_GENERADOR_CPU_PCT % de la CPU de k6 (criterio experimental, configurable)"
     echo "modo de afinidad: $PIN_MODO (aplicado: $AFINIDAD_APLICADA${AFINIDAD_MOTIVO:+; motivo: $AFINIDAD_MOTIVO}); k6 en CPU $K6_NUCLEOS, backend '$PIN_BACK', PostgreSQL '$PIN_PG', muestreadores '$PIN_MON'"
     echo "mezcla de operaciones: semilla ${SEMILLA:-no fijada (aleatoria)}; pesos ${PESOS_ACCIONES:-22,18,15,2,13,12,10,8} (panel, agenda, historia, reportes, recepción, atención, cobro, cancelar)"
+    echo "pool de conexiones: $POOL; muestreo de PostgreSQL: $([ "$MUESTREO_PG" = 1 ] && echo sí || echo no); volcados de hilos en los segundos: ${VOLCADO_HILOS_S:-ninguno}; registro de Hikari en DEBUG: $([ -n "$LOG_HIKARI" ] && echo sí || echo no); NMT: $([ "$NMT" = 1 ] && echo "sí (añade sobrecosto de memoria nativa)" || echo no)"
     echo "caída del backend: $([ "$ABORTAR_SI_CAE" = 1 ] && echo "k6 se detiene $GRACIA_CAIDA_S s después de que el contenedor se detenga" || echo "k6 continúa hasta el final")"
     echo "heap en vivo: $([ "$HEAP_EN_VIVO" = 1 ] && echo "sí, cada $HEAP_PERIODO_S s (contadores hsperfdata y cgroup)" || echo no)"
     echo "runner: ${ImageOS:-desconocido} ${ImageVersion:-desconocida}"
@@ -282,6 +301,17 @@ registrar_io() {
   } > "$SAL/niveles/io_${etiqueta}_${fase}.txt" 2>&1
 }
 
+volcar_hilos() {
+  local v="$1" etiqueta="$2" inicio="$3" seg marca
+  for seg in $(echo "$VOLCADO_HILOS_S" | tr ',' ' '); do
+    while [ $(( $(date +%s) - inicio )) -lt "$seg" ]; do sleep 1; done
+    marca="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    docker kill -s QUIT "sv-$v" > /dev/null 2>&1 || return 0
+    sleep 4
+    docker logs --since "$marca" "sv-$v" 2>&1 | sed -n '/^Full thread dump/,$p' | head -c 800000 | gzip > "$SAL/niveles/hilos_${etiqueta}_t${seg}.txt.gz"
+  done
+}
+
 vigilar_backend() {
   local v="$1" etiqueta="$2" corriendo
   while sleep 2; do
@@ -375,7 +405,7 @@ iniciar_backend() {
     -e "JAVA_OPTS=$JAVA_OPTS_LAB" -e RATE_LIMIT_LOGIN_PER_MINUTE="$LIMITE_LOGIN_IP" -e RATE_LIMIT_LOGIN_PER_ACCOUNT_PER_15_MINUTES="$LIMITE_LOGIN_CUENTA" \
     -e COOKIE_SECURE=false -e COOKIE_SAME_SITE=Lax -e TRUSTED_PROXY_COUNT=1 -e SWAGGER_ENABLED=false -e REMINDERS_CRON="0 0 0 1 1 *" \
     -e IA_RADIOGRAFIA_URL=http://ia-desactivada.local -e IA_LABORATORIO_URL=http://ia-desactivada.local -e IA_DIAGNOSTICO_URL=http://ia-desactivada.local \
-    ${ENV_EXTRA_BACKEND:+-e $ENV_EXTRA_BACKEND} \
+    ${ENV_EXTRA_BACKEND:+-e $ENV_EXTRA_BACKEND} ${LOG_HIKARI:+-e LOGGING_LEVEL_COM_ZAXXER_HIKARI=DEBUG} \
     "sv-backend:$v" > /dev/null
 }
 
@@ -391,7 +421,7 @@ esperar_salud() {
   return 1
 }
 
-detener_backend() { docker logs "sv-$1" > "$SAL/logs/backend_$2.log" 2>&1; docker rm -f "sv-$1" > /dev/null 2>&1 || true; }
+detener_backend() { [ "$NMT" = 1 ] && docker stop -t 30 "sv-$1" > /dev/null 2>&1; docker logs "sv-$1" > "$SAL/logs/backend_$2.log" 2>&1; docker rm -f "sv-$1" > /dev/null 2>&1 || true; }
 
 preparar_base() {
   local v="$1" d; d="$(dir_de "$v")"
@@ -653,7 +683,7 @@ caos_en_segundo_plano() {
 
 correr_nivel_escritura() {
   local v="$1" nivel="$2" rampa="$3" mantener="$4" base_u="$5" base_cuenta="$6" config="${7:-$CFG_NIVEL}" prefijo="${8:-$1}" prep="${9:-}" envx="${10:-}" inicio_iso
-  local etiqueta="${prefijo}_${nivel}" etq_caja="$nivel" t0 salud ids codigo cpu0 cpu1 muestreador muestreador_pg muestreador_gen muestreador_jvm vigilante caida correos0 correos1
+  local etiqueta="${prefijo}_${nivel}" etq_caja="$nivel" t0 salud ids codigo cpu0 cpu1 muestreador muestreador_pg muestreador_gen muestreador_jvm muestreador_pgact vigia_hilos vigilante caida correos0 correos1
   [ "$prefijo" != "$v" ] && etq_caja="${prefijo}-${nivel}"
   opciones_jvm "$config"
   ENV_EXTRA_BACKEND="$envx"
@@ -684,6 +714,11 @@ correr_nivel_escritura() {
     $PIN_MON python3 "$LAB_DIR/muestreo_jvm.py" "$SAL/niveles/jvm_vivo_${etiqueta}.csv" --contenedor "sv-$v" --periodo "$HEAP_PERIODO_S" &
     muestreador_jvm=$!
   fi
+  muestreador_pgact=""
+  if [ "$MUESTREO_PG" = 1 ]; then
+    $PIN_MON python3 "$LAB_DIR/muestreo_pg.py" "$SAL/niveles/pg_actividad_${etiqueta}.csv" --base "$v" --periodo 2 &
+    muestreador_pgact=$!
+  fi
   registrar_io "$v" "$etiqueta" antes
   vigilante=""
   if [ "$ABORTAR_SI_CAE" = 1 ]; then
@@ -692,6 +727,11 @@ correr_nivel_escritura() {
   fi
   t0="$(date +%s)"
   inicio_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  vigia_hilos=""
+  if [ -n "$VOLCADO_HILOS_S" ]; then
+    volcar_hilos "$v" "$etiqueta" "$t0" &
+    vigia_hilos=$!
+  fi
   log "[$v] nivel $nivel: k6 con hasta $nivel usuarios (subida $rampa, sostenido $mantener)"
   local evento_caos="" pid_caos=""
   case "$prefijo" in caos_*) evento_caos="${prefijo#caos_}"; evento_caos="${evento_caos%_antes}"; evento_caos="${evento_caos%_despues}"; evento_caos="${evento_caos%_rapido}"; evento_caos="${evento_caos%_medio}" ;; esac
@@ -708,7 +748,7 @@ correr_nivel_escritura() {
     "$RAIZ/medicion/escritura/carga_escrituras.js" > "$SAL/logs/k6_${etiqueta}.log" 2>&1
   codigo=$?
   [ -n "$pid_caos" ] && wait "$pid_caos"
-  kill "$muestreador" "$muestreador_pg" $muestreador_gen $muestreador_jvm 2> /dev/null; wait "$muestreador" "$muestreador_pg" $muestreador_gen $muestreador_jvm 2> /dev/null
+  kill "$muestreador" "$muestreador_pg" $muestreador_gen $muestreador_jvm $muestreador_pgact $vigia_hilos 2> /dev/null; wait "$muestreador" "$muestreador_pg" $muestreador_gen $muestreador_jvm $muestreador_pgact $vigia_hilos 2> /dev/null
   [ -n "$vigilante" ] && { kill "$vigilante" 2> /dev/null; wait "$vigilante" 2> /dev/null; }
   registrar_io "$v" "$etiqueta" despues
   caida=""
@@ -745,6 +785,10 @@ correr_nivel_escritura() {
   docker exec sv-pg psql -U postgres -d "$v" -tAc "SELECT json_build_object('llamadas', coalesce(sum(calls), 0), 'total_ms', coalesce(round(sum(total_exec_time)::numeric, 0), 0), 'media_ms', coalesce(round((sum(total_exec_time) / nullif(sum(calls), 0))::numeric, 2), 0)) FROM pg_stat_statements WHERE dbid = (SELECT oid FROM pg_database WHERE datname = '$v') AND query ILIKE '%consentimiento_datos%'" > "$SAL/niveles/sql_consentimiento_${etiqueta}.json" 2> /dev/null || true
   docker logs --since "$inicio_iso" sv-pg 2>&1 | head -c 600000 | gzip > "$SAL/niveles/plan_pg_${etiqueta}.log.gz" || true
   detener_backend "$v" "carga_${etiqueta}"
+  if [ "$NMT" = 1 ]; then
+    sed -n '/^Native Memory Tracking:/,$p' "$SAL/logs/backend_carga_${etiqueta}.log" > "$SAL/niveles/nmt_${etiqueta}.txt"
+    [ -s "$SAL/niveles/nmt_${etiqueta}.txt" ] || log "[$v] no se obtuvo el resumen de memoria nativa de $etiqueta (la JVM no terminó de forma ordenada)"
+  fi
   ENV_EXTRA_BACKEND=""
   gzip -f "$SAL/niveles/k6_${etiqueta}.csv" 2>/dev/null || true
   log "[$v] nivel $nivel terminado: k6 código $codigo, OOM=$oom, reinicios=$reinicios, salud final=$salud_final"

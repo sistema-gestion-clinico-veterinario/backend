@@ -183,6 +183,18 @@ def evaluar_jvm(niv, etiqueta):
         r['cont_pico_cgroup_mb'] = max(col('cont_pico_kb', 1024), default=None)
         r['cont_anon_max_mb'] = max(col('cont_anon_kb', 1024), default=None)
         r['cont_file_max_mb'] = max(col('cont_file_kb', 1024), default=None)
+        r['rss_max_mb'] = max(col('rss_kb', 1024), default=None)
+        r['rss_anon_max_mb'] = max(col('rss_anon_kb', 1024), default=None)
+        r['hilos_so_max'] = max(col('hilos_so'), default=None)
+        r['hilos_java_max'] = max(col('hilos_java'), default=None)
+        r['kstack_max_mb'] = max(col('kstack_kb', 1024), default=None)
+        r['slab_max_mb'] = max(col('slab_kb', 1024), default=None)
+        no_heap = []
+        for f in filas:
+            anon, comp = numero(f.get('rss_anon_kb')), numero(f.get('heap_comprometido_kb'))
+            if anon is not None and comp is not None:
+                no_heap.append((anon - comp) / 1024)
+        r['fuera_del_heap_max_mb'] = max(no_heap, default=None)
         ygc, fgc, gct = col('ygc'), col('fgc'), col('gct_s')
         r['jstat_ygc'] = (ygc[-1] - ygc[0]) if len(ygc) > 1 else None
         r['jstat_total'] = (ygc[-1] if ygc else None, fgc[-1] if fgc else None, gct[-1] if gct else None)

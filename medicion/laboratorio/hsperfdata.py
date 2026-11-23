@@ -63,4 +63,6 @@ def resumen_heap(c):
         'ygc': c.get('sun.gc.collector.0.invocations'),
         'fgc': c.get('sun.gc.collector.1.invocations'),
         'gct_s': (tiempo_gc / frecuencia) if frecuencia else None,
+        'hilos_java': c.get('java.threads.live'),
+        'clases_comprimidas_usado_b': c.get('sun.gc.compressedclassspace.used'),
     }

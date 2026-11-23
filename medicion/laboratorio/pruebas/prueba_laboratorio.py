@@ -64,6 +64,15 @@ class MuestreoJvm(unittest.TestCase):
         fila['heap_usado_kb'] = 1600
         self.assertFalse(dict((n, ok) for n, _, _, ok in cj.comparar(j, fila))['Heap usado (KB)'])
 
+    def test_memoria_nativa_hilos_y_pilas(self):
+        perf = gzip.decompress(FIXTURE.read_bytes())
+        lineas = ["--actual", "1073741824", "--stat", "anon 805306368", "file 104857600", "kernel_stack 2097152", "slab 5242880", "sock 1048576", "--status", "VmRSS:\t  600000 kB", "RssAnon:\t  560000 kB", "RssFile:\t  40000 kB", "Threads:\t  87", "--pico", "1181116006"]
+        texto = "\n".join(lineas) + "\n"
+        r = mj.parsear_muestra(perf + mj.MARCA + texto.encode())
+        self.assertEqual((r['rss_kb'], r['rss_anon_kb'], r['rss_file_kb'], r['hilos_so']), (600000, 560000, 40000, 87))
+        self.assertEqual((r['kstack_kb'], r['slab_kb'], r['sock_kb']), (2048, 5120, 1024))
+        self.assertEqual(r["fuente"], "hsperfdata")
+
     def test_sin_contadores_conserva_la_memoria_del_contenedor(self):
         r = mj.parsear_muestra(contenedor(b'', actual=2097152, anon=1048576, archivo=0, pico=0))
         self.assertEqual(r['fuente'], 'ninguna')

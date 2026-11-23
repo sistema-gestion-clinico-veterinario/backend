@@ -1,0 +1,422 @@
+name: "Investigaciones: heap de producción, pool de conexiones y afinidad (laboratorio)"
+
+on:
+  push:
+    branches: [medicion/investigacion]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: medicion-investigacion
+  cancel-in-progress: false
+
+jobs:
+  verificacion:
+    name: Pruebas de los scripts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Ejecutar las pruebas
+        run: |
+          python3 medicion/laboratorio/pruebas/prueba_laboratorio.py
+          python3 medicion/laboratorio/pruebas/prueba_comparacion.py
+          python3 medicion/laboratorio/pruebas/prueba_investigacion.py
+          python3 medicion/laboratorio/pruebas/prueba_diagnostico.py
+          bash medicion/laboratorio/pruebas/prueba_arnes.sh
+
+  humo:
+    name: Humo del nuevo monitoreo (perfil experimental, NMT, PostgreSQL, volcado de hilos)
+    needs: verificacion
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el DESPUÉS (medicion/despues)
+        uses: actions/checkout@v4
+        with:
+          ref: medicion/despues
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
+        with:
+          k6-version: "2.4.0"
+
+      - name: Ejecutar un nivel corto con todo el monitoreo nuevo
+        env:
+          RESULTADOS_DIR: ${{ github.workspace }}/resultados-humo
+          PERFIL_LAB: EXP-HEAP-256M
+          VERSIONES: despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/laboratorio/PLAN_HUMO_INV
+          ITER_POR_VU: "14"
+          RESET_BASE: "1"
+          SEMILLA: "20261123"
+          PIN_MODO: topologia
+          POOL: "20"
+          NMT: "1"
+          MUESTREO_PG: "1"
+          LOG_HIKARI: "1"
+          VOLCADO_HILOS_S: "40"
+          HEAP_EN_VIVO: "1"
+          HEAP_PERIODO_S: "3"
+          ABORTAR_SI_CAE: "1"
+          LIMPIAR_PREVIO: "1"
+        run: bash medicion/escritura/carga_escritura.sh
+
+      - name: Verificar que cada instrumento produjo datos
+        run: bash medicion/laboratorio/verificar_humo.sh resultados-humo
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inv-humo
+          path: resultados-humo/
+          if-no-files-found: warn
+
+  heap:
+    name: Heap, repetición ${{ matrix.repeticion }}
+    needs: humo
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - repeticion: 1
+            orden: "192 224 256 288 192-sin-informes"
+          - repeticion: 2
+            orden: "192-sin-informes 288 256 224 192"
+          - repeticion: 3
+            orden: "224 192-sin-informes 192 288 256"
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el DESPUÉS (medicion/despues)
+        uses: actions/checkout@v4
+        with:
+          ref: medicion/despues
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
+        with:
+          k6-version: "2.4.0"
+
+      - name: Ejecutar los perfiles de heap en el orden de esta repetición
+        env:
+          VERSIONES: despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/laboratorio/PLAN_HEAP
+          ITER_POR_VU: "14"
+          RESET_BASE: "1"
+          SEMILLA: "20261123"
+          PIN_MODO: topologia
+          HEAP_EN_VIVO: "1"
+          HEAP_PERIODO_S: "3"
+          ABORTAR_SI_CAE: "1"
+          GRACIA_CAIDA_S: "20"
+          LIMPIAR_PREVIO: "1"
+        run: |
+          fallos=0
+          for entrada in ${{ matrix.orden }}; do
+            mb="${entrada%%-*}"
+            etiqueta="EXP-HEAP-${mb}M"
+            pesos="22,18,15,2,13,12,10,8"
+            carpeta="${etiqueta}"
+            case "$entrada" in
+              *-sin-informes) pesos="22,18,15,0,13,12,10,8"; carpeta="${etiqueta}-sin-informes" ;;
+            esac
+            echo "::group::${carpeta}"
+            RESULTADOS_DIR="$GITHUB_WORKSPACE/resultados-inv/inv-heap-r${{ matrix.repeticion }}-${carpeta}" PERFIL_LAB="$etiqueta" PESOS_ACCIONES="$pesos" bash medicion/escritura/carga_escritura.sh
+            codigo=$?
+            echo "::endgroup::"
+            if [ "$codigo" != 0 ]; then
+              echo "::error::La ejecución de ${carpeta} terminó con código $codigo"
+              fallos=$((fallos + 1))
+            fi
+          done
+          [ "$fallos" = 0 ]
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inv-heap-r${{ matrix.repeticion }}
+          path: resultados-inv/
+          if-no-files-found: warn
+
+  nmt:
+    name: Memoria nativa con NMT (diagnóstico, una repetición)
+    needs: humo
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el DESPUÉS (medicion/despues)
+        uses: actions/checkout@v4
+        with:
+          ref: medicion/despues
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
+        with:
+          k6-version: "2.4.0"
+
+      - name: Ejecutar tres configuraciones de heap con NMT a 50 usuarios
+        env:
+          VERSIONES: despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/laboratorio/PLAN_HEAP
+          ITER_POR_VU: "14"
+          RESET_BASE: "1"
+          SEMILLA: "20261123"
+          PIN_MODO: topologia
+          NMT: "1"
+          HEAP_EN_VIVO: "1"
+          HEAP_PERIODO_S: "3"
+          ABORTAR_SI_CAE: "1"
+          LIMPIAR_PREVIO: "1"
+        run: |
+          fallos=0
+          for mb in 192 256 288; do
+            echo "::group::EXP-HEAP-${mb}M con NMT"
+            RESULTADOS_DIR="$GITHUB_WORKSPACE/resultados-inv/inv-heap-r4-EXP-HEAP-${mb}M-nmt" PERFIL_LAB="EXP-HEAP-${mb}M" bash medicion/escritura/carga_escritura.sh || fallos=$((fallos + 1))
+            echo "::endgroup::"
+          done
+          [ "$fallos" = 0 ]
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inv-heap-r4-nmt
+          path: resultados-inv/
+          if-no-files-found: warn
+
+  pool:
+    name: Pool, repetición ${{ matrix.repeticion }}
+    needs: humo
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - repeticion: 1
+            orden: "10 20 40 80"
+          - repeticion: 2
+            orden: "80 40 20 10"
+          - repeticion: 3
+            orden: "20 80 10 40"
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el DESPUÉS (medicion/despues)
+        uses: actions/checkout@v4
+        with:
+          ref: medicion/despues
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
+        with:
+          k6-version: "2.4.0"
+
+      - name: Ejecutar CAPACIDAD-2G a 250 usuarios con cada tamaño de pool
+        env:
+          PERFIL_LAB: CAPACIDAD-2G
+          VERSIONES: despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/laboratorio/PLAN_POOL
+          ITER_POR_VU: "14"
+          RESET_BASE: "1"
+          SEMILLA: "20261123"
+          PIN_MODO: topologia
+          HEAP_EN_VIVO: "1"
+          HEAP_PERIODO_S: "3"
+          MUESTREO_PG: "1"
+          LOG_HIKARI: "1"
+          VOLCADO_HILOS_S: "120,200,260,330"
+          ABORTAR_SI_CAE: "1"
+          LIMPIAR_PREVIO: "1"
+        run: |
+          fallos=0
+          for p in ${{ matrix.orden }}; do
+            echo "::group::Pool ${p}"
+            RESULTADOS_DIR="$GITHUB_WORKSPACE/resultados-inv/inv-pool-r${{ matrix.repeticion }}-POOL-${p}" POOL="$p" bash medicion/escritura/carga_escritura.sh
+            codigo=$?
+            echo "::endgroup::"
+            if [ "$codigo" != 0 ]; then
+              echo "::error::La ejecución con pool ${p} terminó con código $codigo"
+              fallos=$((fallos + 1))
+            fi
+          done
+          [ "$fallos" = 0 ]
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inv-pool-r${{ matrix.repeticion }}
+          path: resultados-inv/
+          if-no-files-found: warn
+
+  afinidad:
+    name: Afinidad, repetición ${{ matrix.repeticion }}
+    needs: humo
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - repeticion: 1
+            orden: "topologia-CAPACIDAD-2G fijo-CAPACIDAD-2G topologia-PRODUCCION-512M fijo-PRODUCCION-512M"
+          - repeticion: 2
+            orden: "fijo-PRODUCCION-512M topologia-PRODUCCION-512M fijo-CAPACIDAD-2G topologia-CAPACIDAD-2G"
+          - repeticion: 3
+            orden: "fijo-CAPACIDAD-2G topologia-CAPACIDAD-2G fijo-PRODUCCION-512M topologia-PRODUCCION-512M"
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el DESPUÉS (medicion/despues)
+        uses: actions/checkout@v4
+        with:
+          ref: medicion/despues
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
+        with:
+          k6-version: "2.4.0"
+
+      - name: Ejecutar 100 usuarios con cada modo de afinidad y perfil
+        env:
+          VERSIONES: despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/laboratorio/PLAN_100
+          ITER_POR_VU: "14"
+          RESET_BASE: "1"
+          SEMILLA: "20261123"
+          PESOS_ACCIONES: "22,18,15,2,13,12,10,8"
+          K6_NUCLEOS: "0"
+          HEAP_EN_VIVO: "1"
+          HEAP_PERIODO_S: "3"
+          ABORTAR_SI_CAE: "1"
+          LIMPIAR_PREVIO: "1"
+        run: |
+          fallos=0
+          for entrada in ${{ matrix.orden }}; do
+            modo="${entrada%%-*}"
+            perfil="${entrada#*-}"
+            echo "::group::${modo} ${perfil}"
+            RESULTADOS_DIR="$GITHUB_WORKSPACE/resultados-inv/inv-afin-r${{ matrix.repeticion }}-${entrada}" PIN_MODO="$modo" PERFIL_LAB="$perfil" bash medicion/escritura/carga_escritura.sh
+            codigo=$?
+            echo "::endgroup::"
+            if [ "$codigo" != 0 ]; then
+              echo "::error::La ejecución ${entrada} terminó con código $codigo"
+              fallos=$((fallos + 1))
+            fi
+          done
+          [ "$fallos" = 0 ]
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inv-afin-r${{ matrix.repeticion }}
+          path: resultados-inv/
+          if-no-files-found: warn
+
+  comparacion:
+    name: Comparación, series temporales y publicación de los resultados
+    needs: [heap, nmt, pool, afinidad]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: write
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar los resultados de las investigaciones
+        uses: actions/download-artifact@v4
+        with:
+          pattern: inv-heap-r*
+          path: descargas
+
+      - name: Descargar los resultados de pool
+        uses: actions/download-artifact@v4
+        with:
+          pattern: inv-pool-r*
+          path: descargas
+
+      - name: Descargar los resultados de afinidad
+        uses: actions/download-artifact@v4
+        with:
+          pattern: inv-afin-r*
+          path: descargas
+
+      - name: Instalar matplotlib
+        run: python3 -m pip install --quiet matplotlib
+
+      - name: Generar la comparación y las series temporales
+        run: |
+          python3 medicion/laboratorio/comparar_investigacion.py descargas comparacion-inv > /dev/null
+          python3 medicion/laboratorio/series_temporales.py descargas comparacion-inv/series > /dev/null
+          cat comparacion-inv/COMPARACION_INVESTIGACION.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Guardar la comparación como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: comparacion-investigacion
+          path: comparacion-inv/
+          if-no-files-found: warn
+
+      - name: Publicar los resultados en la rama medicion/resultados-investigacion
+        if: always()
+        env:
+          TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EJECUCION: ${{ github.run_id }}
+        run: |
+          set -e
+          find descargas -type f -size +50M -delete
+          rm -rf /tmp/publicar && mkdir -p /tmp/publicar
+          cp -r descargas /tmp/publicar/descargas
+          cp -r comparacion-inv /tmp/publicar/comparacion-inv
+          cd /tmp/publicar
+          git init -q
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git checkout -q -b medicion/resultados-investigacion
+          git add -A
+          git commit -q -m "Resultados de las investigaciones (ejecución $EJECUCION)"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${REPO}.git" medicion/resultados-investigacion
