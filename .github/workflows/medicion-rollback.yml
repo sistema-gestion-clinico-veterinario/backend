@@ -1,0 +1,54 @@
+name: "Corte con peticiones en curso: rollback fallido (laboratorio)"
+
+on:
+  push:
+    branches: [medicion/rollback]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: medicion-rollback
+  cancel-in-progress: false
+
+jobs:
+  corte:
+    name: Corte con peticiones en curso con el código final, réplica ${{ matrix.replica }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [r1, r2]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backend con la corrección (green-rollback-despues)
+        uses: actions/checkout@v4
+        with: { ref: green-rollback-despues, path: .despues }
+      - uses: grafana/setup-k6-action@v1
+      - name: Ejecutar los cortes
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/escritura/PLAN_CAOS
+          RESET_BASE: "0"
+          MODO_CORTE: "1"
+          ENV_EXTRA_BACKEND: DB_POOL_CONNECTION_TIMEOUT_MS=5000
+          CICLOS_CORTE: "20"
+          TRABAJADORES_CORTE: "40"
+          ESPERA_CORTE_S: "12"
+          PG_SHARED_BUFFERS: 1GB
+          ITER_POR_VU: "40"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: corte-rollback-${{ matrix.replica }}
+          path: resultados/
+          if-no-files-found: warn
+
