@@ -443,7 +443,7 @@ correr_nivel_escritura() {
   inicio_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   log "[$v] nivel $nivel: k6 con hasta $nivel usuarios (subida $rampa, sostenido $mantener)"
   local evento_caos="" pid_caos=""
-  case "$prefijo" in caos_*) evento_caos="${prefijo#caos_}" ;; esac
+  case "$prefijo" in caos_*) evento_caos="${prefijo#caos_}"; evento_caos="${evento_caos%_antes}"; evento_caos="${evento_caos%_despues}" ;; esac
   if [ -n "$evento_caos" ]; then
     log "[$v] evento de caos programado: $evento_caos a los ${ESPERA_CAOS:-150} s del inicio de la carga"
     caos_en_segundo_plano "$v" "$etiqueta" "$evento_caos" "${ESPERA_CAOS:-150}" &

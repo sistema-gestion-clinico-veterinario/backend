@@ -1,0 +1,68 @@
+name: "Caída de PostgreSQL de 30 s: respuestas 401 y 500 frente a 503 (laboratorio)"
+
+on:
+  push:
+    branches: [medicion/503]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: medicion-503
+  cancel-in-progress: false
+
+jobs:
+  caida:
+    name: Réplica ${{ matrix.replica }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [r1, r2]
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el código anterior (etiqueta green-503-antes)
+        uses: actions/checkout@v4
+        with:
+          ref: green-503-antes
+          path: .antes
+
+      - name: Descargar el código con 503 (etiqueta green-503-despues)
+        uses: actions/checkout@v4
+        with:
+          ref: green-503-despues
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Ejecutar la caída de PostgreSQL con cada versión
+        env:
+          CPUS: "1"
+          MEMORIA: 2g
+          XMX: 1g
+          VERSIONES: antes despues
+          VARIANTES: "F:caos_bd_parada_antes:::antes F:caos_bd_parada_despues:::despues"
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/escritura/PLAN_CAOS
+          RESET_BASE: "1"
+          MODO_VARIANTES: caos
+          FASE_ETIQUETA: 3h
+          ESPERA_CAOS: "150"
+          PG_SHARED_BUFFERS: 1GB
+          ITER_POR_VU: "40"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-503-${{ matrix.replica }}
+          path: resultados/
+          if-no-files-found: warn
