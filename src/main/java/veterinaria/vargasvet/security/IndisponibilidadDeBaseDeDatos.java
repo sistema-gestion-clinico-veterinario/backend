@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.transaction.CannotCreateTransactionException;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.TransactionTimedOutException;
 
 import java.io.IOException;
@@ -36,7 +37,8 @@ public final class IndisponibilidadDeBaseDeDatos {
                     || actual instanceof SQLTransientConnectionException
                     || actual instanceof SQLNonTransientConnectionException
                     || actual instanceof SQLRecoverableException
-                    || actual instanceof SQLException sql && indicaServidorNoDisponible(sql)) {
+                    || actual instanceof SQLException sql && indicaServidorNoDisponible(sql)
+                    || esRollbackFallido(actual)) {
                 return true;
             }
             actual = actual.getCause();
@@ -54,6 +56,13 @@ public final class IndisponibilidadDeBaseDeDatos {
             actual = actual.getNextException();
         }
         return false;
+    }
+
+    private static boolean esRollbackFallido(Throwable error) {
+        String mensaje = error.getMessage();
+        return mensaje != null
+                && (error instanceof org.hibernate.TransactionException && mensaje.startsWith("Unable to rollback")
+                || error instanceof TransactionSystemException && mensaje.startsWith("Could not roll back"));
     }
 
     public static String resumen(Throwable error) {

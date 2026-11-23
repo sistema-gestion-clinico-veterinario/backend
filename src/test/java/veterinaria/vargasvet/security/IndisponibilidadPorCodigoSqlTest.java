@@ -6,7 +6,10 @@ import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.hibernate.TransactionException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.orm.jpa.vendor.HibernateJpaDialect;
+import org.springframework.transaction.TransactionSystemException;
 
 import java.sql.SQLException;
 
@@ -53,6 +56,26 @@ class IndisponibilidadPorCodigoSqlTest {
 
         assertThat(resumen).isEqualTo("IllegalStateException <- SQLException[57P01]");
         assertThat(IndisponibilidadDeBaseDeDatos.resumen(null)).isEmpty();
+    }
+
+    @Test
+    void unRollbackQueFallaPorqueLaConexionYaEstaCerradaEsUnaCaida() {
+        SQLException cerrada = new SQLException("Connection is closed");
+        JpaSystemException comoLlegaAlFiltro = new JpaSystemException(
+                new TransactionException("Unable to rollback against JDBC Connection", cerrada));
+
+        assertThat(IndisponibilidadDeBaseDeDatos.es(comoLlegaAlFiltro)).isTrue();
+        assertThat(IndisponibilidadDeBaseDeDatos.es(new TransactionSystemException("Could not roll back JPA transaction",
+                new RuntimeException(cerrada)))).isTrue();
+    }
+
+    @Test
+    void unFalloAlConfirmarPorUnErrorDeDatosNoEsUnaCaida() {
+        SQLException duplicada = new SQLException("clave duplicada", "23505");
+        JpaSystemException comoLlegaAlFiltro = new JpaSystemException(
+                new TransactionException("Unable to commit against JDBC Connection", duplicada));
+
+        assertThat(IndisponibilidadDeBaseDeDatos.es(comoLlegaAlFiltro)).isFalse();
     }
 
     @Test
