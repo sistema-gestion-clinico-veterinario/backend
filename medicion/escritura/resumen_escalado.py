@@ -40,9 +40,9 @@ for nivel in niveles:
     )
 
 limite_cpu = datos[0]['limite_cpu'] if datos else '?'
-limite_mem = (datos[0]['limite_mem_mb'] // 1024) if datos else '?'
+limite_mem = c.memoria_legible(datos[0]['limite_mem_mb']) if datos else '?'
 heap = datos[0]['heap_max'] if datos else '?'
-lineas = [f'# Fase 3: escalado vertical, {limite_cpu} CPU, {limite_mem} GB, heap {heap}', '']
+lineas = [f'# Fase 3: escalado vertical, {limite_cpu} CPU, {limite_mem}, heap {heap}', '']
 lineas += c.lineas_entorno() + ['']
 lineas += [
     '| Usuarios | Veredicto | Sin degradación hasta (usuarios) | Errores | Peticiones/s | p95 (ms) | p99 (ms) | CPU backend: media / al tope (% del límite) | CPU PostgreSQL media (%) | Memoria pico (MB) | Heap tras GC máx (MB) | Tiempo en GC | Metaspace pico (MB) | Avisos de pool agotado | Fallos: sin respuesta / 5xx / 4xx | Escrituras correctas / fallidas | Datos |',

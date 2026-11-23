@@ -142,7 +142,11 @@ registrar_entorno() {
     else
       echo "  P -> no disponible (DESPUÉS no tiene Dockerfile con ENV JAVA_OPTS)"
     fi
-    echo "usadas en esta corrida: D (Metaspace 256 MB) para la escalera; E (Metaspace 128 MB, igual que el Dockerfile) para el control"
+    if [ "$CFG_NIVEL" = D ] && [ "$CFG_CONTROL" = E ]; then
+      echo "usadas en esta corrida: D (Metaspace 256 MB) para la escalera; E (Metaspace 128 MB, igual que el Dockerfile) para el control"
+    else
+      echo "usadas en esta corrida: $CFG_NIVEL para los niveles y $CFG_CONTROL para el control (perfil $PERFIL_EFECTIVO)"
+    fi
     echo "correo: servidor SMTP de pruebas en el contenedor sv-correo (sin TLS ni autenticación; los envíos terminan bien)"
     opciones_jvm D
     echo "pool de conexiones: $POOL"

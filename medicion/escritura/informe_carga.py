@@ -559,7 +559,7 @@ def generar():
     lineas += generador_del_nivel(['antes', 'despues'])
     lineas += bloque_version('ANTES', antes, ma)
     lineas += bloque_version('DESPUÉS', despues, md)
-    lineas.append('> Todos los números salen de los archivos de la prueba (k6, estadísticas del contenedor, registros de la JVM y consultas a la base). Los usuarios hacen una acción cada ~15 s. Laboratorio con la base de datos en el mismo equipo: sirve para comparar, no es una promesa para producción.')
+    lineas.append('> Todos los números salen de los archivos de la prueba (k6, estadísticas del contenedor, registros de la JVM y consultas a la base). Los usuarios hacen una acción cada ~15 s. Laboratorio con la base de datos en el mismo equipo: sirve para comparar, no es una promesa para producción. Con menos de 100 peticiones el p99 coincide con el máximo.')
     (NIV / f'INFORME_CARGA_{NIVEL}.md').write_text('\n'.join(lineas) + '\n', encoding='utf-8')
     print('\n'.join(lineas))
 
@@ -587,14 +587,18 @@ def tabla_una(d, m):
     return ['| | DESPUÉS |', '|---|---|'] + [f'| {a} | {b} |' for a, b in filas]
 
 
+def memoria_legible(mb):
+    return f'{mb // 1024} GB' if mb and mb % 1024 == 0 else f'{mb} MB'
+
+
 def generar_una():
     d = analizar('despues')
     m = n.metricas(d)
-    lineas = [f'# Fase 3: {NIVEL} usuarios simultáneos, {d["limite_cpu"]} CPU, {d["limite_mem_mb"] // 1024} GB, heap {d["heap_max"]}', '']
+    lineas = [f'# Fase 3: {NIVEL} usuarios simultáneos, {d["limite_cpu"]} CPU, {memoria_legible(d["limite_mem_mb"])}, heap {d["heap_max"]}', '']
     lineas += lineas_entorno() + [''] + tabla_una(d, m) + ['']
     lineas += generador_del_nivel(['despues'])
     lineas += bloque_version('DESPUÉS', d, m)
-    lineas.append('> Todos los números salen de los archivos de la prueba. Los usuarios hacen una acción cada ~15 s. Laboratorio con la base de datos en el mismo equipo: sirve para comparar, no es una promesa para producción.')
+    lineas.append('> Todos los números salen de los archivos de la prueba. Los usuarios hacen una acción cada ~15 s. Laboratorio con la base de datos en el mismo equipo: sirve para comparar, no es una promesa para producción. Con menos de 100 peticiones el p99 coincide con el máximo.')
     (NIV / f'INFORME_CARGA_{NIVEL}.md').write_text('\n'.join(lineas) + '\n', encoding='utf-8')
     print('\n'.join(lineas))
 

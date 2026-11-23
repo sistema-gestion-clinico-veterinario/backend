@@ -185,6 +185,7 @@ def evaluar_jvm(niv, etiqueta):
         r['cont_file_max_mb'] = max(col('cont_file_kb', 1024), default=None)
         ygc, fgc, gct = col('ygc'), col('fgc'), col('gct_s')
         r['jstat_ygc'] = (ygc[-1] - ygc[0]) if len(ygc) > 1 else None
+        r['jstat_total'] = (ygc[-1] if ygc else None, fgc[-1] if fgc else None, gct[-1] if gct else None)
         r['jstat_fgc'] = (fgc[-1] - fgc[0]) if len(fgc) > 1 else None
         r['jstat_gct_s'] = (gct[-1] - gct[0]) if len(gct) > 1 else None
         dur = col('duracion_ms')
@@ -228,14 +229,14 @@ def tabla_generador(evals, umbral):
 
 
 def tabla_jvm(evals):
-    filas = ['| Etiqueta | Heap usado máx / media (MB) | Heap comprometido máx (MB) | Metaspace usado máx (MB) | Contenedor: memory.current máx (MB) | Contenedor: pico cgroup (MB) | Contenedor: docker stats pico (MB) | GC jstat: young / full / tiempo (s) | GC registro: pausas / total ms / máx ms / full |',
+    filas = ['| Etiqueta | Heap usado máx / media (MB) | Heap comprometido máx (MB) | Metaspace usado máx (MB) | Contenedor: memory.current máx (MB) | Contenedor: pico cgroup (MB) | Contenedor: docker stats pico (MB) | GC en vivo, durante el muestreo: young / full / tiempo (s) (acumulado de la JVM) | GC registro: pausas / total ms / máx ms / full |',
              '|---|---|---|---|---|---|---|---|---|']
     for e in evals:
         g = e.get('gc_registro')
         gc = f"{g['pausas']} / {fmt(g['total_ms'])} / {fmt(g['max_ms'], 1)} / {g['completas']}" if g else 'sin registro'
         if e['heap_en_vivo']:
             vivo = (f"{fmt(e['heap_usado_max_mb'])} / {fmt(e['heap_usado_media_mb'])}", fmt(e['heap_comprometido_max_mb']), fmt(e['metaspace_usado_max_mb']),
-                    f"{fmt(e['jstat_ygc'])} / {fmt(e['jstat_fgc'])} / {fmt(e['jstat_gct_s'], 2)}")
+                    f"{fmt(e['jstat_ygc'])} / {fmt(e['jstat_fgc'])} / {fmt(e['jstat_gct_s'], 2)} ({fmt(e['jstat_total'][0])} / {fmt(e['jstat_total'][1])} / {fmt(e['jstat_total'][2], 1)})")
         else:
             vivo = ('no medido', 'no medido', 'no medido', 'no medido')
         filas.append(f"| {e['etiqueta']} | {vivo[0]} | {vivo[1]} | {vivo[2]} | {fmt(e.get('cont_actual_max_mb'))} | {fmt(e.get('cont_pico_cgroup_mb'))} | {fmt(e['docker_stats_pico_mb'])} | {vivo[3]} | {gc} |")
@@ -287,9 +288,9 @@ def generar(raiz, umbral=UMBRAL_DEFECTO):
         lineas += ['Ningún nivel superó el criterio: no se detectó saturación del generador ni carga inferior a la prevista (esto no prueba que el generador no influya, solo que no alcanzó el umbral).', '']
     lineas += ['> `dropped_iterations` solo lo emiten los ejecutores de tasa de llegada; este escenario usa `ramping-vus`, por lo que no aplica. La carga efectivamente generada se verifica con los usuarios activos máximos (`vus`), las peticiones totales y por segundo, y los errores.', '']
     lineas += ['## Memoria de la JVM y del contenedor', '',
-               '- **Heap usado / comprometido** (`jstat -gc`, en vivo cada pocos segundos): memoria de objetos dentro del heap de la JVM, y la reservada por la JVM para ese heap.',
+               '- **Heap usado / comprometido** (contadores de la JVM, los mismos que lee `jstat -gc`, en vivo cada pocos segundos): memoria de objetos dentro del heap de la JVM, y la reservada por la JVM para ese heap.',
                '- **Contenedor** (`memory.current` y pico del cgroup, `docker stats`): memoria total que ve el límite de Docker (heap + Metaspace + código + hilos + memoria directa + caché de archivos).',
-               '- **GC jstat**: contadores acumulados leídos en vivo. **GC registro**: pausas leídas del archivo de registro de la JVM (`-Xlog:gc`); solo hay una línea por recolección.',
+               '- **GC en vivo**: contadores leídos mientras corre el nivel; la primera cifra es lo ocurrido desde que empezó el muestreo y entre paréntesis el acumulado de la JVM. **GC registro**: pausas de toda la vida de la JVM leídas del archivo `-Xlog:gc` (incluye el arranque), por eso no coinciden con la ventana del muestreo.',
                '']
     lineas += tabla_jvm(jvms) + ['']
     medidos = [j for j in jvms if j.get('muestreo_ms_media') is not None]
