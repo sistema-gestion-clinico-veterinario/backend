@@ -192,6 +192,10 @@ public class JWTFilter extends GenericFilterBean {
                     IndisponibilidadDeBaseDeDatos.responder((HttpServletResponse) response);
                     return;
                 }
+                if (!(e instanceof org.springframework.security.core.AuthenticationException)
+                        && !(e instanceof io.jsonwebtoken.JwtException)) {
+                    logger.warn("Sesión sin autenticar por un error inesperado: " + IndisponibilidadDeBaseDeDatos.resumen(e));
+                }
             }
         }
 

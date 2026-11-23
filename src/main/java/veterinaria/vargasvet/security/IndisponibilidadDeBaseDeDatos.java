@@ -56,6 +56,22 @@ public final class IndisponibilidadDeBaseDeDatos {
         return false;
     }
 
+    public static String resumen(Throwable error) {
+        StringBuilder cadena = new StringBuilder();
+        Throwable actual = error;
+        for (int nivel = 0; actual != null && nivel < PROFUNDIDAD_MAXIMA; nivel++) {
+            if (nivel > 0) {
+                cadena.append(" <- ");
+            }
+            cadena.append(actual.getClass().getSimpleName());
+            if (actual instanceof SQLException sql && sql.getSQLState() != null) {
+                cadena.append('[').append(sql.getSQLState()).append(']');
+            }
+            actual = actual.getCause();
+        }
+        return cadena.toString();
+    }
+
     public static void responder(HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
         response.setHeader("Retry-After", String.valueOf(REINTENTAR_EN_SEGUNDOS));

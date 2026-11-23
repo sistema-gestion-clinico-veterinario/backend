@@ -46,6 +46,16 @@ class IndisponibilidadPorCodigoSqlTest {
     }
 
     @Test
+    void elResumenListaLasClasesYElCodigoSqlSinMensajes() {
+        SQLException sql = new SQLException("dato privado que no debe aparecer", "57P01");
+
+        String resumen = IndisponibilidadDeBaseDeDatos.resumen(new IllegalStateException("otro dato privado", sql));
+
+        assertThat(resumen).isEqualTo("IllegalStateException <- SQLException[57P01]");
+        assertThat(IndisponibilidadDeBaseDeDatos.resumen(null)).isEmpty();
+    }
+
+    @Test
     void unaExcepcionSinCodigoSqlNoSeTomaPorCaida() {
         assertThat(IndisponibilidadDeBaseDeDatos.es(new SQLException("sin código"))).isFalse();
         assertThat(IndisponibilidadDeBaseDeDatos.es(new SQLException("con código vacío", ""))).isFalse();
