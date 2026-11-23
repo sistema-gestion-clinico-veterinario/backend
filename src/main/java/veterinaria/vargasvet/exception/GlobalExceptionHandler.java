@@ -7,6 +7,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
+import veterinaria.vargasvet.security.IndisponibilidadDeBaseDeDatos;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -193,6 +194,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex,
                                                                     HttpServletRequest request) {
+        if (IndisponibilidadDeBaseDeDatos.es(ex)) {
+            log.warn("Base de datos no disponible procesando {} {}: {}", request.getMethod(), request.getRequestURI(),
+                    ex.getClass().getSimpleName());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .header("Retry-After", String.valueOf(IndisponibilidadDeBaseDeDatos.REINTENTAR_EN_SEGUNDOS))
+                    .body(new ApiResponse<>(false, IndisponibilidadDeBaseDeDatos.MENSAJE, null));
+        }
         log.error("Error no controlado procesando {} {}", request.getMethod(), request.getRequestURI(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse<>(false,

@@ -188,6 +188,10 @@ public class JWTFilter extends GenericFilterBean {
                 }
             } catch (Exception e) {
                 SecurityContextHolder.clearContext();
+                if (IndisponibilidadDeBaseDeDatos.es(e)) {
+                    IndisponibilidadDeBaseDeDatos.responder((HttpServletResponse) response);
+                    return;
+                }
             }
         }
 
