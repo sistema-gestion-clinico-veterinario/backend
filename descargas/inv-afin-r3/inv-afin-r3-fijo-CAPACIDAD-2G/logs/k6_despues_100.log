@@ -1,0 +1,113 @@
+time="2026-11-23T20:25:29Z" level=info msg="PASO|2|cita|POST|400|166|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:25:36Z" level=info msg="PASO|8|cita|POST|400|156|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:25:52Z" level=info msg="PASO|9|cita|POST|400|69|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:26:22Z" level=info msg="PASO|4|cita|POST|400|61|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:26:35Z" level=info msg="PASO|3|cita|POST|400|28|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:26:55Z" level=info msg="PASO|6|cita|POST|400|29|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:27:25Z" level=info msg="PASO|6|cita|POST|400|10|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:27:44Z" level=info msg="PASO|42|iniciar|PATCH|400|15|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-23T20:28:25Z" level=info msg="PASO|8|cita|POST|400|15|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:28:27Z" level=info msg="PASO|20|cita|POST|400|10|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:28:41Z" level=info msg="PASO|7|cita|POST|400|10|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:29:36Z" level=info msg="PASO|13|cita|POST|400|10|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+{
+ "perfil": "carga_escritura",
+ "nivel": 100,
+ "iteraciones_completas": 1496,
+ "peticiones": 6289,
+ "duracion_total_s": 307.094289751,
+ "latencia_ms": {
+  "mediana": 19.422789,
+  "p95": 123.71436659999978,
+  "p99": 632.2138860799996,
+  "max": 6667.862886
+ },
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 6277,
+  "otro_4xx": 12,
+  "5xx": 0,
+  "sin_respuesta": 0
+ },
+ "pasos": {
+  "apoderado": {
+   "correctos": 314,
+   "fallidos": 0
+  },
+  "mascota": {
+   "correctos": 314,
+   "fallidos": 0
+  },
+  "cita": {
+   "correctos": 303,
+   "fallidos": 11
+  },
+  "checkin": {
+   "correctos": 155,
+   "fallidos": 0
+  },
+  "iniciar": {
+   "correctos": 154,
+   "fallidos": 1
+  },
+  "consulta": {
+   "correctos": 154,
+   "fallidos": 0
+  },
+  "diagnostico": {
+   "correctos": 154,
+   "fallidos": 0
+  },
+  "receta": {
+   "correctos": 154,
+   "fallidos": 0
+  },
+  "actualizar_mascota": {
+   "correctos": 154,
+   "fallidos": 0
+  },
+  "cerrar_consulta": {
+   "correctos": 154,
+   "fallidos": 0
+  },
+  "finalizar_servicio": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "punto_cobro": {
+   "correctos": 71,
+   "fallidos": 0
+  },
+  "vincular_equipo": {
+   "correctos": 71,
+   "fallidos": 0
+  },
+  "abrir_caja": {
+   "correctos": 71,
+   "fallidos": 0
+  },
+  "pago": {
+   "correctos": 93,
+   "fallidos": 0
+  },
+  "cancelar_cita": {
+   "correctos": 54,
+   "fallidos": 0
+  }
+ },
+ "acciones": {
+  "panel": 289,
+  "agenda": 237,
+  "historia": 232,
+  "reportes": 22,
+  "recepcion": 314,
+  "atencion": 155,
+  "cobro": 93,
+  "cancelar": 54
+ },
+ "acciones_sin_trabajo": 256,
+ "vus_maximos": 100,
+ "vus_activos_max": 100,
+ "iteraciones_descartadas": null
+}

@@ -1,0 +1,145 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.2)
+
+2026-11-23T20:52:14.151Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : Starting VargasvetApplication v0.0.1-SNAPSHOT using Java 21.0.13.1 with PID 1 (/app/app.jar started by softvet in /app)
+2026-11-23T20:52:14.155Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-11-23T20:52:16.287Z  INFO 1 --- [vargasvet] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-23T20:52:16.645Z  INFO 1 --- [vargasvet] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 346 ms. Found 75 JPA repository interfaces.
+2026-11-23T20:52:17.909Z  INFO 1 --- [vargasvet] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-11-23T20:52:17.926Z  INFO 1 --- [vargasvet] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-11-23T20:52:17.927Z  INFO 1 --- [vargasvet] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.34]
+2026-11-23T20:52:17.955Z  INFO 1 --- [vargasvet] [           main] o.a.c.c.C.[.[localhost].[/api/v1]        : Initializing Spring embedded WebApplicationContext
+2026-11-23T20:52:17.956Z  INFO 1 --- [vargasvet] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3712 ms
+2026-11-23T20:52:18.053Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : Driver class org.postgresql.Driver found in Thread context class loader TomcatEmbeddedWebappClassLoader
+  context: api#v1
+  delegate: true
+----------> Parent Classloader:
+org.springframework.boot.loader.launch.LaunchedClassLoader@568db2f2
+
+2026-11-23T20:52:18.194Z  INFO 1 --- [vargasvet] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-23T20:52:18.254Z  INFO 1 --- [vargasvet] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.5.Final
+2026-11-23T20:52:18.297Z  INFO 1 --- [vargasvet] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-23T20:52:18.574Z  INFO 1 --- [vargasvet] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-23T20:52:18.608Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : HikariPool-1 - configuration:
+2026-11-23T20:52:18.613Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : allowPoolSuspension.............false
+2026-11-23T20:52:18.613Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : autoCommit......................true
+2026-11-23T20:52:18.613Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : catalog.........................none
+2026-11-23T20:52:18.613Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : connectionInitSql...............none
+2026-11-23T20:52:18.613Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : connectionTestQuery.............none
+2026-11-23T20:52:18.613Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : connectionTimeout...............30000
+2026-11-23T20:52:18.614Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : dataSource......................none
+2026-11-23T20:52:18.614Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : dataSourceClassName.............none
+2026-11-23T20:52:18.614Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : dataSourceJNDI..................none
+2026-11-23T20:52:18.614Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : dataSourceProperties............{sslmode=disable, password=<masked>}
+2026-11-23T20:52:18.614Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : driverClassName................."org.postgresql.Driver"
+2026-11-23T20:52:18.614Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : exceptionOverrideClassName......none
+2026-11-23T20:52:18.615Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : healthCheckProperties...........{}
+2026-11-23T20:52:18.615Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : healthCheckRegistry.............none
+2026-11-23T20:52:18.615Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : idleTimeout.....................600000
+2026-11-23T20:52:18.615Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : initializationFailTimeout.......1
+2026-11-23T20:52:18.615Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : isolateInternalQueries..........false
+2026-11-23T20:52:18.615Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : jdbcUrl.........................jdbc:postgresql://sv-pg:5432/despues
+2026-11-23T20:52:18.615Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : keepaliveTime...................0
+2026-11-23T20:52:18.615Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : leakDetectionThreshold..........0
+2026-11-23T20:52:18.615Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : maxLifetime.....................1800000
+2026-11-23T20:52:18.615Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : maximumPoolSize.................80
+2026-11-23T20:52:18.615Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : metricRegistry..................none
+2026-11-23T20:52:18.616Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : metricsTrackerFactory...........none
+2026-11-23T20:52:18.616Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : minimumIdle.....................2
+2026-11-23T20:52:18.616Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : password........................<masked>
+2026-11-23T20:52:18.616Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : poolName........................"HikariPool-1"
+2026-11-23T20:52:18.616Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : readOnly........................false
+2026-11-23T20:52:18.616Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : registerMbeans..................false
+2026-11-23T20:52:18.616Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : scheduledExecutor...............none
+2026-11-23T20:52:18.616Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : schema..........................none
+2026-11-23T20:52:18.617Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : threadFactory...................internal
+2026-11-23T20:52:18.617Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : transactionIsolation............default
+2026-11-23T20:52:18.618Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : username........................"postgres"
+2026-11-23T20:52:18.618Z DEBUG 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariConfig           : validationTimeout...............5000
+2026-11-23T20:52:18.618Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-11-23T20:52:18.837Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@2da0770
+2026-11-23T20:52:18.839Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-11-23T20:52:18.869Z  WARN 1 --- [vargasvet] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-11-23T20:52:18.892Z  INFO 1 --- [vargasvet] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 16.16
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-23T20:52:18.939Z DEBUG 1 --- [vargasvet] [l-1 housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Before cleanup stats (total=1, active=0, idle=1, waiting=0)
+2026-11-23T20:52:18.940Z DEBUG 1 --- [vargasvet] [l-1 housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - After cleanup  stats (total=1, active=0, idle=1, waiting=0)
+2026-11-23T20:52:18.996Z DEBUG 1 --- [vargasvet] [onnection adder] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@39d68c9f
+2026-11-23T20:52:19.027Z DEBUG 1 --- [vargasvet] [onnection adder] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - After adding stats (total=2, active=0, idle=2, waiting=0)
+2026-11-23T20:52:21.642Z  INFO 1 --- [vargasvet] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-23T20:52:21.953Z  INFO 1 --- [vargasvet] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-23T20:52:22.409Z  INFO 1 --- [vargasvet] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-11-23T20:52:28.109Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter jwtFilterRegistration was not registered (disabled)
+2026-11-23T20:52:28.109Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter cookieSecurityFilterRegistration was not registered (disabled)
+2026-11-23T20:52:28.110Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter backupReportTokenFilterRegistration was not registered (disabled)
+2026-11-23T20:52:28.110Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter rateLimitFilterRegistration was not registered (disabled)
+2026-11-23T20:52:28.110Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter requestTraceFilterRegistration was not registered (disabled)
+2026-11-23T20:52:29.990Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.WebSecurityConfig     : Contraseñas protegidas con BCrypt, factor de costo 12
+2026-11-23T20:52:34.269Z  INFO 1 --- [vargasvet] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-11-23T20:52:35.066Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-11-23T20:52:35.067Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@44e2c58b]]
+2026-11-23T20:52:35.068Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-11-23T20:52:35.083Z  INFO 1 --- [vargasvet] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-11-23T20:52:35.100Z  INFO 1 --- [vargasvet] [           main] o.s.s.config.TaskSchedulerRouter         : More than one TaskScheduler bean exists within the context, and none is named 'taskScheduler'. Mark one of them as primary or name it 'taskScheduler' (possibly as an alias); or implement the SchedulingConfigurer interface and call ScheduledTaskRegistrar#setScheduler explicitly within the configureTasks() callback: [messageBrokerTaskScheduler, heartbeatScheduler]
+2026-11-23T20:52:35.113Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : Started VargasvetApplication in 21.577 seconds (process running for 22.281)
+2026-11-23T20:52:35.238Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : === INICIALIZANDO DATOS DEL SISTEMA ===
+2026-11-23T20:52:35.324Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Rol del sistema creado: ROLE_SUPER_ADMIN
+2026-11-23T20:52:35.336Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Rol del sistema creado: ROLE_ADMIN
+2026-11-23T20:52:35.336Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Inicializando ventanas...
+2026-11-23T20:52:35.363Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       :  Ventana creada: ADMINISTRACION
+2026-11-23T20:52:35.369Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       :  Ventana creada: PERSONAL
+2026-11-23T20:52:35.374Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       :  Ventana creada: CLINICA
+2026-11-23T20:52:35.380Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       :  Ventana creada: PORTAL_APODERADO
+2026-11-23T20:52:35.385Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       :  Ventana creada: FACTURACION
+2026-11-23T20:52:35.389Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       :  Ventana creada: INVENTARIO
+2026-11-23T20:52:35.423Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_DASHBOARD → /dashboard
+2026-11-23T20:52:35.436Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_EMPLEADO_DASHBOARD → /empleado/dashboard
+2026-11-23T20:52:35.441Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_PROFILE → /profile
+2026-11-23T20:52:35.446Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_COMPANY → /company
+2026-11-23T20:52:35.453Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_AUDITORIA_ADMIN → /auditoria
+2026-11-23T20:52:35.458Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_ROLES → /roles
+2026-11-23T20:52:35.463Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_VENTANAS → /ventanas
+2026-11-23T20:52:35.468Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_COMPLEMENTARIO → /complementario
+2026-11-23T20:52:35.473Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_REPORTES → /reportes
+2026-11-23T20:52:35.479Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_RESPALDOS → /admin/respaldos
+2026-11-23T20:52:35.485Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_SOLICITUDES_CUMPLIMIENTO → /admin/solicitudes-cumplimiento
+2026-11-23T20:52:35.491Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_EMPLEADOS → /empleados
+2026-11-23T20:52:35.497Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_HORARIOS → /empleados/horarios
+2026-11-23T20:52:35.502Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_MI_HORARIO → /mi-horario
+2026-11-23T20:52:35.507Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_CLIENTES → /clientes
+2026-11-23T20:52:35.513Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_MASCOTAS → /mascotas
+2026-11-23T20:52:35.518Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_RECETAS → /recetas
+2026-11-23T20:52:35.525Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_HISTORIAS → /historias-clinicas
+2026-11-23T20:52:35.531Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_CITAS_AGENDA → /citas/agenda
+2026-11-23T20:52:35.534Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_CARTILLA → /historias-clinicas/cartilla
+2026-11-23T20:52:35.540Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_LABORATORIO → /laboratorio
+2026-11-23T20:52:35.542Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_CAJA → /caja
+2026-11-23T20:52:35.548Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_PAGOS → /pagos
+2026-11-23T20:52:35.554Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_PRODUCTOS → /admin/productos
+2026-11-23T20:52:35.559Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_LOTES → /admin/lotes
+2026-11-23T20:52:35.564Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_CATEGORIAS_PRODUCTO → /admin/categorias-producto
+2026-11-23T20:52:35.568Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_APODERADO_DASHBOARD → /apoderado/dashboard
+2026-11-23T20:52:35.571Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_MIS_MASCOTAS → /apoderado/mis-mascotas
+2026-11-23T20:52:35.574Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_MIS_PAGOS → /apoderado/mis-pagos
+2026-11-23T20:52:35.582Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_MIS_CITAS → /apoderado/mis-citas
+2026-11-23T20:52:35.587Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_MI_HISTORIAL → /apoderado/mi-historial
+2026-11-23T20:52:35.590Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Vista creada: VISTA_MIS_RECETAS → /apoderado/mis-recetas
+2026-11-23T20:52:35.663Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Verificando permisos del SUPER_ADMIN...
+2026-11-23T20:52:35.698Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : 32 nuevos permisos asignados al SUPER_ADMIN (vistas nuevas)
+2026-11-23T20:52:35.699Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : === INICIALIZACIÓN COMPLETADA ===
+2026-11-23T20:52:36.956Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.a.c.c.C.[.[localhost].[/api/v1]        : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-11-23T20:52:36.956Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-11-23T20:52:36.959Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms

@@ -1,0 +1,36 @@
+{
+ "modo": "topologia",
+ "aplicado": true,
+ "motivo": "",
+ "notas": [
+  "El backend queda en la CPU lógica 2, y su hilo hermano 3 no recibe trabajo fijado: ningún proceso del experimento comparte con él su núcleo físico.",
+  "Esa CPU hermana no está bloqueada: el demonio de Docker, el agente del runner y el núcleo del sistema pueden usarla.",
+  "PostgreSQL, k6 y los muestreadores comparten el otro núcleo físico (hilos hermanos): la interferencia entre ellos no se elimina, solo se saca al backend de ese núcleo.",
+  "El aislamiento físico completo sigue sin demostrarse: el runner es una máquina virtual y la caché L3 y la memoria se comparten."
+ ],
+ "backend": [
+  2
+ ],
+ "postgres": [
+  0
+ ],
+ "k6": [
+  1
+ ],
+ "muestreadores": [
+  1
+ ],
+ "cpu_reservada_sin_trabajo_fijado": [
+  3
+ ],
+ "nucleos_fisicos": [
+  [
+   0,
+   1
+  ],
+  [
+   2,
+   3
+  ]
+ ]
+}

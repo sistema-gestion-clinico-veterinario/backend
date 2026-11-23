@@ -1,0 +1,4 @@
+pid=35856
+Cpus_allowed_list=2
+Mems_allowed_list=0
+hz=100

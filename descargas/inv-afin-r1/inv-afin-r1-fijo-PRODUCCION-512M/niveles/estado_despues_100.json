@@ -1,0 +1,22 @@
+{
+  "version": "despues",
+  "perfil_lab": "PRODUCCION-512M",
+  "nivel": 100,
+  "config_jvm": "P",
+  "correos_recibidos": 14,
+  "heap_max": "192m",
+  "cpus_limite": 1,
+  "memoria_limite_mb": 512,
+  "perfil": "carga_escritura",
+  "duracion_s": 350,
+  "cpu_contenedor_s": 117,
+  "oom_killed": false,
+  "reinicios": 0,
+  "sigue_corriendo": true,
+  "codigo_salida": 0,
+  "salud_final_http": "000",
+  "k6_codigo_salida": 0,
+  "caida_backend": "",
+  "sql_sentencias": 6349,
+  "sql_tiempo_s": 2.3
+}

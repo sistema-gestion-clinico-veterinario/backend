@@ -1,0 +1,183 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.2)
+
+2026-11-23T20:56:25.044Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : Starting VargasvetApplication v0.0.1-SNAPSHOT using Java 21.0.13.1 with PID 1 (/app/app.jar started by softvet in /app)
+2026-11-23T20:56:25.047Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-11-23T20:56:26.792Z  INFO 1 --- [vargasvet] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-23T20:56:27.143Z  INFO 1 --- [vargasvet] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 340 ms. Found 75 JPA repository interfaces.
+2026-11-23T20:56:28.254Z  INFO 1 --- [vargasvet] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-11-23T20:56:28.268Z  INFO 1 --- [vargasvet] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-11-23T20:56:28.268Z  INFO 1 --- [vargasvet] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.34]
+2026-11-23T20:56:28.358Z  INFO 1 --- [vargasvet] [           main] o.a.c.c.C.[.[localhost].[/api/v1]        : Initializing Spring embedded WebApplicationContext
+2026-11-23T20:56:28.360Z  INFO 1 --- [vargasvet] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3257 ms
+2026-11-23T20:56:28.570Z  INFO 1 --- [vargasvet] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-23T20:56:28.642Z  INFO 1 --- [vargasvet] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.5.Final
+2026-11-23T20:56:28.682Z  INFO 1 --- [vargasvet] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-23T20:56:29.074Z  INFO 1 --- [vargasvet] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-23T20:56:29.113Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-11-23T20:56:29.294Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@71c1ca1
+2026-11-23T20:56:29.296Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-11-23T20:56:29.326Z  WARN 1 --- [vargasvet] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-11-23T20:56:29.347Z  INFO 1 --- [vargasvet] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 16.16
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-23T20:56:32.702Z  INFO 1 --- [vargasvet] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-23T20:56:32.706Z  INFO 1 --- [vargasvet] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-23T20:56:33.078Z  INFO 1 --- [vargasvet] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-11-23T20:56:40.447Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter jwtFilterRegistration was not registered (disabled)
+2026-11-23T20:56:40.448Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter cookieSecurityFilterRegistration was not registered (disabled)
+2026-11-23T20:56:40.448Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter backupReportTokenFilterRegistration was not registered (disabled)
+2026-11-23T20:56:40.448Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter rateLimitFilterRegistration was not registered (disabled)
+2026-11-23T20:56:40.448Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter requestTraceFilterRegistration was not registered (disabled)
+2026-11-23T20:56:42.820Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.WebSecurityConfig     : Contraseñas protegidas con BCrypt, factor de costo 12
+2026-11-23T20:56:48.606Z  INFO 1 --- [vargasvet] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-11-23T20:56:49.467Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-11-23T20:56:49.467Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@7a284c01]]
+2026-11-23T20:56:49.469Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-11-23T20:56:49.481Z  INFO 1 --- [vargasvet] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-11-23T20:56:49.495Z  INFO 1 --- [vargasvet] [           main] o.s.s.config.TaskSchedulerRouter         : More than one TaskScheduler bean exists within the context, and none is named 'taskScheduler'. Mark one of them as primary or name it 'taskScheduler' (possibly as an alias); or implement the SchedulingConfigurer interface and call ScheduledTaskRegistrar#setScheduler explicitly within the configureTasks() callback: [messageBrokerTaskScheduler, heartbeatScheduler]
+2026-11-23T20:56:49.503Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : Started VargasvetApplication in 24.981 seconds (process running for 25.643)
+2026-11-23T20:56:49.632Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : === INICIALIZANDO DATOS DEL SISTEMA ===
+2026-11-23T20:56:49.717Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Rol del sistema verificado: ROLE_SUPER_ADMIN
+2026-11-23T20:56:49.727Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Rol del sistema verificado: ROLE_ADMIN
+2026-11-23T20:56:49.728Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Inicializando ventanas...
+2026-11-23T20:56:50.073Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.a.c.c.C.[.[localhost].[/api/v1]        : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-11-23T20:56:50.078Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-11-23T20:56:50.082Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 4 ms
+2026-11-23T20:56:50.132Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Verificando permisos del SUPER_ADMIN...
+2026-11-23T20:56:50.155Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : ⏭ SUPER_ADMIN ya tiene todos los permisos al día
+2026-11-23T20:56:50.155Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : === INICIALIZACIÓN COMPLETADA ===
+2026-11-23T20:57:15.310Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3882 tiene el correo verificado
+2026-11-23T20:57:16.130Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3883 tiene el correo verificado
+2026-11-23T20:57:17.351Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.770@softvet.test
+2026-11-23T20:57:17.352Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.714@softvet.test
+2026-11-23T20:57:20.154Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.728@softvet.test
+2026-11-23T20:57:20.369Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3884 tiene el correo verificado
+2026-11-23T20:57:21.601Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.742@softvet.test
+2026-11-23T20:57:22.709Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3885 tiene el correo verificado
+2026-11-23T20:57:23.214Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.798@softvet.test
+2026-11-23T20:57:24.742Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3886 tiene el correo verificado
+2026-11-23T20:57:26.219Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.840@softvet.test
+2026-11-23T20:57:26.789Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.882@softvet.test
+2026-11-23T20:57:29.150Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3887 tiene el correo verificado
+2026-11-23T20:57:30.079Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3888 tiene el correo verificado
+2026-11-23T20:57:31.905Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.854@softvet.test
+
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "http-nio-8080-Acceptor"
+Exception in thread "http-nio-8080-exec-35" java.lang.OutOfMemoryError: Java heap space
+Exception in thread "http-nio-8080-exec-37" java.lang.OutOfMemoryError: Java heap space
+2026-11-23T20:58:36.022Z ERROR 1 --- [vargasvet] [io-8080-exec-36] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-23T20:59:14.892Z ERROR 1 --- [vargasvet] [nio-8080-exec-4] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-23T20:59:14.882Z ERROR 1 --- [vargasvet] [io-8080-exec-38] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-23T20:59:14.904Z ERROR 1 --- [vargasvet] [io-8080-exec-38] org.apache.tomcat.util.net.NioEndpoint   : Error running socket processor
+
+java.lang.NullPointerException: Cannot invoke "java.nio.ByteBuffer.limit(int)" because "this.byteBuffer" is null
+	at org.apache.coyote.http11.Http11InputBuffer.recycle(Http11InputBuffer.java:262) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.coyote.http11.Http11Processor.recycle(Http11Processor.java:1447) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.release(AbstractProtocol.java:1094) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:1069) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.34.jar!/:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+
+2026-11-23T20:59:06.898Z ERROR 1 --- [vargasvet] [io-8080-exec-41] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-23T20:59:14.942Z ERROR 1 --- [vargasvet] [io-8080-exec-30] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Java heap space
+	at java.base/java.nio.HeapByteBuffer.<init>(Unknown Source) ~[na:na]
+	at java.base/java.nio.ByteBuffer.allocate(Unknown Source) ~[na:na]
+	at java.base/sun.nio.cs.StreamDecoder.<init>(Unknown Source) ~[na:na]
+	at java.base/sun.nio.cs.StreamDecoder.<init>(Unknown Source) ~[na:na]
+	at java.base/sun.nio.cs.StreamDecoder.forInputStreamReader(Unknown Source) ~[na:na]
+	at java.base/java.io.InputStreamReader.<init>(Unknown Source) ~[na:na]
+	at io.jsonwebtoken.impl.io.Streams.reader(Streams.java:66) ~[jjwt-impl-0.12.6.jar!/:0.12.6]
+	at io.jsonwebtoken.impl.DefaultJwtParser.deserialize(DefaultJwtParser.java:897) ~[jjwt-impl-0.12.6.jar!/:0.12.6]
+	at io.jsonwebtoken.impl.DefaultJwtParser.parse(DefaultJwtParser.java:619) ~[jjwt-impl-0.12.6.jar!/:0.12.6]
+	at io.jsonwebtoken.impl.DefaultJwtParser.parse(DefaultJwtParser.java:364) ~[jjwt-impl-0.12.6.jar!/:0.12.6]
+	at io.jsonwebtoken.impl.DefaultJwtParser.parse(DefaultJwtParser.java:94) ~[jjwt-impl-0.12.6.jar!/:0.12.6]
+	at io.jsonwebtoken.impl.io.AbstractParser.parse(AbstractParser.java:36) ~[jjwt-impl-0.12.6.jar!/:0.12.6]
+	at io.jsonwebtoken.impl.io.AbstractParser.parse(AbstractParser.java:29) ~[jjwt-impl-0.12.6.jar!/:0.12.6]
+	at io.jsonwebtoken.impl.DefaultJwtParser.parseSignedClaims(DefaultJwtParser.java:830) ~[jjwt-impl-0.12.6.jar!/:0.12.6]
+	at veterinaria.vargasvet.security.TokenProvider.parseAccessClaims(TokenProvider.java:312) ~[!/:0.0.1-SNAPSHOT]
+	at veterinaria.vargasvet.security.TokenProvider.getAuthentication(TokenProvider.java:181) ~[!/:0.0.1-SNAPSHOT]
+	at veterinaria.vargasvet.security.JWTFilter.doFilter(JWTFilter.java:68) ~[!/:0.0.1-SNAPSHOT]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.4.2.jar!/:6.4.2]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.4.2.jar!/:6.4.2]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.4.2.jar!/:6.4.2]
+	at veterinaria.vargasvet.security.CookieSecurityFilter.doFilterInternal(CookieSecurityFilter.java:52) ~[!/:0.0.1-SNAPSHOT]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.2.2.jar!/:6.2.2]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.4.2.jar!/:6.4.2]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.4.2.jar!/:6.4.2]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.4.2.jar!/:6.4.2]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:101) ~[spring-web-6.2.2.jar!/:6.2.2]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.4.2.jar!/:6.4.2]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227) ~[spring-security-web-6.4.2.jar!/:6.4.2]
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137) ~[spring-security-web-6.4.2.jar!/:6.4.2]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107) ~[spring-security-web-6.4.2.jar!/:6.4.2]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93) ~[spring-security-web-6.4.2.jar!/:6.4.2]
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240) ~[spring-security-web-6.4.2.jar!/:6.4.2]
+
+2026-11-23T20:59:03.636Z ERROR 1 --- [vargasvet] [io-8080-exec-40] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-23T20:59:14.961Z ERROR 1 --- [vargasvet] [io-8080-exec-34] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-23T20:59:04.675Z ERROR 1 --- [vargasvet] [nio-8080-exec-3] o.s.t.support.TransactionTemplate        : Application exception overridden by rollback exception
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-23T20:59:15.023Z  INFO 1 --- [vargasvet] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 0, completed tasks = 0]
+2026-11-23T20:58:37.999Z ERROR 1 --- [vargasvet] [io-8080-exec-39] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-23T20:59:15.051Z  WARN 1 --- [vargasvet] [io-8080-exec-27] v.v.exception.GlobalExceptionHandler     : Base de datos no disponible procesando POST /api/v1/auth/login: CannotCreateTransactionException
+2026-11-23T20:59:15.128Z ERROR 1 --- [vargasvet] [nio-8080-exec-1] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Java heap space] with root cause
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-23T20:59:15.212Z ERROR 1 --- [vargasvet] [io-8080-exec-23] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Java heap space] with root cause
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-23T20:59:15.232Z ERROR 1 --- [vargasvet] [nio-8080-exec-3] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Java heap space] with root cause
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-23T20:59:15.443Z ERROR 1 --- [vargasvet] [io-8080-exec-10] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Java heap space] with root cause
+
+java.lang.OutOfMemoryError: Java heap space
+
+2026-11-23T20:59:15.889Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.868@softvet.test
+2026-11-23T20:59:16.492Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.784@softvet.test
+2026-11-23T20:59:16.501Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.896@softvet.test

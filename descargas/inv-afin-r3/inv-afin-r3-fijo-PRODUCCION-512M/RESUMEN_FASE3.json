@@ -1,0 +1,32 @@
+[
+ {
+  "nivel": 100,
+  "veredicto": "FALLA",
+  "sin_degradacion": 6.0,
+  "errores_pct": 78.38214783821479,
+  "rps": 2.0503230313059273,
+  "p95_ms": 30000.920106200003,
+  "p99_ms": 30001.058256,
+  "mediana_ms": 30000.329851,
+  "peticiones": 717,
+  "cpu_media_pct_limite": 66.35698412698413,
+  "cpu_tope_pct": 63.49206349206349,
+  "cpu_pg_media": 0.97015625,
+  "mem_pico_mb": 427.4,
+  "heap_tras_gc_max_mb": 185,
+  "gc_pct": 77.67591142445683,
+  "metaspace_pico_mb": 109.26171875,
+  "pool_agotado": 2,
+  "oom_heap": 38,
+  "oom_metaspace": 0,
+  "sin_respuesta": 561,
+  "err_5xx": 0,
+  "err_4xx": 1,
+  "escrituras_ok": 21,
+  "escrituras_fallidas": 42,
+  "datos": "CONSISTENTES",
+  "limite_cpu": 1,
+  "limite_mem_mb": 512,
+  "heap_max": "192m"
+ }
+]

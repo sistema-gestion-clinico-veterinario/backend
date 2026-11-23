@@ -1,0 +1,352 @@
+time="2026-11-23T20:44:17Z" level=info msg="PASO|51|login|POST|401|290|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:18Z" level=info msg="PASO|52|login|POST|401|279|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:19Z" level=info msg="PASO|53|login|POST|401|237|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:20Z" level=info msg="PASO|54|login|POST|401|245|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:21Z" level=info msg="PASO|55|login|POST|401|295|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:23Z" level=info msg="PASO|56|login|POST|401|874|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:24Z" level=info msg="PASO|57|login|POST|401|1401|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:25Z" level=info msg="PASO|58|login|POST|401|1028|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:26Z" level=info msg="PASO|59|login|POST|401|885|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:27Z" level=info msg="PASO|60|login|POST|401|486|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:27Z" level=info msg="PASO|61|login|POST|401|238|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:29Z" level=info msg="PASO|62|login|POST|401|299|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:30Z" level=info msg="PASO|63|login|POST|401|282|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:31Z" level=info msg="PASO|64|login|POST|401|312|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:32Z" level=info msg="PASO|65|login|POST|401|310|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:33Z" level=info msg="PASO|66|login|POST|401|238|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:34Z" level=info msg="PASO|67|login|POST|401|247|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:35Z" level=info msg="PASO|68|login|POST|401|240|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:37Z" level=info msg="PASO|69|login|POST|401|741|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:38Z" level=info msg="PASO|70|login|POST|401|1151|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:39Z" level=info msg="PASO|71|login|POST|401|988|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:40Z" level=info msg="PASO|72|login|POST|401|535|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:41Z" level=info msg="PASO|73|login|POST|401|259|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:42Z" level=info msg="PASO|74|login|POST|401|262|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:43Z" level=info msg="PASO|75|login|POST|401|314|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:44Z" level=info msg="PASO|52|login|POST|401|639|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:44Z" level=info msg="PASO|53|login|POST|401|664|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:44Z" level=info msg="PASO|76|login|POST|401|691|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:44Z" level=info msg="PASO|56|login|POST|401|566|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:45Z" level=info msg="PASO|77|login|POST|401|292|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:46Z" level=info msg="PASO|78|login|POST|401|251|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:47Z" level=info msg="PASO|79|login|POST|401|298|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:50Z" level=info msg="PASO|80|login|POST|401|1455|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:52Z" level=info msg="PASO|81|login|POST|401|2417|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:52Z" level=info msg="PASO|59|login|POST|401|2547|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:52Z" level=info msg="PASO|51|login|POST|401|2413|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:53Z" level=info msg="PASO|82|login|POST|401|2732|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:53Z" level=info msg="PASO|63|login|POST|401|2695|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:54Z" level=info msg="PASO|61|login|POST|401|2836|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:54Z" level=info msg="PASO|55|login|POST|401|2811|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:54Z" level=info msg="PASO|83|login|POST|401|2768|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:55Z" level=info msg="PASO|84|login|POST|401|2030|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:55Z" level=info msg="PASO|60|login|POST|401|1997|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:55Z" level=info msg="PASO|58|login|POST|401|1720|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:55Z" level=info msg="PASO|85|login|POST|401|1453|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:55Z" level=info msg="PASO|66|login|POST|401|859|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:55Z" level=info msg="PASO|86|login|POST|401|651|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:56Z" level=info msg="PASO|68|login|POST|401|286|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:56Z" level=info msg="PASO|87|login|POST|401|254|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:57Z" level=info msg="PASO|88|login|POST|401|310|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:58Z" level=info msg="PASO|89|login|POST|401|383|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:44:59Z" level=info msg="PASO|54|login|POST|401|266|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:00Z" level=info msg="PASO|90|login|POST|401|388|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:00Z" level=info msg="PASO|64|login|POST|401|369|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:01Z" level=info msg="PASO|91|login|POST|401|301|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:01Z" level=info msg="PASO|57|login|POST|401|281|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:02Z" level=info msg="PASO|92|login|POST|401|271|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:03Z" level=info msg="PASO|93|login|POST|401|281|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:04Z" level=info msg="PASO|73|login|POST|401|473|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:04Z" level=info msg="PASO|75|login|POST|401|512|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:04Z" level=info msg="PASO|94|login|POST|401|331|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:04Z" level=info msg="PASO|62|login|POST|401|500|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:04Z" level=info msg="PASO|71|login|POST|401|517|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:05Z" level=info msg="PASO|95|login|POST|401|270|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:06Z" level=info msg="PASO|96|login|POST|401|377|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:06Z" level=info msg="PASO|70|login|POST|401|389|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:07Z" level=info msg="PASO|65|login|POST|401|600|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:07Z" level=info msg="PASO|74|login|POST|401|730|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:08Z" level=info msg="PASO|56|login|POST|401|781|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:08Z" level=info msg="PASO|97|login|POST|401|758|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:08Z" level=info msg="PASO|98|login|POST|401|264|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:09Z" level=info msg="PASO|80|login|POST|401|281|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:09Z" level=info msg="PASO|99|login|POST|401|432|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:10Z" level=info msg="PASO|76|login|POST|401|426|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:10Z" level=info msg="PASO|51|login|POST|401|305|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:11Z" level=info msg="PASO|100|login|POST|401|441|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:11Z" level=info msg="PASO|77|login|POST|401|367|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:12Z" level=info msg="PASO|67|login|POST|401|486|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:12Z" level=info msg="PASO|63|login|POST|401|494|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:14Z" level=info msg="PASO|79|login|POST|401|692|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:14Z" level=info msg="PASO|53|login|POST|401|825|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:14Z" level=info msg="PASO|60|login|POST|401|793|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:15Z" level=info msg="PASO|69|login|POST|401|563|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:16Z" level=info msg="PASO|72|login|POST|401|450|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:16Z" level=info msg="PASO|83|login|POST|401|442|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:17Z" level=info msg="PASO|55|login|POST|401|328|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:18Z" level=info msg="PASO|78|login|POST|401|418|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:18Z" level=info msg="PASO|85|login|POST|401|401|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:18Z" level=info msg="PASO|59|login|POST|401|311|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:19Z" level=info msg="PASO|82|login|POST|401|773|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:19Z" level=info msg="PASO|88|login|POST|401|851|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:19Z" level=info msg="PASO|81|login|POST|401|838|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:19Z" level=info msg="PASO|52|login|POST|401|260|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:20Z" level=info msg="PASO|84|login|POST|401|475|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:20Z" level=info msg="PASO|89|login|POST|401|557|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:21Z" level=info msg="PASO|64|login|POST|401|445|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:21Z" level=info msg="PASO|58|login|POST|401|373|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:24Z" level=info msg="PASO|92|login|POST|401|1179|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:25Z" level=info msg="PASO|61|login|POST|401|1684|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:26Z" level=info msg="PASO|71|login|POST|401|1734|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:26Z" level=info msg="PASO|87|login|POST|401|251|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:27Z" level=info msg="PASO|86|login|POST|401|243|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:28Z" level=info msg="PASO|96|login|POST|401|249|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:28Z" level=info msg="PASO|66|login|POST|401|250|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:29Z" level=info msg="PASO|97|login|POST|401|276|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:30Z" level=info msg="PASO|38|iniciar|PATCH|400|45|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-23T20:45:30Z" level=info msg="PASO|56|login|POST|401|631|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:30Z" level=info msg="PASO|76|login|POST|401|628|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:31Z" level=info msg="PASO|95|login|POST|401|286|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:31Z" level=info msg="PASO|90|login|POST|401|315|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:32Z" level=info msg="PASO|54|login|POST|401|340|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:32Z" level=info msg="PASO|70|login|POST|401|389|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:32Z" level=info msg="PASO|91|login|POST|401|299|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:32Z" level=info msg="PASO|51|login|POST|401|284|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:34Z" level=info msg="PASO|57|login|POST|401|250|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:35Z" level=info msg="PASO|68|login|POST|401|502|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:35Z" level=info msg="PASO|74|login|POST|401|543|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:35Z" level=info msg="PASO|75|login|POST|401|280|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:37Z" level=info msg="PASO|65|login|POST|401|276|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:37Z" level=info msg="PASO|98|login|POST|401|283|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:38Z" level=info msg="PASO|79|login|POST|401|245|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:38Z" level=info msg="PASO|62|login|POST|401|274|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:38Z" level=info msg="PASO|59|login|POST|401|289|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:39Z" level=info msg="PASO|73|login|POST|401|485|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:39Z" level=info msg="PASO|93|login|POST|401|549|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:40Z" level=info msg="PASO|83|login|POST|401|1453|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:40Z" level=info msg="PASO|63|login|POST|401|1455|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:41Z" level=info msg="PASO|94|login|POST|401|1506|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:41Z" level=info msg="PASO|80|login|POST|401|1534|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:41Z" level=info msg="PASO|77|login|POST|401|1491|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:41Z" level=info msg="PASO|99|login|POST|401|1145|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:41Z" level=info msg="PASO|55|login|POST|401|1119|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:42Z" level=info msg="PASO|100|login|POST|401|1047|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:42Z" level=info msg="PASO|69|login|POST|401|981|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:42Z" level=info msg="PASO|64|login|POST|401|846|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:42Z" level=info msg="PASO|60|login|POST|401|676|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:43Z" level=info msg="PASO|72|login|POST|401|615|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:43Z" level=info msg="PASO|81|login|POST|401|652|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:43Z" level=info msg="PASO|85|login|POST|401|547|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:44Z" level=info msg="PASO|84|login|POST|401|263|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:45Z" level=info msg="PASO|78|login|POST|401|511|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:47Z" level=info msg="PASO|92|login|POST|401|1562|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:47Z" level=info msg="PASO|82|login|POST|401|1352|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:49Z" level=info msg="PASO|71|login|POST|401|2598|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:50Z" level=info msg="PASO|67|login|POST|401|2747|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:50Z" level=info msg="PASO|89|login|POST|401|2676|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:50Z" level=info msg="PASO|86|login|POST|401|2658|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:51Z" level=info msg="PASO|58|login|POST|401|2224|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:52Z" level=info msg="PASO|61|login|POST|401|1934|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:53Z" level=info msg="PASO|66|login|POST|401|1568|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:53Z" level=info msg="PASO|95|login|POST|401|1635|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:53Z" level=info msg="PASO|52|login|POST|401|1122|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:53Z" level=info msg="PASO|70|login|POST|401|597|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:55Z" level=info msg="PASO|87|login|POST|401|1453|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:55Z" level=info msg="PASO|53|login|POST|401|1434|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:57Z" level=info msg="PASO|74|login|POST|401|2134|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:57Z" level=info msg="PASO|56|login|POST|401|2501|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:57Z" level=info msg="PASO|97|login|POST|401|2408|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:58Z" level=info msg="PASO|91|login|POST|401|1980|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:45:59Z" level=info msg="PASO|88|login|POST|401|1854|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:01Z" level=info msg="PASO|73|login|POST|401|2216|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:01Z" level=info msg="PASO|79|login|POST|401|2058|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:01Z" level=info msg="PASO|54|login|POST|401|2101|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:01Z" level=info msg="PASO|59|login|POST|401|1561|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:01Z" level=info msg="PASO|76|login|POST|401|1544|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:01Z" level=info msg="PASO|98|login|POST|401|1380|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:03Z" level=info msg="PASO|80|login|POST|401|485|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:03Z" level=info msg="PASO|81|login|POST|401|504|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:05Z" level=info msg="PASO|55|login|POST|401|1109|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:05Z" level=info msg="PASO|68|login|POST|401|1214|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:05Z" level=info msg="PASO|99|login|POST|401|1348|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:05Z" level=info msg="PASO|90|login|POST|401|1340|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:05Z" level=info msg="PASO|84|login|POST|401|1322|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:05Z" level=info msg="PASO|96|login|POST|401|709|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:06Z" level=info msg="PASO|69|login|POST|401|340|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:07Z" level=info msg="PASO|62|login|POST|401|306|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:08Z" level=info msg="PASO|78|login|POST|401|455|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:08Z" level=info msg="PASO|77|login|POST|401|580|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:08Z" level=info msg="PASO|67|login|POST|401|456|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:09Z" level=info msg="PASO|75|login|POST|401|379|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:09Z" level=info msg="PASO|93|login|POST|401|371|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:10Z" level=info msg="PASO|94|login|POST|401|317|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:11Z" level=info msg="PASO|64|login|POST|401|559|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:11Z" level=info msg="PASO|57|login|POST|401|573|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:11Z" level=info msg="PASO|51|login|POST|401|383|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:12Z" level=info msg="PASO|58|login|POST|401|596|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:12Z" level=info msg="PASO|65|login|POST|401|633|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:13Z" level=info msg="PASO|100|login|POST|401|495|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:13Z" level=info msg="PASO|63|login|POST|401|246|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:14Z" level=info msg="PASO|95|login|POST|401|244|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:15Z" level=info msg="PASO|83|login|POST|401|444|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:15Z" level=info msg="PASO|71|login|POST|401|440|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:16Z" level=info msg="PASO|60|login|POST|401|316|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:16Z" level=info msg="PASO|92|login|POST|401|445|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:16Z" level=info msg="PASO|89|login|POST|401|438|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:18Z" level=info msg="PASO|91|login|POST|401|748|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:18Z" level=info msg="PASO|66|login|POST|401|750|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:18Z" level=info msg="PASO|72|login|POST|401|741|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:18Z" level=info msg="PASO|87|login|POST|401|546|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:18Z" level=info msg="PASO|97|login|POST|401|466|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:19Z" level=info msg="PASO|85|login|POST|401|562|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:19Z" level=info msg="PASO|88|login|POST|401|549|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:19Z" level=info msg="PASO|74|login|POST|401|489|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:20Z" level=info msg="PASO|73|login|POST|401|481|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:20Z" level=info msg="PASO|70|login|POST|401|416|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:21Z" level=info msg="PASO|52|login|POST|401|256|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:22Z" level=info msg="PASO|82|login|POST|401|805|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:27Z" level=info msg="PASO|53|login|POST|401|2230|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:27Z" level=info msg="PASO|61|login|POST|401|1975|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:27Z" level=info msg="PASO|86|login|POST|401|2039|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:28Z" level=info msg="PASO|96|login|POST|401|1635|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:29Z" level=info msg="PASO|54|login|POST|401|1214|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:29Z" level=info msg="PASO|77|login|POST|401|1226|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:29Z" level=info msg="PASO|84|login|POST|401|1249|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:29Z" level=info msg="PASO|98|login|POST|401|1209|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:29Z" level=info msg="PASO|69|login|POST|401|964|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:29Z" level=info msg="PASO|62|login|POST|401|592|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:30Z" level=info msg="PASO|67|login|POST|401|441|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:31Z" level=info msg="PASO|79|login|POST|401|502|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:31Z" level=info msg="PASO|94|login|POST|401|491|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:32Z" level=info msg="PASO|76|login|POST|401|390|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:32Z" level=info msg="PASO|99|login|POST|401|282|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:33Z" level=info msg="PASO|75|login|POST|401|255|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:35Z" level=info msg="PASO|68|login|POST|401|387|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:35Z" level=info msg="PASO|80|login|POST|401|554|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:35Z" level=info msg="PASO|95|login|POST|401|485|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:36Z" level=info msg="PASO|93|login|POST|401|353|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:39Z" level=info msg="PASO|92|login|POST|401|293|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:39Z" level=info msg="PASO|100|login|POST|401|256|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:40Z" level=info msg="PASO|81|login|POST|401|319|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:41Z" level=info msg="PASO|90|login|POST|401|271|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:41Z" level=info msg="PASO|78|login|POST|401|250|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:42Z" level=info msg="PASO|89|login|POST|401|260|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:43Z" level=info msg="PASO|82|login|POST|401|313|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:45Z" level=info msg="PASO|72|login|POST|401|386|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:46Z" level=info msg="PASO|83|login|POST|401|555|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:46Z" level=info msg="PASO|87|login|POST|401|480|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:47Z" level=info msg="PASO|65|login|POST|401|249|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:48Z" level=info msg="PASO|91|login|POST|401|245|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:49Z" level=info msg="PASO|96|login|POST|401|374|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:49Z" level=info msg="PASO|88|login|POST|401|424|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:50Z" level=info msg="PASO|57|login|POST|401|415|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:50Z" level=info msg="PASO|98|login|POST|401|473|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:54Z" level=info msg="PASO|97|login|POST|401|357|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:55Z" level=info msg="PASO|99|login|POST|401|319|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:57Z" level=info msg="PASO|85|login|POST|401|267|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:46:59Z" level=info msg="PASO|86|login|POST|401|243|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:47:01Z" level=info msg="PASO|100|login|POST|401|289|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:47:03Z" level=info msg="PASO|90|login|POST|401|255|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:47:04Z" level=info msg="PASO|94|login|POST|401|272|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+time="2026-11-23T20:47:09Z" level=info msg="PASO|93|login|POST|401|294|FALLO|{\"success\":false,\"message\":\"Credenciales inválidas\",\"data\":null}" source=console
+{
+ "perfil": "carga_escritura",
+ "nivel": 100,
+ "iteraciones_completas": 1491,
+ "peticiones": 3947,
+ "duracion_total_s": 305.405779818,
+ "latencia_ms": {
+  "mediana": 20.75071,
+  "p95": 452.893540299999,
+  "p99": 1798.2263790199956,
+  "max": 6742.310349
+ },
+ "estados": {
+  "401": 358,
+  "429": 0,
+  "2xx": 3588,
+  "otro_4xx": 1,
+  "5xx": 0,
+  "sin_respuesta": 0
+ },
+ "pasos": {
+  "apoderado": {
+   "correctos": 176,
+   "fallidos": 0
+  },
+  "mascota": {
+   "correctos": 176,
+   "fallidos": 0
+  },
+  "cita": {
+   "correctos": 176,
+   "fallidos": 0
+  },
+  "checkin": {
+   "correctos": 88,
+   "fallidos": 0
+  },
+  "iniciar": {
+   "correctos": 87,
+   "fallidos": 1
+  },
+  "consulta": {
+   "correctos": 87,
+   "fallidos": 0
+  },
+  "diagnostico": {
+   "correctos": 87,
+   "fallidos": 0
+  },
+  "receta": {
+   "correctos": 87,
+   "fallidos": 0
+  },
+  "actualizar_mascota": {
+   "correctos": 87,
+   "fallidos": 0
+  },
+  "cerrar_consulta": {
+   "correctos": 87,
+   "fallidos": 0
+  },
+  "finalizar_servicio": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "punto_cobro": {
+   "correctos": 37,
+   "fallidos": 0
+  },
+  "vincular_equipo": {
+   "correctos": 37,
+   "fallidos": 0
+  },
+  "abrir_caja": {
+   "correctos": 37,
+   "fallidos": 0
+  },
+  "pago": {
+   "correctos": 54,
+   "fallidos": 0
+  },
+  "cancelar_cita": {
+   "correctos": 33,
+   "fallidos": 0
+  }
+ },
+ "acciones": {
+  "panel": 175,
+  "agenda": 142,
+  "historia": 130,
+  "reportes": 12,
+  "recepcion": 176,
+  "atencion": 88,
+  "cobro": 54,
+  "cancelar": 33
+ },
+ "acciones_sin_trabajo": 138,
+ "vus_maximos": 100,
+ "vus_activos_max": 100,
+ "iteraciones_descartadas": null
+}

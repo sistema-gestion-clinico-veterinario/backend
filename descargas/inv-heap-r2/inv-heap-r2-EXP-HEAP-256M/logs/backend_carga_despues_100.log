@@ -1,0 +1,454 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.2)
+
+2026-11-23T20:57:44.848Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : Starting VargasvetApplication v0.0.1-SNAPSHOT using Java 21.0.13.1 with PID 1 (/app/app.jar started by softvet in /app)
+2026-11-23T20:57:44.851Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-11-23T20:57:46.295Z  INFO 1 --- [vargasvet] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-23T20:57:46.584Z  INFO 1 --- [vargasvet] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 280 ms. Found 75 JPA repository interfaces.
+2026-11-23T20:57:47.489Z  INFO 1 --- [vargasvet] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-11-23T20:57:47.500Z  INFO 1 --- [vargasvet] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-11-23T20:57:47.500Z  INFO 1 --- [vargasvet] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.34]
+2026-11-23T20:57:47.568Z  INFO 1 --- [vargasvet] [           main] o.a.c.c.C.[.[localhost].[/api/v1]        : Initializing Spring embedded WebApplicationContext
+2026-11-23T20:57:47.569Z  INFO 1 --- [vargasvet] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2672 ms
+2026-11-23T20:57:47.742Z  INFO 1 --- [vargasvet] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-23T20:57:47.798Z  INFO 1 --- [vargasvet] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.5.Final
+2026-11-23T20:57:47.833Z  INFO 1 --- [vargasvet] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-23T20:57:48.066Z  INFO 1 --- [vargasvet] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-23T20:57:48.157Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-11-23T20:57:48.305Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@71c1ca1
+2026-11-23T20:57:48.306Z  INFO 1 --- [vargasvet] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-11-23T20:57:48.331Z  WARN 1 --- [vargasvet] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-11-23T20:57:48.346Z  INFO 1 --- [vargasvet] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 16.16
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-23T20:57:51.106Z  INFO 1 --- [vargasvet] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-23T20:57:51.110Z  INFO 1 --- [vargasvet] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-23T20:57:51.412Z  INFO 1 --- [vargasvet] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-11-23T20:57:57.144Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter jwtFilterRegistration was not registered (disabled)
+2026-11-23T20:57:57.144Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter cookieSecurityFilterRegistration was not registered (disabled)
+2026-11-23T20:57:57.144Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter backupReportTokenFilterRegistration was not registered (disabled)
+2026-11-23T20:57:57.144Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter rateLimitFilterRegistration was not registered (disabled)
+2026-11-23T20:57:57.144Z  INFO 1 --- [vargasvet] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter requestTraceFilterRegistration was not registered (disabled)
+2026-11-23T20:57:59.008Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.WebSecurityConfig     : Contraseñas protegidas con BCrypt, factor de costo 12
+2026-11-23T20:58:03.465Z  INFO 1 --- [vargasvet] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-11-23T20:58:04.152Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Starting...
+2026-11-23T20:58:04.153Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@70fd37d3]]
+2026-11-23T20:58:04.154Z  INFO 1 --- [vargasvet] [           main] o.s.m.s.b.SimpleBrokerMessageHandler     : Started.
+2026-11-23T20:58:04.165Z  INFO 1 --- [vargasvet] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-11-23T20:58:04.176Z  INFO 1 --- [vargasvet] [           main] o.s.s.config.TaskSchedulerRouter         : More than one TaskScheduler bean exists within the context, and none is named 'taskScheduler'. Mark one of them as primary or name it 'taskScheduler' (possibly as an alias); or implement the SchedulingConfigurer interface and call ScheduledTaskRegistrar#setScheduler explicitly within the configureTasks() callback: [messageBrokerTaskScheduler, heartbeatScheduler]
+2026-11-23T20:58:04.183Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.VargasvetApplication         : Started VargasvetApplication in 19.764 seconds (process running for 20.283)
+2026-11-23T20:58:04.292Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : === INICIALIZANDO DATOS DEL SISTEMA ===
+2026-11-23T20:58:04.368Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Rol del sistema verificado: ROLE_SUPER_ADMIN
+2026-11-23T20:58:04.377Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Rol del sistema verificado: ROLE_ADMIN
+2026-11-23T20:58:04.377Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Inicializando ventanas...
+2026-11-23T20:58:04.676Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : Verificando permisos del SUPER_ADMIN...
+2026-11-23T20:58:04.687Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : ⏭ SUPER_ADMIN ya tiene todos los permisos al día
+2026-11-23T20:58:04.688Z  INFO 1 --- [vargasvet] [           main] v.vargasvet.config.DataInitializer       : === INICIALIZACIÓN COMPLETADA ===
+2026-11-23T20:58:06.010Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.a.c.c.C.[.[localhost].[/api/v1]        : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-11-23T20:58:06.011Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-11-23T20:58:06.013Z  INFO 1 --- [vargasvet] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-11-23T20:58:29.573Z  WARN 1 --- [vargasvet] [io-8080-exec-10] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3882 tiene el correo verificado
+2026-11-23T20:58:30.206Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3883 tiene el correo verificado
+2026-11-23T20:58:30.420Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.714@softvet.test
+2026-11-23T20:58:30.426Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.770@softvet.test
+2026-11-23T20:58:34.311Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.728@softvet.test
+2026-11-23T20:58:34.464Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3884 tiene el correo verificado
+2026-11-23T20:58:35.949Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.742@softvet.test
+2026-11-23T20:58:36.052Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3885 tiene el correo verificado
+2026-11-23T20:58:36.745Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.798@softvet.test
+2026-11-23T20:58:36.823Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3886 tiene el correo verificado
+2026-11-23T20:58:38.447Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.882@softvet.test
+2026-11-23T20:58:38.485Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3887 tiene el correo verificado
+2026-11-23T20:58:38.767Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.840@softvet.test
+2026-11-23T20:58:38.834Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3888 tiene el correo verificado
+2026-11-23T20:58:42.176Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.854@softvet.test
+2026-11-23T20:58:42.242Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3889 tiene el correo verificado
+2026-11-23T20:58:46.109Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.952@softvet.test
+2026-11-23T20:58:46.171Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3890 tiene el correo verificado
+2026-11-23T20:58:47.008Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.868@softvet.test
+2026-11-23T20:58:47.044Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3891 tiene el correo verificado
+2026-11-23T20:58:47.392Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.784@softvet.test
+2026-11-23T20:58:47.423Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3892 tiene el correo verificado
+2026-11-23T20:58:47.533Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.980@softvet.test
+2026-11-23T20:58:47.568Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3893 tiene el correo verificado
+2026-11-23T20:58:47.631Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.938@softvet.test
+2026-11-23T20:58:47.699Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3894 tiene el correo verificado
+2026-11-23T20:58:49.561Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.826@softvet.test
+2026-11-23T20:58:49.656Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3895 tiene el correo verificado
+2026-11-23T20:58:53.248Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.812@softvet.test
+2026-11-23T20:58:53.313Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3896 tiene el correo verificado
+2026-11-23T20:58:53.525Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1008@softvet.test
+2026-11-23T20:58:53.576Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3897 tiene el correo verificado
+2026-11-23T20:58:53.687Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1064@softvet.test
+2026-11-23T20:58:53.736Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3898 tiene el correo verificado
+2026-11-23T20:58:53.755Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.896@softvet.test
+2026-11-23T20:58:53.799Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3899 tiene el correo verificado
+2026-11-23T20:58:54.968Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1050@softvet.test
+2026-11-23T20:58:54.996Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3900 tiene el correo verificado
+2026-11-23T20:58:56.348Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.869@softvet.test
+2026-11-23T20:58:56.386Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3901 tiene el correo verificado
+2026-11-23T20:58:56.993Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.785@softvet.test
+2026-11-23T20:58:57.029Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3902 tiene el correo verificado
+2026-11-23T20:58:57.950Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.994@softvet.test
+2026-11-23T20:58:57.979Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3903 tiene el correo verificado
+2026-11-23T20:59:02.716Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.743@softvet.test
+2026-11-23T20:59:02.744Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3904 tiene el correo verificado
+2026-11-23T20:59:04.135Z  INFO 1 --- [vargasvet] [MessageBroker-1] o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 0, completed tasks = 0]
+2026-11-23T20:59:04.680Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1134@softvet.test
+2026-11-23T20:59:04.711Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3905 tiene el correo verificado
+2026-11-23T20:59:05.902Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1232@softvet.test
+2026-11-23T20:59:05.950Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3906 tiene el correo verificado
+2026-11-23T20:59:06.613Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.910@softvet.test
+2026-11-23T20:59:06.647Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.813@softvet.test
+2026-11-23T20:59:06.690Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3907 tiene el correo verificado
+2026-11-23T20:59:06.706Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3908 tiene el correo verificado
+2026-11-23T20:59:07.254Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1078@softvet.test
+2026-11-23T20:59:07.278Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3909 tiene el correo verificado
+2026-11-23T20:59:12.593Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.786@softvet.test
+2026-11-23T20:59:12.618Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3910 tiene el correo verificado
+2026-11-23T20:59:14.267Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1302@softvet.test
+2026-11-23T20:59:14.306Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3911 tiene el correo verificado
+2026-11-23T20:59:16.773Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1022@softvet.test
+2026-11-23T20:59:16.870Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3912 tiene el correo verificado
+2026-11-23T20:59:19.219Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1162@softvet.test
+2026-11-23T20:59:19.220Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1036@softvet.test
+2026-11-23T20:59:19.381Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3913 tiene el correo verificado
+2026-11-23T20:59:19.386Z  WARN 1 --- [vargasvet] [nio-8080-exec-2] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3914 tiene el correo verificado
+2026-11-23T20:59:19.550Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1274@softvet.test
+2026-11-23T20:59:19.668Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3915 tiene el correo verificado
+2026-11-23T20:59:20.575Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1386@softvet.test
+2026-11-23T20:59:20.639Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3916 tiene el correo verificado
+2026-11-23T20:59:21.038Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1120@softvet.test
+2026-11-23T20:59:21.079Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.924@softvet.test
+2026-11-23T20:59:21.102Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3917 tiene el correo verificado
+2026-11-23T20:59:21.105Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1092@softvet.test
+2026-11-23T20:59:21.128Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3918 tiene el correo verificado
+2026-11-23T20:59:21.144Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3919 tiene el correo verificado
+2026-11-23T20:59:22.232Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1246@softvet.test
+2026-11-23T20:59:22.259Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3920 tiene el correo verificado
+2026-11-23T20:59:22.649Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.744@softvet.test
+2026-11-23T20:59:22.673Z  WARN 1 --- [vargasvet] [io-8080-exec-10] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3921 tiene el correo verificado
+2026-11-23T20:59:22.723Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1288@softvet.test
+2026-11-23T20:59:22.761Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3922 tiene el correo verificado
+2026-11-23T20:59:23.175Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1148@softvet.test
+2026-11-23T20:59:23.200Z  WARN 1 --- [vargasvet] [nio-8080-exec-2] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3923 tiene el correo verificado
+2026-11-23T20:59:23.268Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1372@softvet.test
+2026-11-23T20:59:23.296Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3924 tiene el correo verificado
+2026-11-23T20:59:24.174Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1358@softvet.test
+2026-11-23T20:59:24.216Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3925 tiene el correo verificado
+2026-11-23T20:59:25.616Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.966@softvet.test
+2026-11-23T20:59:25.644Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3926 tiene el correo verificado
+2026-11-23T20:59:25.965Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1344@softvet.test
+2026-11-23T20:59:25.991Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3927 tiene el correo verificado
+2026-11-23T20:59:27.144Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1204@softvet.test
+2026-11-23T20:59:27.173Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3928 tiene el correo verificado
+2026-11-23T20:59:28.521Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.715@softvet.test
+2026-11-23T20:59:28.591Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3929 tiene el correo verificado
+2026-11-23T20:59:30.779Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1303@softvet.test
+2026-11-23T20:59:30.854Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3930 tiene el correo verificado
+2026-11-23T20:59:31.741Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.883@softvet.test
+2026-11-23T20:59:31.819Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3931 tiene el correo verificado
+2026-11-23T20:59:34.672Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1359@softvet.test
+2026-11-23T20:59:34.696Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.967@softvet.test
+2026-11-23T20:59:34.717Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3932 tiene el correo verificado
+2026-11-23T20:59:34.731Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3933 tiene el correo verificado
+2026-11-23T20:59:35.289Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1051@softvet.test
+2026-11-23T20:59:35.318Z  WARN 1 --- [vargasvet] [io-8080-exec-10] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3934 tiene el correo verificado
+2026-11-23T20:59:35.766Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.729@softvet.test
+2026-11-23T20:59:35.789Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3935 tiene el correo verificado
+2026-11-23T20:59:36.415Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.814@softvet.test
+2026-11-23T20:59:36.442Z  WARN 1 --- [vargasvet] [nio-8080-exec-2] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3936 tiene el correo verificado
+2026-11-23T20:59:37.676Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.716@softvet.test
+2026-11-23T20:59:37.742Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3937 tiene el correo verificado
+2026-11-23T20:59:42.501Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1135@softvet.test
+2026-11-23T20:59:42.512Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1065@softvet.test
+2026-11-23T20:59:42.583Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3939 tiene el correo verificado
+2026-11-23T20:59:42.631Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3938 tiene el correo verificado
+2026-11-23T20:59:43.457Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.841@softvet.test
+2026-11-23T20:59:43.586Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3940 tiene el correo verificado
+2026-11-23T20:59:45.159Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1330@softvet.test
+2026-11-23T20:59:45.859Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1149@softvet.test
+2026-11-23T20:59:45.927Z  WARN 1 --- [vargasvet] [io-8080-exec-11] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3941 tiene el correo verificado
+2026-11-23T20:59:46.162Z  WARN 1 --- [vargasvet] [io-8080-exec-11] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3942 tiene el correo verificado
+2026-11-23T20:59:46.420Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1176@softvet.test
+2026-11-23T20:59:47.210Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3943 tiene el correo verificado
+2026-11-23T20:59:48.313Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.911@softvet.test
+2026-11-23T20:59:48.556Z  WARN 1 --- [vargasvet] [io-8080-exec-10] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3944 tiene el correo verificado
+2026-11-23T20:59:48.865Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.700@softvet.test
+2026-11-23T20:59:49.112Z  WARN 1 --- [vargasvet] [io-8080-exec-10] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3945 tiene el correo verificado
+2026-11-23T20:59:49.601Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1106@softvet.test
+2026-11-23T20:59:49.810Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3946 tiene el correo verificado
+2026-11-23T20:59:50.669Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1247@softvet.test
+2026-11-23T20:59:50.854Z  WARN 1 --- [vargasvet] [io-8080-exec-14] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3947 tiene el correo verificado
+2026-11-23T20:59:51.573Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1387@softvet.test
+2026-11-23T20:59:51.641Z  WARN 1 --- [vargasvet] [io-8080-exec-12] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3948 tiene el correo verificado
+2026-11-23T20:59:51.705Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.815@softvet.test
+2026-11-23T20:59:51.764Z  WARN 1 --- [vargasvet] [io-8080-exec-11] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3949 tiene el correo verificado
+2026-11-23T20:59:52.880Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1190@softvet.test
+2026-11-23T20:59:52.947Z  WARN 1 --- [vargasvet] [io-8080-exec-12] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3950 tiene el correo verificado
+2026-11-23T20:59:53.862Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.939@softvet.test
+2026-11-23T20:59:53.904Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3951 tiene el correo verificado
+2026-11-23T20:59:54.002Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1260@softvet.test
+2026-11-23T20:59:54.041Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3952 tiene el correo verificado
+2026-11-23T20:59:55.687Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.771@softvet.test
+2026-11-23T20:59:55.711Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3953 tiene el correo verificado
+2026-11-23T20:59:55.970Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.925@softvet.test
+2026-11-23T20:59:56.027Z  WARN 1 --- [vargasvet] [io-8080-exec-12] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3954 tiene el correo verificado
+2026-11-23T20:59:58.436Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1121@softvet.test
+2026-11-23T20:59:58.486Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3955 tiene el correo verificado
+2026-11-23T21:00:00.067Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.745@softvet.test
+2026-11-23T21:00:00.144Z  WARN 1 --- [vargasvet] [io-8080-exec-12] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3956 tiene el correo verificado
+2026-11-23T21:00:02.984Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.717@softvet.test
+2026-11-23T21:00:03.058Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3957 tiene el correo verificado
+2026-11-23T21:00:04.695Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1218@softvet.test
+2026-11-23T21:00:04.751Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3958 tiene el correo verificado
+2026-11-23T21:00:07.102Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.756@softvet.test
+2026-11-23T21:00:07.192Z  WARN 1 --- [vargasvet] [io-8080-exec-13] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3959 tiene el correo verificado
+2026-11-23T21:00:09.681Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1316@softvet.test
+2026-11-23T21:00:09.709Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3960 tiene el correo verificado
+2026-11-23T21:00:11.882Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1052@softvet.test
+2026-11-23T21:00:11.928Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3961 tiene el correo verificado
+2026-11-23T21:00:18.588Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.953@softvet.test
+2026-11-23T21:00:18.736Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1360@softvet.test
+2026-11-23T21:00:18.765Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3962 tiene el correo verificado
+2026-11-23T21:00:18.852Z  WARN 1 --- [vargasvet] [io-8080-exec-11] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3963 tiene el correo verificado
+2026-11-23T21:00:21.561Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.746@softvet.test
+2026-11-23T21:00:21.586Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3964 tiene el correo verificado
+2026-11-23T21:00:22.631Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1136@softvet.test
+2026-11-23T21:00:22.699Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3965 tiene el correo verificado
+2026-11-23T21:00:30.043Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1373@softvet.test
+2026-11-23T21:00:30.076Z  WARN 1 --- [vargasvet] [io-8080-exec-15] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3966 tiene el correo verificado
+2026-11-23T21:00:30.119Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1345@softvet.test
+2026-11-23T21:00:30.146Z  WARN 1 --- [vargasvet] [io-8080-exec-16] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3967 tiene el correo verificado
+2026-11-23T21:00:33.251Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.816@softvet.test
+2026-11-23T21:00:33.306Z  WARN 1 --- [vargasvet] [io-8080-exec-15] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3968 tiene el correo verificado
+2026-11-23T21:00:33.826Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1066@softvet.test
+2026-11-23T21:00:33.933Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3969 tiene el correo verificado
+2026-11-23T21:00:35.468Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1261@softvet.test
+2026-11-23T21:00:35.593Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3970 tiene el correo verificado
+2026-11-23T21:00:36.387Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1037@softvet.test
+2026-11-23T21:00:36.458Z  WARN 1 --- [vargasvet] [io-8080-exec-14] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3971 tiene el correo verificado
+2026-11-23T21:00:40.955Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.870@softvet.test
+2026-11-23T21:00:41.194Z  WARN 1 --- [vargasvet] [nio-8080-exec-2] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3972 tiene el correo verificado
+2026-11-23T21:00:41.491Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1346@softvet.test
+2026-11-23T21:00:41.544Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1023@softvet.test
+2026-11-23T21:00:41.649Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3973 tiene el correo verificado
+2026-11-23T21:00:41.726Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3974 tiene el correo verificado
+2026-11-23T21:00:43.454Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.884@softvet.test
+2026-11-23T21:00:43.541Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3975 tiene el correo verificado
+2026-11-23T21:00:46.974Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.897@softvet.test
+2026-11-23T21:00:47.137Z  WARN 1 --- [vargasvet] [nio-8080-exec-2] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3976 tiene el correo verificado
+2026-11-23T21:00:49.982Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1093@softvet.test
+2026-11-23T21:00:50.152Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3977 tiene el correo verificado
+2026-11-23T21:00:51.967Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1331@softvet.test
+2026-11-23T21:00:52.154Z  WARN 1 --- [vargasvet] [io-8080-exec-13] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3978 tiene el correo verificado
+2026-11-23T21:00:55.146Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1079@softvet.test
+2026-11-23T21:00:55.227Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1233@softvet.test
+2026-11-23T21:00:55.345Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3979 tiene el correo verificado
+2026-11-23T21:00:55.422Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3980 tiene el correo verificado
+2026-11-23T21:00:57.621Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1150@softvet.test
+2026-11-23T21:00:57.705Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3981 tiene el correo verificado
+2026-11-23T21:00:59.145Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.842@softvet.test
+2026-11-23T21:00:59.250Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3982 tiene el correo verificado
+2026-11-23T21:01:00.266Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.968@softvet.test
+2026-11-23T21:01:00.325Z  WARN 1 --- [vargasvet] [io-8080-exec-13] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3983 tiene el correo verificado
+2026-11-23T21:01:00.876Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1388@softvet.test
+2026-11-23T21:01:00.980Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3984 tiene el correo verificado
+2026-11-23T21:01:02.884Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.926@softvet.test
+2026-11-23T21:01:02.975Z  WARN 1 --- [vargasvet] [io-8080-exec-15] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3985 tiene el correo verificado
+2026-11-23T21:01:03.056Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.772@softvet.test
+2026-11-23T21:01:03.128Z  WARN 1 --- [vargasvet] [io-8080-exec-12] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3986 tiene el correo verificado
+2026-11-23T21:01:06.250Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1205@softvet.test
+2026-11-23T21:01:06.347Z  WARN 1 --- [vargasvet] [io-8080-exec-10] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3987 tiene el correo verificado
+2026-11-23T21:01:06.757Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.898@softvet.test
+2026-11-23T21:01:06.806Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3988 tiene el correo verificado
+2026-11-23T21:01:07.303Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.817@softvet.test
+2026-11-23T21:01:07.331Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3989 tiene el correo verificado
+2026-11-23T21:01:08.142Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1317@softvet.test
+2026-11-23T21:01:08.209Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3990 tiene el correo verificado
+2026-11-23T21:01:08.431Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1137@softvet.test
+2026-11-23T21:01:08.453Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3991 tiene el correo verificado
+2026-11-23T21:01:10.586Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.701@softvet.test
+2026-11-23T21:01:10.661Z  WARN 1 --- [vargasvet] [io-8080-exec-12] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3992 tiene el correo verificado
+2026-11-23T21:01:11.993Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.827@softvet.test
+2026-11-23T21:01:12.060Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3993 tiene el correo verificado
+2026-11-23T21:01:12.122Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1038@softvet.test
+2026-11-23T21:01:12.176Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3994 tiene el correo verificado
+2026-11-23T21:01:12.377Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1094@softvet.test
+2026-11-23T21:01:12.400Z  WARN 1 --- [vargasvet] [io-8080-exec-16] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3995 tiene el correo verificado
+2026-11-23T21:01:13.793Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.981@softvet.test
+2026-11-23T21:01:13.864Z  WARN 1 --- [vargasvet] [io-8080-exec-13] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3996 tiene el correo verificado
+2026-11-23T21:01:13.877Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.969@softvet.test
+2026-11-23T21:01:13.945Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3997 tiene el correo verificado
+2026-11-23T21:01:16.209Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1053@softvet.test
+2026-11-23T21:01:16.332Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3998 tiene el correo verificado
+2026-11-23T21:01:18.474Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1248@softvet.test
+2026-11-23T21:01:18.531Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 3999 tiene el correo verificado
+2026-11-23T21:01:19.623Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1122@softvet.test
+2026-11-23T21:01:19.691Z  WARN 1 --- [vargasvet] [nio-8080-exec-1] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4000 tiene el correo verificado
+2026-11-23T21:01:20.439Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1177@softvet.test
+2026-11-23T21:01:20.536Z  WARN 1 --- [vargasvet] [io-8080-exec-14] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4001 tiene el correo verificado
+2026-11-23T21:01:23.022Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1039@softvet.test
+2026-11-23T21:01:23.041Z  WARN 1 --- [vargasvet] [io-8080-exec-16] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4002 tiene el correo verificado
+2026-11-23T21:01:23.397Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.818@softvet.test
+2026-11-23T21:01:23.423Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4003 tiene el correo verificado
+2026-11-23T21:01:25.126Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.899@softvet.test
+2026-11-23T21:01:25.176Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4004 tiene el correo verificado
+2026-11-23T21:01:26.807Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.982@softvet.test
+2026-11-23T21:01:26.829Z  WARN 1 --- [vargasvet] [io-8080-exec-16] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4005 tiene el correo verificado
+2026-11-23T21:01:26.890Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.799@softvet.test
+2026-11-23T21:01:26.924Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4006 tiene el correo verificado
+2026-11-23T21:01:28.111Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.970@softvet.test
+2026-11-23T21:01:28.150Z  WARN 1 --- [vargasvet] [io-8080-exec-16] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4007 tiene el correo verificado
+2026-11-23T21:01:29.301Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.855@softvet.test
+2026-11-23T21:01:29.322Z  WARN 1 --- [vargasvet] [io-8080-exec-15] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4008 tiene el correo verificado
+2026-11-23T21:01:29.543Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.718@softvet.test
+2026-11-23T21:01:29.622Z  WARN 1 --- [vargasvet] [io-8080-exec-13] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4009 tiene el correo verificado
+2026-11-23T21:01:30.586Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.747@softvet.test
+2026-11-23T21:01:30.661Z  WARN 1 --- [vargasvet] [io-8080-exec-12] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4010 tiene el correo verificado
+2026-11-23T21:01:32.404Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1080@softvet.test
+2026-11-23T21:01:32.426Z  WARN 1 --- [vargasvet] [io-8080-exec-16] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4011 tiene el correo verificado
+2026-11-23T21:01:34.513Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1191@softvet.test
+2026-11-23T21:01:34.564Z  WARN 1 --- [vargasvet] [io-8080-exec-11] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4012 tiene el correo verificado
+2026-11-23T21:01:36.352Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1024@softvet.test
+2026-11-23T21:01:36.374Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4013 tiene el correo verificado
+2026-11-23T21:01:39.906Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1361@softvet.test
+2026-11-23T21:01:39.929Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4014 tiene el correo verificado
+2026-11-23T21:01:42.691Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1081@softvet.test
+2026-11-23T21:01:42.729Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4015 tiene el correo verificado
+2026-11-23T21:01:44.755Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1206@softvet.test
+2026-11-23T21:01:44.777Z  WARN 1 --- [vargasvet] [nio-8080-exec-3] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4016 tiene el correo verificado
+2026-11-23T21:01:45.341Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1107@softvet.test
+2026-11-23T21:01:45.364Z  WARN 1 --- [vargasvet] [io-8080-exec-13] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4017 tiene el correo verificado
+2026-11-23T21:01:45.666Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1262@softvet.test
+2026-11-23T21:01:45.690Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4018 tiene el correo verificado
+2026-11-23T21:01:47.211Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.954@softvet.test
+2026-11-23T21:01:47.235Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4019 tiene el correo verificado
+2026-11-23T21:01:47.518Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.787@softvet.test
+2026-11-23T21:01:47.541Z  WARN 1 --- [vargasvet] [io-8080-exec-16] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4020 tiene el correo verificado
+2026-11-23T21:01:51.950Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.819@softvet.test
+2026-11-23T21:01:51.971Z  WARN 1 --- [vargasvet] [io-8080-exec-14] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4021 tiene el correo verificado
+2026-11-23T21:01:53.163Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1389@softvet.test
+2026-11-23T21:01:53.191Z  WARN 1 --- [vargasvet] [io-8080-exec-12] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4022 tiene el correo verificado
+2026-11-23T21:01:56.638Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1009@softvet.test
+2026-11-23T21:01:56.659Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4023 tiene el correo verificado
+2026-11-23T21:01:57.766Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1178@softvet.test
+2026-11-23T21:01:57.794Z  WARN 1 --- [vargasvet] [io-8080-exec-10] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4024 tiene el correo verificado
+2026-11-23T21:01:57.809Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1289@softvet.test
+2026-11-23T21:01:57.836Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.800@softvet.test
+2026-11-23T21:01:57.847Z  WARN 1 --- [vargasvet] [io-8080-exec-11] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4025 tiene el correo verificado
+2026-11-23T21:01:57.888Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4026 tiene el correo verificado
+2026-11-23T21:02:01.361Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1067@softvet.test
+2026-11-23T21:02:01.383Z  WARN 1 --- [vargasvet] [nio-8080-exec-2] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4027 tiene el correo verificado
+2026-11-23T21:02:03.403Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1249@softvet.test
+2026-11-23T21:02:03.428Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4028 tiene el correo verificado
+2026-11-23T21:02:04.661Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1219@softvet.test
+2026-11-23T21:02:04.684Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4029 tiene el correo verificado
+2026-11-23T21:02:06.409Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.702@softvet.test
+2026-11-23T21:02:06.433Z  WARN 1 --- [vargasvet] [nio-8080-exec-9] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4030 tiene el correo verificado
+2026-11-23T21:02:06.607Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.730@softvet.test
+2026-11-23T21:02:06.629Z  WARN 1 --- [vargasvet] [io-8080-exec-16] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4031 tiene el correo verificado
+2026-11-23T21:02:07.897Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1054@softvet.test
+2026-11-23T21:02:07.921Z  WARN 1 --- [vargasvet] [io-8080-exec-12] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4032 tiene el correo verificado
+2026-11-23T21:02:10.449Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1362@softvet.test
+2026-11-23T21:02:10.506Z  WARN 1 --- [vargasvet] [io-8080-exec-13] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4033 tiene el correo verificado
+2026-11-23T21:02:13.654Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1263@softvet.test
+2026-11-23T21:02:13.678Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4034 tiene el correo verificado
+2026-11-23T21:02:15.288Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.912@softvet.test
+2026-11-23T21:02:15.313Z  WARN 1 --- [vargasvet] [nio-8080-exec-6] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4035 tiene el correo verificado
+2026-11-23T21:02:16.659Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1234@softvet.test
+2026-11-23T21:02:16.682Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4036 tiene el correo verificado
+2026-11-23T21:02:20.154Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.773@softvet.test
+2026-11-23T21:02:20.176Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4037 tiene el correo verificado
+2026-11-23T21:02:20.214Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.757@softvet.test
+2026-11-23T21:02:20.235Z  WARN 1 --- [vargasvet] [io-8080-exec-16] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4038 tiene el correo verificado
+2026-11-23T21:02:21.864Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1192@softvet.test
+2026-11-23T21:02:21.888Z  WARN 1 --- [vargasvet] [nio-8080-exec-2] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4039 tiene el correo verificado
+2026-11-23T21:02:23.401Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1095@softvet.test
+2026-11-23T21:02:23.427Z  WARN 1 --- [vargasvet] [nio-8080-exec-2] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4040 tiene el correo verificado
+2026-11-23T21:02:26.636Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.871@softvet.test
+2026-11-23T21:02:26.659Z  WARN 1 --- [vargasvet] [io-8080-exec-10] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4041 tiene el correo verificado
+2026-11-23T21:02:31.761Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1163@softvet.test
+2026-11-23T21:02:31.784Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4042 tiene el correo verificado
+2026-11-23T21:02:34.605Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.843@softvet.test
+2026-11-23T21:02:34.661Z  WARN 1 --- [vargasvet] [nio-8080-exec-4] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4043 tiene el correo verificado
+2026-11-23T21:02:34.720Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1138@softvet.test
+2026-11-23T21:02:34.789Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4044 tiene el correo verificado
+2026-11-23T21:02:37.799Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.774@softvet.test
+2026-11-23T21:02:37.821Z  WARN 1 --- [vargasvet] [io-8080-exec-10] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4045 tiene el correo verificado
+2026-11-23T21:02:38.193Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.872@softvet.test
+2026-11-23T21:02:38.225Z  WARN 1 --- [vargasvet] [io-8080-exec-11] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4046 tiene el correo verificado
+2026-11-23T21:02:39.071Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1318@softvet.test
+2026-11-23T21:02:39.119Z  WARN 1 --- [vargasvet] [io-8080-exec-11] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4047 tiene el correo verificado
+2026-11-23T21:02:39.993Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1264@softvet.test
+2026-11-23T21:02:40.015Z  WARN 1 --- [vargasvet] [nio-8080-exec-7] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4048 tiene el correo verificado
+2026-11-23T21:02:41.614Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.995@softvet.test
+2026-11-23T21:02:41.681Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4049 tiene el correo verificado
+2026-11-23T21:02:48.239Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.788@softvet.test
+2026-11-23T21:02:48.263Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4050 tiene el correo verificado
+2026-11-23T21:02:48.358Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1139@softvet.test
+2026-11-23T21:02:48.388Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4051 tiene el correo verificado
+2026-11-23T21:02:50.238Z  INFO 1 --- [vargasvet] [argasVetAsync-1] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1025@softvet.test
+2026-11-23T21:02:50.689Z  WARN 1 --- [vargasvet] [nio-8080-exec-5] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4052 tiene el correo verificado
+2026-11-23T21:02:51.246Z  INFO 1 --- [vargasvet] [argasVetAsync-2] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.1235@softvet.test
+2026-11-23T21:02:52.099Z  WARN 1 --- [vargasvet] [nio-8080-exec-8] v.v.service.impl.CitaServiceImpl         : No se envía email de confirmación: ninguna persona con vínculo vigente con la mascota 4053 tiene el correo verificado
+Exception in thread "http-nio-8080-Acceptor" java.lang.OutOfMemoryError: Java heap space
+	at java.base/java.nio.HeapByteBuffer.<init>(Unknown Source)
+	at java.base/java.nio.ByteBuffer.allocate(Unknown Source)
+	at org.apache.tomcat.util.net.SocketBufferHandler.<init>(SocketBufferHandler.java:58)
+	at org.apache.tomcat.util.net.NioEndpoint.setSocketOptions(NioEndpoint.java:457)
+	at org.apache.tomcat.util.net.NioEndpoint.setSocketOptions(NioEndpoint.java:71)
+	at org.apache.tomcat.util.net.Acceptor.run(Acceptor.java:148)
+	at java.base/java.lang.Thread.runWith(Unknown Source)
+	at java.base/java.lang.Thread.run(Unknown Source)
+2026-11-23T21:03:32.641Z  INFO 1 --- [vargasvet] [argasVetAsync-5] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.775@softvet.test
+2026-11-23T21:03:32.645Z  INFO 1 --- [vargasvet] [argasVetAsync-3] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.856@softvet.test
+2026-11-23T21:03:32.645Z  INFO 1 --- [vargasvet] [argasVetAsync-4] v.vargasvet.service.EmailService         : Correo enviado exitosamente a: lab.913@softvet.test
+2026-11-23T21:03:54.737Z ERROR 1 --- [vargasvet] [nio-8080-exec-6] o.a.c.c.C.[.[.[.[dispatcherServlet]      : Servlet.service() for servlet [dispatcherServlet] in context with path [/api/v1] threw exception [Handler dispatch failed: java.lang.OutOfMemoryError: Java heap space] with root cause
+
+java.lang.OutOfMemoryError: Java heap space
+	at java.base/java.util.Arrays.copyOf(Unknown Source) ~[na:na]
+	at java.base/java.util.Arrays.copyOf(Unknown Source) ~[na:na]
+	at java.base/java.util.ArrayList.grow(Unknown Source) ~[na:na]
+	at java.base/java.util.ArrayList.grow(Unknown Source) ~[na:na]
+	at java.base/java.util.ArrayList.add(Unknown Source) ~[na:na]
+	at java.base/java.util.ArrayList.add(Unknown Source) ~[na:na]
+	at org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl.registerLoadingEntityHolder(JdbcValuesSourceProcessingStateStandardImpl.java:95) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.engine.internal.StatefulPersistenceContext.claimEntityHolderIfPossible(StatefulPersistenceContext.java:419) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.resolveInstance(EntityInitializerImpl.java:1017) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.resolveKey(EntityInitializerImpl.java:583) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.resolveKey(EntityInitializerImpl.java:453) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.resolveKey(EntityInitializerImpl.java:97) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.Initializer.resolveKey(Initializer.java:101) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.resolveKeySubInitializers(EntityInitializerImpl.java:696) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.resolveKey(EntityInitializerImpl.java:601) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.resolveKey(EntityInitializerImpl.java:453) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.resolveKey(EntityInitializerImpl.java:97) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.internal.StandardRowReader.coordinateInitializers(StandardRowReader.java:235) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.internal.StandardRowReader.readRow(StandardRowReader.java:141) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.spi.ListResultsConsumer.read(ListResultsConsumer.java:249) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:201) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.results.spi.ListResultsConsumer.consume(ListResultsConsumer.java:35) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.doExecuteQuery(JdbcSelectExecutorStandardImpl.java:224) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl.executeQuery(JdbcSelectExecutorStandardImpl.java:102) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.executeQuery(JdbcSelectExecutor.java:91) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.sql.exec.spi.JdbcSelectExecutor.list(JdbcSelectExecutor.java:165) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.lambda$new$1(ConcreteSqmSelectQueryPlan.java:152) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan$$Lambda/0x00007ff3d3e3c868.interpret(Unknown Source) ~[na:na]
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.withCacheableSqmInterpretation(ConcreteSqmSelectQueryPlan.java:442) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan.performList(ConcreteSqmSelectQueryPlan.java:362) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.query.sqm.internal.QuerySqmImpl.doList(QuerySqmImpl.java:380) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+	at org.hibernate.query.spi.AbstractSelectionQuery.list(AbstractSelectionQuery.java:143) ~[hibernate-core-6.6.5.Final.jar!/:6.6.5.Final]
+

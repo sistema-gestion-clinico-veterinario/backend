@@ -1,0 +1,22 @@
+{
+  "version": "despues",
+  "perfil_lab": "EXP-HEAP-192M (experimental: -Xmx192m en un contenedor de 512m; el resto de las opciones es el de producción)",
+  "nivel": 100,
+  "config_jvm": "H",
+  "correos_recibidos": 179,
+  "heap_max": "192m",
+  "cpus_limite": 1,
+  "memoria_limite_mb": 512,
+  "perfil": "carga_escritura",
+  "duracion_s": 307,
+  "cpu_contenedor_s": 104,
+  "oom_killed": false,
+  "reinicios": 0,
+  "sigue_corriendo": true,
+  "codigo_salida": 0,
+  "salud_final_http": "200",
+  "k6_codigo_salida": 0,
+  "caida_backend": "",
+  "sql_sentencias": 103172,
+  "sql_tiempo_s": 9.6
+}

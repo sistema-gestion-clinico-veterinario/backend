@@ -1,0 +1,104 @@
+fecha: 2026-11-23T21:04:59Z
+núcleos del equipo: 4
+procesador: AMD EPYC 9V45 96-Core Processor; hilos por núcleo: 2; núcleos por socket: 2
+versiones medidas: despues; heap máximo: 192m; núcleos de k6: 1; reservas de horario por usuario: 14
+memoria total del equipo (MB): 15983
+recursos del backend: 1 CPU, 512m de RAM
+perfil del laboratorio: EXP-HEAP-192M (experimental: -Xmx192m en un contenedor de 512m; el resto de las opciones es el de producción) (memoria 512m, CPU 1, heap máximo 192m; configuración de la JVM en los niveles: H, en el control: H)
+umbral del generador: 80 % de la CPU de k6 (criterio experimental, configurable)
+modo de afinidad: topologia (aplicado: si); k6 en CPU 1, backend '--cpuset-cpus 2', PostgreSQL '--cpuset-cpus 0', muestreadores 'taskset -c 1'
+mezcla de operaciones: semilla 20261123; pesos 22,18,15,2,13,12,10,8 (panel, agenda, historia, reportes, recepción, atención, cobro, cancelar)
+citas de la clínica grande: 6000; propietarios: 1200
+pool de conexiones: 10; muestreo de PostgreSQL: no; volcados de hilos en los segundos: ninguno; registro de Hikari en DEBUG: no; NMT: no
+caída del backend: k6 se detiene 20 s después de que el contenedor se detenga
+heap en vivo: sí, cada 3 s (contadores hsperfdata y cgroup)
+runner: ubuntu24 20261116.376.1
+kernel: 7.0.0-1017-azure
+configuraciones de la JVM:
+  C -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m
+  D -> -Xmx192m -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  E -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  F -> -Xms192m -Xmx192m -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  G -> -Xms1280m -Xmx1280m -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  P -> -Xmx192m -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  (P = ENV JAVA_OPTS del Dockerfile de producción de DESPUÉS, b1d22f9, más las opciones de observación del arnés: registro de GC y propiedades del correo de pruebas)
+usadas en esta corrida: H para los niveles y H para el control (perfil EXP-HEAP-192M (experimental: -Xmx192m en un contenedor de 512m; el resto de las opciones es el de producción))
+correo: servidor SMTP de pruebas en el contenedor sv-correo (sin TLS ni autenticación; los envíos terminan bien)
+pool de conexiones: 10
+pausa entre acciones: 15 s (con variación aleatoria)
+mezcla de acciones (panel, agenda, historia, reportes, recepción, atención, cobro, cancelar): 22,18,15,2,13,12,10,8 %
+cuentas de medición: una por usuario virtual, 101 en total
+docker: 28.0.4
+k6: k6 v2.4.0 (commit/dd9395906d, go1.26.11, linux/amd64)
+antes:   no medido
+despues: b1d22f951f756e136a366262625c79e2e95b7e5b
+fijado de CPU: PG='--cpuset-cpus 0' backend='--cpuset-cpus 2' k6='taskset -c 1'
+plan de niveles:
+  # nivel  subida  sostenido
+  50 55s 150s
+  100 110s 150s
+### lscpu -e
+CPU CORE SOCKET NODE ONLINE MAXMHZ
+  0    0      0    0    yes      -
+  1    0      0    0    yes      -
+  2    1      0    0    yes      -
+  3    1      0    0    yes      -
+
+### lscpu (resumen)
+Model name:                              AMD EPYC 9V45 96-Core Processor
+Thread(s) per core:                      2
+Core(s) per socket:                      2
+Socket(s):                               1
+Virtualization:                          AMD-V
+Hypervisor vendor:                       Microsoft
+Virtualization type:                     full
+L1d cache:                               96 KiB (2 instances)
+L2 cache:                                2 MiB (2 instances)
+L3 cache:                                32 MiB (1 instance)
+
+### afinidad del arnés: pid 72561's current affinity list: 0-3
+### cpuset del cgroup del arnés: 0-3
+### fijado de CPU solicitado: PG='--cpuset-cpus 0' backend='--cpuset-cpus 2' k6='taskset -c 1' muestreadores='taskset -c 1'
+### Topología de CPU del runner
+
+| CPU lógica | Núcleo físico (hermanas SMT) | core_id | Paquete |
+|---|---|---|---|
+| 0 | 0,1 | 0 | 0 |
+| 1 | 0,1 | 0 | 0 |
+| 2 | 2,3 | 1 | 0 |
+| 3 | 2,3 | 1 | 0 |
+
+- Núcleos físicos distintos: 2; SMT activo: sí.
+- k6: CPU lógica(s) 1
+- backend: CPU lógica(s) 2
+- postgres: CPU lógica(s) 0
+- muestreadores: CPU lógica(s) 1
+- **k6 y postgres comparten núcleo físico** (hilos hermanos): el `cpuset` los separa por CPU lógica, no por núcleo físico; pueden interferirse.
+- **k6 y muestreadores comparten núcleo físico** (hilos hermanos): el `cpuset` los separa por CPU lógica, no por núcleo físico; pueden interferirse.
+- **postgres y muestreadores comparten núcleo físico** (hilos hermanos): el `cpuset` los separa por CPU lógica, no por núcleo físico; pueden interferirse.
+- **Aislamiento físico no demostrado:** el fijado de CPU solo restringe dónde pueden ejecutarse estos procesos; el demonio de Docker, el agente del runner y el núcleo del sistema no están fijados, la caché L3 y el ancho de banda de memoria son compartidos, y el runner es una máquina virtual cuyo mapeo a CPU físicas del anfitrión no es visible desde dentro.
+
+### Modo de afinidad: topologia
+- El backend queda en la CPU lógica 2, y su hilo hermano 3 no recibe trabajo fijado: ningún proceso del experimento comparte con él su núcleo físico.
+- Esa CPU hermana no está bloqueada: el demonio de Docker, el agente del runner y el núcleo del sistema pueden usarla.
+- PostgreSQL, k6 y los muestreadores comparten el otro núcleo físico (hilos hermanos): la interferencia entre ellos no se elimina, solo se saca al backend de ese núcleo.
+- El aislamiento físico completo sigue sin demostrarse: el runner es una máquina virtual y la caché L3 y la memoria se comparten.
+[21:05:00] construyendo la imagen despues desde b1d22f9
+[21:05:00] levantando PostgreSQL
+[21:05:03] levantando el servidor SMTP de pruebas
+[21:05:04] [despues] creando el esquema con el propio backend
+[21:05:25] [despues] sembrando datos
+[21:05:27] [despues] aplicando las migraciones de su versión
+[21:05:31] [despues] migraciones: 34 aplicadas, 1 con error
+citas=13580 consultas=10168 mascotas=3881
+[21:05:31] [despues] configuración de la clínica (horarios, turnos, razas)
+[21:05:31] [despues] cuentas de medición 2 a 101
+[21:06:10] [despues] aviso de privacidad: HTTP 200 HTTP 200 
+[21:06:10] [despues] guardando la base preparada como plantilla
+[21:06:11] [despues] nivel 50 (config H, despues_50): arrancando el backend (1 CPU, 512m)
+[21:06:41] [despues] nivel 50: k6 con hasta 50 usuarios (subida 55s, sostenido 150s)
+[21:10:51] [despues] nivel 50 terminado: k6 código 0, OOM=false, reinicios=0, salud final=200
+[21:11:11] [despues] nivel 100 (config H, despues_100): arrancando el backend (1 CPU, 512m)
+[21:11:37] [despues] nivel 100: k6 con hasta 100 usuarios (subida 110s, sostenido 150s)
+[21:16:45] [despues] nivel 100 terminado: k6 código 0, OOM=false, reinicios=0, salud final=200
+[21:17:06] terminado

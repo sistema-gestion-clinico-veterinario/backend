@@ -1,0 +1,32 @@
+{
+ "etiqueta": "despues_100",
+ "nivel": 100,
+ "umbral_pct": 80.0,
+ "nucleos_k6": 1,
+ "cpus_permitidas_k6": "1",
+ "motivos": [],
+ "muestras": 153,
+ "cpu_media_pct": 1.0098039215686274,
+ "cpu_p95_pct": 2.5,
+ "cpu_max_pct": 3.5,
+ "muestras_sobre_umbral_pct": 0.0,
+ "rss_pico_mb": 120.9765625,
+ "cpu_logica_media_pct": {
+  "0": 5.879084967320261,
+  "1": 2.80718954248366,
+  "2": 39.79803921568627,
+  "3": 1.6601307189542485
+ },
+ "peticiones": 3934,
+ "iteraciones": 1502,
+ "peticiones_por_s": 12.830290331642688,
+ "vus_activos_max": 100,
+ "vus_asignados_max": 100,
+ "iteraciones_descartadas": null,
+ "no_2xx_pct": 9.100152516522623,
+ "sin_respuesta": 0,
+ "k6_codigo_salida": 0,
+ "saturado": false,
+ "alcanzo_vus": true,
+ "interpretable": "sí"
+}

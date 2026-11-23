@@ -1,0 +1,261 @@
+time="2026-11-23T20:49:11Z" level=info msg="PASO|2|cita|POST|400|90|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:49:15Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": read tcp 127.0.0.1:34114->127.0.0.1:18080: read: connection reset by peer"
+time="2026-11-23T20:49:15Z" level=info msg="PASO|18|panel|GET|0|57|FALLO|null" source=console
+time="2026-11-23T20:49:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:15Z" level=info msg="PASO|19|login|POST|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:15Z" level=info msg="PASO|3|apoderado|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:16Z" level=info msg="PASO|20|login|POST|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:16Z" level=info msg="PASO|4|apoderado|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:17Z" level=info msg="PASO|9|navegacion|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:17Z" level=info msg="PASO|9|privacidad|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:17Z" level=info msg="PASO|9|cumplimiento|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:17Z" level=info msg="PASO|9|notificaciones|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:17Z" level=info msg="PASO|9|avisos_de_cumplimiento|GET|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:17Z" level=info msg="PASO|10|lista_de_historias|GET|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:17Z" level=info msg="PASO|5|citas_del_mes|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:17Z" level=info msg="PASO|5|empleados|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:17Z" level=info msg="PASO|5|propietarios|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:17Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:17Z" level=info msg="PASO|21|login|POST|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:18Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:18Z" level=info msg="PASO|8|apoderado|POST|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:18Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27581/check-in\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:18Z" level=info msg="PASO|6|checkin|PATCH|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:18Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27581/start\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:18Z" level=info msg="PASO|6|iniciar|PATCH|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:19Z" level=info msg="PASO|22|login|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:19Z" level=info msg="PASO|14|apoderado|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:20Z" level=info msg="PASO|11|apoderado|POST|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:20Z" level=info msg="PASO|23|login|POST|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:20Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:20Z" level=info msg="PASO|7|navegacion|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:20Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:20Z" level=info msg="PASO|7|privacidad|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:20Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:20Z" level=info msg="PASO|7|cumplimiento|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:20Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:20Z" level=info msg="PASO|7|notificaciones|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:20Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:20Z" level=info msg="PASO|7|avisos_de_cumplimiento|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:20Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:21Z" level=info msg="PASO|24|login|POST|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:22Z" level=info msg="PASO|25|login|POST|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:23Z" level=info msg="PASO|26|login|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:23Z" level=info msg="PASO|12|apoderado|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:24Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:24Z" level=info msg="PASO|27|login|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:25Z" level=info msg="PASO|28|login|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:26Z" level=info msg="PASO|4|apoderado|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:26Z" level=info msg="PASO|29|login|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:27Z" level=info msg="PASO|8|navegacion|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:27Z" level=info msg="PASO|8|privacidad|GET|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:27Z" level=info msg="PASO|8|cumplimiento|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:27Z" level=info msg="PASO|8|notificaciones|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:27Z" level=info msg="PASO|18|apoderado|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:27Z" level=info msg="PASO|30|login|POST|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:28Z" level=info msg="PASO|13|apoderado|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:28Z" level=info msg="PASO|1|navegacion|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:28Z" level=info msg="PASO|1|privacidad|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:28Z" level=info msg="PASO|1|cumplimiento|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:28Z" level=info msg="PASO|1|notificaciones|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:28Z" level=info msg="PASO|1|avisos_de_cumplimiento|GET|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:28Z" level=info msg="PASO|31|login|POST|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:29Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:29Z" level=info msg="PASO|17|lista_de_historias|GET|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:30Z" level=info msg="PASO|32|login|POST|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:30Z" level=info msg="PASO|10|apoderado|POST|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:31Z" level=info msg="PASO|2|apoderado|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:31Z" level=info msg="PASO|33|login|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:32Z" level=info msg="PASO|34|login|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:32Z" level=info msg="PASO|11|navegacion|GET|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:32Z" level=info msg="PASO|11|privacidad|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:32Z" level=info msg="PASO|11|cumplimiento|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:32Z" level=info msg="PASO|11|notificaciones|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:32Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:33Z" level=info msg="PASO|35|login|POST|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:34Z" level=info msg="PASO|36|login|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:34Z" level=info msg="PASO|14|apoderado|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:34Z" level=info msg="PASO|15|apoderado|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:35Z" level=info msg="PASO|16|navegacion|GET|0|1|FALLO|null" source=console
+time="2026-11-23T20:49:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:35Z" level=info msg="PASO|16|privacidad|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:35Z" level=info msg="PASO|16|cumplimiento|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:35Z" level=info msg="PASO|16|notificaciones|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:35Z" level=info msg="PASO|16|avisos_de_cumplimiento|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:35Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:35Z" level=info msg="PASO|37|login|POST|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:36Z" level=info msg="PASO|12|navegacion|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:36Z" level=info msg="PASO|12|privacidad|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:36Z" level=info msg="PASO|12|cumplimiento|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:36Z" level=info msg="PASO|12|notificaciones|GET|0|0|FALLO|null" source=console
+time="2026-11-23T20:49:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": dial tcp 127.0.0.1:18080: connect: connection refused"
+time="2026-11-23T20:49:36Z" level=info msg="PASO|38|login|POST|0|1|FALLO|null" source=console
+{
+ "perfil": "carga_escritura",
+ "nivel": 50,
+ "iteraciones_completas": 35,
+ "peticiones": 219,
+ "duracion_total_s": 42.143119495,
+ "latencia_ms": {
+  "mediana": 8.799986,
+  "p95": 347.9633862,
+  "p99": 1127.3689642599986,
+  "max": 4025.933178
+ },
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 133,
+  "otro_4xx": 1,
+  "5xx": 0,
+  "sin_respuesta": 85
+ },
+ "pasos": {
+  "apoderado": {
+   "correctos": 2,
+   "fallidos": 15
+  },
+  "mascota": {
+   "correctos": 2,
+   "fallidos": 0
+  },
+  "cita": {
+   "correctos": 1,
+   "fallidos": 1
+  },
+  "checkin": {
+   "correctos": 0,
+   "fallidos": 1
+  },
+  "iniciar": {
+   "correctos": 0,
+   "fallidos": 1
+  },
+  "consulta": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "diagnostico": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "receta": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "actualizar_mascota": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "cerrar_consulta": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "finalizar_servicio": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "punto_cobro": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "vincular_equipo": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "abrir_caja": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "pago": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "cancelar_cita": {
+   "correctos": 0,
+   "fallidos": 0
+  }
+ },
+ "acciones": {
+  "panel": 7,
+  "agenda": 1,
+  "historia": 2,
+  "reportes": 1,
+  "recepcion": 17,
+  "atencion": 1,
+  "cobro": 0,
+  "cancelar": 0
+ },
+ "acciones_sin_trabajo": 13,
+ "vus_maximos": 50,
+ "vus_activos_max": 38,
+ "iteraciones_descartadas": null
+}
+time="2026-11-23T20:49:37Z" level=error msg="test run was aborted because k6 received a 'terminated' signal"

@@ -1,0 +1,32 @@
+[
+ {
+  "nivel": 250,
+  "veredicto": "AGUANTA",
+  "sin_degradacion": 9.0,
+  "errores_pct": 0.16040100250626568,
+  "rps": 44.3844953719218,
+  "p95_ms": 221.45510694999973,
+  "p99_ms": 827.6491530699884,
+  "mediana_ms": 23.1698435,
+  "peticiones": 19950,
+  "cpu_media_pct_limite": 61.35573170731708,
+  "cpu_tope_pct": 23.170731707317074,
+  "cpu_pg_media": 36.71074074074074,
+  "mem_pico_mb": 1271.808,
+  "heap_tras_gc_max_mb": 907,
+  "gc_pct": 9.849356184568988,
+  "metaspace_pico_mb": 136.3740234375,
+  "pool_agotado": 0,
+  "oom_heap": 0,
+  "oom_metaspace": 0,
+  "sin_respuesta": 0,
+  "err_5xx": 0,
+  "err_4xx": 32,
+  "escrituras_ok": 7263,
+  "escrituras_fallidas": 32,
+  "datos": "CONSISTENTES",
+  "limite_cpu": 1,
+  "limite_mem_mb": 2048,
+  "heap_max": "1g"
+ }
+]

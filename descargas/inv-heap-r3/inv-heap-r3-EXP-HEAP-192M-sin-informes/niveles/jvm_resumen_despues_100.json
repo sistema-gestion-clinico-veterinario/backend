@@ -1,0 +1,41 @@
+{
+ "etiqueta": "despues_100",
+ "muestras": 102,
+ "heap_en_vivo": true,
+ "heap_usado_max_mb": 167.29296875,
+ "heap_usado_media_mb": 139.7070503982843,
+ "heap_comprometido_max_mb": 192.0,
+ "metaspace_usado_max_mb": 111.1640625,
+ "cont_actual_max_mb": 431.765625,
+ "cont_pico_cgroup_mb": 435.1953125,
+ "cont_anon_max_mb": 423.6171875,
+ "cont_file_max_mb": 3.515625,
+ "rss_max_mb": 443.5234375,
+ "rss_anon_max_mb": 423.484375,
+ "hilos_so_max": 41.0,
+ "hilos_java_max": 35.0,
+ "kstack_max_mb": 0.671875,
+ "slab_max_mb": 1.681640625,
+ "fuera_del_heap_max_mb": 231.484375,
+ "jstat_ygc": 119.0,
+ "jstat_total": [
+  336.0,
+  27.0,
+  7.0454
+ ],
+ "jstat_fgc": 6.0,
+ "jstat_gct_s": 1.9380999999999995,
+ "muestreo_ms_media": 97.67647058823529,
+ "muestreo_ms_max": 516.0,
+ "sin_jstat": 0,
+ "gc_registro": {
+  "pausas": 363,
+  "total_ms": 7074.598,
+  "max_ms": 290.173,
+  "completas": 27,
+  "comprometido_max_mb": 185.0,
+  "usado_antes_max_mb": 185.0,
+  "usado_despues_max_mb": 185.0
+ },
+ "docker_stats_pico_mb": 427.4
+}

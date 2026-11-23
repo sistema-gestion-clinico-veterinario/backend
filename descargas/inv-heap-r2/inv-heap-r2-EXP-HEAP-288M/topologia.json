@@ -1,0 +1,65 @@
+{
+ "nucleos_fisicos": [
+  [
+   0,
+   2
+  ],
+  [
+   1,
+   3
+  ]
+ ],
+ "smt": true,
+ "topologia_desconocida": false,
+ "roles": {
+  "k6": [
+   2
+  ],
+  "backend": [
+   1
+  ],
+  "postgres": [
+   0
+  ],
+  "muestreadores": [
+   2
+  ]
+ },
+ "nucleo_fisico_de_cada_rol": {
+  "k6": [
+   0
+  ],
+  "backend": [
+   1
+  ],
+  "postgres": [
+   0
+  ],
+  "muestreadores": [
+   0
+  ]
+ },
+ "roles_que_comparten_nucleo_fisico": [
+  {
+   "a": "k6",
+   "b": "postgres",
+   "grupos": [
+    0
+   ]
+  },
+  {
+   "a": "k6",
+   "b": "muestreadores",
+   "grupos": [
+    0
+   ]
+  },
+  {
+   "a": "postgres",
+   "b": "muestreadores",
+   "grupos": [
+    0
+   ]
+  }
+ ]
+}

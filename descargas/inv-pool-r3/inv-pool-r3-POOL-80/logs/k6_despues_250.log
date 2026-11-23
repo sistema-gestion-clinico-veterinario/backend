@@ -1,0 +1,127 @@
+time="2026-11-23T20:34:53Z" level=info msg="PASO|2|cita|POST|400|138|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:35:00Z" level=info msg="PASO|8|cita|POST|400|86|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:35:16Z" level=info msg="PASO|9|cita|POST|400|35|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:35:59Z" level=info msg="PASO|3|cita|POST|400|28|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:37:40Z" level=info msg="PASO|139|cita|POST|400|35|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:37:50Z" level=info msg="PASO|20|cita|POST|400|51|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:37:50Z" level=info msg="PASO|8|cita|POST|400|44|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:37:55Z" level=info msg="PASO|169|iniciar|PATCH|400|40|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-23T20:38:56Z" level=info msg="PASO|176|iniciar|PATCH|400|82|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-23T20:38:58Z" level=info msg="PASO|50|iniciar|PATCH|400|35|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-23T20:39:01Z" level=info msg="PASO|136|cita|POST|400|33|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:39:03Z" level=info msg="PASO|164|iniciar|PATCH|400|50|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-23T20:39:12Z" level=info msg="PASO|226|iniciar|PATCH|400|29|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-23T20:39:14Z" level=info msg="PASO|238|iniciar|PATCH|400|29|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-23T20:39:28Z" level=info msg="PASO|17|cita|POST|400|43|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:39:35Z" level=info msg="PASO|140|cita|POST|400|25|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:40:01Z" level=info msg="PASO|12|cita|POST|400|21|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:40:27Z" level=info msg="PASO|128|iniciar|PATCH|400|34|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-23T20:40:31Z" level=info msg="PASO|10|cita|POST|400|28|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:40:42Z" level=info msg="PASO|149|cita|POST|400|66|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:40:52Z" level=info msg="PASO|145|cita|POST|400|10|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:40:59Z" level=info msg="PASO|156|iniciar|PATCH|400|13|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-23T20:41:06Z" level=info msg="PASO|1|iniciar|PATCH|400|27|FALLO|{\"success\":false,\"message\":\"El empleado ya tiene una atención en proceso. Debe completarla antes de iniciar otra.\",\"data\":null}" source=console
+time="2026-11-23T20:41:10Z" level=info msg="PASO|10|cita|POST|400|7|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:41:16Z" level=info msg="PASO|150|cita|POST|400|136|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-23T20:41:18Z" level=info msg="PASO|134|cita|POST|400|116|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+{
+ "perfil": "carga_escritura",
+ "nivel": 250,
+ "iteraciones_completas": 4835,
+ "peticiones": 19874,
+ "duracion_total_s": 447.19864788900003,
+ "latencia_ms": {
+  "mediana": 30.0134405,
+  "p95": 309.63489774999954,
+  "p99": 930.7041406800009,
+  "max": 8738.632138
+ },
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 19848,
+  "otro_4xx": 26,
+  "5xx": 0,
+  "sin_respuesta": 0
+ },
+ "pasos": {
+  "apoderado": {
+   "correctos": 977,
+   "fallidos": 0
+  },
+  "mascota": {
+   "correctos": 977,
+   "fallidos": 0
+  },
+  "cita": {
+   "correctos": 960,
+   "fallidos": 17
+  },
+  "checkin": {
+   "correctos": 474,
+   "fallidos": 0
+  },
+  "iniciar": {
+   "correctos": 465,
+   "fallidos": 9
+  },
+  "consulta": {
+   "correctos": 465,
+   "fallidos": 0
+  },
+  "diagnostico": {
+   "correctos": 465,
+   "fallidos": 0
+  },
+  "receta": {
+   "correctos": 465,
+   "fallidos": 0
+  },
+  "actualizar_mascota": {
+   "correctos": 465,
+   "fallidos": 0
+  },
+  "cerrar_consulta": {
+   "correctos": 465,
+   "fallidos": 0
+  },
+  "finalizar_servicio": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "punto_cobro": {
+   "correctos": 189,
+   "fallidos": 0
+  },
+  "vincular_equipo": {
+   "correctos": 189,
+   "fallidos": 0
+  },
+  "abrir_caja": {
+   "correctos": 189,
+   "fallidos": 0
+  },
+  "pago": {
+   "correctos": 316,
+   "fallidos": 0
+  },
+  "cancelar_cita": {
+   "correctos": 195,
+   "fallidos": 0
+  }
+ },
+ "acciones": {
+  "panel": 991,
+  "agenda": 810,
+  "historia": 728,
+  "reportes": 94,
+  "recepcion": 977,
+  "atencion": 474,
+  "cobro": 316,
+  "cancelar": 195
+ },
+ "acciones_sin_trabajo": 733,
+ "vus_maximos": 250,
+ "vus_activos_max": 250,
+ "iteraciones_descartadas": null
+}
