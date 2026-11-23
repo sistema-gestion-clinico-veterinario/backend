@@ -34,7 +34,7 @@ SLUG="clinica-medicion"
 USUARIO="medicion"
 CLAVE="$(openssl rand -hex 12)"
 LAB_DIR="$RAIZ/medicion/laboratorio"
-. "$LAB_DIR/imagenes.env"
+. "$LAB_DIR/imagenes.sh"
 entrada_evento() { [ -n "${GITHUB_EVENT_PATH:-}" ] && [ -f "$GITHUB_EVENT_PATH" ] && jq -r --arg k "$1" '.inputs[$k] // empty' "$GITHUB_EVENT_PATH" 2> /dev/null; true; }
 PERFIL_LAB="${PERFIL_LAB:-$(entrada_evento perfil)}"
 PERFIL_LAB="${PERFIL_LAB:-CAPACIDAD-2G}"

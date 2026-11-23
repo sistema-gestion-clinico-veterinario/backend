@@ -1,0 +1,6 @@
+IMG_POSTGRES="${IMG_POSTGRES:-postgres:16@sha256:3950ad7c3148ca2175ef1b6c36c9efbf78957ae8fbe8b3a5d7c35af50500382f}"
+IMG_PYTHON="${IMG_PYTHON:-python:3.12-alpine@sha256:c5ba3deef00c7758561a0f03c26f44f10589263d40e732b8748e0d1f38f6dd89}"
+IMG_MAVEN="${IMG_MAVEN:-maven:3.9.6-eclipse-temurin-21-alpine@sha256:9fca6934e64eff26860889804faecb71a522d04b4ebf05574140c71f8e9bc700}"
+IMG_JRE="${IMG_JRE:-eclipse-temurin:21-jre-alpine@sha256:5d7689f47d670aca766b9503a70bccc2d73b4eb9221ae8f714ae958313c4ce70}"
+IMG_JDK="${IMG_JDK:-eclipse-temurin:21-jdk-alpine@sha256:c07bb82e004a166b5d3d63b84ad70e2e822f228505e2e0c0b8dfdc2890d22f13}"
+K6_VERSION="${K6_VERSION:-2.4.0}"

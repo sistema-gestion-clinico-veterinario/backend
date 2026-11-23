@@ -13,7 +13,7 @@ igual() { if [ "$2" = "$3" ]; then ok "$1"; else mal "$1 (esperado '$3', obtenid
 log() { echo "[log] $*" >> "$TMP/log.txt"; }
 fallo() { echo "FALLO: $*" >> "$TMP/log.txt"; exit 1; }
 for f in flags_de a_mb opciones_jvm aplicar_perfil verificar_k6 fijar_dockerfile; do eval "$(extraer $f)"; done
-. "$AQUI/../imagenes.env"
+. "$AQUI/../imagenes.sh"
 BASE_JVM="-XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m"
 OBSERVACION_JVM="-Xlog:gc:file=/tmp/jvm_gc.log"
 XMX=1g

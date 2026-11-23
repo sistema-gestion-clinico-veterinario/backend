@@ -3,7 +3,7 @@ set -uo pipefail
 
 RAIZ="$(cd "$(dirname "$0")/../.." && pwd)"
 LAB="$RAIZ/medicion/laboratorio"
-. "$LAB/imagenes.env"
+. "$LAB/imagenes.sh"
 SAL="${SAL:-$RAIZ/resultados-laboratorio}"
 VENTANA_S="${VENTANA_S:-60}"
 MUESTRAS="${MUESTRAS:-12}"
