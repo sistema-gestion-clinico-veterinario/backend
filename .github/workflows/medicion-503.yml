@@ -47,7 +47,7 @@ jobs:
           MEMORIA: 2g
           XMX: 1g
           VERSIONES: antes despues
-          VARIANTES: "F:caos_bd_parada_antes:::antes F:caos_bd_parada_despues:::despues"
+          VARIANTES: "F:caos_bd_parada_antes:::antes F:caos_bd_parada_despues:::despues F:caos_bd_parada_rapido::DB_POOL_CONNECTION_TIMEOUT_MS=5000:despues"
           SIN_CONTROL: "1"
           PLAN_CARGA: medicion/escritura/PLAN_CAOS
           RESET_BASE: "1"

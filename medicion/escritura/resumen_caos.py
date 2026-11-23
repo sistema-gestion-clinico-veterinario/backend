@@ -17,6 +17,7 @@ NOMBRES = {
     'caos_bd_parada': 'PostgreSQL detenido 30 s',
     'caos_bd_parada_antes': 'PostgreSQL detenido 30 s, código anterior (401 y 500)',
     'caos_bd_parada_despues': 'PostgreSQL detenido 30 s, código con 503',
+    'caos_bd_parada_rapido': 'PostgreSQL detenido 30 s, código con 503 y espera de conexión de 5 s',
     'caos_bd_kill_checkpoint': 'Caída abrupta de PostgreSQL tras un CHECKPOINT',
     'caos_backend_kill': 'Caída abrupta del backend (SIGKILL) y arranque',
 }
