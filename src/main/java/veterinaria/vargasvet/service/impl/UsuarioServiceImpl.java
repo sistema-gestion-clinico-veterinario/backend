@@ -1403,9 +1403,26 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
     }
 
     @Override
-    @Transactional
     public void resetPasswordWithToken(veterinaria.vargasvet.dto.request.ResetPasswordRequest request) {
-        PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenForUpdate(hashToken(request.getToken()))
+        String tokenHash = hashToken(request.getToken());
+        SolicitudDeRestablecimiento solicitud =
+                transacciones.execute(status -> prepararRestablecimiento(tokenHash, request));
+
+        if (passwordEncoder.matches(request.getNewPassword(), solicitud.hashActual())) {
+            throw new IllegalArgumentException("La nueva contraseña debe ser diferente de la actual");
+        }
+        String hashNuevo = passwordEncoder.encode(request.getNewPassword());
+
+        String claveDeBloqueo = transacciones.execute(status -> aplicarRestablecimiento(tokenHash, solicitud, hashNuevo));
+        accountLockoutService.clearLockout(claveDeBloqueo);
+    }
+
+    private record SolicitudDeRestablecimiento(Long credencialId, String hashActual) {
+    }
+
+    private SolicitudDeRestablecimiento prepararRestablecimiento(String tokenHash,
+                                                                 veterinaria.vargasvet.dto.request.ResetPasswordRequest request) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenForUpdate(tokenHash)
                 .orElseThrow(() -> new ResourceNotFoundException("El token es inválido o no existe."));
 
         // 404 (no 400) para que la pantalla ofrezca pedir un enlace nuevo en vez de un error de formulario.
@@ -1421,21 +1438,31 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
 
         passwordPolicyService.validate(request.getNewPassword(), usuario.getEmail(),
                 usuario.getNombre(), usuario.getApellido());
-        if (passwordEncoder.matches(request.getNewPassword(), credencial.getPassword())) {
-            throw new IllegalArgumentException("La nueva contraseña debe ser diferente de la actual");
+        return new SolicitudDeRestablecimiento(credencial.getId(), credencial.getPassword());
+    }
+
+    private String aplicarRestablecimiento(String tokenHash, SolicitudDeRestablecimiento solicitud, String hashNuevo) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenForUpdate(tokenHash)
+                .orElseThrow(() -> new ResourceNotFoundException("El token es inválido o no existe."));
+        if (resetToken.getExpiryDate().isBefore(veterinaria.vargasvet.util.AppClock.now())) {
+            throw new ResourceNotFoundException("El token ha expirado. Por favor solicite uno nuevo.");
         }
-        credencial.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
+        Usuario usuario = resetToken.getUsuario();
+        Company company = resetToken.getCompany();
+        veterinaria.vargasvet.domain.entity.UsuarioEmpresaCredencial credencial =
+                resolveCredencial(usuario.getId(), company != null ? company.getId() : null)
+                        .orElseThrow(() -> new IllegalStateException("No se encontró la credencial a restablecer"));
+        if (!java.util.Objects.equals(credencial.getPassword(), solicitud.hashActual())) {
+            throw new ResourceNotFoundException("El token ya no es válido. Por favor solicite uno nuevo.");
+        }
+
+        credencial.setPassword(hashNuevo);
         credencial.setPasswordChanged(true);
         credencialRepository.save(credencial);
         sessionSecurityService.invalidateSessionsForCredential(credencial);
 
-        // Usuario y correo son alias de la misma credencial: ambos comparten un único
-        // bloqueo interno y la recuperación exitosa lo elimina.
         Integer credentialCompanyId = company != null ? company.getId() : null;
-        accountLockoutService.clearLockout(credentialCompanyId == null
-                ? AuthenticationAttemptKey.forPlatformAccount(usuario.getId())
-                : AuthenticationAttemptKey.forCompanyAccount(credentialCompanyId, usuario.getId()));
-
         passwordResetTokenRepository.delete(resetToken);
 
         auditLogService.log(
@@ -1448,9 +1475,14 @@ public class UsuarioServiceImpl implements veterinaria.vargasvet.service.Usuario
             "El usuario ha restablecido su contraseña exitosamente usando un token.",
             null
         );
+
+        // Usuario y correo son alias de la misma credencial: ambos comparten un único
+        // bloqueo interno y la recuperación exitosa lo elimina.
+        return credentialCompanyId == null
+                ? AuthenticationAttemptKey.forPlatformAccount(usuario.getId())
+                : AuthenticationAttemptKey.forCompanyAccount(credentialCompanyId, usuario.getId());
     }
 
-    @Override
     @Transactional(readOnly = true)
     public boolean validateResetToken(String token) {
         if (token == null || token.isBlank()) {

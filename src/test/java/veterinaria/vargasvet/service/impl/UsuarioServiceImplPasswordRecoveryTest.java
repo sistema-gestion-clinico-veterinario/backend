@@ -247,4 +247,78 @@ class UsuarioServiceImplPasswordRecoveryTest {
         verify(passwordResetTokenRepository, never()).delete(any(PasswordResetToken.class));
         verifyNoInteractions(accountLockoutService, sessionSecurityService);
     }
+
+    private boolean[] dentroDeLaTransaccion() {
+        boolean[] dentro = {false};
+        org.springframework.transaction.support.TransactionOperations operaciones =
+                new org.springframework.transaction.support.TransactionOperations() {
+                    @Override
+                    public <T> T execute(org.springframework.transaction.support.TransactionCallback<T> accion) {
+                        dentro[0] = true;
+                        try {
+                            return accion.doInTransaction(new org.springframework.transaction.support.SimpleTransactionStatus());
+                        } finally {
+                            dentro[0] = false;
+                        }
+                    }
+                };
+        ReflectionTestUtils.setField(service, "transacciones", operaciones);
+        return dentro;
+    }
+
+    @Test
+    void restablecerNoCalculaBcryptNiDesbloqueaMientrasRetieneLaConexionPeroSiBorraElTokenDentro() {
+        boolean[] dentro = dentroDeLaTransaccion();
+        List<String> dentroDeLaTransaccion = new java.util.ArrayList<>();
+        List<String> fueraDeLaTransaccion = new java.util.ArrayList<>();
+        Usuario usuario = usuario(true, true);
+        PasswordResetToken token = tokenGuardado(usuario, false);
+        when(passwordResetTokenRepository.findByTokenForUpdate(SecurityTokenUtils.hash("token-valido"))).thenReturn(Optional.of(token));
+        when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencial()));
+        when(passwordEncoder.matches("Nueva-Contrasena-123", "HASH_ACTUAL")).thenAnswer(i -> {
+            (dentro[0] ? dentroDeLaTransaccion : fueraDeLaTransaccion).add("matches");
+            return false;
+        });
+        when(passwordEncoder.encode("Nueva-Contrasena-123")).thenAnswer(i -> {
+            (dentro[0] ? dentroDeLaTransaccion : fueraDeLaTransaccion).add("encode");
+            return "HASH_NUEVO";
+        });
+        org.mockito.Mockito.doAnswer(i -> {
+            (dentro[0] ? dentroDeLaTransaccion : fueraDeLaTransaccion).add("desbloqueo");
+            return null;
+        }).when(accountLockoutService).clearLockout(anyString());
+        org.mockito.Mockito.doAnswer(i -> {
+            (dentro[0] ? dentroDeLaTransaccion : fueraDeLaTransaccion).add("borrar-token");
+            return null;
+        }).when(passwordResetTokenRepository).delete(any(PasswordResetToken.class));
+
+        service.resetPasswordWithToken(restablecimiento("token-valido", "Nueva-Contrasena-123"));
+
+        assertThat(fueraDeLaTransaccion).containsExactlyInAnyOrder("matches", "encode", "desbloqueo");
+        assertThat(dentroDeLaTransaccion).containsExactly("borrar-token");
+    }
+
+    @Test
+    void restablecerRechazaSiLaContrasenaCambioMientrasSeCalculabaElHash() {
+        dentroDeLaTransaccion();
+        Usuario usuario = usuario(true, true);
+        UsuarioEmpresaCredencial credencial = credencial();
+        PasswordResetToken token = tokenGuardado(usuario, false);
+        when(passwordResetTokenRepository.findByTokenForUpdate(SecurityTokenUtils.hash("token-valido"))).thenReturn(Optional.of(token));
+        when(credencialRepository.findByUsuarioIdAndCompanyId(10, 7)).thenReturn(Optional.of(credencial));
+        when(passwordEncoder.matches("Nueva-Contrasena-123", "HASH_ACTUAL")).thenAnswer(i -> {
+            credencial.setPassword("HASH_CAMBIADO_POR_OTRA_VIA");
+            return false;
+        });
+        when(passwordEncoder.encode("Nueva-Contrasena-123")).thenReturn("HASH_NUEVO");
+
+        assertThatThrownBy(() -> service.resetPasswordWithToken(restablecimiento("token-valido", "Nueva-Contrasena-123")))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("ya no es válido");
+
+        assertThat(credencial.getPassword()).isEqualTo("HASH_CAMBIADO_POR_OTRA_VIA");
+        verify(credencialRepository, never()).save(any());
+        verify(passwordResetTokenRepository, never()).delete(any(PasswordResetToken.class));
+        verifyNoInteractions(accountLockoutService, sessionSecurityService);
+    }
 }
