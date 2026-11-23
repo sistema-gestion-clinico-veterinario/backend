@@ -1,14 +1,14 @@
-name: "Evidencia visual en un navegador real y cierre de la caída de la base (laboratorio)"
+name: "Corte con peticiones en curso y espera de conexión (laboratorio)"
 
 on:
   push:
-    branches: [medicion/visual]
+    branches: [medicion/espera]
 
 permissions:
   contents: read
 
 concurrency:
-  group: medicion-visual
+  group: medicion-espera
   cancel-in-progress: false
 
 jobs:
