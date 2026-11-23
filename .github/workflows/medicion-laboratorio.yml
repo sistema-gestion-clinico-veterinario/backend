@@ -1,0 +1,87 @@
+name: "Calibración y humo del laboratorio (instrumentación)"
+
+on:
+  push:
+    branches: [medicion/laboratorio-auditoria]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: medicion-laboratorio
+  cancel-in-progress: false
+
+jobs:
+  calibracion:
+    name: Calibración de la instrumentación
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
+        with:
+          k6-version: "2.4.0"
+
+      - name: Pruebas unitarias de los scripts del laboratorio
+        run: |
+          python3 medicion/laboratorio/pruebas/prueba_laboratorio.py
+          bash medicion/laboratorio/pruebas/prueba_arnes.sh
+
+      - name: Calibrar topología, lector de la JVM, interferencia y generador
+        run: bash medicion/laboratorio/calibrar.sh
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: calibracion-laboratorio
+          path: resultados-laboratorio/
+          if-no-files-found: warn
+
+  humo:
+    name: Humo del arnés, perfil ${{ matrix.perfil }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      matrix:
+        perfil: [CAPACIDAD-2G, PRODUCCION-512M]
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el DESPUÉS (medicion/despues)
+        uses: actions/checkout@v4
+        with:
+          ref: medicion/despues
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
+        with:
+          k6-version: "2.4.0"
+
+      - name: Ejecutar un nivel corto con el perfil ${{ matrix.perfil }}
+        env:
+          PERFIL_LAB: ${{ matrix.perfil }}
+          VERSIONES: despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/laboratorio/PLAN_HUMO
+          ITER_POR_VU: "14"
+          K6_NUCLEOS: "0"
+        run: bash medicion/escritura/carga_escritura.sh
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: humo-laboratorio-${{ matrix.perfil }}
+          path: resultados/
+          if-no-files-found: warn

@@ -54,7 +54,7 @@ export const options = {
     },
   },
   noCookiesReset: true,
-  summaryTrendStats: ['avg', 'med', 'p(90)', 'p(95)', 'max'],
+  summaryTrendStats: ['avg', 'med', 'p(90)', 'p(95)', 'p(99)', 'max'],
 };
 
 let conSesion = false;
@@ -397,7 +397,7 @@ export function handleSummary(data) {
     iteraciones_completas: valor('iterations', 'count'),
     peticiones: valor('http_reqs', 'count'),
     duracion_total_s: data.state.testRunDurationMs / 1000,
-    latencia_ms: { mediana: valor('http_req_duration', 'med'), p95: valor('http_req_duration', 'p(95)'), max: valor('http_req_duration', 'max') },
+    latencia_ms: { mediana: valor('http_req_duration', 'med'), p95: valor('http_req_duration', 'p(95)'), p99: valor('http_req_duration', 'p(99)'), max: valor('http_req_duration', 'max') },
     estados: {
       '2xx': valor('estado_2xx', 'count') || 0,
       '401': valor('estado_401', 'count') || 0,
@@ -410,6 +410,8 @@ export function handleSummary(data) {
     acciones: Object.fromEntries(NOMBRES_ACCIONES.map((a) => [a, valor(`accion_${a}`, 'count') || 0])),
     acciones_sin_trabajo: valor('acciones_sin_trabajo', 'count') || 0,
     vus_maximos: valor('vus_max', 'max'),
+    vus_activos_max: valor('vus', 'max'),
+    iteraciones_descartadas: data.metrics.dropped_iterations ? data.metrics.dropped_iterations.values.count : null,
   };
   return { [SALIDA]: JSON.stringify(resumen, null, 1), stdout: JSON.stringify(resumen, null, 1) + '\n' };
 }

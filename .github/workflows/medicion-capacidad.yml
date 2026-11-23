@@ -3,6 +3,7 @@ name: "Capacidad del backend (laboratorio)"
 on:
   push:
     branches: [medicion/capacidad]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -34,7 +35,9 @@ jobs:
           path: .despues
 
       - name: Instalar k6
-        uses: grafana/setup-k6-action@v1
+        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
+        with:
+          k6-version: "2.4.0"
 
       - name: Ejecutar la escalera de carga
         run: bash medicion/capacidad/correr.sh

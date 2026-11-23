@@ -35,7 +35,7 @@ export const options = {
     jornada: { executor: 'per-vu-iterations', vus: VUS, iterations: ITER, maxDuration: '30m' },
   },
   noCookiesReset: true,
-  summaryTrendStats: ['avg', 'med', 'p(90)', 'p(95)', 'max'],
+  summaryTrendStats: ['avg', 'med', 'p(90)', 'p(95)', 'p(99)', 'max'],
 };
 
 let conSesion = false;
@@ -316,7 +316,7 @@ export function handleSummary(data) {
     jornadas_incompletas: valor('jornadas_incompletas', 'count') || 0,
     peticiones: valor('http_reqs', 'count'),
     duracion_total_s: data.state.testRunDurationMs / 1000,
-    latencia_ms: { mediana: valor('http_req_duration', 'med'), p95: valor('http_req_duration', 'p(95)'), max: valor('http_req_duration', 'max') },
+    latencia_ms: { mediana: valor('http_req_duration', 'med'), p95: valor('http_req_duration', 'p(95)'), p99: valor('http_req_duration', 'p(99)'), max: valor('http_req_duration', 'max') },
     pasos,
   };
   return { [SALIDA]: JSON.stringify(resumen, null, 1), stdout: JSON.stringify(resumen, null, 1) + '\n' };

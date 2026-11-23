@@ -24,7 +24,7 @@ for nivel in niveles:
     fallos = f"{est.get('sin_respuesta', 0)} / {est.get('5xx', 0)} / {est.get('otro_4xx', 0)}"
     registro = {
         'nivel': nivel, 'veredicto': c.n.veredicto(m).split(' (')[0], 'sin_degradacion': m['sano'], 'errores_pct': m['errores_pct'],
-        'rps': m['rps'], 'p95_ms': m['p95_ms'], 'mediana_ms': m['mediana_ms'], 'peticiones': m['peticiones'],
+        'rps': m['rps'], 'p95_ms': m['p95_ms'], 'p99_ms': m['p99_ms'], 'mediana_ms': m['mediana_ms'], 'peticiones': m['peticiones'],
         'cpu_media_pct_limite': d['cpu']['media'], 'cpu_tope_pct': d['cpu']['tope_pct'], 'cpu_pg_media': d['cpu_pg']['media'],
         'mem_pico_mb': d['mem_pico_mb'], 'heap_tras_gc_max_mb': jvm['heap_tras_gc_max_mb'], 'gc_pct': gc_pct, 'metaspace_pico_mb': pico_ms,
         'pool_agotado': d['log']['pool_conexiones'], 'oom_heap': d['log']['sin_memoria_java'], 'oom_metaspace': d['log']['oom_metaspace'],
@@ -34,7 +34,7 @@ for nivel in niveles:
     }
     datos.append(registro)
     filas.append(
-        f"| {nivel} | {registro['veredicto']} | {c.n.fmt(m['sano'])} | {c.n.fmt(m['errores_pct'], 1, ' %')} | {c.n.fmt(m['rps'], 1)} | {c.n.fmt(m['p95_ms'])} | "
+        f"| {nivel} | {registro['veredicto']} | {c.n.fmt(m['sano'])} | {c.n.fmt(m['errores_pct'], 1, ' %')} | {c.n.fmt(m['rps'], 1)} | {c.n.fmt(m['p95_ms'])} | {c.n.fmt(m['p99_ms'])} | "
         f"{c.n.fmt(d['cpu']['media'], 0)} / {c.n.fmt(d['cpu']['tope_pct'], 0)} | {c.n.fmt(d['cpu_pg']['media'], 0)} | {c.n.fmt(d['mem_pico_mb'])} | "
         f"{c.n.fmt(jvm['heap_tras_gc_max_mb'])} | {c.n.fmt(gc_pct, 0, ' %')} | {c.n.fmt(pico_ms)} | {d['log']['pool_conexiones']} | {fallos} | {ok} / {fallo} | {registro['datos']} |"
     )
@@ -45,8 +45,8 @@ heap = datos[0]['heap_max'] if datos else '?'
 lineas = [f'# Fase 3: escalado vertical, {limite_cpu} CPU, {limite_mem} GB, heap {heap}', '']
 lineas += c.lineas_entorno() + ['']
 lineas += [
-    '| Usuarios | Veredicto | Sin degradación hasta (usuarios) | Errores | Peticiones/s | p95 (ms) | CPU backend: media / al tope (% del límite) | CPU PostgreSQL media (%) | Memoria pico (MB) | Heap tras GC máx (MB) | Tiempo en GC | Metaspace pico (MB) | Avisos de pool agotado | Fallos: sin respuesta / 5xx / 4xx | Escrituras correctas / fallidas | Datos |',
-    '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|',
+    '| Usuarios | Veredicto | Sin degradación hasta (usuarios) | Errores | Peticiones/s | p95 (ms) | p99 (ms) | CPU backend: media / al tope (% del límite) | CPU PostgreSQL media (%) | Memoria pico (MB) | Heap tras GC máx (MB) | Tiempo en GC | Metaspace pico (MB) | Avisos de pool agotado | Fallos: sin respuesta / 5xx / 4xx | Escrituras correctas / fallidas | Datos |',
+    '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|',
 ] + filas + ['']
 lineas.append('> "Sin degradación hasta" = usuarios del último tramo de 15 s antes del primero con 1 % de errores o p95 de 2 s. Los 4xx del laboratorio son reglas de negocio (solo hay 10 veterinarios). Una corrida por nivel y por configuración.')
 (RAIZ / 'RESUMEN_FASE3.md').write_text('\n'.join(lineas) + '\n', encoding='utf-8')

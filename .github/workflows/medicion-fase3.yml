@@ -3,6 +3,19 @@ name: "Fase 3: escalado vertical (laboratorio)"
 on:
   push:
     branches: [medicion/fase3]
+  workflow_dispatch:
+    inputs:
+      umbral_generador_cpu_pct:
+        description: "Umbral experimental de saturación del generador k6 (% de su CPU)"
+        type: string
+        default: "80"
+      heap_en_vivo:
+        description: "Muestreo del heap de la JVM en vivo (1 = sí, 0 = no)"
+        type: choice
+        options:
+          - "1"
+          - "0"
+        default: "1"
 
 permissions:
   contents: write
@@ -48,7 +61,9 @@ jobs:
           path: .despues
 
       - name: Instalar k6
-        uses: grafana/setup-k6-action@v1
+        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
+        with:
+          k6-version: "2.4.0"
 
       - name: Ejecutar la escalera de carga
         env:

@@ -25,7 +25,7 @@ for nivel in niveles:
         datos.append({'nivel': nivel, 'variante': pref, **{k: v for k, v in valores.items()}, 'escrituras_ok': ok, 'escrituras_fallidas': fallo, 'datos': c.estado_datos(d)})
         filas.append(
             f"| {nivel} | {c.NOMBRES_MULTI.get(pref, pref)} | {c.n.veredicto(m).split(' (')[0]} | {valores['Errores (%)']} | {valores['Inicios de sesión con error (%)']} | {valores['Inicios de sesión: p95 (ms)']} | {valores['Ritmo medio (peticiones/s)']} | "
-            f"{valores['Tiempo p95 (ms)']} | {valores['Panel bajo carga: p95 (ms)']} | {valores['CPU total por 1.000 peticiones (s)']} | {valores['Tiempo en GC']} | "
+            f"{valores['Tiempo p95 (ms)']} | {valores['Tiempo p99 (ms)']} | {valores['Panel bajo carga: p95 (ms)']} | {valores['CPU total por 1.000 peticiones (s)']} | {valores['Tiempo en GC']} | "
             f"{valores['Planes lentos muestreados (>= 300 ms)']} / {valores['...de ellos con compilación JIT']} | {valores['Avisos de pool agotado']} | {ok} / {fallo} | {c.estado_datos(d)} |"
         )
 
@@ -33,8 +33,8 @@ TITULOS = {'3e': 'Fase 3e: configuración de PostgreSQL y heap', '3f': 'Fase 3f:
 lineas = [f"# {TITULOS.get(FASE, 'Fase ' + FASE)}", '']
 lineas += c.lineas_entorno() + ['']
 lineas += [
-    '| Usuarios | Variante | Veredicto | Errores | Login con error | Login p95 (ms) | Peticiones/s | p95 (ms) | Panel p95 (ms) | CPU total por 1.000 peticiones (s) | Tiempo en GC | Planes lentos / con JIT | Avisos de pool agotado | Escrituras correctas / fallidas | Datos |',
-    '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|',
+    '| Usuarios | Variante | Veredicto | Errores | Login con error | Login p95 (ms) | Peticiones/s | p95 (ms) | p99 (ms) | Panel p95 (ms) | CPU total por 1.000 peticiones (s) | Tiempo en GC | Planes lentos / con JIT | Avisos de pool agotado | Escrituras correctas / fallidas | Datos |',
+    '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|',
 ] + filas + ['']
 if FASE == '3f':
     lineas.append('> Cada corrida parte de la misma base de la plantilla, con la misma configuración; solo cambia la versión del código del inicio de sesión. Una corrida por variante y nivel; la comparación válida es dentro de cada trabajo (mismo equipo).')

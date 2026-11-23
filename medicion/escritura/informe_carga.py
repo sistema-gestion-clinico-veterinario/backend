@@ -10,10 +10,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'capacidad'))
 import informe_nivel as n  # noqa: E402
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'laboratorio'))
+import informe_laboratorio as lab  # noqa: E402
+
 RAIZ = NIV = LOGS = None
 NIVEL = 0
 
-TOPES_METASPACE_MB = {'D': 256, 'E': 128, 'F': 256, 'A': 128, 'B': 128, 'C': 128}
+TOPES_METASPACE_MB = {'D': 256, 'E': 128, 'F': 256, 'A': 128, 'B': 128, 'C': 128, 'P': 128}
 
 ORDEN_PASOS = ['apoderado', 'mascota', 'cita', 'checkin', 'iniciar', 'consulta', 'diagnostico', 'receta', 'actualizar_mascota',
                'cerrar_consulta', 'finalizar_servicio', 'punto_cobro', 'vincular_equipo', 'abrir_caja', 'pago', 'cancelar_cita']
@@ -303,7 +306,7 @@ def tabla_escrituras(d):
     k = (d['k6'] or {}).get('pasos', {})
     if not k:
         return []
-    filas = ['| Paso | Correctos | Fallidos | % de fallos | Mediana (ms) | p95 (ms) |', '|---|---|---|---|---|---|']
+    filas = ['| Paso | Correctos | Fallidos | % de fallos | Mediana (ms) | p95 (ms) | p99 (ms) |', '|---|---|---|---|---|---|---|']
     for p in ORDEN_PASOS:
         c, f = correctos(d, p), fallidos(d, p)
         if c + f == 0:
@@ -311,7 +314,8 @@ def tabla_escrituras(d):
         ep = d['endpoints'].get(p)
         mediana = n.fmt(statistics.median(ep['duraciones'])) if ep and ep['duraciones'] else '-'
         p95 = n.fmt(n.percentil(ep['duraciones'], 0.95)) if ep and ep['duraciones'] else '-'
-        filas.append(f"| {ETIQUETAS.get(p, p)} | {c} | {f} | {f / (c + f) * 100:.1f} % | {mediana} | {p95} |")
+        p99 = n.fmt(n.percentil(ep['duraciones'], 0.99)) if ep and ep['duraciones'] else '-'
+        filas.append(f"| {ETIQUETAS.get(p, p)} | {c} | {f} | {f / (c + f) * 100:.1f} % | {mediana} | {p95} | {p99} |")
     return filas
 
 
@@ -458,6 +462,8 @@ def valores_multi(d, m):
         ('Ritmo medio (peticiones/s)', n.fmt(m['rps'], 1)),
         ('Tiempo mediano (ms)', n.fmt(m['mediana_ms'])),
         ('Tiempo p95 (ms)', n.fmt(m['p95_ms'])),
+        ('Tiempo p99 (ms)', n.fmt(m['p99_ms'])),
+        (n.etiqueta_p99(), n.p99_dentro(m)),
         ('Usuarios sin degradación', n.fmt(m['sano'])),
         ('Peticiones sin respuesta (tiempo agotado)', n.fmt(m['estados'].get('sin_respuesta', 0))),
         ('Inicios de sesión (peticiones)', n.fmt(lg_n)),
@@ -525,12 +531,17 @@ def generar_multi():
     print('\n'.join(lineas))
 
 
+def generador_del_nivel(versiones):
+    umbral = float(os.environ.get('UMBRAL_GENERADOR_CPU_PCT') or lab.UMBRAL_DEFECTO)
+    return lab.lineas_generador_nivel(RAIZ, [f'{v}_{NIVEL}' for v in versiones], umbral)
+
+
 def lineas_entorno():
     salida = []
     entorno = RAIZ / 'entorno.txt'
     if entorno.exists():
         for linea in entorno.read_text(encoding='utf-8').splitlines():
-            if linea.startswith(('recursos del backend', 'pausa entre acciones', 'antes', 'despues', 'usadas en esta corrida', 'correo:', 'procesador', 'versiones medidas')):
+            if linea.startswith(('perfil del laboratorio', 'recursos del backend', 'pausa entre acciones', 'antes', 'despues', 'usadas en esta corrida', 'correo:', 'procesador', 'versiones medidas')):
                 salida.append(f'- {linea}')
     return salida
 
@@ -545,6 +556,7 @@ def generar():
     lineas = [f'# Fase 2b: carga con escrituras, {NIVEL} usuarios simultáneos (Metaspace {antes["jvm"]["tope_mb"]} MB, correo de pruebas)', '']
     lineas += lineas_entorno() + ['']
     lineas += etiquetar_tabla(n.tabla_resumen(ma, md, antes, despues)) + ['']
+    lineas += generador_del_nivel(['antes', 'despues'])
     lineas += bloque_version('ANTES', antes, ma)
     lineas += bloque_version('DESPUÉS', despues, md)
     lineas.append('> Todos los números salen de los archivos de la prueba (k6, estadísticas del contenedor, registros de la JVM y consultas a la base). Los usuarios hacen una acción cada ~15 s. Laboratorio con la base de datos en el mismo equipo: sirve para comparar, no es una promesa para producción.')
@@ -563,6 +575,8 @@ def tabla_una(d, m):
         ('Ritmo medio (peticiones/s)', n.fmt(m['rps'], 1)),
         ('Tiempo mediano (ms)', n.fmt(m['mediana_ms'])),
         ('Tiempo p95 (ms)', n.fmt(m['p95_ms'])),
+        ('Tiempo p99 (ms)', n.fmt(m['p99_ms'])),
+        (n.etiqueta_p99(), n.p99_dentro(m)),
         (f"CPU del backend, media (% del límite de {d['limite_cpu']} CPU)", n.fmt(d['cpu']['media'], 0)),
         ('Tiempo con la CPU al tope (%)', n.fmt(d['cpu']['tope_pct'], 0)),
         ('CPU de PostgreSQL, media (% de 1 núcleo)', n.fmt(d['cpu_pg']['media'], 0)),
@@ -578,6 +592,7 @@ def generar_una():
     m = n.metricas(d)
     lineas = [f'# Fase 3: {NIVEL} usuarios simultáneos, {d["limite_cpu"]} CPU, {d["limite_mem_mb"] // 1024} GB, heap {d["heap_max"]}', '']
     lineas += lineas_entorno() + [''] + tabla_una(d, m) + ['']
+    lineas += generador_del_nivel(['despues'])
     lineas += bloque_version('DESPUÉS', d, m)
     lineas.append('> Todos los números salen de los archivos de la prueba. Los usuarios hacen una acción cada ~15 s. Laboratorio con la base de datos en el mismo equipo: sirve para comparar, no es una promesa para producción.')
     (NIV / f'INFORME_CARGA_{NIVEL}.md').write_text('\n'.join(lineas) + '\n', encoding='utf-8')
@@ -700,6 +715,8 @@ def tabla_xms(a, b, ma, mb, nombre_a='SIN -Xms', nombre_b='CON -Xms = -Xmx', con
         ('Ritmo medio (peticiones/s)', n.fmt(ma['rps'], 1), n.fmt(mb['rps'], 1)),
         ('Tiempo mediano (ms)', n.fmt(ma['mediana_ms']), n.fmt(mb['mediana_ms'])),
         ('Tiempo p95 (ms)', n.fmt(ma['p95_ms']), n.fmt(mb['p95_ms'])),
+        ('Tiempo p99 (ms)', n.fmt(ma['p99_ms']), n.fmt(mb['p99_ms'])),
+        (n.etiqueta_p99(), n.p99_dentro(ma), n.p99_dentro(mb)),
         ('Usuarios sin degradación', n.fmt(ma['sano']), n.fmt(mb['sano'])),
         ('CPU del backend, media (% del límite)', n.fmt(a['cpu']['media'], 0), n.fmt(b['cpu']['media'], 0)),
         ('CPU de PostgreSQL, media (% de 1 núcleo)', n.fmt(a['cpu_pg']['media'], 0), n.fmt(b['cpu_pg']['media'], 0)),

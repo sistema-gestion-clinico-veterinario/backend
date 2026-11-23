@@ -33,9 +33,31 @@ PUERTO=18080
 SLUG="clinica-medicion"
 USUARIO="medicion"
 CLAVE="$(openssl rand -hex 12)"
+LAB_DIR="$RAIZ/medicion/laboratorio"
+. "$LAB_DIR/imagenes.env"
+entrada_evento() { [ -n "${GITHUB_EVENT_PATH:-}" ] && [ -f "$GITHUB_EVENT_PATH" ] && jq -r --arg k "$1" '.inputs[$k] // empty' "$GITHUB_EVENT_PATH" 2> /dev/null; true; }
+PERFIL_LAB="${PERFIL_LAB:-$(entrada_evento perfil)}"
+PERFIL_LAB="${PERFIL_LAB:-CAPACIDAD-2G}"
+UMBRAL_GENERADOR_CPU_PCT="${UMBRAL_GENERADOR_CPU_PCT:-$(entrada_evento umbral_generador_cpu_pct)}"
+UMBRAL_GENERADOR_CPU_PCT="${UMBRAL_GENERADOR_CPU_PCT:-80}"
+HEAP_EN_VIVO="${HEAP_EN_VIVO:-$(entrada_evento heap_en_vivo)}"
+HEAP_EN_VIVO="${HEAP_EN_VIVO:-1}"
+HEAP_PERIODO_S="${HEAP_PERIODO_S:-5}"
+GENERADOR_PERIODO_S="${GENERADOR_PERIODO_S:-2}"
+export UMBRAL_GENERADOR_CPU_PCT
+CFG_NIVEL=D
+CFG_CONTROL=E
+CPUS_PREP="$CPUS"
+MEM_PREP="$MEMORIA"
+PERFIL_EFECTIVO="$PERFIL_LAB"
 
 BASE_JVM="-XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m"
 OBSERVACION_JVM="-Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false"
+flags_de() {
+  local f="$1/Dockerfile"
+  [ -f "$f" ] || return 1
+  tr -d '\r' < "$f" | sed -n 's/^ENV JAVA_OPTS="\(.*\)"[[:space:]]*$/\1/p' | head -1
+}
 opciones_jvm() {
   case "$1" in
     A) JAVA_OPTS_LAB="-Xmx192m $BASE_JVM -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m" ;;
@@ -45,7 +67,9 @@ opciones_jvm() {
     E) JAVA_OPTS_LAB="-Xmx1g $BASE_JVM -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
     F) JAVA_OPTS_LAB="-Xms$XMX -Xmx$XMX -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
     G) JAVA_OPTS_LAB="-Xms${XMX_G:-1280m} -Xmx${XMX_G:-1280m} -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m $OBSERVACION_JVM" ;;
-    *) echo "configuración desconocida: '$1' (usa A, B, C, D, E, F o G)"; exit 1 ;;
+    P) JAVA_OPTS_LAB="$(flags_de "$DESPUES_DIR") $OBSERVACION_JVM"
+       case "$JAVA_OPTS_LAB" in " "*) echo "no se pudo leer ENV JAVA_OPTS de $DESPUES_DIR/Dockerfile"; exit 1 ;; esac ;;
+    *) echo "configuración desconocida: '$1' (usa A, B, C, D, E, F, G o P)"; exit 1 ;;
   esac
 }
 opciones_jvm "$CONFIG"
@@ -53,16 +77,45 @@ opciones_jvm "$CONFIG"
 NUCLEOS="$(nproc)"
 if [ "$NUCLEOS" -ge 4 ]; then
   PIN_PG="--cpuset-cpus 2"
-  if [ "$CPUS" -ge 2 ]; then PIN_BACK="--cpuset-cpus 1,3"; else PIN_BACK="--cpuset-cpus 1"; fi
+  if awk -v c="$CPUS" 'BEGIN { exit !(c >= 2) }'; then PIN_BACK="--cpuset-cpus 1,3"; else PIN_BACK="--cpuset-cpus 1"; fi
   PIN_K6="taskset -c $K6_NUCLEOS"
 else
   PIN_PG=""
   PIN_BACK=""
   PIN_K6=""
 fi
+PIN_MON=""
+if [ "$NUCLEOS" -ge 4 ] && [ "$PIN_BACK" = "--cpuset-cpus 1" ]; then
+  case ",$K6_NUCLEOS," in *,3,*) ;; *) PIN_MON="taskset -c 3" ;; esac
+fi
 
 log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "$SAL/logs/orquestador.log"; }
 fallo() { log "FALLO: $*"; exit 1; }
+a_mb() { case "$1" in *g) echo $(( ${1%g} * 1024 )) ;; *m) echo "${1%m}" ;; *) echo "$1" ;; esac; }
+aplicar_perfil() {
+  case "$PERFIL_LAB" in
+    CAPACIDAD-2G)
+      if [ "$MEMORIA" != 2g ] || [ "$CPUS" != 1 ] || [ "$XMX" != 1g ]; then PERFIL_EFECTIVO="CAPACIDAD-2G con parámetros distintos del perfil base (CPU $CPUS, memoria $MEMORIA, heap $XMX)"; fi ;;
+    PRODUCCION-512M)
+      MEMORIA=512m; XMX=192m; CFG_NIVEL=P; CFG_CONTROL=P; CPUS_PREP=1; MEM_PREP=2g
+      PERFIL_EFECTIVO="PRODUCCION-512M"
+      [ "$CPUS" = 1 ] || PERFIL_EFECTIVO="PRODUCCION-512M (CPU $CPUS, la de Render es una fracción no verificada)"
+      [ -n "$(flags_de "$DESPUES_DIR")" ] || fallo "el perfil PRODUCCION-512M necesita ENV JAVA_OPTS en $DESPUES_DIR/Dockerfile"
+      [ -z "${VARIANTES:-}" ] || fallo "el perfil PRODUCCION-512M no se combina con VARIANTES: cada variante define su propia JVM"
+      [ "${MODO_SEGURIDAD:-0}" = 0 ] && [ -z "${ESCENARIO_VISUAL:-}" ] && [ "${MODO_CORTE:-0}" = 0 ] \
+        || fallo "el perfil PRODUCCION-512M solo aplica a los niveles de carga, no a las pruebas de seguridad, visuales ni de corte" ;;
+    *) fallo "perfil desconocido: '$PERFIL_LAB' (usa CAPACIDAD-2G o PRODUCCION-512M)" ;;
+  esac
+  case "$UMBRAL_GENERADOR_CPU_PCT" in ''|*[!0-9.]*) fallo "umbral del generador no numérico: '$UMBRAL_GENERADOR_CPU_PCT'" ;; esac
+  case "$HEAP_EN_VIVO" in 0|1) ;; *) fallo "HEAP_EN_VIVO debe ser 0 o 1" ;; esac
+}
+verificar_k6() {
+  local version; version="$(k6 version | head -1)"
+  case "$version" in
+    "k6 v$K6_VERSION "*|"k6.exe v$K6_VERSION "*) ;;
+    *) [ "${K6_VERSION_LIBRE:-0}" = 1 ] || fallo "k6 no es la versión fijada $K6_VERSION: $version (K6_VERSION_LIBRE=1 lo permite)" ;;
+  esac
+}
 dir_de() { if [ "$1" = "antes" ]; then echo "$ANTES_DIR"; else echo "$DESPUES_DIR"; fi; }
 psql_db() { local db="$1"; shift; docker exec -i sv-pg psql -U postgres -d "$db" -v ON_ERROR_STOP=1 -q "$@"; }
 
@@ -75,8 +128,20 @@ registrar_entorno() {
     echo "versiones medidas: $VERSIONES; heap máximo: $XMX; núcleos de k6: $K6_NUCLEOS; reservas de horario por usuario: $ITER_POR_VU"
     free -m | sed -n 2p | awk '{print "memoria total del equipo (MB): "$2}'
     echo "recursos del backend: $CPUS CPU, $MEMORIA de RAM"
+    echo "perfil del laboratorio: $PERFIL_EFECTIVO (memoria $MEMORIA, CPU $CPUS, heap máximo $XMX; configuración de la JVM en los niveles: $CFG_NIVEL, en el control: $CFG_CONTROL)"
+    echo "umbral del generador: $UMBRAL_GENERADOR_CPU_PCT % de la CPU de k6 (criterio experimental, configurable)"
+    echo "heap en vivo: $([ "$HEAP_EN_VIVO" = 1 ] && echo "sí, cada $HEAP_PERIODO_S s (contadores hsperfdata y cgroup)" || echo no)"
+    echo "runner: ${ImageOS:-desconocido} ${ImageVersion:-desconocida}"
+    echo "kernel: $(uname -r)"
     echo "configuraciones de la JVM:"
     for c in C D E F G; do opciones_jvm "$c"; echo "  $c -> $JAVA_OPTS_LAB"; done
+    if [ -n "$(flags_de "$DESPUES_DIR")" ]; then
+      opciones_jvm P; echo "  P -> $JAVA_OPTS_LAB"
+      echo "  (P = ENV JAVA_OPTS del Dockerfile de producción de DESPUÉS, $(git -C "$DESPUES_DIR" rev-parse --short HEAD 2>/dev/null || echo sin git), más las opciones de observación del arnés: registro de GC y propiedades del correo de pruebas)"
+      [ ! -f "$ANTES_DIR/Dockerfile" ] || [ "$(flags_de "$ANTES_DIR")" = "$(flags_de "$DESPUES_DIR")" ] || echo "  AVISO: el Dockerfile de ANTES tiene JAVA_OPTS distintos al de DESPUÉS"
+    else
+      echo "  P -> no disponible (DESPUÉS no tiene Dockerfile con ENV JAVA_OPTS)"
+    fi
     echo "usadas en esta corrida: D (Metaspace 256 MB) para la escalera; E (Metaspace 128 MB, igual que el Dockerfile) para el control"
     echo "correo: servidor SMTP de pruebas en el contenedor sv-correo (sin TLS ni autenticación; los envíos terminan bien)"
     opciones_jvm D
@@ -94,13 +159,95 @@ registrar_entorno() {
   cat "$SAL/entorno.txt" | tee -a "$SAL/logs/orquestador.log"
 }
 
+fijar_dockerfile() {
+  awk -v build="$IMG_MAVEN" -v ejecucion="$IMG_JRE" '
+    /^FROM maven:3\.9\.6-eclipse-temurin-21-alpine AS build[[:space:]\r]*$/ { print "FROM " build " AS build"; n++; next }
+    /^FROM eclipse-temurin:21-jre-alpine[[:space:]\r]*$/ { print "FROM " ejecucion; n++; next }
+    { print }
+    END { if (n != 2) exit 3 }' "$DESPUES_DIR/Dockerfile.measurement" > "$SAL/Dockerfile.fijado"
+  if [ $? -ne 0 ]; then
+    [ "${BASES_ESTRICTAS:-0}" = 1 ] && fallo "Dockerfile.measurement no tiene las dos líneas FROM esperadas: no se pueden fijar las bases por digest"
+    cp "$DESPUES_DIR/Dockerfile.measurement" "$SAL/Dockerfile.fijado"
+    BASES_FIJADAS=no
+    log "AVISO: Dockerfile.measurement no tiene las dos líneas FROM esperadas; las bases NO quedan fijadas por digest en esta corrida"
+  fi
+}
+
+descargar_imagen() {
+  local ref="$1" intento
+  for intento in 1 2 3; do
+    docker pull -q "$ref" > /dev/null 2>&1 && return 0
+    sleep $((intento * 10))
+  done
+  fallo "no se pudo descargar $ref"
+}
+
+registrar_imagenes() {
+  local ref digest repo_digests
+  {
+    echo "imágenes fijadas por digest (referencia; id local):"
+    for ref in "$IMG_POSTGRES" "$IMG_PYTHON" "$IMG_MAVEN" "$IMG_JRE"; do
+      descargar_imagen "$ref"
+      digest="${ref#*@}"
+      repo_digests="$(docker image inspect "$ref" --format '{{join .RepoDigests ","}}')"
+      case "$repo_digests" in
+        *"$digest"*) echo "  imagen: $ref (id $(docker image inspect "$ref" --format '{{.Id}}'); digest verificado por Docker al descargar)" ;;
+        *) echo "  imagen: $ref NO COINCIDE con los digests locales: $repo_digests"; fallo "el digest de $ref no coincide" ;;
+      esac
+    done
+    echo "  bases del Dockerfile.measurement fijadas por digest: ${BASES_FIJADAS:-sí}"
+    echo "  Dockerfile.measurement usado: $SAL/Dockerfile.fijado (sha256 $(sha256sum "$SAL/Dockerfile.fijado" | cut -d' ' -f1))"
+    echo "  k6 fijado: $K6_VERSION"
+  } >> "$SAL/entorno.txt"
+}
+
+registrar_herramientas_java() {
+  docker run --rm --entrypoint sh "$IMG_JRE" -c 'java -version 2>&1; for t in java jcmd jstat jfr jps; do if command -v $t > /dev/null 2>&1; then echo "$t: sí"; else echo "$t: no"; fi; done' > "$SAL/herramientas_java_jre.txt" 2>&1 || true
+  {
+    echo "imagen de ejecución (JRE): $IMG_JRE"
+    sed 's/^/  /' "$SAL/herramientas_java_jre.txt"
+    echo "  el heap en vivo se lee de los contadores de la JVM (/tmp/hsperfdata_*/1) con cat dentro del contenedor, sin jstat ni jcmd"
+  } >> "$SAL/entorno.txt"
+}
+
+registrar_topologia() {
+  {
+    echo "### lscpu -e"
+    lscpu -e=CPU,CORE,SOCKET,NODE,ONLINE,MAXMHZ 2>&1 || lscpu -e 2>&1
+    echo
+    echo "### lscpu (resumen)"
+    lscpu | grep -E 'Model name|Thread|Core|Socket|Hypervisor|Virtualization|L1d|L2|L3' 2>&1
+    echo
+    echo "### afinidad del arnés: $(taskset -cp $$ 2>&1)"
+    echo "### cpuset del cgroup del arnés: $(cat /sys/fs/cgroup/cpuset.cpus.effective 2>/dev/null || echo no disponible)"
+    echo "### fijado de CPU solicitado: PG='$PIN_PG' backend='$PIN_BACK' k6='$PIN_K6' muestreadores='$PIN_MON'"
+  } > "$SAL/topologia_lscpu.txt"
+  python3 "$LAB_DIR/topologia.py" --pg "${PIN_PG#--cpuset-cpus}" --backend "${PIN_BACK#--cpuset-cpus}" \
+    --k6 "$([ -n "$PIN_K6" ] && echo "$K6_NUCLEOS")" --mon "${PIN_MON#taskset -c}" --json "$SAL/topologia.json" > "$SAL/topologia.md" 2> "$SAL/logs/topologia.log" \
+    || log "no se pudo generar la topología (ver logs/topologia.log)"
+  cat "$SAL/topologia_lscpu.txt" "$SAL/topologia.md" >> "$SAL/logs/orquestador.log" 2> /dev/null
+}
+
+registrar_afinidad() {
+  local v="$1" etiqueta="$2"
+  {
+    echo "backend sv-$v: $(docker inspect "sv-$v" --format 'cpuset={{.HostConfig.CpusetCpus}} nanocpus={{.HostConfig.NanoCpus}} memoria={{.HostConfig.Memory}} swap={{.HostConfig.MemorySwap}}')"
+    echo "backend, cpuset.cpus.effective: $(docker exec "sv-$v" cat /sys/fs/cgroup/cpuset.cpus.effective 2>/dev/null || echo no disponible)"
+    echo "backend, cpu.max: $(docker exec "sv-$v" cat /sys/fs/cgroup/cpu.max 2>/dev/null || echo no disponible)"
+    echo "backend, memory.max: $(docker exec "sv-$v" cat /sys/fs/cgroup/memory.max 2>/dev/null || echo no disponible)"
+    echo "backend, nproc dentro del contenedor: $(docker exec "sv-$v" nproc 2>/dev/null || echo no disponible)"
+    echo "postgres sv-pg: $(docker inspect sv-pg --format 'cpuset={{.HostConfig.CpusetCpus}} nanocpus={{.HostConfig.NanoCpus}} memoria={{.HostConfig.Memory}}')"
+    echo "postgres, cpuset.cpus.effective: $(docker exec sv-pg cat /sys/fs/cgroup/cpuset.cpus.effective 2>/dev/null || echo no disponible)"
+  } > "$SAL/niveles/afinidad_${etiqueta}.txt" 2>&1
+}
+
 construir_imagenes() {
   for v in $VERSIONES; do
     local d; d="$(dir_de "$v")"
     log "construyendo la imagen $v desde $(git -C "$d" rev-parse --short HEAD)"
     local intento construida=0
     for intento in 1 2 3 4; do
-      if docker build -f "$DESPUES_DIR/Dockerfile.measurement" -t "sv-backend:$v" "$d" > "$SAL/logs/build_$v.log" 2>&1; then construida=1; break; fi
+      if docker build -f "$SAL/Dockerfile.fijado" -t "sv-backend:$v" "$d" > "$SAL/logs/build_$v.log" 2>&1; then construida=1; break; fi
       log "la construcción de $v falló (intento $intento de 4); espera de $((intento * 60)) s antes de reintentar"
       sleep $((intento * 60))
     done
@@ -114,7 +261,7 @@ construir_imagenes() {
 levantar_postgres() {
   log "levantando PostgreSQL"
   docker network create sv-net > /dev/null
-  docker run -d --name sv-pg --network sv-net $PIN_PG --memory 2g -e POSTGRES_PASSWORD="$PGPASS" postgres:16 \
+  docker run -d --name sv-pg --network sv-net $PIN_PG --memory 2g -e POSTGRES_PASSWORD="$PGPASS" "$IMG_POSTGRES" \
     -c shared_preload_libraries=pg_stat_statements,auto_explain -c pg_stat_statements.track=all -c max_connections=100 \
     -c auto_explain.log_min_duration=300 -c auto_explain.log_analyze=on -c auto_explain.log_buffers=on -c auto_explain.sample_rate=0.1 ${PG_SHARED_BUFFERS:+-c shared_buffers=$PG_SHARED_BUFFERS} > /dev/null
   for i in $(seq 1 60); do
@@ -129,7 +276,7 @@ levantar_postgres() {
 
 levantar_correo() {
   log "levantando el servidor SMTP de pruebas"
-  docker run -d --name sv-correo --network sv-net -v "$RAIZ/medicion/escritura/sumidero_smtp.py:/sumidero.py:ro" python:3.12-alpine python -u /sumidero.py > /dev/null \
+  docker run -d --name sv-correo --network sv-net -v "$RAIZ/medicion/escritura/sumidero_smtp.py:/sumidero.py:ro" "$IMG_PYTHON" python -u /sumidero.py > /dev/null \
     || fallo "no se pudo levantar el servidor SMTP de pruebas"
   for i in $(seq 1 30); do
     docker logs sv-correo 2>&1 | grep -q '^LISTO' && break
@@ -311,7 +458,7 @@ preparar_clinica() {
     psql_db "$v" -v slug="$SLUG" -v clave="$CLAVE" -v desde=2 -v hasta="$TOTAL_CUENTAS" < "$RAIZ/medicion/escritura/provisionar_cuentas.sql" > "$SAL/logs/cuentas_$v.log" 2>&1 \
       || { tail -30 "$SAL/logs/cuentas_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "las cuentas de medición en $v fallaron"; }
   fi
-  iniciar_backend "$v" none "$CPUS" "$MEMORIA" "$PIN_BACK"
+  iniciar_backend "$v" none "$CPUS_PREP" "$MEM_PREP" "$PIN_BACK"
   esperar_inicializacion "$v"
   publicar_aviso "$v"
   detener_backend "$v" "preparacion_$v"
@@ -437,8 +584,8 @@ caos_en_segundo_plano() {
 }
 
 correr_nivel_escritura() {
-  local v="$1" nivel="$2" rampa="$3" mantener="$4" base_u="$5" base_cuenta="$6" config="${7:-D}" prefijo="${8:-$1}" prep="${9:-}" envx="${10:-}" inicio_iso
-  local etiqueta="${prefijo}_${nivel}" etq_caja="$nivel" t0 salud ids codigo cpu0 cpu1 muestreador muestreador_pg correos0 correos1
+  local v="$1" nivel="$2" rampa="$3" mantener="$4" base_u="$5" base_cuenta="$6" config="${7:-$CFG_NIVEL}" prefijo="${8:-$1}" prep="${9:-}" envx="${10:-}" inicio_iso
+  local etiqueta="${prefijo}_${nivel}" etq_caja="$nivel" t0 salud ids codigo cpu0 cpu1 muestreador muestreador_pg muestreador_gen muestreador_jvm correos0 correos1
   [ "$prefijo" != "$v" ] && etq_caja="${prefijo}-${nivel}"
   opciones_jvm "$config"
   ENV_EXTRA_BACKEND="$envx"
@@ -447,6 +594,7 @@ correr_nivel_escritura() {
   log "[$v] nivel $nivel (config $config, $etiqueta): arrancando el backend ($CPUS CPU, $MEMORIA)"
   iniciar_backend "$v" none "$CPUS" "$MEMORIA" "$PIN_BACK"
   esperar_inicializacion "$v"
+  registrar_afinidad "$v" "$etiqueta"
   salud="$(esperar_salud)"
   sleep 3
   ids="$(armar_ids "$v")"
@@ -461,6 +609,13 @@ correr_nivel_escritura() {
   muestreador=$!
   muestrear "sv-pg" "$SAL/niveles/stats_pg_${etiqueta}.csv" &
   muestreador_pg=$!
+  $PIN_MON python3 "$LAB_DIR/muestreo_generador.py" "$SAL/niveles/generador_${etiqueta}.csv" --periodo "$GENERADOR_PERIODO_S" &
+  muestreador_gen=$!
+  muestreador_jvm=""
+  if [ "$HEAP_EN_VIVO" = 1 ]; then
+    $PIN_MON python3 "$LAB_DIR/muestreo_jvm.py" "$SAL/niveles/jvm_vivo_${etiqueta}.csv" --contenedor "sv-$v" --periodo "$HEAP_PERIODO_S" &
+    muestreador_jvm=$!
+  fi
   t0="$(date +%s)"
   inicio_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   log "[$v] nivel $nivel: k6 con hasta $nivel usuarios (subida $rampa, sostenido $mantener)"
@@ -479,7 +634,7 @@ correr_nivel_escritura() {
     "$RAIZ/medicion/escritura/carga_escrituras.js" > "$SAL/logs/k6_${etiqueta}.log" 2>&1
   codigo=$?
   [ -n "$pid_caos" ] && wait "$pid_caos"
-  kill "$muestreador" "$muestreador_pg" 2> /dev/null; wait "$muestreador" "$muestreador_pg" 2> /dev/null
+  kill "$muestreador" "$muestreador_pg" $muestreador_gen $muestreador_jvm 2> /dev/null; wait "$muestreador" "$muestreador_pg" $muestreador_gen $muestreador_jvm 2> /dev/null
   local duracion=$(( $(date +%s) - t0 ))
   cpu1="$(cpu_us "$v")"; cpu1="${cpu1:-0}"
   correos1="$(correos_recibidos)"
@@ -496,8 +651,8 @@ correr_nivel_escritura() {
     --argjson cpu_s "$(( (cpu1 - cpu0) / 1000000 ))" --arg oom "$oom" --argjson reinicios "${reinicios:-0}" \
     --arg corriendo "$corriendo" --argjson salida "${codigo_salida:--1}" --arg salud "$salud_final" \
     --arg sql "$sql" --argjson k6_codigo "$codigo" --arg config "$config" --argjson correos "$(( correos1 - correos0 ))" \
-    --arg heap_max "$XMX" --argjson cpus_limite "$CPUS" --argjson memoria_limite_mb "$(( ${MEMORIA%g} * 1024 ))" \
-    '{version:$version, nivel:$nivel, config_jvm:$config, correos_recibidos:$correos, heap_max:$heap_max, cpus_limite:$cpus_limite, memoria_limite_mb:$memoria_limite_mb, perfil:"carga_escritura", duracion_s:$duracion, cpu_contenedor_s:$cpu_s, oom_killed:($oom=="true"),
+    --arg heap_max "$XMX" --arg perfil "$PERFIL_EFECTIVO" --argjson cpus_limite "$CPUS" --argjson memoria_limite_mb "$(a_mb "$MEMORIA")" \
+    '{version:$version, perfil_lab:$perfil, nivel:$nivel, config_jvm:$config, correos_recibidos:$correos, heap_max:$heap_max, cpus_limite:$cpus_limite, memoria_limite_mb:$memoria_limite_mb, perfil:"carga_escritura", duracion_s:$duracion, cpu_contenedor_s:$cpu_s, oom_killed:($oom=="true"),
       reinicios:$reinicios, sigue_corriendo:($corriendo=="true"), codigo_salida:$salida, salud_final_http:$salud,
       k6_codigo_salida:$k6_codigo, sql_sentencias:(($sql|split("|")[0])|tonumber), sql_tiempo_s:(($sql|split("|")[1])|tonumber)}' \
     > "$SAL/niveles/estado_${etiqueta}.json" || log "no se pudo escribir el estado de $etiqueta"
@@ -542,7 +697,13 @@ while read -r campo1 campo2 campo3 _; do
 done < "$PLAN_CARGA"
 [ "$RESET_BASE" = 1 ] && TOTAL_CUENTAS=$((1 + CONTROL_USUARIOS + maximo_nivel))
 
+aplicar_perfil
+verificar_k6
 registrar_entorno
+registrar_topologia
+fijar_dockerfile
+registrar_imagenes
+registrar_herramientas_java
 construir_imagenes
 levantar_postgres
 levantar_correo
@@ -600,7 +761,7 @@ for v in $VERSIONES; do preparar_clinica "$v"; done
 
 if [ "$SIN_CONTROL" != 1 ]; then
   log "control: $CONTROL_USUARIOS usuarios con Metaspace de 128 MB (igual que el Dockerfile) y el servidor de correo de pruebas"
-  correr_nivel_escritura despues "$CONTROL_USUARIOS" 30s 150s 0 1 E ctrl128
+  correr_nivel_escritura despues "$CONTROL_USUARIOS" 30s 150s 0 1 "$CFG_CONTROL" ctrl128
   python3 "$RAIZ/medicion/escritura/informe_carga.py" "$SAL" "$CONTROL_USUARIOS" control > "$SAL/logs/informe_control.log" 2>&1 \
     && cat "$SAL/niveles/INFORME_CONTROL_128.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
     || log "no se pudo generar el informe del control (ver logs/informe_control.log)"
@@ -647,4 +808,7 @@ else
     && cat "$SAL/RESUMEN_FASE2B.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
     || log "no se pudo generar el resumen global (ver logs/resumen_carga.log)"
 fi
+python3 "$LAB_DIR/informe_laboratorio.py" "$SAL" > "$SAL/logs/informe_laboratorio.log" 2>&1 \
+  && cat "$SAL/SALUD_LABORATORIO.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
+  || log "no se pudo generar el informe de salud del laboratorio (ver logs/informe_laboratorio.log)"
 log "terminado"

@@ -1,6 +1,7 @@
 import csv
 import gzip
 import json
+import os
 import re
 import statistics
 import sys
@@ -23,6 +24,7 @@ def configurar(raiz, nivel, cfg):
 
 LIMITE_MEM_MB = 2048
 UMBRAL_TOPE_CPU = 95
+UMBRAL_P99_MS = float(os.environ.get('UMBRAL_P99_MS') or 5000)
 
 
 def leer_json(ruta):
@@ -36,6 +38,16 @@ def fmt(valor, decimales=0, sufijo=''):
     if valor is None:
         return 'sin datos'
     return f'{valor:,.{decimales}f}{sufijo}'.replace(',', ' ')
+
+
+def p99_dentro(m):
+    if m.get('p99_ms') is None:
+        return 'sin datos'
+    return 'sí' if m['p99_ms'] < UMBRAL_P99_MS else 'no'
+
+
+def etiqueta_p99():
+    return f'p99 menor a {UMBRAL_P99_MS:.0f} ms (criterio experimental)'
 
 
 def percentil(valores, p):
@@ -139,6 +151,7 @@ def leer_k6_csv(ruta):
             'desde_s': max(0, cubo - (inicio or cubo)),
             'peticiones': total,
             'p95_ms': percentil(c['duraciones'], 0.95),
+            'p99_ms': percentil(c['duraciones'], 0.99),
             'errores_pct': (c['fallos'] / total * 100) if total else 0,
             'usuarios': usuarios.get(cubo),
         })
@@ -193,6 +206,7 @@ def metricas(datos):
         'errores_pct': (errores / peticiones * 100) if peticiones else None,
         'rps': (peticiones / duracion) if duracion else None,
         'p95_ms': (k6.get('latencia_ms') or {}).get('p95'),
+        'p99_ms': (k6.get('latencia_ms') or {}).get('p99'),
         'mediana_ms': (k6.get('latencia_ms') or {}).get('mediana'),
         'estados': est,
         'sano': usuarios_sanos(datos['tramos']),
@@ -287,6 +301,8 @@ def tabla_resumen(m1, m2, d1, d2):
         ('Ritmo medio (peticiones/s)', fmt(m1['rps'], 1), fmt(m2['rps'], 1)),
         ('Tiempo mediano (ms)', fmt(m1['mediana_ms']), fmt(m2['mediana_ms'])),
         ('Tiempo p95 (ms)', fmt(m1['p95_ms']), fmt(m2['p95_ms'])),
+        ('Tiempo p99 (ms)', fmt(m1['p99_ms']), fmt(m2['p99_ms'])),
+        (etiqueta_p99(), p99_dentro(m1), p99_dentro(m2)),
         ('CPU del backend, media (%)', fmt(d1['cpu']['media'], 0), fmt(d2['cpu']['media'], 0)),
         ('Tiempo con la CPU al tope (%)', fmt(d1['cpu']['tope_pct'], 0), fmt(d2['cpu']['tope_pct'], 0)),
         ('CPU de PostgreSQL, media (%)', fmt(d1['cpu_pg']['media'], 0), fmt(d2['cpu_pg']['media'], 0)),
@@ -304,13 +320,13 @@ def tabla_endpoints(datos):
     if not eps:
         return []
     total = sum(sum(e['duraciones']) for e in eps.values()) or 1
-    filas = ['| Endpoint | Peticiones | Errores | Mediana (ms) | p95 (ms) | % del tiempo total |', '|---|---|---|---|---|---|']
+    filas = ['| Endpoint | Peticiones | Errores | Mediana (ms) | p95 (ms) | p99 (ms) | % del tiempo total |', '|---|---|---|---|---|---|---|']
     ordenados = sorted(eps.items(), key=lambda kv: sum(kv[1]['duraciones']), reverse=True)[:12]
     for nombre, e in ordenados:
         errores = f"{e['errores']} ({e['errores'] / e['n'] * 100:.0f} %)" if e['n'] else '0'
         filas.append(
             f"| {nombre} | {e['n']} | {errores} | {fmt(statistics.median(e['duraciones']))} | "
-            f"{fmt(percentil(e['duraciones'], 0.95))} | {sum(e['duraciones']) / total * 100:.0f} % |"
+            f"{fmt(percentil(e['duraciones'], 0.95))} | {fmt(percentil(e['duraciones'], 0.99))} | {sum(e['duraciones']) / total * 100:.0f} % |"
         )
     return filas
 
@@ -318,11 +334,11 @@ def tabla_endpoints(datos):
 def linea_tiempo_md(datos):
     if not datos['tramos']:
         return []
-    filas = ['| Minuto | Usuarios | Peticiones (15 s) | p95 (ms) | Errores |', '|---|---|---|---|---|']
+    filas = ['| Minuto | Usuarios | Peticiones (15 s) | p95 (ms) | p99 (ms) | Errores |', '|---|---|---|---|---|---|']
     pasos = max(1, len(datos['tramos']) // 14)
     for tramo in datos['tramos'][::pasos]:
         usuarios = fmt(tramo['usuarios']) if tramo['usuarios'] is not None else '-'
-        filas.append(f"| {tramo['desde_s'] / 60:.1f} | {usuarios} | {tramo['peticiones']} | {fmt(tramo['p95_ms'])} | {tramo['errores_pct']:.0f} % |")
+        filas.append(f"| {tramo['desde_s'] / 60:.1f} | {usuarios} | {tramo['peticiones']} | {fmt(tramo['p95_ms'])} | {fmt(tramo['p99_ms'])} | {tramo['errores_pct']:.0f} % |")
     return filas
 
 

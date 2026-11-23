@@ -29,14 +29,14 @@ def fila(nivel, titulo, d):
         estado_ms = f"crece {tend['pct']:+.0f} %"
     correos = (d['estado'] or {}).get('correos_recibidos')
     return (
-        f"| {nivel} | {titulo} | {c.n.veredicto(m).split(' (')[0]} | {sano} | {c.n.fmt(m['errores_pct'], 1, ' %')} | {c.n.fmt(m['p95_ms'])} | "
+        f"| {nivel} | {titulo} | {c.n.veredicto(m).split(' (')[0]} | {sano} | {c.n.fmt(m['errores_pct'], 1, ' %')} | {c.n.fmt(m['p95_ms'])} | {c.n.fmt(m['p99_ms'])} | "
         f"{ok} / {fallo} | {c.estado_datos(d)} | {c.n.fmt(pico)} | {estado_ms} | {c.n.fmt(correos)} |"
     )
 
 
 CABECERA = [
-    '| Usuarios | Versión | Veredicto | Sin degradación hasta (usuarios) | Errores | p95 (ms) | Escrituras correctas / fallidas | Datos | Metaspace pico (MB) | Metaspace | Correos recibidos |',
-    '|---|---|---|---|---|---|---|---|---|---|---|',
+    '| Usuarios | Versión | Veredicto | Sin degradación hasta (usuarios) | Errores | p95 (ms) | p99 (ms) | Escrituras correctas / fallidas | Datos | Metaspace pico (MB) | Metaspace | Correos recibidos |',
+    '|---|---|---|---|---|---|---|---|---|---|---|---|',
 ]
 
 lineas = ['# Fase 2b: resumen de la escalera de carga con escrituras', '']

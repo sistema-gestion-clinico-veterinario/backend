@@ -25,8 +25,9 @@ def celda_capacidad(version, nivel, cfg):
     sano = f"~{m['sano']:.0f} usuarios sanos" if m['sano'] is not None else 'sin tramo sano'
     err = n.fmt(m['errores_pct'], 1, ' %')
     p95 = n.fmt(m['p95_ms'])
+    p99 = n.fmt(m['p99_ms'])
     extra = (' · ' + ', '.join(marcas)) if marcas else ''
-    return f'**{texto}** · {sano} · errores {err} · p95 {p95} ms{extra}'
+    return f'**{texto}** · {sano} · errores {err} · p95 {p95} ms · p99 {p99} ms{extra}'
 
 
 def celda_recuperacion(version, pico, cfg):

@@ -66,12 +66,12 @@ for nivel in niveles:
         else:
             extra = ''
         filas.append(
-            f"| {nivel} | {titulo} | {c.n.veredicto(m).split(' (')[0]} | {c.n.fmt(m['errores_pct'], 1, ' %')} | {c.n.fmt(m['rps'], 1)} | {c.n.fmt(m['p95_ms'])} | "
+            f"| {nivel} | {titulo} | {c.n.veredicto(m).split(' (')[0]} | {c.n.fmt(m['errores_pct'], 1, ' %')} | {c.n.fmt(m['rps'], 1)} | {c.n.fmt(m['p95_ms'])} | {c.n.fmt(m['p99_ms'])} | "
             f"{j['completos']} | {c.n.fmt(gc_pct, 1, ' %')} | {c.n.fmt(d['cpu_pg']['media'], 0)} | {extra}{d['log']['pool_conexiones']} | {ok} / {fallo} | {c.estado_datos(d)} |"
         )
 
-cabecera = '| Usuarios | Variante | Veredicto | Errores | Peticiones/s | p95 (ms) | Pausas completas de GC | Tiempo en GC | CPU PostgreSQL media (%) | '
-sep = '|---|---|---|---|---|---|---|---|---|'
+cabecera = '| Usuarios | Variante | Veredicto | Errores | Peticiones/s | p95 (ms) | p99 (ms) | Pausas completas de GC | Tiempo en GC | CPU PostgreSQL media (%) | '
+sep = '|---|---|---|---|---|---|---|---|---|---|'
 if MODO == 'indice':
     cabecera += 'Tiempo SQL en consentimiento_datos (s) | Media por llamada (ms) | Filas de la tabla | '
     sep += '---|---|---|'

@@ -75,7 +75,7 @@ export const options = {
     'group_duration{group:::P3_historia_clinica}': ['max>=0'],
     'group_duration{group:::P4_reportes}': ['max>=0'],
   },
-  summaryTrendStats: ['avg', 'med', 'p(90)', 'p(95)', 'max'],
+  summaryTrendStats: ['avg', 'med', 'p(90)', 'p(95)', 'p(99)', 'max'],
   cloud: { name: __ENV.NOMBRE_PRUEBA || 'Medición SoftVet' },
   noCookiesReset: true,
   insecureSkipTLSVerify: false,
@@ -279,7 +279,7 @@ export function handleSummary(data) {
   const resumen = { objetivo: BASE, vus: VUS, iteraciones_por_vu: ITERACIONES, recorridos: {} };
   for (const g of grupos) {
     const m = data.metrics[`group_duration{group:::${g}}`];
-    if (m) resumen.recorridos[g] = { mediana_ms: m.values.med, p95_ms: m.values['p(95)'], promedio_ms: m.values.avg, maximo_ms: m.values.max, muestras: m.values.count };
+    if (m) resumen.recorridos[g] = { mediana_ms: m.values.med, p95_ms: m.values['p(95)'], p99_ms: m.values['p(99)'], promedio_ms: m.values.avg, maximo_ms: m.values.max, muestras: m.values.count };
   }
   const get = (nombre, campo) => (data.metrics[nombre] ? data.metrics[nombre].values[campo] : null);
   resumen.perfil = PERFIL;
@@ -290,7 +290,7 @@ export function handleSummary(data) {
   resumen.peticiones = get('http_reqs', 'count');
   resumen.respuestas_no_200 = get('respuestas_no_200', 'count') || 0;
   resumen.tasa_de_fallos_http = get('http_req_failed', 'rate');
-  resumen.latencia_ms = { mediana: get('http_req_duration', 'med'), p95: get('http_req_duration', 'p(95)') };
+  resumen.latencia_ms = { mediana: get('http_req_duration', 'med'), p95: get('http_req_duration', 'p(95)'), p99: get('http_req_duration', 'p(99)') };
   resumen.bytes_recibidos = get('data_received', 'count');
   resumen.duracion_total_s = data.state.testRunDurationMs / 1000;
   resumen.chequeos_fallidos = chequeosFallidos(data.root_group || {}, []);

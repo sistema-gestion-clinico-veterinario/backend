@@ -1,0 +1,29 @@
+# Imagen exclusiva para mediciones locales. Las llaves incluidas son las llaves
+# RSA de pruebas del repositorio; nunca deben reutilizarse en producción.
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
+WORKDIR /app
+
+COPY pom.xml .
+COPY src ./src
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn package -B -DskipTests --no-transfer-progress
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+RUN addgroup -S softvet && adduser -S softvet -G softvet \
+    && mkdir -p /app/keys /app/uploads \
+    && chown -R softvet:softvet /app
+
+COPY --from=build --chown=softvet:softvet /app/target/*.jar /app/app.jar
+COPY --chown=softvet:softvet src/test/resources/keys/e2e_private_key.pem /app/keys/private_key.pem
+COPY --chown=softvet:softvet src/test/resources/keys/e2e_public_key.pem /app/keys/public_key.pem
+
+USER softvet
+EXPOSE 8080
+
+HEALTHCHECK --interval=5s --timeout=3s --start-period=45s --retries=24 \
+  CMD wget -q -O - http://127.0.0.1:8080/api/v1/actuator/health || exit 1
+
+ENV JAVA_OPTS="-Xms96m -Xmx256m -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=160m"
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]
