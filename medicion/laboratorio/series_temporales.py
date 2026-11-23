@@ -15,7 +15,7 @@ import informe_nivel as n  # noqa: E402
 import informe_laboratorio as lab  # noqa: E402
 
 RE_FECHA = re.compile(r'^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})(?:\.(\d+))?Z?')
-RE_HIKARI_STATS = re.compile(r'(Pool stats|Timeout failure stats) \(total=(\d+), active=(\d+), idle=(\d+), waiting=(\d+)\)')
+RE_HIKARI_STATS = re.compile(r'(Before cleanup|After cleanup|After adding|Timeout failure) +stats \(total=(\d+), active=(\d+), idle=(\d+), waiting=(\d+)\)')
 RE_SIN_CONEXION = re.compile(r'Connection is not available|request timed out after')
 RE_HIKARI_ERROR = re.compile(r'request timed out after \d+ms \(total=(\d+), active=(\d+), idle=(\d+), waiting=(\d+)\)')
 CUBO_S = 5

@@ -17,10 +17,10 @@ filas = list(csv.DictReader(open(sys.argv[1], encoding='utf-8')))
 sys.exit(0 if any(f.get('rss_anon_kb') and f.get('hilos_so') for f in filas) else 1)
 PY"
 comprobar "la actividad de PostgreSQL tiene al menos 5 muestras" "[ \$(wc -l < \"$N/pg_actividad_despues_10.csv\") -ge 6 ]"
-comprobar "hay un volcado de hilos con el encabezado de la JVM" "gzip -dc \"$N\"/hilos_despues_10_t*.txt.gz | head -50 | grep -q 'Full thread dump'"
+comprobar "hay un volcado de hilos con el encabezado de la JVM" "gzip -dc \"$N\"/hilos_despues_10_t*.txt.gz 2> /dev/null | grep -q 'Full thread dump'"
 comprobar "el volcado contiene hilos de peticiones" "gzip -dc \"$N\"/hilos_despues_10_t*.txt.gz | grep -q 'http-nio-8080-exec'"
 comprobar "hay resumen de memoria nativa (NMT)" "grep -q 'Native Memory Tracking' \"$N/nmt_despues_10.txt\""
-comprobar "el registro del backend trae estadísticas de Hikari" "grep -q 'Pool stats' \"$D/logs/backend_carga_despues_10.log\""
+comprobar "el registro del backend trae estadísticas de Hikari" "grep -Eq '(Before cleanup|After cleanup|After adding|Timeout failure) +stats \(total=' \"$D/logs/backend_carga_despues_10.log\""
 comprobar "k6 entregó los usuarios previstos" "grep -q '\"vus_activos_max\": 10' \"$N/k6_despues_10.json\""
 comprobar "el informe del laboratorio se generó" "[ -s \"$D/SALUD_LABORATORIO.md\" ]"
 echo "--- análisis del volcado:"
