@@ -1,0 +1,7 @@
+--- inicio de sesión del administrador de la clínica
+HTTP 200
+--- plantilla del aviso de privacidad
+{"success":true,"message":"Datos para el aviso","data":{"razonSocial":"Clinica de medicion","ruc":"20000000001","domicilio":null,"correoDerechos":null,"registroBancoDatos":null,"encargadoTratamiento":"VetSoft, proveedor de la plataforma de gestión que aloja la información","finalidades":["Registrarle como cliente y gestionar la atención veterinaria de su mascota","Programar sus citas y avisarle de ellas","Emitir comprobantes y gestionar pagos y cobranzas","Mantener el historial clínico de su mascota y comunicarle información sobre ella"],"datosObligatorios":["Nombres y apellidos","Tipo y 
+--- publicación del aviso
+{"success":true,"message":"Aviso de privacidad publicado","data":{"audiencia":"PROPIETARIOS_Y_AUTORIZADOS","version":1,"contenido":"AVISO DE PRIVACIDAD - PROPIETARIOS Y PERSONAS AUTORIZADAS - Versión 1\n\n1. Quién trata sus datos\nEl titular del banco de datos personales es Clinica de medicion, con RUC 20000000001 y domicilio en Avenida Los Olivos 123.\nEncargado del tratamiento: VetSoft, proveedor de la plataforma de gestión que aloja la información.\n\n2. Qué datos se registran\nDatos obligatorios, sin los cuales no podemos registrarle ni atender a su mascota:\n- Nombres y apellidos\n- 
+HTTP 200

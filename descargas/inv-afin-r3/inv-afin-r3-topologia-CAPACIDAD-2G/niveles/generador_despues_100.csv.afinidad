@@ -1,0 +1,4 @@
+pid=20722
+Cpus_allowed_list=1
+Mems_allowed_list=0
+hz=100

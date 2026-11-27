@@ -1,0 +1,22 @@
+{
+  "version": "despues",
+  "perfil_lab": "CAPACIDAD-2G",
+  "nivel": 100,
+  "config_jvm": "D",
+  "correos_recibidos": 314,
+  "heap_max": "1g",
+  "cpus_limite": 1,
+  "memoria_limite_mb": 2048,
+  "perfil": "carga_escritura",
+  "duracion_s": 308,
+  "cpu_contenedor_s": 172,
+  "oom_killed": false,
+  "reinicios": 0,
+  "sigue_corriendo": true,
+  "codigo_salida": 0,
+  "salud_final_http": "200",
+  "k6_codigo_salida": 0,
+  "caida_backend": "",
+  "sql_sentencias": 168414,
+  "sql_tiempo_s": 51.0
+}

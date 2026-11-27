@@ -1,0 +1,22 @@
+### lscpu -e
+CPU CORE SOCKET NODE ONLINE MAXMHZ
+  0    0      0    0    yes      -
+  1    1      0    0    yes      -
+  2    0      0    0    yes      -
+  3    1      0    0    yes      -
+
+### lscpu (resumen)
+Model name:                              Intel(R) Xeon(R) 6975P-C
+Thread(s) per core:                      2
+Core(s) per socket:                      2
+Socket(s):                               1
+Virtualization:                          VT-x
+Hypervisor vendor:                       KVM
+Virtualization type:                     full
+L1d cache:                               96 KiB (2 instances)
+L2 cache:                                4 MiB (2 instances)
+L3 cache:                                480 MiB (1 instance)
+
+### afinidad del arnés: pid 77980's current affinity list: 0-3
+### cpuset del cgroup del arnés: 0-3
+### fijado de CPU solicitado: PG='--cpuset-cpus 0' backend='--cpuset-cpus 1' k6='taskset -c 2' muestreadores='taskset -c 2'

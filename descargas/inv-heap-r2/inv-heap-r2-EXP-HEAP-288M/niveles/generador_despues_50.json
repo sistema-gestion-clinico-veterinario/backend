@@ -1,0 +1,35 @@
+{
+ "etiqueta": "despues_50",
+ "nivel": 50,
+ "umbral_pct": 80.0,
+ "nucleos_k6": 1,
+ "cpus_permitidas_k6": "2",
+ "motivos": [
+  "k6 alcanzó 34 usuarios activos de 50 previstos",
+  "k6 terminó con código 105"
+ ],
+ "muestras": 19,
+ "cpu_media_pct": 0.42105263157894735,
+ "cpu_p95_pct": 1.0,
+ "cpu_max_pct": 1.0,
+ "muestras_sobre_umbral_pct": 0.0,
+ "rss_pico_mb": 64.7109375,
+ "cpu_logica_media_pct": {
+  "0": 3.3368421052631576,
+  "1": 20.610526315789475,
+  "2": 1.2947368421052632,
+  "3": 0.7105263157894737
+ },
+ "peticiones": 181,
+ "iteraciones": 27,
+ "peticiones_por_s": 4.754850394930135,
+ "vus_activos_max": 34,
+ "vus_asignados_max": 50,
+ "iteraciones_descartadas": null,
+ "no_2xx_pct": 38.67403314917127,
+ "sin_respuesta": 70,
+ "k6_codigo_salida": 105,
+ "saturado": false,
+ "alcanzo_vus": false,
+ "interpretable": "potencialmente no"
+}

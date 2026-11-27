@@ -1,0 +1,10 @@
+[backend]
+io.stat: 252:0 rbytes=0 wbytes=3149824 rios=0 wios=769 dbytes=0 dios=0;
+cpu.stat: usage_usec 32760430;user_usec 31155252;system_usec 1605178;nice_usec 0;core_sched.force_idle_usec 0;nr_periods 344;nr_throttled 18;throttled_usec 10332;nr_bursts 0;burst_usec 0;
+memory.events: low 0;high 0;max 0;oom 0;oom_kill 0;oom_group_kill 0;sock_throttled 0;
+red: rx_bytes=1922478;tx_bytes=571592
+[postgres]
+io.stat: 259:1 rbytes=0 wbytes=527826944 rios=0 wios=128864 dbytes=0 dios=0;252:0 rbytes=0 wbytes=580149248 rios=0 wios=141638 dbytes=0 dios=0;
+cpu.stat: usage_usec 8740489;user_usec 7475760;system_usec 1264728;nice_usec 0;core_sched.force_idle_usec 0;nr_periods 0;nr_throttled 0;throttled_usec 0;nr_bursts 0;burst_usec 0;
+memory.events: low 0;high 0;max 0;oom 0;oom_kill 0;oom_group_kill 0;sock_throttled 0;
+red: rx_bytes=622191;tx_bytes=2305182

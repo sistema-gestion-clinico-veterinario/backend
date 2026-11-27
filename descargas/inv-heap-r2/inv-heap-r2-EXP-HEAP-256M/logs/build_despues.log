@@ -1,0 +1,58 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.fijado
+#1 transferring dockerfile: 1.32kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/maven:3.9.6-eclipse-temurin-21-alpine@sha256:9fca6934e64eff26860889804faecb71a522d04b4ebf05574140c71f8e9bc700
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/eclipse-temurin:21-jre-alpine@sha256:5d7689f47d670aca766b9503a70bccc2d73b4eb9221ae8f714ae958313c4ce70
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 68B done
+#4 DONE 0.0s
+
+#5 [build 1/5] FROM docker.io/library/maven:3.9.6-eclipse-temurin-21-alpine@sha256:9fca6934e64eff26860889804faecb71a522d04b4ebf05574140c71f8e9bc700
+#5 DONE 0.0s
+
+#6 [stage-1 1/6] FROM docker.io/library/eclipse-temurin:21-jre-alpine@sha256:5d7689f47d670aca766b9503a70bccc2d73b4eb9221ae8f714ae958313c4ce70
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 113.13kB 0.0s done
+#7 DONE 0.0s
+
+#8 [stage-1 4/6] COPY --from=build --chown=softvet:softvet /app/target/*.jar /app/app.jar
+#8 CACHED
+
+#9 [stage-1 3/6] RUN addgroup -S softvet && adduser -S softvet -G softvet     && mkdir -p /app/keys /app/uploads     && chown -R softvet:softvet /app
+#9 CACHED
+
+#10 [stage-1 2/6] WORKDIR /app
+#10 CACHED
+
+#11 [stage-1 5/6] COPY --chown=softvet:softvet src/test/resources/keys/e2e_private_key.pem /app/keys/private_key.pem
+#11 CACHED
+
+#12 [build 3/5] COPY pom.xml .
+#12 CACHED
+
+#13 [build 2/5] WORKDIR /app
+#13 CACHED
+
+#14 [build 4/5] COPY src ./src
+#14 CACHED
+
+#15 [build 5/5] RUN --mount=type=cache,target=/root/.m2     mvn package -B -DskipTests --no-transfer-progress
+#15 CACHED
+
+#16 [stage-1 6/6] COPY --chown=softvet:softvet src/test/resources/keys/e2e_public_key.pem /app/keys/public_key.pem
+#16 CACHED
+
+#17 exporting to image
+#17 exporting layers done
+#17 writing image sha256:b79aedb25cceed4ad41482d0628560932c513a5bd2d093d7f296e17d579bcf8f done
+#17 naming to docker.io/library/sv-backend:despues done
+#17 DONE 0.0s

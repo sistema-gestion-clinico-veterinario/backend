@@ -1,0 +1,56 @@
+fecha: 2026-11-27T04:46:04Z
+núcleos del equipo: 4
+procesador: Intel(R) Xeon(R) 6975P-C; hilos por núcleo: 2; núcleos por socket: 2
+versiones medidas: despues; heap máximo: 1g; núcleos de k6: 2; reservas de horario por usuario: 14
+memoria total del equipo (MB): 15701
+recursos del backend: 1 CPU, 2g de RAM
+perfil del laboratorio: CAPACIDAD-2G (memoria 2g, CPU 1, heap máximo 1g; configuración de la JVM en los niveles: D, en el control: E)
+umbral del generador: 80 % de la CPU de k6 (criterio experimental, configurable)
+modo de afinidad: topologia (aplicado: si); k6 en CPU 2, backend '--cpuset-cpus 1', PostgreSQL '--cpuset-cpus 0', muestreadores 'taskset -c 2'
+mezcla de operaciones: semilla 20261123; pesos 22,18,15,2,13,12,10,8 (panel, agenda, historia, reportes, recepción, atención, cobro, cancelar)
+citas de la clínica grande: 20000; propietarios: 1200
+pool de conexiones: 40; muestreo de PostgreSQL: sí; volcados de hilos en los segundos: 120,200,260,330; registro de Hikari en DEBUG: sí; NMT: no
+caída del backend: k6 se detiene 20 s después de que el contenedor se detenga
+heap en vivo: sí, cada 3 s (contadores hsperfdata y cgroup)
+runner: ubuntu24 20261122.23.1
+kernel: 7.0.0-1018-aws
+configuraciones de la JVM:
+  C -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m
+  D -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  E -> -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  F -> -Xms1g -Xmx1g -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  G -> -Xms1280m -Xmx1280m -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=64m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  P -> -Xmx192m -XX:+UseSerialGC -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -XX:TieredStopAtLevel=1 -XX:CICompilerCount=1 -XX:MaxDirectMemorySize=32m -Xlog:gc,gc+metaspace:file=/tmp/jvm_gc.log:uptime,tags -Xlog:class+load:file=/tmp/jvm_clases.log:uptime,tags -Dspring.mail.properties.mail.smtp.auth=false -Dspring.mail.properties.mail.smtp.starttls.enable=false -Dspring.mail.properties.mail.smtp.starttls.required=false
+  (P = ENV JAVA_OPTS del Dockerfile de producción de DESPUÉS, b1d22f9, más las opciones de observación del arnés: registro de GC y propiedades del correo de pruebas)
+usadas en esta corrida: D (Metaspace 256 MB) para la escalera; E (Metaspace 128 MB, igual que el Dockerfile) para el control
+correo: servidor SMTP de pruebas en el contenedor sv-correo (sin TLS ni autenticación; los envíos terminan bien)
+pool de conexiones: 40
+pausa entre acciones: 15 s (con variación aleatoria)
+mezcla de acciones (panel, agenda, historia, reportes, recepción, atención, cobro, cancelar): 22,18,15,2,13,12,10,8 %
+cuentas de medición: una por usuario virtual, 251 en total
+docker: 28.0.4
+k6: k6 v2.4.0 (commit/dd9395906d, go1.26.11, linux/amd64)
+antes:   no medido
+despues: b1d22f951f756e136a366262625c79e2e95b7e5b
+fijado de CPU: PG='--cpuset-cpus 0' backend='--cpuset-cpus 1' k6='taskset -c 2'
+plan de niveles:
+  # nivel  subida  sostenido
+  250 250s 150s
+imágenes fijadas por digest (referencia; id local):
+  imagen: postgres:16@sha256:3950ad7c3148ca2175ef1b6c36c9efbf78957ae8fbe8b3a5d7c35af50500382f (id sha256:2fd2c185c3dc19e21db2174dce9677cbe6c78dfa6b50d7a3751cea87d95d16b3; digest verificado por Docker al descargar)
+  imagen: python:3.12-alpine@sha256:c5ba3deef00c7758561a0f03c26f44f10589263d40e732b8748e0d1f38f6dd89 (id sha256:4076016aea5420e5c87eb52280edfc527ace1ce31dc1c9288b1cc4ef9a0e8905; digest verificado por Docker al descargar)
+  imagen: maven:3.9.6-eclipse-temurin-21-alpine@sha256:9fca6934e64eff26860889804faecb71a522d04b4ebf05574140c71f8e9bc700 (id sha256:b112e8e8ae6e4208e073641bc966e6c9f49fdd32f17000b499b1f35cb1ab75b9; digest verificado por Docker al descargar)
+  imagen: eclipse-temurin:21-jre-alpine@sha256:5d7689f47d670aca766b9503a70bccc2d73b4eb9221ae8f714ae958313c4ce70 (id sha256:5649cf3d873b6600b777ddff8a1a89cffbfa19755e5334bfb61136e8ec7a59a9; digest verificado por Docker al descargar)
+  bases del Dockerfile.measurement fijadas por digest: sí
+  Dockerfile.measurement usado: /home/runner/work/backend/backend/resultados-inv/inv-pool-r2-POOL-40/Dockerfile.fijado (sha256 11a2a24a9dfa62a56dcbeb51a2f67632ebcc2f4c60b57b587feaf8e64b020b1c)
+  k6 fijado: 2.4.0
+imagen de ejecución (JRE): eclipse-temurin:21-jre-alpine@sha256:5d7689f47d670aca766b9503a70bccc2d73b4eb9221ae8f714ae958313c4ce70
+  openjdk version "21.0.13.1" 2026-11-17 LTS
+  OpenJDK Runtime Environment Temurin-21.0.13.1+2 (build 21.0.13.1+2-LTS)
+  OpenJDK 64-Bit Server VM Temurin-21.0.13.1+2 (build 21.0.13.1+2-LTS, mixed mode, sharing)
+  java: sí
+  jcmd: no
+  jstat: no
+  jfr: sí
+  jps: no
+  el heap en vivo se lee de los contadores de la JVM (/tmp/hsperfdata_*/1) con cat dentro del contenedor, sin jstat ni jcmd

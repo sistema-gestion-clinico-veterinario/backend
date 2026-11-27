@@ -1,0 +1,114 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.fijado
+#1 transferring dockerfile: 1.32kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/eclipse-temurin:21-jre-alpine@sha256:5d7689f47d670aca766b9503a70bccc2d73b4eb9221ae8f714ae958313c4ce70
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/maven:3.9.6-eclipse-temurin-21-alpine@sha256:9fca6934e64eff26860889804faecb71a522d04b4ebf05574140c71f8e9bc700
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 68B done
+#4 DONE 0.0s
+
+#5 [stage-1 1/6] FROM docker.io/library/eclipse-temurin:21-jre-alpine@sha256:5d7689f47d670aca766b9503a70bccc2d73b4eb9221ae8f714ae958313c4ce70
+#5 DONE 0.0s
+
+#6 [stage-1 2/6] WORKDIR /app
+#6 DONE 0.0s
+
+#7 [build 1/5] FROM docker.io/library/maven:3.9.6-eclipse-temurin-21-alpine@sha256:9fca6934e64eff26860889804faecb71a522d04b4ebf05574140c71f8e9bc700
+#7 DONE 0.0s
+
+#8 [build 2/5] WORKDIR /app
+#8 DONE 0.0s
+
+#9 [internal] load build context
+#9 transferring context: 5.16MB 0.1s done
+#9 DONE 0.1s
+
+#10 [build 3/5] COPY pom.xml .
+#10 DONE 0.0s
+
+#11 [stage-1 3/6] RUN addgroup -S softvet && adduser -S softvet -G softvet     && mkdir -p /app/keys /app/uploads     && chown -R softvet:softvet /app
+#11 DONE 0.1s
+
+#12 [build 4/5] COPY src ./src
+#12 DONE 0.1s
+
+#13 [build 5/5] RUN --mount=type=cache,target=/root/.m2     mvn package -B -DskipTests --no-transfer-progress
+#13 0.987 [INFO] Scanning for projects...
+#13 2.611 [INFO] 
+#13 2.611 [INFO] -----------------------< veterinaria:vargasvet >------------------------
+#13 2.611 [INFO] Building vargasvet 0.0.1-SNAPSHOT
+#13 2.611 [INFO]   from pom.xml
+#13 2.612 [INFO] --------------------------------[ jar ]---------------------------------
+#13 12.70 [INFO] 
+#13 12.70 [INFO] --- resources:3.3.1:resources (default-resources) @ vargasvet ---
+#13 12.96 [INFO] Copying 2 resources from src/main/resources to target/classes
+#13 12.97 [INFO] Copying 133 resources from src/main/resources to target/classes
+#13 12.98 [INFO] 
+#13 12.98 [INFO] --- compiler:3.13.0:compile (default-compile) @ vargasvet ---
+#13 13.26 [INFO] Recompiling the module because of changed source code.
+#13 13.27 [INFO] Compiling 752 source files with javac [debug parameters release 21] to target/classes
+#13 22.90 [INFO] Annotation processing is enabled because one or more processors were found
+#13 22.90   on the class path. A future release of javac may disable annotation processing
+#13 22.90   unless at least one processor is specified by name (-processor), or a search
+#13 22.90   path is specified (--processor-path, --processor-module-path), or annotation
+#13 22.90   processing is enabled explicitly (-proc:only, -proc:full).
+#13 22.90   Use -Xlint:-options to suppress this message.
+#13 22.90   Use -proc:none to disable annotation processing.
+#13 22.91 [INFO] /app/src/main/java/veterinaria/vargasvet/config/DataInitializer.java: Some input files use or override a deprecated API.
+#13 22.91 [INFO] /app/src/main/java/veterinaria/vargasvet/config/DataInitializer.java: Recompile with -Xlint:deprecation for details.
+#13 22.91 [INFO] 
+#13 22.91 [INFO] --- resources:3.3.1:testResources (default-testResources) @ vargasvet ---
+#13 22.92 [INFO] Copying 5 resources from src/test/resources to target/test-classes
+#13 22.92 [INFO] 
+#13 22.92 [INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ vargasvet ---
+#13 22.94 [INFO] Recompiling the module because of changed dependency.
+#13 22.94 [INFO] Compiling 256 source files with javac [debug parameters release 21] to target/test-classes
+#13 27.66 [INFO] Annotation processing is enabled because one or more processors were found
+#13 27.66   on the class path. A future release of javac may disable annotation processing
+#13 27.66   unless at least one processor is specified by name (-processor), or a search
+#13 27.66   path is specified (--processor-path, --processor-module-path), or annotation
+#13 27.66   processing is enabled explicitly (-proc:only, -proc:full).
+#13 27.66   Use -Xlint:-options to suppress this message.
+#13 27.66   Use -proc:none to disable annotation processing.
+#13 27.66 [INFO] /app/src/test/java/veterinaria/vargasvet/controller/IaClinicaControllerTest.java: Some input files use unchecked or unsafe operations.
+#13 27.66 [INFO] /app/src/test/java/veterinaria/vargasvet/controller/IaClinicaControllerTest.java: Recompile with -Xlint:unchecked for details.
+#13 27.66 [INFO] 
+#13 27.66 [INFO] --- surefire:3.5.2:test (default-test) @ vargasvet ---
+#13 28.09 [INFO] Tests are skipped.
+#13 28.09 [INFO] 
+#13 28.10 [INFO] --- jar:3.4.2:jar (default-jar) @ vargasvet ---
+#13 28.67 [INFO] Building jar: /app/target/vargasvet-0.0.1-SNAPSHOT.jar
+#13 28.79 [INFO] 
+#13 28.79 [INFO] --- spring-boot:3.4.2:repackage (repackage) @ vargasvet ---
+#13 29.90 [INFO] Replacing main artifact /app/target/vargasvet-0.0.1-SNAPSHOT.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+#13 29.90 [INFO] The original artifact has been renamed to /app/target/vargasvet-0.0.1-SNAPSHOT.jar.original
+#13 29.90 [INFO] ------------------------------------------------------------------------
+#13 29.90 [INFO] BUILD SUCCESS
+#13 29.90 [INFO] ------------------------------------------------------------------------
+#13 29.90 [INFO] Total time:  28.936 s
+#13 29.90 [INFO] Finished at: 2026-11-27T04:36:32Z
+#13 29.90 [INFO] ------------------------------------------------------------------------
+#13 DONE 30.1s
+
+#14 [stage-1 4/6] COPY --from=build --chown=softvet:softvet /app/target/*.jar /app/app.jar
+#14 DONE 0.2s
+
+#15 [stage-1 5/6] COPY --chown=softvet:softvet src/test/resources/keys/e2e_private_key.pem /app/keys/private_key.pem
+#15 DONE 0.0s
+
+#16 [stage-1 6/6] COPY --chown=softvet:softvet src/test/resources/keys/e2e_public_key.pem /app/keys/public_key.pem
+#16 DONE 0.0s
+
+#17 exporting to image
+#17 exporting layers
+#17 exporting layers 0.2s done
+#17 writing image sha256:5c691c3b33bf9bf7396af057cb64aa41efcc72084f6d69592a2e19983971e0d4 done
+#17 naming to docker.io/library/sv-backend:despues done
+#17 DONE 0.2s

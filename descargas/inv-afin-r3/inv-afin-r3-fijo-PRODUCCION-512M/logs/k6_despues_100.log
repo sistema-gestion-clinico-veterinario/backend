@@ -1,0 +1,1148 @@
+time="2026-11-27T04:55:42Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports?fechaDesde=2025-11-26&fechaHasta=2026-11-26&companyId=1\": request timeout"
+time="2026-11-27T04:55:42Z" level=info msg="PASO|1|reporte_clinico|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:55:52Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:55:52Z" level=info msg="PASO|23|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:55:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:55:53Z" level=info msg="PASO|24|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:55:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:55:54Z" level=info msg="PASO|25|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:55:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:55:55Z" level=info msg="PASO|26|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:55:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:55:56Z" level=info msg="PASO|27|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:55:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:55:57Z" level=info msg="PASO|28|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:55:57Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/consultations/20654/close\": request timeout"
+time="2026-11-27T04:55:57Z" level=info msg="PASO|6|cerrar_consulta|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-27T04:55:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:55:58Z" level=info msg="PASO|29|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:55:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:55:59Z" level=info msg="PASO|30|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:00Z" level=info msg="PASO|31|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:01Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-27T04:56:01Z" level=info msg="PASO|20|panel|GET|0|30001|FALLO|{\"success\":true,\"message\":\"Dashboard recuperado con éxito\",\"data\":{\"stats\":{\"totalPacientes\":2408,\"totalCitasHoy\":24,\"totalCitas\":20008,\"totalEmpleados\":10,\"totalEmpresas\":0,\"citasPorDia\":[22,26,26,18,34,30,36],\"citasPorSemana\":[138,157,148,260],\"citasPorMes\":[746,634,701,727,661,709,685,756,694,729" source=console
+time="2026-11-27T04:56:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:01Z" level=info msg="PASO|32|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:03Z" level=info msg="PASO|33|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:56:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:56:03Z" level=info msg="PASO|7|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:04Z" level=info msg="PASO|34|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:56:05Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-27T04:56:05Z" level=info msg="PASO|22|navegacion|GET|0|30001|FALLO|{\"success\":true,\"message\":\"Navegación efectiva obtenida\",\"data\":[{\"ventanaId\":null,\"ventanaCodigo\":null,\"ventanaNombre\":\"Dashboard\",\"ventanaIcono\":null,\"presentacion\":\"FLAT\",\"grupo\":null,\"orden\":1000,\"vistas\":[{\"id\":1,\"codigo\":\"VISTA_DASHBOARD\",\"nombre\":\"Dashboard\",\"ruta\":\"/dashboard\",\"grupo\":\"GENER" source=console
+time="2026-11-27T04:56:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:05Z" level=info msg="PASO|35|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/pets\": request timeout"
+time="2026-11-27T04:56:05Z" level=info msg="PASO|13|mascota|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:05Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-27T04:56:05Z" level=info msg="PASO|21|notificaciones|GET|0|30001|FALLO|{\"success\":true,\"message\":\"Notificaciones revisadas\",\"data\":[]}" source=console
+time="2026-11-27T04:56:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-27T04:56:06Z" level=info msg="PASO|17|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:06Z" level=info msg="PASO|36|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:06Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-27T04:56:06Z" level=info msg="PASO|8|avisos_de_cumplimiento|GET|0|30002|FALLO|{\"success\":true,\"message\":\"Decisiones sobre solicitudes\",\"data\":[]}" source=console
+time="2026-11-27T04:56:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:56:06Z" level=info msg="PASO|10|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:56:06Z" level=info msg="PASO|18|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:06Z" level=warning msg="Request Failed" error="request timeout"
+time="2026-11-27T04:56:06Z" level=info msg="PASO|11|navegacion|GET|0|30001|FALLO|{\"success\":true,\"message\":\"Navegación efectiva obtenida\",\"data\":[{\"ventanaId\":null,\"ventanaCodigo\":null,\"ventanaNombre\":\"Dashboard\",\"ventanaIcono\":null,\"presentacion\":\"FLAT\",\"grupo\":null,\"orden\":1000,\"vistas\":[{\"id\":1,\"codigo\":\"VISTA_DASHBOARD\",\"nombre\":\"Dashboard\",\"ruta\":\"/dashboard\",\"grupo\":\"GENER" source=console
+time="2026-11-27T04:56:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:07Z" level=info msg="PASO|37|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:56:08Z" level=info msg="PASO|9|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:08Z" level=info msg="PASO|38|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:56:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:56:08Z" level=info msg="PASO|19|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:09Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:09Z" level=info msg="PASO|39|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:56:10Z" level=info msg="PASO|15|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:10Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-27T04:56:10Z" level=info msg="PASO|16|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:10Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27587/check-in\": request timeout"
+time="2026-11-27T04:56:10Z" level=info msg="PASO|14|checkin|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:10Z" level=info msg="PASO|40|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:56:11Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27583/cancel?motivo=Cambio%20de%20planes%20del%20propietario\": request timeout"
+time="2026-11-27T04:56:11Z" level=info msg="PASO|3|cancelar_cita|PATCH|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:11Z" level=info msg="PASO|41|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-27T04:56:11Z" level=info msg="PASO|12|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:12Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/sales-products?fechaDesde=2025-11-26&fechaHasta=2026-11-26&companyId=1\": request timeout"
+time="2026-11-27T04:56:12Z" level=info msg="PASO|1|reporte_de_ventas|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:12Z" level=info msg="PASO|42|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-27T04:56:13Z" level=info msg="PASO|5|navegacion|GET|0|30000|FALLO|null" source=console
+time="2026-11-27T04:56:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:14Z" level=info msg="PASO|43|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:15Z" level=info msg="PASO|44|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:16Z" level=info msg="PASO|45|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:17Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:17Z" level=info msg="PASO|46|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:18Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:18Z" level=info msg="PASO|47|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:56:19Z" level=info msg="PASO|4|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:19Z" level=info msg="PASO|48|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:19Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27582/start\": request timeout"
+time="2026-11-27T04:56:19Z" level=info msg="PASO|2|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:20Z" level=info msg="PASO|49|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:21Z" level=info msg="PASO|50|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:22Z" level=info msg="PASO|51|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:56:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:23Z" level=info msg="PASO|52|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:25Z" level=info msg="PASO|53|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:26Z" level=info msg="PASO|54|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:27Z" level=info msg="PASO|55|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:28Z" level=info msg="PASO|56|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:29Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:29Z" level=info msg="PASO|57|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:30Z" level=info msg="PASO|58|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:31Z" level=info msg="PASO|59|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:32Z" level=info msg="PASO|60|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:33Z" level=info msg="PASO|61|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:34Z" level=info msg="PASO|62|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:56:35Z" level=info msg="PASO|22|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T04:56:35Z" level=info msg="PASO|21|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:36Z" level=info msg="PASO|63|login|POST|0|30012|FALLO|null" source=console
+time="2026-11-27T04:56:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:36Z" level=info msg="PASO|23|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-27T04:56:36Z" level=info msg="PASO|8|panel|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:36Z" level=info msg="PASO|27|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:56:36Z" level=info msg="PASO|11|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:37Z" level=info msg="PASO|64|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:37Z" level=info msg="PASO|26|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:38Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:38Z" level=info msg="PASO|65|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:39Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:39Z" level=info msg="PASO|66|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:56:40Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:56:40Z" level=info msg="PASO|16|privacidad|GET|0|30000|FALLO|null" source=console
+time="2026-11-27T04:56:40Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27587/start\": request timeout"
+time="2026-11-27T04:56:40Z" level=info msg="PASO|14|iniciar|PATCH|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:40Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:40Z" level=info msg="PASO|67|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:41Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:41Z" level=info msg="PASO|33|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:41Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:41Z" level=info msg="PASO|68|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:41Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:41Z" level=info msg="PASO|25|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:41Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:56:41Z" level=info msg="PASO|12|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:42Z" level=info msg="PASO|24|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:42Z" level=info msg="PASO|30|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:42Z" level=info msg="PASO|69|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:42Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clinical-reports/inactive-patients?page=0&size=20&companyId=1\": request timeout"
+time="2026-11-27T04:56:42Z" level=info msg="PASO|1|pacientes_inactivos|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:42Z" level=info msg="PASO|31|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:56:43Z" level=info msg="PASO|7|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:43Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:56:43Z" level=info msg="PASO|5|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:43Z" level=info msg="PASO|34|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:43Z" level=info msg="PASO|70|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:44Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:44Z" level=info msg="PASO|29|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:44Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:44Z" level=info msg="PASO|36|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:44Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:56:44Z" level=info msg="PASO|13|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:44Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:44Z" level=info msg="PASO|71|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:45Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:45Z" level=info msg="PASO|72|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:46Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-27T04:56:46Z" level=info msg="PASO|20|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:47Z" level=info msg="PASO|73|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-27T04:56:47Z" level=info msg="PASO|6|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:47Z" level=info msg="PASO|32|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:48Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:48Z" level=info msg="PASO|74|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:48Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-27T04:56:48Z" level=info msg="PASO|18|lista_de_historias|GET|0|30000|FALLO|null" source=console
+time="2026-11-27T04:56:48Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:48Z" level=info msg="PASO|39|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:48Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:48Z" level=info msg="PASO|38|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:49Z" level=info msg="PASO|75|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:50Z" level=info msg="PASO|28|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:50Z" level=info msg="PASO|76|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:56:50Z" level=info msg="PASO|19|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:56:51Z" level=info msg="PASO|9|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:51Z" level=info msg="PASO|77|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:52Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:52Z" level=info msg="PASO|78|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:52Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:52Z" level=info msg="PASO|42|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:53Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-27T04:56:53Z" level=info msg="PASO|17|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:53Z" level=info msg="PASO|79|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:56:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:54Z" level=info msg="PASO|80|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:55Z" level=info msg="PASO|81|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:56Z" level=info msg="PASO|40|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:56Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-27T04:56:56Z" level=info msg="PASO|10|lista_de_historias|GET|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:56Z" level=info msg="PASO|82|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:57Z" level=info msg="PASO|44|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:57Z" level=info msg="PASO|35|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:56:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-27T04:56:57Z" level=info msg="PASO|3|navegacion|GET|0|30002|FALLO|null" source=console
+time="2026-11-27T04:56:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:58Z" level=info msg="PASO|83|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:58Z" level=info msg="PASO|37|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:59Z" level=info msg="PASO|84|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:56:59Z" level=info msg="PASO|41|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:56:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:56:59Z" level=info msg="PASO|15|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:00Z" level=info msg="PASO|85|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:01Z" level=info msg="PASO|86|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:02Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:02Z" level=info msg="PASO|52|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:02Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:02Z" level=info msg="PASO|87|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:03Z" level=info msg="PASO|50|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:03Z" level=info msg="PASO|88|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:04Z" level=info msg="PASO|53|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:04Z" level=info msg="PASO|54|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:04Z" level=info msg="PASO|45|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:04Z" level=info msg="PASO|89|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:05Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T04:57:05Z" level=info msg="PASO|22|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:05Z" level=info msg="PASO|43|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:05Z" level=info msg="PASO|90|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:05Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-27T04:57:05Z" level=info msg="PASO|21|panel|GET|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:06Z" level=info msg="PASO|49|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:06Z" level=info msg="PASO|91|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:06Z" level=info msg="PASO|48|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T04:57:06Z" level=info msg="PASO|11|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:06Z" level=info msg="PASO|46|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:07Z" level=info msg="PASO|92|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:08Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:08Z" level=info msg="PASO|47|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:09Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:09Z" level=info msg="PASO|93|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:09Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:57:09Z" level=info msg="PASO|4|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:09Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:09Z" level=info msg="PASO|51|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:10Z" level=info msg="PASO|56|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:10Z" level=info msg="PASO|94|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:10Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T04:57:10Z" level=info msg="PASO|16|cumplimiento|GET|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:11Z" level=info msg="PASO|95|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:11Z" level=info msg="PASO|58|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:57:11Z" level=info msg="PASO|2|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T04:57:11Z" level=info msg="PASO|12|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:12Z" level=info msg="PASO|96|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:13Z" level=info msg="PASO|97|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T04:57:13Z" level=info msg="PASO|5|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:14Z" level=info msg="PASO|98|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:14Z" level=info msg="PASO|62|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:15Z" level=info msg="PASO|99|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:15Z" level=info msg="PASO|57|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:15Z" level=info msg="PASO|23|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:16Z" level=info msg="PASO|27|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:16Z" level=info msg="PASO|55|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:16Z" level=info msg="PASO|100|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:16Z" level=info msg="PASO|26|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:16Z" level=info msg="PASO|59|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:17Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:17Z" level=info msg="PASO|61|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T04:57:17Z" level=info msg="PASO|6|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:17Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:17Z" level=info msg="PASO|66|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-27T04:57:17Z" level=info msg="PASO|8|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:17Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:17Z" level=info msg="PASO|60|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:19Z" level=info msg="PASO|30|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:20Z" level=info msg="PASO|64|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:23Z" level=info msg="PASO|65|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:57:24Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:24Z" level=info msg="PASO|72|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:25Z" level=info msg="PASO|67|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:26Z" level=info msg="PASO|32|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:57:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:26Z" level=info msg="PASO|74|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:26Z" level=info msg="PASO|33|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:26Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-27T04:57:26Z" level=info msg="PASO|1|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:26Z" level=info msg="PASO|63|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-27T04:57:27Z" level=info msg="PASO|14|navegacion|GET|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:57:27Z" level=info msg="PASO|3|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:27Z" level=info msg="PASO|38|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-27T04:57:28Z" level=info msg="PASO|19|navegacion|GET|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:28Z" level=info msg="PASO|70|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:28Z" level=info msg="PASO|69|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:57:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:57:28Z" level=info msg="PASO|7|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:29Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:29Z" level=info msg="PASO|24|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:30Z" level=info msg="PASO|71|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:31Z" level=info msg="PASO|36|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:57:31Z" level=info msg="PASO|13|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:31Z" level=info msg="PASO|34|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:31Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-27T04:57:31Z" level=info msg="PASO|18|lista_de_historias|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:31Z" level=info msg="PASO|25|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:31Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:31Z" level=info msg="PASO|68|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:32Z" level=info msg="PASO|42|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:32Z" level=info msg="PASO|28|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:57:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:33Z" level=info msg="PASO|31|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:33Z" level=info msg="PASO|29|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:57:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:34Z" level=info msg="PASO|77|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:57:34Z" level=info msg="PASO|9|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:34Z" level=info msg="PASO|40|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-27T04:57:35Z" level=info msg="PASO|22|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-27T04:57:35Z" level=info msg="PASO|20|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:36Z" level=info msg="PASO|76|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-27T04:57:36Z" level=info msg="PASO|11|notificaciones|GET|0|30000|FALLO|null" source=console
+time="2026-11-27T04:57:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:37Z" level=info msg="PASO|84|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:57:37Z" level=info msg="PASO|17|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:37Z" level=info msg="PASO|81|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:39Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:39Z" level=info msg="PASO|75|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:39Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:39Z" level=info msg="PASO|73|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:39Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:39Z" level=info msg="PASO|37|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:40Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:40Z" level=info msg="PASO|79|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:40Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:40Z" level=info msg="PASO|39|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:40Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-27T04:57:40Z" level=info msg="PASO|16|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:40Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:40Z" level=info msg="PASO|78|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:40Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:40Z" level=info msg="PASO|85|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:41Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:41Z" level=info msg="PASO|35|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:41Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-27T04:57:41Z" level=info msg="PASO|10|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:41Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-27T04:57:41Z" level=info msg="PASO|12|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:42Z" level=info msg="PASO|86|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:43Z" level=info msg="PASO|82|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:57:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:43Z" level=info msg="PASO|44|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:57:43Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-27T04:57:43Z" level=info msg="PASO|15|navegacion|GET|0|30000|FALLO|null" source=console
+time="2026-11-27T04:57:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:43Z" level=info msg="PASO|80|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:43Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-27T04:57:43Z" level=info msg="PASO|5|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:43Z" level=info msg="PASO|54|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:45Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:45Z" level=info msg="PASO|46|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:46Z" level=info msg="PASO|87|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:57:46Z" level=info msg="PASO|21|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:46Z" level=info msg="PASO|93|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T04:57:47Z" level=info msg="PASO|6|propietarios|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:47Z" level=info msg="PASO|48|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:57:47Z" level=info msg="PASO|8|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:49Z" level=info msg="PASO|41|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:49Z" level=info msg="PASO|90|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:49Z" level=info msg="PASO|50|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:49Z" level=info msg="PASO|56|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:57:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:49Z" level=info msg="PASO|52|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:49Z" level=info msg="PASO|83|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:49Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:49Z" level=info msg="PASO|53|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:50Z" level=info msg="PASO|49|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:51Z" level=info msg="PASO|91|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:51Z" level=info msg="PASO|43|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:52Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:52Z" level=info msg="PASO|95|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:53Z" level=info msg="PASO|62|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:53Z" level=info msg="PASO|47|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:57:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:53Z" level=info msg="PASO|23|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:54Z" level=info msg="PASO|45|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:54Z" level=info msg="PASO|88|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:54Z" level=info msg="PASO|59|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:55Z" level=info msg="PASO|51|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:55Z" level=info msg="PASO|89|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:57:55Z" level=info msg="PASO|4|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:56Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:57:56Z" level=info msg="PASO|1|privacidad|GET|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:56Z" level=info msg="PASO|94|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:56Z" level=info msg="PASO|100|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:57:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:57:57Z" level=info msg="PASO|14|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:57Z" level=info msg="PASO|55|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:57Z" level=info msg="PASO|61|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T04:57:57Z" level=info msg="PASO|3|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:57:57Z" level=info msg="PASO|2|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:58Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:57:58Z" level=info msg="PASO|19|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:58Z" level=info msg="PASO|92|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:58Z" level=info msg="PASO|60|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:57:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:58Z" level=info msg="PASO|58|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:57:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:57:59Z" level=info msg="PASO|98|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:00Z" level=info msg="PASO|66|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:01Z" level=info msg="PASO|99|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:03Z" level=info msg="PASO|96|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:04Z" level=info msg="PASO|72|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:04Z" level=info msg="PASO|97|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:05Z" level=info msg="PASO|26|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:05Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T04:58:05Z" level=info msg="PASO|22|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:05Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T04:58:05Z" level=info msg="PASO|20|empleados|GET|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:05Z" level=info msg="PASO|64|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:05Z" level=info msg="PASO|33|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:05Z" level=info msg="PASO|57|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:06Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T04:58:06Z" level=info msg="PASO|11|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:07Z" level=info msg="PASO|27|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:09Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:09Z" level=info msg="PASO|71|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:10Z" level=info msg="PASO|36|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:10Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T04:58:10Z" level=info msg="PASO|16|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:11Z" level=info msg="PASO|70|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T04:58:11Z" level=info msg="PASO|10|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:11Z" level=info msg="PASO|30|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:11Z" level=info msg="PASO|38|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T04:58:11Z" level=info msg="PASO|12|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:12Z" level=info msg="PASO|65|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:12Z" level=info msg="PASO|74|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:58:13Z" level=info msg="PASO|15|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T04:58:13Z" level=info msg="PASO|5|avisos_de_cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:14Z" level=info msg="PASO|40|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:14Z" level=info msg="PASO|32|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:14Z" level=info msg="PASO|63|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:15Z" level=info msg="PASO|76|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:15Z" level=info msg="PASO|31|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:16Z" level=info msg="PASO|77|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:58:16Z" level=info msg="PASO|17|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-27T04:58:17Z" level=info msg="PASO|13|navegacion|GET|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T04:58:17Z" level=info msg="PASO|8|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:17Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:17Z" level=info msg="PASO|67|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-27T04:58:19Z" level=info msg="PASO|7|citas_del_mes|GET|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:19Z" level=info msg="PASO|79|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:19Z" level=info msg="PASO|68|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:19Z" level=info msg="PASO|69|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:20Z" level=info msg="PASO|34|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:20Z" level=info msg="PASO|24|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:58:20Z" level=info msg="PASO|9|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:21Z" level=info msg="PASO|42|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:22Z" level=info msg="PASO|82|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:22Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-27T04:58:22Z" level=info msg="PASO|18|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:22Z" level=info msg="PASO|81|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:22Z" level=info msg="PASO|85|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:22Z" level=info msg="PASO|28|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:23Z" level=info msg="PASO|37|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:23Z" level=info msg="PASO|25|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:23Z" level=info msg="PASO|35|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:23Z" level=info msg="PASO|78|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:24Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:24Z" level=info msg="PASO|84|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:25Z" level=info msg="PASO|29|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:25Z" level=info msg="PASO|80|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:25Z" level=info msg="PASO|75|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:26Z" level=info msg="PASO|73|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:26Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T04:58:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:26Z" level=info msg="PASO|93|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T04:58:27Z" level=info msg="PASO|14|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:27Z" level=info msg="PASO|46|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-27T04:58:27Z" level=info msg="PASO|3|notificaciones|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T04:58:28Z" level=info msg="PASO|19|cumplimiento|GET|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:28Z" level=info msg="PASO|53|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:29Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:29Z" level=info msg="PASO|44|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:30Z" level=info msg="PASO|48|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:30Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-27T04:58:30Z" level=info msg="PASO|6|citas_del_mes|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:30Z" level=info msg="PASO|39|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:32Z" level=info msg="PASO|87|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:32Z" level=info msg="PASO|23|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:32Z" level=info msg="PASO|86|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:33Z" level=info msg="PASO|83|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:34Z" level=info msg="PASO|50|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:34Z" level=info msg="PASO|54|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:34Z" level=info msg="PASO|49|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-27T04:58:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T04:58:35Z" level=info msg="PASO|20|propietarios|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:35Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:35Z" level=info msg="PASO|55|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:58:36Z" level=info msg="PASO|4|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:36Z" level=info msg="PASO|41|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:36Z" level=info msg="PASO|58|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:36Z" level=info msg="PASO|95|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:58:36Z" level=info msg="PASO|21|apoderado|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:36Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-27T04:58:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:58:36Z" level=info msg="PASO|2|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:36Z" level=info msg="PASO|90|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:37Z" level=info msg="PASO|43|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:37Z" level=info msg="PASO|45|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:37Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:37Z" level=info msg="PASO|91|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:38Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:38Z" level=info msg="PASO|52|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:39Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:39Z" level=info msg="PASO|59|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:39Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:39Z" level=info msg="PASO|88|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:40Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:40Z" level=info msg="PASO|62|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:40Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-27T04:58:41Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T04:58:41Z" level=info msg="PASO|10|propietarios|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:41Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-27T04:58:41Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:41Z" level=info msg="PASO|56|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:42Z" level=info msg="PASO|97|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:43Z" level=info msg="PASO|98|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:43Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T04:58:43Z" level=info msg="PASO|15|cumplimiento|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:43Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-27T04:58:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:43Z" level=info msg="PASO|61|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:43Z" level=info msg="PASO|89|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:43Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:43Z" level=info msg="PASO|51|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:44Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:44Z" level=info msg="PASO|47|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:45Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:45Z" level=info msg="PASO|33|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:45Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:45Z" level=info msg="PASO|94|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:45Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:45Z" level=info msg="PASO|27|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:46Z" level=info msg="PASO|99|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:46Z" level=info msg="PASO|100|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:46Z" level=info msg="PASO|66|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:58:47Z" level=info msg="PASO|13|privacidad|GET|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-27T04:58:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:47Z" level=info msg="PASO|26|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:47Z" level=info msg="PASO|60|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:58:49Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T04:58:49Z" level=info msg="PASO|7|empleados|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:50Z" level=info msg="PASO|92|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:51Z" level=info msg="PASO|96|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:51Z" level=info msg="PASO|72|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:51Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:51Z" level=info msg="PASO|74|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:52Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:58:52Z" level=info msg="PASO|18|privacidad|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:53Z" level=info msg="PASO|40|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:54Z" level=info msg="PASO|57|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:54Z" level=info msg="PASO|31|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:54Z" level=info msg="PASO|32|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:54Z" level=info msg="PASO|70|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:54Z" level=info msg="PASO|36|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:55Z" level=info msg="PASO|63|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:56Z" level=info msg="PASO|64|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:56Z" level=info msg="PASO|77|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:56Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-27T04:58:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:56Z" level=info msg="PASO|30|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:57Z" level=info msg="PASO|38|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-27T04:58:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:57Z" level=info msg="PASO|65|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:58:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T04:58:58Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-27T04:58:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:59Z" level=info msg="PASO|71|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:58:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:58:59Z" level=info msg="PASO|69|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:00Z" level=info msg="PASO|82|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:00Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T04:59:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:00Z" level=info msg="PASO|67|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:59:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:01Z" level=info msg="PASO|85|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:02Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:59:02Z" level=info msg="PASO|17|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:03Z" level=info msg="PASO|79|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:05Z" level=info msg="PASO|76|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:05Z" level=info msg="PASO|78|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:05Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:59:05Z" level=info msg="PASO|9|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:06Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:06Z" level=info msg="PASO|81|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:07Z" level=info msg="PASO|37|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:09Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:09Z" level=info msg="PASO|84|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:10Z" level=info msg="PASO|34|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:10Z" level=info msg="PASO|68|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:59:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:10Z" level=info msg="PASO|75|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:10Z" level=info msg="PASO|24|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:59:11Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:11Z" level=info msg="PASO|48|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:12Z" level=info msg="PASO|28|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:59:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:12Z" level=info msg="PASO|83|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:12Z" level=info msg="PASO|42|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:12Z" level=info msg="PASO|46|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:12Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:12Z" level=info msg="PASO|25|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:13Z" level=info msg="PASO|39|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:59:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-27T04:59:13Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:13Z" level=info msg="PASO|80|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:14Z" level=info msg="PASO|58|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:14Z" level=info msg="PASO|73|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:14Z" level=info msg="PASO|35|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:14Z" level=info msg="PASO|87|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:14Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:14Z" level=info msg="PASO|93|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:59:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:15Z" level=info msg="PASO|86|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:59:15Z" level=info msg="PASO|4|apoderado|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:15Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:15Z" level=info msg="PASO|29|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:16Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:16Z" level=info msg="PASO|49|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:59:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T04:59:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T04:59:17Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:17Z" level=info msg="PASO|91|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:18Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:18Z" level=info msg="PASO|54|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:19Z" level=info msg="PASO|53|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:19Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T04:59:19Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27586/cancel?motivo=Cambio%20de%20planes%20del%20propietario\": request timeout"
+time="2026-11-27T04:59:19Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:59:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:20Z" level=info msg="PASO|55|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:20Z" level=info msg="PASO|90|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:20Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/navigation\": request timeout"
+time="2026-11-27T04:59:20Z" level=info msg="PASO|2|navegacion|GET|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:20Z" level=info msg="PASO|97|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:20Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:20Z" level=info msg="PASO|59|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:21Z" level=info msg="PASO|50|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:21Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-27T04:59:21Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:21Z" level=info msg="PASO|44|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:59:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:22Z" level=info msg="PASO|45|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:22Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T04:59:22Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:22Z" level=info msg="PASO|89|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:59:23Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:24Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:24Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:24Z" level=info msg="PASO|52|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:24Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:59:24Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:24Z" level=info msg="PASO|47|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:25Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:25Z" level=info msg="PASO|43|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:26Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T04:59:26Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:26Z" level=info msg="PASO|62|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:27Z" level=info msg="PASO|98|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:27Z" level=info msg="PASO|95|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:59:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-27T04:59:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T04:59:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:27Z" level=info msg="PASO|61|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:59:27Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-27T04:59:28Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:28Z" level=info msg="PASO|41|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:59:28Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T04:59:29Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:29Z" level=info msg="PASO|60|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:30Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:30Z" level=info msg="PASO|92|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:30Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T04:59:31Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27588/check-in\": request timeout"
+time="2026-11-27T04:59:31Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-27T04:59:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:32Z" level=info msg="PASO|88|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:59:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:32Z" level=info msg="PASO|94|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:32Z" level=info msg="PASO|100|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:32Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:33Z" level=info msg="PASO|66|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:59:33Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:33Z" level=info msg="PASO|56|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:59:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:34Z" level=info msg="PASO|72|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:34Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:34Z" level=info msg="PASO|63|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:35Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:35Z" level=info msg="PASO|64|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:59:35Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:35Z" level=info msg="PASO|51|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:36Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:36Z" level=info msg="PASO|70|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:38Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:38Z" level=info msg="PASO|71|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:59:38Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:38Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:38Z" level=info msg="PASO|57|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:38Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:38Z" level=info msg="PASO|99|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:39Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:39Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:39Z" level=info msg="PASO|74|login|POST|0|30000|FALLO|null" source=console
+time="2026-11-27T04:59:40Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:40Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:40Z" level=info msg="PASO|96|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:59:40Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:59:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:42Z" level=info msg="PASO|65|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:42Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:42Z" level=info msg="PASO|79|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:43Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T04:59:45Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:45Z" level=info msg="PASO|77|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:45Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:45Z" level=info msg="PASO|81|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:46Z" level=info msg="PASO|69|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:59:46Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:47Z" level=info msg="PASO|85|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-27T04:59:47Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-27T04:59:47Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:47Z" level=info msg="PASO|84|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:48Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:48Z" level=info msg="PASO|82|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:50Z" level=info msg="PASO|68|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:50Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/privacidad/mi-estado\": request timeout"
+time="2026-11-27T04:59:50Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:50Z" level=info msg="PASO|78|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:52Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:52Z" level=info msg="PASO|76|login|POST|0|30002|FALLO|null" source=console
+time="2026-11-27T04:59:52Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/notifications/read\": request timeout"
+time="2026-11-27T04:59:52Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-27T04:59:52Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:52Z" level=info msg="PASO|67|login|POST|0|30001|FALLO|null" source=console
+time="2026-11-27T04:59:52Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:53Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:54Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:55Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:56Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-27T04:59:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:56Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T04:59:57Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-27T04:59:57Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:58Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-27T04:59:58Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T04:59:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T04:59:59Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T05:00:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T05:00:00Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T05:00:00Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/medical-records?page=0&size=10&companyId=1\": request timeout"
+time="2026-11-27T05:00:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T05:00:01Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T05:00:01Z" level=warning msg="Request Failed" error="Patch \"http://127.0.0.1:18080/api/v1/appointments/27588/start\": request timeout"
+time="2026-11-27T05:00:02Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T05:00:03Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T05:00:04Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/auth/login\": request timeout"
+time="2026-11-27T05:00:05Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-27T05:00:07Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T05:00:10Z" level=warning msg="Request Failed" error="Post \"http://127.0.0.1:18080/api/v1/clients/guardians\": request timeout"
+time="2026-11-27T05:00:11Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-27T05:00:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/dashboard/overview?companyId=1\": request timeout"
+time="2026-11-27T05:00:13Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/appointments?page=0&size=100&companyId=1&fechaDesde=2026-11-01&fechaHasta=2026-11-28\": request timeout"
+time="2026-11-27T05:00:17Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T05:00:20Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance\": request timeout"
+time="2026-11-27T05:00:22Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/me/compliance/request-notifications\": request timeout"
+time="2026-11-27T05:00:22Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T05:00:27Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/clients/guardians?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T05:00:35Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T05:00:41Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+time="2026-11-27T05:00:43Z" level=warning msg="Request Failed" error="Get \"http://127.0.0.1:18080/api/v1/admin/employees?page=0&size=100&companyId=1\": request timeout"
+{
+ "perfil": "carga_escritura",
+ "nivel": 100,
+ "iteraciones_completas": 503,
+ "peticiones": 765,
+ "duracion_total_s": 349.701193087,
+ "latencia_ms": {
+  "mediana": 30000.309119,
+  "p95": 30000.9231736,
+  "p99": 30001.058365,
+  "max": 30012.024605
+ },
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 199,
+  "otro_4xx": 0,
+  "5xx": 0,
+  "sin_respuesta": 566
+ },
+ "pasos": {
+  "apoderado": {
+   "correctos": 9,
+   "fallidos": 36
+  },
+  "mascota": {
+   "correctos": 8,
+   "fallidos": 1
+  },
+  "cita": {
+   "correctos": 8,
+   "fallidos": 0
+  },
+  "checkin": {
+   "correctos": 2,
+   "fallidos": 2
+  },
+  "iniciar": {
+   "correctos": 1,
+   "fallidos": 3
+  },
+  "consulta": {
+   "correctos": 1,
+   "fallidos": 0
+  },
+  "diagnostico": {
+   "correctos": 1,
+   "fallidos": 0
+  },
+  "receta": {
+   "correctos": 1,
+   "fallidos": 0
+  },
+  "actualizar_mascota": {
+   "correctos": 1,
+   "fallidos": 0
+  },
+  "cerrar_consulta": {
+   "correctos": 0,
+   "fallidos": 1
+  },
+  "finalizar_servicio": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "punto_cobro": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "vincular_equipo": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "abrir_caja": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "pago": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "cancelar_cita": {
+   "correctos": 1,
+   "fallidos": 2
+  }
+ },
+ "acciones": {
+  "panel": 13,
+  "agenda": 7,
+  "historia": 10,
+  "reportes": 1,
+  "recepcion": 45,
+  "atencion": 4,
+  "cobro": 0,
+  "cancelar": 3
+ },
+ "acciones_sin_trabajo": 28,
+ "vus_maximos": 100,
+ "vus_activos_max": 100,
+ "iteraciones_descartadas": null
+}

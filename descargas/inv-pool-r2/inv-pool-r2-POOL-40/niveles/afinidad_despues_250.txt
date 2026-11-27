@@ -1,0 +1,7 @@
+backend sv-despues: cpuset=1 nanocpus=1000000000 memoria=2147483648 swap=2147483648
+backend, cpuset.cpus.effective: 1
+backend, cpu.max: 100000 100000
+backend, memory.max: 2147483648
+backend, nproc dentro del contenedor: 1
+postgres sv-pg: cpuset=0 nanocpus=0 memoria=2147483648
+postgres, cpuset.cpus.effective: 0

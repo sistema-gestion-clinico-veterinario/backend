@@ -1,0 +1,17 @@
+# Fase 3: escalado vertical, 1 CPU, 512 MB, heap 192m
+
+- procesador: AMD EPYC 9V74 80-Core Processor; hilos por núcleo: 2; núcleos por socket: 2
+- versiones medidas: despues; heap máximo: 192m; núcleos de k6: 0; reservas de horario por usuario: 14
+- recursos del backend: 1 CPU, 512m de RAM
+- perfil del laboratorio: PRODUCCION-512M (memoria 512m, CPU 1, heap máximo 192m; configuración de la JVM en los niveles: P, en el control: P)
+- usadas en esta corrida: P para los niveles y P para el control (perfil PRODUCCION-512M)
+- correo: servidor SMTP de pruebas en el contenedor sv-correo (sin TLS ni autenticación; los envíos terminan bien)
+- pausa entre acciones: 15 s (con variación aleatoria)
+- antes:   no medido
+- despues: b1d22f951f756e136a366262625c79e2e95b7e5b
+
+| Usuarios | Veredicto | Sin degradación hasta (usuarios) | Errores | Peticiones/s | p95 (ms) | p99 (ms) | CPU backend: media / al tope (% del límite) | CPU PostgreSQL media (%) | Memoria pico (MB) | Heap tras GC máx (MB) | Tiempo en GC | Metaspace pico (MB) | Avisos de pool agotado | Fallos: sin respuesta / 5xx / 4xx | Escrituras correctas / fallidas | Datos |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 100 | FALLA | 16 | 76.6 % | 2.1 | 30 001 | 30 001 | 23 / 20 | 1 | 424 | 185 | 47 % | 109 | 6 | 561 / 0 / 1 | 27 / 42 | CONSISTENTES |
+
+> "Sin degradación hasta" = usuarios del último tramo de 15 s antes del primero con 1 % de errores o p95 de 2 s. Los 4xx del laboratorio son reglas de negocio (solo hay 10 veterinarios). Una corrida por nivel y por configuración.

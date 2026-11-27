@@ -1,0 +1,22 @@
+{
+  "version": "despues",
+  "perfil_lab": "EXP-HEAP-288M (experimental: -Xmx288m en un contenedor de 512m; el resto de las opciones es el de producción)",
+  "nivel": 100,
+  "config_jvm": "H",
+  "correos_recibidos": 2,
+  "heap_max": "288m",
+  "cpus_limite": 1,
+  "memoria_limite_mb": 512,
+  "perfil": "carga_escritura",
+  "duracion_s": 39,
+  "cpu_contenedor_s": -21,
+  "oom_killed": true,
+  "reinicios": 0,
+  "sigue_corriendo": false,
+  "codigo_salida": 137,
+  "salud_final_http": "000",
+  "k6_codigo_salida": 105,
+  "caida_backend": "t=2026-11-27T05:04:03Z OOMKilled=true codigo_salida=137 error=",
+  "sql_sentencias": 2404,
+  "sql_tiempo_s": 0.6
+}

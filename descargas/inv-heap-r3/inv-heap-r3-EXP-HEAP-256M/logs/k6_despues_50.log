@@ -1,0 +1,109 @@
+time="2026-11-27T04:38:40Z" level=info msg="PASO|14|cita|POST|400|22|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-27T04:38:49Z" level=info msg="PASO|7|cita|POST|400|15|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-27T04:38:58Z" level=info msg="PASO|7|cita|POST|400|40|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-27T04:39:56Z" level=info msg="PASO|17|cita|POST|400|31|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-27T04:40:04Z" level=info msg="PASO|2|cita|POST|400|13|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-27T04:40:48Z" level=info msg="PASO|15|cita|POST|400|12|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-27T04:41:14Z" level=info msg="PASO|20|cita|POST|400|12|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+time="2026-11-27T04:41:27Z" level=info msg="PASO|21|cita|POST|400|12|FALLO|{\"success\":false,\"message\":\"El veterinario ya tiene una cita programada en ese horario\",\"data\":null}" source=console
+{
+ "perfil": "carga_escritura",
+ "nivel": 50,
+ "iteraciones_completas": 659,
+ "peticiones": 2784,
+ "duracion_total_s": 252.244802345,
+ "latencia_ms": {
+  "mediana": 13.873688000000001,
+  "p95": 113.13260549999976,
+  "p99": 413.31007458000073,
+  "max": 5361.409946
+ },
+ "estados": {
+  "401": 0,
+  "429": 0,
+  "2xx": 2776,
+  "otro_4xx": 8,
+  "5xx": 0,
+  "sin_respuesta": 0
+ },
+ "pasos": {
+  "apoderado": {
+   "correctos": 146,
+   "fallidos": 0
+  },
+  "mascota": {
+   "correctos": 146,
+   "fallidos": 0
+  },
+  "cita": {
+   "correctos": 138,
+   "fallidos": 8
+  },
+  "checkin": {
+   "correctos": 60,
+   "fallidos": 0
+  },
+  "iniciar": {
+   "correctos": 60,
+   "fallidos": 0
+  },
+  "consulta": {
+   "correctos": 60,
+   "fallidos": 0
+  },
+  "diagnostico": {
+   "correctos": 60,
+   "fallidos": 0
+  },
+  "receta": {
+   "correctos": 60,
+   "fallidos": 0
+  },
+  "actualizar_mascota": {
+   "correctos": 60,
+   "fallidos": 0
+  },
+  "cerrar_consulta": {
+   "correctos": 60,
+   "fallidos": 0
+  },
+  "finalizar_servicio": {
+   "correctos": 0,
+   "fallidos": 0
+  },
+  "punto_cobro": {
+   "correctos": 32,
+   "fallidos": 0
+  },
+  "vincular_equipo": {
+   "correctos": 32,
+   "fallidos": 0
+  },
+  "abrir_caja": {
+   "correctos": 32,
+   "fallidos": 0
+  },
+  "pago": {
+   "correctos": 36,
+   "fallidos": 0
+  },
+  "cancelar_cita": {
+   "correctos": 28,
+   "fallidos": 0
+  }
+ },
+ "acciones": {
+  "panel": 133,
+  "agenda": 99,
+  "historia": 99,
+  "reportes": 8,
+  "recepcion": 146,
+  "atencion": 60,
+  "cobro": 36,
+  "cancelar": 28
+ },
+ "acciones_sin_trabajo": 110,
+ "vus_maximos": 50,
+ "vus_activos_max": 50,
+ "iteraciones_descartadas": null
+}
