@@ -15,7 +15,7 @@ import informe_nivel as n  # noqa: E402
 import informe_laboratorio as lab  # noqa: E402
 
 RE_FECHA = re.compile(r'^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})(?:\.(\d+))?Z?')
-RE_HIKARI_STATS = re.compile(r'(Before cleanup|After cleanup|After adding|Timeout failure) +stats \(total=(\d+), active=(\d+), idle=(\d+), waiting=(\d+)\)')
+RE_HIKARI_STATS = re.compile(r'(Before cleanup|After cleanup|After adding|Timeout failure|Connection not added,) +stats \(total=(\d+), active=(\d+), idle=(\d+), waiting=(\d+)\)')
 RE_SIN_CONEXION = re.compile(r'Connection is not available|request timed out after')
 RE_HIKARI_ERROR = re.compile(r'request timed out after \d+ms \(total=(\d+), active=(\d+), idle=(\d+), waiting=(\d+)\)')
 CUBO_S = 5
@@ -97,7 +97,7 @@ def leer_log(ruta):
                     ev['sin_conexion'].append(t)
                 m = RE_HIKARI_STATS.search(linea)
                 if m and t is not None:
-                    ev['hikari'].append({'ts': t, 'tipo': m.group(1), 'total': int(m.group(2)), 'activas': int(m.group(3)), 'inactivas': int(m.group(4)), 'esperando': int(m.group(5))})
+                    ev['hikari'].append({'ts': t, 'tipo': m.group(1).rstrip(','), 'total': int(m.group(2)), 'activas': int(m.group(3)), 'inactivas': int(m.group(4)), 'esperando': int(m.group(5))})
                 else:
                     m = RE_HIKARI_ERROR.search(linea)
                     if m and t is not None:

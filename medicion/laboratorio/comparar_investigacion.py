@@ -11,8 +11,8 @@ import informe_laboratorio as lab  # noqa: E402
 import series_temporales as st  # noqa: E402
 
 NOMBRE_RE = re.compile(r'inv-(heap|pool|afin)-r(\d+)-(.+)$')
-RE_NMT = re.compile(r'^-\s+(.+?)\s+\(reserved=(\d+)KB, committed=(\d+)KB\)', re.M)
-RE_NMT_TOTAL = re.compile(r'Total: reserved=(\d+)KB, committed=(\d+)KB')
+RE_NMT = re.compile(r'^-\s+(.+?)\s+\(reserved=(\d+)(KB)?, committed=(\d+)(KB)?\)', re.M)
+RE_NMT_TOTAL = re.compile(r'Total: reserved=(\d+)(KB)?, committed=(\d+)(KB)?')
 
 
 def descubrir(raiz):
@@ -31,9 +31,11 @@ def leer_nmt(ruta):
     texto = cb.leer_texto(ruta)
     if not texto:
         return None
-    categorias = {nombre.strip(): int(comprometido) / 1024 for nombre, _, comprometido in RE_NMT.findall(texto)}
+    def a_mb(valor, unidad):
+        return int(valor) / (1024 if unidad == 'KB' else 1048576)
+    categorias = {nombre.strip(): a_mb(comprometido, unidad) for nombre, _, _, comprometido, unidad in RE_NMT.findall(texto)}
     total = RE_NMT_TOTAL.search(texto)
-    return {'categorias_mb': categorias, 'total_comprometido_mb': int(total.group(2)) / 1024 if total else None}
+    return {'categorias_mb': categorias, 'total_comprometido_mb': a_mb(total.group(3), total.group(4)) if total else None}
 
 
 def actividad_pg(ruta):
@@ -52,8 +54,9 @@ def actividad_pg(ruta):
 def hikari_resumen(a):
     puntos = [h for _, h in a['hikari']]
     if not puntos:
-        return {'esperando_max': None, 'activas_max': None, 'avisos': 0}
-    return {'esperando_max': max(h['esperando'] for h in puntos), 'activas_max': max(h['activas'] for h in puntos), 'avisos': len(puntos), 'total': puntos[0]['total']}
+        return {'esperando_max': None, 'activas_max': None, 'avisos': 0, 'esperas_agotadas': a.get('sin_conexion_lineas', 0)}
+    return {'esperando_max': max(h['esperando'] for h in puntos), 'activas_max': max(h['activas'] for h in puntos), 'avisos': len(puntos), 'total': puntos[0]['total'],
+            'esperas_agotadas': a.get('sin_conexion_lineas', 0)}
 
 
 def pool_de_entorno(d):
@@ -112,7 +115,7 @@ def seccion_heap(corridas):
                    for (e, nv), x in g.items()]) + ['']
     nmt = [c for c in cs if c.get('nmt')]
     if nmt:
-        categorias = sorted({k for c in nmt for k in c['nmt']['categorias_mb']})
+        categorias = sorted({k for c in nmt for k in c['nmt']['categorias_mb']}, key=lambda k: -max(c['nmt']['categorias_mb'].get(k, 0) for c in nmt))
         L += ['### Memoria nativa según NMT (una corrida por configuración, con el sobrecosto del propio NMT)', '']
         L += cb.tabla(['Configuración', 'Usuarios', 'Total comprometido (MB)'] + categorias[:9],
                       [(c['etiqueta'], c['nivel'], cb.fmt0(c['nmt']['total_comprometido_mb'])) + tuple(cb.fmt0(c['nmt']['categorias_mb'].get(k)) for k in categorias[:9]) for c in nmt]) + ['']
@@ -133,7 +136,7 @@ def seccion_pool(corridas):
                   [(p[0], cb.rango([cb.val(c, 'pg_actividad', 'conexiones_max') for c in x]), f"{cb.rango([cb.val(c, 'pg_actividad', 'activas_media') for c in x], 1)} / {cb.rango([cb.val(c, 'pg_actividad', 'activas_max') for c in x])}",
                     cb.rango([cb.val(c, 'pg_actividad', 'inactivas_media') for c in x], 1), cb.rango([cb.val(c, 'pg_actividad', 'inactivas_en_transaccion_max') for c in x]),
                     cb.rango([cb.val(c, 'pg_actividad', 'esperan_lock_max') for c in x]), cb.rango([cb.val(c, 'pg_actividad', 'tx_mas_vieja_max_s') for c in x], 1),
-                    cb.rango([cb.val(c, 'hikari', 'esperando_max') for c in x]), cb.rango([cb.val(c, 'hikari', 'avisos') for c in x])) for p, x in g.items()]) + ['']
+                    cb.rango([cb.val(c, 'hikari', 'esperando_max') for c in x]), cb.rango([cb.val(c, 'hikari', 'esperas_agotadas') for c in x])) for p, x in g.items()]) + ['']
     hilos = [(c['pool'], c['repeticion'], c['volcados_de_hilos']) for c in cs if c['volcados_de_hilos']]
     if hilos:
         L += ['Volcados de hilos disponibles (se analizan con `analizar_hilos.py`): ' + '; '.join(f'pool {p}, repetición {r}: {len(v)}' for p, r, v in hilos) + '.', '']

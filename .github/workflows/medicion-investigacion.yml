@@ -402,7 +402,7 @@ jobs:
           path: comparacion-inv/
           if-no-files-found: warn
 
-      - name: Publicar los resultados en la rama medicion/resultados-investigacion
+      - name: Publicar los resultados en una rama propia de esta ejecución
         if: always()
         env:
           TOKEN: ${{ github.token }}
@@ -418,7 +418,8 @@ jobs:
           git init -q
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git checkout -q -b medicion/resultados-investigacion
+          RAMA="medicion/resultados-investigacion-$EJECUCION"
+          git checkout -q -b "$RAMA"
           git add -A
           git commit -q -m "Resultados de las investigaciones (ejecución $EJECUCION)"
-          git push -f "https://x-access-token:${TOKEN}@github.com/${REPO}.git" medicion/resultados-investigacion
+          git push "https://x-access-token:${TOKEN}@github.com/${REPO}.git" "$RAMA"

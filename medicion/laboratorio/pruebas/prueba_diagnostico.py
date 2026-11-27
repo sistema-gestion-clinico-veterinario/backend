@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import analizar_hilos as ah  # noqa: E402
 import series_temporales as st  # noqa: E402
 import muestreo_pg as mp  # noqa: E402
+import comparar_investigacion as ci  # noqa: E402
 
 TRANSACCION = 'at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:374)'
 
@@ -79,17 +80,33 @@ class RegistroDeHikari(unittest.TestCase):
             '2026-11-23T19:56:00.101Z DEBUG 1 --- [vargasvet] [housekeeper] ' + pie + 'After cleanup  stats (total=20, active=3, idle=17, waiting=0)',
             '2026-11-23T19:57:12.930Z ERROR 1 --- [vargasvet] [exec-8] o.h.e.j.s.SqlExceptionHelper : HikariPool-1 - Connection is not available, request timed out after 30000ms (total=10, active=10, idle=0, waiting=199)',
             '2026-11-23T19:57:13.000Z DEBUG 1 --- [vargasvet] [exec-9] ' + pie + 'Timeout failure stats (total=10, active=10, idle=0, waiting=198)',
+            '2026-11-23T19:57:13.500Z DEBUG 1 --- [vargasvet] [onnection adder] ' + pie + 'Connection not added, stats (total=4, active=2, idle=2, waiting=5)',
             '2026-11-23T19:57:14.000Z ERROR 1 --- [vargasvet] [exec-9] x : java.lang.OutOfMemoryError: Java heap space',
         ]) + '\n'
         with tempfile.TemporaryDirectory() as t:
             ruta = Path(t) / 'backend.log'
             ruta.write_text(lineas, encoding='utf-8')
             ev = st.leer_log(ruta)
-        self.assertEqual([h['tipo'] for h in ev['hikari']], ['Before cleanup', 'After cleanup', 'Tiempo agotado', 'Timeout failure'])
-        self.assertEqual([h['esperando'] for h in ev['hikari']], [0, 0, 199, 198])
+        self.assertEqual([h['tipo'] for h in ev['hikari']], ['Before cleanup', 'After cleanup', 'Tiempo agotado', 'Timeout failure', 'Connection not added'])
+        self.assertEqual([h['esperando'] for h in ev['hikari']], [0, 0, 199, 198, 5])
         self.assertEqual(ev['hikari'][0]['activas'], 3)
         self.assertEqual(len(ev['sin_conexion']), 1)
         self.assertEqual(len(ev['oom']), 1)
+
+
+class MemoriaNativa(unittest.TestCase):
+    def test_lee_nmt_en_bytes_y_en_kb(self):
+        import tempfile
+        salto = chr(10)
+        with tempfile.TemporaryDirectory() as t:
+            en_bytes = Path(t) / 'b.txt'
+            en_bytes.write_text(salto.join(['Total: reserved=585933636, committed=413479748', '', '-                 Java Heap (reserved=201326592, committed=201326592)', '']), encoding='utf-8')
+            en_kb = Path(t) / 'k.txt'
+            en_kb.write_text(salto.join(['Total: reserved=2048KB, committed=1024KB', '', '-                 Java Heap (reserved=2048KB, committed=1024KB)', '']), encoding='utf-8')
+            r1, r2 = ci.leer_nmt(en_bytes), ci.leer_nmt(en_kb)
+        self.assertAlmostEqual(r1['total_comprometido_mb'], 394.3, delta=0.1)
+        self.assertEqual(r1['categorias_mb']['Java Heap'], 192)
+        self.assertEqual(r2['total_comprometido_mb'], 1.0)
 
 
 if __name__ == '__main__':

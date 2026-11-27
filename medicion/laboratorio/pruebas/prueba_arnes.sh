@@ -144,6 +144,10 @@ VOLCADO_HILOS_S="0,0"
 volcar_hilos despues despues_250 "$(date +%s)"
 igual "el volcado envía SIGQUIT al contenedor" "$(cat "$TMP/kill.txt")" "kill -s QUIT sv-despues"
 igual "el volcado se guarda comprimido y empieza en el volcado" "$(gzip -dc "$TMP/niveles/hilos_despues_250_t0.txt.gz" | head -1)" "Full thread dump OpenJDK 64-Bit Server VM:"
+for desplazamiento in $(grep -n 'base_cuenta=\$((base_cuenta + nivel))' "$ARNES" | cut -d: -f1); do
+  previa="$(sed -n "$((desplazamiento - 3)),$((desplazamiento - 1))p" "$ARNES")"
+  case "$previa" in *'RESET_BASE'*) ok "la cuenta base no avanza con la base reiniciada (línea $desplazamiento)" ;; *) mal "la cuenta base avanza aunque RESET_BASE=1 reinicia la base (línea $desplazamiento)" ;; esac
+done
 unset -f docker sleep pkill
 
 rm -rf "$TMP"

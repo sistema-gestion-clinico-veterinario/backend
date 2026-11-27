@@ -913,7 +913,7 @@ while read -r nivel rampa mantener _ <&3; do
   python3 "$RAIZ/medicion/escritura/informe_carga.py" "$SAL" "$nivel" $MODO_INFORME > "$SAL/logs/informe_carga_${nivel}.log" 2>&1 \
     && cat "$SAL/niveles/INFORME_CARGA_${nivel}.md" >> "${GITHUB_STEP_SUMMARY:-/dev/null}" \
     || log "no se pudo generar el informe del nivel $nivel (ver logs/informe_carga_${nivel}.log)"
-  if [ -z "$VARIANTES" ]; then
+  if [ -z "$VARIANTES" ] && [ "$RESET_BASE" != 1 ]; then
     base_u=$((base_u + nivel * ITER_POR_VU))
     base_cuenta=$((base_cuenta + nivel))
   fi
