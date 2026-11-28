@@ -2,19 +2,19 @@ package veterinaria.vargasvet.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import veterinaria.vargasvet.domain.entity.AuditLog;
 import veterinaria.vargasvet.dto.AuditLogDTO;
+import veterinaria.vargasvet.realtime.PublicadorTiempoReal;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class AuditRealtimePublisher {
 
-    private final SimpMessagingTemplate messagingTemplate;
+    private final PublicadorTiempoReal publicador;
 
     public void publishAfterCommit(AuditLog saved) {
         Runnable publish = () -> {
@@ -40,10 +40,10 @@ public class AuditRealtimePublisher {
                         .outcome(saved.getOutcome())
                         .build();
 
-                messagingTemplate.convertAndSend("/topic/audit-logs", dto);
+                publicador.publicar("/topic/audit-logs", dto);
 
                 if (saved.getCompanyId() != null) {
-                    messagingTemplate.convertAndSend("/topic/audit-logs/" + saved.getCompanyId(), dto);
+                    publicador.publicar("/topic/audit-logs/" + saved.getCompanyId(), dto);
                 }
             } catch (Exception e) {
                 log.warn("No se pudo publicar el evento de auditoría por WebSocket (auditId={})", saved.getId());

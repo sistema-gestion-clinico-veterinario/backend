@@ -29,7 +29,7 @@ import veterinaria.vargasvet.util.BusinessValidator;
 import veterinaria.vargasvet.service.EmailService;
 import veterinaria.vargasvet.dto.Mail;
 import veterinaria.vargasvet.dto.CitaWsEvent;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import veterinaria.vargasvet.realtime.PublicadorTiempoReal;
 import java.util.Map;
 import java.util.HashMap;
 import java.time.format.DateTimeFormatter;
@@ -65,7 +65,7 @@ public class CitaServiceImpl implements CitaService {
     private final AccesoValidator accesoValidator;
     private final veterinaria.vargasvet.service.AuditLogService auditLogService;
     private final EmailService emailService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final PublicadorTiempoReal publicadorTiempoReal;
     private final UsuarioContactoService contactoService;
     private final veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
     private final veterinaria.vargasvet.service.OwnerContactPolicy ownerContactPolicy;
@@ -1128,7 +1128,7 @@ public class CitaServiceImpl implements CitaService {
         java.util.concurrent.CompletableFuture.runAsync(() -> {
             try {
                 if (finalCompanyId != null) {
-                    messagingTemplate.convertAndSend("/topic/citas/" + finalCompanyId, event);
+                    publicadorTiempoReal.publicar("/topic/citas/" + finalCompanyId, event);
                 }
             } catch (Exception e) {
                 System.err.println("WS ERROR: No se pudo transmitir evento de cita: " + e.getMessage());

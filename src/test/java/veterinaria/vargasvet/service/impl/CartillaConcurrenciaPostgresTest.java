@@ -6,7 +6,7 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import veterinaria.vargasvet.realtime.PublicadorTiempoReal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -109,7 +109,7 @@ class CartillaConcurrenciaPostgresTest {
                 mascotaRepository, historiaClinicaRepository, empleadoRepository, serviciosRepository,
                 tipoVacunaRepository, tipoDesparasitanteRepository, vacunaRepository, desparasitacionRepository,
                 controlRepository, citaRepository, mock(UsuarioContactoService.class), mock(AuditLogService.class),
-                mock(SimpMessagingTemplate.class), mock(MascotaCartillaMapper.class),
+                mock(PublicadorTiempoReal.class), mock(MascotaCartillaMapper.class),
                 mock(veterinaria.vargasvet.service.PetOwnershipService.class));
     }
 

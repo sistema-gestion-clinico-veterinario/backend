@@ -3,7 +3,7 @@ package veterinaria.vargasvet.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import veterinaria.vargasvet.realtime.PublicadorTiempoReal;
 import veterinaria.vargasvet.domain.entity.*;
 import veterinaria.vargasvet.domain.enums.EstadoCita;
 import veterinaria.vargasvet.domain.enums.EstadoControlPreventivo;
@@ -57,7 +57,7 @@ public class CartillaServiceImpl implements CartillaService {
     private final CitaRepository citaRepository;
     private final UsuarioContactoService contactoService;
     private final AuditLogService auditLogService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final PublicadorTiempoReal publicadorTiempoReal;
     private final MascotaCartillaMapper mascotaCartillaMapper;
     private final veterinaria.vargasvet.service.PetOwnershipService petOwnershipService;
 
@@ -499,7 +499,7 @@ public class CartillaServiceImpl implements CartillaService {
         event.put("mascotaNombre", mascota.getNombreCompleto());
         event.put("control", tipo.name());
         event.put("total", total);
-        Runnable publish = () -> messagingTemplate.convertAndSend("/topic/caja/" + companyId, event);
+        Runnable publish = () -> publicadorTiempoReal.publicar("/topic/caja/" + companyId, event);
         if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
             org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
                     new org.springframework.transaction.support.TransactionSynchronization() {

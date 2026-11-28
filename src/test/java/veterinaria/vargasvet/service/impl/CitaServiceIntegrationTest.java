@@ -6,7 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import veterinaria.vargasvet.realtime.PublicadorTiempoReal;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -120,7 +120,7 @@ class CitaServiceIntegrationTest {
                 accesoValidator,
                 mock(AuditLogService.class),
                 emailService,
-                mock(SimpMessagingTemplate.class),
+                mock(PublicadorTiempoReal.class),
                 mock(veterinaria.vargasvet.service.impl.UsuarioContactoService.class),
                 petOwnershipService,
                 new veterinaria.vargasvet.service.OwnerContactPolicy(contactoAvisos)

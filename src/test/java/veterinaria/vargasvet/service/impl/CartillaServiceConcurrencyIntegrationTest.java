@@ -4,7 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import veterinaria.vargasvet.realtime.PublicadorTiempoReal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import veterinaria.vargasvet.domain.enums.IntervaloUnidad;
 import veterinaria.vargasvet.dto.request.CartillaAplicacionRequest;
@@ -56,7 +56,7 @@ class CartillaServiceConcurrencyIntegrationTest {
                 mascotaRepository, historiaClinicaRepository, empleadoRepository, serviciosRepository,
                 tipoVacunaRepository, tipoDesparasitanteRepository, vacunaRepository, desparasitacionRepository,
                 controlRepository, citaRepository, mock(UsuarioContactoService.class), mock(AuditLogService.class),
-                mock(SimpMessagingTemplate.class), mock(MascotaCartillaMapper.class),
+                mock(PublicadorTiempoReal.class), mock(MascotaCartillaMapper.class),
                 mock(veterinaria.vargasvet.service.PetOwnershipService.class));
 
         EscenarioCartillaParaPruebas.Datos datos = new EscenarioCartillaParaPruebas(companyRepository, usuarioRepository,
