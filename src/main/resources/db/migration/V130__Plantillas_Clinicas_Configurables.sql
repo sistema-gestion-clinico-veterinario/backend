@@ -1,4 +1,4 @@
-CREATE TABLE clinical_concept (
+CREATE TABLE IF NOT EXISTS clinical_concept (
     id BIGSERIAL PRIMARY KEY,
     company_id INTEGER REFERENCES company(id),
     code VARCHAR(120) NOT NULL,
@@ -23,14 +23,14 @@ CREATE TABLE clinical_concept (
     )
 );
 
-CREATE UNIQUE INDEX uk_clinical_concept_system_code
+CREATE UNIQUE INDEX IF NOT EXISTS uk_clinical_concept_system_code
     ON clinical_concept (code) WHERE company_id IS NULL;
-CREATE UNIQUE INDEX uk_clinical_concept_company_code
+CREATE UNIQUE INDEX IF NOT EXISTS uk_clinical_concept_company_code
     ON clinical_concept (company_id, code) WHERE company_id IS NOT NULL;
-CREATE INDEX idx_clinical_concept_company_active
+CREATE INDEX IF NOT EXISTS idx_clinical_concept_company_active
     ON clinical_concept (company_id, active);
 
-CREATE TABLE clinical_template (
+CREATE TABLE IF NOT EXISTS clinical_template (
     id BIGSERIAL PRIMARY KEY,
     company_id INTEGER NOT NULL REFERENCES company(id),
     template_key VARCHAR(80) NOT NULL,
@@ -47,13 +47,13 @@ CREATE TABLE clinical_template (
     CONSTRAINT ck_clinical_template_status CHECK (status IN ('DRAFT', 'PUBLISHED', 'ARCHIVED'))
 );
 
-CREATE UNIQUE INDEX uk_clinical_template_published
+CREATE UNIQUE INDEX IF NOT EXISTS uk_clinical_template_published
     ON clinical_template (company_id, template_key)
     WHERE status = 'PUBLISHED';
-CREATE INDEX idx_clinical_template_company_status
+CREATE INDEX IF NOT EXISTS idx_clinical_template_company_status
     ON clinical_template (company_id, status);
 
-CREATE TABLE clinical_template_section (
+CREATE TABLE IF NOT EXISTS clinical_template_section (
     id BIGSERIAL PRIMARY KEY,
     template_id BIGINT NOT NULL REFERENCES clinical_template(id) ON DELETE CASCADE,
     title VARCHAR(160) NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE clinical_template_section (
     CONSTRAINT ck_clinical_template_section_order CHECK (display_order >= 0)
 );
 
-CREATE TABLE clinical_template_field (
+CREATE TABLE IF NOT EXISTS clinical_template_field (
     id BIGSERIAL PRIMARY KEY,
     section_id BIGINT NOT NULL REFERENCES clinical_template_section(id) ON DELETE CASCADE,
     concept_id BIGINT NOT NULL REFERENCES clinical_concept(id),
@@ -81,7 +81,7 @@ CREATE TABLE clinical_template_field (
 ALTER TABLE consulta
     ADD COLUMN IF NOT EXISTS clinical_template_id BIGINT REFERENCES clinical_template(id);
 
-CREATE TABLE consultation_field_answer (
+CREATE TABLE IF NOT EXISTS consultation_field_answer (
     id BIGSERIAL PRIMARY KEY,
     consultation_id BIGINT NOT NULL REFERENCES consulta(id) ON DELETE CASCADE,
     template_field_id BIGINT NOT NULL REFERENCES clinical_template_field(id),
@@ -98,11 +98,20 @@ CREATE TABLE consultation_field_answer (
     )
 );
 
-CREATE INDEX idx_consultation_field_answer_consultation
+CREATE INDEX IF NOT EXISTS idx_consultation_field_answer_consultation
     ON consultation_field_answer (consultation_id);
-CREATE INDEX idx_consultation_field_answer_field_number
+CREATE INDEX IF NOT EXISTS idx_consultation_field_answer_field_number
     ON consultation_field_answer (template_field_id, value_number)
     WHERE value_number IS NOT NULL;
+
+ALTER TABLE clinical_concept
+    ALTER COLUMN active SET DEFAULT TRUE,
+    ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE clinical_template
+    ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE clinical_template_field
+    ALTER COLUMN visible SET DEFAULT TRUE,
+    ALTER COLUMN visibility_rules SET DEFAULT '{}'::jsonb;
 
 INSERT INTO clinical_concept
     (code, base_name, description, value_type, unit, origin, reportable, validation_config)
