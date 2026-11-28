@@ -15,11 +15,11 @@ class PlantillasClinicasConfigurablesMigrationTest {
                 "src/main/resources/db/migration/V130__Plantillas_Clinicas_Configurables.sql"));
 
         assertThat(sql)
-                .contains("CREATE TABLE clinical_concept")
-                .contains("CREATE TABLE clinical_template")
-                .contains("CREATE TABLE clinical_template_section")
-                .contains("CREATE TABLE clinical_template_field")
-                .contains("CREATE TABLE consultation_field_answer")
+                .contains("CREATE TABLE IF NOT EXISTS clinical_concept")
+                .contains("CREATE TABLE IF NOT EXISTS clinical_template")
+                .contains("CREATE TABLE IF NOT EXISTS clinical_template_section")
+                .contains("CREATE TABLE IF NOT EXISTS clinical_template_field")
+                .contains("CREATE TABLE IF NOT EXISTS consultation_field_answer")
                 .contains("CONSTRAINT uk_clinical_template_version UNIQUE (company_id, template_key, version)")
                 .contains("WHERE status = 'PUBLISHED'")
                 .contains("ADD COLUMN IF NOT EXISTS clinical_template_id")
