@@ -57,6 +57,16 @@ PERFIL_EFECTIVO="$PERFIL_LAB"
 PIN_MODO="${PIN_MODO:-$(entrada_evento pin_modo)}"
 PIN_MODO="${PIN_MODO:-fijo}"
 SEMILLA="${SEMILLA:-}"
+CLINICAS="${CLINICAS:-$(entrada_evento clinicas)}"
+CLINICAS="${CLINICAS:-1}"
+CUENTAS_COMPLETAS="$CUENTAS"
+[ "$CLINICAS" -gt "$CUENTAS_COMPLETAS" ] && CUENTAS_COMPLETAS="$CLINICAS"
+slug_de() { if [ "$1" -eq 1 ]; then echo "clinica-medicion"; else echo "auxiliar-$1"; fi; }
+primera_cuenta_ligera() {
+  local c="$1" d=$((CUENTAS_COMPLETAS + 1))
+  while [ $(( (d - 1) % CLINICAS + 1 )) -ne "$c" ]; do d=$((d + 1)); done
+  echo "$d"
+}
 PESOS_ACCIONES="${PESOS_ACCIONES:-}"
 ABORTAR_SI_CAE="${ABORTAR_SI_CAE:-0}"
 NMT="${NMT:-0}"
@@ -171,7 +181,11 @@ registrar_entorno() {
     echo "umbral del generador: $UMBRAL_GENERADOR_CPU_PCT % de la CPU de k6 (criterio experimental, configurable)"
     echo "modo de afinidad: $PIN_MODO (aplicado: $AFINIDAD_APLICADA${AFINIDAD_MOTIVO:+; motivo: $AFINIDAD_MOTIVO}); k6 en CPU $K6_NUCLEOS, backend '$PIN_BACK', PostgreSQL '$PIN_PG', muestreadores '$PIN_MON'"
     echo "mezcla de operaciones: semilla ${SEMILLA:-no fijada (aleatoria)}; pesos ${PESOS_ACCIONES:-22,18,15,2,13,12,10,8} (panel, agenda, historia, reportes, recepción, atención, cobro, cancelar)"
-    echo "citas de la clínica grande: ${CITAS_GRANDE:-20000}; propietarios: ${PROPIETARIOS_GRANDE:-1200}"
+    if [ "$CLINICAS" -gt 1 ]; then
+      echo "clínicas: $CLINICAS (medianas: ${CLINICAS_MEDIANAS:-4} con unas ${CITAS_MEDIANA:-3000} citas; pequeñas: $((CLINICAS - ${CLINICAS_MEDIANAS:-4})) con unas ${CITAS_PEQUENA:-500}); cada usuario virtual pertenece a una clínica (cuenta n va a la clínica ((n-1) mod $CLINICAS)+1)"
+    else
+      echo "citas de la clínica grande: ${CITAS_GRANDE:-20000}; propietarios: ${PROPIETARIOS_GRANDE:-1200}"
+    fi
     echo "pool de conexiones: $POOL; muestreo de PostgreSQL: $([ "$MUESTREO_PG" = 1 ] && echo sí || echo no); volcados de hilos en los segundos: ${VOLCADO_HILOS_S:-ninguno}; registro de Hikari en DEBUG: $([ -n "$LOG_HIKARI" ] && echo sí || echo no); NMT: $([ "$NMT" = 1 ] && echo "sí (añade sobrecosto de memoria nativa)" || echo no)"
     echo "caída del backend: $([ "$ABORTAR_SI_CAE" = 1 ] && echo "k6 se detiene $GRACIA_CAIDA_S s después de que el contenedor se detenga" || echo "k6 continúa hasta el final")"
     echo "heap en vivo: $([ "$HEAP_EN_VIVO" = 1 ] && echo "sí, cada $HEAP_PERIODO_S s (contadores hsperfdata y cgroup)" || echo no)"
@@ -437,10 +451,12 @@ preparar_base() {
   detener_backend "$v" "${v}_esquema"
   log "[$v] sembrando datos"
   psql_db "$v" -c "CREATE EXTENSION IF NOT EXISTS pgcrypto; CREATE EXTENSION IF NOT EXISTS pg_stat_statements;" || fallo "extensiones en $v"
-  psql_db "$v" -v citas_grande="${CITAS_GRANDE:-20000}" -v propietarios_grande="${PROPIETARIOS_GRANDE:-1200}" < "$RAIZ/medicion/sembrar.sql" > "$SAL/logs/siembra_$v.log" 2>&1 || { tail -30 "$SAL/logs/siembra_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la siembra de $v falló"; }
+  local siembra_multi=""
+  [ "$CLINICAS" -gt 1 ] && siembra_multi="-v clinicas=$CLINICAS -v medianas=${CLINICAS_MEDIANAS:-4} -v citas_mediana=${CITAS_MEDIANA:-3000} -v citas_pequena=${CITAS_PEQUENA:-500}"
+  psql_db "$v" -v citas_grande="${CITAS_GRANDE:-20000}" -v propietarios_grande="${PROPIETARIOS_GRANDE:-1200}" $siembra_multi < "$RAIZ/medicion/sembrar.sql" > "$SAL/logs/siembra_$v.log" 2>&1 || { tail -30 "$SAL/logs/siembra_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la siembra de $v falló"; }
   : > "$SAL/logs/cuenta_$v.log"
-  for n in $(seq 1 "$CUENTAS"); do
-    psql_db "$v" -v measurement_company_slug="$SLUG" -v measurement_email="medicion$n@softvet.test" \
+  for n in $(seq 1 "$CUENTAS_COMPLETAS"); do
+    psql_db "$v" -v measurement_company_slug="$(slug_de $(( (n - 1) % CLINICAS + 1 )))" -v measurement_email="medicion$n@softvet.test" \
       -v measurement_username="$USUARIO$n" -v measurement_password="$CLAVE" < "$RAIZ/medicion/provisionar_cuenta.sql" \
       >> "$SAL/logs/cuenta_$v.log" 2>&1 || { tail -30 "$SAL/logs/cuenta_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la cuenta de medición $n en $v falló"; }
   done
@@ -491,23 +507,26 @@ instantanea() {
 }
 
 integridad() {
+  local donde="WHERE company_id=$2" columnas="numero_documento"
+  [ "$CLINICAS" -gt 1 ] && { donde=""; columnas="company_id, numero_documento"; }
   consulta_json "$1" "SELECT json_build_object(
     'mascotas_sin_apoderado',(SELECT count(*) FROM mascota m LEFT JOIN apoderado a ON a.id=m.apoderado_id WHERE a.id IS NULL),
     'citas_sin_mascota',(SELECT count(*) FROM citas c LEFT JOIN mascota m ON m.id=c.mascota_id WHERE m.id IS NULL),
     'consultas_sin_cita',(SELECT count(*) FROM consulta c LEFT JOIN citas ci ON ci.id=c.cita_id WHERE ci.id IS NULL),
-    'documentos_repetidos',(SELECT count(*) FROM (SELECT numero_documento FROM apoderado WHERE company_id=$2 GROUP BY numero_documento HAVING count(*)>1) x))"
+    'documentos_repetidos',(SELECT count(*) FROM (SELECT $columnas FROM apoderado $donde GROUP BY $columnas HAVING count(*)>1) x))"
 }
 
 publicar_aviso() {
-  local v="$1" jar base plantilla campos cuerpo
+  local v="$1" slug="${2:-$SLUG}" admin="${3:-1}" jar base plantilla campos cuerpo
   jar="$(mktemp)"
   base="http://127.0.0.1:$PUERTO/api/v1"
   {
+    echo "=== clínica $slug"
     echo "--- inicio de sesión del administrador de la clínica"
-    curl -s -o /dev/null -w 'HTTP %{http_code}\n' -c "$jar" -H "Content-Type: application/json" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.1" \
-      -d "{\"slug\":\"$SLUG\",\"username\":\"${USUARIO}1\",\"password\":\"$CLAVE\"}" "$base/auth/login"
+    curl -s -o /dev/null -w 'HTTP %{http_code}\n' -c "$jar" -H "Content-Type: application/json" -H "Origin: http://localhost" -H "X-Company-Slug: $slug" -H "X-Forwarded-For: 10.250.0.1" \
+      -d "{\"slug\":\"$slug\",\"username\":\"${USUARIO}${admin}\",\"password\":\"$CLAVE\"}" "$base/auth/login"
     echo "--- plantilla del aviso de privacidad"
-    plantilla="$(curl -s -b "$jar" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.1" "$base/admin/privacidad/aviso/plantilla?audiencia=PROPIETARIOS_Y_AUTORIZADOS")"
+    plantilla="$(curl -s -b "$jar" -H "Origin: http://localhost" -H "X-Company-Slug: $slug" -H "X-Forwarded-For: 10.250.0.1" "$base/admin/privacidad/aviso/plantilla?audiencia=PROPIETARIOS_Y_AUTORIZADOS")"
     echo "$plantilla" | cut -c1-600
     campos="$(echo "$plantilla" | jq -c '.data
       | .domicilio = (if (.domicilio // "") == "" then "Avenida Los Olivos 123" else .domicilio end)
@@ -516,25 +535,35 @@ publicar_aviso() {
       | .plazoConservacion = (if (.plazoConservacion // "") == "" then "Mientras dure la relación con la clínica y hasta 10 años por obligación legal" else .plazoConservacion end)')" || true
     echo "--- publicación del aviso"
     cuerpo="$(jq -nc --argjson c "${campos:-null}" '{audiencia:"PROPIETARIOS_Y_AUTORIZADOS", campos:$c, confirmoRevisionLegal:true}')"
-    curl -s -b "$jar" -w '\nHTTP %{http_code}\n' -H "Content-Type: application/json" -H "Origin: http://localhost" -H "X-Company-Slug: $SLUG" -H "X-Forwarded-For: 10.250.0.1" \
+    curl -s -b "$jar" -w '\nHTTP %{http_code}\n' -H "Content-Type: application/json" -H "Origin: http://localhost" -H "X-Company-Slug: $slug" -H "X-Forwarded-For: 10.250.0.1" \
       -d "$cuerpo" "$base/admin/privacidad/aviso" | cut -c1-600
-  } > "$SAL/logs/aviso_$v.log" 2>&1
+  } >> "$SAL/logs/aviso_$v.log" 2>&1
   rm -f "$jar"
   log "[$v] aviso de privacidad: $(grep -E '^HTTP' "$SAL/logs/aviso_$v.log" | tr '\n' ' ')"
 }
 
-armar_ids() {
-  local v="$1" company_id rol_cliente vets servicios raza_perro raza_gato
-  company_id="$(consulta_json "$v" "SELECT id FROM company WHERE slug='$SLUG'")"
+armar_ids_de() {
+  local v="$1" slug="$2" company_id rol_cliente vets servicios raza_perro raza_gato
+  company_id="$(consulta_json "$v" "SELECT id FROM company WHERE slug='$slug'")"
   rol_cliente="$(consulta_json "$v" "SELECT id FROM roles WHERE company_id=$company_id AND name='ROLE_CLIENTE'" | head -1)"
   vets="$(consulta_json "$v" "SELECT coalesce(json_agg(id ORDER BY id),'[]'::json) FROM empleado WHERE company_id=$company_id AND estado=true AND user_id IS NOT NULL")"
   servicios="$(consulta_json "$v" "SELECT coalesce(json_agg(json_build_object('id',id,'precio',precio) ORDER BY id),'[]'::json) FROM servicios WHERE company_id=$company_id AND activo=true AND disponible=true")"
   raza_perro="$(consulta_json "$v" "SELECT id FROM raza WHERE especie='PERRO' AND nombre='Mestizo' ORDER BY id LIMIT 1")"
   raza_gato="$(consulta_json "$v" "SELECT id FROM raza WHERE especie='GATO' AND nombre='Mestizo' ORDER BY id LIMIT 1")"
   [ -n "$rol_cliente" ] || fallo "no existe el rol ROLE_CLIENTE de la clínica en $v"
-  jq -nc --argjson c "$company_id" --argjson r "$rol_cliente" --argjson v "$vets" --argjson s "$servicios" \
+  jq -nc --arg slug "$slug" --argjson c "$company_id" --argjson r "$rol_cliente" --argjson v "$vets" --argjson s "$servicios" \
     --argjson p "${raza_perro:-0}" --argjson g "${raza_gato:-0}" \
-    '{companyId:$c, rolCliente:$r, veterinarios:$v, servicios:$s, razas:{PERRO:$p, GATO:$g}, dias_con_turno:180, huecos_por_dia:16}'
+    '{slug:$slug, companyId:$c, rolCliente:$r, veterinarios:$v, servicios:$s, razas:{PERRO:$p, GATO:$g}, dias_con_turno:180, huecos_por_dia:16}'
+}
+
+armar_ids() {
+  local v="$1" c lista="[]" una
+  if [ "$CLINICAS" -le 1 ]; then armar_ids_de "$v" "$SLUG"; return; fi
+  for c in $(seq 1 "$CLINICAS"); do
+    una="$(armar_ids_de "$v" "$(slug_de "$c")")" || return 1
+    lista="$(jq -c --argjson u "$una" '. + [$u]' <<< "$lista")"
+  done
+  jq -c '.[0] + {clinicas: .}' <<< "$lista"
 }
 
 esperar_inicializacion() {
@@ -550,16 +579,31 @@ preparar_clinica() {
   local v="$1"
   opciones_jvm D
   log "[$v] configuración de la clínica (horarios, turnos, razas)"
-  psql_db "$v" -v slug="$SLUG" < "$RAIZ/medicion/escritura/config_clinica.sql" > "$SAL/logs/config_$v.log" 2>&1 \
-    || { tail -30 "$SAL/logs/config_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la configuración de la clínica en $v falló"; }
-  if [ "$TOTAL_CUENTAS" -ge 2 ]; then
+  : > "$SAL/logs/config_$v.log"
+  local c
+  for c in $(seq 1 "$CLINICAS"); do
+    psql_db "$v" -v slug="$(slug_de "$c")" < "$RAIZ/medicion/escritura/config_clinica.sql" >> "$SAL/logs/config_$v.log" 2>&1 \
+      || { tail -30 "$SAL/logs/config_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "la configuración de la clínica $c en $v falló"; }
+  done
+  if [ "$TOTAL_CUENTAS" -ge 2 ] && [ "$CLINICAS" -le 1 ]; then
     log "[$v] cuentas de medición 2 a $TOTAL_CUENTAS"
     psql_db "$v" -v slug="$SLUG" -v clave="$CLAVE" -v desde=2 -v hasta="$TOTAL_CUENTAS" < "$RAIZ/medicion/escritura/provisionar_cuentas.sql" > "$SAL/logs/cuentas_$v.log" 2>&1 \
       || { tail -30 "$SAL/logs/cuentas_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "las cuentas de medición en $v fallaron"; }
+  elif [ "$TOTAL_CUENTAS" -gt "$CUENTAS_COMPLETAS" ]; then
+    log "[$v] cuentas de medición $((CUENTAS_COMPLETAS + 1)) a $TOTAL_CUENTAS repartidas entre $CLINICAS clínicas"
+    : > "$SAL/logs/cuentas_$v.log"
+    local desde
+    for c in $(seq 1 "$CLINICAS"); do
+      desde="$(primera_cuenta_ligera "$c")"
+      [ "$desde" -gt "$TOTAL_CUENTAS" ] && continue
+      psql_db "$v" -v slug="$(slug_de "$c")" -v clave="$CLAVE" -v desde="$desde" -v hasta="$TOTAL_CUENTAS" -v paso="$CLINICAS" < "$RAIZ/medicion/escritura/provisionar_cuentas.sql" >> "$SAL/logs/cuentas_$v.log" 2>&1 \
+        || { tail -30 "$SAL/logs/cuentas_$v.log" | tee -a "$SAL/logs/orquestador.log"; fallo "las cuentas de medición de la clínica $c en $v fallaron"; }
+    done
   fi
   iniciar_backend "$v" none "$CPUS_PREP" "$MEM_PREP" "$PIN_BACK"
   esperar_inicializacion "$v"
-  publicar_aviso "$v"
+  : > "$SAL/logs/aviso_$v.log"
+  for c in $(seq 1 "$CLINICAS"); do publicar_aviso "$v" "$(slug_de "$c")" "$c"; done
   detener_backend "$v" "preparacion_$v"
 }
 

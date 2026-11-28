@@ -174,5 +174,19 @@ class Comparacion(unittest.TestCase):
             self.assertIsNone(c['throttled_pct'])
 
 
+    def test_el_numero_de_clinicas_separa_los_grupos(self):
+        with tempfile.TemporaryDirectory() as t:
+            una = construir(t, 'CAPACIDAD-2G', 1, 100)
+            varias = construir(t, 'CAPACIDAD-2G', 2, 100)
+            varias = varias.rename(Path(t) / 'bateria-r2-CAPACIDAD-2G-12clinicas')
+            clinicas = [{'slug': f'c{i}', 'companyId': i} for i in range(12)]
+            (varias / 'niveles' / 'ids_despues_100.json').write_text(json.dumps({'companyId': 0, 'clinicas': clinicas}), encoding='utf-8')
+            (una / 'niveles' / 'ids_despues_100.json').write_text(json.dumps({'companyId': 0}), encoding='utf-8')
+            etiquetas = sorted(p for _, p, _, _ in cb.descubrir(t))
+            self.assertEqual(etiquetas, ['CAPACIDAD-2G', 'CAPACIDAD-2G (12 clínicas)'])
+            corridas = [cb.analizar_corrida(*x) for x in cb.descubrir(t)]
+            self.assertEqual(len(cb.agrupar(corridas)), 2)
+
+
 if __name__ == '__main__':
     unittest.main()

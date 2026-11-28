@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import informe_nivel as n  # noqa: E402
 import informe_laboratorio as lab  # noqa: E402
 
-NOMBRE_RE = re.compile(r'bateria-r(\d+)-(CAPACIDAD-2G|PRODUCCION-512M)$')
+NOMBRE_RE = re.compile(r'bateria-r(\d+)-(CAPACIDAD-2G|PRODUCCION-512M)(?:-\d+clinicas)?$')
 RE_PAUSA_UPTIME = re.compile(r'\[(\d+(?:\.\d+)?)s\].*?Pause (\w+).*?(\d+)([KMG])->(\d+)([KMG])\((\d+)([KMG])\)\s+([\d.]+)ms\s*$')
 A_MB = {'K': 1 / 1024, 'M': 1, 'G': 1024}
 RE_ID_GC = re.compile(r'GC\((\d+)\)')
@@ -54,6 +54,12 @@ def percentil(valores, p):
     return n.percentil(valores, p) if valores else None
 
 
+def etiqueta_con_clinicas(perfil, d, nivel):
+    ids = leer_json(d / 'niveles' / f'ids_despues_{nivel}.json') or {}
+    clinicas = len(ids.get('clinicas') or [])
+    return f'{perfil} ({clinicas} clínicas)' if clinicas > 1 else perfil
+
+
 def descubrir(raiz):
     raiz = Path(raiz)
     candidatos = [d.parent for d in raiz.rglob('entorno.txt') if (d.parent / 'niveles').is_dir()]
@@ -68,7 +74,7 @@ def descubrir(raiz):
             perfil = pm.group(1) if pm else 'desconocido'
         for estado in sorted((d / 'niveles').glob('estado_despues_*.json')):
             nivel = int(estado.stem.split('_')[-1])
-            corridas.append((d, perfil, rep, nivel))
+            corridas.append((d, etiqueta_con_clinicas(perfil, d, nivel), rep, nivel))
     return corridas
 
 

@@ -10,12 +10,33 @@
 SET synchronous_commit = off;
 SELECT setseed(0.42);
 
+\if :{?clinicas}
+\if :{?medianas}
+\else
+\set medianas 4
+\endif
+\if :{?citas_mediana}
+\else
+\set citas_mediana 3000
+\endif
+\if :{?citas_pequena}
+\else
+\set citas_pequena 500
+\endif
+CREATE TEMP TABLE tamano AS
+SELECT g AS n,
+       CASE WHEN g <= :medianas THEN :citas_mediana + (g * 7919) % 400 ELSE :citas_pequena + (g * 7919) % 200 END AS n_citas,
+       CASE WHEN g <= :medianas THEN 250 + (g * 37) % 50 ELSE 50 + (g * 37) % 30 END AS n_propietarios,
+       CASE WHEN g <= :medianas THEN 8 ELSE 4 END AS n_empleados
+FROM generate_series(1, :clinicas) g;
+\else
 CREATE TEMP TABLE tamano AS
 SELECT g AS n,
        CASE WHEN g = 1 THEN :citas_grande ELSE 800 + (g * 7919) % 1200 END AS n_citas,
        CASE WHEN g = 1 THEN :propietarios_grande ELSE 100 + (g * 37) % 100 END AS n_propietarios,
        CASE WHEN g = 1 THEN 10 ELSE 4 + (g % 3) END AS n_empleados
 FROM generate_series(1, 6) g;
+\endif
 
 INSERT INTO company (name, slug, ruc, activo, modo_acceso_propietario, created_at)
 SELECT CASE WHEN n = 1 THEN 'Clinica de medicion' ELSE 'Clinica auxiliar ' || n END,

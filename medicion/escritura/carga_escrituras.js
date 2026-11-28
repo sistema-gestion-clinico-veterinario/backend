@@ -2,6 +2,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter } from 'k6/metrics';
 import { crearGenerador } from './aleatorio.js';
+import { clinicaDeCuenta } from './clinicas.js';
 
 const BASE = (__ENV.BASE_URL || '').replace(/\/$/, '');
 const SLUG = __ENV.SLUG;
@@ -19,7 +20,18 @@ const ITER_POR_VU = parseInt(__ENV.ITER_POR_VU || '19', 10);
 const SALIDA = __ENV.SALIDA || 'resumen_carga.json';
 const SEMILLA = __ENV.SEMILLA ? parseInt(__ENV.SEMILLA, 10) : null;
 const IDS = JSON.parse(__ENV.IDS || '{}');
-const EMPRESA = IDS.companyId;
+
+function clinica() {
+  return clinicaDeCuenta(IDS, CUENTA_BASE + __VU);
+}
+
+function slugActual() {
+  return clinica().slug || SLUG;
+}
+
+function empresa() {
+  return clinica().companyId;
+}
 
 const NOMBRES_ACCIONES = ['panel', 'agenda', 'historia', 'reportes', 'recepcion', 'atencion', 'cobro', 'cancelar'];
 const PESOS = (__ENV.PESOS_ACCIONES || '22,18,15,2,13,12,10,8').split(',').map((n) => parseFloat(n));
@@ -73,7 +85,7 @@ function cabeceras() {
   const cliente = `10.${(__VU >> 8) & 255}.${__VU & 255}.${(Math.floor(enviadas / 40) % 250) + 1}`;
   return {
     'Content-Type': 'application/json',
-    'X-Company-Slug': SLUG,
+    'X-Company-Slug': slugActual(),
     Accept: 'application/json',
     Origin: 'http://localhost',
     'X-Forwarded-For': `${cliente}`,
@@ -161,15 +173,16 @@ function pausa() {
 
 function iniciarSesion() {
   ultimoLogin = Date.now();
-  const r = llamar('login', 'POST', '/auth/login', { slug: SLUG, username: `${USUARIO}${CUENTA_BASE + __VU}`, password: CLAVE }, false);
+  const r = llamar('login', 'POST', '/auth/login', { slug: slugActual(), username: `${USUARIO}${CUENTA_BASE + __VU}`, password: CLAVE }, false);
   conSesion = r.correcto;
   return conSesion;
 }
 
 function hueco(u) {
-  const veterinarios = IDS.veterinarios;
-  const dias = IDS.dias_con_turno || 120;
-  const porDia = IDS.huecos_por_dia || 16;
+  const c = clinica();
+  const veterinarios = c.veterinarios;
+  const dias = c.dias_con_turno || 120;
+  const porDia = c.huecos_por_dia || 16;
   const v = veterinarios[u % veterinarios.length];
   const resto = Math.floor(u / veterinarios.length);
   const dia = 1 + (resto % dias);
@@ -184,20 +197,20 @@ function panel() {
   leer('cumplimiento', '/me/compliance');
   leer('notificaciones', '/notifications/read');
   leer('avisos_de_cumplimiento', '/me/compliance/request-notifications');
-  leer('panel', `/dashboard/overview?companyId=${EMPRESA}`);
+  leer('panel', `/dashboard/overview?companyId=${empresa()}`);
 }
 
 function agenda() {
   const hoy = new Date(Date.now() - 5 * 3600 * 1000);
   const desde = `${hoy.getUTCFullYear()}-${rellenar(hoy.getUTCMonth() + 1, 2)}-01`;
   const hasta = `${hoy.getUTCFullYear()}-${rellenar(hoy.getUTCMonth() + 1, 2)}-28`;
-  leer('citas_del_mes', `/appointments?page=0&size=100&companyId=${EMPRESA}&fechaDesde=${desde}&fechaHasta=${hasta}`);
-  leer('empleados', `/admin/employees?page=0&size=100&companyId=${EMPRESA}`);
-  leer('propietarios', `/clients/guardians?page=0&size=100&companyId=${EMPRESA}`);
+  leer('citas_del_mes', `/appointments?page=0&size=100&companyId=${empresa()}&fechaDesde=${desde}&fechaHasta=${hasta}`);
+  leer('empleados', `/admin/employees?page=0&size=100&companyId=${empresa()}`);
+  leer('propietarios', `/clients/guardians?page=0&size=100&companyId=${empresa()}`);
 }
 
 function historia() {
-  const lista = leer('lista_de_historias', `/medical-records?page=0&size=10&companyId=${EMPRESA}`);
+  const lista = leer('lista_de_historias', `/medical-records?page=0&size=10&companyId=${empresa()}`);
   const items = (lista.datos && lista.datos.content) || [];
   if (!items.length) return;
   const elegida = items[(__VU + usosDeHueco) % items.length];
@@ -210,9 +223,9 @@ function historia() {
 function reportes() {
   const hasta = fechaLima(0);
   const desde = fechaLima(-365);
-  leer('reporte_clinico', `/clinical-reports?fechaDesde=${desde}&fechaHasta=${hasta}&companyId=${EMPRESA}`);
-  leer('reporte_de_ventas', `/clinical-reports/sales-products?fechaDesde=${desde}&fechaHasta=${hasta}&companyId=${EMPRESA}`);
-  leer('pacientes_inactivos', `/clinical-reports/inactive-patients?page=0&size=20&companyId=${EMPRESA}`);
+  leer('reporte_clinico', `/clinical-reports?fechaDesde=${desde}&fechaHasta=${hasta}&companyId=${empresa()}`);
+  leer('reporte_de_ventas', `/clinical-reports/sales-products?fechaDesde=${desde}&fechaHasta=${hasta}&companyId=${empresa()}`);
+  leer('pacientes_inactivos', `/clinical-reports/inactive-patients?page=0&size=20&companyId=${empresa()}`);
 }
 
 function recepcion() {
@@ -220,7 +233,8 @@ function recepcion() {
   const u = U_BASE + (__VU - 1) * ITER_POR_VU + usosDeHueco;
   usosDeHueco += 1;
   const sufijo = letras(u);
-  const servicio = IDS.servicios[u % IDS.servicios.length];
+  const servicios = clinica().servicios;
+  const servicio = servicios[u % servicios.length];
   const especie = u % 2 === 0 ? 'PERRO' : 'GATO';
   const h = hueco(u);
 
@@ -233,8 +247,8 @@ function recepcion() {
     telefono: `9${rellenar(u, 8)}`,
     direccion: 'Avenida Los Olivos 123',
     genero: u % 2 === 0 ? 'MASCULINO' : 'FEMENINO',
-    companyId: EMPRESA,
-    roleIds: [IDS.rolCliente],
+    companyId: empresa(),
+    roleIds: [clinica().rolCliente],
     avisoInformado: true,
     consentimientoRecordatorios: false,
     habilitarAccesoPortal: false,
@@ -245,7 +259,7 @@ function recepcion() {
   const pedidoMascota = {
     nombreCompleto: `Mascota${sufijo}`,
     especie,
-    razaId: IDS.razas[especie],
+    razaId: clinica().razas[especie],
     sexo: 'MACHO',
     fechaNacimiento: '2022-03-15',
     peso: 12.5,
@@ -322,12 +336,12 @@ function atencion() {
 }
 
 function prepararCaja() {
-  const p = llamar('punto_cobro', 'POST', '/caja/puntos', { companyId: EMPRESA, nombre: `Caja ${ETIQUETA}-${__VU}`, activa: true }, true);
+  const p = llamar('punto_cobro', 'POST', '/caja/puntos', { companyId: empresa(), nombre: `Caja ${ETIQUETA}-${__VU}`, activa: true }, true);
   const id = p.datos && p.datos.id;
   if (!p.correcto || !id) return false;
-  const v = llamar('vincular_equipo', 'POST', `/caja/puntos/${id}/vincular?companyId=${EMPRESA}`, { nombreEquipo: `Equipo ${ETIQUETA}-${__VU}` }, true);
+  const v = llamar('vincular_equipo', 'POST', `/caja/puntos/${id}/vincular?companyId=${empresa()}`, { nombreEquipo: `Equipo ${ETIQUETA}-${__VU}` }, true);
   if (!v.correcto) return false;
-  return llamar('abrir_caja', 'POST', '/caja/sesion/abrir', { companyId: EMPRESA, montoApertura: 100 }, true).correcto;
+  return llamar('abrir_caja', 'POST', '/caja/sesion/abrir', { companyId: empresa(), montoApertura: 100 }, true).correcto;
 }
 
 function cobro() {

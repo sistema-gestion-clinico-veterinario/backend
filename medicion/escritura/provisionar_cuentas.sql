@@ -1,5 +1,10 @@
 \set ON_ERROR_STOP on
+\if :{?paso}
+\else
+\set paso 1
+\endif
 
+SELECT set_config('softvet.paso', :'paso', false) AS e \gset
 SELECT set_config('softvet.slug', :'slug', false) AS a \gset
 SELECT set_config('softvet.clave', :'clave', false) AS b \gset
 SELECT set_config('softvet.desde', :'desde', false) AS c \gset
@@ -23,7 +28,7 @@ BEGIN
         RAISE EXCEPTION 'No existe un ROLE_ADMIN activo';
     END IF;
 
-    FOR i IN current_setting('softvet.desde')::integer .. current_setting('softvet.hasta')::integer LOOP
+    FOR i IN current_setting('softvet.desde')::integer .. current_setting('softvet.hasta')::integer BY current_setting('softvet.paso')::integer LOOP
         INSERT INTO usuario (activo, apellido, company_id, email, email_verified, nombre, username)
         VALUES (true, 'Medición', empresa, 'medicion' || i || '@softvet.test', true, 'SoftVet', 'medicion' || i)
         RETURNING id INTO usuario_id;

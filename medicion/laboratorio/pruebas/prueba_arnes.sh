@@ -148,6 +148,51 @@ for desplazamiento in $(grep -n 'base_cuenta=\$((base_cuenta + nivel))' "$ARNES"
   previa="$(sed -n "$((desplazamiento - 3)),$((desplazamiento - 1))p" "$ARNES")"
   case "$previa" in *'RESET_BASE'*) ok "la cuenta base no avanza con la base reiniciada (línea $desplazamiento)" ;; *) mal "la cuenta base avanza aunque RESET_BASE=1 reinicia la base (línea $desplazamiento)" ;; esac
 done
+
+for f in slug_de primera_cuenta_ligera armar_ids_de armar_ids integridad; do eval "$(extraer $f)"; done
+consulta_json() {
+  case "$2" in
+    *"FROM company WHERE slug='clinica-medicion'"*) echo 11 ;;
+    *"FROM company WHERE slug='auxiliar-2'"*) echo 12 ;;
+    *"FROM company WHERE slug='auxiliar-3'"*) echo 13 ;;
+    *"FROM roles"*) echo 100 ;;
+    *"FROM empleado"*) echo "[1,2]" ;;
+    *"FROM servicios"*) echo '[{"id":1,"precio":40}]' ;;
+    *"especie='PERRO'"*) echo 5 ;;
+    *"especie='GATO'"*) echo 6 ;;
+    *"documentos_repetidos"*) echo "$2" ;;
+  esac
+}
+SLUG="clinica-medicion"
+CLINICAS=1
+igual "slug_de 1 es la clínica de medición" "$(slug_de 1)" "clinica-medicion"
+igual "slug_de 5 es la auxiliar 5" "$(slug_de 5)" "auxiliar-5"
+igual "con una clínica, los ids son los de siempre (sin lista)" "$(armar_ids v | jq -c '[.companyId, .slug, (.clinicas // "sin")]')" '[11,"clinica-medicion","sin"]'
+CLINICAS=3
+igual "con 3 clínicas, ids por clínica en orden" "$(armar_ids v | jq -r '[.clinicas[].slug] | join(",")')" "clinica-medicion,auxiliar-2,auxiliar-3"
+igual "con 3 clínicas, cada una trae su empresa" "$(armar_ids v | jq -c '[.clinicas[].companyId]')" "[11,12,13]"
+igual "con 3 clínicas, los campos de la primera quedan arriba (compatibilidad)" "$(armar_ids v | jq -c '[.companyId, .slug]')" '[11,"clinica-medicion"]'
+CLINICAS=12
+CUENTAS_COMPLETAS=12
+TOTAL=262
+cubiertas=""
+for c in $(seq 1 "$CLINICAS"); do
+  desde="$(primera_cuenta_ligera "$c")"
+  [ "$desde" -le "$TOTAL" ] && cubiertas="$cubiertas $(seq "$desde" "$CLINICAS" "$TOTAL" | tr '\n' ' ')"
+done
+igual "las cuentas ligeras de las 12 clínicas cubren 13..262 sin repetir" "$(echo $cubiertas | tr ' ' '\n' | sort -n | tr '\n' ' ')" "$(seq 13 262 | tr '\n' ' ')"
+igual "la cuenta 13 va a la clínica 1 y la 14 a la 2" "$(primera_cuenta_ligera 1) $(primera_cuenta_ligera 2)" "13 14"
+CLINICAS=3
+CUENTAS_COMPLETAS=3
+igual "con 3 clínicas, la primera cuenta ligera de la 3 es la 6" "$(primera_cuenta_ligera 3)" "6"
+CLINICAS=1
+unico="$(integridad v 11)"
+case "$unico" in *"WHERE company_id=11 GROUP BY numero_documento"*) ok "con una clínica, la integridad de documentos filtra por empresa" ;; *) mal "la integridad con una clínica cambió: $unico" ;; esac
+CLINICAS=12
+varias="$(integridad v 11)"
+case "$varias" in *"FROM apoderado  GROUP BY company_id, numero_documento"*) ok "con varias clínicas, la integridad revisa todas las empresas" ;; *) mal "la integridad con varias clínicas no revisa todas: $varias" ;; esac
+CLINICAS=1
+
 unset -f docker sleep pkill
 
 rm -rf "$TMP"

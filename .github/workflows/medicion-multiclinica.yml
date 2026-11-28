@@ -1,0 +1,198 @@
+name: "Varias clínicas: 12 clínicas contra una sola clínica grande (laboratorio)"
+
+on:
+  push:
+    branches: [medicion/multiclinica]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: medicion-multiclinica
+  cancel-in-progress: false
+
+jobs:
+  verificacion:
+    name: Pruebas de los scripts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Ejecutar las pruebas
+        run: |
+          python3 medicion/laboratorio/pruebas/prueba_laboratorio.py
+          python3 medicion/laboratorio/pruebas/prueba_comparacion.py
+          python3 medicion/laboratorio/pruebas/prueba_investigacion.py
+          python3 medicion/laboratorio/pruebas/prueba_diagnostico.py
+          bash medicion/laboratorio/pruebas/prueba_arnes.sh
+
+  humo:
+    name: Humo con 12 clínicas (siembra, cuentas, avisos y reparto de usuarios)
+    needs: verificacion
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el código corregido (green-rollback-despues)
+        uses: actions/checkout@v4
+        with:
+          ref: green-rollback-despues
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
+        with:
+          k6-version: "2.4.0"
+
+      - name: Ejecutar un nivel corto con 12 clínicas
+        env:
+          RESULTADOS_DIR: ${{ github.workspace }}/resultados-humo-multi
+          PERFIL_LAB: CAPACIDAD-2G
+          CLINICAS: "12"
+          VERSIONES: despues
+          SIN_CONTROL: "1"
+          PLAN_CARGA: medicion/laboratorio/PLAN_HUMO_MULTI
+          ITER_POR_VU: "14"
+          RESET_BASE: "1"
+          SEMILLA: "20261123"
+          PIN_MODO: topologia
+          ABORTAR_SI_CAE: "1"
+          LIMPIAR_PREVIO: "1"
+        run: bash medicion/escritura/carga_escritura.sh
+
+      - name: Verificar que las 12 clínicas recibieron usuarios y datos coherentes
+        run: bash medicion/laboratorio/verificar_multiclinica.sh resultados-humo-multi 12
+
+      - name: Guardar los resultados como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: multi-humo
+          path: resultados-humo-multi/
+          if-no-files-found: warn
+
+  multiclinica:
+    name: Repetición ${{ matrix.repeticion }} (orden ${{ matrix.orden }})
+    needs: humo
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - repeticion: 1
+            orden: "CAPACIDAD-2G:12 CAPACIDAD-2G:1 PRODUCCION-512M:12"
+          - repeticion: 2
+            orden: "PRODUCCION-512M:12 CAPACIDAD-2G:1 CAPACIDAD-2G:12"
+          - repeticion: 3
+            orden: "CAPACIDAD-2G:1 PRODUCCION-512M:12 CAPACIDAD-2G:12"
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar el código corregido (green-rollback-despues)
+        uses: actions/checkout@v4
+        with:
+          ref: green-rollback-despues
+          path: .despues
+
+      - name: Instalar k6
+        uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
+        with:
+          k6-version: "2.4.0"
+
+      - name: Ejecutar las configuraciones en el orden de esta repetición
+        env:
+          VERSIONES: despues
+          SIN_CONTROL: "1"
+          ITER_POR_VU: "14"
+          RESET_BASE: "1"
+          SEMILLA: "20261123"
+          PESOS_ACCIONES: "22,18,15,2,13,12,10,8"
+          PIN_MODO: topologia
+          K6_NUCLEOS: "0"
+          HEAP_EN_VIVO: "1"
+          HEAP_PERIODO_S: "3"
+          ABORTAR_SI_CAE: "1"
+          GRACIA_CAIDA_S: "20"
+          LIMPIAR_PREVIO: "1"
+        run: |
+          fallos=0
+          for entrada in ${{ matrix.orden }}; do
+            perfil="${entrada%%:*}"
+            clinicas="${entrada##*:}"
+            plan="medicion/laboratorio/PLAN_BATERIA"
+            [ "$perfil" = "PRODUCCION-512M" ] && plan="medicion/laboratorio/PLAN_100"
+            echo "::group::$perfil con $clinicas clínica(s)"
+            RESULTADOS_DIR="$GITHUB_WORKSPACE/resultados-$perfil-$clinicas" PERFIL_LAB="$perfil" CLINICAS="$clinicas" PLAN_CARGA="$plan" bash medicion/escritura/carga_escritura.sh
+            codigo=$?
+            echo "::endgroup::"
+            if [ "$codigo" != 0 ]; then
+              echo "::error::La ejecución de $perfil con $clinicas clínica(s) terminó con código $codigo"
+              fallos=$((fallos + 1))
+            fi
+          done
+          [ "$fallos" = 0 ]
+
+      - name: Guardar CAPACIDAD-2G con 12 clínicas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bateria-r${{ matrix.repeticion }}-CAPACIDAD-2G-12clinicas
+          path: resultados-CAPACIDAD-2G-12/
+          if-no-files-found: warn
+
+      - name: Guardar CAPACIDAD-2G con una sola clínica grande
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bateria-r${{ matrix.repeticion }}-CAPACIDAD-2G
+          path: resultados-CAPACIDAD-2G-1/
+          if-no-files-found: warn
+
+      - name: Guardar PRODUCCION-512M con 12 clínicas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bateria-r${{ matrix.repeticion }}-PRODUCCION-512M-12clinicas
+          path: resultados-PRODUCCION-512M-12/
+          if-no-files-found: warn
+
+  comparacion:
+    name: Comparación entre una clínica y varias, por perfil y nivel
+    needs: multiclinica
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Descargar el arnés de medición
+        uses: actions/checkout@v4
+
+      - name: Descargar los resultados de todas las repeticiones
+        uses: actions/download-artifact@v4
+        with:
+          pattern: bateria-r*
+          path: descargas
+
+      - name: Generar la comparación
+        run: |
+          python3 medicion/laboratorio/comparar_bateria.py descargas comparacion > /dev/null
+          cat comparacion/COMPARACION_BATERIA.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Guardar la comparación como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: comparacion-multiclinica
+          path: comparacion/
+          if-no-files-found: warn
