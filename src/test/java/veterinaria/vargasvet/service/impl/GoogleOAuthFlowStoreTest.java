@@ -1,14 +1,12 @@
 package veterinaria.vargasvet.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 import veterinaria.vargasvet.exception.RateLimitExceededException;
 
-import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,16 +15,18 @@ class GoogleOAuthFlowStoreTest {
 
     private static final Instant INICIO = Instant.parse("2026-10-05T12:00:00Z");
 
+    private RepositorioEstadoOAuthEnMemoria repositorio;
     private GoogleOAuthFlowStore store;
 
     @BeforeEach
     void setUp() {
-        store = new GoogleOAuthFlowStore();
+        repositorio = new RepositorioEstadoOAuthEnMemoria();
+        store = new GoogleOAuthFlowStore(new EstadoOAuthCompartido(repositorio, new CifradoEstadoOAuth(new byte[32]), new ObjectMapper()));
         pasarA(INICIO);
     }
 
     private void pasarA(Instant momento) {
-        ReflectionTestUtils.setField(store, "clock", Clock.fixed(momento, ZoneOffset.UTC));
+        repositorio.fijarReloj(momento);
     }
 
     private GoogleOAuthFlowStore.Context login() {
@@ -120,5 +120,12 @@ class GoogleOAuthFlowStoreTest {
 
         pasarA(INICIO.plus(Duration.ofMinutes(6)));
         assertThat(store.createIntent(login())).isNotBlank();
+    }
+
+    @Test
+    void laBaseNoGuardaElCodigoNiElContenidoEnClaro() {
+        String intent = store.createIntent(new GoogleOAuthFlowStore.Context(null, "token-de-invitacion"));
+
+        assertThat(repositorio.volcado()).doesNotContain(intent).doesNotContain("token-de-invitacion").doesNotContain("vargas-vet");
     }
 }

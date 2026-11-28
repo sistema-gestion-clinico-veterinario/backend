@@ -15,6 +15,7 @@ import veterinaria.vargasvet.service.AccountClosureService;
 import veterinaria.vargasvet.service.EmailChangeService;
 import veterinaria.vargasvet.service.UsuarioService;
 import veterinaria.vargasvet.service.impl.GoogleLoginExchangeStore;
+import veterinaria.vargasvet.service.impl.EstadoOAuthParaPruebas;
 import veterinaria.vargasvet.service.impl.GoogleOAuthFlowStore;
 import veterinaria.vargasvet.service.impl.GoogleOAuthService;
 
@@ -33,7 +34,7 @@ class AuthControllerSessionCookiesTest {
     private final UsuarioService usuarioService = mock(UsuarioService.class);
     private final AuthController controller = new AuthController(
             usuarioService, mock(EmailChangeService.class), mock(GoogleOAuthService.class),
-            mock(GoogleLoginExchangeStore.class), new GoogleOAuthFlowStore(), mock(AccountClosureService.class),
+            mock(GoogleLoginExchangeStore.class), new GoogleOAuthFlowStore(EstadoOAuthParaPruebas.enMemoria()), mock(AccountClosureService.class),
                 org.mockito.Mockito.mock(veterinaria.vargasvet.security.ClientIpResolver.class));
 
     @BeforeEach

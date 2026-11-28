@@ -18,6 +18,7 @@ import veterinaria.vargasvet.exception.GoogleEmailMismatchException;
 import veterinaria.vargasvet.service.EmailChangeService;
 import veterinaria.vargasvet.service.UsuarioService;
 import veterinaria.vargasvet.service.impl.GoogleLoginExchangeStore;
+import veterinaria.vargasvet.service.impl.EstadoOAuthParaPruebas;
 import veterinaria.vargasvet.service.impl.GoogleOAuthFlowStore;
 import veterinaria.vargasvet.service.impl.GoogleOAuthService;
 
@@ -44,7 +45,7 @@ class AuthControllerGoogleTest {
     private final UsuarioService usuarioService = mock(UsuarioService.class);
     private final GoogleOAuthService googleOAuthService = mock(GoogleOAuthService.class);
     private final GoogleLoginExchangeStore exchangeStore = mock(GoogleLoginExchangeStore.class);
-    private final GoogleOAuthFlowStore flowStore = new GoogleOAuthFlowStore();
+    private final GoogleOAuthFlowStore flowStore = new GoogleOAuthFlowStore(EstadoOAuthParaPruebas.enMemoria());
     private final veterinaria.vargasvet.service.AccountClosureService closureService =
             mock(veterinaria.vargasvet.service.AccountClosureService.class);
     private final AuthController controller = new AuthController(
