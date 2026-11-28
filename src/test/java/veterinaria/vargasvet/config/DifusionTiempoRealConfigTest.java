@@ -45,6 +45,17 @@ class DifusionTiempoRealConfigTest {
     }
 
     @Test
+    void alCerrarElContextoLaEscuchaQuedaDetenida() {
+        contexto.withPropertyValues("app.realtime.distribuido=true").run(ctx -> {
+            EscuchaPostgres escucha = ctx.getBean(EscuchaPostgres.class);
+
+            ctx.close();
+
+            assertThat(escucha.estado()).isEqualTo(EscuchaPostgres.Estado.DETENIDA);
+        });
+    }
+
+    @Test
     void conLaBanderaApagadaElPublicadorSoloEntregaLocalmente() {
         contexto.run(ctx -> {
             SimpMessagingTemplate mensajeria = ctx.getBean(SimpMessagingTemplate.class);

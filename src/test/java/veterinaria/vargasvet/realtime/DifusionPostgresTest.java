@@ -136,6 +136,26 @@ class DifusionPostgresTest {
     }
 
     @Test
+    void alDetenerseSeEnvianLosEventosQueQuedabanEnCola() {
+        List<String> cargas = new CopyOnWriteArrayList<>();
+        DifusionPostgres difusion = difusion((canal, carga) -> {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            cargas.add(carga);
+        }, 100);
+
+        for (int i = 0; i < 10; i++) {
+            difusion.difundir("/topic/citas/1", Map.of("n", i));
+        }
+        difusion.detener();
+
+        assertThat(cargas).hasSize(10);
+    }
+
+    @Test
     void unCuerpoQueNoEsJsonNoSeDifunde() {
         List<String> cargas = new CopyOnWriteArrayList<>();
         DifusionPostgres difusion = difusion((canal, carga) -> cargas.add(carga), 10);

@@ -89,6 +89,8 @@ public class WebSecurityConfig {
                                 "/swagger-ui.html",
                                 "/ws/**",
                                 "/actuator/health",
+                                "/actuator/health/liveness",
+                                "/actuator/health/readiness",
                                 "/error"
                         ).permitAll()
 
