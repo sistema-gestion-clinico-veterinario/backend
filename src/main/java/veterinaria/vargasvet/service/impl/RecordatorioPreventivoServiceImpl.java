@@ -2,6 +2,7 @@ package veterinaria.vargasvet.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import veterinaria.vargasvet.dto.Mail;
@@ -30,6 +31,7 @@ public class RecordatorioPreventivoServiceImpl implements RecordatorioPreventivo
 
     private enum Resultado { ENVIADO, NO_ENVIADO, ENVIADO_SIN_REGISTRO }
 
+    @SchedulerLock(name = "recordatorios-preventivos", lockAtMostFor = "PT1H", lockAtLeastFor = "PT10M")
     @Override
     @Scheduled(cron = "${app.reminders.cron:0 0 8 * * *}", zone = "${app.reminders.zone:America/Lima}")
     public void procesarRecordatorios() {

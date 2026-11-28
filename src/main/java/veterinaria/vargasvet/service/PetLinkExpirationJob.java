@@ -2,6 +2,7 @@ package veterinaria.vargasvet.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,7 @@ public class PetLinkExpirationJob {
 
     private final MascotaRelacionService mascotaRelacionService;
 
+    @SchedulerLock(name = "cierre-vinculos-vencidos", lockAtMostFor = "PT30M", lockAtLeastFor = "PT5M")
     @Scheduled(cron = "${app.pet-link.expiration-cron:0 50 3 * * *}", zone = "${app.reminders.zone:America/Lima}")
     public void cerrarVencidas() {
         try {

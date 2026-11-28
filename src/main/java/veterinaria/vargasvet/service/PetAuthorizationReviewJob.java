@@ -2,6 +2,7 @@ package veterinaria.vargasvet.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ public class PetAuthorizationReviewJob {
 
     private final PetOwnershipService petOwnershipService;
 
+    @SchedulerLock(name = "revision-autorizacion-mascotas", lockAtMostFor = "PT30M", lockAtLeastFor = "PT5M")
     @Scheduled(cron = "${app.pet-authorization.review-cron:0 45 3 * * *}", zone = "${app.reminders.zone:America/Lima}")
     public void reviewPets() {
         try {
